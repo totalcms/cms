@@ -436,4 +436,10 @@ describe('AccessControlService - Inline Editing', function (): void {
 	it('denies a collection the group cannot reach at all', function (): void {
 		expect($this->accessControl->canInlineEdit('blogger-user-test-com', 'products'))->toBeFalse();
 	});
+
+	it('denies, rather than throws, when there is no session user', function (): void {
+		// An API-key caller asking for the table format has no session user,
+		// so the renderer hands over an empty id. That is "no pencil", not a 500.
+		expect($this->accessControl->canInlineEdit('', 'blog'))->toBeFalse();
+	});
 });

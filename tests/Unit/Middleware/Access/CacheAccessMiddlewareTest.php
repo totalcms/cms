@@ -14,8 +14,11 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -36,7 +39,6 @@ use TotalCMS\Support\Config;
 
 describe('CacheAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation     = $this->createMock(UserValidationService::class);
 		$this->accessControl      = $this->createMock(AccessControlService::class);
 		$this->session            = $this->createMock(SessionInterface::class);
 		$this->jsonRenderer       = $this->createMock(JsonRenderer::class);
@@ -64,16 +66,15 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->twigRenderer->method('template')->willReturn($this->forbiddenResponse);
 
 		$this->make = fn (): CacheAccessMiddleware => new CacheAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			new ActorContext(),
 			$this->jsonRenderer,
 			$this->twigRenderer,
 			$this->responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
-			$this->oauthActivityLogger,
+			new AccessDenials($this->loggerFactory, $this->oauthActivityLogger, new EventDispatcher(new NullLogger())),
 		);
 
 		$this->requestFor = function (string $method = 'DELETE', string $path = '/api/cache'): ServerRequestInterface {
@@ -87,13 +88,6 @@ describe('CacheAccessMiddleware', function (): void {
 			return $request;
 		};
 
-		// BaseAccessMiddleware::process() resolves the authority via
-		// authorityFor(), then calls $request->withAttribute('accessAuthority', $authority)
-		// before invoking checkPermission() with the REASSIGNED $request. A
-		// bare mock's withAttribute() doesn't actually persist that for a
-		// later getAttribute() call, so $authority is pre-wired into the
-		// getAttribute() map directly — it must be the exact same instance
-		// the test also configures accessControl->authorityFor() to return.
 		$this->bearerRequestFor = function (UserAuthority $authority, string $method = 'DELETE', string $path = '/api/cache'): ServerRequestInterface {
 			$uri = $this->createMock(UriInterface::class);
 			$uri->method('getPath')->willReturn($path);
@@ -105,7 +99,6 @@ describe('CacheAccessMiddleware', function (): void {
 				['publicSubmission', null, null],
 				['authMethod', null, 'oauth_bearer'],
 				['oauth_user_id', '', 'auth:bearer-user'],
-				['accessAuthority', null, $authority],
 			]);
 			$request->method('withAttribute')->willReturnSelf();
 
@@ -121,7 +114,7 @@ describe('CacheAccessMiddleware', function (): void {
 	// ── Bearer (OAuth) ──────────────────────────────────────────────────────
 
 	test('bearer non-admin without a cache grant is denied', function (): void {
-		$this->accessControl->method('authorityFor')->willReturn($this->cacheDeniedAuthority);
+		$this->accessControl->method('authorityOf')->willReturn($this->cacheDeniedAuthority);
 
 		$this->handler->expects($this->never())->method('handle');
 		$this->forbiddenResponse->expects($this->once())->method('withStatus')->with(403);
@@ -132,7 +125,7 @@ describe('CacheAccessMiddleware', function (): void {
 	});
 
 	test('bearer non-admin WITH a cache grant is allowed', function (): void {
-		$this->accessControl->method('authorityFor')->willReturn($this->cacheGrantedAuthority);
+		$this->accessControl->method('authorityOf')->willReturn($this->cacheGrantedAuthority);
 
 		$this->handler->expects($this->once())->method('handle');
 
@@ -143,7 +136,7 @@ describe('CacheAccessMiddleware', function (): void {
 
 	test('bearer admin authority bypasses the check entirely', function (): void {
 		$adminAuthority = new UserAuthority(isAdmin: true, groups: []);
-		$this->accessControl->method('authorityFor')->willReturn($adminAuthority);
+		$this->accessControl->method('authorityOf')->willReturn($adminAuthority);
 
 		$this->handler->expects($this->once())->method('handle');
 
@@ -158,8 +151,7 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
-		$this->accessControl->method('canAccessUtils')->with('regular-user', 'cache')->willReturn(false);
+		$this->accessControl->method('authorityOf')->with('regular-user')->willReturn($this->cacheDeniedAuthority);
 
 		$this->handler->expects($this->never())->method('handle');
 		$this->forbiddenResponse->expects($this->once())->method('withStatus')->with(403);
@@ -173,8 +165,7 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
-		$this->accessControl->method('canAccessUtils')->with('regular-user', 'cache')->willReturn(true);
+		$this->accessControl->method('authorityOf')->with('regular-user')->willReturn($this->cacheGrantedAuthority);
 
 		$this->handler->expects($this->once())->method('handle');
 
@@ -187,8 +178,7 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-id' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->with('admin-id')->willReturn(true);
-		$this->accessControl->expects($this->never())->method('canAccessUtils');
+		$this->accessControl->method('authorityOf')->with('admin-id')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 
 		$this->handler->expects($this->once())->method('handle');
 
@@ -203,8 +193,7 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
-		$this->accessControl->method('canAccessUtils')->willReturn(true);
+		$this->accessControl->method('authorityOf')->willReturn($this->cacheGrantedAuthority);
 		$this->operationDetector->expects($this->never())->method('detectOperation');
 
 		($this->make)()->process(($this->requestFor)('POST', '/api/cache/devmode'), $this->handler);

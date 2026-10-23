@@ -84,7 +84,7 @@ export default class LocalizedStyledTextField extends LocalizedTextField {
 
 		Object.entries(this.editors).forEach(([code, editor]) => {
 			let html = editor?.getHTML?.() ?? '';
-			html = html.replace(/\%25/g, "%");
+			html = html.replace(/%25/g, "%");
 
 			// Treat editor with only empty tags as truly empty.
 			const tmp = document.createElement('div');

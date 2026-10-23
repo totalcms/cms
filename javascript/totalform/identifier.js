@@ -135,7 +135,7 @@ export default class Identifier extends TotalField {
 		id = id.replace('@', `${sep}at${sep}`).replace(/\./g, sep);
 
 		// Build the remove regex, allowing custom characters if specified
-		let removeRegex = /[*+~.,()?'"!:@{}\[\]\/\\]/g;
+		let removeRegex = /[*+~.,()?'"!:@{}[\]/\\]/g;
 		if (this.settings.allowCharacters) {
 			// Escape special regex characters in the allowed string
 			const escaped = this.settings.allowCharacters.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -244,7 +244,11 @@ export default class Identifier extends TotalField {
 				return;
 			}
 
-			response.ok ? this.idExists() : this.idAvailable();
+			if (response.ok) {
+				this.idExists();
+			} else {
+				this.idAvailable();
+			}
 		});
     }
 }

@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -48,6 +49,7 @@ readonly class ListViewsTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			edition: EditionFeature::DATA_VIEWS,
 		));
 	}
 
@@ -66,12 +68,8 @@ readonly class ListViewsTool
 
 			$level  = McpAccessLevel::fromString((string)($entry['mcp']['access'] ?? 'admin'));
 			$access = $level->value;
-			if (!$level->allows($persona)) {
-				continue;
-			}
-
-			$id = (string)($entry['id'] ?? '');
-			if ($id === '') {
+			$id     = (string)($entry['id'] ?? '');
+			if ($id === '' || !$level->allowsView($persona, $this->personaContext->getLimitedKey(), $id, $this->personaContext->getAuthority())) {
 				continue;
 			}
 
@@ -137,7 +135,7 @@ readonly class ListViewsTool
 							'name'        => ['type' => 'string'],
 							'description' => ['type' => 'string'],
 							'last_built'  => ['type' => 'string', 'description' => 'ISO 8601 timestamp of the last successful build, empty string when never built.'],
-							'access'      => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated']],
+							'access'      => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public']],
 						],
 					],
 				],

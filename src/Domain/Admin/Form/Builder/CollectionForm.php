@@ -90,7 +90,29 @@ class CollectionForm extends TotalForm
 			$sortField->setOptions($options);
 		}
 
+		$this->hideRegistrationFields();
+
 		return parent::fieldContent();
+	}
+
+	/**
+	 * The registration fields only mean something for a collection that holds
+	 * users. The new-collection form has no schema yet and hides them too, as
+	 * the owner picker is empty there.
+	 */
+	private function hideRegistrationFields(): void
+	{
+		$holdsUsers = $this->collectionData instanceof CollectionData
+			&& $this->optionSources()->schemaIsOrInherits($this->collectionData->schema, 'auth');
+		if ($holdsUsers) {
+			return;
+		}
+
+		foreach (['publicRegistration', 'requireEmailVerification', 'registrationGroups'] as $name) {
+			if (isset($this->fields[$name])) {
+				$this->fields[$name]->hide();
+			}
+		}
 	}
 
 	/** @return array<string> */

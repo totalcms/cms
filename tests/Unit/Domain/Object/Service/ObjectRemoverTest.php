@@ -45,6 +45,7 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectFetcher,
 			$this->objectUpdater,
 			$this->eventDispatcher,
+			systemWriteGate(),
 		);
 	}
 

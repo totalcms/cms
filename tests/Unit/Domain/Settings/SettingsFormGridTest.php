@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Settings;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -47,9 +48,8 @@ final class SettingsFormGridTest extends TestCase
 	 * was written with `"min": 0.25` and reached the admin as `min="0"`, offering
 	 * the operator the single value that means "never close this stream" to the
 	 * MCP SDK.
-	 *
-	 * @dataProvider settingsSchemaProvider
 	 */
+	#[DataProvider('settingsSchemaProvider')]
 	public function testNumericBoundsAreIntegers(string $path): void
 	{
 		$schema = json_decode((string)file_get_contents($path), true);
@@ -86,9 +86,7 @@ final class SettingsFormGridTest extends TestCase
 		$this->assertTrue(true);
 	}
 
-	/**
-	 * @dataProvider settingsSchemaProvider
-	 */
+	#[DataProvider('settingsSchemaProvider')]
 	public function testFormGridPlacesEveryPropertyExactlyOnce(string $path): void
 	{
 		$schema = json_decode((string)file_get_contents($path), true);

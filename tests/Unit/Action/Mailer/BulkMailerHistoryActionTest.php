@@ -30,9 +30,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-	@unlink($this->tmpDir . '/.system/bulkmailer');
-	@rmdir($this->tmpDir . '/.system');
-	@rmdir($this->tmpDir);
+	recursiveDelete($this->tmpDir);
 });
 
 it('says so when the email has never been bulk sent', function (): void {

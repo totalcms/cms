@@ -4,20 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Bundle\Data;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 class BundleData implements \Stringable
 {
 	/** @var array<string,string> */
 	public array $bundle;
-	private readonly Serializer $serializer;
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
 
 	public function __toString(): string
 	{
@@ -26,7 +18,7 @@ class BundleData implements \Stringable
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->bundle, 'json');
+		return SerializerFactory::json()->serialize($this->bundle, 'json');
 	}
 
 	/** @param array<string,string> $data */

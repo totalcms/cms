@@ -13,7 +13,7 @@ for arg in "$@"; do
 done
 
 echo "Building frontend assets..."
-yarn install
+vp install
 PRODUCTION=$PRODUCTION node esbuild.config.js
 cp -r resources/fonts public/assets/fonts
 

@@ -81,6 +81,7 @@ describe('ExtensionState', function (): void {
 			'quarantine'          => null,
 			'updateDisabled'      => null,
 			'autoEnrolledBundled' => false,
+			'approvedFindings'    => null,
 		]);
 	});
 
@@ -94,6 +95,7 @@ describe('ExtensionState', function (): void {
 			'quarantine'          => null,
 			'updateDisabled'      => null,
 			'autoEnrolledBundled' => false,
+			'approvedFindings'    => null,
 		];
 
 		$state  = ExtensionState::fromArray($original);

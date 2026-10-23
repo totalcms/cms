@@ -26,6 +26,7 @@ describe('forms.js', () => {
 		expect(window.TotalCMS.registerFieldType).toBeTypeOf('function');
 		expect(window.TotalCMS.TotalField).toBeTypeOf('function');
 		expect(window.TotalCMS.TotalForm).toBeTypeOf('function');
+		expect(window.TotalCMS.extendFieldType).toBeTypeOf('function');
 	});
 
 	test('registers the light classes and a loader for every heavy type', async () => {

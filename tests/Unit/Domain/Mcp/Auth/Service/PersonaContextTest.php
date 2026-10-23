@@ -5,14 +5,23 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class PersonaContextTest extends TestCase
 {
@@ -35,17 +44,39 @@ final class PersonaContextTest extends TestCase
 		$schemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
 			],
 		);
 
-		return new PersonaContext($fetcher, $schemaResolver);
+		return new PersonaContext($fetcher, $schemaResolver, mcpGuard($this), $this->actors());
 	}
 
 	/** @var array<string,CollectionData> */
 	private array $fixtureCollections = [];
+
+	/** The request's actor, shared by every context a test builds. */
+	private ?ActorContext $actors = null;
+
+	private function actors(): ActorContext
+	{
+		return $this->actors ??= new ActorContext();
+	}
+
+	/**
+	 * Give the caller read on $allowed, as McpRequestAuthorizer does for an
+	 * OAuth member: on the persona context and on the request's actor.
+	 *
+	 * @param list<string> $allowed
+	 */
+	private function grant(PersonaContext $context, array $allowed): void
+	{
+		$authority = $this->authorityGranting($allowed);
+		$context->setAuthority($authority);
+		$this->actors()->set(new Actor(ActorKind::Member, 'member-1', 'auth', $authority, ['cms:read']));
+	}
 
 	private function registerCollection(string $id, string $access): CollectionData
 	{
@@ -198,7 +229,7 @@ final class PersonaContextTest extends TestCase
 		$this->registerCollection('blog', 'authenticated');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting(['blog']));
+		$this->grant($context, ['blog']);
 
 		$this->assertTrue($context->canReadCollection('blog'));
 	}
@@ -208,7 +239,7 @@ final class PersonaContextTest extends TestCase
 		$this->registerCollection('blog', 'authenticated');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting(['other-collection']));
+		$this->grant($context, ['other-collection']);
 
 		$this->assertFalse($context->canReadCollection('blog'));
 	}
@@ -221,7 +252,7 @@ final class PersonaContextTest extends TestCase
 		$this->registerCollection('blog', 'public');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting([]));
+		$this->grant($context, []);
 
 		$this->assertTrue($context->canReadCollection('blog'));
 	}
@@ -244,31 +275,30 @@ final class PersonaContextTest extends TestCase
 		$this->assertTrue($context->canReadCollection('not-in-fixture-map', $adHoc));
 	}
 
-	// ── canReadDrafts / canReadCollection consistency (Task 10b) ────────────────
+	// ── readScope / canReadCollection consistency ──────────────────────────────
 
-	public function testCanReadDraftsStaysFalseOnAPublicCollectionWithoutAGrant(): void
+	public function testReadScopeIsPublishedOnlyOnAPublicCollectionWithoutAGrant(): void
 	{
-		// Public exposure must NEVER imply draft access — canReadDrafts()
-		// deliberately does NOT share canReadCollection()'s public carve-out.
+		// Public exposure must NEVER imply draft access: readScope() does NOT
+		// share canReadCollection()'s public carve-out.
 		$this->registerCollection('blog', 'public');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting([]));
+		$this->grant($context, []);
 
-		$this->assertFalse($context->canReadDrafts('blog'));
-		// Yet the same caller CAN read the collection's published content —
-		// proving the two rules are deliberately different, not a bug.
+		$this->assertEquals(ReadScope::publishedOnly(), $context->readScope('blog'));
+		// Yet the same caller CAN read the collection's published content.
 		$this->assertTrue($context->canReadCollection('blog'));
 	}
 
-	public function testCanReadDraftsAndCanReadCollectionAgreeWhenAuthorityGrantsRead(): void
+	public function testAGrantOnAnUnownedCollectionReadsEverythingDraftsIncluded(): void
 	{
 		$this->registerCollection('blog', 'authenticated');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting(['blog']));
+		$this->grant($context, ['blog']);
 
-		$this->assertTrue($context->canReadDrafts('blog'));
+		$this->assertTrue($context->readScope('blog')->isAll());
 		$this->assertTrue($context->canReadCollection('blog'));
 	}
 
@@ -294,7 +324,7 @@ final class PersonaContextTest extends TestCase
 		$this->registerCollection('blog', 'authenticated');
 		$context = $this->context();
 		$context->set(McpPersona::AUTHENTICATED);
-		$context->setAuthority($this->authorityGranting(['blog']));
+		$this->grant($context, ['blog']);
 
 		$this->assertFalse($context->isCollectionExposedPublic('blog'));
 		// canReadCollection() (the group-layer question) is still true —
@@ -330,12 +360,44 @@ final class PersonaContextTest extends TestCase
 		$fetcher->method('fetchCollection')->willReturnCallback(static fn (string $id): ?CollectionData => $collections[$id] ?? null);
 		$resolver = $this->createStub(McpSchemaResolver::class);
 		$resolver->method('isAccessibleTo')->willReturn($accessible);
+		$resolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => ['access' => (string)($c->mcp['access'] ?? 'admin'), 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => ''],
+		);
 		$resolver->method('renderCatalog')->willReturn('Available collections and filterable properties:');
 
-		$context = new PersonaContext($fetcher, $resolver);
+		$context = new PersonaContext($fetcher, $resolver, mcpGuard($this), new ActorContext());
 		$context->set($persona);
 
 		return $context;
+	}
+
+	/**
+	 * A context over a REAL McpSchemaResolver, so the owned-collection rule is
+	 * exercised where it lives (forCollection()) rather than stubbed away.
+	 *
+	 * @param array<string,CollectionData> $collections
+	 */
+	private function ownedContext(array $collections, McpPersona $persona): PersonaContext
+	{
+		$fetcher = $this->createStub(CollectionFetcher::class);
+		$fetcher->method('fetchCollection')->willReturnCallback(static fn (string $id): ?CollectionData => $collections[$id] ?? null);
+		$repository = $this->createStub(CollectionRepository::class);
+		$repository->method('listAllCollections')->willReturn(array_values($collections));
+		$schemas = $this->createStub(SchemaFetcher::class);
+		$schemas->method('fetchSchemaForCollection')->willReturn(new SchemaData());
+
+		$context = new PersonaContext($fetcher, new McpSchemaResolver($schemas, new McpDescriptionResolver(), $repository), mcpGuard($this, ['portfolio' => 'owner']), $this->actors());
+		$context->set($persona);
+
+		return $context;
+	}
+
+	private function registerOwnedCollection(string $id, string $access): CollectionData
+	{
+		$collection                = $this->registerCollection($id, $access);
+		$collection->ownerProperty = 'owner';
+
+		return $collection;
 	}
 
 	public function testExposedCollectionReturnsTheRecordWhenTheCallerMayReachIt(): void
@@ -377,5 +439,113 @@ final class PersonaContextTest extends TestCase
 		$context = $this->gateContext([], McpPersona::ADMIN);
 
 		$this->assertSame("Base.\n\nAvailable collections and filterable properties:", $context->catalogDescription(McpPersona::ADMIN, 'Base.'));
+	}
+
+	// ── Owned collections: a member reads their own objects ─────────────────
+
+	public static function nonAdminPersonas(): array
+	{
+		return [
+			'authenticated' => [McpPersona::AUTHENTICATED],
+			'public'        => [McpPersona::PUBLIC_],
+		];
+	}
+
+	public function testAnOwnedCollectionKeepsItsDeclaredAccessThroughExposedCollection(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+
+		foreach ([McpPersona::PUBLIC_, McpPersona::AUTHENTICATED, McpPersona::ADMIN] as $persona) {
+			$this->assertSame($portfolio, $this->ownedContext(['portfolio' => $portfolio], $persona)->exposedCollection('portfolio'));
+		}
+	}
+
+	public function testAnOwnedAdminCollectionIsRefusedWithTheOrdinaryMessage(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'admin');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Collection "portfolio" is not available to the current caller. Use list_collections to see what you can query.');
+
+		$this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED)->exposedCollection('portfolio');
+	}
+
+	public function testAnonymousCallerReadsAnOwnedPublicCollectionButNotItsDrafts(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::PUBLIC_);
+
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertEquals(ReadScope::publishedOnly(), $context->readScope('portfolio'));
+	}
+
+	public function testAGrantedMemberOnAnOwnedPublicCollectionReadsTheirOwnPlusEveryonesPublished(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
+		$this->grant($context, ['portfolio']);
+
+		$scope = $context->readScope('portfolio');
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertTrue($scope->matches(['id' => 'mine', 'owner' => 'member-1', 'draft' => true]));
+		$this->assertTrue($scope->matches(['id' => 'theirs', 'owner' => 'sam', 'draft' => false]));
+		$this->assertFalse($scope->matches(['id' => 'their-draft', 'owner' => 'sam', 'draft' => true]));
+	}
+
+	public function testAGrantedMemberOnAnOwnedCollectionThatIsNotPublicReadsOnlyTheirOwn(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'authenticated');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
+		$this->grant($context, ['portfolio']);
+
+		$scope = $context->readScope('portfolio');
+		$this->assertTrue($context->canReadCollection('portfolio', $portfolio));
+		$this->assertSame([$portfolio], $context->visibleCollections([$portfolio]));
+		$this->assertTrue($scope->matches(['id' => 'mine', 'owner' => 'member-1', 'draft' => true]));
+		$this->assertFalse($scope->matches(['id' => 'theirs', 'owner' => 'sam', 'draft' => false]));
+	}
+
+	public function testTheSameGrantOpensAnUnownedCollectionThatIsNotPublicCompletely(): void
+	{
+		$blog    = $this->registerCollection('blog', 'authenticated');
+		$context = $this->ownedContext(['blog' => $blog], McpPersona::AUTHENTICATED);
+		$this->grant($context, ['blog']);
+
+		$this->assertTrue($context->canReadCollection('blog'));
+		$this->assertTrue($context->readScope('blog')->isAll());
+	}
+
+	public function testAdminSeesAnOwnedCollectionAndItsDrafts(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'authenticated');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN);
+
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertTrue($context->readScope('portfolio')->isAll());
+		$this->assertSame([$portfolio], $context->visibleCollections([$portfolio]));
+	}
+
+	#[DataProvider('nonAdminPersonas')]
+	public function testAnOwnedPublicCollectionIsVisibleAndCatalogedForNonAdminPersonas(McpPersona $persona): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], $persona);
+
+		$this->assertSame([$portfolio], $context->visibleCollections([$portfolio]));
+		$this->assertStringContainsString('- portfolio', $context->catalogDescription($persona, 'Base.'));
+	}
+
+	public function testExposedCollectionServesAnUnownedCollectionToAuthenticated(): void
+	{
+		$blog = $this->registerCollection('blog', 'public');
+
+		$this->assertSame($blog, $this->gateContext(['blog' => $blog], McpPersona::AUTHENTICATED)->exposedCollection('blog'));
+	}
+
+	public function testVisibleCollectionsKeepsAnUnownedCollectionForAuthenticated(): void
+	{
+		$blog = $this->registerCollection('blog', 'public');
+
+		$this->assertSame([$blog], $this->gateContext(['blog' => $blog], McpPersona::AUTHENTICATED)->visibleCollections([$blog]));
 	}
 }

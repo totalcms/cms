@@ -1,9 +1,13 @@
 <?php
 
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 describe('EventDispatcher', function (): void {
@@ -226,4 +230,31 @@ describe('EventDispatcher', function (): void {
 
 		expect($calls)->toBe(['ext-1', 'ext-2', 'ext-3']);
 	});
+});
+
+test('every payload carries the actor current at dispatch', function (): void {
+	$actors = new ActorContext();
+	$actors->set(new Actor(ActorKind::Member, 'alex', 'users'));
+	$dispatcher = new EventDispatcher(new NullLogger(), $actors);
+	$received   = null;
+	$dispatcher->listen('object.created', function (array $payload) use (&$received): void {
+		$received = $payload;
+	});
+
+	$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'post-1'));
+
+	expect($received['actor'] ?? null)->toMatchArray(['kind' => 'member', 'userId' => 'alex', 'authCollection' => 'users']);
+});
+
+test('a payload that names its own actor keeps it', function (): void {
+	$actors     = new ActorContext();
+	$dispatcher = new EventDispatcher(new NullLogger(), $actors);
+	$received   = null;
+	$dispatcher->listen('cache.cleared', function (array $payload) use (&$received): void {
+		$received = $payload;
+	});
+
+	$dispatcher->dispatch('cache.cleared', new SystemEventPayload(['actor' => ['kind' => 'custom']]));
+
+	expect($received['actor'])->toBe(['kind' => 'custom']);
 });

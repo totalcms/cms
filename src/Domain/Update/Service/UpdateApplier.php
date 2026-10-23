@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -171,7 +172,7 @@ class UpdateApplier
 		if (is_dir($extractDir)) {
 			$this->deleteDirectory($extractDir);
 		}
-		mkdir($extractDir, 0755, true);
+		FileUtils::ensureDirectory($extractDir);
 
 		$zip = new \ZipArchive();
 		if ($zip->open($zipPath) !== true) {
@@ -233,9 +234,7 @@ class UpdateApplier
 	 */
 	private function swapItems(string $source, string $destination, string $backupDir): void
 	{
-		if (!is_dir($backupDir)) {
-			mkdir($backupDir, 0755, true);
-		}
+		FileUtils::ensureDirectory($backupDir);
 
 		foreach (new \DirectoryIterator($source) as $item) {
 			if ($item->isDot()) {
@@ -332,7 +331,7 @@ class UpdateApplier
 
 		$retainRoot = $this->retainedBackupRoot();
 
-		if (!is_dir($retainRoot) && !@mkdir($retainRoot, 0755, true) && !is_dir($retainRoot)) {
+		if (!FileUtils::ensureDirectory($retainRoot)) {
 			$this->logger->warning('Could not create the backup directory; previous version discarded');
 			$this->deleteDirectory($backupDir);
 

@@ -31,7 +31,6 @@ const AnchorId = Extension.create({
 		return {
 			setAnchorId: (id) => ({ tr, state, dispatch }) => {
 				const { $from } = state.selection;
-				const node = $from.node($from.depth);
 
 				// Find the closest block node that supports the id attribute
 				for (let depth = $from.depth; depth >= 1; depth--) {

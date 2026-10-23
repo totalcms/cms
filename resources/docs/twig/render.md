@@ -38,13 +38,17 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 
 {# Eager loading (default is lazy) #}
 {{ cms.render.image('hero', {}, {loading: 'eager'}) }}
+
+{# Your own alt text, or an empty one for a decorative image #}
+{{ cms.render.image(post, {}, {alt: post.title, collection: 'blog'}) }}
+{{ cms.render.image('divider', {}, {alt: ''}) }}
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
 | `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
-| `options` | array | `[]` | Collection context: `collection`, `property`, `loading` |
+| `options` | array | `[]` | Collection context: `collection`, `property`, `loading`, `class`, `alt` and `protect`. `alt` is the alt text for this render; without it the image's own alt applies, then its EXIF title, description, and finally the filename. Pass an empty string for a decorative image; otherwise the filename fallback is what a screen reader hears. `protect` is covered under [Protecting images](#protecting-images) |
 
 #### Nested images (cards and decks)
 
@@ -78,6 +82,10 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 
 {# The transforms apply to every candidate; w there is a ceiling, not a candidate #}
 {{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}
+
+{# A different image for dark mode: another object, or a second property on the same object #}
+{{ cms.render.picture('logo', {}, {dark: 'logo-dark'}) }}
+{{ cms.render.picture(post, {}, {darkProperty: 'imageDark', collection: 'blog'}) }}
 ```
 
 | Parameter | Type | Default | Description |
@@ -91,9 +99,19 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 | `widths` | int[] | `[480, 768, 1024, 1440, 1920]` | Candidate widths for every `srcset`. Any wider than the source are dropped and the source width joins as the largest — ImageWorks never upscales, so a wider candidate would deliver the source's own width and mis-report it |
 | `formats` | string[] | `['avif', 'webp']` | One `<source>` per format, in order, best first. A format equal to the image's own is skipped as redundant. Any of `jpg`, `png`, `webp`, `avif` |
 | `sizes` | string | `'100vw'` | The `sizes` attribute on every `<source>` and the `<img>`. `100vw` is what a browser assumes without it, so narrow it per call |
+| `dark` | string\|array | — | The image to show under `prefers-color-scheme: dark` — an object ID or object, resolved with the same `collection` and `property` as the light image |
+| `darkProperty` | string | — | The dark image as a second image property on the **same** object (dotted for card/deck-nested). `dark` wins when both are given |
+| `alt` | string | the image's own | Alt text for the `<img>`, as in `image()`. The dark image never contributes alt text |
+| `protect` | bool | `imageworks.protect` | Drag and context-menu protection on the `<img>` — see [Protecting images](#protecting-images) |
 | `collection`, `property`, `loading`, `class` | | as `image()` | Collection context, dotted nested `property`, lazy loading, extra class |
 
-Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `h` and `fit` are applied — never the requested number. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
+Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `crop`, `h` and `fit` are applied — never the requested number. A `crop` rect (`crop: '520,717,0,100'`, as width, height, x, y) is cut before anything is sized, so the rect is the source: candidates wider than it are dropped, its width joins as the largest, and the `<img>` carries the rect's dimensions. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
+
+#### Light and dark mode
+
+With `dark` or `darkProperty` set, the `<picture>` leads with one `<source media="(prefers-color-scheme: dark)">` per format for the dark image, then the light sources and the light `<img>` as usual. A browser takes the first `<source>` whose media query and type both match, and re-evaluates the media query live, so the image swaps when the visitor's theme changes — no CSS or JavaScript involved. Nothing is needed for light mode: the unqualified sources and the `<img>` already are the light image.
+
+The dark image gets its own candidate list, capped at its own width, with the same transforms, `widths`, `formats` and `sizes`. Because the dark set has no `<img>` of its own to fall back to, its stored format is appended after the requested formats as a last resort. Alt text, `width`/`height` and the link wrapper come from the light image. A dark image that is missing, empty or a GIF is ignored and the markup is exactly what it would be without the option.
 
 ### alt()
 
@@ -105,6 +123,24 @@ Get the alt text for an image. Falls back through alt text, EXIF data, then file
 
 {# Card child #}
 {{ cms.render.alt('post-1', {property: 'mycard.image'}) }}
+```
+
+### Protecting images
+
+Every `<img>` these helpers write — `image()`, `picture()`, `gallery()` thumbnails and `galleryImage()` — carries `draggable="false"` and a disabled context menu, which stops the casual drag-to-desktop and right-click-save. It is a courtesy, not security: the URL is in the markup and the browser has already downloaded the file.
+
+Turn it off site-wide in `config/tcms.php`, or per call with the `protect` option, which wins either way:
+
+```php
+$settings['imageworks']['protect'] = false;
+```
+
+```twig
+{# A logo visitors are welcome to grab #}
+{{ cms.render.image('logo', {}, {protect: false}) }}
+
+{# Protected even on a site that has turned it off #}
+{{ cms.render.picture(photo, {}, {protect: true, collection: 'portfolio'}) }}
 ```
 
 ## Video
@@ -201,6 +237,7 @@ Render a complete gallery grid with LightGallery lightbox support.
 | `counter` | bool | `true` | Show image counter |
 | `plugins` | array | `['zoom','thumbnail','fullscreen']` | LightGallery plugins |
 | `zoomFromOrigin` | bool | `true` | Animate the lightbox open and close from the clicked thumbnail. Set `false` when thumbnails are cropped to a different shape than the originals — see below |
+| `protect` | bool | `imageworks.protect` | Drag and context-menu protection on every thumbnail — see [Protecting images](#protecting-images) |
 
 Every option that is not one of Total CMS's own (`collection`, `property`, `captions`, `gridCaptions`, `sort`, `class`, `maxVisible`, `viewAllText`, `featuredOnly`) is passed straight through to [LightGallery's settings](https://www.lightgalleryjs.com/docs/settings/), so `loop`, `download`, `counter`, `zoomFromOrigin`, `speed`, `mode` and the rest all work as documented there.
 

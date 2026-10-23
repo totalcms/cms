@@ -41,6 +41,25 @@ readonly class SchemaFetcher
 		return $this->storage->getSchema($id);
 	}
 
+	/**
+	 * Whether a schema is `$target` or names it directly in `inheritFrom`.
+	 * False for a schema that cannot be read.
+	 */
+	public function isOrInherits(string $schemaId, string $target): bool
+	{
+		if ($schemaId === $target) {
+			return true;
+		}
+
+		try {
+			$schema = $this->fetchRawSchema($schemaId);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return in_array($target, $schema->inheritFrom, true);
+	}
+
 	public function schemaExists(string $id): bool
 	{
 		return $this->storage->schemaExists($id);

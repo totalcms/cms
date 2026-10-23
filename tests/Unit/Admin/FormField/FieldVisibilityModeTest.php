@@ -116,3 +116,42 @@ test('array current value with not_empty operator hides when array is empty', fu
 	], options: ['A']))->build();
 	expect($html)->toContain('field-hidden');
 });
+
+// ---------------------------------------------------------------------------
+// empty / not_empty on scalar and object current values. Mirrors the JS
+// evaluateCondition() scalar branch: nothing, a blank string and an empty
+// array-as-object are empty; 0 and false are values.
+// ---------------------------------------------------------------------------
+
+test('not_empty on a scalar watch-field', function (mixed $watched, bool $visible): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn($watched);
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'notes', 'value' => null, 'operator' => 'not_empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain($visible ? 'field-visible' : 'field-hidden');
+})->with([
+	'null'          => [null, false],
+	'blank string'  => ['   ', false],
+	'empty array'   => [[], false],
+	'text'          => ['hello', true],
+	'zero'          => [0, true],
+	'false'         => [false, true],
+	'image value'   => [['path' => 'x.jpg'], true],
+]);
+
+test('empty on a scalar watch-field', function (mixed $watched, bool $visible): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn($watched);
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'notes', 'value' => null, 'operator' => 'empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain($visible ? 'field-visible' : 'field-hidden');
+})->with([
+	'null'         => [null, true],
+	'blank string' => ['', true],
+	'text'         => ['hello', false],
+	'zero'         => [0, false],
+]);

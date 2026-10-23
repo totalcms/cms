@@ -128,6 +128,22 @@ final readonly class OAuthActivityLogger
 	 * scopeRejected(), which fires earlier for tokens whose scopes don't
 	 * cover the operation at all.
 	 */
+	/**
+	 * A session from an auth collection other than `oauth.loginCollection`
+	 * (or the default one) tried to authorize a client; it was sent to the
+	 * login page instead.
+	 */
+	public function loginCollectionRejected(string $clientId, string $userId, string $collection, string $loginCollection): void
+	{
+		$this->logger->warning('OAuth authorize refused a session from another auth collection', [
+			'type'             => 'login_collection.rejected',
+			'client_id'        => $clientId,
+			'user_id'          => $userId,
+			'collection'       => $collection,
+			'login_collection' => $loginCollection,
+		]);
+	}
+
 	public function groupRejected(string $clientId, string $operation, string $userId): void
 	{
 		$this->logger->info('OAuth group-rejected request', [

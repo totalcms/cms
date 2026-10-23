@@ -28,6 +28,7 @@ final readonly class ImpersonationService implements ImpersonationServiceInterfa
 		private UserValidationService $userValidation,
 		private ObjectFetcher $objectFetcher,
 		private Config $config,
+		private RegistrationCollections $registrationCollections,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Access);
@@ -63,15 +64,12 @@ final readonly class ImpersonationService implements ImpersonationServiceInterfa
 		if ($collection === $realCollection && $userId === $realUser) {
 			throw new ImpersonationException('You cannot impersonate yourself.');
 		}
-		// Only the operator collection and opt-in public-registration (member)
-		// collections hold real users. Never swap the session identity into an
-		// arbitrary collection (e.g. a blog post id) — the UI hides this, and the
-		// server enforces it so a crafted POST cannot produce a nonsensical session.
-		$allowedCollections = array_merge(
-			[$defaultCollection],
-			array_values((array)($this->config->auth['publicRegistration'] ?? [])),
-		);
-		if (!in_array($collection, $allowedCollections, true)) {
+		// Only the operator collection and public-registration (member)
+		// collections (config list or the collection's toggle) hold real
+		// users. Never swap the session identity into an arbitrary collection
+		// (e.g. a blog post id) — the UI hides this, and the server enforces
+		// it so a crafted POST cannot produce a nonsensical session.
+		if ($collection !== $defaultCollection && !$this->registrationCollections->isEnabled($collection)) {
 			throw new ImpersonationException('That collection cannot be impersonated.');
 		}
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {

@@ -8,6 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Factory\LogChannel;
@@ -60,11 +62,16 @@ readonly class DefaultErrorHandler
 		bool $displayErrorDetails,
 		bool $logErrors,
 	): ResponseInterface {
-		// Clear OPcache to prevent cached errors from persisting
-		// This ensures that after fixing code errors, the fixes take effect immediately
-		if ($this->opcacheService->isAvailable()) {
-			$this->opcacheService->clear();
-		}
+		// Reset OPcache after a fault in the code so that, once the file is
+		// fixed, the fix takes effect immediately. An HTTP exception is not a
+		// fault: a routing 404 is the normal answer to a bot probing
+		// /wp-login.php, and resetting the pool-wide bytecode cache on every
+		// such hit would recompile the whole site each time. Nor is a write
+		// the storage layer refused the current actor.
+		$opcacheCleared = !$exception instanceof HttpException
+			&& !$exception instanceof AccessDeniedException
+			&& $this->opcacheService->isAvailable()
+			&& $this->opcacheService->clear();
 
 		// Log error (skip expected 404s: HEAD existence checks, and requests the
 		// PageRouterMiddleware may augment into a rendered builder page — every
@@ -124,10 +131,9 @@ readonly class DefaultErrorHandler
 			->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
 			->withHeader('Pragma', 'no-cache')
 			->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT')
-			->withHeader('X-OPcache-Cleared', 'true')
 			->withStatus($statusCode);
 
-		return $response;
+		return $opcacheCleared ? $response->withHeader('X-OPcache-Cleared', 'true') : $response;
 	}
 
 	/**
@@ -197,9 +203,22 @@ readonly class DefaultErrorHandler
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
 		}
 
+		if ($exception instanceof AccessDeniedException) {
+			// The storage layer refused the current actor a write the entry
+			// point let through (see ObjectWriteGate).
+			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
+		}
+
 		if ($exception instanceof TemplatesLockedException) {
 			// Templates are git-managed on this environment — editing is forbidden.
 			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
+		}
+
+		if (PageNotFoundException::find($exception) instanceof PageNotFoundException) {
+			// A template called cms.notFound() somewhere the page router did not
+			// catch it (a render endpoint, the playground). Twig wraps it, so
+			// look through the chain.
+			$statusCode = StatusCodeInterface::STATUS_NOT_FOUND;
 		}
 
 		$file = basename($exception->getFile());

@@ -278,6 +278,7 @@ Most users should choose either Redis or Memcached, not both. Redis is generally
 - **json** — data storage and API
 - **mbstring** — UTF-8 string handling
 - **fileinfo** — file type detection
+- **pdo_sqlite** — job queue and bulk mailer log (cron PHP too)
 
 ### PHP Extensions (Recommended)
 - **Imagick** — significantly faster image processing than GD

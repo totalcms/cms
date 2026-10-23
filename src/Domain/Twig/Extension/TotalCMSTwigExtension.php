@@ -7,6 +7,7 @@ use Odan\Session\FlashInterface;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Collection\Utilities\ManualSorter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
+use TotalCMS\Domain\Locale\CountryNames;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
@@ -84,6 +85,13 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		// TotalCMSTwigFilters uses static methods for performance, which can't access
 		// injected dependencies. This is the only filter that requires service access.
 		$filters[] = new TwigFilter('manualSort', $this->manualSort(...), ['is_safe' => ['html']]);
+
+		// Twig's IntlExtension provides country_name, but TwigEngine only loads
+		// it with the PHP intl extension. This one reads the same symfony/intl
+		// data, so templates can rely on the filter everywhere; when
+		// IntlExtension is loaded, its own registration replaces this one.
+		// Not is_safe: an unknown code comes back as given.
+		$filters[] = new TwigFilter('country_name', CountryNames::name(...));
 
 		return $filters;
 	}

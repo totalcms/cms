@@ -6,6 +6,9 @@ namespace TotalCMS\Domain\XmlRpc\Service;
 
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -37,6 +40,7 @@ readonly class XmlRpcAuth
 		private EditionFeatureService $editionFeatures,
 		private UserValidationService $userValidation,
 		private Config $config,
+		private ActorContext $actors,
 	) {
 	}
 
@@ -69,6 +73,11 @@ readonly class XmlRpcAuth
 		if (!$this->editionFeatures->can(EditionFeature::EXTERNAL_REST_API)) {
 			throw XmlRpcFault::forbidden('XML-RPC publishing requires the Pro edition or higher.');
 		}
+
+		// The endpoint has no access middleware; the key is the actor for
+		// every write this call makes, limited to the collections its paths
+		// name, so the storage layer refuses a write BlogRegistry let through.
+		$this->actors->set(Actor::apiKey($apiKey->id, ApiKeyGrants::authority($apiKey)));
 
 		return new XmlRpcIdentity($apiKey, $this->resolveAuthor($username, $apiKey->name));
 	}

@@ -172,12 +172,74 @@ describe('TotalForm.focusFirstInput', () => {
 		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
 	});
 
+	// Mirrors ObjectForm::botFields(): the honeypot sits off-screen in a 1px box
+	// that still has a rect, so it must be excluded by markup, not geometry.
+	const honeypot = `<div class="form-field text-field bot-field" data-type="text" aria-hidden="true">
+		<label>Leave this field empty</label>
+		<div class="form-group"><input type="text" name="extra_reference_code" tabindex="-1" autocomplete="off"></div>
+	</div>`;
+
+	test('skips the bot-protection honeypot even when it is placed first', () => {
+		const form = formWithHtml(proxyField('image', 'photo') + honeypot + textField('title'));
+		place('extra_reference_code', -10000, -10000, 1);
+		place('title', 100);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('skips any input taken out of the tab order', () => {
+		const form = formWithHtml(`<div class="form-field"><input name="skip" tabindex="-1"></div>` + textField('title'));
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
 	test('a proxy is still a valid target for error reporting', () => {
 		// Skipping proxies on form open must NOT make them unreportable — a deck
 		// anchors its native error bubble on exactly this input, which is why it is
 		// collapsed rather than display:none.
 		const form = formWithHtml(proxyField('deck', 'items', 'items'));
 		expect(form.isFocusable(document.querySelector('[name="items"]'))).toBe(true);
+	});
+
+	// On a public page the form is one element among many. A register form
+	// beside a login form took the cursor from the login email the page had
+	// marked autofocus, and on a phone scrolled the page down to itself.
+	test('leaves focus alone when another field on the page already has it', () => {
+		const form = formWithHtml(textField('title'));
+		const other = document.createElement('input');
+		other.name = 'email';
+		document.body.prepend(other);
+		other.focus();
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(other);
+	});
+
+	test('leaves focus alone when the page marks another field autofocus', () => {
+		const form = formWithHtml(textField('title'));
+		const other = document.createElement('input');
+		other.setAttribute('autofocus', '');
+		document.body.prepend(other);
+
+		form.focusFirstInput();
+		expect(document.activeElement).not.toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('does not scroll the page to a form below the first screen', () => {
+		const form = formWithHtml(textField('title'));
+		place('title', window.innerHeight + 200);
+
+		form.focusFirstInput();
+		expect(document.activeElement).not.toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('still focuses a form whose first field is on screen', () => {
+		const form = formWithHtml(textField('title'));
+		place('title', 120);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
 	});
 });
 
@@ -197,5 +259,50 @@ describe('TotalForm.afterSave', () => {
 		expect(form.id).toBe('new-123');
 		expect(form.form.dataset.id).toBe('new-123');
 		expect(idAtFlush).toBe('new-123');
+	});
+});
+
+//-----------------------------------------------
+// Field events are debounced (TotalDispatcher, 300ms). A failed validation
+// leaves the form in "error"; the field-change from the member's correction
+// only arrives 300ms later. Saving inside that window used to pass
+// validate() and then refuse in save() on the stale "error" state ("Error in
+// form, cannot save"); the next click worked. validate() now flushes pending
+// field events first, so the state reflects every edit already made.
+//-----------------------------------------------
+import TotalDispatcher from '../../javascript/totalform/dispatcher.js';
+
+function wiredForm() {
+	const form = Object.create(TotalForm.prototype);
+	form.form = document.createElement('form');
+	form.method = 'POST';
+	form.states = ['unsaved', 'success', 'error', 'processing'];
+	form.state = null;
+	form.autosave = false;
+	form.eventListeners();
+	return form;
+}
+
+function pendingField(form) {
+	const container = document.createElement('div');
+	form.form.appendChild(container);
+	const dispatcher = new TotalDispatcher(container);
+	return { container, dispatcher, validate: () => true, isVisible: () => true };
+}
+
+describe('TotalForm.validate flushes pending field events', () => {
+	test('a correction typed just before saving clears the stale error state', () => {
+		vi.useFakeTimers();
+		const form = wiredForm();
+		const fixed = pendingField(form);
+		form.fields = [fixed];
+
+		form.changeState('error');                                 // the earlier failed attempt
+		fixed.dispatcher.dispatchEvent('field-change', { field: fixed }); // the correction, still debounced
+
+		expect(form.validate()).toBe(true);
+		expect(form.isError()).toBe(false);
+		expect(form.state).toBe('unsaved');
+		vi.useRealTimers();
 	});
 });

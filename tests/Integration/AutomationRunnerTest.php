@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 use TotalCMS\Domain\Automation\Service\AutomationContextFactory;
 use TotalCMS\Domain\Automation\Service\AutomationGuard;
@@ -100,6 +101,7 @@ function prodRunner(object $container): AutomationRunner
 		$container->get(Config::class),
 		$guard,
 		$container->get(AutomationActivityLogger::class),
+		$container->get(ActorContext::class),
 		$container->get(LoggerFactory::class),
 	);
 }

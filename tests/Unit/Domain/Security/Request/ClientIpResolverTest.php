@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Security\Request;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
@@ -57,7 +58,7 @@ final class ClientIpResolverTest extends TestCase
 		$this->assertSame('203.0.113.5', $resolved);
 	}
 
-	/** @dataProvider privatePeers */
+	#[DataProvider('privatePeers')]
 	public function testTrustsProxyHeadersFromAPrivateOrLoopbackPeer(string $peer): void
 	{
 		// A reverse proxy on the same host or LAN — nginx, Apache, a container

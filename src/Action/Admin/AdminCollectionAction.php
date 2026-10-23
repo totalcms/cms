@@ -5,12 +5,14 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\SingletonCollectionResolver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * Action.
@@ -23,6 +25,8 @@ readonly class AdminCollectionAction
 		private ObjectFetcher $objectFetcher,
 		private RedirectRenderer $redirectRenderer,
 		private SingletonCollectionResolver $singletonResolver,
+		private Config $config,
+		private RegistrationCollections $registrationCollections,
 	) {
 	}
 
@@ -53,9 +57,7 @@ readonly class AdminCollectionAction
 		// Validate collection exists (skip for index, new, and special routes)
 		$collection = $args['collection'] ?? '';
 		if ($collection !== '' && $collection !== 'new' && !$this->collectionFetcher->collectionExists($collection)) {
-			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
-				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
-			]);
+			return $this->notFound($request, $response);
 		}
 
 		// Validate object exists (skip for add/edit keywords)
@@ -64,9 +66,7 @@ readonly class AdminCollectionAction
 			&& !in_array($id, ['', 'add', 'edit'], true)
 			&& !str_starts_with($id, '-')
 			&& !$this->objectFetcher->existsObject($collection, $id)) {
-			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
-				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
-			]);
+			return $this->notFound($request, $response);
 		}
 
 		// Singleton collections: clicking the collection (list route, no object
@@ -104,23 +104,46 @@ readonly class AdminCollectionAction
 				'id'         => $args['id'] ?? '',
 			],
 			'singleton' => $collectionData instanceof CollectionData && $collectionData->singleton,
+			// The "Impersonate User" action: the default auth collection and any collection that may register.
+			// Reuses the record fetched above rather than fetching it again.
+			'canImpersonateUsers' => $collectionData instanceof CollectionData
+				&& ($collection === (string)$this->config->auth['collection']
+					|| $this->registrationCollections->isEnabledFor($collectionData)),
 		];
 
-		// Handle POST request for object duplication
-		if ($request->getMethod() === 'POST' && $id === 'add') {
-			$postData = (array)$request->getParsedBody();
-
-			// Check if this is a duplication request (contains 'duplicate' with object ID)
-			if (isset($postData['duplicate']) && is_string($postData['duplicate'])) {
-				$duplicateId = $postData['duplicate'];
-
-				// Fetch the object to duplicate and convert to array
-				// ObjectForm will handle filtering file properties
-				$objectToDuplicate             = $this->objectFetcher->fetchObject($collection, $duplicateId);
-				$templateData['duplicateData'] = $objectToDuplicate->toArray();
-			}
+		$duplicate = $this->duplicateSource($request, $collection, $id);
+		if ($duplicate !== null) {
+			$templateData['duplicateData'] = $duplicate;
 		}
 
 		return $this->twigRenderer->template($response, 'admin/collection.twig', $templateData);
+	}
+
+	private function notFound(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+			'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+		]);
+	}
+
+	/**
+	 * The object to pre-fill the add form with: a POST to .../add carrying a
+	 * `duplicate` field names the object to copy. ObjectForm filters the file
+	 * properties out of the copy.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function duplicateSource(ServerRequestInterface $request, string $collection, string $id): ?array
+	{
+		if ($request->getMethod() !== 'POST' || $id !== 'add') {
+			return null;
+		}
+
+		$postData = (array)$request->getParsedBody();
+		if (!isset($postData['duplicate']) || !is_string($postData['duplicate'])) {
+			return null;
+		}
+
+		return $this->objectFetcher->fetchObject($collection, $postData['duplicate'])->toArray();
 	}
 }

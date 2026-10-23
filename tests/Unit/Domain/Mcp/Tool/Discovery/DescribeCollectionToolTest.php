@@ -7,6 +7,9 @@ namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -37,6 +40,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$personaSchemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -45,7 +49,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
 			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
 		);
-		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver);
+		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver, mcpGuard($this), new ActorContext());
 
 		$this->tool = new DescribeCollectionTool(
 			$this->resolver,
@@ -145,7 +149,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => 'Blog posts', 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => 'Blog posts', 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([
 			['name' => 'title',   'type' => 'text',       'description' => 'Post title',  'indexed' => true,  'filterable' => true,  'sortable' => false],
@@ -183,7 +187,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($this->collection('locked'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'admin', 'description' => null, 'resource' => true,
+			'access' => 'admin', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([]);
 
@@ -202,12 +206,89 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($collection);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([]);
 
 		$result = $this->tool->handler(collection: 'fresh');
 
 		$this->assertSame(0, $result['total_objects']);
+	}
+
+	// ─── Ownership hint ─────────────────────────────────────────────────────
+
+	/**
+	 * describe_collection for member `member-1` granted read on `portfolio`,
+	 * owned through `owner`, exposed at $access.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function describeOwnedAsMember(string $access): array
+	{
+		$portfolio      = $this->collection('portfolio');
+		$portfolio->mcp = ['access' => $access];
+		$this->collections->method('fetchCollection')->willReturn($portfolio);
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('forCollection')->willReturn(['access' => $access, 'owned' => true, 'description' => null, 'resource' => true]);
+		$this->resolver->method('describeProperties')->willReturn([]);
+
+		$personaResolver = $this->createStub(McpSchemaResolver::class);
+		$personaResolver->method('forCollection')->willReturn(['access' => $access, 'owned' => true, 'description' => null, 'resource' => true, 'titleProperty' => '']);
+		$personaResolver->method('isAccessibleTo')->willReturn(true);
+
+		$authority = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+			'id'          => 'members',
+			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['portfolio']]],
+		])]);
+		$persona = new PersonaContext($this->collections, $personaResolver, mcpGuard($this, ['portfolio' => 'owner']), memberActors($authority));
+		$persona->set(McpPersona::AUTHENTICATED);
+		$persona->setAuthority($authority);
+
+		return (new DescribeCollectionTool($this->resolver, $persona))->handler(collection: 'portfolio');
+	}
+
+	public function testTellsAMemberTheySeeTheirOwnPlusPublishedOnAPublicOwnedCollection(): void
+	{
+		$result = $this->describeOwnedAsMember('public');
+
+		$this->assertStringContainsString("everyone else's published ones", (string)$result['ownership']);
+		$this->assertStringContainsString('edit only your own', (string)$result['ownership']);
+		$this->assertStringContainsString('"owner"', (string)$result['ownership']);
+	}
+
+	public function testTellsAMemberTheySeeOnlyTheirOwnOnAPrivateOwnedCollection(): void
+	{
+		$result = $this->describeOwnedAsMember('authenticated');
+
+		$this->assertStringContainsString('You see and edit only your own objects.', (string)$result['ownership']);
+	}
+
+	public function testOwnershipIsNullForAnAdmin(): void
+	{
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true]);
+		$this->resolver->method('describeProperties')->willReturn([]);
+
+		$this->assertNull($this->tool->handler(collection: 'blog')['ownership']);
+	}
+
+	public function testAMediaPropertySaysHowToEditItsMetadata(): void
+	{
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('team'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true]);
+		$this->resolver->method('describeProperties')->willReturn([
+			['name' => 'photo', 'type' => 'image', 'description' => 'Headshot', 'indexed' => false, 'filterable' => false, 'sortable' => false],
+			['name' => 'name', 'type' => 'text', 'description' => 'Name', 'indexed' => true, 'filterable' => true, 'sortable' => true],
+		]);
+
+		$properties = $this->tool->handler(collection: 'team')['properties'];
+
+		$this->assertStringStartsWith('Headshot Files cannot be uploaded over MCP', $properties[0]['description']);
+		$this->assertStringContainsString('alt, link, tags', $properties[0]['description']);
+		$this->assertSame('Name', $properties[1]['description']);
 	}
 }

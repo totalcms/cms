@@ -9,10 +9,13 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
+use TotalCMS\Domain\Locale\CountryNames;
 use TotalCMS\Domain\Locale\LocaleRegistry;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 
 /**
@@ -113,19 +116,10 @@ final readonly class FormOptionSources
 		return $options;
 	}
 
-	private function schemaIsOrInherits(string $schemaId, string $target): bool
+	/** Whether a schema is `$target` or names it in `inheritFrom`. False for a schema that cannot be read. */
+	public function schemaIsOrInherits(string $schemaId, string $target): bool
 	{
-		if ($schemaId === $target) {
-			return true;
-		}
-
-		try {
-			$schema = $this->services->schemaFetcher->fetchRawSchema($schemaId);
-		} catch (\Throwable) {
-			return false;
-		}
-
-		return in_array($target, $schema->inheritFrom, true);
+		return $this->services->schemaFetcher->isOrInherits($schemaId, $target);
 	}
 
 	/**
@@ -258,23 +252,50 @@ final readonly class FormOptionSources
 	}
 
 	/**
+	 * The property keys of a collection's (or a named schema's) schema.
+	 *
+	 * `$types` narrows the list to properties whose normalised JSON-Schema type
+	 * is one of them; a property with no type counts as `string`. An empty
+	 * `$types` returns every key. `$ownerOnly` keeps only properties that can
+	 * hold an owner (OwnerPropertyKind): string properties and lists of
+	 * strings, never a gallery or another list of objects.
+	 *
+	 * @param array<string> $types
+	 *
 	 * @return array<string>
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = '', string $schema = ''): array
+	public function schemaPropertyKeys(string $collection = '', string $schema = '', array $types = [], bool $ownerOnly = false): array
 	{
 		try {
 			if ($collection !== '') {
-				return array_keys($this->services->schemaFetcher->fetchSchemaForCollection($collection)->properties);
-			}
-
-			if ($schema !== '') {
-				return array_keys($this->services->schemaFetcher->fetchSchema($schema)->properties);
+				$properties = $this->services->schemaFetcher->fetchSchemaForCollection($collection)->properties;
+			} elseif ($schema !== '') {
+				$properties = $this->services->schemaFetcher->fetchSchema($schema)->properties;
+			} else {
+				return [];
 			}
 		} catch (\Throwable) {
 			return [];
 		}
 
-		return [];
+		$keys = [];
+		foreach ($properties as $key => $definition) {
+			if ($ownerOnly) {
+				if (is_array($definition) && OwnerPropertyKind::of($definition) !== null) {
+					$keys[] = (string)$key;
+				}
+
+				continue;
+			}
+
+			if ($types === [] || in_array(PropertyDefinition::fromArray(is_array($definition) ? $definition : [])->effectiveJsonType() ?? 'string', $types, true)) {
+				$keys[] = (string)$key;
+			}
+		}
+
+		return $keys;
 	}
 
 	/**
@@ -351,6 +372,17 @@ final readonly class FormOptionSources
 	public function localeList(): array
 	{
 		return LocaleRegistry::options();
+	}
+
+	/**
+	 * Every country, ISO 3166-1 alpha-2 code as the value and its name in the
+	 * site's locale as the label — feeds `propertyOptions: "countries"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function countryList(): array
+	{
+		return CountryNames::options($this->services->config->locale !== '' ? $this->services->config->locale : null);
 	}
 
 	/**

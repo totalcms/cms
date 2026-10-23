@@ -35,7 +35,7 @@ final class ExtensionEnableReviewer
 	/**
 	 * @param array<string,bool> $capabilities What the extension registers, as detected
 	 *
-	 * @return array{capabilities: array<string,bool>, findings: list<mixed>, reviewNote: string, risky: array<string,string>, hasFlags: bool, skill: array{target: string, contents: string, files: list<string>}|null}
+	 * @return array{capabilities: array<string,bool>, findings: list<mixed>, reviewNote: string, risky: array<string,string>, hasFlags: bool, needsReview: bool, skill: array{target: string, contents: string, files: list<string>}|null}
 	 */
 	public function review(string $extensionId, ExtensionManifest $manifest, array $capabilities, ?string $extPath): array
 	{
@@ -54,13 +54,20 @@ final class ExtensionEnableReviewer
 			}
 		}
 
+		$skill = $this->skillReview($extensionId, $extPath);
+
+		// hasFlags: something to warn about (risky capability, scan finding).
+		// needsReview: anything the operator should read before enabling —
+		// the flags plus the developer's note and an agent skill. The enable
+		// button and a fresh install stop at the review page only for this.
 		return [
 			'capabilities' => $capabilities,
 			'findings'     => $findings,
 			'reviewNote'   => $manifest->reviewNote,
 			'risky'        => $risky,
 			'hasFlags'     => $risky !== [] || $findings !== [],
-			'skill'        => $this->skillReview($extensionId, $extPath),
+			'needsReview'  => $risky !== [] || $findings !== [] || $manifest->reviewNote !== '' || $skill !== null,
+			'skill'        => $skill,
 		];
 	}
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Security\Request;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Security\Request\CidrMatcher;
 use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
@@ -23,7 +24,7 @@ final class CidrMatcherTest extends TestCase
 		$this->matcher = new CidrMatcher();
 	}
 
-	/** @dataProvider ipv4Boundaries */
+	#[DataProvider('ipv4Boundaries')]
 	public function testMatchesIpv4RangesInclusiveOfTheirEdges(string $ip, bool $expected): void
 	{
 		$this->assertSame($expected, $this->matcher->matches($ip, ['173.245.48.0/20']));

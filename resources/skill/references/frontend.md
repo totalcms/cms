@@ -24,22 +24,27 @@ npm install
 npm run build        # compiles into public/assets/ (git-ignored build output)
 ```
 
-During development, `npm run dev` runs Vite's watcher.
+During development, `npm run watch` rebuilds on every change. `npm run dev`
+starts Vite's dev server for hot reload instead; see `site-builder/frontend.md`
+for wiring it into a layout.
 
 ## Reference compiled assets in templates
 
-Use the builder helpers so URLs get mtime cache-busting:
+Use the builder helpers. With a build, they look the source path up in
+Vite's `manifest.json` and emit the hashed file; without one, they add an
+mtime cache-buster to the plain file:
 
 ```twig
 {{ cms.builder.css('css/style.css') }}
-{{ cms.builder.js('js/app.js') }}
+{{ cms.builder.js('js/app.js', {module: true}) }}
 {{ cms.builder.asset('img/logo.svg') }}
 ```
 
-Paths are relative to the compiled output in `public/assets/`.
+Name the source path (`css/style.css`), not the hashed output. Vite builds ES
+modules, so the script tag needs `{module: true}`.
 
 ## Notes
 
 - `frontend/` is present only if installed; absence is normal for template-only sites.
 - Build output in `public/assets/` is git-ignored — commit `frontend/` source, not output.
-- For deeper config see `vendor/totalcms/cms/resources/docs/site-builder/`.
+- For deeper config see `vendor/totalcms/cms/resources/docs/site-builder/frontend.md`.

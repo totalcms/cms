@@ -64,6 +64,20 @@ describe('JsonLdBuilder', function (): void {
 		expect($article)->not->toBeNull()->and($article['headline'])->toBe('Essay')->and($article['datePublished'])->toBe('2026-01-01T00:00:00+00:00');
 	});
 
+	test('an author string becomes a Person, an array is the author node, a reference stays a reference', function () use ($build): void {
+		$article = fn (array $object): array => array_values(array_filter($build(seoCtx(['object' => $object])), fn (array $n): bool => $n['@type'] === 'Article'))[0];
+		$base    = ['id' => 'hello', 'title' => 'Hello'];
+
+		expect($article($base + ['author' => ' Ada '])['author'])->toBe(['@type' => 'Person', 'name' => 'Ada']);
+		expect($article($base + ['author' => ['@id' => 'https://example.com/about#founder']])['author'])->toBe(['@id' => 'https://example.com/about#founder']);
+		expect($article($base + ['author' => ['name' => 'Ada', 'url' => 'https://ada.test']])['author'])->toBe(['@type' => 'Person', 'name' => 'Ada', 'url' => 'https://ada.test']);
+		expect($article($base + ['author' => ['@type' => 'Organization', 'name' => 'Bistro Ltd']])['author'])->toBe(['@type' => 'Organization', 'name' => 'Bistro Ltd']);
+		expect($article($base))->not->toHaveKey('author');
+		expect($article($base + ['author' => '']))->not->toHaveKey('author');
+		expect($article($base + ['author' => []]))->not->toHaveKey('author');
+		expect($article($base + ['author' => ['Ada', 'Grace']]))->not->toHaveKey('author');
+	});
+
 	test('jsonldType website suppresses the Article, and the script cannot break out', function () use ($build): void {
 		$ctx = seoCtx(['fields' => SeoFields::fromArray(['jsonldType' => 'website', 'title' => '</script><script>alert(1)</script>'])]);
 		expect(array_column($build($ctx), '@type'))->not->toContain('Article');
@@ -87,16 +101,48 @@ describe('JsonLdBuilder', function (): void {
 		expect($graph[3]['@id'])->toBe('https://example.com/blog/hello#faq');
 	});
 
-	test('an extra node reusing a provider @id is dropped', function (): void {
+	test('an extra node reusing a provider @id extends that node and cannot replace it', function (): void {
 		$ctx     = seoCtx();
 		$builder = new JsonLdBuilder(new WebPageProvider());
 		$graph   = $builder->graph($ctx, (new MetaBuilder())->build($ctx), [
-			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#webpage'],
+			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#webpage', 'name' => 'Mine', 'founder' => ['@id' => 'https://example.com/about#founder']],
 			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#faq'],
 		]);
 
 		expect(array_column($graph, '@type'))->toBe(['WebPage', 'FAQPage']);
 		expect(array_column($graph, '@id'))->toBe(['https://example.com/blog/hello#webpage', 'https://example.com/blog/hello#faq']);
+		// The provider's own values stand; only the property it did not set lands.
+		expect($graph[0]['name'])->toBe('Hello <World>')
+			->and($graph[0]['founder'])->toBe(['@id' => 'https://example.com/about#founder']);
+	});
+
+	test('the headline and breadcrumb leaf are the record title, not the authored page title', function () use ($build): void {
+		$graph  = $build(seoCtx(['fields' => SeoFields::fromArray(['title' => 'Hello — Bistro'])]));
+		$byType = array_column($graph, null, '@type');
+
+		expect($byType['WebPage']['name'])->toBe('Hello — Bistro')
+			->and($byType['Article']['headline'])->toBe('Hello <World>')
+			->and(end($byType['BreadcrumbList']['itemListElement'])['name'])->toBe('Hello <World>');
+	});
+
+	test('a record without a title falls back to the page title for the headline', function () use ($build): void {
+		$graph  = $build(seoCtx(['object' => ['id' => 'hello', 'summary' => 's'], 'fields' => SeoFields::fromArray(['title' => 'Authored'])]));
+		$byType = array_column($graph, null, '@type');
+
+		expect($byType['Article']['headline'])->toBe('Authored')
+			->and(end($byType['BreadcrumbList']['itemListElement'])['name'])->toBe('Authored');
+	});
+
+	test('the WebPage and the Article agree on datePublished: the record date, else created', function () use ($build): void {
+		$object = ['id' => 'hello', 'title' => 'Hello', 'created' => '2026-10-05T07:14:00+00:00', 'date' => '2026-10-01T00:00:00+00:00'];
+		$byType = array_column($build(seoCtx(['object' => $object])), null, '@type');
+		expect($byType['WebPage']['datePublished'])->toBe('2026-10-01T00:00:00+00:00')
+			->and($byType['Article']['datePublished'])->toBe('2026-10-01T00:00:00+00:00');
+
+		unset($object['date']);
+		$byType = array_column($build(seoCtx(['object' => $object])), null, '@type');
+		expect($byType['WebPage']['datePublished'])->toBe('2026-10-05T07:14:00+00:00')
+			->and($byType['Article']['datePublished'])->toBe('2026-10-05T07:14:00+00:00');
 	});
 
 	test('a breakout attempt inside an extra node is encoded, not interpolated', function (): void {

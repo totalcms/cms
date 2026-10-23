@@ -60,6 +60,8 @@ Access groups are defined in `tcms-data/.system/access-groups.json`:
 }
 ```
 
+Manage groups in **Utilities → Access Groups**, or from the command line with `tcms access-group:list`, `access-group:get`, `access-group:set` and `access-group:patch` — see [CLI](docs/extensions/cli#access-group-commands). Don't edit the file by hand: a misspelled section or operation saves a group that quietly grants nothing, which the CLI refuses.
+
 ## CRUD Operations
 
 Total CMS uses CRUD (Create, Read, Update, Delete) operations for fine-grained permission control:
@@ -112,6 +114,10 @@ Controls access to objects within collections:
 - **`delete`** - Delete objects
 - **`all`** - If `true`, access all collections; if `false`, only those in `allowed`
 - **`allowed`** - Array of specific collection IDs
+
+**Owned collections.** A grant on a collection covers every object in it — unless the collection names an [`ownerProperty`](docs/collections/settings#ownerproperty). Then anyone who is not a super admin is limited to the objects they created: the same `read`/`update`/`delete` grant, applied to their own objects only, with the owner stamped on create. Access groups decide *which collections*; the owner property decides *which objects*. Use it for member-submitted content, guest authors, and anything where "yours" matters. The owner property can be a list of user ids for shared ownership, and [`ownerCollection`](docs/collections/settings#ownercollection) limits owners to one auth collection.
+
+A refusal is the same `403` "Access denied" whichever check made it; the access log records which, as `reason: group` (the group did not grant the operation), `reason: owner` (the object belongs to someone else) or `reason: protected` (a non-admin write to a [protected](docs/schemas/validation#protected) property through a property route, or a clone or collection import refused on a collection with protected properties, or a clone whose body names another target collection).
 
 ### Schemas
 

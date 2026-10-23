@@ -349,6 +349,14 @@ class ExtensionManager
 			}
 		}
 
+		// What the operator is consenting to: today's risky-code findings become
+		// the baseline an update is measured against, so a later version is
+		// disabled only for code beyond this (ExtensionEnrollment, ExtensionInstaller).
+		$path                    = $this->discovery->getExtensionPath($extensionId);
+		$state->approvedFindings = $path !== null
+			? DangerousCodeScanner::fingerprints((new DangerousCodeScanner())->scan($path))
+			: [];
+
 		$this->stateRepository->saveState($extensionId, $state);
 		$this->dispatchEvent(CoreEvent::EXTENSION_ENABLED, new ExtensionEventPayload($extensionId));
 	}
@@ -364,8 +372,10 @@ class ExtensionManager
 	 * Pre-enable review data: the developer's review note, what the extension
 	 * registers (capabilities), which of those are risky (with plain-language
 	 * labels), and risky source patterns found by a one-time scan. Informational —
-	 * not enforcement. `hasFlags` tells the review page whether there's anything
-	 * worth showing at all.
+	 * not enforcement. `hasFlags` says whether there is anything to warn about;
+	 * `needsReview` whether there is anything to read at all (flags, a review
+	 * note, an agent skill) — the enable flow stops at the review page only
+	 * when it is true.
 	 *
 	 * @return array{
 	 *   capabilities: array<string,bool>,
@@ -373,6 +383,7 @@ class ExtensionManager
 	 *   reviewNote: string,
 	 *   risky: array<string,string>,
 	 *   hasFlags: bool,
+	 *   needsReview: bool,
 	 *   skill: array{target:string,contents:string,files:list<string>}|null
 	 * }
 	 */
@@ -380,7 +391,7 @@ class ExtensionManager
 	{
 		$manifest = $this->discoveredManifests[$extensionId] ?? null;
 		if ($manifest === null) {
-			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false, 'skill' => null];
+			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false, 'needsReview' => false, 'skill' => null];
 		}
 
 		try {
@@ -408,6 +419,11 @@ class ExtensionManager
 		if ($state instanceof ExtensionState) {
 			$state->enabled = false;
 			$state->error   = null;
+			// An operator turning it off has seen it and decided: the
+			// "disabled after an update" and quarantine warnings have done
+			// their job. Re-enabling still resets the crash counter.
+			$state->clearUpdateDisabled();
+			$state->clearQuarantine();
 			$this->stateRepository->saveState($extensionId, $state);
 			$this->dispatchEvent(CoreEvent::EXTENSION_DISABLED, new ExtensionEventPayload($extensionId));
 		}
@@ -780,7 +796,7 @@ class ExtensionManager
 	public function getAllTwigGlobals(): array
 	{
 		$globals = [];
-		foreach ($this->permittedContexts('twig:functions') as $context) {
+		foreach ($this->permittedContexts('twig:globals') as $context) {
 			$globals = array_merge($globals, $context->getRegisteredTwigGlobals());
 		}
 
@@ -1031,11 +1047,7 @@ class ExtensionManager
 
 				$relPath  = ltrim($asset['path'], '/');
 				$url      = '/ext/' . $extPath . '/assets/' . $relPath;
-				$version  = $asset['version'];
-				if ($version === null) {
-					$mtime   = @filemtime($assetDir . '/' . $relPath);
-					$version = $mtime !== false ? (string)$mtime : null;
-				}
+				$version  = $asset['version'] ?? $this->fileVersion($assetDir . '/' . $relPath);
 				if ($version !== null && $version !== '') {
 					$url .= '?v=' . $version;
 				}
@@ -1056,6 +1068,12 @@ class ExtensionManager
 		}
 
 		return $records;
+	}
+
+	/** An asset's cache-busting version: its mtime, or null when the file is missing. */
+	private function fileVersion(string $file): ?string
+	{
+		return is_file($file) ? (string)filemtime($file) : null;
 	}
 
 	/** @return array<string,list<array{callable, int}>> */
@@ -1187,6 +1205,14 @@ class ExtensionManager
 	public function getDiscoveredManifests(): array
 	{
 		return $this->discoveredManifests;
+	}
+
+	/**
+	 * The discovered manifest for one extension, enabled or not.
+	 */
+	public function getManifest(string $extensionId): ?ExtensionManifest
+	{
+		return $this->discoveredManifests[$extensionId] ?? null;
 	}
 
 	/**
@@ -1435,20 +1461,31 @@ class ExtensionManager
 			return;
 		}
 
-		// DIAGNOSTIC: the detected capability set changed, so permissions were
-		// reconciled. If this fires after a Total-CMS-only update (extension
-		// untouched), Total CMS changed what capabilities it detects — added
-		// caps land OFF, removed caps are pruned, which presents as the
-		// extension's features turning off even though it stayed enabled.
-		$addedOff = array_values(array_diff(array_keys($state->permissions), array_keys($original)));
-		$pruned   = array_values(array_diff(array_keys($original), array_keys($state->permissions)));
-		$this->logger->info(sprintf(
-			"Extension '%s' capabilities reconciled: added-off [%s]; pruned [%s].",
-			$id,
-			implode(', ', $addedOff),
-			implode(', ', $pruned),
-		));
-
 		$this->stateRepository->saveState($id, $state);
+
+		// The detected capability set changed, so permissions were reconciled.
+		// Added capabilities land OFF, so whatever the extension registered
+		// under them is dropped until an operator turns them on: that is the
+		// re-consent rule for an updated extension, and it also catches an
+		// extension that gained a registration between enables (a developer
+		// iterating on it). Say so at warning level, with the way out —
+		// otherwise the new Twig function or command is silently absent and
+		// the admin screen gives no hint why. If this fires after a
+		// Total-CMS-only update (extension untouched), Total CMS changed what
+		// capabilities it detects. Pruned capabilities are routine.
+		$added    = array_diff_key($state->permissions, $original);
+		$addedOff = array_keys(array_filter($added, static fn (bool $on): bool => !$on));
+		$pruned   = array_keys(array_diff_key($original, $state->permissions));
+		if ($addedOff !== []) {
+			$this->logger->warning(sprintf(
+				"Extension '%s' now registers capabilities it was not enabled with: [%s]. They are OFF, and what the extension registers under them is not loaded, until an operator turns them on under Admin > Extensions or runs `tcms extension:enable %s` again.",
+				$id,
+				implode(', ', $addedOff),
+				$id,
+			));
+		}
+		if ($pruned !== []) {
+			$this->logger->info(sprintf("Extension '%s' no longer registers capabilities [%s]; their permissions were pruned.", $id, implode(', ', $pruned)));
+		}
 	}
 }

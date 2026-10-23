@@ -64,7 +64,7 @@ Runs the handler when a core content event fires.
 | `event` | The event name, e.g. `object.created`, `object.updated`, `object.deleted`, `schema.saved`, `user.login`. |
 | `collection` | Optional. Restrict the trigger to one collection; leave blank to match every collection. |
 
-The event payload (`collection`, `id`, …) is available to the handler as `$ctx->event`. Event runs are queued and processed on the next `automations:process` tick, so a slow handler never blocks the write that triggered it.
+The event payload (`collection`, `id`, …, plus `actor`, who caused the event) is available to the handler as `$ctx->event`. Event runs are queued and processed on the next `automations:process` tick, so a slow handler never blocks the write that triggered it.
 
 > During a bulk import, `object.created` / `object.updated` are suppressed in favour of `import.created` / `import.updated`. Subscribe to the `import.*` events if you specifically want to react to import-time writes.
 

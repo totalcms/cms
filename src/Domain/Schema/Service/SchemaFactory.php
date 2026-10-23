@@ -2,23 +2,14 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 /**
  * Service.
  */
 readonly class SchemaFactory
 {
-	private Serializer $serializer;
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
-
 	/**
 	 * create a schema object.
 	 *
@@ -30,7 +21,7 @@ readonly class SchemaFactory
 	{
 		try {
 			/** @var SchemaData $schema */
-			$schema = $this->serializer->denormalize($schemaData, SchemaData::class);
+			$schema = SerializerFactory::json()->denormalize($schemaData, SchemaData::class);
 		} catch (\Throwable $e) {
 			// A shape the serializer cannot map (wrong-typed field, etc.) is bad
 			// input, not a server fault — importers turn this into a 400.

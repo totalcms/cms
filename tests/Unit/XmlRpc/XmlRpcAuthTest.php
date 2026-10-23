@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubApiKeyFetcher;
 use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubUserValidationService;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
@@ -44,7 +46,7 @@ function xmlRpcTestConfig(): Config
  * properties are individually readonly, the class isn't), so its double
  * stays anonymous and unmodified.
  */
-function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null): XmlRpcAuth
+function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null, ?ActorContext $actors = null): XmlRpcAuth
 {
 	$editions = new class($proEdition) extends EditionFeatureService {
 		public function __construct(private bool $allowed)
@@ -62,6 +64,7 @@ function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $use
 		$editions,
 		new XmlRpcAuthStubUserValidationService($user),
 		xmlRpcTestConfig(),
+		$actors ?? new ActorContext(),
 	);
 }
 
@@ -82,6 +85,29 @@ it('faults with 401 naming Pro when the edition is too low', function (): void {
 		expect($fault->getCode())->toBe(401);
 		expect($fault->getMessage())->toContain('Pro');
 	}
+});
+
+it('makes the key the actor for the writes the call makes', function (): void {
+	$actors = new ActorContext();
+	$auth   = makeXmlRpcAuth(validatedKey: xmlRpcApiKey(), proEdition: true, actors: $actors);
+
+	$auth->authenticate(['blog', 'joe', 'tcms_testkey']);
+
+	expect($actors->current()->kind)->toBe(ActorKind::ApiKey)
+		->and($actors->current()->reaches('blog', 'create'))->toBeTrue()
+		->and($actors->current()->reaches('auth', 'update'))->toBeFalse();
+});
+
+it('leaves the actor anonymous when the key is refused', function (): void {
+	$actors = new ActorContext();
+	$auth   = makeXmlRpcAuth(validatedKey: null, proEdition: true, actors: $actors);
+
+	try {
+		$auth->authenticate(['blog', 'joe', 'tcms_wrong']);
+	} catch (XmlRpcFault) {
+	}
+
+	expect($actors->current()->kind)->toBe(ActorKind::Anonymous);
 });
 
 it('resolves the author name from the username', function (): void {

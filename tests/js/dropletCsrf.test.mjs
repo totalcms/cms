@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 //-----------------------------------------------
 // Dropzone builds its own XHR, so it never picks up the CSRF header that

@@ -222,6 +222,20 @@ Turn it **off** if you would rather create a static client in the admin for each
 
 ---
 
+## Login collection
+
+**Admin → Settings → OAuth Server → Login Collection** (`oauth.loginCollection`, default: the default user collection) names the auth collection whose members sign in to connect an AI client or authorize an integration. Set it when your site's members live in their own collection, such as `users`, rather than the default `auth`.
+
+With it set:
+
+- **Signing in.** A signed-out caller at `/oauth/authorize` is sent to that collection's login page (`/admin/login/users`), and back to the consent screen once signed in.
+- **Staff can sign in there too.** During an OAuth sign-in only, a login on that page that matches no member is tried against the default user collection, so staff connect an AI client from the same page. Outside an OAuth flow the page behaves as any other collection's login. A super admin always signs in as themselves, as on every login page.
+- **Other collections cannot authorize.** A session from any other auth collection is treated as signed out at `/oauth/authorize` and on approval, and the refusal is logged as `login_collection.rejected`.
+
+The token records the collection its user signed in from (`users:jane`), so a member's token is scoped to that member: on an [owned collection](docs/collections/settings#ownerproperty) they see and edit their own objects. Tokens already issued are unaffected by a change to this setting.
+
+---
+
 ## Running public-only MCP
 
 **Admin → Settings → OAuth Server → Enable OAuth Server** (default: on) is the master switch for the whole authorization server. Turn it **off** to run a public-only MCP site.
@@ -319,6 +333,7 @@ Every OAuth lifecycle event is appended to `tcms-data/.system/logs/mcp.log` unde
 | `token.refreshed` | INFO | An access token is renewed via refresh token |
 | `token.revoked` | INFO | A token is revoked via the admin or `POST /oauth/revoke` |
 | `scope.rejected` | INFO | A request is rejected because the token lacks the required scope |
+| `login_collection.rejected` | **WARNING** | A session from an auth collection other than the [login collection](#login-collection) tried to authorize a client |
 | `security.refresh_replay` | **WARNING** | A previously-used refresh token is presented — the entire grant chain is revoked immediately |
 | `security.rate_limit` | **WARNING** | The token endpoint or dynamic-registration rate limit is hit |
 
@@ -365,6 +380,7 @@ Settings live in **Admin → Settings → OAuth Server**.
 | Key | Default | Effect |
 |---|---|---|
 | `oauth.enabled` | `true` | Master switch. Off = every OAuth endpoint and discovery document returns 404 — see [Running public-only MCP](#running-public-only-mcp) |
+| `oauth.loginCollection` | `''` | The auth collection whose members authorize clients. `''` = the default user collection — see [Login collection](#login-collection) |
 | `oauth.dynamicRegistration` | `true` | RFC 7591 self-registration at `/oauth/register`. `false` = static clients only |
 | `oauth.accessTokenTtl` | `PT1H` | PHP DateInterval — access token lifetime |
 | `oauth.refreshTokenTtl` | `P30D` | PHP DateInterval — refresh token lifetime |

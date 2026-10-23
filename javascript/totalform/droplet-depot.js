@@ -1,6 +1,5 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
-import Droplet from "./droplet";
 import { csrfHeaders } from "../csrf";
 globalThis.Dropzone = Dropzone;
 

@@ -80,4 +80,80 @@ final class ImagickSupportTest extends TestCase
 		$first = ImagickSupport::formats();
 		$this->assertSame($first, ImagickSupport::formats());
 	}
+
+	/**
+	 * ImageMagick allocates outside PHP's memory manager, so memory_limit never
+	 * bounds it. Measured on production: a 24 MP resize peaked at 268 MB per
+	 * process unlimited, 86 MB with these caps.
+	 */
+	public function testProbingCapsImageMagickMemory(): void
+	{
+		if (!extension_loaded('imagick')) {
+			$this->markTestSkipped('Requires imagick.');
+		}
+
+		$restore = $this->snapshotLimits();
+		try {
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 1024 * 1024 * 1024);
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MAP, 2048 * 1024 * 1024);
+
+			ImagickSupport::formats();
+
+			$this->assertSame(64 * 1024 * 1024, (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MEMORY));
+			$this->assertSame(128 * 1024 * 1024, (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MAP));
+		} finally {
+			$restore();
+		}
+	}
+
+	public function testAStricterHostLimitIsNeverRaised(): void
+	{
+		if (!extension_loaded('imagick')) {
+			$this->markTestSkipped('Requires imagick.');
+		}
+
+		$restore = $this->snapshotLimits();
+		try {
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 16 * 1024 * 1024);
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MAP, 32 * 1024 * 1024);
+
+			ImagickSupport::limitResources();
+
+			$this->assertSame(16 * 1024 * 1024, (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MEMORY));
+			$this->assertSame(32 * 1024 * 1024, (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MAP));
+		} finally {
+			$restore();
+		}
+	}
+
+	public function testLimitsApplyOncePerRequest(): void
+	{
+		if (!extension_loaded('imagick')) {
+			$this->markTestSkipped('Requires imagick.');
+		}
+
+		$restore = $this->snapshotLimits();
+		try {
+			ImagickSupport::limitResources();
+			// An operator raising it mid-request is not fought on every call.
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 512 * 1024 * 1024);
+			ImagickSupport::limitResources();
+
+			$this->assertSame(512 * 1024 * 1024, (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MEMORY));
+		} finally {
+			$restore();
+		}
+	}
+
+	/** ImageMagick limits are process-wide; put them back for later tests. */
+	private function snapshotLimits(): \Closure
+	{
+		$memory = (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MEMORY);
+		$map    = (int)\Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MAP);
+
+		return static function () use ($memory, $map): void {
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, $memory);
+			\Imagick::setResourceLimit(\Imagick::RESOURCETYPE_MAP, $map);
+		};
+	}
 }

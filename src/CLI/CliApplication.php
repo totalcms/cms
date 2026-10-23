@@ -9,6 +9,8 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
@@ -46,6 +48,10 @@ class CliApplication
 		fwrite($handle, $message);
 	}
 
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression") the CLI entry point: a failed
+	 *                                            bootstrap has no caller to return to
+	 */
 	public static function run(): void
 	{
 		// Auto-detect project root for Composer installs
@@ -66,6 +72,10 @@ class CliApplication
 			exit(1);
 		}
 		$totalcms->disableCache();
+
+		// Commands are the operator's own hand: every write they make (and
+		// every job or automation they drain) runs as the system actor.
+		$totalcms->container()->get(ActorContext::class)->set(Actor::system());
 
 		$app = new Application('Total CMS', Version::number());
 
@@ -115,6 +125,13 @@ class CliApplication
 		$app->addCommand(new Command\CollectionExportCommand($totalcms));
 		$app->addCommand(new Command\CollectionImportCommand($totalcms));
 		$app->addCommand(new Command\CollectionConvertCommand($totalcms));
+		$app->addCommand(new Command\CollectionUpdateCommand($totalcms));
+
+		// Access group commands
+		$app->addCommand(new Command\AccessGroup\AccessGroupListCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupGetCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupSetCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupPatchCommand($totalcms));
 
 		// Object commands
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
@@ -157,6 +174,8 @@ class CliApplication
 		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionDisableCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionRemoveCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionPackageCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionInstallCommand($totalcms));
 
 		// Extension-provided commands (with collision protection)
 		try {

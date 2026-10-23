@@ -40,9 +40,11 @@ In **Development**, the error is logged loudly so the extension's author can see
 
 ### Auto-quarantine
 
-If an extension crashes **repeatedly** on a Production site (by default, 5 times within 5 minutes), Total CMS disables it for you — the site heals itself rather than serving broken pages. You'll see a banner on the Extensions page:
+If an extension crashes **repeatedly** on a Production site (by default, 5 times within 5 minutes), Total CMS disables it for you — the site heals itself rather than serving broken pages. Every admin page shows admins a warning naming the extension and its last error, and the Extensions page shows:
 
 > **Auto-disabled for stability.** Total CMS disabled this extension after it crashed repeatedly. **[Re-enable]**
+
+The warning stays until you re-enable the extension or disable it yourself.
 
 Re-enabling clears the quarantine and gives the extension a fresh start. This only happens in Production — in Development, a crashing extension stays enabled and loud so you can debug it.
 
@@ -67,7 +69,7 @@ Set either to `0` to disable that warning. These are guidance only — nothing i
 
 ## The Pre-Enable Review
 
-Most extensions enable in a single click. But when you enable one that touches anything **sensitive** — or whose source code contains high-risk patterns — Total CMS first shows you a short review screen so you can make an informed decision.
+Most extensions enable in a single click. But when you enable one that touches anything **sensitive** — or whose source code contains high-risk patterns, whose developer left a note for you, or that ships an agent skill — Total CMS first shows you a short review screen so you can make an informed decision. A freshly uploaded extension lands on the same screen when it has any of these.
 
 You'll see the review when an extension uses any of these capabilities:
 
@@ -92,7 +94,7 @@ The review screen has up to four parts:
 3. **Source-code patterns to review** — any high-risk calls the scan found, with file and line. These aren't proof of anything malicious — many legitimate extensions use them — but they're worth a look.
 4. **What this extension tells AI agents** — the full text of the [agent skill](docs/extensions/extension-points#agent-skill) it ships, if any. While the extension is enabled that text is installed into the project's `.claude/skills/` and read by coding agents working there, so read it as instructions you would be giving the agent yourself.
 
-From there you **Enable** (apply it) or **Cancel**. An extension that uses none of the sensitive capabilities and has clean code skips the review entirely.
+From there you **Enable** (apply it) or **Cancel**. An extension with none of the four — no developer note, no sensitive capability, clean code, no agent skill — skips the review entirely.
 
 ### Turning individual features off
 
@@ -104,10 +106,14 @@ The review happens when you enable an extension. But an extension can also be **
 
 When a sideloaded extension's version changes, Total CMS runs the static source scan on the new code (again, without executing it):
 
-- **If the new code contains high-risk patterns**, the extension is **disabled** until you review it. You'll see a banner explaining why, with a **Review & re-enable** button that walks you through the review screen for the new version. The risky new code never runs until you say so.
-- **If the new code is clean**, the extension keeps working — but any **new capability** the update introduces is turned **off by default**. It appears in the extension's settings as a toggle you can opt into. The extension doesn't silently start using a new privilege you didn't grant.
+The scan is compared with what you approved. When you enable an extension, Total CMS remembers the risky patterns its review showed you, by pattern and file (`curl_exec @ src/Client.php`). An update is measured against that list, not against zero:
 
-Clean updates that don't add capabilities install with no interruption at all.
+- **If the new code adds a risky pattern you have not approved** (a new call, or a known one in a new file), the extension is **disabled** until you review it. Every admin page shows admins a warning naming the extension and the new findings, until you re-enable it or disable it yourself. Its settings page lists them too, with a **Review & re-enable** button that walks you through the review screen for the new version. Re-enabling approves the new version's findings in turn. The risky new code never runs until you say so.
+- **If it adds none**, the extension keeps working, including when it still has the patterns you approved. An HTTP client you accepted at 1.0 does not disable the extension at 1.1. Any **new capability** the update introduces is turned **off by default**. It appears in the extension's settings as a toggle you can opt into. The extension doesn't silently start using a new privilege you didn't grant.
+
+Updates that add no new risky code and no capabilities install with no interruption at all. An extension enabled before Total CMS 3.6.3 has no approved list yet; its next update takes the findings it has then as approved, rather than disabling it once more.
+
+The same check runs when you **upload** a replacement on the Extensions page or run `tcms extension:install` over an installed extension — and there it does not depend on the version number changing. A replacement that adds risky code you have not approved to an enabled extension is disabled pending review even if the developer shipped it under the same version.
 
 **Built-in (bundled) extensions are exempt** — they ship and update with Total CMS itself, so they're not re-reviewed on a core upgrade.
 
@@ -117,9 +123,10 @@ Clean updates that don't add capabilities install with no interruption at all.
 
 If you're building an extension, these features shape how operators experience it:
 
-- **Write a [`reviewNote`](docs/extensions/manifest).** If your extension uses any sensitive capability, the operator *will* see the review screen — your note is your chance to explain, in plain language, what you do and why. A good note is the difference between a confident "Enable" and a nervous one.
+- **Write a [`reviewNote`](docs/extensions/manifest).** If your extension uses any sensitive capability, the operator *will* see the review screen — your note is your chance to explain, in plain language, what you do and why. A note on its own is enough to put the review screen in front of the operator, so keep it to what they need before enabling. A good note is the difference between a confident "Enable" and a nervous one.
 - **You see exactly what they see.** When you enable your own extension while testing, you get the same review screen — so you can preview how it reads.
 - **Capabilities you add in an update default to off** for existing users. They'll find the new capability in your extension's settings and opt into it. Plan for that: don't assume a capability added in a point release is immediately active for everyone.
+- **The same applies while you develop.** Add a Twig function, a command or any other registration to an extension that is already enabled, and its capability is detected at the next boot and stored turned off — the function or command is simply absent, with no error in templates or `tcms list`. The log carries a warning naming the capability. Turn it on under **Admin → Extensions**, or run `tcms extension:enable <id>` again, which grants new capabilities on re-enable.
 - **Keep high-risk calls intentional and explainable.** If your code legitimately needs `file_get_contents('https://…')` or `base64_decode`, that's fine — it'll show on the review screen, and your `reviewNote` can put it in context. Avoid surprising patterns you can't justify.
 
 See the [Manifest Reference](docs/extensions/manifest) for the `reviewNote` field and the full capability list.

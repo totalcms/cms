@@ -5,6 +5,8 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
@@ -67,6 +69,7 @@ class TotalCMSTwigAdapter
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 		public SeoTwigAdapter $seo,
+		public BadgeTwigAdapter $badge,
 		private readonly ?\Closure $twigEngineFactory = null,
 	) {
 		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);
@@ -108,6 +111,39 @@ class TotalCMSTwigAdapter
 	public function log(string $message, string $level = 'warning', array $context = []): void
 	{
 		$this->logger->log($level, $message, $context);
+	}
+
+	/**
+	 * Stop rendering and answer the request as a 404: the site's not-found
+	 * page, at the visitor's own URL, with the 404 status a crawler or link
+	 * checker needs. For a page template that discovers it has nothing to
+	 * show — a draft reached through a collection URL, a record marked not to
+	 * render, an empty lookup. Nothing after the call is rendered.
+	 *
+	 * `cms.collection.redirectIfNotFound()` sends the visitor to the 404 page
+	 * instead; it answers 302, so it is for when the move itself is wanted.
+	 */
+	public function notFound(): never
+	{
+		throw new PageNotFoundException();
+	}
+
+	/**
+	 * Stop rendering and answer the request with a redirect to `$url`. For a
+	 * forwarding page whose target depends on data — a page record's
+	 * `redirectTo` covers the fixed ones. Nothing after the call is rendered.
+	 *
+	 * The status is one of 301, 302, 303, 307 or 308; anything else becomes
+	 * 302. A URL that is empty or holds a line break is refused, so a value
+	 * built from the request can never add a header of its own.
+	 */
+	public function redirect(string $url, int $status = 302): never
+	{
+		if ($url === '' || strpbrk($url, "\r\n") !== false) {
+			throw new \InvalidArgumentException('cms.redirect() needs a URL without line breaks.');
+		}
+
+		throw new PageRedirectException($url, in_array($status, [301, 302, 303, 307, 308], true) ? $status : 302);
 	}
 
 	/**

@@ -19,7 +19,9 @@ Add `--frontend` to also scaffold the Vite pipeline (see `frontend.md`).
 
 ## Template directories
 
-Live on the filesystem under `tcms-data/builder/`:
+Live on the filesystem under a project-root `builder/` directory when one
+exists (git-managed: it wins, and the admin's template editor is read-only),
+otherwise under `tcms-data/builder/`:
 - `layouts/` — page shells (`<html>`, head, nav, footer)
 - `pages/` — per-page templates (referenced by a page's `template` field)
 - `partials/` — reusable fragments (`{% include %}`)
@@ -51,6 +53,13 @@ Live on the filesystem under `tcms-data/builder/`:
   implicitly pretty; it dispatches through the object URL builder.
 - The `prettyUrl` flag only applies to non-templated URL prefixes.
 - `vendor/bin/tcms builder:routes` prints the full routing table and flags conflicts.
+- A page with `status: 404` is the site's not-found page: it renders in place, at the
+  visitor's URL, for any path that matches nothing. Collection URLs match drafts too, so a
+  detail template that should not serve a record calls `cms.notFound()` — same answer,
+  rendering stops. Not `cms.collection.redirectIfNotFound()`, which answers 302.
+- A forwarding URL whose target depends on data calls `cms.redirect(url, status = 302)`:
+  the router answers with the status and `Location`, nothing else renders. A fixed redirect
+  belongs on the page record (`redirectTo`).
 
 ## SEO in layouts and detail pages
 

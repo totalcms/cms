@@ -183,9 +183,17 @@
 // JSON editor container
 .totalform-json-editor-container {
 	border        : 1px solid oklch(var(--totalform-border-color));
-	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius) !important;
+	border-radius : var(--totalform-radius) !important;
 	overflow      : hidden;
 	width         : 100%;
+
+	// Square the right side only where the field icon sits against it, as
+	// text inputs do. A field rendered with icon: false keeps full corners.
+	&:has(~ .form-group-icon) {
+		border-top-right-radius    : 0 !important;
+		border-bottom-right-radius : 0 !important;
+	}
+
 	max-width     : 100%;
 	flex          : 1;
 	min-width     : 0;

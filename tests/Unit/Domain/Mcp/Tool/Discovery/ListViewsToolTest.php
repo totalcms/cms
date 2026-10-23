@@ -6,6 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -27,7 +29,7 @@ final class ListViewsToolTest extends TestCase
 		// ListViewsTool never touches canReadCollection()/canReadDrafts() —
 		// PersonaContext's Task 10b constructor deps are unused here; plain
 		// stubs satisfy the type only.
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$this->tool    = new ListViewsTool($this->lister, $this->persona);
 	}
 
@@ -61,6 +63,23 @@ final class ListViewsToolTest extends TestCase
 		$this->assertSame(2, $result['total']);
 		$ids = array_column($result['views'], 'id');
 		$this->assertSame(['public-one', 'public-two'], $ids);
+	}
+
+	public function testALimitedKeySeesTheViewsItNamesFromApikeyUp(): void
+	{
+		$this->persona->set(McpPersona::AUTHENTICATED);
+		$this->persona->setLimitedKey(new ApiKeyData([
+			'id'     => 'k1', 'name' => 'Sales', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/dataviews/sales/data', '/dataviews/locked/data']],
+		]));
+		$this->lister->method('listViews')->willReturn([
+			['id' => 'sales',   'name' => 'Sales',   'mcp' => ['access' => 'apikey']],
+			['id' => 'payroll', 'name' => 'Payroll', 'mcp' => ['access' => 'apikey']],
+			['id' => 'locked',  'name' => 'Locked',  'mcp' => ['access' => 'admin']],
+			['id' => 'open',    'name' => 'Open',    'mcp' => ['access' => 'public']],
+		]);
+
+		$this->assertSame(['open', 'sales'], array_column($this->tool->handler()['views'], 'id'));
 	}
 
 	public function testAdminPersonaSeesEveryView(): void

@@ -54,9 +54,15 @@ export default class ListField extends MultiSelectField {
 	initSortable() {
 		const list = this.container.querySelector('.choices__list');
 
+		// Choices calls preventDefault() on an item's mousedown, which stops
+		// the browser starting a native drag. Sortable's fallback mode drags
+		// on pointer events instead, so it works in every browser.
 		this.sortable = new TotalSortable(list, {
-			draggable : ".choices__item",
-			onEnd     : this.syncChoices.bind(this)
+			draggable         : ".choices__item",
+			forceFallback     : true,
+			fallbackOnBody    : true,
+			fallbackTolerance : 3,
+			onEnd             : this.syncChoices.bind(this)
 		});
 	}
 

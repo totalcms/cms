@@ -6,6 +6,8 @@ namespace TotalCMS\Domain\Automation\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Automation\Data\RunRecord;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -35,6 +37,7 @@ final readonly class AutomationRunner
 		private Config $config,
 		private AutomationGuard $guard,
 		private AutomationActivityLogger $activity,
+		private ActorContext $actors,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Automations);
@@ -46,6 +49,21 @@ final readonly class AutomationRunner
 	 * @param array<string,mixed>|null $event
 	 */
 	public function run(string $id, array $trigger, array $args, ?ServerRequestInterface $request = null, ?array $event = null): RunRecord
+	{
+		// An automation is the operator's code, so the run — the handler and
+		// the bookkeeping writes after it — is the system actor whatever
+		// started it: a webhook or web cron call (anonymous), Run Now (an
+		// admin), a queue drained mid-request. Handlers routinely write
+		// protected fields, which a member or anonymous actor could not.
+		return $this->actors->runAs(Actor::system(), fn (): RunRecord => $this->execute($id, $trigger, $args, $request, $event));
+	}
+
+	/**
+	 * @param array<string,mixed> $trigger
+	 * @param array<string,mixed> $args
+	 * @param array<string,mixed>|null $event
+	 */
+	private function execute(string $id, array $trigger, array $args, ?ServerRequestInterface $request, ?array $event): RunRecord
 	{
 		$runId     = gmdate('Ymd\THis') . '-' . bin2hex(random_bytes(6));
 		$startedAt = gmdate('c');

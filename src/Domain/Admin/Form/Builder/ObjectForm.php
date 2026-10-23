@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Security\BotProtection;
+use TotalCMS\Domain\Security\BotSubmissionGate;
 
 /**
  * Total Form Builder.
@@ -30,15 +35,22 @@ class ObjectForm extends TotalForm
 		$this->route = "/collections/{$this->collection}";
 
 		// Retarget the form at the public registration endpoint. `data-api`
-		// drops the `/api` prefix because `/admin/register` lives at the
-		// config base, not under the API prefix — same convention as the
-		// admin-routed forms in TotalFormFactory::totalform().
+		// stays the REST base: the JS resolves /admin routes against the site
+		// base (TotalCMS::buildApiQuery), and the form's other calls — the id
+		// "taken?" check, the mailer action — need /api.
 		if ($this->register) {
-			$this->api   = $this->services->config->api;
 			$this->route = "/admin/register/{$this->collection}";
 		}
 
 		$objectExists = $this->services->objectFetcher->existsObject($this->collection, $this->id);
+
+		// A member of an owned collection must not see another member's object
+		// prefilled: refuse before the object is read.
+		if (!$this->addOnly && $this->id !== '' && $objectExists && $this->ownerForbids()) {
+			$this->refuse(self::OWNER_REFUSAL);
+
+			return;
+		}
 
 		// For addOnly forms, never load existing objects even if an ID is somehow present
 		if (!$this->addOnly && $this->id !== '' && $objectExists) {
@@ -62,6 +74,109 @@ class ObjectForm extends TotalForm
 				$this->duplicateData['id'] = '';
 			}
 		}
+	}
+
+	public function build(string $content = '', string $contentAfter = ''): string
+	{
+		// A registration form that names where the verification link should
+		// land posts it as a hidden field; the register endpoint moves it onto
+		// the verification token. A field, not a bare input: the form script
+		// only submits `.form-field` values.
+		if ($this->register && $this->verifyRedirect !== '' && !$this->refused && $this->collectionData instanceof CollectionData) {
+			$content = $this->field('verifyRedirect', ['field' => 'hidden', 'value' => $this->verifyRedirect]) . $content;
+		}
+
+		if ($this->wantsBotProtection()) {
+			$content = $this->botFields() . $content;
+		}
+
+		return parent::build($content, $contentAfter);
+	}
+
+	/**
+	 * Bot protection is for anonymous create forms: the `botProtection`
+	 * option, a mailer action whose template has Require Bot Protection on,
+	 * or a collection with Require Bot Protection on a register form or a
+	 * create form the public may create through. Never for an edit form
+	 * (the POST check), and never for a signed-in visitor, whom the endpoints
+	 * skip too.
+	 */
+	private function wantsBotProtection(): bool
+	{
+		if ($this->refused || !$this->collectionData instanceof CollectionData || strtoupper($this->method) !== 'POST') {
+			return false;
+		}
+
+		if (BotSubmissionGate::sessionSignedIn($this->services->session)) {
+			return false;
+		}
+
+		if ($this->botProtection || $this->mailerRequiresBotProtection()) {
+			return true;
+		}
+
+		if (!$this->collectionData->requireBotProtection) {
+			return false;
+		}
+
+		return $this->register
+			|| in_array('create', array_map(strtolower(...), $this->collectionData->publicOperations), true);
+	}
+
+	/**
+	 * Whether a mailer action this form runs after a create uses a template
+	 * with Require Bot Protection on: the endpoint would refuse its send
+	 * without the fields.
+	 */
+	private function mailerRequiresBotProtection(): bool
+	{
+		$mailers = $this->services->mailers;
+		if (!$mailers instanceof MailerFetcher) {
+			return false;
+		}
+
+		foreach ($this->newActions as $action) {
+			$mailerId = $action['mailerId'] ?? '';
+			if (($action['action'] ?? '') !== 'mailer' || !is_string($mailerId) || $mailerId === '' || !$mailers->exists($mailerId)) {
+				continue;
+			}
+			if ($mailers->fetchMailer($mailerId)->requireBotProtection) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The honeypot (an empty text field hidden off-screen and from assistive
+	 * tech) and the signed time-trap token. Both are `.form-field`s, since
+	 * the form script only submits those.
+	 */
+	private function botFields(): string
+	{
+		$id       = 'field-' . bin2hex(random_bytes(6));
+		$honeypot = HTMLUtils::element(
+			'div',
+			HTMLUtils::element('label', 'Leave this field empty', ['for' => $id])
+				. HTMLUtils::element('div', HTMLUtils::inlineElement('input', [
+					'type'         => 'text',
+					'id'           => $id,
+					'name'         => BotProtection::HONEYPOT_FIELD,
+					'tabindex'     => '-1',
+					'autocomplete' => 'off',
+					// Password managers: 1Password, LastPass, Bitwarden, Dashlane.
+					'data-1p-ignore'  => '',
+					'data-lpignore'   => 'true',
+					'data-bwignore'   => '',
+					'data-form-type'  => 'other',
+				]), ['class' => 'form-group']),
+			['class' => 'form-field text-field bot-field', 'data-type' => 'text', 'aria-hidden' => 'true'],
+		);
+
+		$token = (new BotProtection())->issue($this->collection, $this->register ? 'register' : 'create');
+
+		return $honeypot . $this->field(BotProtection::TIMESTAMP_FIELD, ['field' => 'hidden', 'value' => $token]);
 	}
 
 	/**

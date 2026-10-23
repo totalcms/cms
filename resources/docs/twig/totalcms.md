@@ -78,6 +78,38 @@ Log messages from templates. Written to `twig.log` and viewable in the admin log
 | `level` | string | `'warning'` | Log level: `debug`, `info`, `warning`, `error` |
 | `context` | object | `{}` | Additional context data |
 
+### notFound()
+
+Stop rendering and answer the request as a 404. The site's [custom 404 page](docs/site-builder/overview#custom-404-page) renders at the visitor's own URL with status `404` — no redirect, so the URL stays in the address bar, and crawlers and link checkers see the not-found they need to drop or flag the link. Nothing after the call is rendered.
+
+Use it in a page template that discovers it has nothing to show: a draft reached through a collection URL, a record marked not to render, a lookup that came back empty.
+
+```twig
+{# A collection URL matches drafts too — a visitor who guesses the slug
+   must get the same answer as for a slug that never existed #}
+{% if object.draft %}{{ cms.notFound() }}{% endif %}
+
+{# A detail page whose object lookup came back empty #}
+{% set post = cms.collection.object('blog', params.id) %}
+{% if post is empty %}{{ cms.notFound() }}{% endif %}
+```
+
+[`cms.collection.redirectIfNotFound()`](docs/twig/collections#redirectifnotfound) is the older alternative: it sends the visitor to the 404 page's own address with a `302`. Prefer `notFound()` unless the move itself is what you want.
+
+### redirect()
+
+Stop rendering and answer the request with a redirect. `cms.redirect(url, status)` sends the visitor to `url` — a path on this site or a full URL — with a `Location` header and no body. Nothing after the call is rendered.
+
+The status defaults to `302`. Pass `301` or `308` for a permanent move, `303` or `307` when the method matters; any other number becomes `302`. A URL that is empty or contains a line break is refused with a template error, so a value built from the request can never add a header of its own.
+
+Use it for a forwarding page whose target depends on data. A redirect that never changes belongs on the page record instead (its Redirect To and Status fields).
+
+```twig
+{# /go/{handle}: the member's profile while it is public, the home page once it is not #}
+{% set member = cms.collection.object('users', params.handle) %}
+{{ cms.redirect(member and member.showProfile ? '/@' ~ params.handle : '/') }}
+```
+
 ## ImageWorks
 
 For the complete ImageWorks reference (resizing, cropping, effects, watermarks, presets, defaults, color palettes), see the dedicated [ImageWorks documentation](docs/twig/imageworks).

@@ -9,6 +9,7 @@ use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  *  @SuppressWarnings("PHPMD.NumberOfChildren")
+ *  @SuppressWarnings("PHPMD.TooManyMethods")
  */
 class FormField
 {
@@ -17,6 +18,8 @@ class FormField
 
 	protected string $uuid;
 	protected bool $datalist = false;
+	/** Set by hide(); see there. */
+	private bool $hidden = false;
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
@@ -257,8 +260,32 @@ class FormField
 		}
 
 		$this->applyVisibility($attributes);
+		$this->applyHidden($attributes);
 
 		return $attributes;
+	}
+
+	/**
+	 * Mark a container hidden by hide(), with the same markers a false
+	 * visibility rule sets, unless applyVisibility() already set them.
+	 *
+	 * @param array<string,string> $attributes
+	 */
+	private function applyHidden(array &$attributes): void
+	{
+		if (!$this->hidden) {
+			return;
+		}
+
+		$classes = $attributes['class'] ?? '';
+		if (!in_array('field-hidden', explode(' ', $classes), true)) {
+			$attributes['class'] = $classes . ' field-hidden';
+		}
+
+		$style = $attributes['style'] ?? '';
+		if (!str_contains($style, 'display: none;')) {
+			$attributes['style'] = $style . ' display: none;';
+		}
 	}
 
 	/**
@@ -312,21 +339,26 @@ class FormField
 			return false; // No watch field specified, hide by default
 		}
 
-		// Get the expected value(s)
-		$expectedValue = $visibility['value'] ?? null;
-		if ($expectedValue === null) {
-			return false; // No expected value, hide by default
-		}
-
 		// Get the operator (default to equality)
 		$operator = $visibility['operator'] ?? '==';
+
+		// `empty` / `not_empty` ask about a missing value, so neither null
+		// guard below applies: they take no expected value, and a watched
+		// field with nothing in it (a new form) is exactly what `empty` means.
+		$asksAboutEmptiness = in_array($operator, ['empty', 'not_empty'], true);
+
+		// Get the expected value(s)
+		$expectedValue = $visibility['value'] ?? null;
+		if ($expectedValue === null && !$asksAboutEmptiness) {
+			return false; // No expected value, hide by default
+		}
 
 		// Get the current value from the form
 		$currentValue = $this->form->getFieldValue($watchField);
 
 		// If we can't get the current value, hide the field by default
 		// This ensures proper initial state for new forms
-		if ($currentValue === null) {
+		if ($currentValue === null && !$asksAboutEmptiness) {
 			return false;
 		}
 
@@ -365,14 +397,32 @@ class FormField
 		// Evaluate based on operator
 		// Note: Array $expectedValue is handled earlier (lines 184-191), so it's never an array here
 		return match ($operator) {
-			'=='    => $currentValue == $expectedValue,
-			'!='    => $currentValue != $expectedValue,
-			'>'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
-			'<'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
-			'>='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
-			'<='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
-			default => $currentValue == $expectedValue, // Default to equality
+			'=='        => $currentValue == $expectedValue,
+			'!='        => $currentValue != $expectedValue,
+			'>'         => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
+			'<'         => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
+			'>='        => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
+			'<='        => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
+			'empty'     => $this->isEmptyValue($currentValue),
+			'not_empty' => !$this->isEmptyValue($currentValue),
+			default     => $currentValue == $expectedValue, // Default to equality
 		};
+	}
+
+	/**
+	 * What `empty` / `not_empty` mean for a non-array value: null or a blank
+	 * string. 0 and false are values — a zero quantity and an unticked toggle
+	 * are not "empty", unlike PHP's empty(). Arrays (and an image or card
+	 * value, which is one here) are handled by the array branch above.
+	 * Mirrors isEmptyValue() in field-visibility.js.
+	 */
+	protected function isEmptyValue(mixed $value): bool
+	{
+		if ($value === null) {
+			return true;
+		}
+
+		return is_string($value) && trim($value) === '';
 	}
 
 	/**
@@ -462,6 +512,17 @@ class FormField
 		$this->readonly = true;
 	}
 
+	/**
+	 * Hide the field server-side, for a field that does not apply to the
+	 * record being edited. The container gets the `field-hidden` class and
+	 * `display: none;`, so the browser treats it like a false visibility rule
+	 * (and a section left with only hidden fields hides too). Idempotent.
+	 */
+	public function hide(): void
+	{
+		$this->hidden = true;
+	}
+
 	public function buildFormField(): string
 	{
 		$attributes = $this->formFieldAttributes();
@@ -531,6 +592,13 @@ class FormField
 	 * - "schemaCollections:<id>": collections whose schema is <id> or inherits from it
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
+	 * - "schemaProperties": the property keys of the collection's schema.
+	 * - {"source": "mediaTags", "field": ..., "type": ...}: tags on a media field.
+	 * - {"source": "schemaProperties", "types": ["string", "array"]}: the
+	 *   schema's property keys, narrowed to those JSON-Schema types (an untyped
+	 *   property counts as string).
+	 * - {"source": "schemaProperties", "owner": true}: only the properties that
+	 *   can hold an owner (OwnerPropertyKind): strings and lists of strings.
 	 *
 	 * Return shape varies by source, and all three shapes `HTMLUtils::options()`
 	 * accepts are legal here: a flat list of strings, a list of `{value, label}`
@@ -551,75 +619,74 @@ class FormField
 	{
 		$source = $this->settings['propertyOptions'] ?? true;
 
-		if (is_array($source) && ($source['source'] ?? null) === 'mediaTags') {
+		if (is_array($source)) {
+			$options = $this->buildOptionsForStructuredSource($source);
+		} elseif (is_string($source)) {
+			$options = $this->buildOptionsForNamedSource($source);
+		} else {
+			$options = null;
+		}
+
+		// Default: fetch from current collection
+		return $options ?? $this->form->propertyListForCollection($this->name);
+	}
+
+	/**
+	 * The `{"source": ...}` object form of propertyOptions. Null for an
+	 * unknown source, which falls back to the current collection's properties.
+	 *
+	 * @param array<string,mixed> $source
+	 *
+	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>|null
+	 */
+	private function buildOptionsForStructuredSource(array $source): ?array
+	{
+		if (($source['source'] ?? null) === 'mediaTags') {
 			return $this->form->mediaTagsForCollection(
 				(string)($source['field'] ?? ''),
 				(string)($source['type'] ?? 'image'),
 			);
 		}
 
-		if ($source === 'collections') {
-			return $this->form->categoryListForCollections();
+		if (($source['source'] ?? null) === 'schemaProperties') {
+			$types = array_values(array_filter((array)($source['types'] ?? []), is_string(...)));
+
+			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true);
 		}
 
-		if ($source === 'schemas') {
-			return $this->form->categoryListForSchemas();
-		}
+		return null;
+	}
 
-		if ($source === 'collectionIds') {
-			return $this->form->collectionIdListWithLabels();
-		}
-
-		if ($source === 'pageCollections') {
-			return $this->form->pageCollectionOptions();
-		}
-
-		if (is_string($source) && str_starts_with($source, 'schemaCollections:')) {
+	/**
+	 * The string form of propertyOptions: a named source, or
+	 * `schemaCollections:{schema}`. Null for an unknown name.
+	 *
+	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>|null
+	 */
+	private function buildOptionsForNamedSource(string $source): ?array
+	{
+		if (str_starts_with($source, 'schemaCollections:')) {
 			return $this->form->collectionsUsingSchema(substr($source, strlen('schemaCollections:')));
 		}
 
-		if ($source === 'viewIds') {
-			return $this->form->viewIdList();
-		}
-
-		if ($source === 'collectionsAndViews') {
-			return $this->form->collectionAndViewOptions();
-		}
-
-		if ($source === 'layouts') {
-			return $this->form->layoutListForBuilder();
-		}
-
-		if ($source === 'pages') {
-			return $this->form->pageListForBuilder();
-		}
-
-		if ($source === 'pageMiddleware') {
-			return $this->form->pageMiddlewareList();
-		}
-
-		if ($source === 'navItems') {
-			return $this->form->adminNavItemList();
-		}
-
-		if ($source === 'schemaProperties') {
-			return $this->form->schemaPropertyKeys();
-		}
-
-		if ($source === 'locales') {
-			return $this->form->localeList();
-		}
-
-		if ($source === 'events') {
-			return $this->form->eventsList();
-		}
-
-		if ($source === 'podcastCategories') {
-			return TotalForm::podcastCategoryOptions();
-		}
-
-		// Default: fetch from current collection
-		return $this->form->propertyListForCollection($this->name);
+		return match ($source) {
+			'collections'         => $this->form->categoryListForCollections(),
+			'schemas'             => $this->form->categoryListForSchemas(),
+			'collectionIds'       => $this->form->collectionIdListWithLabels(),
+			'pageCollections'     => $this->form->pageCollectionOptions(),
+			'viewIds'             => $this->form->viewIdList(),
+			'collectionsAndViews' => $this->form->collectionAndViewOptions(),
+			'layouts'             => $this->form->layoutListForBuilder(),
+			'pages'               => $this->form->pageListForBuilder(),
+			'pageMiddleware'      => $this->form->pageMiddlewareList(),
+			'navItems'            => $this->form->adminNavItemList(),
+			'schemaProperties'    => $this->form->schemaPropertyKeys(),
+			'locales'             => $this->form->localeList(),
+			'countries'           => $this->form->countryList(),
+			'events'              => $this->form->eventsList(),
+			'podcastCategories'   => TotalForm::podcastCategoryOptions(),
+			default               => null,
+		};
 	}
 
 	/**

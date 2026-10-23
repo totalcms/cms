@@ -19,11 +19,14 @@ readonly class ObjectRemover
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
 		private EventDispatcher $eventDispatcher,
+		private ObjectWriteGate $gate,
 	) {
 	}
 
 	public function deleteObject(string $collection, string $id): bool
 	{
+		$this->gate->beforeDelete($collection, $id);
+
 		// Read the record before it goes so `object.deleted` can carry what was
 		// deleted. Without this every listener is blind to the content — the
 		// backup store, for one, has nothing to keep. Nullable fetch: deleting

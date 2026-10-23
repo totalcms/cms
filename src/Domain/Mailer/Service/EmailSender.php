@@ -17,6 +17,8 @@ use TotalCMS\Support\OperationResult;
  */
 readonly class EmailSender
 {
+	public const SENT_MESSAGE = 'Email sent successfully';
+
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -129,7 +131,7 @@ readonly class EmailSender
 				'from'    => $fromEmail,
 			]);
 
-			return OperationResult::success('Email sent successfully');
+			return OperationResult::success(self::SENT_MESSAGE);
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to send email', [
 				'to'      => $emailData['to'] ?? 'unknown',

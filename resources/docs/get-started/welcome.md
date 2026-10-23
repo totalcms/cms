@@ -63,7 +63,7 @@ If you'd rather skip the tutorial and go straight to setup:
 
 If you use Claude Code, Cursor, Windsurf, or GitHub Copilot, point them at the Total CMS docs MCP server at `https://totalcms.co/mcp` — our own docs site, dogfooding Total CMS's built-in MCP server. Your assistant can then look up exact Twig signatures, field configurations, REST endpoints, and CLI commands on demand — no more guessing at function names from stale training data.
 
-One JSON snippet in your editor's config gets it working across every Total CMS project. See [Using Total CMS with AI](docs/extensions/ai-integration) for the per-tool setup and the full list of MCP tools (`docs_search`, `docs_get`, `docs_lookup`, and more).
+In ChatGPT, add [Total CMS from the app directory](https://chatgpt.com/plugins/plugin_asdk_app_6abdb19953248191932b75de95b06dbd); in Claude, search its directory for Total CMS. In an editor, one JSON snippet in its config gets it working across every Total CMS project. See [Using Total CMS with AI](docs/extensions/ai-integration) for the per-tool setup and the full list of MCP tools (`docs_search`, `docs_get`, `docs_lookup`, and more).
 
 ## Community & support
 

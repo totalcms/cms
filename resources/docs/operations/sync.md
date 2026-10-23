@@ -94,7 +94,7 @@ On your **production** Total CMS instance:
 
 1. Go to **Utilities > API Keys**
 2. Create a new key with **GET** and **POST** permissions
-3. Under endpoints, choose **Specific endpoints** and tick **Sync Manager** — this grants the `/sync` routes that push (`POST /sync/import`) and pull (`GET /sync/export`) use, and nothing else
+3. Under endpoints, choose **Specific endpoints** and tick **Sync Manager** — this grants the `/sync` routes that push (`POST /sync/import`) and pull (`GET /sync/export`) use, and nothing else. Both routes are admin only for a signed-in session; an API key is checked against its own endpoint grant instead
 4. If you will seed objects with `tcms push --objects`, also tick **Content Import (seeding)**. Seeded objects go to `POST /import/jumpstart`, a different route from the rest of a push, so a key granted only Sync Manager answers `401 Invalid API key or insufficient permissions` for that half while everything else succeeds
 5. Copy the generated API key
 

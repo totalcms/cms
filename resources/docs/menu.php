@@ -18,9 +18,17 @@
  * its top-level group folder (get-started/, collections/, fields/, etc.).
  * Subgroups (e.g. Fields > Field Types) exist only in the menu — the files
  * themselves are flat within the group folder.
+ *
+ * Ordering: a group or subgroup is written in the order it should read in,
+ * unless it carries `'sort' => 'alpha'`, in which case its `sub` entries are
+ * sorted by title here, before the array is returned, so every consumer —
+ * this admin, the index builder, the validator and the docs site's sidebar
+ * builder — sees the same order. Reference lists (Operations, Field Types,
+ * Bundled Extensions) are sorted; learning paths are not. An entry marked
+ * `'pinned' => true` stays at the top of a sorted list in its written order,
+ * for the overview page a reference list still wants first.
  */
-
-return [
+$menu = [
 	[
 		'title' => 'Get Started',
 		'sub'   => [
@@ -59,9 +67,10 @@ return [
 		'groups' => [
 			[
 				'title' => 'Field Types',
+				'sort'  => 'alpha',
 				'sub'   => [
-					['title' => 'Choosing a Field',      'path' => 'fields/choosing-a-field'],
-					['title' => 'All Fields',            'path' => 'fields/all-fields'],
+					['title' => 'Choosing a Field',      'path' => 'fields/choosing-a-field', 'pinned' => true],
+					['title' => 'All Fields',            'path' => 'fields/all-fields', 'pinned' => true],
 					['title' => 'Card',                  'path' => 'fields/card'],
 					['title' => 'Code Editor',           'path' => 'fields/code-editor'],
 					['title' => 'Color',                 'path' => 'fields/color'],
@@ -148,6 +157,7 @@ return [
 					['title' => 'Edition Helpers', 'path' => 'twig/edition'],
 					['title' => 'Barcodes',        'path' => 'twig/barcodes'],
 					['title' => 'QR Codes',        'path' => 'twig/qrcodes'],
+					['title' => 'Badges',          'path' => 'twig/badges'],
 				],
 			],
 			[
@@ -252,8 +262,9 @@ return [
 		'groups' => [
 			[
 				'title' => 'Bundled Extensions',
+				'sort'  => 'alpha',
 				'sub'   => [
-					['title' => 'Bundled Overview', 'path' => 'extensions/bundled'],
+					['title' => 'Bundled Overview', 'path' => 'extensions/bundled', 'pinned' => true],
 					['title' => 'A/B Split',        'path' => 'extensions/ab-split'],
 					['title' => 'Algolia Search',   'path' => 'extensions/algolia-search'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
@@ -269,16 +280,19 @@ return [
 	],
 	[
 		'title' => 'Operations',
+		'sort'  => 'alpha',
 		'sub'   => [
 			['title' => 'Deployment',        'path' => 'operations/deployment'],
 			['title' => 'Apache',            'path' => 'operations/apache'],
 			['title' => 'Nginx',             'path' => 'operations/nginx'],
 			['title' => 'Security',          'path' => 'operations/security'],
+			['title' => 'Sharing Sessions',  'path' => 'operations/sharing-sessions'],
 			['title' => 'Impersonation',     'path' => 'operations/impersonation'],
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Shared Data',       'path' => 'operations/shared-data'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
+			['title' => 'Activity Log',      'path' => 'operations/activity'],
 			['title' => 'Backups',           'path' => 'operations/backups'],
 			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
 			['title' => 'Cron URLs',         'path' => 'operations/cron-urls'],
@@ -292,3 +306,30 @@ return [
 		],
 	],
 ];
+
+// Apply `sort => 'alpha'`: pinned entries first in their written order, then
+// the rest by title. Natural, case-insensitive, and locale-independent —
+// strnatcasecmp folds case through LC_CTYPE, which sorts non-ASCII titles
+// differently on macOS and Linux.
+$sortPages = static function (array $node): array {
+	if (($node['sort'] ?? null) !== 'alpha' || !is_array($node['sub'] ?? null)) {
+		return $node;
+	}
+	$pinned = array_values(array_filter($node['sub'], static fn (array $e): bool => ($e['pinned'] ?? false) === true));
+	$rest   = array_values(array_filter($node['sub'], static fn (array $e): bool => ($e['pinned'] ?? false) !== true));
+	usort($rest, static fn (array $a, array $b): int => strnatcmp(mb_strtolower((string)($a['title'] ?? '')), mb_strtolower((string)($b['title'] ?? ''))));
+	$node['sub'] = [...$pinned, ...$rest];
+
+	return $node;
+};
+
+foreach ($menu as &$group) {
+	$group = $sortPages($group);
+	foreach ($group['groups'] ?? [] as &$subgroup) {
+		$subgroup = $sortPages($subgroup);
+	}
+	unset($subgroup);
+}
+unset($group);
+
+return $menu;

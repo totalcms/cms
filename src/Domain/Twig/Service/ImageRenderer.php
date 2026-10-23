@@ -55,9 +55,32 @@ class ImageRenderer
 	}
 
 	/**
+	 * The attributes that discourage saving an image — no drag-to-desktop,
+	 * no context menu — or none. `protect` in the call's options decides;
+	 * without it, `imageworks.protect` in settings does; without that, the
+	 * image is protected. Shared with the gallery renderer so one switch
+	 * covers every `<img>` Total CMS writes.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,string>
+	 */
+	public static function protection(array $options, ?Config $config): array
+	{
+		$protect = $options['protect'] ?? $config?->imageworks['protect'] ?? true;
+
+		return filter_var($protect, FILTER_VALIDATE_BOOLEAN)
+			? ['draggable' => 'false', 'oncontextmenu' => 'return false;']
+			: [];
+	}
+
+	/**
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options
+	 * `alt` in the options replaces the stored alt text; an explicit empty
+	 * string marks the image decorative. Without it the fallback chain in
+	 * {@see altFromImageData()} applies.
+	 * @param array<string,mixed> $options collection, property, loading, class, alt, protect
 	 */
 	public function image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -95,14 +118,12 @@ class ImageRenderer
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $this->alt($idOrObject, $options),
+			'alt'           => array_key_exists('alt', $options) ? (string)$options['alt'] : $this->alt($idOrObject, $options),
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'] ?? null,
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
+		] + self::protection($options, $this->config));
 
 		if (!empty($image['link'])) {
 			return HTMLUtils::element('a', $html, ['href' => $image['link']]);
@@ -132,7 +153,12 @@ class ImageRenderer
 	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options widths, formats, sizes, plus collection, property, loading, class
+	 * A `crop` rect in `$imageworks` (`width,height,x,y`) is the source
+	 * every candidate is cut from — Glide crops before it sizes — so the
+	 * candidate widths, the `<img>` dimensions and every `w` descriptor are
+	 * taken from the rect, not the upload. `alt` in the options works as in
+	 * {@see image()} and applies to the light `<img>` only.
+	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, alt, protect, plus collection, property, loading, class
 	 */
 	public function picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -158,38 +184,38 @@ class ImageRenderer
 
 		// The image's own format is what the <img> fallback serves; a <source>
 		// in that same format would be redundant.
-		$native = strtolower(pathinfo((string)($image['name'] ?? ''), PATHINFO_EXTENSION));
-		$native = isset(self::MIME[$native]) ? $native : 'jpg';
+		$native = $this->nativeFormat($image);
 
 		$base = $imageworks;
 		unset($base['fm']);
 		$ceiling = isset($base['w']) ? (int)$base['w'] : null;
 		unset($base['w']);
 
-		$candidates = $this->candidateWidths($widths, (int)($image['width'] ?? 0), $ceiling);
+		$candidates = $this->candidateWidths($widths, $this->sourceWidth($image, $base), $ceiling);
 		if ($candidates === []) {
 			return '';
 		}
 
-		$srcset = function (string $format) use ($idOrObject, $base, $options, $image, $candidates): string {
-			$parts = [];
-			$seen  = [];
-			foreach ($candidates as $w) {
-				$params    = $base + ['w' => $w, 'fm' => $format];
-				$delivered = ImageDimensionCalculator::calculateFromImageData($image, $params)['width'];
-				$delivered = $delivered > 0 ? $delivered : $w;
-				// Two requested widths can clamp to one delivered width.
-				if (isset($seen[$delivered])) {
-					continue;
-				}
-				$seen[$delivered] = true;
-				$parts[]          = $this->media->imagePath($idOrObject, $params, $options) . " {$delivered}w";
-			}
-
-			return implode(', ', $parts);
-		};
-
+		// Dark-scheme sources lead: a browser takes the first <source> whose
+		// media and type both match, so these must come before the unqualified
+		// light set. The dark image has no <img> of its own to fall back to, so
+		// its own stored format is appended as the last-resort candidate.
 		$sources = '';
+		$dark    = $this->darkVariant($idOrObject, $options);
+		if ($dark !== null) {
+			[$darkTarget, $darkImage, $darkOptions] = $dark;
+			$darkCandidates                         = $this->candidateWidths($widths, $this->sourceWidth($darkImage, $base), $ceiling);
+			$darkNative                             = $this->nativeFormat($darkImage);
+			foreach ($darkCandidates === [] ? [] : array_unique([...$formats, $darkNative]) as $format) {
+				$sources .= HTMLUtils::inlineElement('source', [
+					'media'  => '(prefers-color-scheme: dark)',
+					'type'   => self::MIME[$format],
+					'srcset' => $this->srcset($darkTarget, $darkImage, $base, $darkOptions, $darkCandidates, $format),
+					'sizes'  => $sizes,
+				]);
+			}
+		}
+
 		if ($native !== 'gif') {
 			foreach ($formats as $format) {
 				if ($format === $native) {
@@ -197,7 +223,7 @@ class ImageRenderer
 				}
 				$sources .= HTMLUtils::inlineElement('source', [
 					'type'   => self::MIME[$format],
-					'srcset' => $srcset($format),
+					'srcset' => $this->srcset($idOrObject, $image, $base, $options, $candidates, $format),
 					'sizes'  => $sizes,
 				]);
 			}
@@ -208,16 +234,14 @@ class ImageRenderer
 
 		$img = HTMLUtils::inlineElement('img', [
 			'src'           => $this->media->imagePath($idOrObject, $base + ['w' => $largest, 'fm' => $native], $options),
-			'srcset'        => $srcset($native),
+			'srcset'        => $this->srcset($idOrObject, $image, $base, $options, $candidates, $native),
 			'sizes'         => $sizes,
-			'alt'           => self::altFromImageData($image),
+			'alt'           => array_key_exists('alt', $options) ? (string)$options['alt'] : self::altFromImageData($image),
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'] ?? null,
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
+		] + self::protection($options, $this->config));
 
 		$html = HTMLUtils::element('picture', $sources . $img);
 
@@ -226,6 +250,96 @@ class ImageRenderer
 		}
 
 		return $html;
+	}
+
+	/**
+	 * One `srcset` of ImageWorks candidates for `$image` in `$format`, each
+	 * described by the width ImageWorks will actually deliver (two requested
+	 * widths can clamp to one delivered width, and collapse into one entry).
+	 *
+	 * @param string|array<string,mixed> $target what imagePath() resolves: the object or its id
+	 * @param array<string,mixed> $image
+	 * @param array<string,string|int> $base
+	 * @param array<string,mixed> $options
+	 * @param list<int> $candidates
+	 */
+	private function srcset(string|array $target, array $image, array $base, array $options, array $candidates, string $format): string
+	{
+		$parts = [];
+		$seen  = [];
+		foreach ($candidates as $w) {
+			$params    = $base + ['w' => $w, 'fm' => $format];
+			$delivered = ImageDimensionCalculator::calculateFromImageData($image, $params)['width'];
+			$delivered = $delivered > 0 ? $delivered : $w;
+			if (isset($seen[$delivered])) {
+				continue;
+			}
+			$seen[$delivered] = true;
+			$parts[]          = $this->media->imagePath($target, $params, $options) . " {$delivered}w";
+		}
+
+		return implode(', ', $parts);
+	}
+
+	/**
+	 * The image a dark color scheme should show, from `dark` (another object
+	 * or id, resolved with the same collection/property as the light image)
+	 * or `darkProperty` (a second image property on the same object). Null
+	 * when neither is given or the image is missing, empty or a GIF — the
+	 * caller then renders the light-only markup it always has.
+	 *
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array{0: string|array<string,mixed>, 1: array<string,mixed>, 2: array<string,mixed>}|null
+	 */
+	private function darkVariant(string|array $idOrObject, array $options): ?array
+	{
+		$target      = $idOrObject;
+		$darkOptions = $options;
+		if (!in_array($options['dark'] ?? null, [null, '', []], true)) {
+			$target = $options['dark'];
+		} elseif (is_string($options['darkProperty'] ?? null) && $options['darkProperty'] !== '') {
+			$darkOptions['property'] = $options['darkProperty'];
+		} else {
+			return null;
+		}
+
+		if (!is_string($target) && !is_array($target)) {
+			return null;
+		}
+
+		$image = $this->imageData($target, $darkOptions);
+		if ($image === [] || (int)($image['size'] ?? 0) === 0 || $this->nativeFormat($image) === 'gif') {
+			return null;
+		}
+
+		return [$target, $image, $darkOptions];
+	}
+
+	/**
+	 * The format the image is stored in, which is what its `<img>` fallback
+	 * (or, for a dark variant, its last-resort `<source>`) serves.
+	 *
+	 * @param array<string,mixed> $image
+	 */
+	private function nativeFormat(array $image): string
+	{
+		$native = strtolower(pathinfo((string)($image['name'] ?? ''), PATHINFO_EXTENSION));
+
+		return isset(self::MIME[$native]) ? $native : 'jpg';
+	}
+
+	/**
+	 * The width candidates are cut from: the stored width, or the `crop`
+	 * rect's when the transforms carry one.
+	 *
+	 * @param array<string,mixed> $image
+	 * @param array<string,string|int> $base
+	 */
+	private function sourceWidth(array $image, array $base): int
+	{
+		return ImageDimensionCalculator::sourceDimensions((int)($image['width'] ?? 0), (int)($image['height'] ?? 0), $base)['width'];
 	}
 
 	/**

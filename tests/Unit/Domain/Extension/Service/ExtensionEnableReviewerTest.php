@@ -17,9 +17,9 @@ afterEach(function (): void {
 	exec('rm -rf ' . escapeshellarg($this->dir));
 });
 
-function reviewManifest(bool $bundled = false): ExtensionManifest
+function reviewManifest(bool $bundled = false, string $reviewNote = 'Read this first'): ExtensionManifest
 {
-	return new ExtensionManifest('acme/thing', 'Thing', '', '1.0.0', [], 'extension.php', null, '', [], 'MIT', bundled: $bundled, reviewNote: 'Read this first');
+	return new ExtensionManifest('acme/thing', 'Thing', '', '1.0.0', [], 'extension.php', null, '', [], 'MIT', bundled: $bundled, reviewNote: $reviewNote);
 }
 
 test('risky capabilities are called out in display order with the review note and skill', function (): void {
@@ -32,6 +32,7 @@ test('risky capabilities are called out in display order with the review note an
 	expect(array_keys($review['risky']))->toBe(['routes:public', 'mcp:tools'])
 		->and($review['risky']['routes:public'])->toBe('Exposes public, unauthenticated endpoints.')
 		->and($review['hasFlags'])->toBeTrue()
+		->and($review['needsReview'])->toBeTrue()
 		->and($review['reviewNote'])->toBe('Read this first')
 		->and($review['skill']['files'])->toBe(['SKILL.md', 'references/a.md'])
 		->and($review['skill']['contents'])->toBe('# Use me')
@@ -41,10 +42,29 @@ test('risky capabilities are called out in display order with the review note an
 test('nothing risky, no findings and no skill is a clean review', function (): void {
 	exec('rm -rf ' . escapeshellarg($this->dir . '/skill'));
 
-	$review = (new ExtensionEnableReviewer())->review('acme/thing', reviewManifest(bundled: true), ['twig:filters' => true], $this->dir);
+	$review = (new ExtensionEnableReviewer())->review('acme/thing', reviewManifest(bundled: true, reviewNote: ''), ['twig:filters' => true], $this->dir);
 
 	expect($review['risky'])->toBe([])
 		->and($review['findings'])->toBe([])
 		->and($review['hasFlags'])->toBeFalse()
+		->and($review['needsReview'])->toBeFalse()
 		->and($review['skill'])->toBeNull();
+});
+
+test('a review note alone needs review without raising flags', function (): void {
+	exec('rm -rf ' . escapeshellarg($this->dir . '/skill'));
+
+	$review = (new ExtensionEnableReviewer())->review('acme/thing', reviewManifest(bundled: true), ['twig:filters' => true], $this->dir);
+
+	expect($review['hasFlags'])->toBeFalse()
+		->and($review['skill'])->toBeNull()
+		->and($review['needsReview'])->toBeTrue();
+});
+
+test('an agent skill alone needs review without raising flags', function (): void {
+	$review = (new ExtensionEnableReviewer())->review('acme/thing', reviewManifest(bundled: true, reviewNote: ''), ['twig:filters' => true], $this->dir);
+
+	expect($review['hasFlags'])->toBeFalse()
+		->and($review['skill'])->not->toBeNull()
+		->and($review['needsReview'])->toBeTrue();
 });

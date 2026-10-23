@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Service;
 
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
@@ -100,11 +101,11 @@ class ResourceRegistry
 	 *
 	 * @return list<McpResourceDefinition>
 	 */
-	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null): array
+	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null, ?ApiKeyData $limitedKey = null): array
 	{
 		$visible = array_values(array_filter(
 			$this->resources,
-			static fn (McpResourceDefinition $r): bool => $r->isVisibleTo($persona, $authority),
+			static fn (McpResourceDefinition $r): bool => $r->isVisibleTo($persona, $authority, $limitedKey),
 		));
 
 		usort($visible, static fn (McpResourceDefinition $a, McpResourceDefinition $b): int => strcmp($a->uri, $b->uri));
@@ -118,11 +119,11 @@ class ResourceRegistry
 	 *
 	 * @return list<McpResourceTemplateDefinition>
 	 */
-	public function templatesForPersona(McpPersona $persona, ?UserAuthority $authority = null): array
+	public function templatesForPersona(McpPersona $persona, ?UserAuthority $authority = null, ?ApiKeyData $limitedKey = null): array
 	{
 		$visible = array_values(array_filter(
 			$this->templates,
-			static fn (McpResourceTemplateDefinition $t): bool => $t->isVisibleTo($persona, $authority),
+			static fn (McpResourceTemplateDefinition $t): bool => $t->isVisibleTo($persona, $authority, $limitedKey),
 		));
 
 		usort($visible, static fn (McpResourceTemplateDefinition $a, McpResourceTemplateDefinition $b): int => strcmp($a->uriTemplate, $b->uriTemplate));

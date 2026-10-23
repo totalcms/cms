@@ -108,6 +108,12 @@ readonly class AccessControlService
 			return true;
 		}
 
+		// No session user — an API-key or OAuth caller rendering the table
+		// format. Nobody to grant the pencil to, which is a denial, not an error.
+		if ($userId === '') {
+			return false;
+		}
+
 		return $this->sessionAuthority($userId)->canInlineEdit($collection);
 	}
 
@@ -173,8 +179,17 @@ readonly class AccessControlService
 	 */
 	public function authorityFor(OAuthUserRef $ref): UserAuthority
 	{
+		return $this->authorityOf($ref->userId, $ref->collection);
+	}
+
+	/**
+	 * The session-free UserAuthority of a user in an explicit auth collection.
+	 * Same rules as {@see authorityFor()}: a lookup failure denies.
+	 */
+	public function authorityOf(string $userId, string $collection): UserAuthority
+	{
 		try {
-			return $this->authority($ref->userId, $ref->collection);
+			return $this->authority($userId, $collection);
 		} catch (\Throwable) {
 			return UserAuthority::denied();
 		}

@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -49,19 +50,27 @@ readonly class McpSchemaResolver
 	/**
 	 * Effective MCP config for a collection, with defaults applied.
 	 *
-	 * @return array{access: string, description: ?string, resource: bool, titleProperty: string}
+	 * @return array{access: string, owned: bool, description: ?string, resource: bool, titleProperty: string}
 	 */
 	public function forCollection(CollectionData $collection): array
 	{
 		$mcp = $collection->mcp;
 
-		$access = (string)($mcp['access'] ?? 'admin');
-		if (!in_array($access, ['admin', 'public', 'authenticated'], true)) {
-			$access = 'admin';
-		}
+		$access = McpAccessLevel::fromString(is_string($mcp['access'] ?? null) ? $mcp['access'] : null)->value;
+
+		// Owned collections (ownerProperty) scope members to their own objects,
+		// over MCP as over REST: every read tool filters through
+		// PersonaContext::readScope(), and the storage layer stamps the owner and
+		// refuses another member's object on write. Access stays the declared
+		// value. `owned` is descriptive, for describe_collection. Declared setting,
+		// not OwnerPropertyResolver: CollectionSaver refuses an ownerProperty the
+		// schema lacks, so the two agree, and this class is built without the
+		// resolver in several places.
+		$owned = $collection->ownerProperty !== '';
 
 		return [
 			'access'        => $access,
+			'owned'         => $owned,
 			'description'   => $this->descriptions->forCollection($collection),
 			// Unset means off. A collection is exposed as an addressable
 			// `tcms://` resource only when someone said so — matching the schema
@@ -76,22 +85,15 @@ readonly class McpSchemaResolver
 	/**
 	 * Whether a persona may access this collection via MCP content tools.
 	 * Mirror policy of McpToolDefinition::isVisibleTo for collections.
+	 * $limitedKey says the caller is an API key limited to some collections,
+	 * which an `apikey` collection lets in; its paths still decide which.
 	 */
-	public function isAccessibleTo(CollectionData $collection, string $persona): bool
+	public function isAccessibleTo(CollectionData $collection, string $persona, bool $limitedKey = false): bool
 	{
-		$access = $this->forCollection($collection)['access'];
+		$caller = McpPersona::tryFrom($persona);
 
-		if ($persona === 'admin') {
-			return true;
-		}
-		if ($persona === 'public') {
-			return $access === 'public';
-		}
-		if ($persona === 'authenticated') {
-			return $access === 'public' || $access === 'authenticated';
-		}
-
-		return false;
+		return $caller instanceof McpPersona
+			&& McpAccessLevel::fromString($this->forCollection($collection)['access'])->allows($caller, $limitedKey);
 	}
 
 	/**
@@ -251,11 +253,11 @@ readonly class McpSchemaResolver
 	 * Metadata-only concern either way (ids + field names, never object
 	 * values), but the inconsistency itself is worth closing.
 	 */
-	public function renderCatalog(McpPersona $persona, int $cap = self::DEFAULT_CATALOG_CAP, ?\Closure $isReadable = null): string
+	public function renderCatalog(McpPersona $persona, int $cap = self::DEFAULT_CATALOG_CAP, ?\Closure $isReadable = null, bool $limitedKey = false): string
 	{
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value)
+			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value, $limitedKey)
 				&& (!$isReadable instanceof \Closure || $isReadable($collection)),
 		);
 

@@ -1,0 +1,32 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Activity",
+	"description" : "A record of who did what: content and schema changes, logins, file downloads by signed-in users, refused requests and MCP tool calls, each with the user, OAuth client or API key behind it. Browse it under <a href=\"utils/activity\">Utilities → Activity</a>. Rows live in <code>tcms-data/.system/activity</code> and survive application updates.",
+	"type"        : "object",
+	"properties"  : {
+		"enable": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Record Activity",
+			"help"    : "Master switch. When off, nothing new is recorded. Existing rows stay and can still be browsed until they age out.",
+			"default" : true
+		},
+		"retentionDays": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Keep Activity (days)",
+			"help"        : "Rows older than this are deleted, checked once a day. Raise it when you need a longer audit trail; the store grows by roughly a few hundred bytes per row.",
+			"placeholder" : "90",
+			"default"     : 90,
+			"min"         : 1,
+			"max"         : 3650
+		},
+		"mcpAnonymous": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Record Anonymous MCP Calls",
+			"help"    : "Tool calls from AI clients that are not signed in. Off by default: a public MCP server listed in an AI directory can take thousands of anonymous lookups a day. Signed-in callers and API keys are always recorded.",
+			"default" : false
+		}
+	}
+}

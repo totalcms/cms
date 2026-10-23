@@ -242,7 +242,11 @@ export default class DepotField extends TotalField {
 
     actionEdit() {
         const selected = this.getSelected();
-        selected.classList.contains("folder") ? this.actionEditFolder(selected) : this.actionEditFile(selected);
+        if (selected.classList.contains("folder")) {
+            this.actionEditFolder(selected);
+        } else {
+            this.actionEditFile(selected);
+        }
     }
 
     actionEditFile(file) {
@@ -851,7 +855,11 @@ export default class DepotField extends TotalField {
     }
 
     updatePreview(item) {
-        item.classList.contains("folder") ? this.updateFolderPreview(item) : this.updateFilePreview(item);
+        if (item.classList.contains("folder")) {
+            this.updateFolderPreview(item);
+        } else {
+            this.updateFilePreview(item);
+        }
     }
 
     updateFolderPreview(folder) {

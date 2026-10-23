@@ -52,6 +52,9 @@ export default class DataVisualizer {
 			mermaid.initialize({
 				startOnLoad : false,
 				theme       : this.prefersDark() ? 'dark' : 'default',
+				// Mermaid 12 defaults to ELK and the neo look; keep the diagrams as they were.
+				layout      : 'dagre',
+				look        : 'classic',
 				// Render at natural size; the viewport + pan/zoom handle large graphs.
 				er          : { useMaxWidth: false },
 			});

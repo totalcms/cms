@@ -117,6 +117,8 @@ class HeicConverter
 	private function convertWithImagickExtension(string $sourcePath, string $destinationPath, int $quality): OperationResult
 	{
 		try {
+			// iPhone HEICs are 12-48 MP; bound the decode like every other render.
+			ImagickSupport::limitResources();
 			$imagick = new \Imagick($sourcePath);
 			$imagick->setImageFormat('jpeg');
 			$imagick->setImageCompressionQuality(max(1, min(100, $quality)));

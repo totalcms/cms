@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -39,29 +39,27 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 	protected const RESOURCE_NAME = 'extension page';
 
 	public function __construct(
-		UserValidationService $userValidation,
-		AccessControlService $accessControl,
-		SessionInterface $session,
+		ActorResolver $actorResolver,
+		ActorContext $actors,
 		JsonRenderer $jsonRenderer,
 		TwigRenderer $twigRenderer,
 		ResponseFactoryInterface $responseFactory,
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
-		OAuthActivityLogger $oauthActivityLogger,
+		AccessDenials $denials,
 		private ExtensionManager $extensionManager,
 	) {
 		parent::__construct(
-			$userValidation,
-			$accessControl,
-			$session,
+			$actorResolver,
+			$actors,
 			$jsonRenderer,
 			$twigRenderer,
 			$responseFactory,
 			$config,
 			$operationDetector,
 			$loggerFactory,
-			$oauthActivityLogger,
+			$denials,
 		);
 	}
 
@@ -71,7 +69,7 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 	 * permission: 'any' pass — and only when the user's access group grants
 	 * this extension (the `extensions` block; missing block = all granted).
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
 		$extensionId = $this->requestedExtensionId($request);
 		$route       = $this->matchedExtensionRoute($request, $extensionId);
@@ -85,7 +83,7 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 			return false;
 		}
 
-		return $this->accessControl->canAccessExtension($userId, $extensionId);
+		return $actor->authority()->canExtension($extensionId);
 	}
 
 	/**

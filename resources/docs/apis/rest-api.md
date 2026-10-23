@@ -285,6 +285,8 @@ Updates only the fields you send and leaves everything else as stored. This is t
 }
 ```
 
+On an owned collection, or when the schema marks fields [`protected`](docs/schemas/validation#protected), the server may change what you sent: protected fields keep their stored value, forced fields take their configured value, and the owner property is stamped on create. The same applies to the single-property routes (`PUT`/`PATCH /api/collections/{collection}/{id}/{property}`): forced values are written in the same save. The response shows what was stored.
+
 ### Delete Object
 
 ```http
@@ -299,7 +301,7 @@ DELETE /api/collections/{collection}/{id}
 POST /api/collections/{collection}/{id}/clone
 ```
 
-Creates a copy of an existing object. Optionally clone to a different ID or collection.
+Creates a copy of an existing object. Optionally clone to a different ID or collection. Cloning into a different collection, and cloning any object in a collection that has protected properties or an owner property, is available to admins and API keys only; other callers receive 403.
 
 **Request Body (optional):**
 ```json
@@ -971,6 +973,8 @@ DELETE /api/upload/{collection}/{id}/{property}/{path}
 ```
 
 These behave similarly to the property-file endpoints above but return a single `link` URL (image/audio/video/file get routed to `imageworks` / `stream` / `download` respectively) rather than the full object. They're public-facing in the sense that the URLs need to remain stable for content embedded in saved HTML, but they're not the recommended integration surface — **prefer the `/api/collections/{collection}/{id}/{property}` endpoints above for any first-party file upload work.**
+
+These routes require the same collection access as the property routes: a session user's access group must grant `update` on the collection to upload or delete, and `read` to list or fetch. On an [owned collection](docs/collections/settings#ownerproperty) the object must also belong to the user. Earlier releases checked only that the caller was authenticated. A group with `create` only (no `update`) can therefore no longer upload rich-text images through `/api/upload/*`; grant `update`, or use the form's own upload. A non-admin upload into a [protected](docs/schemas/validation#protected) property is refused with `403`.
 
 ## File Downloads & Streaming
 

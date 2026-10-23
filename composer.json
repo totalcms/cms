@@ -62,7 +62,7 @@
     "league/html-to-markdown": "^5.0",
     "league/oauth2-server": "^9.0",
     "league/uri": "^7.4",
-    "mcp/sdk": "^0.8.1",
+    "mcp/sdk": "^0.9.0",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.8",
@@ -101,21 +101,21 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "nikic/php-parser": "^5.0",
-    "totalcms/pest-plugin-slim": "^4.0",
-    "totalcms/slim-test": "^4.0",
     "overtrue/phplint": "^9.0",
     "pestphp/pest": "^3.0",
     "pestphp/pest-plugin-arch": "^3.0",
     "pestphp/pest-plugin-faker": "^3.0",
     "pestphp/pest-plugin-type-coverage": "^3.0",
-    "phpmd/phpmd": "^2.12",
+    "phpmd/phpmd": "^3.0",
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.1",
     "selective/test-traits": "^4.1",
     "spatie/pest-plugin-snapshots": "^2.0",
     "squizlabs/php_codesniffer": "^4.0",
-    "symfony/var-dumper": "^7.1"
+    "symfony/var-dumper": "^7.1",
+    "totalcms/pest-plugin-slim": "^4.0",
+    "totalcms/slim-test": "^4.0"
   },
   "config": {
     "process-timeout": 0,
@@ -149,9 +149,8 @@
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
     "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 2G",
-    "md:src": "phpmd src ansi phpmd.xml",
-    "md:config": "phpmd config ansi phpmd.xml",
-    "md:tests": "phpmd tests ansi phpmd.xml",
+    "md:tests": "phpmd analyze tests --format=ansi --no-progress --cache --cache-file=.phpmd-tests.cache.php",
+    "md:baseline": "phpmd analyze src config --format=ansi --no-progress --update-baseline",
     "mcp:inspect": "bin/mcp-inspector.sh",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcbf.xml",
@@ -169,15 +168,13 @@
     "test:coverage:phpunit": "TCMS_TEST_MEMORY_LIMIT=4G php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. -d memory_limit=4G vendor/bin/phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --display-warnings --display-deprecations --coverage-clover build/coverage/clover.xml --coverage-html build/coverage --coverage-text",
     "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
-    "test:js": "yarn test:js",
+    "test:js": "node_modules/.bin/vp run test:js",
+    "lint:js": "node_modules/.bin/vp run lint:js",
+    "lint:js:fix": "node_modules/.bin/vp run lint:js:fix",
     "bundle": "php bin/make-bundle.php",
     "bundle:check": "php bin/make-bundle.php --check",
     "docs:validate": "php bin/validate-docs.php",
-    "md": [
-      "@md:src",
-      "@md:config",
-      "@md:tests"
-    ],
+    "md": "phpmd analyze src config --format=ansi --no-progress --cache --cache-file=.phpmd.cache.php",
     "test:format": [
       "@lint",
       "@cs"
@@ -186,25 +183,31 @@
       "@stan",
       "@docs:validate",
       "@test",
+      "@lint:js",
       "@test:js"
     ],
     "test:all:parallel": [
       "@stan",
       "@docs:validate",
       "@test:parallel",
+      "@lint:js",
       "@test:js"
     ],
     "snapshots:check": "php bin/check-snapshots.php",
     "test:build": [
       "@stan",
       "@docs:validate",
+      "@md",
       "@test",
       "@snapshots:check",
+      "@lint:js",
       "@test:js"
     ],
     "quality": [
       "@cs",
       "@stan",
+      "@md",
+      "@lint:js",
       "@rector",
       "@sniffer:check"
     ],
@@ -214,12 +217,14 @@
       "@rector",
       "@sniffer:check",
       "@md",
+      "@lint:js",
       "@test:coverage"
     ],
 	"clean": [
 		"@rector:fix",
 		"@cs:fix",
 		"@sniffer:fix",
+		"@lint:js:fix",
 		"@bundle"
 	]
   }

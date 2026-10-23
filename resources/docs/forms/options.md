@@ -37,6 +37,8 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     fieldIcons: true,              # Render the icon slot beside each field; a field's own `icon` option overrides (bool, default: true)
     addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
     register: true,                # Retarget the form at /admin/register/{collection} so the new user is also auto-logged-in (bool, default: false)
+    verifyRedirect: '/welcome',    # Register mode with email verification: where the verification link lands instead of the admin login (string, default: '')
+    botProtection: true,           # Add a honeypot and a time trap that turn away naive bots on register and public create forms (bool, default: false)
 }) }}
 ```
 
@@ -65,6 +67,34 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 - Any ID parameter in the URL or form is ignored
 - The form will always create a new object, never update existing ones
 - Protects against malicious users passing `?id=123` to edit other users' data
+
+## Member Portals: Owned Collections
+
+`addOnly` stops a visitor editing anything. When signed-in members should edit *their own* submissions and nothing else, do not rely on the form hiding other people's ids — the form posts to the REST API, which decides on access groups alone. Instead make the collection **owned**:
+
+1. Add an `owner` text property to the schema, list it in the schema's [`index`](docs/schemas/reference#index) array, and set the collection's **Owner Property** to it ([`ownerProperty`](docs/collections/settings#ownerproperty)). Members' lists are scoped by filtering the index on `owner`; if it is not indexed, every member's list comes back empty.
+2. Grant the members' access group `create`, `read`, `update` (and `delete` if they may withdraw) on the collection.
+3. Mark the moderation fields [`protected`](docs/schemas/validation#protected): `"draft": {"protected": {"value": true}}` sends every member edit back to review.
+
+The server then stamps `owner` on create and refuses any API read or write of someone else's object. The template, though, renders on the server with its own access to the collection: `cms.object.get()` loads any object you name, whoever is signed in. So check the owner before building the edit form:
+
+```twig
+{% set user = cms.auth.userData() %}
+{% set site = cms.object.get('showcase', app.request.query.get('id')) %}
+{% if user and site and site.owner == user.id %}
+    {% set form = cms.form.builder('showcase', {
+        id: site.id,
+        actions: [{ action: 'message', text: 'Saved — your changes are back in the review queue.' }]
+    }) %}
+    {% do form.addField('name') %}
+    {% do form.addField('url') %}
+    {{ form.build() }}
+{% else %}
+    <p>That submission is not yours to edit.</p>
+{% endif %}
+```
+
+The `if` is a belt-and-braces measure: `cms.form.builder()` itself refuses to load another member's object, rendering only "You do not have permission to edit this object." in place of the whole form (no fields, no save button), and the API returns `403` for the save. The deck item forms, `cms.form.deck()` and `cms.form.deckBuilder()`, refuse the same way when `id` names another member's object, whether they would edit one of its items (`itemId`) or add one. Keep the check in the template anyway so the page around the form (headings, other `cms.objects` calls) does not show the object either. Members are also refused the whole-collection routes beyond create, list and query (export, report, import, reindex, bulk delete and clone), so a portal cannot be used to pull the full collection.
 
 ## Public Registration Forms
 
@@ -95,21 +125,15 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
 
 **Required server-side opt-in:**
 
-The target collection must appear in `config.auth.publicRegistration` in `config/tcms.php`, otherwise the endpoint returns a `403 Forbidden`:
+Switch on **Allow Public Registration** in the **Public Registration** section of the target collection's settings; it is offered on collections whose schema is `auth` or inherits it. Nothing is open by default, so the operator-only `auth` collection is never exposed to public signups by accident. Without it the endpoint returns `403 Forbidden` ("Public registration is not enabled for this collection."). See [`publicRegistration`](docs/collections/settings#publicregistration).
 
-```php
-return [
-    'auth' => [
-        'publicRegistration' => ['members'],
-    ],
-];
-```
+**Registrant groups:**
 
-The allow-list is empty by default so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
+A registrant receives the global `publicRegistrationGroup` (auth settings) plus the collection's **Registration Groups**, with duplicates removed. `admin` is never granted from Registration Groups. A `groups` value submitted in the form is always ignored.
 
 ### Email Verification
 
-Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (under Public Access).
+Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (in the Public Registration section, once **Allow Public Registration** is on).
 
 When enabled:
 
@@ -130,10 +154,30 @@ When enabled:
    ```
 
 4. The form also dispatches a `cms:form:verification-required` event for custom JS (analytics, redirects, etc.)
-5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page
+5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page (or to your own page — see below)
 6. If the link expired, the user is redirected to `/admin/resend-verification` where they can request a fresh link
 
-A "Resend verification email" link is auto-added below the login form whenever `publicRegistration` is non-empty.
+#### Landing on your own page after verification
+
+By default the verification link ends on the admin login page. To send members to a page on your site instead, set `verifyRedirect` on the registration form:
+
+```twig
+{{ cms.form.builder('users', {register: true, verifyRedirect: '/login'}) }}
+```
+
+The form posts the target as a hidden field. It travels on the verification token only — it is never saved on the user record — so the link in the email lands on `/login` once the account is active. If the link has expired, the target rides along to the resend form, and the fresh link lands there too.
+
+The target must be on your own site: a path such as `/login` or `/members/welcome`, or a full `http(s)` URL on the same host as the form. Anything else (another domain, `//host`) is dropped and the link lands on the admin login page as before.
+
+The verification sets a success flash message. Your landing page should show it, since the visitor arrives expecting confirmation:
+
+```twig
+{% for message in flash.get('success') %}
+    <p class="cms-twig-info" role="alert">{{ message }}</p>
+{% endfor %}
+```
+
+A "Resend verification email" link appears below the login form when a sign-in fails because the account is not yet active.
 
 Default behavior (when the toggle is **off**) is unchanged: the new user is authenticated and signed in before the response returns — no verification step.
 
@@ -146,10 +190,36 @@ Verification-related config (in `config/tcms.php` under `auth`):
 
 **Security caveats the operator owns:**
 
-- Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — gate the form with a CAPTCHA or rate limit even when verification is on.
-- New users land in whatever default access group the auth collection's schema assigns. If that group reaches gated content, every verified signup gains that access.
+- Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — turn on [Bot Protection](#bot-protection) even when verification is on.
+- New users receive the global `publicRegistrationGroup` plus the collection's Registration Groups (never `admin`). If those groups reach gated content, every verified signup gains that access.
 - Password validation (minimum length etc.) is the schema's responsibility, not the endpoint's.
 - The verification flow assumes the auth schema has an `email` field. If your custom schema doesn't, the verification email cannot be sent — the account is still created (inactive) but stays in limbo unless an admin activates it manually.
+
+### Bot Protection
+
+`botProtection: true` adds two hidden fields to a register form or a public create form, with no CAPTCHA for visitors to solve:
+
+```twig
+{{ cms.form.builder('members', {register: true, botProtection: true}) }}
+{{ cms.form.builder('enquiries', {addOnly: true, botProtection: true}) }}
+```
+
+- **A honeypot**: a text field moved off-screen and hidden from screen readers and the keyboard. A person never fills it; a bot that fills every field does.
+- **A time trap**: a token holding the time the form was rendered, signed with the site's key, the collection and the form type. A submission sent less than 3 seconds after the form rendered, more than a day later, or with a forged token fails. A token from one form does not work on another.
+
+A submission that fails is answered as if it succeeded, so the bot learns nothing: a register form gets the response a real signup gets (with `meta.requiresVerification: true` when the collection requires email verification) and a create form gets the usual saved-object response. Nothing is saved, no one is signed in and no email is sent. The access log records each one at info level with the reason (`honeypot`, `missing`, `too_fast`, `expired` or `bad_signature`).
+
+The exception is an expired token: the form genuinely came from your site and was left open for more than a day, so the visitor gets a `422` with "This form has expired. Reload the page and try again."
+
+Do not put a bot-protected form inside `{% cache %}`: a cached token expires and visitors see the reload message.
+
+Signed-in visitors never see the fields and are never checked. With authentication disabled, public creates are not checked (the register endpoint still is).
+
+The endpoints check only submissions that carry the fields, so a form without `botProtection` keeps working. To refuse posts that skip the check altogether, a bot posting straight to the endpoint, switch on **Require Bot Protection** in the collection's Access Controls ([`requireBotProtection`](docs/collections/settings#requirebotprotection)). The collection's register form, and its new-object forms when it allows public `create`, then include the fields without the option. A public clone is checked like a create, so on such a collection an anonymous clone is answered with a decoy and nothing is copied.
+
+A form's mailer action sends the bot fields with its mail, and the mailer endpoint checks them too. A mailer template with **Require Bot Protection** on adds the fields to the create and register forms that send it, without the option. See [Bot protection for form mail](docs/notifications/mailer#bot-protection-for-form-mail).
+
+Bot protection stops naive bots. A bot that loads the form in a real browser and waits gets through, so keep email verification on where accounts reach anything of value.
 
 ## Actions
 

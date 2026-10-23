@@ -29,6 +29,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
 use function Sentry\captureException;
@@ -135,6 +136,9 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
+			// The hosting account's disk quota is full (EDQUOT) — usually first
+			// seen as Monolog failing to write a log line. Same story as above.
+			'Disk quota exceeded',
 			// session_start() returned false: session.save_path is missing,
 			// unwritable, or the account is out of inodes/quota. Seen on shared
 			// hosting where crawler traffic fills the session directory. PHP
@@ -199,7 +203,7 @@ class SentryMiddleware implements MiddlewareInterface
 			// schema validation correctly refuses to re-encode it.
 			'Malformed UTF-8 characters',
 			// User schema references a property type that doesn't exist.
-			'Unknown property type for object',
+			'Unknown property type "',
 			// Operator never ran `tcms oauth:setup`, so the OAuth signing key is
 			// missing/invalid (see OAuthServerFactory::loadSigningKey).
 			'OAuth signing key is missing or invalid',
@@ -213,6 +217,11 @@ class SentryMiddleware implements MiddlewareInterface
 			// Corrupted vendor tree — an abstract class resolved where its
 			// concrete provider file is missing (e.g. broken Faker install).
 			'Cannot instantiate abstract class',
+			// PDO has no sqlite driver: the host's PHP (often a different binary
+			// for cron than for the web) was built without pdo_sqlite, which the
+			// job queue and mailer log need. Server configuration, and a cron
+			// every minute reports it every minute.
+			'could not find driver',
 			// User Twig template calling an adapter/function without its
 			// required arguments. This surfaces at shutdown as an
 			// ErrorException — a genuinely thrown ArgumentCountError is our own
@@ -256,6 +265,12 @@ class SentryMiddleware implements MiddlewareInterface
 			// it as a RuntimeException from the fetcher.
 			'Nested file data missing at',
 			'Unable to locate nested file at',
+			// A file-property save was given a URL to fetch and the remote host
+			// answered with an error status or refused the connection. The URL
+			// is caller-supplied (API clients, importers); nothing in T3 fixes
+			// the other server.
+			'HTTP error when downloading file',
+			'Failed to download file from URL',
 		],
 	];
 
@@ -376,6 +391,22 @@ class SentryMiddleware implements MiddlewareInterface
 		// segment plus the Windows variant for cross-platform installs.
 		$file = $exception->getFile();
 		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
+			return null;
+		}
+
+		// Site-specific extensions live at `<projectRoot>/extensions/` (see
+		// ExtensionDiscovery) and are the site's own code, same as the above.
+		// Bundled extensions under resources/extensions/ are ours and still report.
+		$projectExtensions = PathResolver::projectRoot() . DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR;
+		if ($projectExtensions !== DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR && str_starts_with($file, $projectExtensions)) {
+			return null;
+		}
+
+		// Slim could not resolve a middleware or route handler class. T3's own
+		// are checked by PHPStan and the test suite, so this is a class a site
+		// added in its public/index.php (or a half-uploaded install) — the
+		// message names the class, and nothing in T3 fixes it.
+		if ($exception instanceof \RuntimeException && preg_match('/^Callable \S+ does not exist$/', $exception->getMessage()) === 1) {
 			return null;
 		}
 

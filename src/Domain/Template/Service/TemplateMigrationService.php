@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Template\Service;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 readonly class TemplateMigrationService
 {
@@ -105,9 +106,7 @@ readonly class TemplateMigrationService
 			}
 
 			$destDir = \dirname($destPath);
-			if (!is_dir($destDir)) {
-				mkdir($destDir, 0o775, true);
-			}
+			FileUtils::ensureDirectory($destDir, 0o775);
 			file_put_contents($destPath, $contents);
 			$imported++;
 		}

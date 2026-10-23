@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Data;
 
+use TotalCMS\Domain\License\Data\EditionFeature;
+
 /**
  * An MCP resource template — a URI pattern like `tcms://blog/{id}` that AI
  * agents fill in to construct concrete URIs for resources/read. One template
@@ -24,7 +26,8 @@ readonly class McpResourceTemplateDefinition extends AbstractMcpResource
 		string $access,
 		\Closure $handler,
 		?string $collectionId = null,
+		?EditionFeature $edition = null,
 	) {
-		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId);
+		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId, edition: $edition);
 	}
 }

@@ -10,6 +10,8 @@ use Psr\Log\NullLogger;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -17,6 +19,7 @@ use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\PageRouterMiddleware;
+use Twig\Error\RuntimeError;
 
 final class PageRouterMiddlewareTest extends TestCase
 {
@@ -305,33 +308,134 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertStringContainsString('Custom 404', (string)$response->getBody());
 	}
 
-	public function testHeadlessModeViaQueryParamReturnsJson(): void
+	public function testTemplateNotFoundRendersFallback404InPlace(): void
 	{
-		$request = (new ServerRequestFactory())->createServerRequest('GET', '/about?_format=json');
+		// A collection URL matched a draft; the template called cms.notFound().
+		// The answer is the 404 page at the visitor's URL with status 404 — no
+		// Location header — exactly as if nothing had matched.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/articles/my-draft');
 		$handler = $this->createHandler(404);
 
-		$match = new RouteMatch(
-			template: 'pages/about.twig',
-			pageData: ['id' => 'about', 'title' => 'About'],
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/articles.twig',
+			pageData: ['id' => 'my-draft', 'draft' => true],
+			params: ['id' => 'my-draft'],
+			collection: 'articles',
+		));
+		$this->pageRouter->expects($this->once())->method('fallback404')->willReturn(new RouteMatch(
+			template: 'pages/not-found.twig',
+			pageData: ['id' => 'not-found'],
 			params: [],
-		);
+			status: 404,
+		));
 
-		$this->pageRouter->method('match')->willReturn($match);
-		$this->twigEngine->expects($this->never())->method('render');
+		// Twig wraps a function's exception in its RuntimeError, once per
+		// include level — the middleware must find ours through the chain.
+		$wrapped = new RuntimeError('An exception has been thrown during the rendering of a template', -1, null, new RuntimeError('inner', -1, null, new PageNotFoundException()));
+		$this->twigEngine->method('render')->willReturnCallback(
+			static fn (string $template): string => $template === 'pages/not-found.twig' ? '<html>Custom 404</html>' : throw $wrapped,
+		);
 
 		$response = $this->middleware->process($request, $handler);
 
-		$this->assertSame(200, $response->getStatusCode());
-		$this->assertStringContainsString('application/json', $response->getHeaderLine('Content-Type'));
-
-		$payload = json_decode((string)$response->getBody(), true);
-		$this->assertSame(['id' => 'about', 'title' => 'About'], $payload['page']);
-		$this->assertSame('pages/about.twig', $payload['template']);
+		$this->assertSame(404, $response->getStatusCode());
+		$this->assertFalse($response->hasHeader('Location'));
+		$this->assertStringContainsString('Custom 404', (string)$response->getBody());
 	}
 
-	public function testHeadlessModeViaAcceptHeaderReturnsJson(): void
+	public function testTemplateRedirectAnswersWithLocation(): void
 	{
-		$request = (new ServerRequestFactory())->createServerRequest('GET', '/about')
+		// A forwarding page (a badge link) called cms.redirect(): the answer is
+		// the redirect itself, no body, with the query string kept as given.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/badges/davide');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/badge-link.twig',
+			pageData: ['id' => 'badge-link'],
+			params: ['handle' => 'davide'],
+		));
+		$this->pageRouter->expects($this->never())->method('fallback404');
+		$this->twigEngine->method('render')->willThrowException(new PageRedirectException('/@davide?mtm_campaign=badge'));
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/@davide?mtm_campaign=badge', $response->getHeaderLine('Location'));
+		$this->assertSame('', (string)$response->getBody());
+	}
+
+	public function testTemplateRedirectThroughTwigWrapping(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/old');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/old.twig',
+			pageData: ['id' => 'old'],
+			params: [],
+		));
+		$wrapped = new RuntimeError('An exception has been thrown during the rendering of a template', -1, null, new RuntimeError('inner', -1, null, new PageRedirectException('https://example.com/new', 301)));
+		$this->twigEngine->method('render')->willThrowException($wrapped);
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(301, $response->getStatusCode());
+		$this->assertSame('https://example.com/new', $response->getHeaderLine('Location'));
+	}
+
+	public function testTemplateNotFoundWithoutFallbackPageReturnsPlain404(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/articles/my-draft');
+		$handler = $this->createHandler(404, 'Slim not found');
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/articles.twig',
+			pageData: ['id' => 'my-draft'],
+			params: [],
+			collection: 'articles',
+		));
+		$this->pageRouter->method('fallback404')->willReturn(null);
+		$this->twigEngine->method('render')->willThrowException(new PageNotFoundException());
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+		$this->assertSame('Slim not found', (string)$response->getBody());
+	}
+
+	public function testTemplateNotFoundDoesNotLoopWhenThe404PageItselfFails(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/articles/my-draft');
+		$handler = $this->createHandler(404, 'Slim not found');
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/articles.twig',
+			pageData: ['id' => 'my-draft'],
+			params: [],
+			collection: 'articles',
+		));
+		$this->pageRouter->expects($this->once())->method('fallback404')->willReturn(new RouteMatch(
+			template: 'pages/not-found.twig',
+			pageData: ['id' => 'not-found'],
+			params: [],
+			status: 404,
+		));
+		// Every render raises not-found, the 404 page's included.
+		$this->twigEngine->method('render')->willThrowException(new PageNotFoundException());
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+		$this->assertSame('Slim not found', (string)$response->getBody());
+	}
+
+	public function testJsonAcceptHeaderOrFormatParamStillRendersTheTemplate(): void
+	{
+		// Until 3.6.3 either one returned the matched record as JSON before
+		// the template ran — every field, drafts included, no template guard.
+		// Record data is the API's job; the page router only renders.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/about?_format=json')
 			->withHeader('Accept', 'application/json');
 		$handler = $this->createHandler(404);
 
@@ -342,51 +446,12 @@ final class PageRouterMiddlewareTest extends TestCase
 		);
 
 		$this->pageRouter->method('match')->willReturn($match);
-		$this->twigEngine->expects($this->never())->method('render');
-
-		$response = $this->middleware->process($request, $handler);
-
-		$payload = json_decode((string)$response->getBody(), true);
-		$this->assertSame(['lang' => 'en'], $payload['params']);
-	}
-
-	public function testHtmlAcceptHeaderDoesNotTriggerHeadlessMode(): void
-	{
-		$request = (new ServerRequestFactory())->createServerRequest('GET', '/about')
-			->withHeader('Accept', 'text/html, */*');
-		$handler = $this->createHandler(404);
-
-		$match = new RouteMatch(
-			template: 'pages/about.twig',
-			pageData: ['id' => 'about'],
-			params: [],
-		);
-
-		$this->pageRouter->method('match')->willReturn($match);
-		$this->twigEngine->method('render')->willReturn('<html>About</html>');
+		$this->twigEngine->expects($this->once())->method('render')->willReturn('<html>About</html>');
 
 		$response = $this->middleware->process($request, $handler);
 
 		$this->assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
-	}
-
-	public function testHeadlessModePreservesCustomStatus(): void
-	{
-		$request = (new ServerRequestFactory())->createServerRequest('GET', '/gone?_format=json');
-		$handler = $this->createHandler(404);
-
-		$match = new RouteMatch(
-			template: 'pages/gone.twig',
-			pageData: ['id' => 'gone'],
-			params: [],
-			status: 410,
-		);
-
-		$this->pageRouter->method('match')->willReturn($match);
-
-		$response = $this->middleware->process($request, $handler);
-
-		$this->assertSame(410, $response->getStatusCode());
+		$this->assertSame('<html>About</html>', (string)$response->getBody());
 	}
 
 	public function testRedirectsWhen301WithLocationSet(): void
@@ -571,29 +636,6 @@ final class PageRouterMiddlewareTest extends TestCase
 		$response = $this->middleware->process($request, $handler);
 
 		$this->assertSame(200, $response->getStatusCode());
-	}
-
-	public function testHeadlessModeForCollectionMatchUsesObjectField(): void
-	{
-		$request = (new ServerRequestFactory())->createServerRequest('GET', '/blog/hello?_format=json');
-		$handler = $this->createHandler(404);
-
-		$match = new RouteMatch(
-			template: 'pages/blog.twig',
-			pageData: ['id' => 'hello', 'title' => 'Hello'],
-			params: ['id' => 'hello'],
-			collection: 'blog',
-		);
-
-		$this->pageRouter->method('match')->willReturn($match);
-
-		$response = $this->middleware->process($request, $handler);
-		$payload  = json_decode((string)$response->getBody(), true);
-
-		$this->assertArrayHasKey('object', $payload);
-		$this->assertArrayNotHasKey('page', $payload);
-		$this->assertSame('hello', $payload['object']['id']);
-		$this->assertSame('blog', $payload['collection']);
 	}
 
 	public function testPassesThroughFor500Errors(): void

@@ -29,6 +29,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Action\Admin\Utils\AccessPageData;
+use TotalCMS\Action\Admin\Utils\ActivityPageData;
 use TotalCMS\Action\Admin\Utils\ImportPageData;
 use TotalCMS\Action\Admin\Utils\JumpStartPageData;
 use TotalCMS\Action\Admin\Utils\OAuthPageData;
@@ -38,11 +39,17 @@ use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Activity\Listener\ActivityListener;
+use TotalCMS\Domain\Activity\Repository\ActivityRepository;
+use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
@@ -83,6 +90,8 @@ use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\Install\ExtensionArchive;
+use TotalCMS\Domain\Extension\Service\Install\ExtensionInstaller;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -93,6 +102,7 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
@@ -101,6 +111,7 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\McpSessionListener;
 use TotalCMS\Domain\Mcp\Service\ResilientSessionStore;
@@ -113,11 +124,14 @@ use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\DeleteCollectionTool;
+use TotalCMS\Domain\Mcp\Tool\Admin\DeleteObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\TemplateTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\UpdateCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Compat\FetchTool;
 use TotalCMS\Domain\Mcp\Tool\Compat\SearchTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
@@ -192,6 +206,7 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\BadgeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
@@ -581,6 +596,10 @@ return [
 		pageMiddlewareRegistry  : $container->get(PageMiddlewareRegistry::class),
 		navRegistry             : $container->get(AdminNavRegistry::class),
 		dataViewLister          : $container->get(DataViewLister::class),
+		session                 : $container->get(SessionInterface::class),
+		guard                   : $container->get(AccessGuard::class),
+		actors                  : $container->get(ActorContext::class),
+		mailers                 : $container->get(MailerFetcher::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
@@ -602,6 +621,7 @@ return [
 		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 		$container->get(SeoTwigAdapter::class),
+		new BadgeTwigAdapter(),
 		// Lazy: the engine's `cms` global is this adapter.
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 	),
@@ -654,6 +674,7 @@ return [
 		$extLevel   = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
 		$dispatcher = new EventDispatcher(
 			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Events, $extLevel),
+			$container->get(ActorContext::class),
 		);
 
 		// Register internal listeners with lazy resolution to avoid circular deps.
@@ -781,6 +802,19 @@ return [
 		$dispatcher->listen('object.updated', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 
+		// ActivityListener — records who changed, downloaded or was refused
+		// what, for Utilities → Activity. Priority 100 = after the core
+		// listeners; it only writes a row, so order among the 100s is moot.
+		foreach (ActivityListener::EVENTS as $activityEvent) {
+			$dispatcher->listen(
+				$activityEvent,
+				static function (array $payload) use ($container, $activityEvent): void {
+					$container->get(ActivityListener::class)->handle($activityEvent, $payload);
+				},
+				100,
+			);
+		}
+
 		// AutomationEventSubscriber — fans every core event out to matching
 		// event-trigger automations (enqueued async). Priority 100 = after all
 		// core listeners, so index/cache are already updated when an automation
@@ -808,6 +842,20 @@ return [
 		return new ExtensionDiscovery(
 			$container->get(Config::class),
 			$container->get(ManifestValidator::class),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
+		);
+	},
+
+	// Explicit because LoggerInterface is not bound; the installer logs to
+	// the extensions channel like the manager and discovery.
+	ExtensionInstaller::class => function (ContainerInterface $container): ExtensionInstaller {
+		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
+
+		return new ExtensionInstaller(
+			$container->get(ExtensionArchive::class),
+			$container->get(ExtensionDiscovery::class),
+			$container->get(ExtensionStateRepository::class),
+			$container->get(Config::class),
 			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 		);
 	},
@@ -950,7 +998,10 @@ return [
 		$container->get(CacheTools::class)->register($registry);
 		$container->get(ExtensionTools::class)->register($registry);
 		$container->get(CollectionTools::class)->register($registry);
+		$container->get(UpdateCollectionTool::class)->register($registry);
+		$container->get(DeleteCollectionTool::class)->register($registry);
 		$container->get(ObjectTools::class)->register($registry);
+		$container->get(DeleteObjectTool::class)->register($registry);
 		// Read-only: list_templates / get_template. No save tool — writing
 		// Twig is a larger authority grant than writing content and is a
 		// separate decision.
@@ -1037,6 +1088,7 @@ return [
 	// LoggerInterface (which is not bound to a concrete class by default).
 	SchemaToolRegistrar::class => fn (ContainerInterface $container): SchemaToolRegistrar => new SchemaToolRegistrar(
 		$container->get(CollectionRepository::class),
+		$container->get(McpSchemaResolver::class),
 		$container->get(SavedQueryToolFactory::class),
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::McpSchemaTools, Level::Debug),
@@ -1054,6 +1106,7 @@ return [
 	PromptDiscoveryService::class => fn (ContainerInterface $container): PromptDiscoveryService => new PromptDiscoveryService(
 		$container->get(IndexFilter::class),
 		$container->get(CollectionRepository::class),
+		$container->get(McpSchemaResolver::class),
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::McpPrompts, Level::Debug),
 	),
@@ -1083,6 +1136,8 @@ return [
 		$container->get(OAuthScopeRegistry::class),
 		$container->get(OAuthActivityLogger::class),
 		$container->get(NotificationBusInterface::class),
+		$container->get(EditionFeatureService::class),
+		$container->get(McpToolActivity::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at
@@ -1275,6 +1330,12 @@ return [
 
 	// The utilities page → builder map. Explicit rather than autowired so the
 	// set of pages each builder serves is visible in one place.
+	ActivityRecorder::class => fn (ContainerInterface $container): ActivityRecorder => new ActivityRecorder(
+		$container->get(ActivityRepository::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Activity),
+	),
+
 	UtilsPageDataResolver::class => function (ContainerInterface $container): UtilsPageDataResolver {
 		$oauth      = $container->get(OAuthPageData::class);
 		$access     = $container->get(AccessPageData::class);
@@ -1289,6 +1350,7 @@ return [
 			'project-setup'         => $import,
 			'import-totalcms-one'   => $import,
 			'import-rss'            => $import,
+			'activity'              => $container->get(ActivityPageData::class),
 			'update'                => $container->get(UpdatePageData::class),
 			'sync'                  => $container->get(SyncPageData::class),
 			'jumpstart'             => $container->get(JumpStartPageData::class),

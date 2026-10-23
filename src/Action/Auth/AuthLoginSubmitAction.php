@@ -12,9 +12,11 @@ use TotalCMS\Domain\Auth\Exception\InvalidCredentialsException;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
+use TotalCMS\Domain\OAuth\Service\OAuthLoginCollection;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Action.
@@ -30,6 +32,7 @@ readonly class AuthLoginSubmitAction
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
 		private TranslationService $translator,
+		private OAuthLoginCollection $oauthLogin,
 	) {
 	}
 
@@ -82,9 +85,13 @@ readonly class AuthLoginSubmitAction
 		$persistentLogin = !empty($data['persistent_login']);
 		$collection      = $args['collection'] ?? '';
 
+		// On the OAuth login page, mid-way through connecting an AI client,
+		// staff from the default collection can sign in too.
+		$fallback = $this->oauthLogin->fallsBackToDefault($collection, (string)$this->session->get(SessionKeys::REQUEST_ORIGIN_URL, ''));
+
 		$user = null;
 		try {
-			$user = $this->loginService->authenticate($idOrEmail, $password, $collection);
+			$user = $this->loginService->authenticate($idOrEmail, $password, $collection, $fallback);
 		} catch (AccountNotActiveException $e) {
 			// Distinct flag so the login template can surface a "resend
 			// verification email" link inline with the error. The generic
@@ -154,29 +161,11 @@ readonly class AuthLoginSubmitAction
 	}
 
 	/**
-	 * Allow a post-login redirect only to this site: a relative path
-	 * (single leading slash — `//host` is scheme-relative and external) or
-	 * an absolute http(s) URL whose host matches the request host. Anything
-	 * else returns the fallback.
+	 * Allow a post-login redirect only to this site — the rule lives in
+	 * {@see SameOriginRedirect}, shared with the verification redirect.
 	 */
 	private function sameOriginRedirect(string $candidate, string $requestHost, string $fallback): string
 	{
-		if ($candidate === '') {
-			return $fallback;
-		}
-
-		if (str_starts_with($candidate, '/') && !str_starts_with($candidate, '//')) {
-			return $candidate;
-		}
-
-		$parts = parse_url($candidate);
-		if (is_array($parts)
-			&& in_array($parts['scheme'] ?? '', ['http', 'https'], true)
-			&& strcasecmp((string)($parts['host'] ?? ''), $requestHost) === 0
-		) {
-			return $candidate;
-		}
-
-		return $fallback;
+		return SameOriginRedirect::resolve($candidate, $requestHost, $fallback);
 	}
 }

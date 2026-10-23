@@ -21,6 +21,7 @@ readonly class ObjectUpdater
 		private ObjectFactory $factory,
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private EventDispatcher $eventDispatcher,
+		private ObjectWriteGate $gate,
 	) {
 	}
 
@@ -39,8 +40,15 @@ readonly class ObjectUpdater
 	 */
 	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false, bool $preserveDates = false): ObjectData
 	{
-		if (!$object instanceof ObjectData) {
-			$object = $this->factory->generateObject($collection, $object);
+		// Every update funnels through here (property, file, deck, upload and
+		// meta writes included), so this is where the current actor's access
+		// rules apply: they must own the object, protected fields revert, and
+		// forced fields take their configured value. A no-op for trusted
+		// actors and unprotected collections.
+		$data    = $object instanceof ObjectData ? $object->toArray() : $object;
+		$guarded = $this->gate->beforeUpdate($collection, $id, $data);
+		if (!$object instanceof ObjectData || $guarded !== $data) {
+			$object = $this->factory->generateObject($collection, $guarded);
 		}
 
 		if ($object->id !== $id) {

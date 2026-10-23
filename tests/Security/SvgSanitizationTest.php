@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\SvgData;
 use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
@@ -193,9 +194,7 @@ final class SvgSanitizationTest extends TestCase
 		new SvgData($maliciousPayload);
 	}
 
-	/**
-	 * @dataProvider entityReferencingPayloadProvider
-	 */
+	#[DataProvider('entityReferencingPayloadProvider')]
 	public function testRefusesAnySvgThatReferencesAnEntity(string $label, string $payload): void
 	{
 		// The three shapes 0.22 used to accept and clean: an XXE file read, a
@@ -218,9 +217,7 @@ final class SvgSanitizationTest extends TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider ordinaryExportProvider
-	 */
+	#[DataProvider('ordinaryExportProvider')]
 	public function testOrdinaryDesignToolExportsStillPassThrough(string $label, string $payload): void
 	{
 		// The compatibility half of the above. A DOCTYPE on its own is what every

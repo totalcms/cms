@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -35,7 +36,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 			// This file never invokes a built tool's ->handle() — only tests
 			// SavedQueryToolFactory's shaping — so PersonaContext's Task 10b
 			// constructor deps never matter; plain stubs satisfy the type.
-			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext()),
 			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
 			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
 			CollectionRepository::class           => $this->createMock(CollectionRepository::class),

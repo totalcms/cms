@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import Autogen from '../../javascript/totalform/autogen.js';
+import TotalField from '../../javascript/totalform/totalfield.js';
 
 //-----------------------------------------------
 // Autogen interpolates a pattern like "${title}-${oid-0000}" from form data plus
@@ -105,5 +106,111 @@ describe('designer token pattern', () => {
 
 		expect(token).toHaveLength(14);
 		expect(token.slice(0, 7)).not.toBe(token.slice(7));
+	});
+});
+
+describe('Autogen.attachListeners', () => {
+	// Reproduces the Auth-collection report: the schema's form order puts the
+	// profile `image` field BEFORE the `name` field, so the image's readonly
+	// "Filename" sub-input (also name="name") is the first `[name="name"]` in
+	// the DOM. The listener must land on the form's own Name field, not on the
+	// composite's sub-field, or typing a name never regenerates the id.
+	function buildForm() {
+		document.body.innerHTML = `
+			<form>
+				<div class="form-field" data-type="id"><input name="id" value=""></div>
+				<div class="form-field" data-type="image">
+					<input name="image" type="hidden">
+					<details>
+						<div class="form-field" data-type="text"><input name="name" value="avatar.jpg" readonly></div>
+						<div class="form-field" data-type="number"><input name="width" value="800" readonly></div>
+					</details>
+				</div>
+				<div class="form-field" data-type="text"><input name="name" value=""></div>
+			</form>`;
+		return document.querySelector('form');
+	}
+
+	function makeAutogenIn(formEl, pattern, { isInDeck = false, deckItem = null } = {}) {
+		const field = {
+			settings: { autogen: pattern },
+			isInDeck,
+			deckItem,
+			form: { form: formEl, generateData: () => ({}) },
+		};
+		return new Autogen(field);
+	}
+
+	// What TotalField.changed() dispatches (see dispatcher.js): bubbling, on the
+	// field's own container.
+	const fieldChange = (container, type = 'field-change') =>
+		container.dispatchEvent(new CustomEvent(type, { bubbles: true }));
+
+	test('listens on the form\'s own field, not a composite sub-field rendered earlier', () => {
+		const formEl = buildForm();
+		const callback = vi.fn();
+		makeAutogenIn(formEl, '${name}').attachListeners(callback);
+
+		const [filenameInput, nameInput] = formEl.querySelectorAll('input[name="name"]');
+		expect(filenameInput.hasAttribute('readonly')).toBe(true); // sanity: DOM order is image first
+
+		fieldChange(nameInput.closest('.form-field'));
+		expect(callback).toHaveBeenCalledTimes(1);
+
+		// The Filename sub-field's own event bubbles through the image, never the Name field.
+		fieldChange(filenameInput.closest('.form-field'), 'subfield-change');
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
+	test('scopes to the deck item and skips its composite sub-fields too', () => {
+		document.body.innerHTML = `
+			<form>
+				<div class="form-field" data-type="text"><input name="name" value="outer"></div>
+				<div class="form-field" data-type="deck">
+					<div class="deck-item">
+						<div class="form-field" data-type="image">
+							<input name="photo" type="hidden">
+							<div class="form-field" data-type="text"><input name="name" value="pic.jpg" readonly></div>
+						</div>
+						<div class="form-field" data-type="text"><input name="name" value=""></div>
+					</div>
+				</div>
+			</form>`;
+		const formEl = document.querySelector('form');
+		const deckItem = document.querySelector('.deck-item');
+		const callback = vi.fn();
+		makeAutogenIn(formEl, '${name}', { isInDeck: true, deckItem }).attachListeners(callback);
+
+		const [outer, filename, own] = formEl.querySelectorAll('input[name="name"]');
+		// Deck item fields are nested in the deck's .form-field, so they emit subfield-change.
+		fieldChange(own.closest('.form-field'), 'subfield-change');
+		expect(callback).toHaveBeenCalledTimes(1);
+		fieldChange(filename.closest('.form-field'), 'subfield-change');
+		fieldChange(outer.closest('.form-field'));
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
+	test('follows a field that sets its value in code and never fires a native change', async () => {
+		// Tiptap, date, color, list, card, … all do this: input.value = x; this.changed().
+		// Before this listened for the TotalField event, `${title}` from one of those never ran.
+		vi.useFakeTimers();
+		try {
+			document.body.innerHTML = `
+				<form>
+					<div class="form-field" data-type="id"><input name="id" value=""></div>
+					<div class="form-field" data-type="styledtext"><textarea name="title"></textarea></div>
+				</form>`;
+			const formEl = document.querySelector('form');
+			const titleField = new TotalField(formEl.querySelector('[data-type="styledtext"]'), {});
+			const callback = vi.fn();
+			makeAutogenIn(formEl, '${title}').attachListeners(callback);
+
+			titleField.input.value = '<p>Hello</p>';
+			titleField.changed();
+			vi.advanceTimersByTime(300); // the dispatcher debounce
+			expect(callback).toHaveBeenCalledTimes(1);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

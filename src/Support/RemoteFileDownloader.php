@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Support;
 
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
+
 /**
  * Fetch a URL into the configured temp directory.
  *
@@ -35,9 +37,7 @@ final readonly class RemoteFileDownloader
 	 */
 	public function download(string $url, array $options = []): string
 	{
-		if (!is_dir($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0700, true);
-		}
+		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
 
 		$prefix   = $options['prefix'] ?? null;
 		$filename = $prefix === null ? self::filenameFor($url) : self::uniqueFilenameFor($url, $prefix);

@@ -56,6 +56,10 @@ class MetaBuilder
 			$rawTitle = $this->scalarString($ctx->object['title'] ?? null);
 		}
 		$title = $authored ? $rawTitle : $this->applyTemplate($rawTitle, $ctx->siteName, $s->titleTemplate);
+		$name  = $this->scalarString($ctx->object['title'] ?? null);
+		if ($name === '') {
+			$name = $rawTitle;
+		}
 
 		// Share title: the card's Social Title, then the collection's social
 		// title template, else the raw title. The site's social title template
@@ -142,6 +146,7 @@ class MetaBuilder
 		return new MetaPayload(
 			title: $title,
 			rawTitle: $rawTitle,
+			name: $name,
 			socialTitle: $socialTitle,
 			description: $description,
 			socialDescription: $socialDescription,

@@ -66,7 +66,7 @@ export default class StyledTextField extends TotalField {
 	getValue() {
 		if (this.tiptap) {
 			let content = this.tiptap.getHTML();
-			content = content.replace(/\%25/g, "%"); // fix for double encoding of many characters such as colon
+			content = content.replace(/%25/g, "%"); // fix for double encoding of many characters such as colon
 
 			// Return empty string if the editor has no real content (just empty tags)
 			const tmp = document.createElement('div');
@@ -118,7 +118,6 @@ export default class StyledTextField extends TotalField {
 	}
 
 	defaultConfig() {
-		const megabyte = 1024 * 1024;
 		const height   = this.input.dataset.height > 0 ? this.input.dataset.height : null;
 		const uploadUrl = () => this.uploadAPI();
 

@@ -158,7 +158,6 @@ class ImageBatcher {
 		this.batchPreview.innerHTML = '';
 
 		for (let i = 0; i < this.images.length; i++) {
-			const image = this.images[i];
 			const container = document.createElement('div');
 			container.className = 'batch-item';
 			container.innerHTML = `

@@ -54,8 +54,21 @@ Three merge rules to know:
   part of it (this is also how you *remove* a deck item).
 - **Clearing is explicit.** Pass the empty value (`""` for text, `[]` for
   containers) to clear a field. Omitting a field never clears it.
-- **Binary fields are untouchable.** Image, file, gallery, and depot fields
-  always keep their current values; a payload that sets one is refused.
+- **Files stay; their metadata is editable.** Image, file, gallery, and depot
+  fields keep their uploaded files. Send a metadata edit to change alt text,
+  tags, a focal point or a download label — `{"alt": "…"}` for an image, a
+  list matched by `name` for a gallery or by `path` for a depot. See
+  [Binary fields](docs/mcp/server#binary-fields-on-the-object-write-tools).
+
+### Owned collections and site-set fields
+
+On a collection with an [owner property](docs/collections/settings#ownerproperty),
+a signed-in member works on their own objects: reads return theirs (drafts
+included) plus published ones, `create_object` records them as the owner
+whatever the payload says, and writing to someone else's object answers
+"not found". Fields the site sets itself — protected fields and the owner —
+keep the site's value whatever the agent sends. `describe_collection` returns
+both limits in its `ownership` field, so check it before planning edits.
 
 ## update_object
 
@@ -73,8 +86,9 @@ If you write back an object you fetched, rather than only the changed fields:
    the original HTML. `html` returns fields as stored.
 2. **Strip the `url` key.** Read tools decorate each item with its public
    `url`; it is not part of the object and must not be written back.
-3. **Strip binary fields** (image, file, gallery, depot). A payload that sets
-   one is refused; omitted, they keep their values.
+3. **Leave binary fields as fetched, or drop them** (image, file, gallery,
+   depot). Only their descriptive metadata can change; omitted, they keep
+   their values.
 4. **Send it** to `update_object` or `patch_object`. The response echoes the
    saved object — confirm your change is in it.
 

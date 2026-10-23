@@ -14,6 +14,8 @@ class SlugData extends PropertyData implements \Stringable
 	// Regular expression for allowed characters in slug.
 	private const SLUGREGEX = '/([^A-Za-z0-9_])+/';
 
+	private static ?Slugify $slugifier = null;
+
 	public string $slug;
 
 	public function __construct(string $slug = '', public array $settings = [])
@@ -23,10 +25,22 @@ class SlugData extends PropertyData implements \Stringable
 
 	public static function slugify(string $slug): string
 	{
-		$slugify = new Slugify(['regexp' => self::SLUGREGEX]);
-		$slugify->addRule('@', '-at-');
+		return self::slugifier()->slugify($slug);
+	}
 
-		return $slugify->slugify($slug);
+	/**
+	 * One Slugify per process. Its constructor activates all 21 bundled rule
+	 * sets (thousands of addRule calls), and every ObjectData slugifies its id,
+	 * so building one per call cost a listing page a fifth of its request.
+	 */
+	private static function slugifier(): Slugify
+	{
+		if (!self::$slugifier instanceof Slugify) {
+			self::$slugifier = new Slugify(['regexp' => self::SLUGREGEX]);
+			self::$slugifier->addRule('@', '-at-');
+		}
+
+		return self::$slugifier;
 	}
 
 	public function transform(): string

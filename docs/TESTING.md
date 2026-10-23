@@ -82,6 +82,8 @@ vendor/bin/pest --parallel
 composer run test:updatesnaps
 ```
 
+The test Twig cache under `tests/.workers/*/cache` does not invalidate when a template is edited: after changing a template, delete its compiled class there (or the whole cache directory) before running feature tests, or they render the old template.
+
 ### Quality Assurance Commands
 
 ```bash

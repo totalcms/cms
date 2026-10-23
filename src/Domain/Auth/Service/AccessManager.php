@@ -117,8 +117,30 @@ class AccessManager
 		return false;
 	}
 
-	/** @return array<string,mixed> */
+	/**
+	 * The signed-in user's full record, password hashes included. For
+	 * internal callers only — templates and the PHP API use publicUserData().
+	 *
+	 * @return array<string,mixed>
+	 */
 	public function userData(): array
+	{
+		return $this->loadUserData(false);
+	}
+
+	/**
+	 * Same shape as userData() (including `collection`) but without any
+	 * password property. Safe to hand to templates.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function publicUserData(): array
+	{
+		return $this->loadUserData(true);
+	}
+
+	/** @return array<string,mixed> */
+	private function loadUserData(bool $withoutPasswords): array
 	{
 		if (!$this->sessionHasUser()) {
 			return [];
@@ -127,10 +149,9 @@ class AccessManager
 		$this->getSessionData();
 
 		try {
-			$userData = $this->userValidator->validateUserById($this->userID, $this->userCollection);
+			$userData = $this->userValidator->validateUserById($this->userID, $this->userCollection, $withoutPasswords);
 		} catch (\Throwable) {
 			// Current session user could be in a different user collection
-			// $this->session->delete('user');
 			return [];
 		}
 

@@ -2,24 +2,14 @@
 
 namespace Tests\Unit\Action\Object;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\NullLogger;
 use TotalCMS\Action\Object\ObjectUpdatePropertyAction;
-use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Support\Config;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectUpdatePropertyActionTest extends TestCase
@@ -37,24 +27,7 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		$this->request       = $this->createMock(ServerRequestInterface::class);
 		$this->response      = $this->createMock(ResponseInterface::class);
 
-		// Real guard with an empty-schema policy: protectedFieldsFor() is always
-		// empty for these non-auth collections, so guardProperty() never blocks.
-		$schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
-		$config              = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->auth        = ['enable' => true, 'collection' => 'auth'];
-		$policyLoggerFactory = $this->createMock(LoggerFactory::class);
-		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
-		$policy = new AuthFieldPolicy(
-			$schemaFetcher,
-			$this->createMock(UserValidationService::class),
-			$this->createMock(ObjectFetcher::class),
-			$config,
-			$policyLoggerFactory,
-		);
-		$guard = new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class));
-
-		$this->action = new ObjectUpdatePropertyAction($this->renderer, $this->objectUpdater, $guard);
+		$this->action = new ObjectUpdatePropertyAction($this->renderer, $this->objectUpdater);
 	}
 
 	public function testUpdatesPropertySuccessfully(): void

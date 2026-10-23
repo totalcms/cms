@@ -133,6 +133,25 @@ final class UserValidationServiceTest extends TestCase
 		]);
 	}
 
+	public function testValidateUserByIdWithoutPasswordsOmitsHash(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+		$config->auth  = ['collection' => 'users'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->expects($this->never())->method('toArray');
+		$mockUser->method('toArrayWithoutPasswords')->willReturn(['id' => 'jane-doe', 'email' => 'jane@example.com']);
+		$objectFetcher->method('existsObject')->willReturn(true);
+		$objectFetcher->method('fetchObject')->willReturn($mockUser);
+
+		$result = (new UserValidationService($searcher, $objectFetcher, $config))->validateUserById('jane-doe', '', true);
+
+		expect($result)->not->toHaveKey('password');
+		expect($result['email'])->toBe('jane@example.com');
+	}
+
 	public function testValidateUserByIdThrowsExceptionForEmptyUserId(): void
 	{
 		$searcher      = $this->createMock(IndexSearcher::class);

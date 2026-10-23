@@ -22,7 +22,7 @@ use TotalCMS\Support\Config;
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
-	@mkdir(cmsDataDir() . '.system', 0755, true);
+	is_dir(cmsDataDir() . '.system') || mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/settings.json', (string)json_encode([
 		'siteName' => 'EU Organization',
 		'smtp'     => ['host' => 'mail.example.eu', 'port' => 587],

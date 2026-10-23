@@ -20,7 +20,7 @@ beforeEach(function (): void {
 	$this->totalcms->method('container')->willReturn($container);
 
 	$app = new Application();
-	$app->add(new CollectionConvertCommand($this->totalcms));
+	$app->addCommand(new CollectionConvertCommand($this->totalcms));
 	$this->tester = new CommandTester($app->find('collection:convert'));
 });
 

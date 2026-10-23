@@ -136,6 +136,10 @@ usual reason — set the path explicitly in `tcms.php`:
 $settings['session']['save_path'] = '/var/lib/tcms-sessions';
 ```
 
+Any other PHP application on the site that shares the session cookie must
+open its session in the same folder, or the two apps end up with separate
+copies of one session. See [Sharing Sessions with Other PHP Apps](docs/operations/sharing-sessions).
+
 ### Sharing a login across subdomains
 
 By default a login applies to one hostname. The session cookie is set for the

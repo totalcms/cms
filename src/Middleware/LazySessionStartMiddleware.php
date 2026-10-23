@@ -61,11 +61,18 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 	 * and script behind `/api/assets/` (and every extension asset behind
 	 * `/api/ext/{vendor}/{name}/assets/`) was reaching the origin on each
 	 * first visit despite its one-year immutable cache header.
+	 *
+	 * Front-end URLs ending in an image extension are on it too: a Site
+	 * Builder page that serves an image (a badge other sites embed, an OG
+	 * card) otherwise opens a session, and sets a cookie, on every view of
+	 * every page the image sits on. Admin and API paths keep their session
+	 * whatever they end in.
 	 */
 	private function isSessionlessPath(string $path): bool
 	{
 		return preg_match('#(^|/)imageworks/#', $path) === 1
 			|| preg_match('#(^|/)api/assets/#', $path) === 1
-			|| preg_match('#(^|/)api/ext/[^/]+/[^/]+/assets/#', $path) === 1;
+			|| preg_match('#(^|/)api/ext/[^/]+/[^/]+/assets/#', $path) === 1
+			|| (preg_match('#\.(svg|png|jpe?g|gif|webp|avif|ico)$#i', $path) === 1 && preg_match('#(^|/)(admin|api)/#', $path) !== 1);
 	}
 }

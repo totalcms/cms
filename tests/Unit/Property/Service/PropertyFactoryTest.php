@@ -10,6 +10,7 @@ use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\IntegerData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
@@ -207,9 +208,39 @@ class PropertyFactoryTest extends TestCase
 		$value          = 'test';
 
 		$this->expectException(\UnexpectedValueException::class);
-		$this->expectExceptionMessage('Unknown property type for object.');
+		$this->expectExceptionMessage('Unknown property type "unknowntype" for property "position".');
 
-		$this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value);
+		$this->propertyFactory->generateProperty(PropertyDefinition::fromArray($propertySchema), $value, 'position');
+	}
+
+	public function testGeneratePropertyNamesTheTypeWhenThePropertyIsAnonymous(): void
+	{
+		$this->expectException(\UnexpectedValueException::class);
+		$this->expectExceptionMessage('Unknown property type "unknowntype".');
+
+		$this->propertyFactory->generateProperty(PropertyDefinition::fromArray(['type' => 'unknowntype']), 'test');
+	}
+
+	/**
+	 * The docs recommend `"type": "integer"` for whole numbers, and the reserved
+	 * schemas use it, but there is no IntegerData class: building the class
+	 * name from the type threw "Unknown property type" on every save.
+	 */
+	public function testGeneratePropertyAcceptsIntegerAsAWholeNumber(): void
+	{
+		$definition = PropertyDefinition::fromArray(['type' => 'integer', 'field' => 'number', 'default' => 0]);
+
+		$property = $this->propertyFactory->generateProperty($definition, '3', 'position');
+		$this->assertInstanceOf(IntegerData::class, $property);
+		$this->assertSame(3, $property->transform());
+
+		$fromDefault = $this->propertyFactory->generateProperty($definition, null, 'position');
+		$this->assertSame(0, $fromDefault->transform());
+
+		// Objects are validated against the schema after transform, so a
+		// fraction must survive to be rejected there, not be truncated to 2
+		$fraction = $this->propertyFactory->generateProperty($definition, 2.5, 'position');
+		$this->assertSame(2.5, $fraction->transform());
 	}
 
 	public function testCreateDeckWithEmptyValue(): void

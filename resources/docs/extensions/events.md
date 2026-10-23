@@ -21,6 +21,26 @@ public function register(ExtensionContext $context): void
 
 The `priority` parameter controls execution order (lower numbers run first). Default is `0`.
 
+## Who Caused the Event
+
+Every payload carries an `actor` key alongside the event's own keys below: who caused the event, captured when it fired. A listener that defers its work, such as a queued automation or an audit log, still records the person rather than whoever processes the queue.
+
+| Key | Type | Description |
+|---|---|---|
+| `kind` | `string` | `system`, `apikey`, `admin`, `member` or `anonymous` |
+| `userId` | `string` | The user's ID, or `''` for system, API key and anonymous |
+| `authCollection` | `string` | The auth collection the user belongs to |
+| `clientId` | `string` | The OAuth client the user connected through, `webmcp` for a browser session over MCP, or `''` |
+| `apiKeyId` | `string` | The API key's ID, or `''` |
+| `initiator` | `?array` | For work the system does on someone's behalf (an automation an admin ran, a registration, a login stamp), the person who started it, in the same shape. `null` otherwise |
+
+```php
+$context->addEventListener('object.updated', function (array $payload): void {
+    $who = $payload['actor']['initiator'] ?? $payload['actor'];
+    // e.g. "alex (member) updated blog/post-1"
+});
+```
+
 ## Available Events
 
 ### `object.created`
@@ -309,6 +329,48 @@ The payload also includes per-service results (e.g. `filesystem`, `redis`, `apcu
 ```php
 $context->addEventListener('cache.cleared', function (array $payload): void {
     // e.g., clear your extension's own cache
+});
+```
+
+### `access.denied`
+
+Fired when the access checks refuse a request, or when the storage layer refuses a write the request's own checks let through. Who was refused is the payload's `actor`. An unauthenticated request to a page that needs a login does not fire it.
+
+| Key | Type | Description |
+|---|---|---|
+| `resource` | `string` | What was asked for: `collection`, `schema`, `object`, … |
+| `operation` | `string` | `create`, `read`, `update`, `delete`, … |
+| `reason` | `string` | The check that refused: `group`, `owner`, `protected`, or `''` |
+| `collection` | `string` | The collection, when the request named one |
+| `id` | `string` | The object ID, when the request named one |
+| `route` | `string` | The route name, or `''` below the HTTP layer |
+| `method` | `string` | The HTTP method, or `''` below the HTTP layer |
+| `path` | `string` | The request path, or `''` below the HTTP layer |
+
+```php
+$context->addEventListener('access.denied', function (array $payload): void {
+    // e.g. alert when one user is refused repeatedly
+});
+```
+
+### `file.downloaded`
+
+Fired when a file is served as an attachment from a `/download/...` URL, after its protection (access groups, password) passed. Who downloaded it is the payload's `actor`; for a visitor who is not signed in that is `anonymous`. Inline streams from `/stream/...` do not fire it, since a media player makes many range requests for one play.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | The collection |
+| `id` | `string` | The object ID |
+| `property` | `string` | The file, depot or styled-text property |
+| `filename` | `string` | The file name the download was saved as |
+| `subpath` | `string` | The depot subfolder, or `''` |
+| `protected` | `bool` | Whether the file is limited to access groups or a password |
+
+```php
+$context->addEventListener('file.downloaded', function (array $payload): void {
+    if ($payload['actor']['kind'] === 'member') {
+        // e.g. count downloads per member
+    }
 });
 ```
 

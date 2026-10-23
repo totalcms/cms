@@ -7,7 +7,7 @@ namespace TotalCMS\Middleware\Access;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Data\Actor;
 
 /**
  * Schema Access Middleware.
@@ -21,7 +21,7 @@ readonly class SchemaAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested schema.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get schema ID from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -33,22 +33,9 @@ readonly class SchemaAccessMiddleware extends BaseAccessMiddleware
 
 		$schema = $route->getArgument('schema');
 
-		// OAuth Bearer callers: no PHP session to derive groups from — use the
-		// UserAuthority resolved from the token by BaseAccessMiddleware.
-		$authority = $request->getAttribute('accessAuthority');
-		if ($authority instanceof UserAuthority) {
-			return $schema
-				? $authority->canSchema($operation, $schema)
-				: $authority->canSchemasOperation($operation);
-		}
-
-		// Check access permissions
-		if ($schema) {
-			// Specific schema - check access to that schema
-			return $this->accessControl->canAccessSchema($userId, $schema, $operation);
-		}
-
-		// No specific schema (e.g., GET /schemas, POST /schemas) - check general schema operation permission
-		return $this->accessControl->canAccessSchemasOperation($userId, $operation);
+		// A specific schema, or schemas in general (GET /schemas, POST /schemas).
+		return $schema
+			? $actor->authority()->canSchema($operation, $schema)
+			: $actor->authority()->canSchemasOperation($operation);
 	}
 }

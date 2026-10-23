@@ -20,7 +20,8 @@ function buildPageCollectionsForm(array $collections, array $rawSchemas): TotalF
 	$lister = test()->createMock(CollectionLister::class);
 	$lister->method('listAllCollections')->willReturn($collections);
 
-	$fetcher = test()->createMock(SchemaFetcher::class);
+	// Partial: the real isOrInherits() reads the stubbed raw schemas.
+	$fetcher = test()->createPartialMock(SchemaFetcher::class, ['fetchRawSchema']);
 	$fetcher->method('fetchRawSchema')->willReturnCallback(function (string $id) use ($rawSchemas): SchemaData {
 		if (!isset($rawSchemas[$id])) {
 			throw new RuntimeException("Schema not found: {$id}");

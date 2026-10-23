@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -15,6 +16,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -37,14 +39,12 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * Binary fields are checked at the PAYLOAD level, not the schema level: a
  * collection that merely *contains* an image / file / gallery / depot field
- * can still be written, as long as the call doesn't try to set one. Binary
- * upload needs a request-shape MCP doesn't have today (multipart bodies,
- * persistent storage handles), so a payload that puts a value into a binary
- * field is refused with a clear error naming the offenders — but omitting
- * them is fine. On create the field is left unset; on update the merge
- * leaves the existing value alone. This lets agents
- * build real content-rich collections (blog posts, etc.) that happen to have
- * an optional image field, instead of being blocked outright.
+ * can still be written. Upload needs a request shape MCP doesn't have
+ * (multipart bodies, persistent storage handles), so create_object refuses a
+ * value in a binary field. update_object / patch_object take a metadata edit
+ * there instead — alt text, tags, a focal point, a download label — merged
+ * over the uploaded file by {@see MediaMetaEdit}; the file itself never
+ * changes. Omitted, the field keeps its value.
  *
  * Card and deck fields are allowed at the top level even though they
  * can nest binary fields, because most of the time they don't. If
@@ -77,6 +77,14 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * `McpSchemaResolver::isAccessibleTo()` check the read tools run — before
  * doing anything else. ADMIN is unaffected (`isAccessibleTo()` always
  * returns true for it), same as every other exposure check in this codebase.
+ *
+ * **Owned and protected collections take member writes.** The storage
+ * layer applies the request actor's rules to every write
+ * ({@see ObjectWriteGate}): a create is
+ * stamped with its owner, protected fields revert and forced ones take
+ * their value. What is left here is the refusal's wording: an update of an
+ * object the caller does not own answers exactly like a missing one, so an
+ * agent cannot probe for other members' ids.
  *
  * **Non-exposed properties are stripped from every write response.** Each
  * handler returns the saved/patched object, which previously came back as a
@@ -112,7 +120,7 @@ readonly class ObjectTools
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'create_object',
-			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection. Binary fields (image, file, gallery, depot) cannot be given VALUES via MCP yet, but a collection that merely CONTAINS them is fully writable — omit those fields from data (they are left unset) and populate them in the admin UI. Only a payload that puts a non-empty value into a binary field is refused.',
+			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection. Files cannot be uploaded via MCP: omit image, file, gallery and depot fields (they are left unset) and upload in the admin UI; a payload that puts a value into one is refused. Once uploaded, their metadata is editable with patch_object.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: [
@@ -140,7 +148,7 @@ readonly class ObjectTools
 						// → PHP [] workaround that mcp/sdk needs for optional
 						// fields.
 						'type'        => 'object',
-						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Omit binary fields (image, file, gallery, depot) — they cannot be given values via MCP yet, and a payload that sets one is refused. Their presence in the schema does not block the write.',
+						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Omit image, file, gallery and depot fields — files cannot be uploaded via MCP, and a payload that sets one is refused. Their presence in the schema does not block the write.',
 					],
 				],
 			],
@@ -156,7 +164,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
-			description: 'Update an existing object. Required: collection + id + data. Same behavior as patch_object: fields present in data are written, omitted fields keep their current values — sending the complete object or only the fields you change both work. Container fields (card, deck, list) are replaced whole when present. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that puts a non-empty value into one is refused.',
+			description: 'Update an existing object. Required: collection + id + data. Same behavior as patch_object: fields present in data are written, omitted fields keep their current values — sending the complete object or only the fields you change both work. Container fields (card, deck, list) are replaced whole when present. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name"; a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif; files download, comments, tags. Files cannot be uploaded, replaced, added or removed via MCP.',
 			access: 'admin',
 			handler: $this->updateHandler(...),
 			inputSchema: [
@@ -194,7 +202,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'patch_object',
-			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that sets a non-empty value into one is refused. update_object behaves the same way.',
+			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name"; a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif; files download, comments, tags. Files cannot be uploaded, replaced, added or removed via MCP. update_object behaves the same way.',
 			access: 'admin',
 			handler: $this->patchHandler(...),
 			inputSchema: [
@@ -260,7 +268,7 @@ readonly class ObjectTools
 
 		try {
 			$object = $this->saver->saveObject($collection, $data);
-		} catch (\DomainException|\UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException|AccessDeniedException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not create object in "%s": %s',
 				$collection,
@@ -297,7 +305,7 @@ readonly class ObjectTools
 	 * over the stored object (REST PATCH semantics via ObjectPatcher).
 	 *
 	 * update_object used to be a full replace, and every field an agent left
-	 * out reverted to its schema default. Agents can't send binary values or
+	 * out reverted to its schema default. Agents can't upload files or send
 	 * passwords at all — passwords are never exposed to them — so a replace
 	 * needed a carry-forward for each kind of field it would otherwise wipe,
 	 * and still lost anything an agent simply forgot. A merge of a complete
@@ -313,23 +321,11 @@ readonly class ObjectTools
 	{
 		$schema         = $this->fetchSchemaOrFail($collection, $toolName);
 		$collectionData = $this->requireExposed($collection, $toolName);
-		$binary         = $this->binaryFieldsIn($schema);
 
-		$this->refuseIfPayloadWritesBinary($collection, $toolName, $data, $binary);
 		$this->refuseIfPayloadWritesVideoPoster($collection, $toolName, $data, $schema);
 
-		// The write never touches binary fields: non-empty values were refused
-		// above, and empty echoes are stripped here so the merge can't clear
-		// an existing image/file value.
-		$data = $this->stripBinaryFields($data, $binary);
-		$data = $this->preserveVideoPosters($collection, $id, $data, $schema);
-
-		// The merged object must keep the route id — drop any divergent id the
-		// agent slipped into the payload rather than failing the equality
-		// assertion downstream.
-		$data['id'] = $id;
-
-		if (!$this->objectFetcher->existsObject($collection, $id)) {
+		if (!$this->objectFetcher->existsObject($collection, $id)
+			|| !$this->personaContext->mayChangeObject($collection, $id)) {
 			throw new ToolCallException(sprintf(
 				'%s: object "%s/%s" not found. Use query_collection to discover ids, or create_object to create it.',
 				$toolName,
@@ -338,9 +334,20 @@ readonly class ObjectTools
 			));
 		}
 
+		// Image, file, gallery and depot fields take metadata edits only,
+		// merged over the stored value; an empty echo is dropped so the merge
+		// can't clear an uploaded file.
+		$data = $this->mergeMediaMeta($toolName, $collection, $id, $data, $this->binaryFieldsIn($schema));
+		$data = $this->preserveVideoPosters($collection, $id, $data, $schema);
+
+		// The merged object must keep the route id — drop any divergent id the
+		// agent slipped into the payload rather than failing the equality
+		// assertion downstream.
+		$data['id'] = $id;
+
 		try {
 			$object = $this->patcher->patchObject($collection, $id, $data);
-		} catch (\DomainException|\UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException|AccessDeniedException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not %s object "%s/%s": %s',
 				$toolName === 'update_object' ? 'update' : 'patch',
@@ -388,10 +395,12 @@ readonly class ObjectTools
 	private function requireExposed(string $collection, string $toolName): CollectionData
 	{
 		try {
-			return $this->personaContext->exposedCollection($collection, 'access');
+			$collectionData = $this->personaContext->exposedCollection($collection, 'access');
 		} catch (ToolCallException $e) {
 			throw new ToolCallException($toolName . ': ' . lcfirst($e->getMessage()), $e->getCode(), $e);
 		}
+
+		return $collectionData;
 	}
 
 	/**
@@ -446,7 +455,7 @@ readonly class ObjectTools
 		}
 
 		throw new ToolCallException(sprintf(
-			'%s: collection "%s" payload sets binary field(s) [%s]. Image, file, gallery, and depot fields can\'t be written via MCP — omit them from your payload (on update they keep their current value) and edit them in the admin UI.',
+			'%s: collection "%s" payload sets binary field(s) [%s]. Files can\'t be uploaded via MCP — omit these fields and upload in the admin UI. Once a file is uploaded, update_object / patch_object can edit its metadata (alt text, tags, focal point…).',
 			$toolName,
 			$collection,
 			implode(', ', array_map(
@@ -454,6 +463,34 @@ readonly class ObjectTools
 				$attempted,
 			)),
 		));
+	}
+
+	/**
+	 * Lay each media field's edit over its stored value ({@see MediaMetaEdit});
+	 * drop empty echoes. The stored object is read only when there is an edit.
+	 *
+	 * @param array<string,mixed>                  $data
+	 * @param list<array{name:string,type:string}> $binary
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function mergeMediaMeta(string $toolName, string $collection, string $id, array $data, array $binary): array
+	{
+		$stored = null;
+		$edit   = new MediaMetaEdit($toolName, $collection);
+		foreach ($binary as $field) {
+			$name = $field['name'];
+			if (!array_key_exists($name, $data) || $this->isEmpty($data[$name])) {
+				unset($data[$name]);
+
+				continue;
+			}
+
+			$stored ??= $this->objectFetcher->fetchObject($collection, $id)->toArray();
+			$data[$name] = $edit->apply($name, $field['type'], $stored[$name] ?? null, $data[$name]);
+		}
+
+		return $data;
 	}
 
 	/**

@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
@@ -16,11 +22,14 @@ final class CollectionToolsTest extends TestCase
 {
 	private MockObject $saver;
 	private CollectionTools $tool;
+	private PersonaContext $persona;
 
 	protected function setUp(): void
 	{
-		$this->saver = $this->createMock(CollectionSaver::class);
-		$this->tool  = new CollectionTools($this->saver);
+		$this->saver   = $this->createMock(CollectionSaver::class);
+		$this->persona = new PersonaContext($this->createMock(CollectionFetcher::class), $this->createMock(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$this->persona->set(McpPersona::ADMIN);
+		$this->tool = new CollectionTools($this->saver, $this->persona);
 	}
 
 	private function collection(string $id, string $schema = 'blog'): CollectionData
@@ -111,6 +120,68 @@ final class CollectionToolsTest extends TestCase
 				'description' => 'Reviews from customers',
 			],
 		);
+	}
+
+	// ─── registration settings: admin callers only ──────────────────────────
+
+	/** @return array<string,array{array<string,mixed>}> */
+	public static function registrationExtras(): array
+	{
+		return [
+			'publicRegistration' => [['publicRegistration' => true]],
+			'registrationGroups' => [['registrationGroups' => ['admin']]],
+		];
+	}
+
+	/**
+	 * A collections-meta create grantee reaches this tool as AUTHENTICATED;
+	 * with the registration settings they could open registration that
+	 * hands registrants a group of their choosing.
+	 *
+	 * @param array<string,mixed> $extra
+	 */
+	#[DataProvider('registrationExtras')]
+	public function testCreateRefusesRegistrationSettingsFromANonAdminCaller(array $extra): void
+	{
+		$this->persona->set(McpPersona::AUTHENTICATED);
+		$this->saver->expects($this->never())->method('saveCollection');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Only admin callers may set publicRegistration or registrationGroups.');
+
+		$this->tool->createHandler(id: 'members', schema: 'auth', extra: $extra);
+	}
+
+	public function testCreateAcceptsOtherExtraFromANonAdminCaller(): void
+	{
+		$this->persona->set(McpPersona::AUTHENTICATED);
+		$this->saver->expects($this->once())->method('saveCollection')->willReturn($this->collection('members', 'auth'));
+
+		$result = $this->tool->createHandler(id: 'members', schema: 'auth', extra: ['name' => 'Members']);
+
+		$this->assertSame('members', $result['id']);
+	}
+
+	/**
+	 * @param array<string,mixed> $extra
+	 */
+	#[DataProvider('registrationExtras')]
+	public function testCreateAcceptsRegistrationSettingsFromAnAdminCaller(array $extra): void
+	{
+		$this->saver->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(static fn (array $data): bool => array_intersect_key($data, $extra) === $extra))
+			->willReturn($this->collection('members', 'auth'));
+
+		$this->tool->createHandler(id: 'members', schema: 'auth', extra: $extra);
+	}
+
+	public function testCreateDescriptionNamesTheAdminOnlyRegistrationSettings(): void
+	{
+		$registry = new ToolRegistry();
+		$this->tool->register($registry);
+
+		$this->assertStringContainsString('publicRegistration and registrationGroups: admin callers only', $registry->get('create_collection')->description);
 	}
 
 	public function testCreateConvertsDuplicateIdToRecoveryHint(): void

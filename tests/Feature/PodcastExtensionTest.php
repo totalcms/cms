@@ -30,7 +30,7 @@ beforeEach(function (): void {
 	// Enable the bundled extension before the app boots: the state file is
 	// what ExtensionManager reads, and an enabled state with no permissions
 	// recorded permits every capability.
-	@mkdir(cmsDataDir() . '.system', 0755, true);
+	is_dir(cmsDataDir() . '.system') || mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/podcast' => ['enabled' => true]]));
 	$this->setUpApp(bootstrap());
 	$container = $this->app->getContainer();

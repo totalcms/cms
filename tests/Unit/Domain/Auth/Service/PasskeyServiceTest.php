@@ -54,6 +54,7 @@ final class PasskeyServiceTest extends TestCase
 			$this->objectPatcher,
 			$this->indexReader,
 			$this->loggerFactory,
+			systemActors(),
 		);
 	}
 

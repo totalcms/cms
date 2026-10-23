@@ -134,6 +134,52 @@ only bites in data you write by hand (JumpStart, the API, imports).
 | grouping collections in the admin sidebar | the collection's `category` setting |
 | grouping schemas in the schema editor | the schema's top-level `category` (`Internal` is reserved — never use it) |
 
+**Know what `relationalOptions` can do before designing around it.** It fills
+a select from one collection or one Data View. Each option's value is one
+property of an object (default `id`), and its label is one or more properties
+or a `format` template. It cannot merge two collections, prefix a value
+(`site:<id>`), or filter by the object being edited ("only this member's
+items"). When the options need any of that, do not build a Data View to fake
+it. Keep the field a `text` or plain `select` in the schema, and have the
+front-end form pass `options` it built in Twig for that user. The admin can
+edit the raw value.
+
+### Ordering: sort by what the data already says
+
+Do not reach for a `sort` or `order` number field first. It is the lazy
+answer. Every new object needs a number, and inserting one in the middle
+renumbers the rest. Two editors pick the same number, and the number means
+nothing to anyone reading the record. Work through these in order and stop at
+the first that fits:
+
+1. **Look at how the list is used, then at the properties already there.**
+   A blog reads newest first (`date`), a directory alphabetically (`name`,
+   with `natural: true` so "Item 2" comes before "Item 10"), a price list by
+   `price`, an events list by start date. Most lists already carry the
+   property they should be ordered by.
+2. **Rank the values of an existing property.** When the order follows a
+   field with a fixed set of values (a team by `position`, a menu by
+   `course`), the collection's `manualSort` setting lists those values in
+   order and the `manualSort` filter applies it. Its `remainder` rule sorts
+   anything not in the list. Editors never type a number.
+3. **Chain sorts before adding anything.** `sortCollection` takes several
+   keys, so "featured first, then newest, then by title" is one call, not a
+   new field.
+4. **Only then add a property, and make its name say why the item moves.**
+   - A `featured` toggle lifts a few items to the top.
+   - A small `weight` select (1 to 3, default 2) lets an editor lead with one
+     item or sink one without numbering the rest. An unset weight reads as
+     the default.
+   - Name the property for its intent (`featured`, `pinned`, `weight`), never
+     `sort`.
+   - If the order is meant to be fair, `shuffle` the list, then apply the
+     weight with a stable sort so the shuffle holds within each weight.
+
+A free position number is right only when the order is truly arbitrary and
+editorial, with no property behind it and few enough items to keep in your
+head (the steps of a process, say). Even then, ask whether those items belong
+in one object's `deck` rather than in a collection of their own.
+
 **Public pages need the SEO card.** Any schema whose objects render as pages
 should carry `seo` (a `card` referencing the reserved `seo` schema), a
 full-width `formgrid` row (`seo seo`), **and** `seo` in the `index` array —

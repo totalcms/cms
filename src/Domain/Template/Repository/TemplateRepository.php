@@ -6,6 +6,7 @@ use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -130,9 +131,7 @@ class TemplateRepository
 	{
 		$absolute = $this->paths->writePath($relativePath);
 		$dir      = \dirname($absolute);
-		if (!is_dir($dir)) {
-			mkdir($dir, 0o775, true);
-		}
+		FileUtils::ensureDirectory($dir, 0o775);
 		file_put_contents($absolute, $contents);
 	}
 

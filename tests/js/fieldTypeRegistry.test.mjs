@@ -79,3 +79,62 @@ describe('TotalForm.registerFieldType', () => {
 		expect(() => TotalForm.registerFieldType('shout', 'ShoutField')).toThrow(TypeError);
 	});
 });
+
+//-----------------------------------------------
+// extendFieldType(): an extension field built on a core field. The core class
+// may be on the page already (admin.js) or still a loader (forms.js), so the
+// extension hands over a function from the base class to its subclass and
+// the registry calls it once the base class is in hand.
+//-----------------------------------------------
+describe('TotalForm.extendFieldType', () => {
+	const formHost = () => Object.assign(Object.create(TotalForm.prototype), {
+		pending: new Set(), fields: [], droplets: [], form: document.createElement('form'),
+	});
+
+	beforeEach(() => {
+		for (const key of Object.keys(TotalForm.fieldTypes)) delete TotalForm.fieldTypes[key];
+		vi.restoreAllMocks();
+	});
+
+	test('subclasses a core class that is already loaded, synchronously', () => {
+		TotalForm.registerBuiltInFieldTypes({ text: TotalField, shout: ShoutField });
+		TotalForm.extendFieldType('whisper', 'shout', Base => class extends Base {
+			getValue() { return super.getValue() + '!'; }
+		});
+
+		const field = factory(fieldElement('whisper'));
+
+		expect(field).toBeInstanceOf(ShoutField);
+		expect(field.getValue()).toBe('HELLO!');
+	});
+
+	test('waits for a core class that is still a loader', async () => {
+		TotalForm.registerBuiltInFieldTypes({ text: TotalField, shout: { lazy: async () => ({ default: ShoutField }) } });
+		TotalForm.extendFieldType('whisper', 'shout', Base => class extends Base {
+			getValue() { return super.getValue() + '!'; }
+		});
+
+		const host = formHost();
+		expect(host.generateFieldObject(fieldElement('whisper'))).toBeNull();
+		await host.whenReady();
+
+		expect(host.fields[0]).toBeInstanceOf(ShoutField);
+		expect(host.fields[0].getValue()).toBe('HELLO!');
+	});
+
+	test('resolves the base when the field is built, so it can register before the core types', async () => {
+		TotalForm.registerBuiltInFieldTypes({});
+		TotalForm.extendFieldType('whisper', 'shout', Base => class extends Base {});
+		TotalForm.registerBuiltInFieldTypes({ text: TotalField, shout: ShoutField });
+
+		const host = formHost();
+		host.generateFieldObject(fieldElement('whisper'));
+		await host.whenReady();
+
+		expect(host.fields[0]).toBeInstanceOf(ShoutField);
+	});
+
+	test('rejects a missing extend function', () => {
+		expect(() => TotalForm.extendFieldType('whisper', 'shout', null)).toThrow(TypeError);
+	});
+});

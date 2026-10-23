@@ -456,6 +456,62 @@ Email must be unique. The value 'john@example.com' already exists in another obj
 
 **Note:** If you mark a property as unique but don't include it in the index, you'll receive a helpful error message prompting you to add it to the index.
 
+## Protected Values
+
+### protected
+
+Make a property admin-only. A user who is not a super admin cannot set it: on update the stored value is kept, on create the field is dropped, and the attempt is written to the access log. The rest of the save goes through, so a form that includes the field still works — the protected value just does not change.
+
+```json
+{
+	"protected": true
+}
+```
+
+Add a `value` to also **force** the property on every authenticated non-admin write (session or OAuth user), whether or not the request included it — the exceptions are listed under the rules below:
+
+```json
+{
+	"protected": { "value": true }
+}
+```
+
+**Example — moderation flags:**
+```json
+{
+	"draft": {
+		"type": "boolean",
+		"label": "Draft",
+		"help": "Awaiting review. Every member edit sets it back to true.",
+		"field": "toggle",
+		"default": true,
+		"protected": { "value": true }
+	},
+	"featured": {
+		"type": "boolean",
+		"label": "Featured",
+		"help": "Editor's pick. Admins only.",
+		"field": "toggle",
+		"default": false,
+		"protected": true
+	}
+}
+```
+
+With this, a member's submission is a draft until an admin approves it, and any later edit by the member returns it to draft. The admin changes `draft` through the dashboard or API as usual. A member's request to the protected property's **own** route (`PUT .../{id}/draft`, or deleting, uploading into or editing deck items of that property) is refused with `403`; a member's request to any **other** property route (`PUT .../{id}/title`) succeeds and writes the forced values alongside.
+
+**Rules:**
+- `protected` binds every writer who is not a super admin, on any collection. API keys and **admin** OAuth bearer tokens are trusted and not filtered. A bearer token issued to a non-admin user is treated as that user.
+- `protected` is honoured on top-level properties only. A `protected` flag inside a card or deck child schema is ignored.
+- Accepted shapes are `true` and an object with a `value` key. Anything else is reported by `schema:lint` and ignored at runtime.
+- A forced `value` still has to pass the property's own validation.
+- A non-admin cannot clone an object in a collection that has protected properties, because a clone would copy values they cannot write. A public `create` does not make that clone public either. A non-admin clone whose body names a different target `collection` is refused on any collection.
+- A non-admin cannot import into a collection that has protected properties (`/api/import/collections/{collection}/...`: CSV, JSON, deck CSV, deck JSON and factory): an import upserts whole objects. Refused clones and imports are logged with `reason: protected`.
+- Over MCP, a collection with protected properties accepts writes (`create_object`, `update_object`, `patch_object`) from admin callers only.
+- Forced values apply to every authenticated non-admin write (session or OAuth user) — body routes, property routes, deck items, file and upload routes, meta writes and property deletes — in the same save, so editing `title`, adding a deck item or uploading a new image on an approved object still flips `draft` back to `true`. Anonymous public submissions through the object body routes are forced too. The exceptions: counter increments and decrements (a tick is not an edit), property, deck and file routes reached as a public submission under a public `update`, and [registration](docs/forms/options#public-registration-forms), which strips protected fields but does not apply forced values.
+- The fields `groups`, `active`, `expiration`, `maxLoginCount`, `passkeys`, `loginCount`, `lastlogin` and `created` are always protected on auth schemas; no flag is needed.
+- A collection's [`ownerProperty`](docs/collections/settings#ownerproperty) is protected by being named on the collection.
+
 ## Disabling Automatic Required Validation
 
 If you want to allow empty values for a required field, explicitly set:

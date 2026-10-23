@@ -72,8 +72,9 @@ final readonly class PresetForms
 
 		$form = $this->forms->builder('mailer', $options);
 
-		// Row: Active toggle + ID
+		// Row: Active and Require Bot Protection toggles, then ID
 		$content  = $form->field('active');
+		$content .= $form->field('requireBotProtection');
 		$content .= $form->field('id');
 		$content .= $form->field('name');
 		$content .= $form->field('category');

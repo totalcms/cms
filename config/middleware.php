@@ -20,6 +20,7 @@ use TotalCMS\Middleware\MaintenanceModeMiddleware;
 use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Middleware\PostMaxSizeMiddleware;
+use TotalCMS\Middleware\RequestScopeResetMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
@@ -108,9 +109,16 @@ return function (App $app): void {
 	// it runs early (near-outermost), doing minimal work before short-circuiting.
 	$app->add(PostMaxSizeMiddleware::class);
 
-	// OUTERMOST layer. In Slim, the middleware added LAST wraps everything else,
-	// so its after-handle() code runs LAST — after route rendering AND after
-	// PageRouter's post-Slim builder work (Twig functions, listeners). That makes
-	// this the right place to flush accumulated extension timing for the request.
+	// The last middleware with after-handle() work. In Slim the middleware added
+	// LAST wraps everything else, so its after-handle() code runs LAST — after
+	// route rendering AND after PageRouter's post-Slim builder work (Twig
+	// functions, listeners). That makes this the right place to flush accumulated
+	// extension timing for the request. The reset middleware added after it does
+	// nothing once the handler returns.
 	$app->add(ExtensionProfileFlushMiddleware::class);
+
+	// Added last, so it runs first on every request (before PageRouter too):
+	// clears per-request forced values and memoised field-policy rules a
+	// long-lived worker would otherwise carry over.
+	$app->add(RequestScopeResetMiddleware::class);
 };

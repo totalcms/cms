@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 class GalleryField extends ImageField
 {
@@ -21,7 +21,7 @@ class GalleryField extends ImageField
 		// Render lightweight thumbnail-only previews (no dialogs per image)
 		$previews = '';
 		foreach ($imageData as $image) {
-			$imagePath    = MediaTwigAdapter::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
+			$imagePath    = ImageworksUrl::buildImageworksGalleryAPI($api, $id, $image['name'], $image, $imageworks, $options);
 			$imagePreview = $this->imagePreview($imagePath, $image['name'] ?? '');
 
 			$previewAttrs = ['class' => 'image-preview', 'data-image-name' => $image['name'] ?? ''];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Mcp\Service\McpActiveSession;
 use TotalCMS\Domain\Mcp\Service\McpSessionInvalidator;
 use TotalCMS\Domain\Mcp\Service\McpSessionListener;
 use TotalCMS\Support\Config;
@@ -33,7 +34,7 @@ final class McpSessionListenerTest extends TestCase
 		$config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->tmpdir = $base;
 
-		$this->listener = new McpSessionListener(new McpSessionInvalidator($config));
+		$this->listener = new McpSessionListener(new McpSessionInvalidator($config, new McpActiveSession()));
 	}
 
 	protected function tearDown(): void

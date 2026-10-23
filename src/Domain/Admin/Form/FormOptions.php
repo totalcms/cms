@@ -55,10 +55,23 @@ final readonly class FormOptions
 		public bool $useFormGrid = true,
 		public bool $addOnly = false,
 		// Public-registration form mode. When true, the form's action is
-		// retargeted to POST /admin/register/{collection} — the allow-listed
-		// registration endpoint that creates the user AND auto-logs them in.
+		// retargeted to POST /admin/register/{collection} — the registration
+		// endpoint, open to collections that enable Allow Public Registration
+		// or are listed in `auth.publicRegistration`. It creates the user AND
+		// auto-logs them in.
 		// Implies `addOnly` because the registration route only handles POST.
 		public bool $register = false,
+		// Register mode only: where the email-verification link lands instead
+		// of the admin login page. Rendered as a hidden `verifyRedirect` field;
+		// the endpoint keeps it on the verification token (never on the user)
+		// and drops anything that is not same-origin.
+		public string $verifyRedirect = '',
+		// Add a honeypot field and a signed time trap (BotProtection) to a
+		// register or create form; the register endpoint and public creates
+		// check them. Never rendered for a signed-in visitor. A collection
+		// with Require Bot Protection gets them on its register and public
+		// create forms without this flag.
+		public bool $botProtection = false,
 		public ?FormActionRegistry $formActionRegistry = null,
 		// Admin-catalog translator, supplied by TotalFormFactory as
 		// TranslationService::trans(...). Optional: a form built directly

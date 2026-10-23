@@ -48,6 +48,7 @@ final class ObjectUpdaterTest extends TestCase
 			$this->factory,
 			$this->propertyProcessor,
 			$this->eventDispatcher,
+			systemWriteGate(),
 		);
 	}
 
@@ -507,5 +508,17 @@ final class ObjectUpdaterTest extends TestCase
 				return ['id' => $this->id];
 			}
 		};
+	}
+
+	// The gate hands back the payload unchanged for a trusted actor, so an
+	// ObjectData input is saved as-is rather than regenerated.
+	public function testUpdateObjectLeavesTheObjectAloneWhenTheGateChangesNothing(): void
+	{
+		$input = $this->createMockObjectDataWithToArray('post-1', ['id' => 'post-1', 'draft' => false]);
+
+		$this->factory->expects($this->never())->method('generateObject');
+		$this->repository->expects($this->once())->method('saveObject')->with('blog', $input);
+
+		expect($this->updater->updateObject('blog', 'post-1', $input))->toBe($input);
 	}
 }

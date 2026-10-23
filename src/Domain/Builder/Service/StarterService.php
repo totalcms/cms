@@ -254,7 +254,7 @@ readonly class StarterService
 		}
 
 		$target = rtrim($docroot, '/') . '/' . trim($this->builderConfig->getAssetsPath(), '/');
-		if (!is_dir($target) && !mkdir($target, 0755, true) && !is_dir($target)) {
+		if (!FileUtils::ensureDirectory($target)) {
 			$this->logger->warning('Could not create assets directory', ['path' => $target]);
 
 			return 0;

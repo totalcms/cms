@@ -10,10 +10,13 @@ use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Visualizer\Service\AccessGroupAnalyzer;
 
@@ -38,6 +41,7 @@ final class AccessGroupAnalyzerTest extends TestCase
 		$this->mcpSchemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => $c->ownerProperty !== '',
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -506,6 +510,59 @@ final class AccessGroupAnalyzerTest extends TestCase
 	}
 
 	/**
+	 * Owned collections (ownerProperty) show the group's grant like any other
+	 * exposed collection: over MCP it reaches each member's own objects.
+	 * Uses the real resolver.
+	 */
+	public function testOwnedCollectionsShowTheGroupGrantInMcpDimension(): void
+	{
+		$owned                    = $this->makeCollection('portfolio', 'public');
+		$owned->ownerProperty     = 'owner';
+		$ownedAuth                = $this->makeCollection('drafts', 'authenticated');
+		$ownedAuth->ownerProperty = 'owner';
+
+		$realResolver = new McpSchemaResolver(
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(McpDescriptionResolver::class),
+			$this->createMock(CollectionRepository::class),
+		);
+
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$owned,
+			$ownedAuth,
+			$this->makeCollection('news', 'public'),
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'writers',
+			'description' => 'Writers',
+			'permissions' => [
+				'collections'     => ['all' => true, 'allowed' => [], 'operations' => ['read', 'create', 'update']],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$analyzer = new AccessGroupAnalyzer(
+			$this->collectionLister,
+			$this->schemaLister,
+			$this->extensionManager,
+			$this->accessGroupLister,
+			$realResolver,
+		);
+		$mcp = $analyzer->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['portfolio']);
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['drafts']);
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['news']);
+	}
+
+	/**
 	 * A public-exposed collection shows 'read' for a group with NO explicit
 	 * grant on it — public exposure alone is enough for the read op.
 	 */
@@ -539,10 +596,10 @@ final class AccessGroupAnalyzerTest extends TestCase
 
 	/**
 	 * 'delete' must never appear in a non-super-admin group's mcp ops, even
-	 * with a full collections.all grant across all four operations — MCP
-	 * ships no delete tool.
+	 * with a full collections.all grant across all four operations: delete
+	 * shows as delete_object, and `all` stays false.
 	 */
-	public function testDeleteNeverAppearsInMcpOpsForNonSuperAdmin(): void
+	public function testDeleteAppearsInMcpOpsWhenGranted(): void
 	{
 		$this->collectionLister->method('listAllCollections')->willReturn([
 			$this->makeCollection('blog', 'public'),
@@ -567,11 +624,10 @@ final class AccessGroupAnalyzerTest extends TestCase
 		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
 
 		foreach ($mcp as $id => $entry) {
-			$this->assertNotContains('delete', $entry['ops'], "'delete' must never appear for mcp:{$id}");
 			$this->assertFalse($entry['all'], "mcp:{$id} 'all' must never be true for a non-super-admin group");
 		}
-		$this->assertSame(['read', 'create', 'update'], $mcp['blog']['ops']);
-		$this->assertSame(['read', 'create', 'update'], $mcp['team']['ops']);
+		$this->assertSame(['read', 'create', 'update', 'delete'], $mcp['blog']['ops']);
+		$this->assertSame(['read', 'create', 'update', 'delete'], $mcp['team']['ops']);
 	}
 
 	/**

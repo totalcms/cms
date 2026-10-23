@@ -33,6 +33,7 @@ readonly class McpSessionInvalidator
 {
 	public function __construct(
 		private Config $config,
+		private McpActiveSession $activeSession,
 	) {
 	}
 
@@ -44,6 +45,9 @@ readonly class McpSessionInvalidator
 	 * Non-recursive on purpose: a misconfigured tmpdir could otherwise blow
 	 * away unrelated tmp content. Top-level dotfiles (`.DS_Store`, `.gitkeep`)
 	 * are also skipped — they aren't sessions.
+	 *
+	 * The session of the MCP request making the change, if there is one, is
+	 * kept (see McpActiveSession).
 	 */
 	public function invalidateAll(): int
 	{
@@ -52,9 +56,10 @@ readonly class McpSessionInvalidator
 			return 0;
 		}
 
+		$keep    = $this->activeSession->id();
 		$removed = 0;
 		foreach (scandir($dir) ?: [] as $entry) {
-			if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.')) {
+			if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || ($keep !== '' && $entry === $keep)) {
 				continue;
 			}
 			$path = $dir . '/' . $entry;

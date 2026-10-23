@@ -200,6 +200,7 @@ Customize the welcome message at the top of the admin dashboard:
 | `forgotPasswordLabel` | Forgot Password? | Text for the forgot password link |
 | `showForgotPassword` | true | Whether to show the forgot password link |
 | `showRememberMe` | true | Whether to show the persistent login checkbox |
+| `fieldIcons` | true | Whether to render the icon slot beside the email and password inputs. Set it to false on a front end that leaves core's icons out. |
 
 ### Login Page - Below Form
 

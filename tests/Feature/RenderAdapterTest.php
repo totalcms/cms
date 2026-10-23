@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postUpload;
 
@@ -43,6 +44,38 @@ function imageObject(array $overrides = []): array
 		'name' => 'hero.jpg', 'alt' => 'Hero shot', 'width' => 1920, 'height' => 1080, 'hash' => 'h1h1', 'link' => '', 'mime' => 'image/jpeg', 'size' => 100,
 	], $overrides)];
 }
+
+// ─── protect ────────────────────────────────────────────────────────────────
+
+test('every image helper protects its <img> by default, and protect: false drops both attributes', function (): void {
+	$protected = fn (string $html): bool => str_contains($html, 'draggable="false"') && str_contains($html, 'oncontextmenu="return false;"');
+	$bare      = fn (string $html): bool => !str_contains($html, 'draggable') && !str_contains($html, 'oncontextmenu');
+
+	expect($protected($this->render->image(imageObject())))->toBeTrue()
+		->and($protected($this->render->picture(imageObject())))->toBeTrue()
+		->and($protected($this->render->gallery(galleryObject())))->toBeTrue()
+		->and($protected($this->render->galleryImage(galleryObject(), 'beach.jpg')))->toBeTrue();
+
+	expect($bare($this->render->image(imageObject(), [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->picture(imageObject(), [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->gallery(galleryObject(), [], [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->galleryImage(galleryObject(), 'beach.jpg', [], ['protect' => false])))->toBeTrue();
+});
+
+test('imageworks.protect in settings is the site-wide default, and a call can still override it either way', function (): void {
+	$config                        = $this->app->getContainer()->get(Config::class);
+	$before                        = $config->imageworks['protect'] ?? null;
+	$config->imageworks['protect'] = false;
+
+	try {
+		expect($this->render->image(imageObject()))->not->toContain('oncontextmenu')
+			->and($this->render->picture(imageObject()))->not->toContain('draggable')
+			->and($this->render->gallery(galleryObject()))->not->toContain('oncontextmenu')
+			->and($this->render->image(imageObject(), [], ['protect' => true]))->toContain('oncontextmenu="return false;"');
+	} finally {
+		$config->imageworks['protect'] = $before;
+	}
+});
 
 // ─── image() ─────────────────────────────────────────────────────────────────
 
@@ -117,6 +150,35 @@ test('picture() never emits a candidate wider than the source, and adds the sour
 		->and($html)->toContain('height="600"');
 });
 
+test('image() and picture() take an alt option, and an explicit empty alt marks the image decorative', function (): void {
+	// HTMLUtils writes an empty value as the bare attribute — `<img alt ...>`
+	// is the HTML empty-attribute form of alt="" — so a decorative image
+	// gets ` alt ` rather than the filename it would fall back to.
+	expect($this->render->image(imageObject(), [], ['alt' => 'Sidebar crop']))->toContain('alt="Sidebar crop"')
+		->and($this->render->image(imageObject(), [], ['alt' => '']))->toContain(' alt width=')
+		->and($this->render->image(imageObject()))->toContain('alt="Hero shot"');
+
+	$picture = $this->render->picture(imageObject(), [], ['alt' => 'Sidebar crop']);
+	expect($picture)->toContain('alt="Sidebar crop"')
+		->and($picture)->not->toContain('Hero shot')
+		->and($this->render->picture(imageObject(), [], ['alt' => '']))->toContain(' alt width=');
+});
+
+test('a crop rect sizes the <img> and the candidates from the rect, not the upload', function (): void {
+	// Glide's crop runs before size, so a 520x717 rect out of the 1920x1080
+	// upload can never deliver more than 520px — a 768w or 1920w descriptor
+	// would send a large screen a small image.
+	$html = $this->render->picture(imageObject(), ['crop' => '520,717,0,100']);
+
+	expect($html)->toContain('width="520"')
+		->and($html)->toContain('height="717"')
+		->and($html)->toContain('?crop=520%2C717%2C0%2C100&amp;w=480')
+		->and($html)->toContain('520w')
+		->and($html)->not->toContain('768w')
+		->and($html)->not->toContain('1920w')
+		->and($this->render->image(imageObject(), ['crop' => '520,717,0,100']))->toContain('width="520" height="717"');
+});
+
 test('picture() honours explicit widths, formats and sizes, and a w in the transforms caps the largest candidate', function (): void {
 	$html = $this->render->picture(
 		imageObject(),
@@ -176,6 +238,57 @@ test('picture() is reachable from a template as cms.render.picture() with the sa
 		->and($html)->toContain('q=80')
 		->and($html)->toContain('class="from-twig"')
 		->and($html)->toContain('1920w');
+});
+
+test('picture() with a dark option emits prefers-color-scheme sources for the dark image first, in every format, sized from the dark image itself', function (): void {
+	$dark = ['id' => 'hero-dark', 'image' => imageObject(['name' => 'hero-dark.jpg', 'width' => 1200, 'height' => 675])['image']];
+
+	$html = $this->render->picture(imageObject(), [], ['dark' => $dark]);
+
+	$firstDark  = strpos($html, 'media="(prefers-color-scheme: dark)"');
+	$firstLight = strpos($html, '<source type="image/avif" srcset="/imageworks/image/hero/image.avif');
+
+	expect($firstDark)->not->toBeFalse()
+		->and($firstLight)->not->toBeFalse()
+		->and($firstDark)->toBeLessThan($firstLight)
+		// The dark set keeps the native format too: it has no <img> fallback of its own.
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/avif" srcset="/imageworks/image/hero-dark/image.avif?w=480')
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/webp" srcset="/imageworks/image/hero-dark/image.webp?w=480')
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/jpeg" srcset="/imageworks/image/hero-dark/image.jpg?w=480')
+		->and(substr_count($html, 'media="(prefers-color-scheme: dark)"'))->toBe(3)
+		->and(substr_count($html, '<source '))->toBe(5)
+		// Dark candidates stop at the dark image's own 1200px, not the light image's 1920.
+		->and($html)->toContain('/imageworks/image/hero-dark/image.avif?w=1200&amp;')
+		->and($html)->toContain(' 1200w')
+		->and($html)->not->toContain('/imageworks/image/hero-dark/image.avif?w=1440')
+		->and($html)->not->toContain('/imageworks/image/hero-dark/image.avif?w=1920')
+		// The <img> fallback, alt and dimensions stay the light image's.
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?w=1920')
+		->and($html)->toContain('alt="Hero shot"')
+		->and($html)->toContain('width="1920"');
+});
+
+test('picture() with darkProperty reads the dark image from a second property on the same object', function (): void {
+	$object              = imageObject();
+	$object['imageDark'] = imageObject(['name' => 'hero-dark.png', 'mime' => 'image/png'])['image'];
+
+	$html = $this->render->picture($object, ['q' => 70], ['darkProperty' => 'imageDark', 'formats' => ['webp']]);
+
+	expect($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/webp" srcset="/imageworks/image/hero/imageDark.webp?q=70&amp;w=480')
+		// The dark image's own PNG rides along as its last-resort source.
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/png" srcset="/imageworks/image/hero/imageDark.png?q=70&amp;w=480')
+		->and($html)->toContain('<source type="image/webp" srcset="/imageworks/image/hero/image.webp?q=70&amp;w=480')
+		->and(substr_count($html, '<source '))->toBe(3)
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?q=70&amp;w=1920');
+});
+
+test('picture() renders the plain light markup when the dark image is missing, empty or a GIF', function (): void {
+	$light = $this->render->picture(imageObject());
+
+	expect($this->render->picture(imageObject(), [], ['dark' => 'does-not-exist']))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['dark' => ['id' => 'x', 'image' => imageObject(['size' => 0])['image']]]))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['darkProperty' => 'nope']))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['dark' => ['id' => 'x', 'image' => imageObject(['name' => 'loop.gif', 'mime' => 'image/gif'])['image']]]))->toBe($light);
 });
 
 // ─── gallery() ───────────────────────────────────────────────────────────────

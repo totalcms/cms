@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 
 /**
@@ -45,16 +45,9 @@ readonly class CacheAccessMiddleware extends BaseAccessMiddleware
 	 * Cache access is a single boolean permission (the `cache` util) — no
 	 * per-target/per-operation dimension, so $operation is unused.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
-		// OAuth Bearer callers: no PHP session to derive groups from — use the
-		// UserAuthority resolved from the token by BaseAccessMiddleware.
-		$authority = $request->getAttribute('accessAuthority');
-		if ($authority instanceof UserAuthority) {
-			return $authority->canUtil('cache');
-		}
-
-		return $this->accessControl->canAccessUtils($userId, 'cache');
+		return $actor->authority()->canUtil('cache');
 	}
 
 	/**

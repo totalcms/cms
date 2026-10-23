@@ -2,23 +2,14 @@
 
 namespace TotalCMS\Domain\Collection\Service;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 readonly class CollectionFactory
 {
-	private Serializer $serializer;
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
-
 	/**
 	 * Generate Collection object.
 	 *
@@ -29,7 +20,7 @@ readonly class CollectionFactory
 	public function generateCollection(array $data): CollectionData
 	{
 		/** @var CollectionData $collection */
-		$collection = $this->serializer->denormalize($data, CollectionData::class);
+		$collection = SerializerFactory::json()->denormalize($data, CollectionData::class);
 
 		if (!$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');
@@ -47,7 +38,7 @@ readonly class CollectionFactory
 	 */
 	public function generateCollectionFromJson(string $json): CollectionData
 	{
-		$collection = $this->serializer->deserialize($json, CollectionData::class, 'json');
+		$collection = SerializerFactory::json()->deserialize($json, CollectionData::class, 'json');
 
 		if (!$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');

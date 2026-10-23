@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Admin\Table\CardSummary;
 use TotalCMS\Domain\Admin\Table\InlineEditable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
@@ -49,11 +49,11 @@ readonly class AdminCellAction
 		private RawRenderer $rawRenderer,
 		private ObjectFetcher $objectFetcher,
 		private ObjectPatcher $patcher,
-		private PrivilegedFieldGuard $guard,
 		private PropertyMetaResolver $propertyMeta,
 		private TotalFormFactory $forms,
 		private AccessControlService $accessControl,
 		private PhpSession $session,
+		private CardSummary $cardSummary,
 	) {
 	}
 
@@ -121,8 +121,7 @@ readonly class AdminCellAction
 		}
 
 		$this->fetch($request, $collection, $id); // 404 before we try to write
-		$patch = $this->guard->guard($request, $collection, $id, [$property => $data[$property]]);
-		$this->patcher->patchObject($collection, $id, $patch);
+		$this->patcher->patchObject($collection, $id, [$property => $data[$property]]);
 	}
 
 	private function fetch(ServerRequestInterface $request, string $collection, string $id): ObjectData
@@ -137,12 +136,15 @@ readonly class AdminCellAction
 	/** @param array<string,mixed> $meta */
 	private function cellFragment(string $collection, ObjectData $object, string $property, array $meta, bool $editable): string
 	{
+		$type = PropertyDefinition::fromArray($meta)->resolveType();
+
 		return $this->twig->render('admin/collection/table-cell.twig', [
 			'object'      => $object->toArray(),
 			'col'         => [
 				'name'     => $property,
-				'type'     => PropertyDefinition::fromArray($meta)->resolveType(),
+				'type'     => $type,
 				'editable' => $editable,
+				'summary'  => $type === 'card' ? $this->cardSummary->field($meta) : null,
 			],
 			'_collection' => $collection,
 		]);

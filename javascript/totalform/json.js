@@ -2,7 +2,7 @@ import TotalField from './totalfield';
 
 // A complete, legal JSON escape — \uXXXX or one of the single-character
 // escapes JSON allows after a backslash.
-const LEGAL_ESCAPE = /\\(?:u[0-9a-fA-F]{4}|["\\\/bfnrt])/;
+const LEGAL_ESCAPE = /\\(?:u[0-9a-fA-F]{4}|["\\/bfnrt])/;
 
 //-----------------------------------------------
 // Forgive the JSON mistakes people actually make in this field.
@@ -137,7 +137,7 @@ export default class JSONField extends TotalField {
 		try {
             this.getValue();
             return true;
-        } catch (e) {
+        } catch {
             this.error("Invalid JSON format.");
             return false;
         }

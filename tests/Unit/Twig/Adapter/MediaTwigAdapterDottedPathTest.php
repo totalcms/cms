@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Support\Config;
 
@@ -121,7 +122,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 	{
 		$image = ['name' => 'photo.jpg', 'size' => 1000, 'hash' => 'abc'];
 
-		$url = MediaTwigAdapter::buildImageworksAPI(
+		$url = ImageworksUrl::buildImageworksAPI(
 			'/api',
 			'post-1',
 			$image,
@@ -136,7 +137,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 	{
 		$image = ['name' => 'photo.jpg', 'size' => 2000, 'hash' => 'def'];
 
-		$url = MediaTwigAdapter::buildImageworksAPI(
+		$url = ImageworksUrl::buildImageworksAPI(
 			'/api',
 			'post-1',
 			$image,
@@ -151,7 +152,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 	{
 		$image = ['name' => 'photo.jpg', 'size' => 3000, 'hash' => 'ghi'];
 
-		$url = MediaTwigAdapter::buildImageworksAPI(
+		$url = ImageworksUrl::buildImageworksAPI(
 			'/api',
 			'post-1',
 			$image,
@@ -164,7 +165,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 
 	public function testBuildImageworksApiReturnsEmptyForMissingName(): void
 	{
-		$url = MediaTwigAdapter::buildImageworksAPI('/api', 'post-1', [], [], ['property' => 'mycard.image']);
+		$url = ImageworksUrl::buildImageworksAPI('/api', 'post-1', [], [], ['property' => 'mycard.image']);
 
 		$this->assertSame('', $url);
 	}
@@ -173,7 +174,7 @@ final class MediaTwigAdapterDottedPathTest extends TestCase
 	{
 		$image = ['name' => 'photo.jpg', 'size' => 1000, 'hash' => 'xyz'];
 
-		$url = MediaTwigAdapter::buildImageworksAPI(
+		$url = ImageworksUrl::buildImageworksAPI(
 			'/api',
 			'post-1',
 			$image,

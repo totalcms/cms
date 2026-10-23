@@ -3,12 +3,36 @@
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Support\Version;
 
 function createManifestValidator(): ManifestValidator
 {
 	$editionService = test()->createMock(EditionFeatureService::class);
 
 	return new ManifestValidator($editionService);
+}
+
+/**
+ * Run $fn with Version::number() reporting $version, then put the cached
+ * version data back so later tests in the worker see the real one.
+ *
+ * @template T
+ *
+ * @param callable(): T $fn
+ *
+ * @return T
+ */
+function withTotalCmsVersion(string $version, callable $fn): mixed
+{
+	$property = new ReflectionProperty(Version::class, 'data');
+	$original = $property->getValue();
+	$property->setValue(null, ['version' => $version]);
+
+	try {
+		return $fn();
+	} finally {
+		$property->setValue(null, $original);
+	}
 }
 
 describe('ManifestValidator', function (): void {
@@ -68,6 +92,17 @@ describe('ManifestValidator', function (): void {
 		expect($validator->validate($manifest))->toContain('vendor/name');
 	});
 
+	test('rejects an ID with a trailing newline', function (): void {
+		$validator = createManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'      => "acme/thing\n",
+			'name'    => 'Test',
+			'version' => '1.0.0',
+		]);
+
+		expect($validator->validate($manifest))->toContain('vendor/name');
+	});
+
 	test('rejects invalid version format', function (): void {
 		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
@@ -78,6 +113,28 @@ describe('ManifestValidator', function (): void {
 
 		expect($validator->validate($manifest))->toContain('semver');
 	});
+
+	test('rejects a version with trailing markup', function (): void {
+		// The version is printed on the Extensions and review pages; the
+		// pattern is anchored at both ends so nothing can ride after it.
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'vendor/test',
+			'name'    => 'Test',
+			'version' => '1.0.0<svg onload=1>',
+		]);
+
+		expect(createManifestValidator()->validate($manifest))->toContain('semver');
+	});
+
+	test('accepts pre-release and build-metadata versions', function (string $version): void {
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'vendor/test',
+			'name'    => 'Test',
+			'version' => $version,
+		]);
+
+		expect(createManifestValidator()->validate($manifest))->toBeNull();
+	})->with(['1.0.0-beta.1', '1.0.0+build.5', '1.0.0.1', '1.2.3beta']);
 
 	test('rejects invalid min_edition', function (): void {
 		$validator = createManifestValidator();
@@ -142,12 +199,25 @@ describe('ManifestValidator', function (): void {
 			'requires' => ['totalcms' => '>=99.0.0'],
 		]);
 
-		$reasons = $validator->getIncompatibilityReasons($manifest);
-		// May include Total CMS reason depending on detected version; if not detectable,
-		// the check is skipped and the array stays empty.
-		foreach ($reasons as $reason) {
-			expect($reason)->toContain('Total CMS');
-		}
+		// Pinned: CI has no version.json, so the detected version would be
+		// "unknown" and the check would skip, asserting nothing.
+		$reasons = withTotalCmsVersion('3.6.0', fn (): array => $validator->getIncompatibilityReasons($manifest));
+
+		expect($reasons)->toBe(['Requires Total CMS >=99.0.0 (current: 3.6.0)']);
+	});
+
+	test('skips the Total CMS check when the running version is unknown', function (): void {
+		$validator = createManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'       => 'vendor/test',
+			'name'     => 'Test',
+			'version'  => '1.0.0',
+			'requires' => ['totalcms' => '>=99.0.0'],
+		]);
+
+		$reasons = withTotalCmsVersion('unknown', fn (): array => $validator->getIncompatibilityReasons($manifest));
+
+		expect($reasons)->toBe([]);
 	});
 
 	test('reports both incompatibilities at once', function (): void {

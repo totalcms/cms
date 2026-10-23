@@ -13,6 +13,8 @@ use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -146,10 +148,6 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// applies to builder-page matches (collection-URL matches don't
 		// have a per-record middleware concept yet). The runner returns a
 		// Response if any middleware short-circuits; null means proceed.
-		//
-		// Runs BEFORE the headless-JSON shortcut: gating still has to apply
-		// to JSON consumers, otherwise an auth-protected page would happily
-		// hand its data to a logged-out visitor that asks for `?_format=json`.
 		if ($match->collection === null) {
 			$page               = new PageData($match->pageData);
 			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
@@ -168,97 +166,77 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			return $response;
 		}
 
-		// Headless mode — return the matched page record as JSON instead of rendering
-		if ($this->wantsJson($request)) {
-			return $this->jsonResponse($match);
-		}
-
 		try {
-			// Collection-URL matches expose the matched record as `object.*`;
-			// builder-page matches expose it as `page.*`. Different conceptual
-			// roles — one is "this is the page record", the other is "this is
-			// the collection object I'm rendering" — so different variable
-			// names make templates self-documenting.
-			$data = ['params' => $match->params];
-			if ($match->collection !== null) {
-				$data['object'] = $match->pageData;
-			} else {
-				$data['page'] = $match->pageData;
+			return $this->renderMatch($request, $match, $path);
+		} catch (\Throwable $throwable) {
+			// The template answered with a redirect (`cms.redirect()`): a
+			// forwarding URL whose target it worked out from data.
+			$redirect = PageRedirectException::find($throwable);
+			if ($redirect instanceof PageRedirectException) {
+				$this->logger->info(sprintf('%d: %s %s → %s', $redirect->status, $method, $path, $redirect->url));
+
+				return (new Response())->withStatus($redirect->status)->withHeader('Location', $redirect->url);
 			}
 
-			$body        = $this->twigEngine->render($match->template, $data);
-			$contentType = $this->detectContentType($path);
+			// The template declined to render the URL (`cms.notFound()`: a
+			// draft behind a collection URL, a record it will not serve).
+			// Answer exactly as an unmatched URL is answered above — the
+			// site's 404 page in place, status 404, the URL kept — rather
+			// than bouncing to the 404 page's own address with a 302.
+			if (PageNotFoundException::find($throwable) instanceof PageNotFoundException) {
+				$this->logger->info(sprintf('404: %s %s — the template declined to render it', $method, $path));
 
-			// Inject the admin-only Page Inspector overlay and live-reload
-			// snippet for HTML responses. Gating (logged-in admin, dismiss
-			// cookie, setting toggle) lives in the renderers; the content-
-			// type check is here because the renderers don't see the response.
-			if (str_starts_with($contentType, 'text/html')) {
-				$body = $this->pageInspector->maybeInject($body, $request, $match);
-				$body = $this->pageReloadInjector->maybeInject($body, $request);
+				$fallback = $this->pageRouter->fallback404();
+				if ($fallback instanceof RouteMatch) {
+					try {
+						return $this->renderMatch($request, $fallback, $path);
+					} catch (\Throwable) {
+						// The 404 page itself failed — the plain 404 below stands.
+					}
+				}
 			}
 
-			$pageResponse = new Response();
-			$pageResponse->getBody()->write($body);
-
-			return $pageResponse
-				->withStatus($match->status)
-				->withHeader('Content-Type', $contentType);
-		} catch (\Throwable) {
 			// Render failed — return the original 404
 			return $response;
 		}
 	}
 
 	/**
-	 * Detect whether the client wants the matched page as JSON instead of HTML.
-	 * Triggered by `?_format=json` query param or `Accept: application/json`.
-	 *
-	 * Lets the same builder pages drive both web and a headless head (Next.js,
-	 * Astro, etc.) without a separate API surface.
+	 * Render a matched page or collection object to a response carrying the
+	 * match's status. Throws whatever the template throws.
 	 */
-	private function wantsJson(ServerRequestInterface $request): bool
+	private function renderMatch(ServerRequestInterface $request, RouteMatch $match, string $path): ResponseInterface
 	{
-		parse_str($request->getUri()->getQuery(), $query);
-		if (($query['_format'] ?? '') === 'json') {
-			return true;
-		}
-
-		$accept = $request->getHeaderLine('Accept');
-		if ($accept === '') {
-			return false;
-		}
-
-		// Accept: application/json wins; */* or text/html don't trigger headless mode
-		return str_contains(strtolower($accept), 'application/json');
-	}
-
-	/**
-	 * Encode a RouteMatch as a JSON response.
-	 */
-	private function jsonResponse(RouteMatch $match): ResponseInterface
-	{
-		// Mirror the template's variable convention for consumers — a
-		// collection-URL match returns the matched record under `object`,
-		// a builder-page match returns it under `page`.
-		$payload = [
-			'params'     => $match->params,
-			'template'   => $match->template,
-			'collection' => $match->collection,
-			'status'     => $match->status,
-		];
+		// Collection-URL matches expose the matched record as `object.*`;
+		// builder-page matches expose it as `page.*`. Different conceptual
+		// roles — one is "this is the page record", the other is "this is
+		// the collection object I'm rendering" — so different variable
+		// names make templates self-documenting.
+		$data = ['params' => $match->params];
 		if ($match->collection !== null) {
-			$payload['object'] = $match->pageData;
+			$data['object'] = $match->pageData;
 		} else {
-			$payload['page'] = $match->pageData;
+			$data['page'] = $match->pageData;
 		}
 
-		$response = new Response();
-		$response->getBody()->write((string)json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$body        = $this->twigEngine->render($match->template, $data);
+		$contentType = $this->detectContentType($path);
 
-		return $response
+		// Inject the admin-only Page Inspector overlay and live-reload
+		// snippet for HTML responses. Gating (logged-in admin, dismiss
+		// cookie, setting toggle) lives in the renderers; the content-
+		// type check is here because the renderers don't see the response.
+		if (str_starts_with($contentType, 'text/html')) {
+			$body = $this->pageInspector->maybeInject($body, $request, $match);
+			$body = $this->pageReloadInjector->maybeInject($body, $request);
+		}
+
+		$pageResponse = new Response();
+		$pageResponse->getBody()->write($body);
+
+		return $pageResponse
 			->withStatus($match->status)
-			->withHeader('Content-Type', 'application/json; charset=utf-8');
+			->withHeader('Content-Type', $contentType);
 	}
 
 	/**

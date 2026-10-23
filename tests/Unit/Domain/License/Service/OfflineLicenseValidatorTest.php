@@ -190,3 +190,28 @@ describe('OfflineLicenseValidator path helpers', function (): void {
 		expect($validator->getExpectedDirectory())->toBe('/data/.system');
 	});
 });
+
+describe('OfflineLicenseValidator::getValidationError', function (): void {
+	// The dashboard shows this ahead of every other licence status: once a
+	// file is on disk, the online/cached data the validator fell back to is
+	// not what the operator installed, and its warnings (DNS verification)
+	// are noise on an air-gapped site.
+	it('explains why a token was rejected', function (): void {
+		$validator = offlineLicenseValidator(offlineLicenseForgedToken([
+			'type'    => 'offline',
+			'domain'  => 'example.test',
+			'edition' => 'pro',
+		]));
+
+		expect($validator->validate())->toBeNull();
+		expect($validator->getValidationError())->toBeString()->not->toBe('');
+	});
+
+	it('is null when there is no file', function (): void {
+		expect(offlineLicenseValidator(null)->getValidationError())->toBeNull();
+	});
+
+	it('runs the validation itself when nothing has asked for it yet', function (): void {
+		expect(offlineLicenseValidator('garbage')->getValidationError())->not->toBeNull();
+	});
+});

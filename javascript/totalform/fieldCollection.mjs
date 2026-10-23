@@ -102,3 +102,43 @@ export function collectScopedInputValues(scopeEl) {
 
 	return data;
 }
+
+/**
+ * The scope's own top-level `.form-field` containers for a property name:
+ * every container whose first input is named `name` (how TotalField derives
+ * `property`), skipping composite sub-fields. Found by DOM rather than via
+ * `container.totalfield` because callers attach listeners from a field's own
+ * constructor, before later fields have an instance.
+ *
+ * @param {Element} scopeEl
+ * @param {string} name
+ * @returns {Element[]}
+ */
+export function findScopedFieldContainers(scopeEl, name) {
+	const containers = [];
+	for (const container of scopeEl.querySelectorAll('.form-field')) {
+		if (isNestedField(container, scopeEl)) continue;
+		const input = container.querySelector('input, textarea, select');
+		if (input && input.name === name) containers.push(container);
+	}
+	return containers;
+}
+
+/**
+ * Run `callback` whenever one of the scope's own fields named `name` changes.
+ * Listens for the TotalField events (`field-change`, or `subfield-change` for
+ * a field inside a deck item) on the field's container rather than for a
+ * native `change` on its input: most field types (Tiptap, date, color, list,
+ * card, …) set their value in code and call `changed()`, and never fire a
+ * native event on the input at all.
+ *
+ * @param {Element} scopeEl
+ * @param {string} name
+ * @param {Function} callback
+ */
+export function listenToScopedField(scopeEl, name, callback) {
+	for (const container of findScopedFieldContainers(scopeEl, name)) {
+		container.addEventListener('field-change', () => callback());
+		container.addEventListener('subfield-change', () => callback());
+	}
+}

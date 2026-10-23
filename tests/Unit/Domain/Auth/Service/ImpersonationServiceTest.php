@@ -6,18 +6,23 @@ use Psr\Log\NullLogger;
 use Tests\Unit\Domain\Auth\Service\InMemorySession;
 use TotalCMS\Domain\Auth\Exception\ImpersonationException;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
+use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
  * @param array<string, mixed> $session
+ * @param list<CollectionData> $collections every collection record; those with the toggle on may register
  *
  * @return array{0: ImpersonationService, 1: InMemorySession, 2: SessionLogin}
  */
-function makeImpersonationService(array $session, callable $configure): array
+function makeImpersonationService(array $session, callable $configure, array $collections = []): array
 {
 	$sess      = new InMemorySession($session);
 	$login     = test()->createMock(SessionLogin::class);
@@ -28,8 +33,23 @@ function makeImpersonationService(array $session, callable $configure): array
 	$lf        = test()->createMock(LoggerFactory::class);
 	$lf->method('channelLogger')->willReturn(new NullLogger());
 
+	$fetcher = test()->createMock(CollectionFetcher::class);
+	$fetcher->method('fetchCollection')->willReturnCallback(static function (string $id) use ($collections): CollectionData {
+		foreach ($collections as $collection) {
+			if ($collection->id === $id) {
+				return $collection;
+			}
+		}
+
+		throw new RuntimeException('missing');
+	});
+	// The real isOrInherits(): an `auth`-schema collection resolves without a read.
+	$schemas = test()->createPartialMock(SchemaFetcher::class, ['fetchRawSchema']);
+	$schemas->method('fetchRawSchema')->willThrowException(new RuntimeException('no schema'));
+	$registration = new RegistrationCollections($cfg, $fetcher, $schemas);
+
 	$configure($users, $fetch, $login);
-	$svc = new ImpersonationService($sess, $login, $users, $fetch, $cfg, $lf);
+	$svc = new ImpersonationService($sess, $login, $users, $fetch, $cfg, $registration, $lf);
 
 	return [$svc, $sess, $login];
 }
@@ -88,6 +108,27 @@ test('start rejects a target in a collection that is not auth-enabled', function
 		},
 	);
 	expect(fn () => $svc->start('blog', 'some-post'))->toThrow(ImpersonationException::class);
+});
+
+test('start accepts a collection opened to registration only by its toggle', function (): void {
+	// 'partners' is not in the config list; its own publicRegistration toggle
+	// makes it a member collection that may be impersonated.
+	$partners                     = new CollectionData();
+	$partners->id                 = 'partners';
+	$partners->schema             = 'auth';
+	$partners->publicRegistration = true;
+
+	[$svc, $sess] = makeImpersonationService(
+		['totalcms.auth.user' => 'joe', 'totalcms.auth.collection' => 'auth'],
+		function ($users, $fetch, $login): void {
+			$users->method('isSuperAdmin')->willReturnMap([['joe', 'auth', true], ['pat', 'partners', false]]);
+			$fetch->method('existsObject')->willReturn(true);
+			$login->expects(test()->once())->method('establish')->with('pat', 'partners', false);
+		},
+		[$partners],
+	);
+	$svc->start('partners', 'pat');
+	expect($sess->get('totalcms.auth.impersonator'))->toBe(['userId' => 'joe', 'collection' => 'auth']);
 });
 
 test('stop restores the real identity and clears the key regardless of target permissions', function (): void {

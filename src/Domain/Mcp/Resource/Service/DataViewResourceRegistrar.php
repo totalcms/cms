@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Resource\Service;
 
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
@@ -46,6 +47,7 @@ readonly class DataViewResourceRegistrar
 			mimeType: 'application/json',
 			access: 'admin',
 			handler: static fn (string $id): array => $resource->read($id),
+			edition: EditionFeature::DATA_VIEWS,
 		));
 
 		foreach ($this->lister->listViews() as $entry) {
@@ -80,6 +82,8 @@ readonly class DataViewResourceRegistrar
 				mimeType: 'application/json',
 				access: $access,
 				handler: static fn (): array => $resource->read($id),
+				viewId: $id,
+				edition: EditionFeature::DATA_VIEWS,
 			));
 		}
 	}

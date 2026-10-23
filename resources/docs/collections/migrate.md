@@ -6,7 +6,7 @@ related:
   - operations/migration-total-cms-one
   - extensions/events
   - operations/search
-updated: 2026-09-10
+updated: 2026-10-19
 ---
 
 # Migrating from another CMS
@@ -19,7 +19,7 @@ They only ever **create** objects. The RSS importer skips an entry whose id alre
 
 **Utilities → Import WordPress.** Requires the Standard edition or higher (the route is gated on the `rss_import` feature).
 
-Generate the file in WordPress under **Tools → Export** and upload the `.xml` (WXR). Analyze it first: that step reports the post count, date range, every category, tag and author found, and the first ten posts. The import step takes the same file plus a target collection.
+Generate the file in WordPress under **Tools → Export** and upload the `.xml` (WXR). Analyze it first: that step reports the post count, date range, every category, tag and author (by display name) found, and the first ten posts. The import step takes the same file plus a target collection.
 
 Only items whose `wp:post_type` is `post` are imported. Fields map like this:
 
@@ -27,16 +27,16 @@ Only items whose `wp:post_type` is `post` are imported. Fields map like this:
 |---|---|
 | `wp:post_name`, else a title slug | `id` |
 | `title` | `title` |
-| `content:encoded` | `content` |
+| `content:encoded` | `content`, without the block editor's `<!-- wp:… -->` markers |
 | `excerpt:encoded` | `summary` |
 | `wp:post_date` | `date`, as ISO 8601 |
-| `dc:creator` | `author` |
-| `category` with `domain="category"` | `category`, comma separated, `Uncategorized` dropped |
-| `category` with `domain="post_tag"` | `tags`, comma separated |
+| `dc:creator` | `author`, as the author's display name |
+| `category` with `domain="category"` | `categories`, a list, `Uncategorized` dropped |
+| `category` with `domain="post_tag"` | `tags`, a list |
 | `link` | `url` |
 | `wp:status` | `draft` — anything but `publish` is a draft |
 
-The featured image is followed: `_thumbnail_id` is resolved against the export's attachment items, downloaded, and imported into `image`. Everything else is **not imported** — pages, custom post types, the rest of the media library, images embedded in post bodies (they keep pointing at the old site), comments, users, menus, and anything a plugin or shortcode produced. The author is a name string, not a user object. "Import as drafts" overrides the status row above. No CLI command.
+The featured image is followed: `_thumbnail_id` is resolved against the export's attachment items, and imported into `image` under its original filename. The upload request only queues the posts; each queued job downloads its own image, so a large export returns at once and the images arrive as the queue runs. An image that fails to download is logged and its post imports without one. Everything else is **not imported** — pages, custom post types, the rest of the media library, images embedded in post bodies (they keep pointing at the old site), comments, users, menus, and anything a plugin or shortcode produced. The author is a name string, not a user object. "Import as drafts" overrides the status row above. No CLI command.
 
 ## Alloy
 

@@ -6,7 +6,7 @@
 import { EditorView, keymap, lineNumbers, highlightActiveLine, placeholder as placeholderExt, drawSelection, rectangularSelection } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { syntaxHighlighting, bracketMatching, foldGutter, foldKeymap, indentOnInput, HighlightStyle } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { tags } from '@lezer/highlight';

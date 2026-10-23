@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -12,6 +14,8 @@ function callerKindContext(): PersonaContext
 	return new PersonaContext(
 		(new ReflectionClass(CollectionFetcher::class))->newInstanceWithoutConstructor(),
 		(new ReflectionClass(McpSchemaResolver::class))->newInstanceWithoutConstructor(),
+		(new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(),
+		new ActorContext(),
 	);
 }
 

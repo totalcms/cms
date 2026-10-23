@@ -81,8 +81,7 @@ Get all objects from a collection. Takes the collection id and nothing else — 
 ```
 
 ### object()
-
-Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found.
+Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.
 
 ```twig
 {% set post = cms.collection.object('blog', 'my-post') %}
@@ -258,7 +257,7 @@ Check if an object's generated URL has empty segments due to missing template da
 
 ### redirectIfNotFound()
 
-Redirect to the 404 page if the provided object is empty or null. Useful in detail page templates to handle missing objects.
+Redirect to the 404 page if the provided object is empty or null. The visitor is sent to the 404 page's own address with a `302` — the URL they typed is lost, and a crawler records a redirect rather than a missing page. On a Site Builder site, prefer [`cms.notFound()`](docs/twig/totalcms#notfound), which renders the 404 page in place with a real `404` status.
 
 ```twig
 {% set post = cms.collection.object('blog', id) %}

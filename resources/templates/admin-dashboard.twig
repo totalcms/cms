@@ -3,7 +3,7 @@
    `navLink` renders the anchor the rail and the More popover share. The
    --action-icon custom property is what the popover's icon mask reads. #}
 {% macro navActive(entry, url) %}{% if entry.isExtension ? (url.path ends with entry.slug) : (url.page == entry.id) %}1{% endif %}{% endmacro %}
-{% macro navLink(entry, class) %}{% if entry.isExtension %}<a class="ext-nav{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}"{% if entry.icon %} style="--ext-icon: url('data:image/svg+xml,{{ entry.icon|url_encode }}'); --action-icon: var(--ext-icon)"{% endif %}>{{ entry.label }}</a>{% else %}<a class="{{ entry.id }}{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}" style="--action-icon: {{ entry.icon }}">{{ entry.label }}</a>{% endif %}{% endmacro %}
+{% macro navLink(entry, class = '') %}{% if entry.isExtension %}<a class="ext-nav{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}"{% if entry.icon %} style="--ext-icon: url('data:image/svg+xml,{{ entry.icon|url_encode }}'); --action-icon: var(--ext-icon)"{% endif %}>{{ entry.label }}</a>{% else %}<a class="{{ entry.id }}{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}" style="--action-icon: {{ entry.icon }}">{{ entry.label }}</a>{% endif %}{% endmacro %}
 <!doctype html>
 <html lang="{{ cms.locale.htmlLang() }}">
 <head>
@@ -161,6 +161,18 @@
             </div>
         </aside>
         <section class="dash-content">
+
+			{# Extensions the system turned off by itself (an update added risky
+			   code, or repeated crashes) happen on a request nobody watches, so
+			   every admin page says so until someone re-enables or disables it.
+			   The extension pages show their own banners. #}
+			{% if cms.auth.isAdmin() and url.page|default('') != 'extensions' %}
+				{% for notice in cms.admin.extensionsNeedingAttention() %}
+				<div class="warning-box extension-attention" role="alert">
+					<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
+				</div>
+				{% endfor %}
+			{% endif %}
 
         	{% block dashcontent %}{% endblock %}
 

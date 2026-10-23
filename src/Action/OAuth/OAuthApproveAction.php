@@ -16,6 +16,7 @@ use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueUserEntity;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthLoginCollection;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -28,6 +29,7 @@ readonly class OAuthApproveAction
 		private TwigRenderer $twig,
 		private OAuthActivityLogger $activityLogger,
 		private Config $config,
+		private OAuthLoginCollection $loginCollection,
 	) {
 	}
 
@@ -57,7 +59,13 @@ readonly class OAuthApproveAction
 		}
 
 		$userId = $this->session->get(SessionKeys::AUTH_USER);
-		if ($userId === null) {
+		// The same session rule the consent screen applied: a session from an
+		// auth collection that may not authorize cannot approve either.
+		if ($userId === null || !$this->loginCollection->accepts(
+			(string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: ''),
+			(string)$userId,
+			$authRequest->getClient()->getIdentifier(),
+		)) {
 			return $this->twig->template(
 				$response->withStatus(401),
 				'oauth/error.twig',

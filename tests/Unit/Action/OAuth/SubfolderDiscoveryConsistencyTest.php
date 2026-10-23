@@ -65,7 +65,7 @@ final class SubfolderDiscoveryConsistencyTest extends TestCase
 	{
 		$provider = new OAuthDiscoveryProvider($this->configFor($requestPath), new OAuthScopeRegistry());
 
-		return (string)$provider->protectedResourceMetadata()->jsonSerialize()['authorization_servers'][0];
+		return (string)$provider->protectedResourceMetadata()['authorization_servers'][0];
 	}
 
 	/**

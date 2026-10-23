@@ -61,7 +61,7 @@ The first release of this extension had its own two tools, `search_content` and 
 - **Which collections an agent sees** now follows each collection's MCP Access, not its Public Operations or the old list. A collection with public REST read but "Admin only" MCP access disappears from a visitor's agent; the reverse appears.
 - **Which fields come back** follows the per-property Expose to MCP flag.
 - **Signed-in users** who are not administrators now see collections whose MCP Access is Authenticated or Public and that their access groups grant read on — never a collection marked Admin only — where before anyone signed into the operator collection saw every listed collection.
-- **The edition, `mcp.enabled` and `mcp.publicAccess`** now apply to the browser too. On a Lite site the read tools stop working; Standard and above have them — Data Views tools (`list_views`/`query_view`) are Pro and simply come back empty below it. Forms still work everywhere.
+- **The edition, `mcp.enabled` and `mcp.publicAccess`** now apply to the browser too. On a Lite site the read tools stop working; Standard and above have them — Data Views tools (`list_views`/`query_view`) are Pro and are not offered below it. Forms still work everywhere.
 - The **Collections exposed as read tools** and **Search results per call** settings are removed; a saved value is ignored.
 
 ## In the admin dashboard

@@ -50,6 +50,7 @@ final class SchemaToolsTest extends TestCase
 		// entirely — assertCanSeed() no-ops in that shape (see its docblock).
 		// Individual seedObjects tests below override this.
 		$this->personaContext->method('isResolved')->willReturn(false);
+		$this->personaContext->method('current')->willReturn(McpPersona::ADMIN);
 
 		$this->tool = new SchemaTools(
 			$this->lister,
@@ -118,11 +119,13 @@ final class SchemaToolsTest extends TestCase
 			$this->assertSame($collectionArg, $requires->collectionArg, "Tool $name requirement collectionArg");
 		}
 
-		// list_schemas/get_schema deliberately have NO requirement (brief
-		// scoped the schemas ToolRequirement treatment to create/update/delete
-		// only) — pin that too so a future change doesn't silently widen it.
-		$this->assertNull($registry->get('list_schemas')->requires);
-		$this->assertNull($registry->get('get_schema')->requires);
+		// The reads follow the schemas read grant, as the REST schema reads
+		// do: get_schema checks the schema asked for, list_schemas lists only
+		// the readable ones.
+		$get = $registry->get('get_schema')->requires;
+		$this->assertSame(['schemas', 'read', 'id'], [$get?->domain, $get?->operation, $get?->collectionArg]);
+		$list = $registry->get('list_schemas')->requires;
+		$this->assertSame(['schemas', 'read', null, true], [$list?->domain, $list?->operation, $list?->collectionArg, $list?->filtersTargets]);
 	}
 
 	public function testReadToolsAreMarkedReadOnlyIdempotent(): void
@@ -413,6 +416,51 @@ final class SchemaToolsTest extends TestCase
 		);
 
 		$this->assertSame(1, $result['seeded']);
+	}
+
+	public function testCreateWithSeedObjectsRefusesAnExistingCollectionEvenForAdmin(): void
+	{
+		$saved = $this->schema('showcase-v2', ['title' => ['field' => 'text']]);
+		$this->saver->expects($this->once())->method('saveSchema')->willReturn($saved);
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+
+		$this->personaContext = $this->createMock(PersonaContext::class);
+		$this->personaContext->method('isResolved')->willReturn(true);
+		$this->personaContext->method('current')->willReturn(McpPersona::ADMIN);
+		$this->rebuildToolWithPersonaContext();
+
+		$this->collectionSaver->expects($this->never())->method('saveCollection');
+		$this->objectSaver->expects($this->never())->method('saveObject');
+
+		try {
+			$this->tool->createHandler(
+				id: 'showcase-v2',
+				properties: ['title' => ['field' => 'text']],
+				seedObjects: [['title' => 'Seed Me', 'owner' => 'someone-else']],
+			);
+			$this->fail('Expected ToolCallException when seeding into an existing collection.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('already exists', $e->getMessage());
+			$this->assertStringContainsString('create_object', $e->getMessage());
+		}
+	}
+
+	public function testCreateWithSeedObjectsCreatesTheCollectionBeforeSeeding(): void
+	{
+		$saved = $this->schema('fresh', ['title' => ['field' => 'text']]);
+		$this->saver->method('saveSchema')->willReturn($saved);
+		$this->collectionFetcher->method('collectionExists')->willReturn(false);
+
+		$this->collectionSaver->expects($this->once())->method('saveCollection')->with(['id' => 'fresh', 'schema' => 'fresh']);
+		$this->objectSaver->expects($this->exactly(2))->method('saveObject');
+
+		$result = $this->tool->createHandler(
+			id: 'fresh',
+			properties: ['title' => ['field' => 'text']],
+			seedObjects: [['title' => 'One'], ['title' => 'Two']],
+		);
+
+		$this->assertSame(2, $result['seeded']);
 	}
 
 	// ─── update_schema ───────────────────────────────────────────────────────

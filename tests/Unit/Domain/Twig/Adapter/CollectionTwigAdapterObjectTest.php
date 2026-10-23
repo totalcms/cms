@@ -12,7 +12,10 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\PasswordData;
+use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -62,5 +65,19 @@ final class CollectionTwigAdapterObjectTest extends TestCase
 			->willThrowException(new \RuntimeException('Unable to fetch object'));
 
 		expect($this->makeAdapter($objectFetcher)->object('blog', 'missing-post'))->toBe([]);
+	}
+
+	public function testObjectOmitsPasswordProperties(): void
+	{
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$objectFetcher->method('fetchObject')->willReturn(new ObjectData('admin', [
+			'name'     => new StringData('Admin'),
+			'password' => new PasswordData('secret-pass'),
+		]));
+
+		$result = $this->makeAdapter($objectFetcher)->object('auth', 'admin');
+
+		expect($result)->not->toHaveKey('password');
+		expect($result['name'])->toBe('Admin');
 	}
 }

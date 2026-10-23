@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Factory\LogChannel;
@@ -28,6 +29,7 @@ readonly class PasswordResetService
 		private UserValidationService $userValidator,
 		private ObjectUpdater $objectUpdater,
 		private Config $config,
+		private ActorContext $actors,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::PasswordReset);
@@ -133,7 +135,8 @@ readonly class PasswordResetService
 		$userData['password'] = $hashedPassword;
 
 		try {
-			$this->objectUpdater->updateObject($collection, $user->id, $userData);
+			// The reset token is the authority here, not the (anonymous) caller.
+			$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectUpdater->updateObject($collection, $user->id, $userData));
 
 			// Invalidate the token (single-use)
 			$this->tokenService->invalidateToken(self::SCOPE, $token);

@@ -200,4 +200,82 @@ final class AuthTokenServiceTest extends TestCase
 
 		$this->service->invalidateLatest('verify', 'a@b.test', 'members');
 	}
+
+	public function testCreateTokenStoresExtrasAndValidateReturnsThem(): void
+	{
+		$stored = [];
+		$this->cacheManager->method('getPasswordResetData')
+			->willReturnCallback(static function (string $key) use (&$stored): ?array {
+				return $stored[$key] ?? null;
+			});
+		$this->cacheManager->method('storePasswordResetData')
+			->willReturnCallback(static function (string $key, array $data) use (&$stored): bool {
+				$stored[$key] = $data;
+
+				return true;
+			});
+
+		$token = (string)$this->service->createToken('verify', 'a@b.test', 'members', 3600, ['redirect' => '/welcome'])->data['token'];
+
+		$this->assertSame(['redirect' => '/welcome'], $stored["verify:token:{$token}"]['extra']);
+
+		$result = $this->service->validateToken('verify', $token);
+
+		$this->assertTrue($result->success);
+		$this->assertSame(['redirect' => '/welcome', 'email' => 'a@b.test', 'collection' => 'members'], $result->data);
+	}
+
+	public function testCreateTokenWithoutExtrasStoresNoExtraKey(): void
+	{
+		$stored = [];
+		$this->cacheManager->method('storePasswordResetData')
+			->willReturnCallback(static function (string $key, array $data) use (&$stored): bool {
+				$stored[$key] = $data;
+
+				return true;
+			});
+
+		$token = (string)$this->service->createToken('verify', 'a@b.test', 'members', 3600)->data['token'];
+
+		$this->assertArrayNotHasKey('extra', $stored["verify:token:{$token}"]);
+	}
+
+	public function testExtrasNeverOverrideEmailOrCollection(): void
+	{
+		$this->cacheManager->method('getPasswordResetData')
+			->willReturn([
+				'email'      => 'a@b.test',
+				'collection' => 'members',
+				'scope'      => 'verify',
+				'createdAt'  => time() - 60,
+				'expiresAt'  => time() + 3600,
+				'extra'      => ['email' => 'evil@x.test', 'collection' => 'admin'],
+			]);
+
+		$result = $this->service->validateToken('verify', 'tok');
+
+		$this->assertSame('a@b.test', $result->data['email']);
+		$this->assertSame('members', $result->data['collection']);
+	}
+
+	public function testExpiredTokenFailureStillCarriesItsPayload(): void
+	{
+		// So the verify action can send the user to the right resend form
+		// without losing the site's redirect.
+		$this->cacheManager->method('getPasswordResetData')
+			->willReturn([
+				'email'      => 'a@b.test',
+				'collection' => 'members',
+				'scope'      => 'verify',
+				'createdAt'  => time() - 7200,
+				'expiresAt'  => time() - 60,
+				'extra'      => ['redirect' => '/welcome'],
+			]);
+
+		$result = $this->service->validateToken('verify', 'tok-expired');
+
+		$this->assertFalse($result->success);
+		$this->assertSame('/welcome', $result->data['redirect']);
+		$this->assertSame('members', $result->data['collection']);
+	}
 }

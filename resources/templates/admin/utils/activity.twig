@@ -1,0 +1,145 @@
+<h1>Activity Log</h1>
+
+<section class="dash-content-section activity-log">
+
+	<p>Who changed, downloaded or called what, and when: content and schema changes, logins, file downloads by signed-in users, refused requests and MCP tool calls. Kept for {{ activity.retentionDays }} days{% if cms.auth.isAdmin() %} — change it under <a href="settings/activity">Settings → Activity</a>{% endif %}.</p>
+
+	{% if not activity.enabled %}
+		<div class="warning-box">
+			<p>Recording is off, so nothing new is being added. The rows below were recorded before it was turned off.</p>
+		</div>
+	{% endif %}
+
+	{% set f = activity.filter %}
+
+	{# `totalform` for styling; data-method=GET + no-save/no-unsaved-warning keep
+	   TotalForm from hijacking this plain GET filter form. #}
+	<form class="activity-filters totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="utils/activity">
+		<label>Event
+			<select name="event">
+				<option value="">Any event</option>
+				{% for event in activity.events %}
+					<option value="{{ event }}" {{ event == f.event ? 'selected' }}>{{ event }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<label>Actor
+			<select name="actor">
+				<option value="">Anyone</option>
+				{% for kind in activity.actorKinds %}
+					<option value="{{ kind }}" {{ kind == f.actorKind ? 'selected' }}>{{ kind }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<label>Collection
+			<select name="collection">
+				<option value="">Any collection</option>
+				{% for collection in activity.collections %}
+					<option value="{{ collection }}" {{ collection == f.collection ? 'selected' }}>{{ collection }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<label>User, key or client
+			<input type="search" name="user" value="{{ f.user }}" placeholder="User id, API key or OAuth client">
+		</label>
+		<label>Level
+			<select name="level">
+				<option value="">Any level</option>
+				<option value="info" {{ f.level == 'info' ? 'selected' }}>info</option>
+				<option value="warning" {{ f.level == 'warning' ? 'selected' }}>warning</option>
+			</select>
+		</label>
+		<label>From
+			<input type="date" name="from" value="{{ f.from }}">
+		</label>
+		<label>To
+			<input type="date" name="to" value="{{ f.to }}">
+		</label>
+		<div class="activity-filter-actions">
+			<button class="dash-button" type="submit">Filter</button>
+			{% if activity.query is not empty %}
+				<a class="dash-button transparent" href="utils/activity">Clear</a>
+			{% endif %}
+			{% if activity.total > 0 %}
+				<a class="dash-button transparent activity-export" href="utils/activity/export{{ activity.query is not empty ? '?' ~ activity.query|url_encode }}" download>Export CSV</a>
+			{% endif %}
+		</div>
+	</form>
+
+	<p class="activity-count">{{ activity.total|number_format }} {{ activity.total == 1 ? 'event' : 'events' }}{% if activity.pages > 1 %} · page {{ activity.page }} of {{ activity.pages }}{% endif %}</p>
+
+	{% if activity.entries is empty %}
+		<div class="dash-empty-state">
+			<em>No activity{{ activity.query is not empty ? ' matches these filters' }}.</em>
+		</div>
+	{% else %}
+		<div class="activity-table-wrap">
+			<table class="admin-table">
+				<thead>
+					<tr>
+						<th class="activity-col-when">When</th>
+						<th class="activity-col-event">Event</th>
+						<th class="activity-col-who">Who</th>
+						<th class="activity-col-target">Target</th>
+						<th class="activity-col-details">Details</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for entry in activity.entries %}
+						<tr class="{{ entry.level == 'warning' ? 'activity-warning' }}">
+							<td class="activity-when">
+								<time datetime="{{ entry.createdAt|date('c') }}">{{ entry.createdAt|date('Y-m-d H:i:s') }}</time>
+							</td>
+							<td>
+								<a class="dash-badge sm {{ entry.level == 'warning' ? 'warning' : 'accent' }}" href="utils/activity?{{ activity.query|merge({event: entry.event})|url_encode }}">{{ entry.event }}</a>
+							</td>
+							<td>
+								{% set who = entry.userId ?: entry.apiKeyId %}
+								{% if who %}
+									<a href="utils/activity?{{ activity.query|merge({user: who})|url_encode }}">{{ entry.actorLabel() }}</a>
+								{% else %}
+									{{ entry.actorLabel() }}
+								{% endif %}
+								<span class="activity-meta">{{ entry.actorKind }}</span>
+								{% if entry.clientId %}
+									<span class="activity-meta">via <a href="utils/activity?{{ activity.query|merge({user: entry.clientId})|url_encode }}">{{ entry.clientId }}</a></span>
+								{% endif %}
+								{% if entry.initiator %}
+									<span class="activity-meta">for {{ entry.initiator }}</span>
+								{% endif %}
+							</td>
+							<td>
+								{% if entry.collection %}
+									<a href="utils/activity?{{ activity.query|merge({collection: entry.collection})|url_encode }}">{{ entry.collection }}</a>{% if entry.objectId %} / {{ entry.objectId }}{% endif %}
+								{% elseif entry.objectId %}
+									{{ entry.objectId }}
+								{% endif %}
+							</td>
+							<td class="activity-details">
+								{{ entry.summary }}
+								{% if entry.detail is not empty %}
+									<details>
+										<summary>More</summary>
+										<pre>{{ entry.detail|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE')) }}</pre>
+									</details>
+								{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		{% if activity.pages > 1 %}
+			<nav class="activity-pager">
+				{% if activity.page > 1 %}
+					<a class="dash-button transparent" href="utils/activity?{{ activity.query|merge({page: activity.page - 1})|url_encode }}">← Newer</a>
+				{% endif %}
+				{% if activity.page < activity.pages %}
+					<a class="dash-button transparent" href="utils/activity?{{ activity.query|merge({page: activity.page + 1})|url_encode }}">Older →</a>
+				{% endif %}
+			</nav>
+		{% endif %}
+	{% endif %}
+
+</section>

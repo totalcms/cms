@@ -53,7 +53,7 @@ describe('ExtensionManager::getEnableReview', function (): void {
 
 		$review = $manager->getEnableReview('test-vendor/dangerous-ext');
 
-		expect($review)->toHaveKeys(['capabilities', 'findings', 'reviewNote', 'risky', 'hasFlags']);
+		expect($review)->toHaveKeys(['capabilities', 'findings', 'reviewNote', 'risky', 'hasFlags', 'needsReview', 'skill']);
 
 		// Developer-authored note flows through from the manifest.
 		expect($review['reviewNote'])->not->toBe('');
@@ -68,6 +68,7 @@ describe('ExtensionManager::getEnableReview', function (): void {
 		expect(array_column($review['findings'], 'pattern'))->toContain('shell_exec');
 
 		expect($review['hasFlags'])->toBeTrue();
+		expect($review['needsReview'])->toBeTrue();
 	});
 
 	test('getEnableReview reports no flags for a clean extension', function (): void {
@@ -81,6 +82,7 @@ describe('ExtensionManager::getEnableReview', function (): void {
 		expect($review['risky'])->toBe([]);
 		expect($review['findings'])->toBe([]);
 		expect($review['hasFlags'])->toBeFalse();
+		expect($review['needsReview'])->toBeFalse();
 	});
 
 	test('getEnableReview shows the agent skill an extension ships', function (): void {
@@ -97,6 +99,10 @@ describe('ExtensionManager::getEnableReview', function (): void {
 		expect($review['skill']['contents'])->toContain('Call `skill_ext_hello()` in Twig');
 		expect($review['skill']['files'])->toBe(['SKILL.md', 'references/notes.md']);
 		expect($review['skill']['target'])->toBe('.claude/skills/test-vendor-skill-ext/');
+
+		// Nothing to warn about, but the skill is still worth reading first.
+		expect($review['hasFlags'])->toBeFalse();
+		expect($review['needsReview'])->toBeTrue();
 
 		// A clean extension without one reports null, not an empty card.
 		expect($manager->getEnableReview('test-vendor/clean-ext')['skill'])->toBeNull();
@@ -115,6 +121,7 @@ describe('ExtensionManager::getEnableReview', function (): void {
 			'reviewNote'   => '',
 			'risky'        => [],
 			'hasFlags'     => false,
+			'needsReview'  => false,
 			'skill'        => null,
 		]);
 	});

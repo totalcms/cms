@@ -2,9 +2,7 @@
 
 namespace TotalCMS\Domain\Collection\Data;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 /**
  * Data object.
@@ -26,8 +24,6 @@ class CollectionData
 		'views',
 	];
 
-	private readonly Serializer $serializer;
-
 	public string $id;                        // collection id
 	public string $name;                      // collection name
 	public string $schema;                    // schema name
@@ -48,7 +44,19 @@ class CollectionData
 	public const FORMAT_MARKDOWN = 'markdown';
 	/** @var list<string> */
 	public const FORMATS                  = [self::FORMAT_JSON, self::FORMAT_MARKDOWN];
+	/** Visitors may register through POST /admin/register/{collection}. Counts only on a collection whose schema is `auth` or inherits it; OR-ed with the `auth.publicRegistration` config list; see RegistrationCollections. */
+	public bool $publicRegistration       = false;
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
+	/**
+	 * Access groups given to every registrant, in addition to the global `auth.publicRegistrationGroup`. Submitted `groups` are always ignored.
+	 *
+	 * @var list<string>
+	 */
+	public array $registrationGroups = [];
+	/** Property holding the owning user's id. Non-empty makes this an owned collection: non-super-admins are scoped to the objects they own and the server stamps their id on create. See OwnerPropertyResolver. */
+	public string $ownerProperty          = '';
+	/** Auth collection whose members may own objects here. Empty means any auth collection (the owner value is a bare user id, so ids must then be unique across auth collections). See OwnerPropertyResolver::ownerCollection(). */
+	public string $ownerCollection        = '';
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
 	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
@@ -59,6 +67,9 @@ class CollectionData
 
 	/** @var array<string> */
 	public array $publicOperations = [];  // operations allowed publicly (create, read, update, delete)
+
+	/** Public registrations and public creates must pass the form's bot check (honeypot + signed time trap); a body without it is turned away. See BotSubmissionGate. */
+	public bool $requireBotProtection = false;
 
 	/** @var array<string,array<string,mixed>> */
 	public array $properties = [];        // Rules for fields defined in schemaToMetaProps
@@ -83,11 +94,6 @@ class CollectionData
 
 	/** @var array<string,mixed> */
 	public array $seo = [];  // SEO card settings (type, title, description, image — the JSON-LD type and which properties supply the title/description/image)
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
 
 	/** @return array<string,mixed> */
 	public function toArray(): array
@@ -116,12 +122,17 @@ class CollectionData
 			'labelSingular'            => $labelSingular,
 			'groups'                   => $this->groups,
 			'publicOperations'         => $this->publicOperations,
+			'requireBotProtection'     => $this->requireBotProtection,
 			'sortBy'                   => $this->sortBy,
 			'reverseSort'              => $this->reverseSort,
 			'prettyUrl'                => $this->prettyUrl,
 			'singleton'                => $this->singleton,
 			'format'                   => $this->format,
+			'publicRegistration'       => $this->publicRegistration,
 			'requireEmailVerification' => $this->requireEmailVerification,
+			'registrationGroups'       => $this->registrationGroups,
+			'ownerProperty'            => $this->ownerProperty,
+			'ownerCollection'          => $this->ownerCollection,
 			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
 			'count'                    => $this->count,
 			'totalObjects'             => max($this->totalObjects, 0),
@@ -181,7 +192,7 @@ class CollectionData
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+		return SerializerFactory::json()->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 	}
 
 	/**
@@ -266,6 +277,50 @@ class CollectionData
 		];
 
 		return $defaults[$schemaId] ?? ['labelPlural' => '', 'labelSingular' => ''];
+	}
+
+	/**
+	 * The stored form of a submitted `publicRegistration`: true only for
+	 * true, 1, "1", "true", "on" and "yes"; anything else is false. The
+	 * serializer would cast "false" to true, so CollectionSaver applies this
+	 * before storing, and CollectionMetaAccessMiddleware compares with it, so
+	 * the gate and storage can never disagree.
+	 */
+	public static function normalizePublicRegistration(mixed $value): bool
+	{
+		if (is_bool($value)) {
+			return $value;
+		}
+
+		if (!is_int($value) && !is_string($value)) {
+			return false;
+		}
+
+		return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+	}
+
+	/**
+	 * The stored form of a submitted `registrationGroups`: trimmed, non-empty,
+	 * deduplicated strings in submitted order. Anything that is not an array
+	 * is [] and non-string items are dropped. Shared with
+	 * CollectionMetaAccessMiddleware for the same reason as above.
+	 *
+	 * @return list<string>
+	 */
+	public static function normalizeRegistrationGroups(mixed $value): array
+	{
+		if (!is_array($value)) {
+			return [];
+		}
+
+		$groups = [];
+		foreach ($value as $item) {
+			if (is_string($item) && trim($item) !== '') {
+				$groups[] = trim($item);
+			}
+		}
+
+		return array_values(array_unique($groups));
 	}
 
 	/**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Infrastructure\Filesystem;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
@@ -84,7 +85,7 @@ final class FileUtilsTreeTest extends TestCase
 		yield 'empty' => ['', 0];
 	}
 
-	/** @dataProvider iniSizes */
+	#[DataProvider('iniSizes')]
 	public function testIniSizeToBytes(string $ini, int $bytes): void
 	{
 		$this->assertSame($bytes, FileUtils::iniSizeToBytes($ini));

@@ -8,9 +8,18 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Action\Mailer\SendEmailAction;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Security\BotProtection;
+use TotalCMS\Domain\Security\BotSubmissionGate;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\OperationResult;
 
@@ -32,7 +41,25 @@ final class SendEmailActionTest extends TestCase
 		$accessManager = $this->createMock(AccessManager::class);
 		$accessManager->method('userData')->willReturn([]);
 
-		$this->action = new SendEmailAction($this->emailService, $this->renderer, $accessManager);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
+		$apiKeys = $this->createMock(ApiKeyAuthenticator::class);
+		$apiKeys->method('hasApiKeyHeader')->willReturn(false);
+		$gate = new BotSubmissionGate(
+			new BotProtection('test-key'),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(ObjectFactory::class),
+			$this->createMock(ObjectFetcher::class),
+			$apiKeys,
+			null,
+			$loggerFactory,
+		);
+
+		// No template requires bot protection here; SendEmailActionBotProtectionTest covers that.
+		$mailers = $this->createMock(MailerFetcher::class);
+		$mailers->method('exists')->willReturn(false);
+
+		$this->action = new SendEmailAction($this->emailService, $this->renderer, $accessManager, $gate, $mailers);
 	}
 
 	public function testSendsEmailSuccessfully(): void

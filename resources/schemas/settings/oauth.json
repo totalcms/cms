@@ -11,6 +11,18 @@
 			"help"    : "Master switch for the OAuth 2.1 authorization server. When off, the OAuth discovery documents and endpoints return 404, so MCP clients that see a discoverable OAuth server (Claude, Claude Desktop) connect anonymously to the public tier instead of demanding a login. Turn off to run a public-only MCP site — access is then anonymous (public collections) or API key (admin). Existing access tokens expire naturally (default 1 hour) and cannot be refreshed.",
 			"default" : true
 		},
+		"loginCollection": {
+			"type"     : "string",
+			"field"    : "select",
+			"label"    : "Login Collection",
+			"help"     : "The auth collection whose members sign in to connect an AI client (Claude, ChatGPT) or authorize an integration. A signed-out user is sent to this collection's login page, where staff from the default user collection can sign in too. A session from any other auth collection cannot authorize: the user is asked to sign in again. Leave on the default to keep OAuth on the default user collection. Tokens already issued keep working.",
+			"default"  : "",
+			"options"  : [{ "value": "", "label": "Default user collection" }],
+			"settings" : {
+				"propertyOptions" : "schemaCollections:auth",
+				"sortOptions"     : false
+			}
+		},
 		"dynamicRegistration": {
 			"type"    : "boolean",
 			"field"   : "toggle",

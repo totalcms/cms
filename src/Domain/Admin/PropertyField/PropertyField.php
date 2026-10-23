@@ -28,6 +28,17 @@ class PropertyField
 
 	protected function topFieldInfo(): string
 	{
+		$value   = TotalForm::canonicalFieldType($this->field);
+		$options = TotalForm::getFieldsByType();
+
+		// A type this install does not list — an extension's, while that
+		// extension is disabled or removed — keeps its own option. Without one
+		// the <select> falls back to its first option (`code`) and the next
+		// schema save writes that over the real type.
+		if ($value !== '' && !in_array($value, array_merge(...array_values($options)), true)) {
+			$options['Unavailable (extension disabled or removed)'] = [$value];
+		}
+
 		return $this->form->field('field', [
 			'field'       => 'select',
 			'label'       => 'Type of Form Field',
@@ -35,9 +46,9 @@ class PropertyField
 			'help'        => 'The type form field that this field will use',
 			// Canonicalize stored alias (e.g. multicheckbox → checklist) so the
 			// <select> finds a matching <option> instead of falling back to first.
-			'value'       => TotalForm::canonicalFieldType($this->field),
+			'value'       => $value,
 			// 'disabled'    => ($this->property === 'id'), // Disable field type for id property
-			'options'     => TotalForm::getFieldsByType(),
+			'options'     => $options,
 			'settings'    => ['clearValue' => false],
 		]);
 	}

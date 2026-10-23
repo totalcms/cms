@@ -14,9 +14,9 @@ declare(strict_types=1);
  * form is rare enough — most MCP clients self-register via RFC 7591 — that it
  * went unnoticed through several release candidates.
  *
- * `/admin/...` routes are the documented exception: TotalFormFactory dispatches
- * those against the unprefixed base path, because the admin surface lives
- * outside the `/api` group.
+ * `/admin/...` routes are the documented exception: buildApiQuery resolves
+ * those against the site base (data-api minus its `/api`), because the admin
+ * surface lives outside the `/api` group.
  */
 test('no totalform route carries its own /api prefix', function (): void {
 	$templateDir = dirname(__DIR__, 2) . '/resources/templates';

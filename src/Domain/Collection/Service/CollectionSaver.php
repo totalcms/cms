@@ -12,7 +12,9 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Exception\EditionFeatureException;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
  * Service.
@@ -26,6 +28,7 @@ readonly class CollectionSaver
 		private CollectionFetcher $collectionFetcher,
 		private EditionFeatureService $editionFeatures,
 		private EventDispatcher $eventDispatcher,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -61,6 +64,8 @@ readonly class CollectionSaver
 
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
+		$this->assertOwnerPropertyValid($data);
+		$this->assertOwnerCollectionValid($data);
 
 		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
@@ -131,6 +136,8 @@ readonly class CollectionSaver
 			$data['lastUpdated'] = DateData::cleanDate((string)$data['lastUpdated']);
 		}
 
+		$callerSuppliedExisting = $existingCollection instanceof CollectionData;
+
 		// Fetch existing collection to preserve system-managed fields if not provided
 		if (!$existingCollection instanceof CollectionData) {
 			$existingCollection = $this->storage->fetchCollection($collectionId);
@@ -140,20 +147,10 @@ readonly class CollectionSaver
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
-		// The format is fixed at creation: the setting and the files on disk
-		// must agree, and only CollectionFormatConverter changes both.
-		// Normalized first so a harmless case/whitespace difference (e.g. the
-		// form re-posting `JSON`) is not mistaken for an attempted change.
-		if (isset($data['format']) && $data['format'] !== '' && $this->normalizeFormat($data['format']) !== $existingCollection->format) {
-			throw new \DomainException(sprintf(
-				"Collection '%s' is stored as %s. Change the storage format with `tcms collection:convert %s --to=%s`.",
-				$collectionId,
-				$existingCollection->format,
-				$collectionId,
-				(string)$data['format'],
-			));
-		}
+		$this->assertFormatUnchanged($collectionId, $data, $existingCollection);
 		$data['format'] = $existingCollection->format;
+
+		$this->assertOwnerSettingsValid($data, $existingCollection, $callerSuppliedExisting);
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
 		if (!isset($data['totalObjects'])) {
@@ -204,16 +201,75 @@ readonly class CollectionSaver
 	}
 
 	/**
+	 * The format is fixed at creation: the setting and the files on disk
+	 * must agree, and only CollectionFormatConverter changes both.
+	 * Normalized first so a harmless case/whitespace difference (e.g. the
+	 * form re-posting `JSON`) is not mistaken for an attempted change.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertFormatUnchanged(string $collectionId, array $data, CollectionData $existingCollection): void
+	{
+		if (!isset($data['format']) || $data['format'] === '' || $this->normalizeFormat($data['format']) === $existingCollection->format) {
+			return;
+		}
+
+		throw new \DomainException(sprintf(
+			"Collection '%s' is stored as %s. Change the storage format with `tcms collection:convert %s --to=%s`.",
+			$collectionId,
+			$existingCollection->format,
+			$collectionId,
+			(string)$data['format'],
+		));
+	}
+
+	/**
+	 * An ownerProperty the schema lacks silently makes the collection
+	 * unowned. Check it when it (or the schema) changed, or when the caller
+	 * did not hand us the stored record. The metadata cascade (count bumps
+	 * on every object write) passes the record and changes neither, so it
+	 * skips the schema read; a patch changing either is validated here, on
+	 * the merged data. Same skip for ownerCollection: only a changed value
+	 * (or a call without the stored record) reads the named collection.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerSettingsValid(array $data, CollectionData $existingCollection, bool $callerSuppliedExisting): void
+	{
+		$ownerUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerProperty'] ?? '') === $existingCollection->ownerProperty
+			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
+		if (!$ownerUnchanged) {
+			$this->assertOwnerPropertyValid($data);
+		}
+
+		$ownerCollectionUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerCollection'] ?? '') === $existingCollection->ownerCollection;
+		if (!$ownerCollectionUnchanged) {
+			$this->assertOwnerCollectionValid($data);
+		}
+	}
+
+	/**
 	 * The configuration portion of a collection — everything except the
 	 * environment-local computed fields and the timestamps themselves.
 	 * Two collections with equal config subsets differ only in content
 	 * activity, which must not move the settings timestamp.
 	 *
+	 * Both sides are normalized, so a stored record that predates a
+	 * normalization (an `mcp` block without `tools`, say) does not read as a
+	 * settings change when the metadata cascade rewrites it in normal form —
+	 * that made the next object save drop every live MCP session.
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function configSubset(CollectionData $collection): array
 	{
-		$config = $collection->toArray();
+		$config = $this->normalizeSubmittedData($collection->toArray());
 		unset($config['count'], $config['totalObjects'], $config['lastUpdated'], $config['updated']);
 
 		return $config;
@@ -319,7 +375,8 @@ readonly class CollectionSaver
 	/**
 	 * Coerce what a form or a sync sends into the on-disk shape: the URL as a
 	 * path, empty-string `formSettings` / `manualSort` as arrays, and an
-	 * empty `mcp.tools` as an array. An entirely empty `mcp` block stays
+	 * empty `mcp.tools` as an array, and the registration settings in
+	 * their strict stored form. An entirely empty `mcp` block stays
 	 * empty: `tcms push` sends "no MCP settings" as `mcp: []`, and growing
 	 * it into `{tools: []}` made every sync dry run report a difference.
 	 *
@@ -337,6 +394,15 @@ readonly class CollectionSaver
 			if (isset($data[$key]) && $data[$key] === '') {
 				$data[$key] = [];
 			}
+		}
+
+		// The serializer casts loosely ("false" becomes true): store the same
+		// normalised values the access middleware compares against.
+		if (array_key_exists('publicRegistration', $data)) {
+			$data['publicRegistration'] = CollectionData::normalizePublicRegistration($data['publicRegistration']);
+		}
+		if (array_key_exists('registrationGroups', $data)) {
+			$data['registrationGroups'] = CollectionData::normalizeRegistrationGroups($data['registrationGroups']);
 		}
 
 		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
@@ -383,6 +449,94 @@ readonly class CollectionSaver
 		// Check if this schema requires a specific edition feature
 		if (isset($schemaToFeature[$schema])) {
 			$this->editionFeatures->canOrFail($schemaToFeature[$schema]);
+		}
+	}
+
+	/**
+	 * An ownerProperty that names a property the schema lacks resolves to no
+	 * owner at all, so the collection would silently behave as unowned. Reject
+	 * it at save time instead. It must also be in the schema's `index`: member
+	 * lists are scoped by matching the owner on the index, so an unindexed
+	 * owner property would silently empty every member's list. And it must be a
+	 * string property or a list of strings (several co-owners; see
+	 * OwnerPropertyKind): the owner is stored and compared as a user id, or a
+	 * list of them.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerPropertyValid(array $data): void
+	{
+		$owner = (string)($data['ownerProperty'] ?? '');
+		if ($owner === '') {
+			return;
+		}
+
+		$schemaId = (string)($data['schema'] ?? '');
+		$message  = sprintf("ownerProperty '%s' is not a property of schema '%s'. Add the property to the schema first.", $owner, $schemaId);
+
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+		} catch (\Throwable) {
+			throw new \DomainException($message);
+		}
+
+		if (!array_key_exists($owner, $schema->properties)) {
+			throw new \DomainException($message);
+		}
+
+		if (!in_array($owner, $schema->index, true)) {
+			throw new \DomainException(sprintf("ownerProperty '%s' must be in the index of schema '%s' so member lists can be scoped. Add it to the schema's index first.", $owner, $schemaId));
+		}
+
+		// The owner is stored as a user id or a list of them: a gallery or any
+		// other array of objects cannot hold one (see OwnerPropertyKind).
+		$definition = is_array($schema->properties[$owner]) ? $schema->properties[$owner] : [];
+		if (OwnerPropertyKind::of($definition) === null) {
+			$effectiveType = PropertyDefinition::fromArray($definition)->effectiveJsonType();
+
+			throw new \DomainException(sprintf("ownerProperty '%s' must be a string property or a list of strings in schema '%s' (its type is '%s').", $owner, $schemaId, $effectiveType ?? 'untyped'));
+		}
+	}
+
+	/**
+	 * An ownerCollection naming a missing or non-auth collection would make
+	 * every member an outsider: nobody could own anything. Reject it at save
+	 * time. The collection's schema must be `auth` or inherit from it.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerCollectionValid(array $data): void
+	{
+		$ownerCollection = $data['ownerCollection'] ?? '';
+		if (!is_string($ownerCollection) || $ownerCollection === '') {
+			return;
+		}
+
+		$message = sprintf("ownerCollection '%s' is not an auth collection. Choose a collection whose schema is auth or inherits from it.", $ownerCollection);
+
+		try {
+			$collection = $this->collectionFetcher->fetchCollection($ownerCollection);
+		} catch (\Throwable) {
+			throw new \DomainException($message);
+		}
+		if (!$collection instanceof CollectionData) {
+			throw new \DomainException($message);
+		}
+		if ($collection->schema === 'auth') {
+			return;
+		}
+
+		try {
+			$inherits = in_array('auth', $this->schemaFetcher->fetchRawSchema($collection->schema)->inheritFrom, true);
+		} catch (\Throwable) {
+			$inherits = false;
+		}
+		if (!$inherits) {
+			throw new \DomainException($message);
 		}
 	}
 

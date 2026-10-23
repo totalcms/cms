@@ -11,8 +11,8 @@
  *
  * The test environment has auth.enable = false (local.test.php), which means
  * full-app dispatches bypass all auth middleware. Route-level tests therefore
- * directly instantiate AdminOnlyMiddleware and exercise it with mocked
- * session/userValidation — the same approach used by
+ * directly instantiate AdminOnlyMiddleware and exercise it with a mocked
+ * session and access-control service — the same approach used by
  * SystemCollectionGuardMiddlewareTest and BaseAccessMiddlewareTest.
  *
  * CLI paths (JumpStartExportCommand, JumpStartImportCommand) and the
@@ -30,9 +30,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -44,7 +48,6 @@ use TotalCMS\Support\Config;
 describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function (): void {
 	beforeEach(function (): void {
 		$this->session           = $this->createMock(SessionInterface::class);
-		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->accessControl     = $this->createMock(AccessControlService::class);
 		$this->jsonRenderer      = $this->createMock(JsonRenderer::class);
 		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
@@ -56,7 +59,7 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
 
 		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->auth  = ['enable' => true];
+		$this->config->auth  = ['enable' => true, 'collection' => 'auth'];
 		$this->config->env   = 'prod';
 		$this->config->debug = false;
 
@@ -88,16 +91,15 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 
 		$this->makeMiddleware = function (): AdminOnlyMiddleware {
 			return new AdminOnlyMiddleware(
-				$this->userValidation,
-				$this->accessControl,
-				$this->session,
+				new ActorResolver($this->session, $this->accessControl, $this->config),
+				new ActorContext(),
 				$this->jsonRenderer,
 				$this->twigRenderer,
 				$this->responseFactory,
 				$this->config,
 				$this->operationDetector,
 				$this->loggerFactory,
-				$this->oauthActivityLogger,
+				new AccessDenials($this->loggerFactory, $this->oauthActivityLogger, new EventDispatcher(new NullLogger())),
 			);
 		};
 	});
@@ -114,7 +116,7 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 	it('returns 403 for a logged-in non-super-admin', function (): void {
 		$this->session->method('get')
 			->willReturnCallback(static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'editor-user-test-com' : null);
-		$this->userValidation->method('isSuperAdmin')->with('editor-user-test-com')->willReturn(false);
+		$this->accessControl->method('authorityOf')->with('editor-user-test-com')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		// AdminOnlyMiddleware::checkPermission always returns false for non-admins.
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
@@ -126,7 +128,7 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 	it('passes through for a super-admin session', function (): void {
 		$this->session->method('get')
 			->willReturnCallback(static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-user-test-com' : null);
-		$this->userValidation->method('isSuperAdmin')->with('admin-user-test-com')->willReturn(true);
+		$this->accessControl->method('authorityOf')->with('admin-user-test-com')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 
 		$result = ($this->makeMiddleware)()->process(($this->apiRequest)(), $this->handler);
 
@@ -139,7 +141,7 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 		$result = ($this->makeMiddleware)()->process(($this->apiRequest)('apikey'), $this->handler);
 
 		expect($result)->toBe($this->passthrough);
-		$this->userValidation->expects($this->never())->method('isSuperAdmin');
+		$this->accessControl->expects($this->never())->method('authorityOf');
 	});
 
 	it('passes through when auth is disabled globally', function (): void {

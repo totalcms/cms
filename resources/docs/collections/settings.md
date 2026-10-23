@@ -381,7 +381,7 @@ Operations that unauthenticated users can perform on this collection via the API
 
 **Security considerations:**
 - Only enable what's necessary
-- `create` without authentication can lead to spam
+- `create` without authentication can lead to spam; [`requireBotProtection`](#requirebotprotection) turns naive bots away
 - `update` and `delete` are rarely appropriate for public access
 - Consider rate limiting for public endpoints
 - Public counters (likes, "was this helpful") are not a collection operation: set `publicIncrement: true` on the number field instead — see [Number and Range Fields](docs/fields/number-range)
@@ -398,6 +398,149 @@ Operations that unauthenticated users can perform on this collection via the API
 // Fully protected (admin-only)
 {"publicOperations": []}
 ```
+
+---
+
+### requireBotProtection
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+Public registrations and public creates must pass the form's [bot protection](docs/forms/options#bot-protection) (a honeypot and a signed time trap). A submission without it is answered as a success but nothing is saved. Shown as **Require Bot Protection** in the Access Controls section. Signed-in users and API keys are never checked.
+
+```json
+{
+    "publicOperations": ["create"],
+    "requireBotProtection": true
+}
+```
+
+With it on, the collection's register form, and its new-object forms when public `create` is allowed, include the fields without the `botProtection` option. With it off, only submissions that carry the fields are checked.
+
+---
+
+### publicRegistration
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+Lets anonymous visitors create their own account in this collection through [`POST /admin/register/{collection}`](docs/forms/options#public-registration-forms). Only collections whose schema is `auth` or inherits it have it.
+
+```json
+{
+    "publicRegistration": true
+}
+```
+
+Switch it on with **Allow Public Registration** in the **Public Registration** section of the collection form. The field is hidden on other collections, and on the new-collection form until the collection is saved. With it off the endpoint returns `403` "Public registration is not enabled for this collection." Installs that opted collections in through the older `config.auth.publicRegistration` list keep working; new setups use this toggle.
+
+An enabled collection can also be [impersonated](docs/operations/impersonation), like the default auth collection.
+
+Turning it on reveals two more fields: **Require Email Verification** (`requireEmailVerification`, off by default) and **Registration Groups** (below).
+
+---
+
+### requireEmailVerification
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+New registrants are created inactive and must click a link in a verification email before they can sign in. Shown as **Require Email Verification** once [`publicRegistration`](#publicregistration) is on. With it off, a registrant is signed in as soon as the account is created. See [Email Verification](docs/forms/options#email-verification) for the full flow.
+
+```json
+{
+    "publicRegistration": true,
+    "requireEmailVerification": true
+}
+```
+
+---
+
+### registrationGroups
+
+**Type:** `array<string>`
+**Required:** No
+**Default:** `[]`
+
+Access groups given to every registrant. Shown as **Registration Groups**, a list of access groups, once [`publicRegistration`](#publicregistration) is on.
+
+```json
+{
+    "publicRegistration": true,
+    "registrationGroups": ["members", "newsletter"]
+}
+```
+
+A registrant receives the global `publicRegistrationGroup` (auth settings) plus these groups, with duplicates removed. A `groups` value submitted in the registration form is always ignored, so a visitor cannot grant themselves access.
+
+`admin` is never granted this way: it is dropped from the list when a registrant is created. Only super admins and API keys may change `publicRegistration` and `registrationGroups`; a request from any other user that would change either is refused with `403`, whatever collection access their groups grant.
+
+---
+
+### ownerProperty
+
+**Type:** `string`
+**Required:** No
+**Default:** `""`
+
+The property that holds the id of the user who owns each object. Setting it makes this an **owned collection**: every user who is not a super admin is limited to the objects they own, and the server writes their user id into this property when they create one.
+
+```json
+{
+    "ownerProperty": "owner"
+}
+```
+
+Pick it from the **Owner Property** select on the collection form, which lists the schema's string properties and lists of strings (not galleries or other lists of objects); choose "None" to clear it. The list is empty on a new collection until it is saved with its schema. The property must exist in the schema and be listed in the schema's `index`. It can be a string or a list of strings. A plain text field is enough, and a `relational` field pointing at the users collection makes the admin table show names. The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a string property or a list of strings, is not in the schema, or is not in the `index` is rejected with a 400 that names the problem, so add the property to the schema first.
+
+- **String or list.** A string holds one user id. A list (`type: array` with string items, or the `list` property type) holds several, and each listed user owns the object. The check is an exact string comparison between the user's id and the stored value, or each entry of it. On create the server stamps `[userId]` (an anonymous public submission stamps `[]`). Members cannot change the field on update: what they send is reverted to the stored value, so only super admins and API keys add or remove co-owners. A `multicheckbox`, `multiselect` or `checklist` array works too, but the admin form shows a user id that is not one of its options, so prefer `list`.
+- **In the index.** The property must be in the schema's [`index`](docs/schemas/reference#index) array, and saving the collection is rejected otherwise. Members' queries and index reads are scoped by matching this property on the collection index, by exact comparison with the user's id (case-sensitive, no wildcards).
+
+Because the owner value does not record which auth collection the id came from, a site with several auth collections must keep user ids unique across them, or set [`ownerCollection`](#ownercollection).
+
+---
+
+### ownerCollection
+
+**Type:** `string`
+**Required:** No
+**Default:** `""`
+
+The auth collection whose members are scoped owners of this collection. Pick it from the **Owner Collection** select, next to **Owner Property**; "Any auth collection" leaves it empty. It only has an effect when `ownerProperty` is set.
+
+```json
+{
+    "ownerProperty": "owner",
+    "ownerCollection": "members"
+}
+```
+
+When set, a signed-in user from any other auth collection is treated like an anonymous caller on this collection: refused with `403` on every object, list, create and admin-form route (access log `reason: owner`) unless the operation is in `publicOperations`, where the caller is treated as anonymous; a public create by them stores an empty owner. Super admins and API keys are unaffected. When empty, the user's auth collection is ignored, so user ids must be unique across auth collections. Saving a collection whose `ownerCollection` is missing or is not an auth collection (its schema is not `auth` and does not inherit from it) is rejected.
+
+**Owned collections**
+
+Access groups grant operations per collection. On an owned collection the same grant applies to the user's own objects only:
+
+- **Create** — the owner is stamped server-side with the acting user's id, whatever the request sent. An anonymous public submission (`publicOperations: ["create"]`) stores an empty owner.
+- **Read, update, delete, property and file routes** — refused with `403` when the object belongs to someone else. A write that names an object id that does not exist is refused too (a read gets the usual `404`): members create through `POST /api/collections/{collection}`. The response is the same "Access denied" as a group refusal; the access log says `reason: owner` (or `reason: group` when the access group refused first).
+- **List and query** — `GET /api/collections/{c}/index` and `/query` return only the user's own objects. `ids=`, `filter=` and `search=` cannot widen that.
+- **Bulk delete, reindex and clone** — refused for scoped members; super admins, API keys and admin bearer tokens are unaffected. Bulk and reindex cannot be scoped; a clone would copy another object's owner.
+- **Whole-collection routes are an allow-list.** A scoped member can create (`POST /api/collections/{collection}`), list (`/query` and `/index`, both scoped) and open the admin collection page (not its export, import, factory, sitemap or feeds pages). Every other route that has no object id is refused with `403`: export (`/api/export/collections/{collection}/...`), report (`/api/report/collections/{collection}/...`), import (`/api/import/collections/{collection}/...`), reindex, bulk delete, and duplicating another object from the admin ("duplicate" on the add page), as well as `object-clone`.
+- The owner property itself cannot be changed by its owner. It is protected by being named here; see [protected](docs/schemas/validation#protected) for the per-field version.
+- **Protected properties on property routes.** On every collection, owned or not, a non-admin write to a protected property (or the owner property) through any property route — `PUT`/`PATCH`/`DELETE .../{id}/{property}`, deck items, files, folders, meta, counters and `/api/upload/*` — is refused with `403`; the access log says `reason: protected`.
+- **Forced values on every write.** A [`protected: {"value": X}`](docs/schemas/validation#protected) property is written as `X` on every authenticated non-admin write (session or OAuth user) — body routes, property routes, deck items, file and upload routes, meta writes and property deletes — so uploading a new screenshot to an approved object sends it back to review. Anonymous public submissions through the object body routes are forced too. The exceptions: counter increments and decrements (a tick is not an edit), property, deck and file routes reached as a public submission under a public `update`, and [registration](docs/forms/options#public-registration-forms), which strips protected fields but does not apply forced values.
+- **Clone and import on protected collections.** On every collection, owned or not, that has protected properties (or an owner property), a non-admin clone (`POST .../{id}/clone`) and every collection import (`/api/import/collections/{collection}/...`: CSV, JSON, deck CSV, deck JSON and factory) are refused with `403` and `reason: protected`: both copy or upsert whole objects with no field policy. A non-admin clone whose body names a different target `collection` is refused on any collection. Under a public `create`, neither kind of clone is public.
+
+Who is scoped: everyone who is not a super admin (a member of the `admin` group in the default auth collection), whether they sign in through a custom auth collection or the dashboard. A dashboard editor on an owned collection therefore sees only their own objects in the collection table. Staff who must moderate every object are super admins. API keys and OAuth tokens issued to admins are untouched; an OAuth token issued to a non-admin is scoped like that user's session.
+
+**Over MCP** the same rules apply, through the same checks. An owned collection is listed at its own `mcp.access`. A caller whose access groups grant `read` on it sees their own objects, drafts included, plus everyone's published objects when its `mcp.access` is `public` (only their own when it is not); a caller without a grant, anonymous included, sees published objects on a public collection and nothing otherwise. Every read tool — `query_collection`, `search_collection`, `search_collections`, `get_object`, saved queries and the `tcms://` resources — applies that scope. `create_object` stamps the caller as owner, and `update_object` / `patch_object` on another member's object answer "not found", as REST does. Protected properties are enforced at storage for every write, so a non-admin's value for one is reverted (or forced) rather than the write refused. `describe_collection` tells the agent up front, in its `ownership` field, what it can see and which fields the site sets. Admin callers are unscoped. Data views keep their own `mcp.access`, since a view is an admin's explicit publication.
+
+**Public operations bypass ownership.** Public requests skip access control entirely, so any `publicOperations` other than `create` — public `read`, `update` or `delete` — skip the owner check too: anyone could read, change or delete any member's object. An owned collection should enable public `create` at most. (Public `create` does not open clone on an owned collection, or on any collection with protected properties.)
+
+Pair this with [`protected`](docs/schemas/validation#protected) on a `draft` field — `"protected": {"value": true}` — and every member edit goes back to the review queue while an admin's approval is the only way out of it. The [member portal pattern](docs/forms/options#member-portals-owned-collections) shows the form side.
 
 ---
 
@@ -493,10 +636,12 @@ Override schema property attributes for this collection. Allows customizing fiel
 {
     "properties": {
         "title": {
+            "field": "text",
             "label": "Headline",
             "placeholder": "Enter a compelling headline..."
         },
         "categories": {
+            "field": "select",
             "options": [
                 {"label": "News", "value": "news"},
                 {"label": "Tutorial", "value": "tutorial"},
@@ -504,17 +649,20 @@ Override schema property attributes for this collection. Allows customizing fiel
             ]
         },
         "featured": {
+            "field": "toggle",
             "help": "Featured articles appear on the homepage carousel."
         }
     }
 }
 ```
 
+Every override carries the property's `field` (its field type, as in the schema), even when it changes only the label: the collection fails validation without it. The admin's override editor fills it in, and so does MCP's `update_collection`.
+
 **Overridable attributes:**
 - `label` - Field label
 - `help` - Help text
 - `placeholder` - Placeholder text
-- `field` - Field type
+- `field` - Field type (required, see above)
 - `options` - Select/checkbox options
 - `settings` - Field-specific settings
 
@@ -645,6 +793,7 @@ A fully configured collection metadata file:
 
     "groups": [],
     "publicOperations": ["read"],
+    "ownerProperty": "owner",
 
     "queueRebuildOnSave": false,
 

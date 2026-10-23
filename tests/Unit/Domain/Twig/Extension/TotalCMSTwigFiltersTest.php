@@ -2,6 +2,8 @@
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFunctions;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
 use Twig\TwigFilter;
 
 describe('TotalCMSTwigFilters', function (): void {
@@ -27,6 +29,23 @@ describe('TotalCMSTwigFilters', function (): void {
 		foreach (TotalCMSTwigFilters::$customFunctions as $customFunction) {
 			expect($filterNames)->toContain($customFunction);
 		}
+	});
+
+	test('TotalCMSTwigFilters → does not shadow Twig\'s own trim filter', function (): void {
+		// Twig's trim takes a character mask and a side. Registering PHP's trim
+		// as a filter shadowed it, so `|trim('x', 'left')` compiled to a native
+		// call that threw an ArgumentCountError (TOTAL-CMS-QH).
+		$filters     = TotalCMSTwigFilters::getFilters();
+		$filterNames = array_map(fn (TwigFilter $filter): string => $filter->getName(), $filters);
+		expect($filterNames)->not->toContain('trim');
+
+		$twig = new Environment(new ArrayLoader([
+			't' => "{{ '• Item' | trim('•-* ', 'left') }}|{{ '  x  ' | trim }}|{{ '--y--' | trim('-') }}",
+		]));
+		foreach ($filters as $filter) {
+			$twig->addFilter($filter);
+		}
+		expect($twig->render('t'))->toBe('Item|x|y');
 	});
 
 	test('TotalCMSTwigFilters → includes all PHP functions in filters', function (): void {

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Import\RemoteMediaFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -22,6 +23,11 @@ use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\RemoteFileDownloader;
 
 /*
  * ObjectImporter is the object WRITE path behind the job queue, JumpStart,
@@ -222,6 +228,26 @@ function objectImporterHarness(array $properties = [], array $options = []): obj
 		}
 	);
 
+	// Remote media: every URL serves the 1x1 PNG, except one containing
+	// "missing", which 404s.
+	$handle->downloadedUrls = [];
+	$httpClient             = test()->createMock(HttpClientInterface::class);
+	$httpClient->method('request')->willReturnCallback(
+		function (string $method, string $url) use ($handle): HttpResponse {
+			$handle->downloadedUrls[] = $url;
+
+			return str_contains($url, 'missing')
+				? new HttpResponse(404, '')
+				: new HttpResponse(200, (string)base64_decode(OBJECT_IMPORTER_PNG, true));
+		}
+	);
+	$config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->tmpdir = sys_get_temp_dir() . '/totalcms-object-importer-' . uniqid();
+	$handle->tmpdir = $config->tmpdir;
+
+	$loggerFactory = test()->createMock(LoggerFactory::class);
+	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
+
 	$handle->importer = new ObjectImporter(
 		$handle->schemaFetcher,
 		$handle->objectSaver,
@@ -234,6 +260,7 @@ function objectImporterHarness(array $properties = [], array $options = []): obj
 		$handle->dispatcher,
 		$handle->collectionFetcher,
 		$handle->collectionSaver,
+		new RemoteMediaFetcher(new RemoteFileDownloader($httpClient, $config), $config, $loggerFactory),
 	);
 
 	return $handle;
@@ -705,6 +732,58 @@ describe('ObjectImporter::importObject media side-cars', function (): void {
 		$handle->importer->importObject('blog', ['title' => 'No image here']);
 
 		expect($handle->imageSaves)->toHaveCount(1);
+	});
+});
+
+describe('ObjectImporter::importObject remote media', function (): void {
+	it('downloads a queued media URL, saves it under its own filename, and removes the download', function (): void {
+		// The WordPress importer queues featured images as URLs so the upload
+		// request does not wait on hundreds of downloads; the job fetches them.
+		$handle = objectImporterHarness(['image' => ['$ref' => objectImporterRef('image')]]);
+
+		$handle->importer->importObject('blog', [
+			RemoteMediaFetcher::PAYLOAD_KEY => ['image' => 'https://example.com/wp-content/uploads/Dog-Bite.jpg'],
+		]);
+
+		expect($handle->downloadedUrls)->toBe(['https://example.com/wp-content/uploads/Dog-Bite.jpg'])
+			->and($handle->savedPayload)->not->toHaveKey(RemoteMediaFetcher::PAYLOAD_KEY)
+			->and($handle->savedPayload['image'])->toBe([])
+			->and($handle->imageSaves)->toHaveCount(1)
+			->and(basename($handle->imageSaves[0]['path']))->toBe('Dog-Bite.jpg')
+			->and(file_exists($handle->imageSaves[0]['path']))->toBeFalse()
+			->and(file_exists(dirname($handle->imageSaves[0]['path'])))->toBeFalse();
+
+		recursiveDelete($handle->tmpdir);
+	});
+
+	it('imports the object without the media when the download fails', function (): void {
+		$handle = objectImporterHarness([
+			'title' => ['type' => 'string'],
+			'image' => ['$ref' => objectImporterRef('image')],
+		]);
+
+		$result = $handle->importer->importObject('blog', [
+			'title'                         => 'Still imported',
+			RemoteMediaFetcher::PAYLOAD_KEY => ['image' => 'https://example.com/missing.jpg'],
+		]);
+
+		expect($result->id)->toBe('post-1')
+			->and($handle->savedPayload['title'])->toBe('Still imported')
+			->and($handle->imageSaves)->toBe([])
+			->and(glob($handle->tmpdir . '/remote-media-*'))->toBe([]);
+
+		recursiveDelete($handle->tmpdir);
+	});
+
+	it('ignores remote media entries that are not http(s) URLs', function (): void {
+		$handle = objectImporterHarness(['image' => ['$ref' => objectImporterRef('image')]]);
+
+		$handle->importer->importObject('blog', [
+			RemoteMediaFetcher::PAYLOAD_KEY => ['image' => 'file:///etc/passwd'],
+		]);
+
+		expect($handle->downloadedUrls)->toBe([])
+			->and($handle->imageSaves)->toBe([]);
 	});
 });
 

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\Form;
 
+use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -17,6 +20,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -36,6 +40,11 @@ use TotalCMS\Support\Config;
  * The four nullable listers were once attached after construction through
  * setters, because the constructor was already full. A form built without
  * them (tests, extensions) answers their option lists with an empty array.
+ *
+ * The guard and actor context feed the owner check on edit forms; a form
+ * built without both skips that check. The session feeds the bot check.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 final readonly class FormServices
 {
@@ -61,6 +70,10 @@ final readonly class FormServices
 		public ?PageMiddlewareRegistry $pageMiddlewareRegistry = null,
 		public ?AdminNavRegistry $navRegistry = null,
 		public ?DataViewLister $dataViewLister = null,
+		public ?SessionInterface $session = null,
+		public ?AccessGuard $guard = null,
+		public ?ActorContext $actors = null,
+		public ?MailerFetcher $mailers = null,
 	) {
 		$this->logger = $logger ?? new NullLogger();
 	}

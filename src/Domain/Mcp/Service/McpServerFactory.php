@@ -8,14 +8,19 @@ use Mcp\Capability\Registry\ElementReference;
 use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\JsonRpc\MessageInterface;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
@@ -66,6 +71,8 @@ readonly class McpServerFactory
 		private OAuthScopeRegistry $scopeRegistry,
 		private OAuthActivityLogger $activityLogger,
 		private NotificationBusInterface $notificationBus,
+		private EditionFeatureService $editionFeatures,
+		private McpToolActivity $toolActivity,
 	) {
 	}
 
@@ -140,7 +147,7 @@ readonly class McpServerFactory
 			$annotations = $tool->annotations ?? $readOnlyDefault;
 
 			$builder->addTool(
-				handler: $this->guardHandler($tool),
+				handler: $this->recordingHandler($tool->name, $this->guardHandler($tool)),
 				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
@@ -161,7 +168,10 @@ readonly class McpServerFactory
 		// access groups grant `read` on, so resources/list matches the
 		// call-time gate CollectionResource::read() enforces.
 		$visibleUris = [];
-		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $resource) {
+		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $resource) {
+			if (!$this->licensed($resource->edition)) {
+				continue;
+			}
 			$visibleUris[] = $resource->uri;
 			$builder->addResource(
 				handler: $resource->handler,
@@ -188,7 +198,10 @@ readonly class McpServerFactory
 			$builder->setNotificationBus(new PersonaNotificationBus($this->notificationBus, $visibleUris));
 		}
 
-		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority()) as $template) {
+		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $template) {
+			if (!$this->licensed($template->edition)) {
+				continue;
+			}
 			$builder->addResourceTemplate(
 				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,
@@ -216,7 +229,9 @@ readonly class McpServerFactory
 
 	/**
 	 * The tools the server built for this request registers: the persona's
-	 * view of the registry, and — for a browser session (WebMCP), which reads
+	 * view of the registry, less any tool whose permission the caller's
+	 * connection was not granted ({@see grantsScopeFor()}), and — for a
+	 * browser session (WebMCP), which reads
 	 * only — nothing that is not readOnlyHint: true. A tool with no
 	 * annotations is read-only by default; an annotations object must
 	 * declare readOnlyHint true (the same effective-annotations rule build()
@@ -232,7 +247,10 @@ readonly class McpServerFactory
 	 */
 	public function registrableTools(McpPersona $persona): array
 	{
-		$tools = $this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority());
+		$tools = array_values(array_filter(
+			$this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() instanceof ApiKeyData),
+			fn (McpToolDefinition $tool): bool => $this->licensed($tool->edition) && $this->grantsScopeFor($persona, $tool),
+		));
 		if (!$this->personaContext->isReadOnly()) {
 			return $tools;
 		}
@@ -294,6 +312,39 @@ readonly class McpServerFactory
 	 * tests/Feature/McpToolGuardTest.php, which asserts a wrapped handler
 	 * receives its arguments intact.
 	 */
+	/**
+	 * Wrap a tool handler so each call lands in the activity log: tool, caller,
+	 * target, outcome and duration ({@see McpToolActivity}). Outermost, so a
+	 * call the guard refuses is recorded as a failure too.
+	 */
+	private function recordingHandler(string $toolName, \Closure $inner): \Closure
+	{
+		$activity = $this->toolActivity;
+
+		$wrapped = static function (array $arguments) use ($inner, $toolName, $activity): mixed {
+			$started = hrtime(true);
+			$elapsed = static fn (): int => (int)((hrtime(true) - $started) / 1_000_000);
+
+			try {
+				$result = (new ReferenceHandler())->handle(new ElementReference($inner), $arguments);
+			} catch (\Throwable $e) {
+				$activity->record($toolName, $arguments, false, $elapsed(), $e->getMessage());
+
+				throw $e;
+			}
+
+			$failed = $result instanceof CallToolResult && $result->isError;
+			$activity->record($toolName, $arguments, !$failed, $elapsed(), $failed ? 'tool returned an error' : null);
+
+			return $result;
+		};
+
+		// Same argument-binding trick as guardHandler(): scoped to
+		// ReferenceHandler so the SDK passes the raw argument bag through, and
+		// the inner handler is replayed with the SDK's normal dispatch.
+		return \Closure::bind($wrapped, null, ReferenceHandler::class);
+	}
+
 	private function guardHandler(McpToolDefinition $tool): \Closure
 	{
 		$requires = $tool->requires;
@@ -542,5 +593,38 @@ readonly class McpServerFactory
 		}
 
 		return max(0.25, min(30.0, (float)$configured));
+	}
+
+	/**
+	 * Whether the license includes $feature. A tool or resource that names
+	 * one (the data view surface) is left out for every caller without it, as
+	 * REST's edition middleware refuses its routes.
+	 */
+	private function licensed(?EditionFeature $feature): bool
+	{
+		return !$feature instanceof EditionFeature || $this->editionFeatures->can($feature);
+	}
+
+	/**
+	 * Whether a signed-in caller's scopes cover the permission $tool needs,
+	 * the same check the call-time guard makes ({@see guardHandler()}): a
+	 * token approved for cms:read only does not see the write tools.
+	 *
+	 * Content read tools stay listed without cms:read, because a public
+	 * collection needs no scope and the guard lets them through there. API
+	 * keys and browser sessions carry fixed scope sets, so the same rule
+	 * covers them.
+	 */
+	private function grantsScopeFor(McpPersona $persona, McpToolDefinition $tool): bool
+	{
+		$requires = $tool->requires;
+		if ($persona !== McpPersona::AUTHENTICATED || !$requires instanceof ToolRequirement) {
+			return true;
+		}
+		if ($requires->domain === 'objects' && $requires->operation === 'read') {
+			return true;
+		}
+
+		return in_array($requires->requiredScope(), $this->scopeRegistry->expand($this->personaContext->getScopes()), true);
 	}
 }

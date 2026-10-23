@@ -2,7 +2,7 @@
 	display: grid;
 	gap: 1rem;
 	grid-template-areas:
-        'active .'
+        'active requireBotProtection'
         'id id'
         'name category'
         'description description'

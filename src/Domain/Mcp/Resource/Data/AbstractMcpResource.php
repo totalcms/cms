@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Data;
 
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
@@ -19,7 +21,7 @@ abstract readonly class AbstractMcpResource
 	 * @param string      $name         Human-readable name
 	 * @param string      $description  Description for AI agents
 	 * @param string      $mimeType     Content type the handler will produce
-	 * @param string      $access       'admin', 'public', or 'authenticated' (OAuth Bearer with mcp:* scope)
+	 * @param string      $access       'admin', 'apikey', 'authenticated' (OAuth Bearer with mcp:* scope) or 'public'
 	 * @param \Closure    $handler      Invoked by the SDK on resources/read
 	 * @param string|null $collectionId Collection this resource enumerates, when it is collection-scoped.
 	 *                                  Set by CollectionResourceRegistrar; null for resources whose
@@ -28,6 +30,11 @@ abstract readonly class AbstractMcpResource
 	 *                                  per their UserAuthority — unless $access is 'public', which stays
 	 *                                  visible to every AUTHENTICATED caller regardless of group grants.
 	 *                                  Mirrors the call-time gate CollectionResource::read() enforces.
+	 * @param string|null $viewId       data view this resource reads, set by DataViewResourceRegistrar:
+	 *                                  an API key limited to some views sees it only when its paths
+	 *                                  name the view, unless $access is 'public'
+	 * @param EditionFeature|null $edition the edition feature the resource belongs to; McpServerFactory
+	 *                                  leaves it out for every caller when the license lacks it
 	 */
 	public function __construct(
 		public string $name,
@@ -36,12 +43,18 @@ abstract readonly class AbstractMcpResource
 		public string $access,
 		public \Closure $handler,
 		public ?string $collectionId = null,
+		public ?string $viewId = null,
+		public ?EditionFeature $edition = null,
 	) {
 	}
 
-	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
+	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null, ?ApiKeyData $limitedKey = null): bool
 	{
-		if (!McpAccessLevel::fromString($this->access)->allows($persona)) {
+		$level   = McpAccessLevel::fromString($this->access);
+		$allowed = $this->viewId !== null
+			? $level->allowsView($persona, $limitedKey, $this->viewId, $authority)
+			: $level->allows($persona, $limitedKey instanceof ApiKeyData);
+		if (!$allowed) {
 			return false;
 		}
 

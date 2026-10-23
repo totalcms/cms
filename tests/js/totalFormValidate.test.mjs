@@ -17,6 +17,16 @@ import TotalField from '../../javascript/totalform/totalfield.js';
 // with real TotalField instances and borrow the prototype.
 //-----------------------------------------------
 
+// validate() reports each invalid field through TotalField.error(), which
+// queues a debounced `field-error` (TotalDispatcher, 300ms). Left on real
+// timers those fire after the file ends and jsdom is torn down, where
+// CustomEvent is Node's again and dispatchEvent throws an unhandled error.
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(() => {
+	vi.clearAllTimers();
+	vi.useRealTimers();
+});
+
 const CARD = `
 	<div class="form-field" data-type="card">
 		<label>Address</label>
@@ -161,7 +171,6 @@ describe('TotalForm.scrollToField', () => {
 	beforeEach(() => { Element.prototype.scrollIntoView = vi.fn(); });
 
 	test('focuses the offending sub-field, not the card hidden marker', () => {
-		vi.useFakeTimers();
 		const form = buildForm(CARD);
 		const card = document.querySelector('[data-type="card"]').totalfield;
 
@@ -169,11 +178,9 @@ describe('TotalForm.scrollToField', () => {
 		vi.advanceTimersByTime(300);
 
 		expect(document.activeElement).toBe(document.querySelector('[name="postal"]'));
-		vi.useRealTimers();
 	});
 
 	test('does not try to focus an input inside a closed dialog', () => {
-		vi.useFakeTimers();
 		const form = buildForm(`
 			<div class="form-field" data-type="deck">
 				<label>Items</label>
@@ -188,6 +195,5 @@ describe('TotalForm.scrollToField', () => {
 		vi.advanceTimersByTime(300);
 
 		expect(document.activeElement).not.toBe(document.querySelector('[name="name"]'));
-		vi.useRealTimers();
 	});
 });

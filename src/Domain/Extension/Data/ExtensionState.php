@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Data;
 
+use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
+
 /**
  * Runtime state for a single extension (stored in extensions.json).
  */
@@ -12,7 +14,7 @@ final class ExtensionState
 	/**
 	 * @param array<string,bool> $permissions Capability key => enabled
 	 * @param array{reason:string,failureCount:int,lastError:string,quarantinedAt:string}|null $quarantine
-	 * @param array{reason:string,findings:int,updatedAt:string}|null $updateDisabled
+	 * @param array{reason:string,findings:int,updatedAt:string,newFindings?:list<string>}|null $updateDisabled
 	 * @param bool $autoEnrolledBundled Provenance marker: true when `enabled` was
 	 *             written automatically by `ExtensionManager::discoverAndRegister()`
 	 *             for a bundled `default_enabled` manifest, never by an operator
@@ -22,6 +24,11 @@ final class ExtensionState
 	 *             `tcms-data/extensions/`) — see the shadow-consent-gap handling in
 	 *             `discoverAndRegister()`. Cleared the moment a human calls
 	 *             `ExtensionManager::enable()`, since that is real consent.
+	 * @param list<string>|null $approvedFindings The risky-code findings the
+	 *             operator saw and accepted when they last enabled the extension,
+	 *             as `pattern @ file` keys ({@see DangerousCodeScanner::fingerprints()}).
+	 *             An update is disabled only for findings outside this set. Null
+	 *             for a record written before the baseline existed.
 	 */
 	public function __construct(
 		public bool $enabled = false,
@@ -31,9 +38,11 @@ final class ExtensionState
 		public array $permissions = [],
 		/** @var array{reason:string,failureCount:int,lastError:string,quarantinedAt:string}|null */
 		public ?array $quarantine = null,
-		/** @var array{reason:string,findings:int,updatedAt:string}|null */
+		/** @var array{reason:string,findings:int,updatedAt:string,newFindings?:list<string>}|null */
 		public ?array $updateDisabled = null,
 		public bool $autoEnrolledBundled = false,
+		/** @var list<string>|null */
+		public ?array $approvedFindings = null,
 	) {
 	}
 
@@ -64,11 +73,16 @@ final class ExtensionState
 		if (isset($data['updateDisabled']) && is_array($data['updateDisabled'])) {
 			$u              = $data['updateDisabled'];
 			$updateDisabled = [
-				'reason'    => (string)($u['reason'] ?? ''),
-				'findings'  => (int)($u['findings'] ?? 0),
-				'updatedAt' => (string)($u['updatedAt'] ?? ''),
+				'reason'      => (string)($u['reason'] ?? ''),
+				'findings'    => (int)($u['findings'] ?? 0),
+				'updatedAt'   => (string)($u['updatedAt'] ?? ''),
+				'newFindings' => is_array($u['newFindings'] ?? null) ? array_values(array_map(strval(...), $u['newFindings'])) : [],
 			];
 		}
+
+		$approvedFindings = is_array($data['approvedFindings'] ?? null)
+			? array_values(array_map(strval(...), $data['approvedFindings']))
+			: null;
 
 		return new self(
 			enabled: (bool)($data['enabled'] ?? false),
@@ -79,6 +93,7 @@ final class ExtensionState
 			quarantine: $quarantine,
 			updateDisabled: $updateDisabled,
 			autoEnrolledBundled: (bool)($data['autoEnrolledBundled'] ?? false),
+			approvedFindings: $approvedFindings,
 		);
 	}
 
@@ -96,6 +111,7 @@ final class ExtensionState
 			'quarantine'          => $this->quarantine,
 			'updateDisabled'      => $this->updateDisabled,
 			'autoEnrolledBundled' => $this->autoEnrolledBundled,
+			'approvedFindings'    => $this->approvedFindings,
 		];
 	}
 

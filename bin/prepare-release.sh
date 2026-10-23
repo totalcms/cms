@@ -158,8 +158,8 @@ if ! command_exists composer; then
     exit 1
 fi
 
-if ! command_exists yarn; then
-    print_error "yarn is not installed"
+if ! command_exists vp; then
+    print_error "vp (Vite+) is not installed — curl -fsSL https://vite.plus | bash"
     exit 1
 fi
 
@@ -259,7 +259,7 @@ composer install
 print_success "PHP dependencies installed"
 
 print_info "Installing JavaScript dependencies..."
-yarn install --production=false  # Need dev dependencies for building
+vp install  # dev dependencies included; needed for building
 print_success "JavaScript dependencies installed"
 
 # Run quality checks

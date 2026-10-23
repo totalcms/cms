@@ -7,6 +7,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Auth\Service\UploadAccessPolicy;
+use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Event\Payload\FileDownloadedPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\FileStreamRenderer;
@@ -22,6 +25,7 @@ readonly class DownloadUploadAction
 		private UploadFetcher $uploadFetcher,
 		private UploadAccessPolicy $accessPolicy,
 		private FileStreamRenderer $streamRenderer,
+		private EventDispatcher $events,
 	) {
 	}
 
@@ -43,6 +47,15 @@ readonly class DownloadUploadAction
 		if ($denial !== null) {
 			throw new HttpForbiddenException($request, $denial);
 		}
+
+		$this->events->dispatch(CoreEvent::FILE_DOWNLOADED, new FileDownloadedPayload(
+			$collection,
+			$id,
+			$property,
+			$name,
+			(string)$subpath,
+			$this->accessPolicy->isProtected($collection, $property, 'fileProtectedByCollection'),
+		));
 
 		return $this->streamRenderer->download(
 			$response,

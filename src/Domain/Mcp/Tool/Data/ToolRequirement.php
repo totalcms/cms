@@ -26,11 +26,17 @@ final readonly class ToolRequirement
 	 * @param string|null $collectionArg Name of the tool's input argument that carries the target
 	 *                                   collection/schema id. Unused by Task 6; read by Task 7's
 	 *                                   call-time guard to resolve $target from the actual call args.
+	 * @param bool        $filtersTargets True for a tool that takes no target but lists many
+	 *                                   (list_schemas): the call needs the operation on at least
+	 *                                   one target, and the handler leaves out the ones the caller
+	 *                                   may not reach. Lets a target-bearing domain go without
+	 *                                   $collectionArg ({@see ToolRegistry}).
 	 */
 	public function __construct(
 		public string $domain,
 		public string $operation,
 		public ?string $collectionArg = null,
+		public bool $filtersTargets = false,
 	) {
 	}
 

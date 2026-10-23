@@ -491,6 +491,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.extensionsNeedingAttention",
+            "signature": "extensionsNeedingAttention(): array",
+            "description": "Extensions the system disabled on its own (risky update, quarantine), for the warning every admin page shows.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.inaccessibleCollections",
             "signature": "inaccessibleCollections(): array",
             "description": "Get collections that are inaccessible due to edition restrictions.",
@@ -890,6 +897,41 @@
             "url": "https://docs.totalcms.co/auth/twig/"
         },
         {
+            "name": "cms.badge.earned",
+            "signature": "earned(string $handle, array $options = []): string",
+            "description": "\"Total CMS designer\" with the member's approved sites and extensions, linking to their profile on totalcms.co. The count is drawn by totalcms.co, so it stays current.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.pill",
+            "signature": "pill(array $options = []): string",
+            "description": "\"Built with Total CMS\" on one line.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.profile",
+            "signature": "profile(string $handle, array $options = []): string",
+            "description": "The member's profile card: photo, \"Total CMS designer\" and @handle, linking to their profile on totalcms.co. An invalid handle gives the pill, as totalcms.co does for a profile it cannot show.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.stacked",
+            "signature": "stacked(array $options = []): string",
+            "description": "\"BUILT WITH\" over \"Total CMS\", beside the flame.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.text",
+            "signature": "text(array $options = []): string",
+            "description": "\"Powered by Total CMS\" as inline text in the host's own text colour, for a footer line.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.builder.asset",
             "signature": "asset(string $path): string",
             "description": "Resolve an asset URL with cache busting. Checks the manifest first (for hashed filenames), then falls back to file mtime for cache busting, then returns the raw path.",
@@ -1047,7 +1089,7 @@
         {
             "name": "cms.collection.object",
             "signature": "object(string $collection, ?string $id): array",
-            "description": "Get a single object by collection and ID. Returns the **full record** \u2014 every property, indexed or not \u2014 or an empty array if not found.",
+            "description": "Get a single object by collection and ID. Returns the **full record** \u2014 every property, indexed or not \u2014 or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.",
             "examples": [
                 "{% set post = cms.collection.object('blog', 'my-post') %}\n{% if post %}\n    <h1>{{ post.title }}</h1>\n    {{ post.content|markdown }}\n{% endif %}"
             ],
@@ -1111,7 +1153,7 @@
         {
             "name": "cms.collection.redirectIfNotFound",
             "signature": "redirectIfNotFound(array|string|null $object = [], string $redirectUrl = ''): void",
-            "description": "Redirect to the 404 page if the provided object is empty or null. Useful in detail page templates to handle missing objects.",
+            "description": "Redirect to the 404 page if the provided object is empty or null. The visitor is sent to the 404 page's own address with a `302` \u2014 the URL they typed is lost, and a crawler records a redirect rather than a missing page. On a Site Builder site, prefer [`cms.notFound()`](docs/twig/totalcms#notfound), which renders the 404 page in place with a real `404` status.",
             "examples": [
                 "{% set post = cms.collection.object('blog', id) %}\n{{ cms.collection.redirectIfNotFound(post) }}\n\n{# With custom redirect URL #}\n{{ cms.collection.redirectIfNotFound(post, '/blog') }}\n\n<h1>{{ post.title }}</h1>"
             ],
@@ -1997,6 +2039,15 @@
             "url": "https://docs.totalcms.co/twig/media/"
         },
         {
+            "name": "cms.media.imageDataUri",
+            "signature": "imageDataUri(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
+            "description": "An image property rendered by ImageWorks and returned as a `data:` URI, for a file that cannot load anything from outside itself \u2014 an SVG served as an <img>, an email. Takes the same arguments as imagePath(); pass a small `w`/`h`. Top-level image properties only.",
+            "examples": [
+                "{# A 68px square avatar inside an SVG, falling back to an initial #}\n{% set photo = cms.media.imageDataUri(member, {w: 68, h: 68, fit: 'crop', fm: 'webp'}, {collection: 'users'}) %}\n{% if photo %}<image href=\"{{ photo }}\" width=\"34\" height=\"34\"/>{% else %}<text>{{ member.name|first }}</text>{% endif %}"
+            ],
+            "url": "https://docs.totalcms.co/twig/media/"
+        },
+        {
             "name": "cms.media.imagePath",
             "signature": "imagePath(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
             "description": "Get the image path for an image property.",
@@ -2029,6 +2080,20 @@
                 "{# A video property on your own schema #}\n{{ cms.media.videoPoster(post, {w: 800}, {property: 'promo'}) }}\n\n{# An object from the ready-made video collection \u2014 collection and property default to \"video\" #}\n{{ cms.media.videoPoster('intro', {w: 800}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/media/"
+        },
+        {
+            "name": "cms.notFound",
+            "signature": "notFound(): never",
+            "description": "Stop rendering and answer the request as a 404: the site's not-found page, at the visitor's own URL, with the 404 status a crawler or link checker needs. For a page template that discovers it has nothing to show \u2014 a draft reached through a collection URL, a record marked not to render, an empty lookup. Nothing after the call is rendered.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/totalcms/"
+        },
+        {
+            "name": "cms.redirect",
+            "signature": "redirect(string $url, int $status = 302): never",
+            "description": "Stop rendering and answer the request with a redirect to `$url`. For a forwarding page whose target depends on data \u2014 a page record's `redirectTo` covers the fixed ones. Nothing after the call is rendered.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/totalcms/"
         },
         {
             "name": "cms.render.alt",
@@ -2110,7 +2175,7 @@
             "signature": "image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
             "description": "Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and lazy loading.",
             "examples": [
-                "{# Basic image #}\n{{ cms.render.image('hero') }}\n\n{# With ImageWorks transformations #}\n{{ cms.render.image('hero', {w: 800, h: 600, fit: 'crop'}) }}\n\n{# Custom collection and property \u2014 note: separate argument from transforms #}\n{{ cms.render.image('widget', {}, {collection: 'products', property: 'photo'}) }}\n\n{# Pass object directly (recommended) #}\n{{ cms.render.image(product, {w: 600}, {collection: 'products', property: 'image'}) }}\n\n{# Eager loading (default is lazy) #}\n{{ cms.render.image('hero', {}, {loading: 'eager'}) }}",
+                "{# Basic image #}\n{{ cms.render.image('hero') }}\n\n{# With ImageWorks transformations #}\n{{ cms.render.image('hero', {w: 800, h: 600, fit: 'crop'}) }}\n\n{# Custom collection and property \u2014 note: separate argument from transforms #}\n{{ cms.render.image('widget', {}, {collection: 'products', property: 'photo'}) }}\n\n{# Pass object directly (recommended) #}\n{{ cms.render.image(product, {w: 600}, {collection: 'products', property: 'image'}) }}\n\n{# Eager loading (default is lazy) #}\n{{ cms.render.image('hero', {}, {loading: 'eager'}) }}\n\n{# Your own alt text, or an empty one for a decorative image #}\n{{ cms.render.image(post, {}, {alt: post.title, collection: 'blog'}) }}\n{{ cms.render.image('divider', {}, {alt: ''}) }}",
                 "{# Card child \u2014 first segment is the card field, last segment is the child key #}\n{{ cms.render.image('post-1', {w: 800}, {property: 'mycard.image'}) }}\n\n{# Deck child \u2014 first segment is the deck field, then the deck-item id, then the child key #}\n{{ cms.render.image('post-1', {w: 800}, {property: 'mydeck.item-3.image'}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/render/"
@@ -2190,9 +2255,9 @@
         {
             "name": "cms.render.picture",
             "signature": "picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
-            "description": "A responsive `<picture>` with per-format `<source>` srcsets and an `<img>` fallback. Same three arguments as image(); `widths`, `formats` and `sizes` ride in the options. All the work lives in ImageRenderer.",
+            "description": "A responsive `<picture>` with per-format `<source>` srcsets and an `<img>` fallback. Same three arguments as image(); `widths`, `formats` and `sizes` ride in the options, as do `dark` / `darkProperty` for a second image under `prefers-color-scheme: dark`. All the work lives in ImageRenderer.",
             "examples": [
-                "{# Defaults: 480/768/1024/1440/1920 candidates, AVIF + WebP sources, sizes=\"100vw\" #}\n{{ cms.render.picture('hero') }}\n\n{# An image that never spans the viewport \u2014 tell the browser, or it downloads for 100vw #}\n{{ cms.render.picture(post, {}, {sizes: '(min-width: 60em) 50vw, 100vw', collection: 'blog'}) }}\n\n{# Your own candidate widths and a single format #}\n{{ cms.render.picture(post, {}, {widths: [400, 800, 1200], formats: ['webp']}) }}\n\n{# The transforms apply to every candidate; w there is a ceiling, not a candidate #}\n{{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}"
+                "{# Defaults: 480/768/1024/1440/1920 candidates, AVIF + WebP sources, sizes=\"100vw\" #}\n{{ cms.render.picture('hero') }}\n\n{# An image that never spans the viewport \u2014 tell the browser, or it downloads for 100vw #}\n{{ cms.render.picture(post, {}, {sizes: '(min-width: 60em) 50vw, 100vw', collection: 'blog'}) }}\n\n{# Your own candidate widths and a single format #}\n{{ cms.render.picture(post, {}, {widths: [400, 800, 1200], formats: ['webp']}) }}\n\n{# The transforms apply to every candidate; w there is a ceiling, not a candidate #}\n{{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}\n\n{# A different image for dark mode: another object, or a second property on the same object #}\n{{ cms.render.picture('logo', {}, {dark: 'logo-dark'}) }}\n{{ cms.render.picture(post, {}, {darkProperty: 'imageDark', collection: 'blog'}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/render/"
         },
@@ -2443,10 +2508,10 @@
         },
         {
             "name": "trim",
-            "signature": "trim(string $string): string",
-            "description": "Removes whitespace from both sides.",
+            "signature": "trim(string $string, string $characterMask = null, string $side = 'both'): string",
+            "description": "Twig's own filter. Removes whitespace from both sides, or the given characters from one side.",
             "examples": [
-                "{{ \"  Hello World  \" | trim }}\n{# Output: \"Hello World\" #}"
+                "{{ \"  Hello World  \" | trim }}\n{# Output: \"Hello World\" #}\n\n{{ \"\u2022 Item\" | trim('\u2022-* ', 'left') }}\n{# Output: \"Item\" #}"
             ],
             "url": "https://docs.totalcms.co/twig/filters/"
         },
@@ -3154,7 +3219,7 @@
             "name": "card",
             "title": "Card Fields",
             "description": "Group related fields into a single nested object using the card field type \u2014 a single-instance deck whose shape is defined by another schema via schemaref.",
-            "content": "card fields a card is a single-instance deck. it renders the properties of another schema as inline sub-fields and stores the collected values as a nested object on the parent. use it to group related settings sitemap config, auth options, integration credentials, etc. without the deck ux of add/remove/duplicate. the card's shape is defined by a separate schema, referenced via schemaref . this keeps the nested structure reusable across collections and makes the parent schema easy to read. how it differs from a deck | | deck | card | |---|---|---| | cardinality | many items | exactly one | | ui | modal dialog with add/remove/duplicate | inline sub-fields, no buttons | | stored as | object keyed by item ids | single nested object keyed by property name | | schema | schemaref defines item shape | schemaref defines the card's shape | if you want a single named-object grouping, use a card. if you want a list of named objects, use a deck. basic usage { \"sitemap\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"sitemap settings\", \"schemaref\" : \" } } the referenced schema sitemap-meta.json here defines the sub-fields the card will render. its properties become the card's properties at save time. storage format a card stores as a single nested object keyed by sub-property name: { \"sitemap\": { \"enabled\" : true, \"frequency\" : \"weekly\", \"priority\" : 0.7 } } in twig, access values with dot notation: if object.sitemap.enabled object.sitemap.priority endif settings schemaref required. url of the schema that defines the card's sub-fields. { \"schemaref\" : \" } > legacy alias: deckref is still accepted as an alias for schemaref and will continue to work indefinitely. new schemas should use schemaref . sub-field behavior sub-fields are rendered using the referenced schema's properties , required , and formgrid . a few rules apply: - the referenced schema's id field is skipped \u2014 a card is a single object with no meaningful identifier of its own. - sub-field default values are applied when the card has no value for that property. - sub-field settings are run through the same preset pipeline as top-level fields, including named presets and type-default presets. - the referenced schema's formgrid is honored for sub-field layout. any sub-field not listed in formgrid is appended automatically. property restrictions card values must be basic types or simple property schemas. the following are not allowed inside a card: - gallery , depot , folder plurality models that don't fit the single-value-per-child shape - other decks cards inside decks are fine; decks inside cards are not allowed property types include string , number , boolean , card nested , color , date , email , file , image , list , password , phone , slug , svg , time , and url . referencing nested images and files in twig images and files stored inside a card are addressed by dot-notation in the property option of the standard media/render macros: { url only } cms.media.imagepath 'post-1', {w: 800}, {property: 'mycard.image'} { full tag } cms.render.image 'post-1', {w: 800}, {property: 'mycard.image'} { file download url } cms.media.download 'post-1', {property: 'mycard.attachment'} the first segment is the card field's name on the parent object; subsequent segments walk down into the card. the image builder dialog opened from the admin form emits the correct dotted-property macro automatically. see cms.media \u2192 nested images docs/twig/media nested-images-cards-and-decks for full reference. complete example a card that groups sitemap configuration into a single nested object: parent schema: { \"sitemap\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"sitemap settings\", \"schemaref\" : \" } } referenced schema sitemap-meta.json : { \"properties\": { \"enabled\": { \"type\" : \"boolean\", \"field\" : \"checkbox\", \"label\" : \"include in sitemap\", \"default\" : true }, \"frequency\": { \"type\" : \"string\", \"field\" : \"select\", \"label\" : \"change frequency\", \"options\" : \"always\", \"hourly\", \"daily\", \"weekly\", \"monthly\", \"yearly\", \"never\" , \"default\" : \"weekly\" }, \"priority\": { \"type\" : \"number\", \"field\" : \"number\", \"label\" : \"priority\", \"default\" : 0.5 } } } resulting object value: { \"sitemap\": { \"enabled\" : true, \"frequency\" : \"weekly\", \"priority\" : 0.7 } } reusing a card schema because a card's shape is defined by a separate schema, the same schema can back multiple card fields on the same parent . this is the most common real-world pattern: one reusable building block, dropped in wherever it's needed. the classic example is an address. an order needs both a billing address and a shipping address \u2014 same shape, same fields, two distinct values. define the address shape once, then reference it from both cards. address schema address.json : { \"properties\": { \"street1\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"street address\" }, \"street2\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"apt / suite\" }, \"city\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"city\" }, \"state\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"state / region\" }, \"zip\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"postal code\" }, \"country\": { \"type\" : \"string\", \"field\" : \"select\", \"label\" : \"country\", \"options\" : \"us\", \"ca\", \"gb\", \"de\", \"fr\" , \"default\" : \"us\" } } } order schema \u2014 two cards, one referenced shape: { \"id\": { \"$ref\" : \" \"field\" : \"input\", \"label\" : \"order id\" }, \"billing address\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"billing address\", \"schemaref\" : \" }, \"shipping address\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"shipping address\", \"schemaref\" : \" } } resulting order object: { \"id\": \"ord-1042\", \"billing address\": { \"street1\" : \"123 main st\", \"street2\" : \"suite 400\", \"city\" : \"austin\", \"state\" : \"tx\", \"zip\" : \"78701\", \"country\" : \"us\" }, \"shipping address\": { \"street1\" : \"456 oak ave\", \"street2\" : \"\", \"city\" : \"portland\", \"state\" : \"or\", \"zip\" : \"97201\", \"country\" : \"us\" } } in twig: ship to order.shipping address.street1 if order.shipping address.street2 order.shipping address.street2 endif order.shipping address.city , order.shipping address.state order.shipping address.zip order.shipping address.country the same pattern applies anywhere you'd otherwise duplicate field definitions \u2014 author bios, contact blocks, geographic coordinates, social-link sets. define the shape once, reference it as many times as you need. common use cases - grouped settings \u2014 sitemap, seo, opengraph, schema.org metadata - integration credentials \u2014 paired api keys and endpoints combine with secret fields for the sensitive parts - feature toggles \u2014 a single features card with checkbox sub-fields - reusable address blocks \u2014 billing/shipping/mailing addresses sharing one address schema see reusing a card schema reusing-a-card-schema",
+            "content": "card fields a card is a single-instance deck. it renders the properties of another schema as inline sub-fields and stores the collected values as a nested object on the parent. use it to group related settings sitemap config, auth options, integration credentials, etc. without the deck ux of add/remove/duplicate. the card's shape is defined by a separate schema, referenced via schemaref . this keeps the nested structure reusable across collections and makes the parent schema easy to read. how it differs from a deck | | deck | card | |---|---|---| | cardinality | many items | exactly one | | ui | modal dialog with add/remove/duplicate | inline sub-fields, no buttons | | stored as | object keyed by item ids | single nested object keyed by property name | | schema | schemaref defines item shape | schemaref defines the card's shape | if you want a single named-object grouping, use a card. if you want a list of named objects, use a deck. basic usage { \"sitemap\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"sitemap settings\", \"schemaref\" : \" } } the referenced schema sitemap-meta.json here defines the sub-fields the card will render. its properties become the card's properties at save time. storage format a card stores as a single nested object keyed by sub-property name: { \"sitemap\": { \"enabled\" : true, \"frequency\" : \"weekly\", \"priority\" : 0.7 } } in twig, access values with dot notation: if object.sitemap.enabled object.sitemap.priority endif settings schemaref required. url of the schema that defines the card's sub-fields. { \"schemaref\" : \" } > legacy alias: deckref is still accepted as an alias for schemaref and will continue to work indefinitely. new schemas should use schemaref . sub-field behavior sub-fields are rendered using the referenced schema's properties , required , and formgrid . a few rules apply: - the referenced schema's id field is skipped \u2014 a card is a single object with no meaningful identifier of its own. - sub-field default values are applied when the card has no value for that property. - sub-field settings are run through the same preset pipeline as top-level fields, including named presets and type-default presets. - the referenced schema's formgrid is honored for sub-field layout. any sub-field not listed in formgrid is appended automatically. in the collection table when a card is in the schema's index , its column shows the card's first text field in the card schema's order \u2014 a title, a name, a street \u2014 skipping id , hidden fields and anything that is not a one-line value styled text, code, svg, json, passwords . a card with no such field, or with it empty, shows its first two scalar values joined with a comma. put the field you want to see first in the card schema. property restrictions card values must be basic types or simple property schemas. the following are not allowed inside a card: - gallery , depot , folder plurality models that don't fit the single-value-per-child shape - other decks cards inside decks are fine; decks inside cards are not allowed property types include string , number , boolean , card nested , color , date , email , file , image , list , password , phone , slug , svg , time , and url . referencing nested images and files in twig images and files stored inside a card are addressed by dot-notation in the property option of the standard media/render macros: { url only } cms.media.imagepath 'post-1', {w: 800}, {property: 'mycard.image'} { full tag } cms.render.image 'post-1', {w: 800}, {property: 'mycard.image'} { file download url } cms.media.download 'post-1', {property: 'mycard.attachment'} the first segment is the card field's name on the parent object; subsequent segments walk down into the card. the image builder dialog opened from the admin form emits the correct dotted-property macro automatically. see cms.media \u2192 nested images docs/twig/media nested-images-cards-and-decks for full reference. complete example a card that groups sitemap configuration into a single nested object: parent schema: { \"sitemap\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"sitemap settings\", \"schemaref\" : \" } } referenced schema sitemap-meta.json : { \"properties\": { \"enabled\": { \"type\" : \"boolean\", \"field\" : \"checkbox\", \"label\" : \"include in sitemap\", \"default\" : true }, \"frequency\": { \"type\" : \"string\", \"field\" : \"select\", \"label\" : \"change frequency\", \"options\" : \"always\", \"hourly\", \"daily\", \"weekly\", \"monthly\", \"yearly\", \"never\" , \"default\" : \"weekly\" }, \"priority\": { \"type\" : \"number\", \"field\" : \"number\", \"label\" : \"priority\", \"default\" : 0.5 } } } resulting object value: { \"sitemap\": { \"enabled\" : true, \"frequency\" : \"weekly\", \"priority\" : 0.7 } } reusing a card schema because a card's shape is defined by a separate schema, the same schema can back multiple card fields on the same parent . this is the most common real-world pattern: one reusable building block, dropped in wherever it's needed. the classic example is an address. an order needs both a billing address and a shipping address \u2014 same shape, same fields, two distinct values. define the address shape once, then reference it from both cards. address schema address.json : { \"properties\": { \"street1\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"street address\" }, \"street2\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"apt / suite\" }, \"city\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"city\" }, \"state\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"state / region\" }, \"zip\": { \"type\" : \"string\", \"field\" : \"input\", \"label\" : \"postal code\" }, \"country\": { \"type\" : \"string\", \"field\" : \"select\", \"label\" : \"country\", \"options\" : \"us\", \"ca\", \"gb\", \"de\", \"fr\" , \"default\" : \"us\" } } } order schema \u2014 two cards, one referenced shape: { \"id\": { \"$ref\" : \" \"field\" : \"input\", \"label\" : \"order id\" }, \"billing address\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"billing address\", \"schemaref\" : \" }, \"shipping address\": { \"$ref\" : \" \"field\" : \"card\", \"label\" : \"shipping address\", \"schemaref\" : \" } } resulting order object: { \"id\": \"ord-1042\", \"billing address\": { \"street1\" : \"123 main st\", \"street2\" : \"suite 400\", \"city\" : \"austin\", \"state\" : \"tx\", \"zip\" : \"78701\", \"country\" : \"us\" }, \"shipping address\": { \"street1\" : \"456 oak ave\", \"street2\" : \"\", \"city\" : \"portland\", \"state\" : \"or\", \"zip\" : \"97201\", \"country\" : \"us\" } } in twig: ship to order.shipping address.street1 if order.shipping address.street2 order.shipping address.street2 endif order.shipping address.city , order.shipping address.state order.shipping address.zip order.shipping address.country the same pattern applies anywhere you'd otherwise duplicate field definitions \u2014 author bios, contact blocks, geographic coordinates, social-link sets. define the shape once, reference it as many times as you need. common use cases - grouped settings \u2014 sitemap, seo, opengraph, schema.org metadata - integration credentials \u2014 paired api keys and endpoints combine with secret fields for the sensitive parts - feature toggles \u2014 a single features card with checkbox sub-fields - reusable address blocks \u2014 billing/shipping/mailing addresses sharing one address schema see reusing a card schema reusing-a-card-schema",
             "url": "https://docs.totalcms.co/fields/card/"
         },
         {
@@ -3336,7 +3401,7 @@
             "name": "validation",
             "title": "Schema Validation",
             "description": "Validate Total CMS schema data with JSON Schema keywords for strings, numbers, arrays, enums, unique constraints, and regex patterns.",
-            "content": "schema validation this document covers json schema validation keywords that can be used in the extra schema definitions field when setting up properties in a schema. overview total cms uses json schema draft 2020-12 for data validation. in addition to the basic schema properties type, field, label, etc. , you can add validation constraints to ensure data quality and consistency. where to add these: in the schema admin interface, when editing a property, use the extra schema definitions field to add validation keywords as json. > important: validation keywords like pattern , minlength , maxlength , minimum , maximum , etc. must be added in the extra schema definitions section of a property \u2014 not in the property's settings. the settings section controls display and behavior options, while extra schema definitions is where all json schema validation rules go. required fields by default, required string and array fields are automatically validated: - strings : cannot be empty \"\" - arrays list, gallery, deck : cannot be empty - files/images : validated on the frontend must have a file uploaded you can override this behavior by explicitly setting minlength or minitems . > conditional required? the schema's top-level required array is a hard data invariant enforced on every save. if you need a field that is only required when another field has a particular value e.g. \"email required only when notifications toggle is on\" , use the form-level settings.required option paired with settings.visibility instead. see required form-level docs/fields/all-fields required-form-level in the all fields docs. string validation minlength / maxlength enforce minimum and maximum string length. { \"minlength\": 3, \"maxlength\": 100 } example - username field: { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"minlength\": 3, \"maxlength\": 20 } } use cases: - usernames 3-20 characters - product names minimum 5 characters - short descriptions maximum 200 characters - passwords minimum 8 characters pattern validate strings against a regular expression. named patterns recommended total cms ships a registry of ready-made patterns. reference one by name and it expands to the real regex when the schema is saved: { \"release\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"release\", \"pattern\": \"patterns.version\" } } that stores ^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$ , so 3.5.0 is accepted and 3.5 , v3.5.0 and junk-3.5.0-junk are all rejected. these are the same names used by form fields, so a field and its schema stay on one definition. there are no backslashes to escape, and the expansion adds the ^ and $ anchors for you. frequently used names: | name | accepts | | --- | --- | | patterns.version | 3.5.0 | | patterns.versionextended | 3.5.0 , v3.5.1-rc.1 , 3.5.0+build.7 | | patterns.slug | my-post-title | | patterns.uuid | 123e4567-e89b-42d3-a456-426614174000 | | patterns.hex | aabbcc | | patterns.domain | totalcms.co | | patterns.integer | -42 | | patterns.phone.usa | 555-123-4567 | | patterns.postcode.uk | sw1a 1aa | nested patterns use their dotted path, exactly as in twig. see validation patterns docs/forms/patterns for the full list. an unknown name is an error on save rather than a silently broken schema, so a typo like patterns.verison tells you immediately. literal regex when no named pattern fits, write the regex yourself: { \"slug\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"url slug\", \"pattern\": \"^ a-z0-9- +$\" } } common patterns: - alphanumeric : ^ a-za-z0-9 +$ - url-safe slug : ^ a-z0-9- +$ - hex color : ^ 0-9a-fa-f {6}$ - phone us : ^\\\\d{3}-\\\\d{3}-\\\\d{4}$ - version x.y.z : ^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$ > backslashes must be doubled. \\\\d is how you write \\d in json \u2014 a > single \\d is not a legal json escape. the schema editor's json field > repairs a lone \\d for you on save, but the doubled form is what is stored. > named patterns avoid the problem entirely. > anchor your literal patterns. json schema's pattern is a substring > match, not a full match. without ^ and $ , \\\\d+\\\\.\\\\d+\\\\.\\\\d+ happily > accepts junk-3.5.0-junk . named patterns are anchored for you. format use built-in format validators. { \"format\": \"email\" } available formats: - email - email address - uri / url - url - date - date yyyy-mm-dd - time - time hh:mm:ss - date-time - iso 8601 date-time - ipv4 / ipv6 - ip address example: { \"website\": { \"type\": \"string\", \"field\": \"url\", \"label\": \"website\", \"format\": \"uri\" } } number validation minimum / maximum enforce minimum and maximum numeric values. { \"minimum\": 0, \"maximum\": 100 } example - percentage field: { \"discount\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"discount %\", \"minimum\": 0, \"maximum\": 100 } } exclusiveminimum / exclusivemaximum like minimum/maximum, but excludes the boundary value. { \"exclusiveminimum\": 0, \"exclusivemaximum\": 100 } example - temperature must be above 0, not equal to 0 : { \"temperature\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"temperature \u00b0c \", \"exclusiveminimum\": 0 } } multipleof ensure number is a multiple of a specified value. { \"multipleof\": 5 } example - quantity in packs of 5 : { \"quantity\": { \"type\": \"integer\", \"field\": \"number\", \"label\": \"quantity\", \"multipleof\": 5, \"minimum\": 5 } } array validation minitems / maxitems enforce minimum and maximum array length. { \"minitems\": 1, \"maxitems\": 10 } example - tags field: { \"tags\": { \"$ref\": \" \"label\": \"tags\", \"minitems\": 1, \"maxitems\": 5 } } use cases: - tags 1-5 items - gallery minimum 3 images - options maximum 10 choices - team members minimum 2 members uniqueitems ensure all items in an array are unique. { \"uniqueitems\": true } example - category tags: { \"categories\": { \"$ref\": \" \"label\": \"categories\", \"uniqueitems\": true } } note: the list property type already has uniqueitems: true by default. enum allowed values restrict values to a specific set of allowed options. { \"enum\": \"draft\", \"published\", \"archived\" } example - status field: { \"status\": { \"type\": \"string\", \"field\": \"select\", \"label\": \"status\", \"enum\": \"draft\", \"published\", \"archived\" , \"options\": {\"value\": \"draft\", \"label\": \"draft\"}, {\"value\": \"published\", \"label\": \"published\"}, {\"value\": \"archived\", \"label\": \"archived\"} } } use cases: - predefined statuses - size options s, m, l, xl - priority levels low, medium, high - content types combining validations you can combine multiple validation keywords for comprehensive data validation. example - product sku: { \"sku\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"product sku\", \"minlength\": 8, \"maxlength\": 12, \"pattern\": \"^ a-z {3}- 0-9 {4,8}$\" } } example - price field: { \"price\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"price usd \", \"minimum\": 0.01, \"maximum\": 999999.99, \"multipleof\": 0.01 } } example - feature list: { \"features\": { \"$ref\": \" \"label\": \"product features\", \"minitems\": 3, \"maxitems\": 10, \"uniqueitems\": true } } unique values unique ensure that a property's value is unique across all objects in the collection. { \"unique\": true } example - email field: { \"email\": { \"$ref\": \" \"label\": \"email address\", \"unique\": true } } example - username field: { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"unique\": true, \"minlength\": 3, \"maxlength\": 20 } } important requirements: - must be indexed : unique properties must be included in the schema's index array for performance - case-sensitive : uniqueness validation is case-sensitive e.g., \"test@example.com\" and \"test@example.com\" are considered different - empty values allowed : multiple objects can have empty/null values for a unique field - update behavior : when updating an object, you can keep the same value, but cannot change to a value used by another object use cases: - user emails prevent duplicate registrations - usernames ensure unique login identifiers - product skus avoid inventory conflicts - slug fields ensure unique urls error message: when a duplicate value is detected, users will see an error message like: email must be unique. the value 'john@example.com' already exists in another object. schema setup example with index: { \"id\": \"user\", \"type\": \"object\", \"properties\": { \"id\": { \"type\": \"string\", \"label\": \"id\", \"field\": \"id\" }, \"email\": { \"$ref\": \" \"label\": \"email\", \"unique\": true }, \"username\": { \"type\": \"string\", \"label\": \"username\", \"field\": \"text\", \"unique\": true } }, \"required\": \"id\", \"email\", \"username\" , \"index\": \"id\", \"email\", \"username\" } note: if you mark a property as unique but don't include it in the index, you'll receive a helpful error message prompting you to add it to the index. disabling automatic required validation if you want to allow empty values for a required field, explicitly set: allow empty strings for required fields : { \"minlength\": 0 } allow empty arrays for required fields : { \"minitems\": 0 } example - optional notes on a required field: { \"notes\": { \"type\": \"string\", \"field\": \"textarea\", \"label\": \"additional notes\", \"minlength\": 0, \"maxlength\": 500 } } error messages when validation fails, total cms will display clear error messages to users: - minlength/maxlength : \"string must be at least x characters\" or \"string exceeds maximum length of x\" - minimum/maximum : \"value must be at least x\" or \"value must not exceed x\" - pattern : \"value does not match required format\" - enum : \"value must be one of: x, y, z\" - minitems/maxitems : \"array must contain at least x items\" or \"array exceeds maximum of x items\" best practices 1. be specific : use validation to enforce your data requirements clearly 2. provide context : use help text to explain validation requirements to users 3. balance strictness : don't over-validate - allow reasonable flexibility 4. test thoroughly : verify validation works as expected in the admin interface 5. consider ux : validation should help users, not frustrate them common validation patterns email with length limits { \"email\": { \"$ref\": \" \"label\": \"email address\", \"maxlength\": 255 } } phone number us format { \"phone\": { \"$ref\": \" \"label\": \"phone number\", \"pattern\": \"^\\\\d{3}-\\\\d{3}-\\\\d{4}$\" } } postal code us zip { \"zipcode\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"zip code\", \"pattern\": \"^\\\\d{5} -\\\\d{4} ?$\" } } percentage 0-100 { \"completion\": { \"type\": \"integer\", \"field\": \"range\", \"label\": \"completion %\", \"minimum\": 0, \"maximum\": 100 } } required gallery minimum 3 images { \"gallery\": { \"$ref\": \" \"label\": \"product images\", \"minitems\": 3, \"maxitems\": 20 } } unique username with validation { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"unique\": true, \"minlength\": 3, \"maxlength\": 20, \"pattern\": \"^ a-z0-9 - +$\" } } unique email address { \"email\": { \"$ref\": \" \"label\": \"email address\", \"unique\": true, \"maxlength\": 255 } } reference for complete json schema documentation, see: - json schema validation specification - understanding json schema",
+            "content": "schema validation this document covers json schema validation keywords that can be used in the extra schema definitions field when setting up properties in a schema. overview total cms uses json schema draft 2020-12 for data validation. in addition to the basic schema properties type, field, label, etc. , you can add validation constraints to ensure data quality and consistency. where to add these: in the schema admin interface, when editing a property, use the extra schema definitions field to add validation keywords as json. > important: validation keywords like pattern , minlength , maxlength , minimum , maximum , etc. must be added in the extra schema definitions section of a property \u2014 not in the property's settings. the settings section controls display and behavior options, while extra schema definitions is where all json schema validation rules go. required fields by default, required string and array fields are automatically validated: - strings : cannot be empty \"\" - arrays list, gallery, deck : cannot be empty - files/images : validated on the frontend must have a file uploaded you can override this behavior by explicitly setting minlength or minitems . > conditional required? the schema's top-level required array is a hard data invariant enforced on every save. if you need a field that is only required when another field has a particular value e.g. \"email required only when notifications toggle is on\" , use the form-level settings.required option paired with settings.visibility instead. see required form-level docs/fields/all-fields required-form-level in the all fields docs. string validation minlength / maxlength enforce minimum and maximum string length. { \"minlength\": 3, \"maxlength\": 100 } example - username field: { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"minlength\": 3, \"maxlength\": 20 } } use cases: - usernames 3-20 characters - product names minimum 5 characters - short descriptions maximum 200 characters - passwords minimum 8 characters pattern validate strings against a regular expression. named patterns recommended total cms ships a registry of ready-made patterns. reference one by name and it expands to the real regex when the schema is saved: { \"release\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"release\", \"pattern\": \"patterns.version\" } } that stores ^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$ , so 3.5.0 is accepted and 3.5 , v3.5.0 and junk-3.5.0-junk are all rejected. these are the same names used by form fields, so a field and its schema stay on one definition. there are no backslashes to escape, and the expansion adds the ^ and $ anchors for you. frequently used names: | name | accepts | | --- | --- | | patterns.version | 3.5.0 | | patterns.versionextended | 3.5.0 , v3.5.1-rc.1 , 3.5.0+build.7 | | patterns.slug | my-post-title | | patterns.uuid | 123e4567-e89b-42d3-a456-426614174000 | | patterns.hex | aabbcc | | patterns.domain | totalcms.co | | patterns.integer | -42 | | patterns.phone.usa | 555-123-4567 | | patterns.postcode.uk | sw1a 1aa | nested patterns use their dotted path, exactly as in twig. see validation patterns docs/forms/patterns for the full list. an unknown name is an error on save rather than a silently broken schema, so a typo like patterns.verison tells you immediately. literal regex when no named pattern fits, write the regex yourself: { \"slug\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"url slug\", \"pattern\": \"^ a-z0-9- +$\" } } common patterns: - alphanumeric : ^ a-za-z0-9 +$ - url-safe slug : ^ a-z0-9- +$ - hex color : ^ 0-9a-fa-f {6}$ - phone us : ^\\\\d{3}-\\\\d{3}-\\\\d{4}$ - version x.y.z : ^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$ > backslashes must be doubled. \\\\d is how you write \\d in json \u2014 a > single \\d is not a legal json escape. the schema editor's json field > repairs a lone \\d for you on save, but the doubled form is what is stored. > named patterns avoid the problem entirely. > anchor your literal patterns. json schema's pattern is a substring > match, not a full match. without ^ and $ , \\\\d+\\\\.\\\\d+\\\\.\\\\d+ happily > accepts junk-3.5.0-junk . named patterns are anchored for you. format use built-in format validators. { \"format\": \"email\" } available formats: - email - email address - uri / url - url - date - date yyyy-mm-dd - time - time hh:mm:ss - date-time - iso 8601 date-time - ipv4 / ipv6 - ip address example: { \"website\": { \"type\": \"string\", \"field\": \"url\", \"label\": \"website\", \"format\": \"uri\" } } number validation minimum / maximum enforce minimum and maximum numeric values. { \"minimum\": 0, \"maximum\": 100 } example - percentage field: { \"discount\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"discount %\", \"minimum\": 0, \"maximum\": 100 } } exclusiveminimum / exclusivemaximum like minimum/maximum, but excludes the boundary value. { \"exclusiveminimum\": 0, \"exclusivemaximum\": 100 } example - temperature must be above 0, not equal to 0 : { \"temperature\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"temperature \u00b0c \", \"exclusiveminimum\": 0 } } multipleof ensure number is a multiple of a specified value. { \"multipleof\": 5 } example - quantity in packs of 5 : { \"quantity\": { \"type\": \"integer\", \"field\": \"number\", \"label\": \"quantity\", \"multipleof\": 5, \"minimum\": 5 } } array validation minitems / maxitems enforce minimum and maximum array length. { \"minitems\": 1, \"maxitems\": 10 } example - tags field: { \"tags\": { \"$ref\": \" \"label\": \"tags\", \"minitems\": 1, \"maxitems\": 5 } } use cases: - tags 1-5 items - gallery minimum 3 images - options maximum 10 choices - team members minimum 2 members uniqueitems ensure all items in an array are unique. { \"uniqueitems\": true } example - category tags: { \"categories\": { \"$ref\": \" \"label\": \"categories\", \"uniqueitems\": true } } note: the list property type already has uniqueitems: true by default. enum allowed values restrict values to a specific set of allowed options. { \"enum\": \"draft\", \"published\", \"archived\" } example - status field: { \"status\": { \"type\": \"string\", \"field\": \"select\", \"label\": \"status\", \"enum\": \"draft\", \"published\", \"archived\" , \"options\": {\"value\": \"draft\", \"label\": \"draft\"}, {\"value\": \"published\", \"label\": \"published\"}, {\"value\": \"archived\", \"label\": \"archived\"} } } use cases: - predefined statuses - size options s, m, l, xl - priority levels low, medium, high - content types combining validations you can combine multiple validation keywords for comprehensive data validation. example - product sku: { \"sku\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"product sku\", \"minlength\": 8, \"maxlength\": 12, \"pattern\": \"^ a-z {3}- 0-9 {4,8}$\" } } example - price field: { \"price\": { \"type\": \"number\", \"field\": \"number\", \"label\": \"price usd \", \"minimum\": 0.01, \"maximum\": 999999.99, \"multipleof\": 0.01 } } example - feature list: { \"features\": { \"$ref\": \" \"label\": \"product features\", \"minitems\": 3, \"maxitems\": 10, \"uniqueitems\": true } } unique values unique ensure that a property's value is unique across all objects in the collection. { \"unique\": true } example - email field: { \"email\": { \"$ref\": \" \"label\": \"email address\", \"unique\": true } } example - username field: { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"unique\": true, \"minlength\": 3, \"maxlength\": 20 } } important requirements: - must be indexed : unique properties must be included in the schema's index array for performance - case-sensitive : uniqueness validation is case-sensitive e.g., \"test@example.com\" and \"test@example.com\" are considered different - empty values allowed : multiple objects can have empty/null values for a unique field - update behavior : when updating an object, you can keep the same value, but cannot change to a value used by another object use cases: - user emails prevent duplicate registrations - usernames ensure unique login identifiers - product skus avoid inventory conflicts - slug fields ensure unique urls error message: when a duplicate value is detected, users will see an error message like: email must be unique. the value 'john@example.com' already exists in another object. schema setup example with index: { \"id\": \"user\", \"type\": \"object\", \"properties\": { \"id\": { \"type\": \"string\", \"label\": \"id\", \"field\": \"id\" }, \"email\": { \"$ref\": \" \"label\": \"email\", \"unique\": true }, \"username\": { \"type\": \"string\", \"label\": \"username\", \"field\": \"text\", \"unique\": true } }, \"required\": \"id\", \"email\", \"username\" , \"index\": \"id\", \"email\", \"username\" } note: if you mark a property as unique but don't include it in the index, you'll receive a helpful error message prompting you to add it to the index. protected values protected make a property admin-only. a user who is not a super admin cannot set it: on update the stored value is kept, on create the field is dropped, and the attempt is written to the access log. the rest of the save goes through, so a form that includes the field still works \u2014 the protected value just does not change. { \"protected\": true } add a value to also force the property on every authenticated non-admin write session or oauth user , whether or not the request included it \u2014 the exceptions are listed under the rules below: { \"protected\": { \"value\": true } } example \u2014 moderation flags: { \"draft\": { \"type\": \"boolean\", \"label\": \"draft\", \"help\": \"awaiting review. every member edit sets it back to true.\", \"field\": \"toggle\", \"default\": true, \"protected\": { \"value\": true } }, \"featured\": { \"type\": \"boolean\", \"label\": \"featured\", \"help\": \"editor's pick. admins only.\", \"field\": \"toggle\", \"default\": false, \"protected\": true } } with this, a member's submission is a draft until an admin approves it, and any later edit by the member returns it to draft. the admin changes draft through the dashboard or api as usual. a member's request to the protected property's own route put .../{id}/draft , or deleting, uploading into or editing deck items of that property is refused with 403 ; a member's request to any other property route put .../{id}/title succeeds and writes the forced values alongside. rules: - protected binds every writer who is not a super admin, on any collection. api keys and admin oauth bearer tokens are trusted and not filtered. a bearer token issued to a non-admin user is treated as that user. - protected is honoured on top-level properties only. a protected flag inside a card or deck child schema is ignored. - accepted shapes are true and an object with a value key. anything else is reported by schema:lint and ignored at runtime. - a forced value still has to pass the property's own validation. - a non-admin cannot clone an object in a collection that has protected properties, because a clone would copy values they cannot write. a public create does not make that clone public either. a non-admin clone whose body names a different target collection is refused on any collection. - a non-admin cannot import into a collection that has protected properties /api/import/collections/{collection}/... : csv, json, deck csv, deck json and factory : an import upserts whole objects. refused clones and imports are logged with reason: protected . - over mcp, a collection with protected properties accepts writes create object , update object , patch object from admin callers only. - forced values apply to every authenticated non-admin write session or oauth user \u2014 body routes, property routes, deck items, file and upload routes, meta writes and property deletes \u2014 in the same save, so editing title , adding a deck item or uploading a new image on an approved object still flips draft back to true . anonymous public submissions through the object body routes are forced too. the exceptions: counter increments and decrements a tick is not an edit , property, deck and file routes reached as a public submission under a public update , and registration docs/forms/options public-registration-forms , which strips protected fields but does not apply forced values. - the fields groups , active , expiration , maxlogincount , passkeys , logincount , lastlogin and created are always protected on auth schemas; no flag is needed. - a collection's ownerproperty docs/collections/settings ownerproperty is protected by being named on the collection. disabling automatic required validation if you want to allow empty values for a required field, explicitly set: allow empty strings for required fields : { \"minlength\": 0 } allow empty arrays for required fields : { \"minitems\": 0 } example - optional notes on a required field: { \"notes\": { \"type\": \"string\", \"field\": \"textarea\", \"label\": \"additional notes\", \"minlength\": 0, \"maxlength\": 500 } } error messages when validation fails, total cms will display clear error messages to users: - minlength/maxlength : \"string must be at least x characters\" or \"string exceeds maximum length of x\" - minimum/maximum : \"value must be at least x\" or \"value must not exceed x\" - pattern : \"value does not match required format\" - enum : \"value must be one of: x, y, z\" - minitems/maxitems : \"array must contain at least x items\" or \"array exceeds maximum of x items\" best practices 1. be specific : use validation to enforce your data requirements clearly 2. provide context : use help text to explain validation requirements to users 3. balance strictness : don't over-validate - allow reasonable flexibility 4. test thoroughly : verify validation works as expected in the admin interface 5. consider ux : validation should help users, not frustrate them common validation patterns email with length limits { \"email\": { \"$ref\": \" \"label\": \"email address\", \"maxlength\": 255 } } phone number us format { \"phone\": { \"$ref\": \" \"label\": \"phone number\", \"pattern\": \"^\\\\d{3}-\\\\d{3}-\\\\d{4}$\" } } postal code us zip { \"zipcode\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"zip code\", \"pattern\": \"^\\\\d{5} -\\\\d{4} ?$\" } } percentage 0-100 { \"completion\": { \"type\": \"integer\", \"field\": \"range\", \"label\": \"completion %\", \"minimum\": 0, \"maximum\": 100 } } required gallery minimum 3 images { \"gallery\": { \"$ref\": \" \"label\": \"product images\", \"minitems\": 3, \"maxitems\": 20 } } unique username with validation { \"username\": { \"type\": \"string\", \"field\": \"text\", \"label\": \"username\", \"unique\": true, \"minlength\": 3, \"maxlength\": 20, \"pattern\": \"^ a-z0-9 - +$\" } } unique email address { \"email\": { \"$ref\": \" \"label\": \"email address\", \"unique\": true, \"maxlength\": 255 } } reference for complete json schema documentation, see: - json schema validation specification - understanding json schema",
             "url": "https://docs.totalcms.co/schemas/validation/"
         }
     ],
@@ -3855,6 +3920,72 @@
             "url": "https://docs.totalcms.co/collections/settings/"
         },
         {
+            "key": "requireBotProtection",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "Public registrations and public creates must pass the form's [bot protection](docs/forms/options#bot-protection) (a honeypot and a signed time trap). A submission without it is answered as a success but nothing is saved. Shown as **Require Bot Protection** in the Access Controls section. Signed-in users and API keys are never checked.",
+            "examples": [
+                "{\n    \"publicOperations\": [\"create\"],\n    \"requireBotProtection\": true\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "publicRegistration",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "Lets anonymous visitors create their own account in this collection through [`POST /admin/register/{collection}`](docs/forms/options#public-registration-forms). Only collections whose schema is `auth` or inherits it have it.",
+            "examples": [
+                "{\n    \"publicRegistration\": true\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "requireEmailVerification",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "New registrants are created inactive and must click a link in a verification email before they can sign in. Shown as **Require Email Verification** once [`publicRegistration`](#publicregistration) is on. With it off, a registrant is signed in as soon as the account is created. See [Email Verification](docs/forms/options#email-verification) for the full flow.",
+            "examples": [
+                "{\n    \"publicRegistration\": true,\n    \"requireEmailVerification\": true\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "registrationGroups",
+            "type": "array<string>",
+            "required": false,
+            "default": "[]",
+            "description": "Access groups given to every registrant. Shown as **Registration Groups**, a list of access groups, once [`publicRegistration`](#publicregistration) is on.",
+            "examples": [
+                "{\n    \"publicRegistration\": true,\n    \"registrationGroups\": [\"members\", \"newsletter\"]\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "ownerProperty",
+            "type": "string",
+            "required": false,
+            "default": "\"\"",
+            "description": "The property that holds the id of the user who owns each object. Setting it makes this an **owned collection**: every user who is not a super admin is limited to the objects they own, and the server writes their user id into this property when they create one.",
+            "examples": [
+                "{\n    \"ownerProperty\": \"owner\"\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "ownerCollection",
+            "type": "string",
+            "required": false,
+            "default": "\"\"",
+            "description": "The auth collection whose members are scoped owners of this collection. Pick it from the **Owner Collection** select, next to **Owner Property**; \"Any auth collection\" leaves it empty. It only has an effect when `ownerProperty` is set.",
+            "examples": [
+                "{\n    \"ownerProperty\": \"owner\",\n    \"ownerCollection\": \"members\"\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
             "key": "manualSort",
             "type": "object<string, array<string>>",
             "required": false,
@@ -3884,7 +4015,7 @@
             "default": "{}",
             "description": "Override schema property attributes for this collection. Allows customizing field labels, help text, options, and settings without modifying the schema itself.",
             "examples": [
-                "{\n    \"properties\": {\n        \"title\": {\n            \"label\": \"Headline\",\n            \"placeholder\": \"Enter a compelling headline...\"\n        },\n        \"categories\": {\n            \"options\": [\n                {\"label\": \"News\", \"value\": \"news\"},\n                {\"label\": \"Tutorial\", \"value\": \"tutorial\"},\n                {\"label\": \"Review\", \"value\": \"review\"}\n            ]\n        },\n        \"featured\": {\n            \"help\": \"Featured articles appear on the homepage carousel.\"\n        }\n    }\n}"
+                "{\n    \"properties\": {\n        \"title\": {\n            \"field\": \"text\",\n            \"label\": \"Headline\",\n            \"placeholder\": \"Enter a compelling headline...\"\n        },\n        \"categories\": {\n            \"field\": \"select\",\n            \"options\": [\n                {\"label\": \"News\", \"value\": \"news\"},\n                {\"label\": \"Tutorial\", \"value\": \"tutorial\"},\n                {\"label\": \"Review\", \"value\": \"review\"}\n            ]\n        },\n        \"featured\": {\n            \"field\": \"toggle\",\n            \"help\": \"Featured articles appear on the homepage carousel.\"\n        }\n    }\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },
@@ -3940,7 +4071,7 @@
             "description": "**Read-only:** Yes",
             "examples": [
                 "{\n    \"updated\": \"2026-07-30T09:12:00+00:00\"\n}",
-                "{\n    \"id\": \"team\",\n    \"name\": \"Team Members\",\n    \"schema\": \"team\",\n    \"description\": \"Company team members and their profiles.\",\n\n    \"url\": \"/about/team\",\n    \"prettyUrl\": true,\n\n    \"category\": \"Content\",\n    \"labelPlural\": \"Team Members\",\n    \"labelSingular\": \"Team Member\",\n    \"sortBy\": \"lastName\",\n    \"reverseSort\": false,\n\n    \"groups\": [],\n    \"publicOperations\": [\"read\"],\n\n    \"queueRebuildOnSave\": false,\n\n    \"manualSort\": {\n        \"position\": [\"ceo\", \"cfo\", \"cmo\", \"vp\", \"director\", \"manager\"],\n        \"department\": [\"executive\", \"engineering\", \"sales\"]\n    },\n\n    \"formSettings\": {\n        \"helpStyle\": \"tooltip\",\n        \"helpOnFocus\": true,\n        \"newActions\": [\n            {\"action\": \"redirect-object\", \"link\": \"/admin/collections/team/{id}\"}\n        ],\n        \"editActions\": [\n            {\"action\": \"refresh\"}\n        ]\n    },\n\n    \"properties\": {\n        \"position\": {\n            \"options\": [\n                {\"label\": \"CEO\", \"value\": \"ceo\"},\n                {\"label\": \"CFO\", \"value\": \"cfo\"},\n                {\"label\": \"CMO\", \"value\": \"cmo\"},\n                {\"label\": \"VP\", \"value\": \"vp\"},\n                {\"label\": \"Director\", \"value\": \"director\"},\n                {\"label\": \"Manager\", \"value\": \"manager\"},\n                {\"label\": \"Staff\", \"value\": \"staff\"}\n            ]\n        }\n    },\n\n    \"customProperties\": {},\n\n    \"count\": 24,\n    \"totalObjects\": 22,\n    \"lastUpdated\": \"2024-01-15T14:30:00+00:00\"\n}"
+                "{\n    \"id\": \"team\",\n    \"name\": \"Team Members\",\n    \"schema\": \"team\",\n    \"description\": \"Company team members and their profiles.\",\n\n    \"url\": \"/about/team\",\n    \"prettyUrl\": true,\n\n    \"category\": \"Content\",\n    \"labelPlural\": \"Team Members\",\n    \"labelSingular\": \"Team Member\",\n    \"sortBy\": \"lastName\",\n    \"reverseSort\": false,\n\n    \"groups\": [],\n    \"publicOperations\": [\"read\"],\n    \"ownerProperty\": \"owner\",\n\n    \"queueRebuildOnSave\": false,\n\n    \"manualSort\": {\n        \"position\": [\"ceo\", \"cfo\", \"cmo\", \"vp\", \"director\", \"manager\"],\n        \"department\": [\"executive\", \"engineering\", \"sales\"]\n    },\n\n    \"formSettings\": {\n        \"helpStyle\": \"tooltip\",\n        \"helpOnFocus\": true,\n        \"newActions\": [\n            {\"action\": \"redirect-object\", \"link\": \"/admin/collections/team/{id}\"}\n        ],\n        \"editActions\": [\n            {\"action\": \"refresh\"}\n        ]\n    },\n\n    \"properties\": {\n        \"position\": {\n            \"options\": [\n                {\"label\": \"CEO\", \"value\": \"ceo\"},\n                {\"label\": \"CFO\", \"value\": \"cfo\"},\n                {\"label\": \"CMO\", \"value\": \"cmo\"},\n                {\"label\": \"VP\", \"value\": \"vp\"},\n                {\"label\": \"Director\", \"value\": \"director\"},\n                {\"label\": \"Manager\", \"value\": \"manager\"},\n                {\"label\": \"Staff\", \"value\": \"staff\"}\n            ]\n        }\n    },\n\n    \"customProperties\": {},\n\n    \"count\": 24,\n    \"totalObjects\": 22,\n    \"lastUpdated\": \"2024-01-15T14:30:00+00:00\"\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },
@@ -4239,6 +4370,37 @@
             "since": "3.5.0"
         },
         {
+            "name": "collection:update",
+            "description": "Change some of an existing collection's settings, keeping the rest. The save validates the result as the collection form does and fires `collection.updated`, which editing `.meta.json` by hand skips.",
+            "arguments": [
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Collection ID"
+                },
+                {
+                    "name": "file",
+                    "required": false,
+                    "description": "JSON file holding the settings to change, or `-` for stdin"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--set key=value",
+                    "description": "Set one setting; a dot reaches into a map. Repeatable"
+                },
+                {
+                    "name": "--json",
+                    "description": "Print the saved settings"
+                }
+            ],
+            "examples": [
+                "tcms collection:update recipes --set ownerProperty=author\ntcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true\ntcms collection:update blog --set mcp.access=authenticated\ntcms collection:update products --set properties.price.label=Cost\necho '{\"seo\":{\"titleTemplate\":\"{title} | Recipes\"}}' | tcms collection:update recipes -"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "collection:query",
             "description": "Query a collection's index with filtering, searching, sorting, and pagination.",
             "arguments": [
@@ -4364,6 +4526,51 @@
             ],
             "examples": [
                 "tcms collection:convert docs --to=markdown\ntcms collection:convert docs --to=markdown --dry-run\ntcms collection:convert docs --to=json --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:list",
+            "description": "List every group with what it grants on collection content.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:list\ntcms access-group:list --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:get",
+            "description": "Show one group. With `--json` it prints the full definition, the shape `access-group:set` takes.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:get editor\ntcms access-group:get editor --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:set",
+            "description": "Create a group, or replace one, from a full JSON definition (a file, or `-` for stdin). Any permission section left out grants nothing.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:set authors authors.json\ntcms access-group:get editor --json | tcms access-group:set editor-copy -",
+                "{\n  \"description\": \"Writes blog posts\",\n  \"permissions\": {\n    \"collections\":     {\"operations\": [\"create\", \"read\", \"update\"], \"all\": false, \"allowed\": [\"blog\"]},\n    \"collectionsMeta\": {\"operations\": [\"read\"], \"all\": true},\n    \"schemas\":         {\"operations\": [\"read\"], \"all\": true},\n    \"utils\":           {\"all\": false, \"allowed\": [\"cache\"]},\n    \"settings\":        {\"all\": false, \"allowed\": []},\n    \"extensions\":      {\"all\": true},\n    \"dataviews\": false, \"builder\": false, \"mailer\": false,\n    \"playground\": false, \"docs\": true, \"inlineEdit\": true\n  }\n}"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:patch",
+            "description": "Change part of an existing group. Each permission section merges key by key, so send only what changes; a list (`operations`, `allowed`) is replaced by the list sent.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "echo '{\"permissions\":{\"collections\":{\"allowed\":[\"blog\",\"news\"]}}}' | tcms access-group:patch editor -\necho '{\"permissions\":{\"dataviews\":true}}' | tcms access-group:patch analysts -"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"
@@ -4956,6 +5163,54 @@
             "since": "3.5.0"
         },
         {
+            "name": "extension:install",
+            "description": "Install an extension from a zip into `tcms-data/extensions/{vendor}/{name}/`, or replace one that is already there.",
+            "arguments": [
+                {
+                    "name": "zip",
+                    "required": true,
+                    "description": "Path to the extension zip"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--force, -f",
+                    "description": "Replace an existing copy without the confirmation prompt"
+                }
+            ],
+            "examples": [
+                "tcms extension:install ~/Downloads/seo-pro-1.2.0.zip\ntcms extension:install seo-pro-1.2.0.zip --force     # replace without asking\ntcms extension:install seo-pro-1.2.0.zip --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "extension:package",
+            "description": "Build the distributable zip for an extension directory: `{name}-{version}.zip` with everything inside a single `{name}/` folder \u2014 the shape `extension:install` and the admin upload accept.",
+            "arguments": [
+                {
+                    "name": "dir",
+                    "required": false,
+                    "description": "Extension directory containing `extension.json` (default: current directory)"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--output, -o",
+                    "description": "Directory to write the zip into (default: next to the extension directory)"
+                },
+                {
+                    "name": "--force, -f",
+                    "description": "Overwrite an existing zip"
+                }
+            ],
+            "examples": [
+                "cd my-extension && tcms extension:package\ntcms extension:package path/to/my-extension --output ~/releases\ntcms extension:package . --force                       # overwrite an existing zip"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "extension:enable",
             "description": "Enable a discovered extension.",
             "arguments": [
@@ -5519,6 +5774,32 @@
                 "payload": {
                     "success": "bool"
                 }
+            },
+            {
+                "name": "access.denied",
+                "description": "Fired when the access checks refuse a request, or when the storage layer refuses a write the request's own checks let through. Who was refused is the payload's `actor`. An unauthenticated request to a page that needs a login does not fire it.",
+                "payload": {
+                    "resource": "string",
+                    "operation": "string",
+                    "reason": "string",
+                    "collection": "string",
+                    "id": "string",
+                    "route": "string",
+                    "method": "string",
+                    "path": "string"
+                }
+            },
+            {
+                "name": "file.downloaded",
+                "description": "Fired when a file is served as an attachment from a `/download/...` URL, after its protection (access groups, password) passed. Who downloaded it is the payload's `actor`; for a visitor who is not signed in that is `anonymous`. Inline streams from `/stream/...` do not fire it, since a media player makes many range requests for one play.",
+                "payload": {
+                    "collection": "string",
+                    "id": "string",
+                    "property": "string",
+                    "filename": "string",
+                    "subpath": "string",
+                    "protected": "bool"
+                }
             }
         ],
         "permissions": [
@@ -5777,8 +6058,8 @@
                 },
                 {
                     "id": "totalcms/algolia-search",
-                    "name": "Algolia Search <em>(beta)</em>",
-                    "description": "<em>Free during beta \u2014 will be a paid extension after launch.</em> Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
+                    "name": "Algolia Search (beta)",
+                    "description": "Free during beta \u2014 will be a paid extension after launch. Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
                     "version": "",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
@@ -5827,7 +6108,7 @@
                 {
                     "id": "totalcms/podcast",
                     "name": "Podcast",
-                    "description": "Host a podcast from two collections. Ships the <code>podcast</code> (show) and <code>podcast-episode</code> schemas, a feed the directories accept at <code>/api/ext/totalcms/podcast/feed</code> \u2014 no page or template needed \u2014 and a <code>podcast_feed()</code> Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
+                    "description": "Host a podcast from two collections. Ships the podcast (show) and podcast-episode schemas, a feed the directories accept at /api/ext/totalcms/podcast/feed \u2014 no page or template needed \u2014 and a podcast_feed() Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
                     "version": "",
                     "url": "https://docs.totalcms.co/extensions/podcast/"
                 },
@@ -5876,7 +6157,7 @@
                     "url": "https://docs.totalcms.co/extensions/ab-split/"
                 },
                 {
-                    "label": "Algolia Search <em>(beta)</em>",
+                    "label": "Algolia Search (beta)",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
                 {

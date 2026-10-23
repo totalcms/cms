@@ -35,14 +35,8 @@ final readonly class UploadAccessPolicy
 	 */
 	public function denialFor(string $collection, string $property, string $settingKey): ?string
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData || $collectionData->groups === []) {
-			return null;
-		}
-
-		$schema   = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$settings = $schema->properties[$property]['settings'] ?? [];
-		if (empty($settings[$settingKey])) {
+		$groups = $this->protectingGroups($collection, $property, $settingKey);
+		if ($groups === []) {
 			return null;
 		}
 
@@ -55,8 +49,33 @@ final readonly class UploadAccessPolicy
 			return null;
 		}
 
-		return $this->userValidator->validateFileAccess($user->id, $collectionData->groups, $user->collection)
+		return $this->userValidator->validateFileAccess($user->id, $groups, $user->collection)
 			? null
 			: 'Access denied';
+	}
+
+	/** Whether the property's uploads are limited to the collection's groups. */
+	public function isProtected(string $collection, string $property, string $settingKey): bool
+	{
+		return $this->protectingGroups($collection, $property, $settingKey) !== [];
+	}
+
+	/**
+	 * The groups an upload is limited to: the collection's groups when the
+	 * property turns $settingKey on, else none.
+	 *
+	 * @return array<mixed>
+	 */
+	private function protectingGroups(string $collection, string $property, string $settingKey): array
+	{
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if (!$collectionData instanceof CollectionData || $collectionData->groups === []) {
+			return [];
+		}
+
+		$schema   = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$settings = $schema->properties[$property]['settings'] ?? [];
+
+		return empty($settings[$settingKey]) ? [] : $collectionData->groups;
 	}
 }

@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace TotalCMS\Action\Admin\Utils;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
@@ -22,6 +27,10 @@ use TotalCMS\Support\Config;
  * OAuth Clients (static/dynamic buckets with active-grant counts, or the
  * new-client form) and OAuth Grants (every grant joined to its client with
  * expiry metadata and effective reach).
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") The count includes
+ * type-only references (OwnerScope in an instanceof check) that add no
+ * dependency; the page's real collaborators are its constructor arguments.
  */
 final readonly class OAuthPageData implements UtilsPageData
 {
@@ -40,6 +49,7 @@ final readonly class OAuthPageData implements UtilsPageData
 		private AccessControlService $accessControlService,
 		private McpSchemaResolver $mcpSchemaResolver,
 		private Config $config,
+		private AccessGuard $guard,
 	) {
 	}
 
@@ -176,9 +186,11 @@ final readonly class OAuthPageData implements UtilsPageData
 	 * apply — the "Effective reach" row on the OAuth Grants admin page. A
 	 * raw scope badge like cms:admin can overstate reach: the real ceiling
 	 * is consented scopes ∩ access-group permissions ∩ collection mcp.access
-	 * exposure — the same rule McpAuth::resolvePersona(),
-	 * PersonaContext::canReadCollection(), and ObjectTools::requireExposed()
-	 * apply at request time, mirrored here rather than reimplemented.
+	 * exposure, narrowed to the member's own objects on an owned collection.
+	 * Exposure is checked as PersonaContext::exposedCollection() does, and
+	 * reads are the AccessGuard's own readScope(), as the read tools apply it.
+	 * `own` lists the collections where that reach is the member's own
+	 * objects.
 	 *
 	 * $authorityCache is keyed by the composite OAuthUserRef string
 	 * ("collection:id") and shared across every grant in the request — most
@@ -188,7 +200,7 @@ final readonly class OAuthPageData implements UtilsPageData
 	 * @param  array<CollectionData>                                      $allCollections
 	 * @param  array<string,array{exists: bool, authority: UserAuthority}> $authorityCache
 	 *
-	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int, deleteOnly: list<string>, deleteOnlyOverflow: int}
+	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int, own: list<string>}
 	 */
 	private function effectiveReachForGrant(
 		OAuthGrantData $grant,
@@ -204,8 +216,7 @@ final readonly class OAuthPageData implements UtilsPageData
 			'readableOverflow'   => 0,
 			'writable'           => [],
 			'writableOverflow'   => 0,
-			'deleteOnly'         => [],
-			'deleteOnlyOverflow' => 0,
+			'own'                => [],
 		];
 
 		$ref    = OAuthUserRef::parse($grant->userId, $authCollection);
@@ -237,56 +248,78 @@ final readonly class OAuthPageData implements UtilsPageData
 		$hasReadScope  = in_array('cms:read', $expandedScopes, true);
 		$hasWriteScope = in_array('cms:write', $expandedScopes, true);
 
-		$readable   = [];
-		$writable   = [];
-		$deleteOnly = [];
+		$readable = [];
+		$writable = [];
+		$own      = [];
+		$actor    = new Actor(ActorKind::Member, $ref->userId, $ref->collection, $authority, $expandedScopes, $grant->clientId);
 
 		foreach ($allCollections as $collection) {
-			// Read mirrors PersonaContext::canReadCollection(): public
-			// exposure is reachable with NO scope at all (an AUTHENTICATED
-			// caller must never read LESS than an anonymous one would), while
-			// a group read grant additionally requires the cms:read scope.
-			$publiclyReadable = $this->mcpSchemaResolver->isAccessibleTo($collection, 'public');
-			$groupReadable    = $hasReadScope && $authority->canCollection('read', $collection->id);
-
-			if ($publiclyReadable || $groupReadable) {
+			$reach = $this->collectionReach($actor, $authority, $collection, $hasReadScope, $hasWriteScope);
+			if ($reach['read']) {
 				$readable[] = $collection->id;
 			}
-
-			// Write mirrors ObjectTools::requireExposed(): every MCP write
-			// tool demands mcp.access expose the collection to at least an
-			// AUTHENTICATED persona BEFORE the group grant is even checked.
-			// mcp.access defaults to 'admin' (not exposed) when the operator
-			// never set it — practically every collection on a fresh site —
-			// so a group write grant alone overstates reach without this gate.
-			if ($hasWriteScope && $this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
-				// create_object/update_object need create/update; MCP has no
-				// delete tool. A group that only grants delete (no create or
-				// update) can still delete over REST but can't be handed
-				// anything an AI assistant would call "write" — list it
-				// separately rather than folding it into the write badge.
-				if ($authority->canCollection('create', $collection->id) || $authority->canCollection('update', $collection->id)) {
-					$writable[] = $collection->id;
-				} elseif ($authority->canCollection('delete', $collection->id)) {
-					$deleteOnly[] = $collection->id;
-				}
+			if ($reach['write']) {
+				$writable[] = $collection->id;
+			}
+			if ($reach['own']) {
+				$own[] = $collection->id;
 			}
 		}
 
 		sort($readable);
 		sort($writable);
-		sort($deleteOnly);
+		sort($own);
 
 		return [
 			'fullAdmin'          => false,
 			'userMissing'        => false,
-			'noAccess'           => $readable === [] && $writable === [] && $deleteOnly === [],
+			'noAccess'           => $readable === [] && $writable === [],
 			'readable'           => array_slice($readable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
 			'readableOverflow'   => max(0, count($readable) - self::EFFECTIVE_REACH_BADGE_CAP),
 			'writable'           => array_slice($writable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
 			'writableOverflow'   => max(0, count($writable) - self::EFFECTIVE_REACH_BADGE_CAP),
-			'deleteOnly'         => array_slice($deleteOnly, 0, self::EFFECTIVE_REACH_BADGE_CAP),
-			'deleteOnlyOverflow' => max(0, count($deleteOnly) - self::EFFECTIVE_REACH_BADGE_CAP),
+			'own'                => $own,
+		];
+	}
+
+	/**
+	 * What one OAuth member reaches in $collection over MCP: whether they can
+	 * read and write there, and whether that reach is their own objects.
+	 *
+	 * @return array{read: bool, write: bool, own: bool}
+	 */
+	private function collectionReach(Actor $actor, UserAuthority $authority, CollectionData $collection, bool $hasReadScope, bool $hasWriteScope): array
+	{
+		// Every MCP content tool first needs the collection exposed to a
+		// signed-in caller (PersonaContext::exposedCollection()); `admin` and
+		// `apikey` collections stay closed to OAuth members whatever their
+		// groups grant.
+		$public = $this->mcpSchemaResolver->isAccessibleTo($collection, 'public');
+		if (!$public && !$this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
+			return ['read' => false, 'write' => false, 'own' => false];
+		}
+
+		// Then what the AccessGuard lets this member read — everything, own
+		// objects (an owned collection), published only (public exposure,
+		// which needs no scope), or nothing — as the read tools apply it.
+		$scope = $hasReadScope
+			? $this->guard->readScope($actor, $collection->id, $public)
+			: ($public ? ReadScope::publishedOnly() : ReadScope::none());
+		$own = $scope->owner instanceof OwnerScope;
+
+		// Writes need cms:write and any one of the create, update or delete
+		// grants (create_object, update_object/patch_object, delete_object).
+		// On an owned collection a member writes their own objects only, and
+		// one from another auth collection none.
+		$writeGrant = $authority->canCollection('create', $collection->id)
+			|| $authority->canCollection('update', $collection->id)
+			|| $authority->canCollection('delete', $collection->id);
+		$owned = $this->mcpSchemaResolver->forCollection($collection)['owned'];
+
+		return [
+			'read'  => $scope->published || $scope->seesDrafts(),
+			'write' => $hasWriteScope && $writeGrant && (!$owned || $own),
+			'own'   => $own,
 		];
 	}
 }

@@ -80,6 +80,7 @@ Go to **Mailer** in the admin sidebar and click **+ New Email**. Templates are g
 | Field | Required | Notes |
 |---|---|---|
 | Active | | Inactive templates refuse to send |
+| Require Bot Protection | | Refuse anonymous sends from the public endpoint that don't carry a form's bot-protection fields. See [Bot protection for form mail](#bot-protection-for-form-mail) |
 | Template Name | ✓ | Internal name. The ID is generated from it plus a short unique suffix |
 | Category | | Groups templates in the sidebar |
 | Description | | What the email is for |
@@ -224,6 +225,16 @@ Content-Type: application/json
 It returns `{"success": true, "message": "..."}`. It responds with `400` for a missing `mailerId` or malformed `data`, `500` when the send fails, and `429` with a `Retry-After` header when a [rate limit](#mailer-settings) is hit.
 
 > **This endpoint is public by design** — a visitor's browser calls it after submitting your contact form. That means anyone can call it with any template ID and any `data`. If a template's **To**, **CC**, or **BCC** comes from `data` (like `{{ data.email }}`), anyone can use that template to send your email to any address. Keep the recipient fixed for notification templates, keep the rate limits tight, and use the whitelist when a template only ever needs to reach your own domain. Deactivate templates you aren't using.
+
+### Bot protection for form mail
+
+A form's mailer action sends the form's data, so when the form has [bot protection](docs/forms/options#bot-protection) the mail request carries the same honeypot and signed token as the save, and the endpoint checks them. A failed check answers with the usual success and sends nothing; an expired token gets the `422` reload message.
+
+As with the save, a request without the fields is not checked, so a bot can skip the form and post to the endpoint directly. Switch on **Require Bot Protection** on the template to refuse that: the endpoint then sends the template only for a request that passes the check, or for a signed-in visitor. A create or register form whose mailer action uses the template renders the fields by itself, without the `botProtection` option.
+
+Only use it on templates sent from a form's mailer action. An edit form never carries the fields, and a send from your own JavaScript or another site has no token, so an anonymous send of a template that requires bot protection from either is answered as a success and dropped. Sends from PHP, automations, Bulk Send and the auth emails don't go through this endpoint and are never checked.
+
+This is how to let a form email someone whose address the visitor must not see, such as a member's contact form. The visitor sends the member's id; the template's **To** looks the address up on the server, for example `{{ cms.object('members', data.member).email }}`. Nobody can point the template at an address of their own, and Require Bot Protection keeps bots from posting to it directly. Keep the rate limits tight anyway: anyone who loads the form can still send to any member.
 
 ## Bulk Send
 

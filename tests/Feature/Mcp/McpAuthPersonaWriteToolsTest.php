@@ -148,7 +148,7 @@ describe('McpAuthenticatedPersona', function (): void {
 		expect($text)->toContain('groups');
 	});
 
-	it('blogger without cms:write scope gets a scope-layer denial for create_object', function (): void {
+	it('blogger without cms:write scope is not offered create_object and cannot call it', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('blogger-user-test-com');
 		mcpAuthSeedAccessGroups();
@@ -169,6 +169,10 @@ describe('McpAuthenticatedPersona', function (): void {
 			return;
 		}
 
+		$list  = json_decode((string)mcpAuthRequest($this->app, $token, ['jsonrpc' => '2.0', 'id' => 9, 'method' => 'tools/list'], $sessionId)->getBody(), true);
+		$names = array_column($list['result']['tools'] ?? [], 'name');
+		expect($names)->toContain('query_collection')->not->toContain('create_object');
+
 		$call = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
 			'id'      => 1,
@@ -184,9 +188,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($call->getStatusCode())->toBe(200);
 		$body = json_decode((string)$call->getBody(), true);
-		expect($body['result']['isError'] ?? false)->toBeTrue();
-		$text = $body['result']['content'][0]['text'] ?? '';
-		expect($text)->toContain('permission');
+		expect(isset($body['error']) || ($body['result']['isError'] ?? false))->toBeTrue();
 	});
 
 	it('viewer does not see create_object in tools/list', function (): void {

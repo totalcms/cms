@@ -13,10 +13,17 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -27,6 +34,7 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -57,7 +65,7 @@ final class McpServerFactoryTest extends TestCase
 		$this->logger            = new NullLogger();
 	}
 
-	private function factory(?PersonaContext $context = null): McpServerFactory
+	private function factory(?PersonaContext $context = null, bool $dataViews = true): McpServerFactory
 	{
 		// SessionSubscriptionManager is the SDK default — fine as a stand-in
 		// for tests since they don't exercise subscription dispatch.
@@ -73,6 +81,7 @@ final class McpServerFactoryTest extends TestCase
 		);
 		$schemaRegistrar = new SchemaToolRegistrar(
 			$collectionRepoMock,
+			$this->createStub(McpSchemaResolver::class),
 			$savedQueryFactory,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -83,6 +92,7 @@ final class McpServerFactoryTest extends TestCase
 		$promptDiscovery = new PromptDiscoveryService(
 			$indexFilterMock,
 			$this->createMock(CollectionRepository::class),
+			$this->createStub(McpSchemaResolver::class),
 			new NullLogger(),
 		);
 
@@ -107,14 +117,81 @@ final class McpServerFactoryTest extends TestCase
 			// (`requires:` unset throughout), so guardHandler()'s objects+read
 			// canReadCollection() branch is unreachable here — plain stubs
 			// satisfy PersonaContext's Task 10b constructor deps only.
-			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext()),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
 			// Modern-era notification bus. Nothing in this file opens a
 			// subscriptions/listen stream, so an in-memory bus is enough — it
 			// only has to exist for the builder to accept it.
 			new InMemoryNotificationBus(),
+			$this->editions($dataViews),
+			new McpToolActivity($this->createStub(ActivityRecorder::class), new ActorContext()),
 		);
+	}
+
+	/** An edition that includes Data Views, or one that includes nothing. */
+	private function editions(bool $dataViews): EditionFeatureService
+	{
+		$editions = $this->createStub(EditionFeatureService::class);
+		$editions->method('can')->willReturn($dataViews);
+
+		return $editions;
+	}
+
+	public function testASignedInCallerSeesOnlyTheToolsItsScopesCoverAndAnAdminSeesThemAll(): void
+	{
+		$requiring = static fn (string $name, string $operation): McpToolDefinition => new McpToolDefinition(
+			name: $name,
+			description: $name,
+			access: $operation === 'read' ? 'public' : 'admin',
+			handler: static fn (string $collection): array => [],
+			inputSchema: ['type' => 'object', 'properties' => ['collection' => ['type' => 'string']]],
+			requires: new ToolRequirement(domain: 'objects', operation: $operation, collectionArg: 'collection'),
+		);
+		$this->registry->register($requiring('read_thing', 'read'));
+		$this->registry->register($requiring('create_thing', 'create'));
+
+		$writer = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+			'id'          => 'writers',
+			'permissions' => ['collections' => ['operations' => ['read', 'create'], 'all' => true, 'allowed' => []]],
+		])]);
+
+		$member = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$member->set(McpPersona::AUTHENTICATED);
+		$member->setAuthority($writer);
+
+		// Read is listed without cms:read: a public collection needs no scope.
+		$member->setScopes(['mcp:tools']);
+		self::assertSame(['read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		$member->setScopes(['cms:read', 'mcp:tools']);
+		self::assertSame(['read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		// cms:admin implies cms:write.
+		$member->setScopes(['cms:admin', 'mcp:tools']);
+		self::assertSame(['create_thing', 'read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		$admin = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$admin->set(McpPersona::ADMIN);
+		self::assertSame(['create_thing', 'read_thing'], $this->toolNames($this->factory($admin), McpPersona::ADMIN));
+	}
+
+	public function testToolsOfAnEditionFeatureTheLicenseLacksAreLeftOutForEveryone(): void
+	{
+		$this->registry->register($this->tool('plain_tool'));
+		$this->registry->register(new McpToolDefinition(
+			name: 'get_view',
+			description: 'a view',
+			access: 'public',
+			handler: static fn (): array => [],
+			edition: EditionFeature::DATA_VIEWS,
+		));
+
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$context->set(McpPersona::ADMIN);
+
+		self::assertSame(['get_view', 'plain_tool'], $this->toolNames($this->factory($context), McpPersona::ADMIN));
+		self::assertSame(['plain_tool'], $this->toolNames($this->factory($context, dataViews: false), McpPersona::ADMIN));
 	}
 
 	private function tool(string $name, string $access = 'public'): McpToolDefinition
@@ -166,7 +243,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::Session);
 
@@ -195,7 +272,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::ApiKey);
 
@@ -207,7 +284,7 @@ final class McpServerFactoryTest extends TestCase
 	{
 		// If this fails after updating the SDK, the factory + discovery JSON
 		// both need to advertise the new version in lockstep.
-		$this->assertSame('2025-11-25', $this->factory()->protocolVersion());
+		$this->assertSame('2026-07-28', $this->factory()->protocolVersion());
 	}
 
 	public function testBuildReturnsSdkServerInstance(): void

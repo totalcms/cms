@@ -76,6 +76,11 @@ function jobsCommandTester(
 }
 
 beforeEach(function (): void {
+	// execute() applies the command's --memory option (default 512M) with
+	// ini_set(), which outlives the test: in a serial run every later test
+	// then has 512M instead of the bootstrap's 1G, and CI ran out of memory
+	// about 500 files further on. Put the limit back after each case.
+	$this->memoryLimit = (string)ini_get('memory_limit');
 	// Each test gets its own datadir because the command takes an exclusive
 	// flock on {datadir}/.system/.processJobs.lock and only releases it at
 	// shutdown — a shared path would make every test after the first report
@@ -85,6 +90,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+	ini_set('memory_limit', $this->memoryLimit);
 	// scandir, not glob('/*'): the lock is .processJobs.lock and glob skips
 	// dotfiles, which left the directory non-empty and rmdir() warning.
 	$system = $this->datadir . '/.system';

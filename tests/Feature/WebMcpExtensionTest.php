@@ -26,7 +26,7 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	@mkdir(cmsDataDir() . '.system', 0755, true);
+	is_dir(cmsDataDir() . '.system') || mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/webmcp' => ['enabled' => true]]));
 	$this->setUpApp(bootstrap());
 
@@ -163,7 +163,7 @@ function bootWebMcpWith(object $test, array $settings): void
 {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
-	@mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
+	is_dir(cmsDataDir() . '.system/extension-settings/totalcms') || mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/webmcp' => ['enabled' => true]]));
 	file_put_contents(cmsDataDir() . '.system/extension-settings/totalcms/webmcp.json', json_encode($settings));
 	// setUpApp() and $app are protected; called from this global function they
@@ -236,7 +236,7 @@ describe('the admin asset', function (): void {
 		// disk before the app boots.
 		recursiveDelete(cmsDataDir());
 		restoreFixtures();
-		@mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
+		is_dir(cmsDataDir() . '.system/extension-settings/totalcms') || mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
 		file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/webmcp' => ['enabled' => true]]));
 		file_put_contents(cmsDataDir() . '.system/extension-settings/totalcms/webmcp.json', json_encode(['adminTools' => true, 'originTrialToken' => 'TOKEN123']));
 		$this->setUpApp(bootstrap());

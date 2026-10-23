@@ -3,8 +3,10 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
@@ -18,6 +20,7 @@ readonly class FirstLoginChecker
 		private IndexReader $indexReader,
 		private Config $config,
 		private AccessGroupManager $accessGroupManager,
+		private ActorContext $actors,
 	) {
 		$this->collection = $this->config->auth['collection'];
 	}
@@ -52,13 +55,15 @@ readonly class FirstLoginChecker
 
 		$name = trim($name);
 
-		$this->objectSaver->saveObject($this->collection, [
+		// The first admin is created by the installer, before anyone can be
+		// signed in: the system writes `groups` and `active`.
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectSaver->saveObject($this->collection, [
 			'name'     => $name !== '' ? $name : 'Admin',
 			'email'    => $email,
 			'password' => $password,
 			'active'   => true,
 			'image'    => [],
 			'groups'   => [UserValidationService::ADMINGROUP],
-		]);
+		]));
 	}
 }

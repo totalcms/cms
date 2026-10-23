@@ -86,20 +86,20 @@ readonly class SearchTool
 			// TextSearchProvider's pre-filter only excludes drafts for the
 			// PUBLIC persona; an AUTHENTICATED caller's per-collection
 			// authority still has to be checked — see
-			// PersonaContext::canReadDrafts(). Computed BEFORE the search call
+			// PersonaContext::readScope(). Computed BEFORE the search call
 			// (not just as a post-filter below) so a caller without read
 			// authority never has drafts occupying slots in the pre-filter's
 			// limit window in the first place — otherwise drafts could crowd
 			// out published matches the caller SHOULD see. The post-filter
 			// stays as an authoritative backstop: an extension-registered
 			// SearchProvider may ignore `persona` entirely.
-			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+			$readScope = $this->personaContext->readScope($collection->id, $collection);
 
 			$hits = $this->searchService->search(new SearchQuery(
 				text: $query,
 				collection: $collection->id,
 				limit: self::DEFAULT_LIMIT,
-				persona: $canReadDrafts ? $persona->value : 'public',
+				persona: $readScope->seesDrafts() ? $persona->value : 'public',
 				relevance: true,
 			));
 
@@ -116,7 +116,7 @@ readonly class SearchTool
 				}
 				$object = $this->objectFetcher->fetchObject($collection->id, $hit->id)->toArray();
 
-				if (!$canReadDrafts && ($object['draft'] ?? false) === true) {
+				if (!$readScope->matches($object)) {
 					continue;
 				}
 

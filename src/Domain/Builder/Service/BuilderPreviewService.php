@@ -125,7 +125,7 @@ readonly class BuilderPreviewService
 	{
 		if ($pageId !== '') {
 			try {
-				return $this->objectFetcher->fetchObject($collectionId, $pageId)->toArray();
+				return $this->objectFetcher->fetchObject($collectionId, $pageId)->toArrayWithoutPasswords();
 			} catch (\Throwable) {
 				return null;
 			}
@@ -146,7 +146,7 @@ readonly class BuilderPreviewService
 		foreach ($index->objects as $object) {
 			if ((string)($object['template'] ?? '') === $templateName) {
 				try {
-					return $this->objectFetcher->fetchObject($collectionId, (string)$object['id'])->toArray();
+					return $this->objectFetcher->fetchObject($collectionId, (string)$object['id'])->toArrayWithoutPasswords();
 				} catch (\Throwable) {
 					return $object;
 				}

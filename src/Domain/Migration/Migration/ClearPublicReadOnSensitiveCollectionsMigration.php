@@ -87,7 +87,7 @@ readonly class ClearPublicReadOnSensitiveCollectionsMigration implements Migrati
 		}
 
 		// A custom user schema (e.g. `members`) that inherits from auth holds
-		// the same email + password hash. Same rule as AuthFieldPolicy.
+		// the same email + password hash. Same rule as AccessGuard.
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection->id);
 		} catch (\Throwable) {

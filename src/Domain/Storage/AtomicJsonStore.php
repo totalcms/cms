@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Storage;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
@@ -166,7 +167,7 @@ final class AtomicJsonStore
 		$lockPath = PathUtils::absolutePath($this->datadir, $path . '.lock');
 		$dir      = dirname($lockPath);
 
-		if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+		if (!FileUtils::ensureDirectory($dir)) {
 			throw new \RuntimeException("Unable to create the directory for {$path}");
 		}
 

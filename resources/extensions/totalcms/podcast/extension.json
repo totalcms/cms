@@ -1,7 +1,7 @@
 {
     "id": "totalcms/podcast",
     "name": "Podcast",
-    "description": "Host a podcast from two collections. Ships the <code>podcast</code> (show) and <code>podcast-episode</code> schemas, a feed the directories accept at <code>/api/ext/totalcms/podcast/feed</code> — no page or template needed — and a <code>podcast_feed()</code> Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
+    "description": "Host a podcast from two collections. Ships the podcast (show) and podcast-episode schemas, a feed the directories accept at /api/ext/totalcms/podcast/feed — no page or template needed — and a podcast_feed() Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
     "icon": "icon.png",
     "requires": {
         "totalcms": ">=3.6.0",

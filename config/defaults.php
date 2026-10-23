@@ -339,6 +339,11 @@ $settings['mailer'] = [
 
 $settings['imageworks'] = [
 	'gatherLocation'      => true,
+	// Every <img> cms.render writes (image, picture, gallery, galleryImage)
+	// carries draggable="false" and a disabled context menu, which stops the
+	// casual drag-to-desktop and right-click-save. Set false to drop both
+	// site-wide, or pass `protect: false` / `protect: true` per call.
+	'protect'             => true,
 	'watermarksGallery'   => 'watermarks',
 	'watermarkFontsDepot' => 'watermark-fonts',
 	'defaults'            => [
@@ -394,9 +399,12 @@ $settings['auth'] = [
 	// Allow-list of collection IDs that accept public (unauthenticated) user
 	// registration via POST /admin/register/{collection}. Empty by default
 	// because the default auth collection is operator-only — opt your member /
-	// customer collections in explicitly. Whether new users are auto-logged in
-	// or sent a verification email is controlled per-collection via the
-	// "Require Email Verification" toggle on the collection's settings page.
+	// customer collections in explicitly, or enable **Allow Public Registration**
+	// on the collection's settings page; the two are combined (a collection
+	// listed here registers whatever its toggle says). Whether new users are
+	// auto-logged in or sent a verification email is controlled per-collection
+	// via the "Require Email Verification" toggle on the collection's settings
+	// page.
 	// Bot abuse note: with auto-login enabled, any visitor (or bot) that fills
 	// the form gets a logged-in session in whatever default access group new
 	// users land in. With verification required, the account is created
@@ -407,7 +415,9 @@ $settings['auth'] = [
 	// Empty = no access group (safest default; registrants get no gated access
 	// until an operator grants it). Set to a member/customer group id to grant
 	// new signups that group. A `groups` value submitted in the form is always
-	// ignored — only this server-side value is honored.
+	// ignored — only server-side groups are honored. Collections can add further
+	// groups through their **Registration Groups** setting; registrants receive
+	// the union.
 	'publicRegistrationGroup' => '',
 ];
 
@@ -611,6 +621,18 @@ $settings['backups'] = [
 	'maxAgeDays' => 30,
 ];
 
+// Activity log: who changed, downloaded or called what, recorded from core
+// events into tcms-data/.system/activity (SQLite) and shown under Utilities →
+// Activity. Anonymous downloads are never recorded; anonymous MCP tool calls
+// only when `mcpAnonymous` is on, since a public MCP server listed in an AI
+// directory would otherwise fill the log with docs lookups. Rows older than
+// `retentionDays` are pruned once a day. Editable under Settings → Activity.
+$settings['activity'] = [
+	'enable'        => true,
+	'retentionDays' => 90,
+	'mcpAnonymous'  => false,
+];
+
 // `tcms push` / `tcms pull` remote. Normally set in Settings → Sync, which
 // writes settings.json. Set it here (or in config/tcms.php) instead when
 // several installs share one tcms-data folder: settings.json is shared, so a
@@ -666,6 +688,11 @@ $settings['oauth'] = [
 	'authCodeTtl'              => 'PT10M',  // 10 minutes
 	'dynamicRegistration'      => true,     // RFC 7591 self-registration — MCP clients (Claude, ChatGPT, Cursor) need it to connect without manual setup; the consent screen shows where the code goes
 	'dynamicRegistrationLimit' => 60,  // /oauth/register requests per IP per hour; hosted AI clients share backend IPs and re-register per connect attempt. 0 = no limit
+	// The auth collection whose members sign in to connect an AI client. '' = the
+	// default auth collection. When set, a logged-out authorize request goes to that
+	// collection's login page (staff from the default collection can sign in there
+	// too), and sessions from any other auth collection cannot authorize.
+	'loginCollection'          => '',
 	// Scopes granted when a client requests none. Without this, scope-less tokens
 	// authenticate but fail every MCP call with insufficient_scope. '' disables.
 	'defaultScope'        => 'cms:read mcp:tools mcp:resources mcp:prompts',

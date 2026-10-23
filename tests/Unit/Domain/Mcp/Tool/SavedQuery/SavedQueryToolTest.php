@@ -17,6 +17,10 @@ use Mcp\Server\Handler\Request\CallToolHandler;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\ReadScope;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -26,12 +30,14 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
 use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class SavedQueryToolTest extends TestCase
 {
@@ -49,15 +55,26 @@ final class SavedQueryToolTest extends TestCase
 		// check is never reached (access:'admin' denies earlier; collection-
 		// missing denies earlier), so a fixed 'public' is consistent with every
 		// reachable scenario here.
-		$schemaResolver = $this->createStub(McpSchemaResolver::class);
-		$schemaResolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => '',
-		]);
-
-		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $schemaResolver);
+		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $this->accessResolver(), mcpGuard($this), new ActorContext());
 		$ctx->set($persona);
 
 		return $ctx;
+	}
+
+	/**
+	 * Resolver stub for the tool's own exposure check: every collection in this
+	 * file is a plain `public` one (same reasoning as makePersonaContext()).
+	 * The owned-collection test uses a real McpSchemaResolver instead.
+	 */
+	private function accessResolver(): McpSchemaResolver
+	{
+		$schemaResolver = $this->createStub(McpSchemaResolver::class);
+		$schemaResolver->method('forCollection')->willReturn([
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => '',
+		]);
+		$schemaResolver->method('isAccessibleTo')->willReturn(true);
+
+		return $schemaResolver;
 	}
 
 	public function testThrowsToolCallExceptionWhenPersonaBelowCollectionAccess(): void
@@ -78,6 +95,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		try {
@@ -130,6 +148,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		$result = $tool->handle(['city' => 'Austin']);
@@ -167,6 +186,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		try {
@@ -195,6 +215,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		try {
@@ -272,6 +293,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		$response = $this->dispatchToolCall('find_listings', fn (): array => $tool->handle([]));
@@ -352,6 +374,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		$response = $this->dispatchToolCall('find_listings', fn (): array => $tool->handle([]));
@@ -394,6 +417,7 @@ final class SavedQueryToolTest extends TestCase
 			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $this->accessResolver(),
 		);
 
 		$response = $this->dispatchToolCall('admin_query', fn (): array => $tool->handle([]));
@@ -407,5 +431,106 @@ final class SavedQueryToolTest extends TestCase
 		$this->assertInstanceOf(CallToolResult::class, $result);
 		$this->assertTrue($result->isError);
 		$this->assertStringContainsString('admin access', $result->content[0]->text);
+	}
+
+	/**
+	 * A saved-query tool on an owned collection, run over a REAL
+	 * McpSchemaResolver and a PersonaContext whose authority grants read on
+	 * it, for member `member-1`. Returns the read scope the index query
+	 * received, or the refusal.
+	 */
+	private function runOwnedTool(McpPersona $persona, string $access): ReadScope|ToolCallException
+	{
+		$def = SavedQueryToolDefinition::fromArray('portfolio', $access, [
+			'name'        => 'find_all',
+			'description' => 'All.',
+		]);
+
+		$portfolio                = new CollectionData();
+		$portfolio->id            = 'portfolio';
+		$portfolio->schema        = 'portfolio';
+		$portfolio->mcp           = ['access' => $access];
+		$portfolio->ownerProperty = 'owner';
+
+		$collectionRepo = $this->createStub(CollectionRepository::class);
+		$collectionRepo->method('fetchCollection')->willReturn($portfolio);
+		$fetcher = $this->createStub(CollectionFetcher::class);
+		$fetcher->method('fetchCollection')->willReturn($portfolio);
+
+		$resolver  = new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo);
+		$authority = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+			'id'          => 'members',
+			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['portfolio']]],
+		])]);
+		$actors  = $persona === McpPersona::PUBLIC_ ? new ActorContext() : memberActors($authority);
+		$context = new PersonaContext($fetcher, $resolver, mcpGuard($this, ['portfolio' => 'owner']), $actors);
+		$context->set($persona);
+		$context->setAuthority($authority);
+
+		$captured   = null;
+		$indexQuery = $this->createStub(IndexQueryService::class);
+		$indexQuery->method('query')->willReturnCallback(
+			function (string $coll, array $params, ?ReadScope $scope = null) use (&$captured): QueryResult {
+				$captured = $scope;
+
+				return new QueryResult(items: [], total: 0, limit: 20, offset: 0);
+			},
+		);
+
+		$tool = new SavedQueryTool(
+			definition: $def,
+			indexQueryService: $indexQuery,
+			filterValueResolver: new FilterValueResolver(),
+			personaContext: $context,
+			shaper: new McpObjectShaper($this->createStub(McpSchemaResolver::class), $this->createStub(ContentRenderer::class), $this->createStub(ObjectUrlBuilder::class)),
+			collectionRepository: $collectionRepo,
+			resultFormatter: new CollectionQueryResultFormatter(),
+			schemaResolver: $resolver,
+		);
+
+		try {
+			$tool->handle([]);
+		} catch (ToolCallException $e) {
+			return $e;
+		}
+
+		$this->assertInstanceOf(ReadScope::class, $captured);
+
+		return $captured;
+	}
+
+	public function testAnAnonymousCallerOnAnOwnedPublicCollectionSeesNoDrafts(): void
+	{
+		$scope = $this->runOwnedTool(McpPersona::PUBLIC_, 'public');
+
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertFalse($scope->seesDrafts());
+	}
+
+	public function testAMemberOnAnOwnedPublicCollectionSeesTheirOwnDraftsAndOthersPublished(): void
+	{
+		$scope = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'public');
+
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->matches(['owner' => 'member-1', 'draft' => true]));
+		$this->assertTrue($scope->matches(['owner' => 'sam', 'draft' => false]));
+		$this->assertFalse($scope->matches(['owner' => 'sam', 'draft' => true]));
+	}
+
+	public function testAMemberOnAnOwnedCollectionThatIsNotPublicSeesOnlyTheirOwn(): void
+	{
+		$scope = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'authenticated');
+
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->matches(['owner' => 'member-1', 'draft' => true]));
+		$this->assertFalse($scope->matches(['owner' => 'sam', 'draft' => false]));
+	}
+
+	public function testAdminSeesDraftsOnAnOwnedCollection(): void
+	{
+		$scope = $this->runOwnedTool(McpPersona::ADMIN, 'authenticated');
+
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->isAll());
 	}
 }

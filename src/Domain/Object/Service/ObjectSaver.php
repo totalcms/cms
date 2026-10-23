@@ -24,6 +24,7 @@ readonly class ObjectSaver
 		private EventDispatcher $eventDispatcher,
 		private CollectionFetcher $collectionFetcher,
 		private IndexRepository $indexRepository,
+		private ObjectWriteGate $gate,
 	) {
 	}
 
@@ -57,6 +58,10 @@ readonly class ObjectSaver
 				));
 			}
 		}
+
+		// The owner stamp and the protected and forced fields for whoever is
+		// acting; a no-op for trusted actors and unprotected collections.
+		$objectData = $this->gate->beforeCreate($collection, $objectData);
 
 		$object = $this->factory->generateObject($collection, $objectData);
 

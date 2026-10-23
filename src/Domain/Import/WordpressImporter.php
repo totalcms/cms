@@ -9,7 +9,6 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\RemoteFileDownloader;
 
 class WordpressImporter
 {
@@ -21,14 +20,13 @@ class WordpressImporter
 	private array $ns = [
 		'wp'      => 'http://wordpress.org/export/1.2/',
 		'content' => 'http://purl.org/rss/1.0/modules/content/',
-		'excerpt' => 'http://wordpress.org/export/1.2/',
+		'excerpt' => 'http://wordpress.org/export/1.2/excerpt/',
 		'dc'      => 'http://purl.org/dc/elements/1.1/',
 	];
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly JobQueuer $jobQueuer,
-		private readonly RemoteFileDownloader $downloader,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::WordpressImporter);
@@ -43,7 +41,8 @@ class WordpressImporter
 	{
 		$this->logger->info('Starting WordPress WXR analysis');
 
-		$xml = $this->parseXml($xmlContent);
+		$xml         = $this->parseXml($xmlContent);
+		$authorNames = $this->buildAuthorLookup($xml);
 
 		$posts      = [];
 		$categories = [];
@@ -60,7 +59,8 @@ class WordpressImporter
 			}
 
 			$dcNs    = $item->children($this->ns['dc']);
-			$author  = (string)$dcNs->creator;
+			$login   = (string)$dcNs->creator;
+			$author  = $authorNames[$login] ?? $login;
 			if ($author !== '' && !in_array($author, $authors, true)) {
 				$authors[] = $author;
 			}
@@ -88,7 +88,7 @@ class WordpressImporter
 				'title'    => (string)$item->title,
 				'date'     => $postDate,
 				'status'   => $status,
-				'category' => $this->extractItemCategories($item),
+				'category' => implode(', ', $this->itemTerms($item, 'category')),
 				'author'   => $author,
 			];
 		}
@@ -135,6 +135,7 @@ class WordpressImporter
 
 		// Build attachment lookup: post_id → attachment URL (for featured images)
 		$attachments = $this->buildAttachmentLookup($xml);
+		$authors     = $this->buildAuthorLookup($xml);
 
 		foreach ($xml->channel->item as $item) {
 			$wpNs     = $item->children($this->ns['wp']);
@@ -144,7 +145,7 @@ class WordpressImporter
 				continue;
 			}
 
-			$this->importPost($item, $collection, $isDraft, $attachments);
+			$this->importPost($item, $collection, $isDraft, $attachments, $authors);
 		}
 
 		$this->logger->info(sprintf('WordPress import completed. Total items queued: %d', $this->importCount));
@@ -213,14 +214,36 @@ class WordpressImporter
 		return $attachments;
 	}
 
+	/**
+	 * Map each author login to the name WordPress displays for them.
+	 *
+	 * @return array<string,string>
+	 */
+	private function buildAuthorLookup(\SimpleXMLElement $xml): array
+	{
+		$authors = [];
+
+		foreach ($xml->channel->children($this->ns['wp'])->author as $author) {
+			$login       = (string)$author->author_login;
+			$displayName = trim((string)$author->author_display_name);
+
+			if ($login !== '' && $displayName !== '') {
+				$authors[$login] = $displayName;
+			}
+		}
+
+		return $authors;
+	}
+
 	// ─── Post Import ───────────────────────────────────────────
 
 	/**
 	 * Import a single WordPress post.
 	 *
 	 * @param array<string,string> $attachments
+	 * @param array<string,string> $authors
 	 */
-	private function importPost(\SimpleXMLElement $item, string $collection, bool $isDraft, array $attachments): void
+	private function importPost(\SimpleXMLElement $item, string $collection, bool $isDraft, array $attachments, array $authors): void
 	{
 		try {
 			$wpNs      = $item->children($this->ns['wp']);
@@ -256,36 +279,29 @@ class WordpressImporter
 			$draft   = $isDraft || $status !== 'publish';
 
 			// Content
-			$body    = (string)$contentNs->encoded;
+			$body    = $this->stripBlockComments((string)$contentNs->encoded);
 			$summary = (string)$excerptNs->encoded;
-			$author  = (string)$dcNs->creator;
+			$login   = (string)$dcNs->creator;
 			$link    = (string)$item->link;
 
-			// Categories and tags
-			$itemCategories = $this->extractItemCategories($item);
-			$itemTags       = $this->extractItemTags($item);
-
 			$data = [
-				'id'       => $slug,
-				'title'    => $title,
-				'content'  => $body,
-				'summary'  => $summary,
-				'date'     => $date,
-				'author'   => $author,
-				'category' => $itemCategories,
-				'tags'     => $itemTags,
-				'draft'    => $draft,
-				'url'      => $link,
+				'id'         => $slug,
+				'title'      => $title,
+				'content'    => $body,
+				'summary'    => $summary,
+				'date'       => $date,
+				'author'     => $authors[$login] ?? $login,
+				'categories' => $this->itemTerms($item, 'category'),
+				'tags'       => $this->itemTerms($item, 'post_tag'),
+				'draft'      => $draft,
+				'url'        => $link,
 			];
 
-			// Featured image
+			// Featured image: queued as a URL and downloaded by the import job,
+			// so the request never waits on the remote server.
 			$thumbnailId = $this->extractThumbnailId($wpNs);
 			if ($thumbnailId !== null && isset($attachments[$thumbnailId])) {
-				$imageUrl = $attachments[$thumbnailId];
-				$tempPath = $this->downloadImage($imageUrl);
-				if ($tempPath !== null) {
-					$data['image'] = $tempPath;
-				}
+				$data[RemoteMediaFetcher::PAYLOAD_KEY] = ['image' => $attachments[$thumbnailId]];
 			}
 
 			$this->queueObject($collection, $data, sprintf('Queued WordPress post import: %s/%s', $collection, $slug));
@@ -298,37 +314,39 @@ class WordpressImporter
 	// ─── Field Extraction ──────────────────────────────────────
 
 	/**
-	 * Extract category names from an item.
+	 * The item's category or tag names, as the list the blog schema's
+	 * `categories` and `tags` fields store. A list rather than a joined
+	 * string, so a name containing a comma stays one term.
+	 *
+	 * @param string $domain `category` or `post_tag`
+	 *
+	 * @return list<string>
 	 */
-	private function extractItemCategories(\SimpleXMLElement $item): string
+	private function itemTerms(\SimpleXMLElement $item, string $domain): array
 	{
-		$categories = [];
+		$terms = [];
 		foreach ($item->category as $cat) {
-			$domain = (string)$cat['domain'];
-			$name   = (string)$cat;
-			if ($domain === 'category' && $name !== '' && $name !== 'Uncategorized') {
-				$categories[] = $name;
+			$name = trim((string)$cat);
+			if ((string)$cat['domain'] !== $domain || $name === '' || in_array($name, $terms, true)) {
+				continue;
 			}
+			if ($domain === 'category' && $name === 'Uncategorized') {
+				continue;
+			}
+			$terms[] = $name;
 		}
 
-		return implode(', ', $categories);
+		return $terms;
 	}
 
 	/**
-	 * Extract tag names from an item.
+	 * Drop the block editor's `<!-- wp:… -->` / `<!-- /wp:… -->` markers.
+	 * They only mean something to Gutenberg; the HTML between them is the
+	 * content.
 	 */
-	private function extractItemTags(\SimpleXMLElement $item): string
+	private function stripBlockComments(string $html): string
 	{
-		$tags = [];
-		foreach ($item->category as $cat) {
-			$domain = (string)$cat['domain'];
-			$name   = (string)$cat;
-			if ($domain === 'post_tag' && $name !== '') {
-				$tags[] = $name;
-			}
-		}
-
-		return implode(', ', $tags);
+		return (string)preg_replace('#<!--\s*/?wp:.*?-->\n?#s', '', $html);
 	}
 
 	/**
@@ -348,23 +366,6 @@ class WordpressImporter
 	}
 
 	// ─── Shared Utilities ──────────────────────────────────────
-
-	/**
-	 * Download an image to a temporary file.
-	 */
-	private function downloadImage(string $url): ?string
-	{
-		try {
-			$tempFile = $this->downloader->download($url, ['timeout' => 15, 'prefix' => 'wp-import']);
-			$this->logger->info(sprintf('Downloaded image: %s → %s', $url, $tempFile));
-
-			return $tempFile;
-		} catch (\RuntimeException $e) {
-			$this->logger->warning(sprintf('Error downloading image %s: %s', $url, $e->getMessage()));
-
-			return null;
-		}
-	}
 
 	/**
 	 * Convert a title string into a URL-safe slug.

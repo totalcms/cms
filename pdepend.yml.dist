@@ -1,0 +1,12 @@
+# PDepend settings for PHPMD (`composer run md`). PHPMD reads this file from
+# the working directory and hands it to PDepend, which computes the metrics
+# the rules check.
+#
+# The default `file` driver keeps parsed ASTs and per-method metrics under
+# ~/.cache/pdepend across runs. That cache has twice reported wrong results
+# here: phantom violations, and (2026-10-17) four real violations hidden
+# locally that CI, with no cache, then failed on. `memory` recomputes every
+# run; the cost is a few seconds.
+pdepend:
+  cache:
+    driver: memory

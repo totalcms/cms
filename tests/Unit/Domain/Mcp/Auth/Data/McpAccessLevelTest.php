@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Auth\Data;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
@@ -23,12 +27,15 @@ final class McpAccessLevelTest extends TestCase
 		yield 'authenticated denies anonymous'    => [McpAccessLevel::AUTHENTICATED, McpPersona::PUBLIC_, false];
 		yield 'authenticated lets authenticated'  => [McpAccessLevel::AUTHENTICATED, McpPersona::AUTHENTICATED, true];
 		yield 'authenticated lets admin'          => [McpAccessLevel::AUTHENTICATED, McpPersona::ADMIN, true];
+		yield 'apikey denies anonymous'           => [McpAccessLevel::API_KEY, McpPersona::PUBLIC_, false];
+		yield 'apikey denies a signed-in member'  => [McpAccessLevel::API_KEY, McpPersona::AUTHENTICATED, false];
+		yield 'apikey lets admin'                 => [McpAccessLevel::API_KEY, McpPersona::ADMIN, true];
 		yield 'admin denies anonymous'            => [McpAccessLevel::ADMIN, McpPersona::PUBLIC_, false];
 		yield 'admin denies authenticated'        => [McpAccessLevel::ADMIN, McpPersona::AUTHENTICATED, false];
 		yield 'admin lets admin'                  => [McpAccessLevel::ADMIN, McpPersona::ADMIN, true];
 	}
 
-	/** @dataProvider matrix */
+	#[DataProvider('matrix')]
 	public function testAllowsFollowsTheMatrix(McpAccessLevel $level, McpPersona $persona, bool $expected): void
 	{
 		$this->assertSame($expected, $level->allows($persona));
@@ -39,6 +46,45 @@ final class McpAccessLevelTest extends TestCase
 		$this->assertSame(McpAccessLevel::PUBLIC_, McpAccessLevel::fromString('public'));
 		$this->assertSame(McpAccessLevel::AUTHENTICATED, McpAccessLevel::fromString('authenticated'));
 		$this->assertSame(McpAccessLevel::ADMIN, McpAccessLevel::fromString('admin'));
+		$this->assertSame(McpAccessLevel::API_KEY, McpAccessLevel::fromString('apikey'));
+	}
+
+	public function testALimitedKeyIsLetInFromApikeyUpButNeverAtAdmin(): void
+	{
+		$this->assertFalse(McpAccessLevel::ADMIN->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::API_KEY->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::AUTHENTICATED->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allows(McpPersona::AUTHENTICATED, apiKey: true));
+	}
+
+	public function testALimitedKeySeesOnlyTheViewsItNamesUnlessPublic(): void
+	{
+		$key = new ApiKeyData([
+			'id'     => 'k1', 'name' => 'Views', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/dataviews/sales/data']],
+		]);
+
+		$this->assertTrue(McpAccessLevel::API_KEY->allowsView(McpPersona::AUTHENTICATED, $key, 'sales', null));
+		$this->assertFalse(McpAccessLevel::API_KEY->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll', null));
+		$this->assertFalse(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll', null));
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll', null));
+		$this->assertFalse(McpAccessLevel::ADMIN->allowsView(McpPersona::AUTHENTICATED, $key, 'sales', null));
+	}
+
+	public function testAnOAuthMemberReadsANonPublicViewOnlyWithTheDataViewsGrant(): void
+	{
+		$withViews    = new UserAuthority(isAdmin: false, groups: [new AccessGroupData(['id' => 'analysts', 'permissions' => ['dataviews' => true]])]);
+		$withoutViews = new UserAuthority(isAdmin: false, groups: [new AccessGroupData(['id' => 'members', 'permissions' => ['dataviews' => false]])]);
+
+		$this->assertTrue(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, null, 'sales', $withViews));
+		$this->assertFalse(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, null, 'sales', $withoutViews));
+		$this->assertFalse(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, null, 'sales', null));
+
+		// A public view is open to anyone, so a member never gets less than
+		// an anonymous caller; an admin needs no grant.
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allowsView(McpPersona::AUTHENTICATED, null, 'sales', $withoutViews));
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allowsView(McpPersona::PUBLIC_, null, 'sales', null));
+		$this->assertTrue(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::ADMIN, null, 'sales', null));
 	}
 
 	public function testUnknownValuesFailClosedToAdminNotToNobody(): void

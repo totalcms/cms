@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Visualizer\Service;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -40,6 +41,7 @@ readonly class AccessGroupAnalyzer
 	 * @var list<string>
 	 */
 	private const UTIL_PAGES = [
+		'activity',
 		'cache',
 		'collection-report',
 		'image-batcher',
@@ -113,7 +115,7 @@ readonly class AccessGroupAnalyzer
 	 * @param list<string> $collectionIds
 	 * @param list<string> $schemaIds
 	 * @param list<string> $extensionIds
-	 * @param array<string, string> $mcpExposure collection id → mcp.access ('public'|'authenticated'), MCP-exposed collections only
+	 * @param array<string, array{access: string, owned: bool}> $mcpExposure collection id → mcp.access ('public'|'authenticated') and whether it is owned, MCP-exposed collections only
 	 *
 	 * @return array{
 	 *   id: string,
@@ -165,15 +167,16 @@ readonly class AccessGroupAnalyzer
 	 *
 	 * @param array<CollectionData> $collections
 	 *
-	 * @return array<string, string> collection id → mcp.access ('public'|'authenticated')
+	 * @return array<string, array{access: string, owned: bool}> collection id → mcp.access ('public'|'authenticated') and ownership
 	 */
 	private function resolveMcpExposure(array $collections): array
 	{
 		$exposed = [];
 		foreach ($collections as $collection) {
-			$access = $this->mcpSchemaResolver->forCollection($collection)['access'];
+			$mcp    = $this->mcpSchemaResolver->forCollection($collection);
+			$access = $mcp['access'];
 			if ($access === 'public' || $access === 'authenticated') {
-				$exposed[$collection->id] = $access;
+				$exposed[$collection->id] = ['access' => $access, 'owned' => $mcp['owned']];
 			}
 		}
 
@@ -197,18 +200,21 @@ readonly class AccessGroupAnalyzer
 	 *                {@see ObjectTools::requireExposed()}
 	 *                applies before every write tool call.
 	 *   - `update` → same rule as `create`.
-	 *   - `delete` → NEVER set. MCP ships no delete tool at all
-	 *                (create_object/update_object/patch_object are the only
-	 *                write tools) — a permanently-absent D is honest.
+	 *   - `delete` → same rule as `create` (delete_object).
+	 *   - On an owned collection (ownerProperty) the same ops show, but over
+	 *                MCP they reach each member's own objects only
+	 *                ({@see AccessGuard}).
+	 *                The matrix shows what the group may do, not whose
+	 *                objects; the OAuth Grants page marks owned reach per
+	 *                user.
 	 *
 	 * `all` is deliberately never derived from the group's own config for a
 	 * non-super-admin row, even when `collections.all: true` with every
-	 * operation granted — the presenter's `ALL` cell sentinel would imply
-	 * delete is possible too, which MCP can never grant. Only the
-	 * super-admin path below uses it, consistent with every other dimension's
-	 * super-admin treatment.
+	 * operation granted: only collections MCP exposes are listed, so `ALL`
+	 * would overstate reach. Only the super-admin path below uses it,
+	 * consistent with every other dimension's super-admin treatment.
 	 *
-	 * @param array<string, string> $mcpExposure collection id → mcp.access, MCP-exposed collections only
+	 * @param array<string, array{access: string, owned: bool}> $mcpExposure collection id → mcp.access and ownership, MCP-exposed collections only
 	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
@@ -225,11 +231,11 @@ readonly class AccessGroupAnalyzer
 		$granted     = static fn (string $id): bool => $all || in_array($id, $allowed, true);
 
 		$result = [];
-		foreach ($mcpExposure as $id => $access) {
+		foreach ($mcpExposure as $id => $exposure) {
 			$hasGrant = $granted($id);
 			$ops      = [];
 
-			if ($access === 'public' || ($hasGrant && isset($opsSet['read']))) {
+			if ($exposure['access'] === 'public' || ($hasGrant && isset($opsSet['read']))) {
 				$ops[] = 'read';
 			}
 			if ($hasGrant && isset($opsSet['create'])) {
@@ -237,6 +243,9 @@ readonly class AccessGroupAnalyzer
 			}
 			if ($hasGrant && isset($opsSet['update'])) {
 				$ops[] = 'update';
+			}
+			if ($hasGrant && isset($opsSet['delete'])) {
+				$ops[] = 'delete';
 			}
 
 			$result[$id] = ['ops' => $ops, 'all' => false];

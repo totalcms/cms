@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Mcp\Service\McpActiveSession;
 use TotalCMS\Domain\Mcp\Service\McpSessionInvalidator;
 use TotalCMS\Support\Config;
 
@@ -48,7 +49,7 @@ final class McpSessionInvalidatorTest extends TestCase
 
 	private function invalidator(): McpSessionInvalidator
 	{
-		return new McpSessionInvalidator($this->config);
+		return new McpSessionInvalidator($this->config, new McpActiveSession());
 	}
 
 	// ─── invalidateAll ────────────────────────────────────────────────────────
@@ -112,5 +113,23 @@ final class McpSessionInvalidatorTest extends TestCase
 
 		$this->assertFileExists($this->sessionsDir . '/.DS_Store');
 		$this->assertFileDoesNotExist($this->sessionsDir . '/session-real');
+	}
+
+	public function testInvalidateAllKeepsTheActiveRequestSession(): void
+	{
+		// The request that changed the tool surface is still running, and
+		// mcp/sdk 0.9 will not save a session deleted under it — the call
+		// that made the change would answer with an internal error.
+		file_put_contents($this->sessionsDir . '/session-mine', 'keep');
+		file_put_contents($this->sessionsDir . '/session-other', 'remove');
+
+		$active = new McpActiveSession();
+		$active->set('session-mine');
+
+		$result = (new McpSessionInvalidator($this->config, $active))->invalidateAll();
+
+		$this->assertSame(1, $result);
+		$this->assertFileExists($this->sessionsDir . '/session-mine');
+		$this->assertFileDoesNotExist($this->sessionsDir . '/session-other');
 	}
 }

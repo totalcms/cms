@@ -47,6 +47,20 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `collection:export <id>` — export to JSON, CSV, or ZIP
 - `collection:import <id> <file>` — import objects from JSON or CSV
 - `collection:convert <id> --to=markdown` — switch a collection's object storage format (`--dry-run` first)
+- `collection:create <id>` — create one collection (`--schema=…` unless the id is reserved)
+- `collection:update <id> --set key=value` — change some settings, keep the rest; a dot
+  reaches into a map (`--set mcp.access=authenticated`, `--set properties.price.label=Cost`),
+  or pass JSON (`-` for stdin). Maps (`properties`, `mcp`, `seo`, …) merge key by key, null removes
+
+### Access groups
+`.system/access-groups.json` is not a collection — never edit it by hand.
+- `access-group:list` / `access-group:get <id> [--json]` — the groups and one group's definition
+- `access-group:set <id> <file>` — create or replace a group from a full definition; a section
+  left out grants nothing
+- `access-group:patch <id> <file>` — change part of a group; each section merges key by key
+- Sections: `collections` (content), `collectionsMeta`, `schemas` take `{operations, all, allowed}`;
+  `utils`, `settings`, `extensions` take `{all, allowed}`; `dataviews`, `builder`, `mailer`,
+  `playground`, `docs`, `inlineEdit` are true/false. Unknown keys and operations are refused
 
 ### Objects
 - `object:list <collection>` — list object IDs
@@ -68,7 +82,7 @@ Every save keeps the version it replaced; every delete keeps the final state
 ### Schemas
 - `schema:list` — list all schemas
 - `schema:get <id>` — schema details
-- `schema:export <id> <file>` — export a schema to JSON
+- `schema:export <id> [-o file]` — export a schema to JSON (stdout without `-o`)
 - `schema:import <file>` — import a schema from JSON
 - `schema:get totalcms --json` — the reference schema: every field type with settings
   and help text, to copy from
@@ -89,6 +103,8 @@ Every save keeps the version it replaced; every delete keeps the final state
 
 ### Extensions
 - `extension:list` / `extension:enable <id>` / `extension:disable <id>` / `extension:remove <id>`
+- `extension:install <zip>` — install or replace a user extension from a zip (`--force` skips the replace prompt); nothing is enabled
+- `extension:package [dir]` — build `{name}-{version}.zip` for distribution; include `vendor/` by running `composer install --no-dev` first
 
 ### MCP and OAuth
 - `mcp:status` — MCP server status: enabled, edition, tool counts per persona
@@ -97,9 +113,9 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `oauth:gc` — prune expired grants and stale self-registered clients
 
 ### Maintenance
-- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk
+- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk (`--all` for every collection)
 - `repair:files` — rebuild blanked file/image/gallery metadata from files on disk
-- `search:reindex` — re-index against the active search provider
+- `search:reindex [collection]` — re-index against the active search provider (`--all` site-wide)
 - `jobs:process` / `automations:process` — process queued jobs / fire due automations
 - `update:check` / `update:apply` / `update:rollback`
 - `pull` / `push` — sync schemas + templates with the production server

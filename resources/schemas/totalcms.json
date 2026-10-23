@@ -183,6 +183,14 @@
 			"field": "toggle",
 			"default": false
 		},
+		"approved": {
+			"type": "boolean",
+			"label": "Approved",
+			"help": "toggle field with protected: true. Only a super admin can change it; a non-admin's save keeps the stored value and an attempt is logged. Use for: moderation flags such as approved, featured, verified. Write protected: {\"value\": true} instead to force the value on every non-admin save — the way a draft flag returns to true whenever a member edits.",
+			"field": "toggle",
+			"default": false,
+			"protected": true
+		},
 		"conditionalEmail": {
 			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
 			"label": "Conditional Email",

@@ -11,6 +11,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Process password reset with new password.
@@ -88,8 +89,13 @@ readonly class ResetPasswordSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
-		// Check for custom redirect URL
-		$redirect = trim((string)($data['redirect'] ?? ''));
+		// Check for custom redirect URL. Same-origin only: the field arrives
+		// from the reset form's `?redirect=`, which anyone can craft.
+		$redirect = SameOriginRedirect::resolve(
+			is_string($data['redirect'] ?? null) ? $data['redirect'] : '',
+			$request->getUri()->getHost(),
+			'',
+		);
 
 		if ($redirect !== '') {
 			return $response->withStatus(302)->withHeader('Location', $redirect);

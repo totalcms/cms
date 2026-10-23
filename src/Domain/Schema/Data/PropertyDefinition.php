@@ -13,6 +13,38 @@ namespace TotalCMS\Domain\Schema\Data;
 readonly class PropertyDefinition
 {
 	/**
+	 * The JSON type a `$ref`-declared property's values take, keyed by the
+	 * property type the `$ref` names (resources/schemas/properties/). Types
+	 * absent here hold strings. `color` (an anyOf of objects), `deck`,
+	 * `localizedtext` and `json` declare no top-level type but store objects
+	 * (json may also store an array), so they count as `object`. The JSON primitives map to themselves for a custom
+	 * `$ref` named after one.
+	 */
+	private const REF_JSON_TYPES = [
+		'list'          => 'array',
+		'gallery'       => 'array',
+		'card'          => 'object',
+		'color'         => 'object',
+		'deck'          => 'object',
+		'depot'         => 'object',
+		'file'          => 'object',
+		'folder'        => 'object',
+		'image'         => 'object',
+		'json'          => 'object',
+		'localizedtext' => 'object',
+		'properties'    => 'object',
+		'rating'        => 'object',
+		'video'         => 'object',
+		'slug'          => 'string',
+		'empty'         => 'string',
+		'array'         => 'array',
+		'boolean'       => 'boolean',
+		'integer'       => 'integer',
+		'number'        => 'number',
+		'string'        => 'string',
+	];
+
+	/**
 	 * @param array<mixed>        $options   Select/checkbox options
 	 * @param array<string,mixed> $settings  Field-specific configuration
 	 * @param array<string,mixed> $extra     Validation constraints and unrecognized keys
@@ -67,6 +99,28 @@ readonly class PropertyDefinition
 	}
 
 	/**
+	 * The property type as a string. JSON Schema also allows a list
+	 * (`"type": ["string", "null"]`), which SchemaSaver passes through
+	 * untouched; the first non-null entry names the T3 type. Casting the
+	 * list with (string) produced "Array" plus a warning that crashed
+	 * `jumpstart:import` and `schema:lint` under the error handler.
+	 */
+	private static function typeFrom(mixed $type): ?string
+	{
+		if (is_array($type)) {
+			foreach ($type as $entry) {
+				if (is_string($entry) && $entry !== '' && $entry !== 'null') {
+					return $entry;
+				}
+			}
+
+			return null;
+		}
+
+		return is_scalar($type) ? (string)$type : null;
+	}
+
+	/**
 	 * Create from an associative array (JSON schema property definition).
 	 *
 	 * @param array<string,mixed> $data
@@ -84,8 +138,8 @@ readonly class PropertyDefinition
 		$extra = array_diff_key($data, array_flip($known));
 
 		return new self(
-			type: isset($data['type']) ? (string)$data['type'] : null,
-			ref: isset($data['$ref']) ? (string)$data['$ref'] : null,
+			type: self::typeFrom($data['type'] ?? null),
+			ref: is_scalar($data['$ref'] ?? null) ? (string)$data['$ref'] : null,
 			field: (string)($data['field'] ?? 'text'),
 			label: (string)($data['label'] ?? ''),
 			help: (string)($data['help'] ?? ''),
@@ -153,6 +207,47 @@ readonly class PropertyDefinition
 	public function isPassword(): bool
 	{
 		return $this->resolveType() === 'password';
+	}
+
+	/**
+	 * The JSON type a property type name stores: `image` an object, `list` an
+	 * array, `text` (and anything unlisted) a string.
+	 */
+	public static function jsonTypeFor(string $propertyType): string
+	{
+		return self::REF_JSON_TYPES[$propertyType] ?? 'string';
+	}
+
+	/**
+	 * The JSON type a property's values take, resolved through its `$ref` when
+	 * the definition declares none: the property schemas under
+	 * resources/schemas/properties/ declare `array` for list and gallery,
+	 * `object` for card, depot, file, folder, image, properties, rating and
+	 * video (color, deck, localizedtext and json store objects too), and
+	 * `string` (or a format on a string) for every other one. An explicit `type` wins. Null
+	 * for a definition with neither `type` nor `$ref` (the field decides;
+	 * callers read that as a string) and for an unrecognised `$ref`.
+	 */
+	public function effectiveJsonType(): ?string
+	{
+		if ($this->type !== null) {
+			return $this->type;
+		}
+		if ($this->ref === null) {
+			return null;
+		}
+
+		$basename = basename($this->ref, '.json');
+		if (isset(self::REF_JSON_TYPES[$basename])) {
+			return self::REF_JSON_TYPES[$basename];
+		}
+
+		// A custom $ref (a card pointing at its sub-schema): resolveType()
+		// falls back to the field type.
+		$resolved = $this->resolveType();
+
+		return self::REF_JSON_TYPES[$resolved]
+			?? (in_array($resolved, SchemaData::PROPERTY_TYPES, true) ? 'string' : null);
 	}
 
 	/**

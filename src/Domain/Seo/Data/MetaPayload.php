@@ -13,6 +13,7 @@ final readonly class MetaPayload
 {
 	/**
 	 * @param string $rawTitle The title before the site title template is applied (the template shapes only a title derived from the object's own `title`)
+	 * @param string $name What the record itself is called — its `title`, before any card title or template reshaped it for the browser tab; the Article headline and the breadcrumb leaf, which should read as the page's own H1 does. $rawTitle when the record has no title
 	 * @param string $socialTitle The share-card title: the card's Social Title, else $rawTitle; a derived title goes through the site's social title template
 	 * @param string $socialDescription The share-card description: the card's Social Description, else the collection's mapped social description property, else $description
 	 * @param string $contentType `website`, `article` or `blogposting` — the record's card, else the collection, else `website`
@@ -27,6 +28,7 @@ final readonly class MetaPayload
 	public function __construct(
 		public string $title,
 		public string $rawTitle,
+		public string $name,
 		public string $socialTitle,
 		public string $description,
 		public string $socialDescription,

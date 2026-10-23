@@ -194,12 +194,12 @@ final class ObjectPatcherTest extends TestCase
 		expect($result)->toBe($updatedObject);
 	}
 
-	public function testPatchObjectPropertyMetaWithRegularProperty(): void
+	public function testPatchObjectPropertyMetaOnAGalleryChangesOnlyDescriptiveKeys(): void
 	{
-		// Mock a regular (non-depot) property
+		// A gallery (non-depot) property
 		$mockProperty = $this->createMockPropertyData([
-			['name' => 'item1', 'value' => 'old_value1'],
-			['name' => 'item2', 'value' => 'old_value2'],
+			['name' => 'item1', 'alt' => 'old alt', 'size' => 100],
+			['name' => 'item2', 'alt' => 'other'],
 		]);
 
 		$existingObject = $this->createMockObjectDataWithProperties([
@@ -207,11 +207,12 @@ final class ObjectPatcherTest extends TestCase
 			'title' => 'Test Post',
 		], ['files' => $mockProperty]);
 
-		$newMetaData = ['value' => 'new_value1', 'description' => 'Updated item'];
+		// The name and size identify the stored bytes: an edit keeps them.
+		$newMetaData = ['alt' => 'Main stage', 'name' => '../../renamed.jpg', 'size' => 1];
 
 		$expectedTransformedData = [
-			['name' => 'item1', 'value' => 'new_value1', 'description' => 'Updated item'],
-			['name' => 'item2', 'value' => 'old_value2'],
+			['name' => 'item1', 'alt' => 'Main stage', 'size' => 100],
+			['name' => 'item2', 'alt' => 'other'],
 		];
 
 		$expectedObjectData = [

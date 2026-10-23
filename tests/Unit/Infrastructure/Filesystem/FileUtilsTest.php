@@ -49,4 +49,46 @@ final class FileUtilsTest extends TestCase
 		$result = FileUtils::fileSizeString(1536);
 		$this->assertMatchesRegularExpression('/^\d+\.\d+ \w+$/', $result);
 	}
+
+	public function testEnsureDirectoryCreatesNestedDirectories(): void
+	{
+		$base = sys_get_temp_dir() . '/tcms-fileutils-' . bin2hex(random_bytes(6));
+		$dir  = $base . '/a/b/c';
+
+		try {
+			$this->assertTrue(FileUtils::ensureDirectory($dir));
+			$this->assertDirectoryExists($dir);
+		} finally {
+			@rmdir($dir);
+			@rmdir($base . '/a/b');
+			@rmdir($base . '/a');
+			@rmdir($base);
+		}
+	}
+
+	public function testEnsureDirectoryIsTrueForAnExistingDirectory(): void
+	{
+		$dir = sys_get_temp_dir() . '/tcms-fileutils-' . bin2hex(random_bytes(6));
+		mkdir($dir);
+
+		try {
+			$this->assertTrue(FileUtils::ensureDirectory($dir));
+		} finally {
+			@rmdir($dir);
+		}
+	}
+
+	public function testEnsureDirectoryIsFalseAndSilentWhenAFileIsInTheWay(): void
+	{
+		$file = sys_get_temp_dir() . '/tcms-fileutils-' . bin2hex(random_bytes(6));
+		file_put_contents($file, 'x');
+
+		try {
+			// The warning mkdir() raises is suppressed: no ErrorException, no log line.
+			$this->assertFalse(FileUtils::ensureDirectory($file . '/child'));
+			$this->assertFalse(FileUtils::ensureDirectory($file));
+		} finally {
+			@unlink($file);
+		}
+	}
 }

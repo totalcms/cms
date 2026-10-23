@@ -37,6 +37,13 @@ document.addEventListener("DOMContentLoaded", e => {
 	// EmbedBuilder::iframe() call (e.g. cms.embed() on an unknown URL) which
 	// only ever carries the plain `cms-iframe` class with no cms-video-embed
 	// ancestor — match all three, or cms.embed()'s output never loads.
-	const embeds = Array.from(document.querySelectorAll('.cms-video-embed[data-src], .cms-video-embed iframe[data-src], iframe.cms-iframe[data-src]'));
+	//
+	// A form's own iframes are not embeds: an upload field's link-tool dialog
+	// carries the same `cms-iframe` + data-src shape (an /admin tool), and the
+	// field loads it when its dialog opens. Loading it here fetched an admin
+	// page on every front-end form with an image field, which a member is
+	// denied (a 403 in the console on page load).
+	const embeds = Array.from(document.querySelectorAll('.cms-video-embed[data-src], .cms-video-embed iframe[data-src], iframe.cms-iframe[data-src]'))
+		.filter(iframe => !iframe.closest('form.totalform'));
 	embeds.forEach(iframe => iframe.src = iframe.dataset.src);
 });

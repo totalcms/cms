@@ -5,7 +5,7 @@
 // Uses ${deckProperty.fieldName} syntax to reference deck item fields
 // for aggregate functions: sum(${items.total}), avg(${items.price}), etc.
 //-----------------------------------------------
-import { collectScopedFieldValues } from './fieldCollection.mjs';
+import { collectScopedFieldValues, listenToScopedField } from './fieldCollection.mjs';
 import { toCalcNumber } from './number-parse.mjs';
 
 export default class Calc {
@@ -44,13 +44,11 @@ export default class Calc {
 		const { fields, deckRefs } = this.getReferences();
 		const searchScope = this.field.isInDeck ? this.field.deckItem : this.field.form.form;
 
-		// Listen to sibling field changes
-		fields.forEach(name => {
-			const input = searchScope.querySelector(`[name="${name}"]`);
-			if (!input) return;
-			input.addEventListener("change", () => callback());
-			input.addEventListener("input", () => callback());
-		});
+		// Listen to sibling field changes through their TotalField events,
+		// scoped to the container's own top-level fields so a composite's
+		// sub-inputs (an image's `width`, `size`, `name`, …) are not matched.
+		// Same mechanism as Autogen.attachListeners(); see fieldCollection.mjs.
+		fields.forEach(name => listenToScopedField(searchScope, name, callback));
 
 		// Listen to deck container changes (item add/remove/edit)
 		if (deckRefs.length > 0 && this.field.form) {

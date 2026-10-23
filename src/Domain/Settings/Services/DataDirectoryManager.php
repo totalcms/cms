@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Settings\Services;
 
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
+
 /**
  * Manages data directory creation, validation, and cleanup.
  */
@@ -16,7 +18,7 @@ readonly class DataDirectoryManager
 	 */
 	public function createDirectory(string $path): void
 	{
-		if (!mkdir($path, 0755, true)) {
+		if (!FileUtils::ensureDirectory($path)) {
 			throw new \RuntimeException('Failed to create directory: ' . $path);
 		}
 

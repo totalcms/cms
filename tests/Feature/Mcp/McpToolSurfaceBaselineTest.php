@@ -13,6 +13,12 @@ use Slim\App;
 const BASELINE_API_KEY  = 'tcms_mcp_baseline_test_key_0000000000000';
 const BASELINE_FIXTURE  = __DIR__ . '/../../fixtures/mcp/tool-surface-baseline.json';
 
+// A clean data directory: a collection another suite in this worker left
+// behind with saved-query tools (CollectionMcpToolsSaveTest) widens tools/list.
+beforeAll(function (): void {
+	recursiveDelete(cmsDataDir());
+});
+
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();

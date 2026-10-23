@@ -30,6 +30,7 @@ readonly class AdminTableRenderer
 		private ObjectUrlBuilder $objectUrlBuilder,
 		private AccessControlService $accessControl,
 		private PhpSession $session,
+		private CardSummary $cardSummary,
 	) {
 	}
 
@@ -70,10 +71,13 @@ readonly class AdminTableRenderer
 		// Build columns array from schema index
 		$columns = [];
 		foreach ($schemaData->index as $property) {
+			$type      = $this->getPropertyType($schemaData, $property);
 			$columns[] = [
 				'name'     => $property,
-				'type'     => $this->getPropertyType($schemaData, $property),
+				'type'     => $type,
 				'editable' => InlineEditable::allows($schemaData->properties[$property] ?? []) && $userMayInlineEdit,
+				// The sub-field a card cell leads with; null falls back to a join
+				'summary'  => $type === 'card' ? $this->cardSummary->field($schemaData->properties[$property] ?? []) : null,
 			];
 		}
 

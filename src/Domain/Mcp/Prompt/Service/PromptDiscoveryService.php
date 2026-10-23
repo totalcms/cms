@@ -11,6 +11,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptCollisionException;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 final class PromptDiscoveryService
 {
@@ -22,6 +23,7 @@ final class PromptDiscoveryService
 	public function __construct(
 		private readonly IndexFilter $indexFilter,
 		private readonly CollectionRepository $collections,
+		private readonly McpSchemaResolver $schemaResolver,
 		private readonly LoggerInterface $logger,
 		private readonly ?DataViewLister $views = null,
 	) {
@@ -121,13 +123,12 @@ final class PromptDiscoveryService
 			return 'admin';
 		}
 
-		// CollectionData::$mcp is array<string,mixed>; MCP access is stored at $mcp['access'].
+		// Effective access from McpSchemaResolver (the declared mcp.access,
+		// normalised; unset or unknown → admin).
 		try {
 			$collection = $this->collections->fetchCollection($prompt->target);
 			if ($collection instanceof CollectionData) {
-				return isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== ''
-					? $collection->mcp['access']
-					: 'admin';
+				return $this->schemaResolver->forCollection($collection)['access'];
 			}
 		} catch (\Throwable $e) {
 			$this->logger->warning('Failed to resolve target-collection access for prompt', [
@@ -149,7 +150,9 @@ final class PromptDiscoveryService
 	 * A Data View's declared MCP access, or null when no view carries this id.
 	 *
 	 * Views declare `mcp` with the same `mcp-collection.json` shape collections
-	 * use, so this reads identically to the collection branch above.
+	 * use, so the view's settings go through the same resolver as the collection
+	 * branch above. A view has no ownerProperty, so this only normalises the
+	 * declared access (unset or unknown → admin).
 	 */
 	private function viewAccess(string $id, string $promptName): ?string
 	{
@@ -163,11 +166,11 @@ final class PromptDiscoveryService
 					continue;
 				}
 
-				$mcp = is_array($entry['mcp'] ?? null) ? $entry['mcp'] : [];
+				$view      = new CollectionData();
+				$view->id  = $id;
+				$view->mcp = is_array($entry['mcp'] ?? null) ? $entry['mcp'] : [];
 
-				return isset($mcp['access']) && is_string($mcp['access']) && $mcp['access'] !== ''
-					? $mcp['access']
-					: 'admin';
+				return $this->schemaResolver->forCollection($view)['access'];
 			}
 		} catch (\Throwable $e) {
 			$this->logger->warning('Failed to resolve target-view access for prompt', [

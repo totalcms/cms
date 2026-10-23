@@ -19,6 +19,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Cron\Service\CronTokenProvider;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
@@ -484,11 +485,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDepotAccessor(): void
 	{
-		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$depotData  = [
 			'id'    => 'test-id',
 			'depot' => [['name' => 'file.pdf']],
-		]);
+		];
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn($depotData);
+		$mockObject->method('toArrayWithoutPasswords')->willReturn($depotData);
 
 		$objectFetcher = $this->createMock(ObjectFetcher::class);
 		$objectFetcher->method('fetchObject')->willReturn($mockObject);
@@ -500,7 +503,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$config      = $this->createMock(Config::class);
 		$config->api = '';
 
-		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);
+		$adapter = new MediaTwigAdapter($objectFetcher, $config, $this->createMock(ImageGenerator::class), $loggerFactory);
 
 		$result = $adapter->depot('test-id');
 		expect($result)->toBe([['name' => 'file.pdf']]);

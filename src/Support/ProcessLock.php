@@ -19,7 +19,7 @@ final class ProcessLock
 	/** Null when the lock file cannot be opened at all. */
 	public static function open(string $path): ?self
 	{
-		$handle = @fopen($path, 'c');
+		$handle = QuietCall::run(fn () => fopen($path, 'c'));
 
 		return $handle === false ? null : new self($handle, $path);
 	}

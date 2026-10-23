@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -51,10 +52,11 @@ final class SearchCollectionsToolTest extends TestCase
 		// type is required regardless — reuses none here since this file has no
 		// CollectionFetcher mock; a plain stub suffices, it's never invoked.
 		// $this->resolver IS invoked (via forCollection(), stubbed below).
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->resolver);
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->resolver, mcpGuard($this), new ActorContext());
 		$this->resolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',

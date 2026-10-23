@@ -15,9 +15,14 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
@@ -39,7 +44,6 @@ use TotalCMS\Support\Config;
 
 describe('ExtensionAdminAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->accessControl     = $this->createMock(AccessControlService::class);
 		$this->session           = $this->createMock(SessionInterface::class);
 		$this->jsonRenderer      = $this->createMock(JsonRenderer::class);
@@ -57,7 +61,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->passthroughResponse = $this->createMock(ResponseInterface::class);
 		$this->handler->method('handle')->willReturn($this->passthroughResponse);
 
-		$this->config->auth  = ['enable' => true];
+		$this->config->auth  = ['enable' => true, 'collection' => 'auth'];
 		$this->config->env   = 'prod';
 		$this->config->debug = false;
 
@@ -68,16 +72,15 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->twigRenderer->method('template')->willReturn($this->forbiddenResponse);
 
 		$this->make = fn (): ExtensionAdminAccessMiddleware => new ExtensionAdminAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			new ActorContext(),
 			$this->jsonRenderer,
 			$this->twigRenderer,
 			$this->responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
-			$this->oauthActivityLogger,
+			new AccessDenials($this->loggerFactory, $this->oauthActivityLogger, new EventDispatcher(new NullLogger())),
 			$this->extensionManager,
 		);
 
@@ -94,6 +97,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 			]);
 
 			$request = $this->createMock(ServerRequestInterface::class);
+			$request->method('withAttribute')->willReturnSelf();
 			$request->method('getUri')->willReturn($uri);
 			$request->method('getMethod')->willReturn('GET');
 			$request->method('getAttribute')->willReturnMap([
@@ -116,7 +120,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	});
 
 	test('denies a non-admin on a default (admin) extension route', function (): void {
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->with('test-vendor/hello-world', 'GET', '/dashboard')
 			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'admin'));
@@ -130,13 +134,12 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	});
 
 	test('allows a non-admin on a permission-any extension route when their group grants the extension', function (): void {
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->with('test-vendor/hello-world', 'GET', '/everyone')
 			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'any'));
-		$this->accessControl->method('canAccessExtension')
-			->with('regular-user', 'test-vendor/hello-world')
-			->willReturn(true);
+		$this->accessControl->method('authorityOf')->with('regular-user')->willReturn(new UserAuthority(isAdmin: false, groups: [
+			new AccessGroupData(['id' => 'ext', 'permissions' => ['extensions' => ['all' => false, 'allowed' => ['test-vendor/hello-world']]]]),
+		]));
 
 		$this->handler->expects($this->once())->method('handle');
 
@@ -146,10 +149,11 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	});
 
 	test('denies a permission-any extension route when the group does not grant the extension', function (): void {
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'any'));
-		$this->accessControl->method('canAccessExtension')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: [
+			new AccessGroupData(['id' => 'ext', 'permissions' => ['extensions' => ['all' => false, 'allowed' => []]]]),
+		]));
 
 		$this->handler->expects($this->never())->method('handle');
 		$this->forbiddenResponse->expects($this->once())->method('withStatus')->with(403);
@@ -160,7 +164,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	});
 
 	test('super admins bypass the permission check entirely', function (): void {
-		$this->userValidation->method('isSuperAdmin')->willReturn(true);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 		$this->extensionManager->expects($this->never())->method('matchExtensionAdminRoute');
 
 		$this->handler->expects($this->once())->method('handle');
@@ -171,7 +175,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	});
 
 	test('unmatched paths pass through so the dispatcher can 404', function (): void {
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->extensionManager->method('matchExtensionAdminRoute')->willReturn(null);
 
 		$this->handler->expects($this->once())->method('handle');
@@ -186,7 +190,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->extensionManager = $this->createMock(ExtensionManager::class);
 		$this->extensionManager->method('isEnabled')->willReturn(false);
 		$this->extensionManager->expects($this->never())->method('matchExtensionAdminRoute');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 
 		$this->handler->expects($this->once())->method('handle');
 

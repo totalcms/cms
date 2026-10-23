@@ -336,7 +336,7 @@ export default class TotalForm {
 	// Resolves once every field whose module was still loading is in.
 	whenReady() {
 		if (this.pending.size === 0) return Promise.resolve();
-		return Promise.all([...this.pending]).then(() => this.whenReady());
+		return Promise.all(this.pending).then(() => this.whenReady());
 	}
 
 	//-------------------------
@@ -365,6 +365,36 @@ export default class TotalForm {
 		TotalForm.fieldTypes[type] = ctor;
 	}
 
+	// An extension type built on a core one: `extend` maps the core class to
+	// the subclass (Base => class extends Base {…}). admin.js has every core
+	// class on the page, so the subclass is made and registered now; forms.js
+	// holds heavy classes as loaders, so the subclass is made when a form
+	// first builds the field and the base class's module arrives.
+	static extendFieldType(type, baseType, extend) {
+		if (typeof extend !== 'function') {
+			throw new TypeError(`extendFieldType('${type}'): expected a function from the ${baseType} class to its subclass`);
+		}
+		const base = TotalForm.builtInFieldTypes[baseType];
+		if (typeof base === 'function') {
+			TotalForm.registerFieldType(type, extend(base));
+			return;
+		}
+		TotalForm.fieldTypes[type] = {
+			lazy: () => TotalForm.fieldClass(baseType).then(Base => extend(Base)),
+		};
+	}
+
+	// The class for a built-in type, loading its module first if need be.
+	static fieldClass(type) {
+		const entry = TotalForm.builtInFieldTypes[type];
+		if (typeof entry === 'function') return Promise.resolve(entry);
+		if (entry && typeof entry.lazy === 'function') {
+			entry.promise ??= entry.lazy();
+			return entry.promise.then(module => module.default ?? module);
+		}
+		return Promise.reject(new Error(`No built-in field type "${type}" to extend`));
+	}
+
     //-------------------------
     // Submit functions
     //-------------------------
@@ -384,6 +414,12 @@ export default class TotalForm {
     }
 
 	validate() {
+		// Field events are debounced (TotalDispatcher). Deliver any still
+		// pending first: otherwise a correction made just before saving has not
+		// yet moved the form out of a previous "error" state, and save() refuses
+		// with "Error in form, cannot save" although every field is now valid.
+		this.fields.forEach(field => field.dispatcher?.flush?.());
+
 		let isValid = true;
 
 		this.fields.forEach(field => {
@@ -561,19 +597,34 @@ export default class TotalForm {
 	closeDialog() {
 		const dialog = this.form.querySelector("dialog[open]");
 		if (dialog) {
-			dialog.dialog ? dialog.dialog.close() : dialog.close();
+			if (dialog.dialog) {
+				dialog.dialog.close();
+			} else {
+				dialog.close();
+			}
 		}
 	}
 
 	focusFirstInput() {
+		// On a public page the form is one element among many: never take focus
+		// from a field the page already focused or marked autofocus (a register
+		// form beside a login form took the cursor from the login email).
+		const active = document.activeElement;
+		if (active && active !== document.body && !this.form.contains(active) && active.matches('input, textarea, select, [contenteditable="true"]')) return;
+		const autofocus = document.querySelector('[autofocus]');
+		if (autofocus && !this.form.contains(autofocus)) return;
+
 		// [data-proxy] skips the value/validity carriers behind deck, card, image,
 		// gallery, file and depot fields (FormField::proxyInput). They're real
 		// inputs the user never types into, collapsed to zero size by CSS — landing
 		// the cursor there puts it in an invisible box.
-		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		// [tabindex="-1"] and .bot-field skip the bot-protection honeypot: an
+		// off-screen 1px box that still has a rect, so the geometry pass below
+		// would otherwise pick it when an image or deck field comes first.
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]):not([tabindex="-1"]), textarea:not([readonly]):not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"])';
 		const candidates = Array.from(this.form.querySelectorAll(selector));
 		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
-		const eligible = candidates.filter(input => !input.closest('dialog'));
+		const eligible = candidates.filter(input => !input.closest('dialog') && !input.closest('.bot-field'));
 
 		// First on screen, not first in the markup: the formgrid places fields by
 		// grid area, so a toggle rendered early in the DOM can sit below the ID
@@ -584,12 +635,23 @@ export default class TotalForm {
 			.filter(({ rect }) => rect.width > 0 || rect.height > 0)
 			.sort((a, b) => (a.rect.top - b.rect.top) || (a.rect.left - b.rect.left));
 
+		// Never scroll the page on load to reach a form below the first screen.
+		if (placed[0] && placed[0].rect.top > window.innerHeight) return;
+
 		(placed[0]?.input ?? eligible[0])?.focus();
 	}
 
-	save() {
+	/**
+	 * @param {object} [options]
+	 * @param {boolean} [options.explicit] - The user asked for this save by
+	 *   clicking the form's Save button. It always sends (after validation),
+	 *   even while the form is in its error state: a failed request leaves
+	 *   the form there until a field changes, and a click is the retry.
+	 *   Cmd+S and autosave keep the guard.
+	 */
+	save({ explicit = false } = {}) {
 		// A field whose module is still loading has no value yet: wait for it.
-		if (this.pending?.size > 0) return this.whenReady().then(() => this.save());
+		if (this.pending?.size > 0) return this.whenReady().then(() => this.save({ explicit }));
 
 		// Defensive prune: drop any fields whose container was detached from the
 		// DOM. refreshFields() handles the normal case, but external mutations
@@ -607,7 +669,7 @@ export default class TotalForm {
 			this.error(message);
 			return Promise.reject(new Error(message));
 		}
-		if (this.isError()) {
+		if (!explicit && this.isError()) {
 			const message = 'Error in form, cannot save.';
 			this.error(message);
 			return Promise.reject(new Error(message));
@@ -786,9 +848,12 @@ export default class TotalForm {
 				}
 				break;
 			case "mailer":
+				// The collection lets the endpoint check the bot-protection
+				// token the form's data carries, which is signed for it.
 				await this.api.postAPI('/action/mailer', {
-					data     : this.generateData(),
-					mailerId : action.mailerId,
+					data       : this.generateData(),
+					mailerId   : action.mailerId,
+					collection : this.collection,
 				});
 				break;
             case "redirect":

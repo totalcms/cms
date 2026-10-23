@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Support;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Support\Config;
 
@@ -58,7 +59,7 @@ final class ConfigAuthEnabledTest extends TestCase
 		$this->assertTrue($this->config(['enable' => true])->authEnabled());
 	}
 
-	/** @dataProvider notFalse */
+	#[DataProvider('notFalse')]
 	public function testValuesThatAreNotExactlyFalseLeaveAuthOn(mixed $value): void
 	{
 		// The original checks were all `=== false`, so a settings file with

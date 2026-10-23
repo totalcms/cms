@@ -2,6 +2,9 @@
 // Field Visibility Manager
 // Handles conditional field visibility for forms
 //-----------------------------------------------
+// HTMLElement's own `style` getter, immune to a form field named "style".
+const STYLE_GETTER = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style').get;
+
 export default class FieldVisibility {
 
 	constructor(formElement, fields) {
@@ -52,14 +55,24 @@ export default class FieldVisibility {
 			const watchedFieldElement = container.querySelector(`[style*="--grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
-			// Re-evaluate when the watched field's value changes (native `change`)
-			// or when its own visibility flips (`visibility-change` from a parent
-			// cascade). The latter must NOT be a `change` event — that would bubble
-			// to TotalField's change listener and falsely mark the field unsaved
+			// Re-evaluate when the watched field's value changes, or when its own
+			// visibility flips (`visibility-change` from a parent cascade). The
+			// latter must NOT be a `change` event — that would bubble to
+			// TotalField's change listener and falsely mark the field unsaved
 			// (cards and other composite fields whose getValue() returns a fresh
 			// object can't rely on the `===` equality guard in changed()).
+			//
+			// A value change is heard two ways. The native `change` bubbling from
+			// the watched field's input answers at once, with no debounce. But
+			// most field types (Tiptap, date, color, list, card, …) set their
+			// value in code and call changed(), which fires no native event, so
+			// a rule watching one of those never re-evaluated. The TotalField
+			// events cover them (`subfield-change` for a field in a deck item).
+			// Re-evaluation is idempotent, so hearing one edit twice is harmless.
 			const reevaluate = () => this.updateScopedVisibility(fieldElement, visibility, fields);
 			watchedFieldElement.addEventListener('change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('field-change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('subfield-change', reevaluate, listenerOpts);
 			watchedFieldElement.addEventListener('visibility-change', reevaluate, listenerOpts);
 
 			// Initial visibility evaluation
@@ -174,7 +187,11 @@ export default class FieldVisibility {
 	setVisibility(field, isActive, mode = 'hide') {
 		if (mode === 'disable') {
 			const wasActive = !field.container.classList.contains('field-disabled');
-			isActive ? field.enable() : field.disable();
+			if (isActive) {
+				field.enable();
+			} else {
+				field.disable();
+			}
 			if (wasActive !== isActive) {
 				field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 			}
@@ -185,7 +202,11 @@ export default class FieldVisibility {
 		// toggle `field-hidden` (the legacy `cms-hide` class was never set by
 		// either path, so the previous read here always returned `true`).
 		const wasVisible = field.isVisible();
-		isActive ? field.show() : field.hide();
+		if (isActive) {
+			field.show();
+		} else {
+			field.hide();
+		}
 
 		if (wasVisible !== isActive) {
 			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
@@ -213,10 +234,14 @@ export default class FieldVisibility {
 			let empty = 0;
 			while (empty < rows.length - 1 && parseFloat(rows[rows.length - 1 - empty]) === 0) empty++;
 
+			// The grid is often the <form> itself, and a form's named fields
+			// shadow its properties: a field called "style" makes grid.style
+			// that input. Read the declaration through the prototype instead.
+			const inline = STYLE_GETTER.call(grid);
 			if (empty > 0 && gap > 0) {
-				grid.style.setProperty('--collapsed-row-gap', `${empty * gap}px`);
+				inline.setProperty('--collapsed-row-gap', `${empty * gap}px`);
 			} else {
-				grid.style.removeProperty('--collapsed-row-gap');
+				inline.removeProperty('--collapsed-row-gap');
 			}
 		});
 	}
@@ -275,8 +300,26 @@ export default class FieldVisibility {
 				return currentValue == expectedValue;
 			case 'not_in':
 				return currentValue != expectedValue;
+			case 'empty':
+				return this.isEmptyValue(currentValue);
+			case 'not_empty':
+				return !this.isEmptyValue(currentValue);
 			default:
 				return currentValue == expectedValue;
 		}
+	}
+
+	//-------------------------
+	// What `empty` / `not_empty` mean for a non-array value: nothing at all, a
+	// blank string, or an object with no keys (an image, file or card field
+	// with nothing in it). 0 and false are values — a zero quantity and an
+	// unticked toggle are not "empty", unlike PHP's empty(). Mirrored by
+	// FormField::isEmptyValue() for the initial render.
+	//-------------------------
+	isEmptyValue(value) {
+		if (value === null || value === undefined) return true;
+		if (typeof value === 'string') return value.trim() === '';
+		if (typeof value === 'object') return Object.keys(value).length === 0;
+		return false;
 	}
 }

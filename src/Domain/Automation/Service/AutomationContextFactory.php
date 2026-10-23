@@ -33,6 +33,7 @@ use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PublicHttpClient;
 
 /**
  * Assembles the {@see AutomationContext} handed to every automation handler.
@@ -70,6 +71,7 @@ final readonly class AutomationContextFactory
 		private RssImporter $rssImporter,
 		private SyncService $syncService,
 		private EmailService $mailer,
+		private PublicHttpClient $publicHttp,
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -107,6 +109,7 @@ final readonly class AutomationContextFactory
 			rssImporter: $this->rssImporter,
 			syncService: $this->syncService,
 			mailer: $this->mailer,
+			publicHttp: $this->publicHttp,
 			config: $this->config,
 			logger: $this->logger,
 			trigger: $trigger,

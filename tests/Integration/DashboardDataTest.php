@@ -62,7 +62,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		foreach ([['home', 'pages'], ['base', 'layouts'], ['nav', 'partials']] as [$id, $folder]) {
 			$path = templatePath($id, $folder);
-			@mkdir(dirname($path), 0777, true);
+			is_dir(dirname($path)) || mkdir(dirname($path), 0777, true);
 			file_put_contents($path, '<p>' . $id . '</p>');
 		}
 

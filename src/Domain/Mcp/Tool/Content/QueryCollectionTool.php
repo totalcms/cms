@@ -22,13 +22,13 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  *
  * Three design notes worth knowing before editing this file:
  *
- *   1. **Draft-authority safety filter is server-merged.** A caller without
- *      draft read authority for this collection — see
- *      PersonaContext::canReadDrafts() — can never see drafts, regardless of
- *      what `exclude` they send. We append `draft:true` to whatever the
- *      caller supplied — not replace it. ADMIN, and an OAuth caller whose
- *      access groups grant `read` on the collection, can include drafts
- *      intentionally by leaving exclude empty.
+ *   1. **The caller's read scope is applied before the query.** The index
+ *      is narrowed to what PersonaContext::readScope() allows — published
+ *      objects for a public caller, a member's own objects (drafts included)
+ *      on an owned collection — before `include`, `exclude` or `ids` run, so
+ *      nothing the caller sends can widen it. ADMIN, and an OAuth caller
+ *      whose access groups grant `read` on an unowned collection, see drafts
+ *      and can drop them with `exclude: draft:true`.
  *
  *   2. **Tool description is built per persona.** The dynamic description
  *      builder (B7) renders a field catalog scoped to what the caller can see,
@@ -114,10 +114,6 @@ readonly class QueryCollectionTool
 
 		$collectionData = $this->personaContext->exposedCollection($collection);
 
-		if (!$this->personaContext->canReadDrafts($collection)) {
-			$exclude = $this->mergeExcludeRule($exclude, 'draft:true');
-		}
-
 		$cappedLimit = max(1, min(50, $limit));
 
 		$params = [
@@ -134,7 +130,7 @@ readonly class QueryCollectionTool
 			$params['exclude'] = $exclude;
 		}
 
-		$result = $this->indexQueryService->query($collection, $params);
+		$result = $this->indexQueryService->query($collection, $params, $this->personaContext->readScope($collection, $collectionData));
 		$items  = [];
 		foreach ($result->items as $item) {
 			$items[] = $this->shaper->shape($item, $collectionData, $format);
@@ -187,7 +183,7 @@ readonly class QueryCollectionTool
 				'exclude' => [
 					'type'        => 'string',
 					'default'     => '',
-					'description' => 'Comma-separated field:value pairs that exclude items (OR). Callers without draft read authority for this collection always get "draft:true" merged in server-side regardless of caller input.',
+					'description' => 'Comma-separated field:value pairs that exclude items (OR). Drafts the caller may not see are removed before this filter runs, whatever it says.',
 					'examples'    => ['draft:true', 'status:archived,featured:false'],
 				],
 				'sort' => [
@@ -222,10 +218,5 @@ readonly class QueryCollectionTool
 				],
 			],
 		];
-	}
-
-	private function mergeExcludeRule(string $current, string $required): string
-	{
-		return $current === '' ? $required : $current . ',' . $required;
 	}
 }

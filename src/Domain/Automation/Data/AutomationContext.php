@@ -30,6 +30,7 @@ use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PublicHttpClient;
 
 /**
  * The only API surface an automation handler receives. Pre-injected services
@@ -67,6 +68,7 @@ final readonly class AutomationContext
 		public RssImporter $rssImporter,
 		public SyncService $syncService,
 		public EmailService $mailer,
+		public PublicHttpClient $publicHttp,
 		public Config $config,
 		public LoggerInterface $logger,
 		public array $trigger = [],

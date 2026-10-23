@@ -122,6 +122,22 @@ final class AccessManagerTest extends TestCase
 		$this->assertTrue($this->accessManager->userLoggedIn());
 	}
 
+	public function testPublicUserDataOmitsPasswordButKeepsCollection(): void
+	{
+		$this->setupSessionWithUser('regular-user', 'auth');
+
+		$this->userValidator->expects($this->once())
+			->method('validateUserById')
+			->with('regular-user', 'auth', true)
+			->willReturn(['id' => 'regular-user', 'name' => 'Reg']);
+
+		$data = $this->accessManager->publicUserData();
+
+		$this->assertArrayNotHasKey('password', $data);
+		$this->assertSame('auth', $data['collection']);
+		$this->assertSame('Reg', $data['name']);
+	}
+
 	public function testUserLoggedInValidatesUserInCollection(): void
 	{
 		$this->setupSessionWithUser('regular-user', 'auth');

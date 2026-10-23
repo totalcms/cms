@@ -9,12 +9,19 @@
 	&:has(~ .form-group-icon) {
 		width : calc(100% - 3em);
 	}
+
+	// Square the right side only where the field icon sits against it, as
+	// text inputs do. A field rendered with icon: false keeps full corners.
+	&:has(~ .form-group-icon) .ste-editor-container {
+		border-top-right-radius    : 0;
+		border-bottom-right-radius : 0;
+	}
 }
 
 .ste-editor-container {
 	width: 100%;
 	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius) 0 0 var(--totalform-radius);
+	border-radius: var(--totalform-radius);
 	background-color: oklch(var(--totalform-white));
 	overflow: hidden;
 }

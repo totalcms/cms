@@ -35,8 +35,36 @@ final class ImagickSupport
 	 */
 	private const REQUIRED_FORMATS = ['JPEG', 'PNG'];
 
+	/**
+	 * Ceiling on ImageMagick's heap pixel cache, in bytes. Past it, ImageMagick
+	 * stages pixels in a memory-mapped file and then on disk instead of RAM.
+	 *
+	 * ImageMagick allocates outside PHP's memory manager, so `memory_limit`
+	 * never sees it — and its own default on a 4 GB host is 1 GB per process.
+	 * Measured on production (ImageMagick 6.9 Q16, PHP 8.4): resizing a
+	 * 6000x4000 photo to 1200px peaked at 268 MB per process unlimited, 86 MB
+	 * at these limits, ~10-20% slower, byte-identical output. A 12 MP photo
+	 * (~96 MB of pixels) still fits under MAP_LIMIT and peaks the same either
+	 * way; the cap is for full-size camera originals. A handful of concurrent
+	 * renders at the unlimited figure is enough to push a small host into swap.
+	 *
+	 * What this does NOT change: retained memory. glibc returned the large
+	 * allocations after each render either way. This bounds the peak only.
+	 */
+	private const MEMORY_LIMIT = 64 * 1024 * 1024;
+
+	/**
+	 * Ceiling on memory-mapped pixel cache, in bytes. It must be bounded too or
+	 * the MEMORY limit is moot: a 128/256 MB MEMORY/MAP pair measured the same
+	 * 242 MB peak as no limit at all.
+	 */
+	private const MAP_LIMIT = 128 * 1024 * 1024;
+
 	/** @var list<string>|null Cached for the request; queryFormats() is not free. */
 	private static ?array $formats = null;
+
+	/** Resource limits are process-wide in ImageMagick; apply once per request. */
+	private static bool $limited = false;
 
 	/**
 	 * True when Imagick is loaded AND can handle the formats we rely on.
@@ -85,15 +113,54 @@ final class ImagickSupport
 			return self::$formats = [];
 		}
 
+		// Every Imagick caller that goes through the capability probe gets
+		// bounded memory without having to remember to ask for it.
+		self::limitResources();
+
 		return self::$formats = array_map(
 			strtoupper(...),
 			$formats,
 		);
 	}
 
+	/**
+	 * Cap ImageMagick's in-memory and memory-mapped pixel cache. Call before
+	 * constructing an \Imagick anywhere that does not go through formats().
+	 *
+	 * Only ever lowers a limit: a host whose policy.xml is already stricter
+	 * keeps its value. Never throws — an Imagick that refuses the call renders
+	 * exactly as it did before.
+	 */
+	public static function limitResources(): void
+	{
+		if (self::$limited) {
+			return;
+		}
+		self::$limited = true;
+
+		if (!extension_loaded('imagick') || !class_exists(\Imagick::class)) {
+			return;
+		}
+
+		try {
+			foreach ([
+				\Imagick::RESOURCETYPE_MEMORY => self::MEMORY_LIMIT,
+				\Imagick::RESOURCETYPE_MAP    => self::MAP_LIMIT,
+			] as $type => $limit) {
+				$current = (int)\Imagick::getResourceLimit($type);
+				if ($current <= 0 || $current > $limit) {
+					\Imagick::setResourceLimit($type, $limit);
+				}
+			}
+		} catch (\Throwable) {
+			// Unbounded is how every install ran before this existed.
+		}
+	}
+
 	/** Clear the cached probe. Tests only — the result cannot change mid-request. */
 	public static function reset(): void
 	{
 		self::$formats = null;
+		self::$limited = false;
 	}
 }

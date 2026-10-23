@@ -7,6 +7,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Import\RemoteMediaFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\BooleanData;
 use TotalCMS\Domain\Property\Data\SlugData;
@@ -53,6 +54,7 @@ class ObjectImporter
 		private readonly EventDispatcher $eventDispatcher,
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CollectionSaver $collectionSaver,
+		private readonly RemoteMediaFetcher $remoteMedia,
 	) {
 	}
 
@@ -76,6 +78,10 @@ class ObjectImporter
 		if (!$wasSuspended) {
 			$this->eventDispatcher->suspendForImport($collection);
 		}
+
+		// Media the importer only had a URL for is fetched now, inside the
+		// job, rather than in the request that queued it.
+		[$objectData, $downloads] = $this->remoteMedia->fetch($objectData);
 
 		try {
 			$objectData = $this->saveRefPropsforLaterProcessing($objectData);
@@ -114,6 +120,7 @@ class ObjectImporter
 
 			return $result;
 		} finally {
+			$this->remoteMedia->cleanup($downloads);
 			if (!$wasSuspended) {
 				$this->eventDispatcher->resumeForImport($collection);
 			}

@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\JobQueue\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
@@ -45,6 +47,7 @@ readonly class JobRunner
 		private ReindexJob $searchReindexJob,
 		private IndexNowJob $indexNowJob,
 		private Config $config,
+		private ActorContext $actors,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -110,7 +113,20 @@ readonly class JobRunner
 		}
 	}
 
+	/**
+	 * Run a job as the system actor: jobs are queued by the operator (imports,
+	 * exports, rebuilds) or by the system itself, and run later from the CLI,
+	 * the web cron endpoint or a drain mid-request, where the current actor is
+	 * whoever happened to make that request. A future job type that a member
+	 * can enqueue with data they chose must record that member and run as
+	 * them instead.
+	 */
 	private function processJob(JobData $job): void
+	{
+		$this->actors->runAs(Actor::system(), fn () => $this->dispatchJob($job));
+	}
+
+	private function dispatchJob(JobData $job): void
 	{
 		switch ($job->type) {
 			case JobData::TYPE_IMPORT:

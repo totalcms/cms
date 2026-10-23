@@ -12,6 +12,10 @@ use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Auth\Data\Decision;
+use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
@@ -211,6 +215,23 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Whether this install can render a field type: a built-in (aliases
+	 * included), an admin-only field with its own FormField class
+	 * (schemaProperties), or one an enabled extension registered. A schema can still
+	 * name a type that is neither — an extension's, after it was disabled.
+	 */
+	public static function isKnownFieldType(string $fieldType): bool
+	{
+		$fieldType = self::canonicalFieldType($fieldType);
+
+		return in_array($fieldType, self::FIELDS, true)
+			|| array_key_exists($fieldType, self::FIELD_DEFAULT_TYPE)
+			|| in_array($fieldType, array_merge(...array_values(self::FIELDS_BY_TYPE)), true)
+			|| array_key_exists($fieldType, self::$extensionFieldTypes)
+			|| self::resolveFieldClass($fieldType) !== FormField::class;
+	}
+
+	/**
 	 * Get all field types grouped by category, including extension types.
 	 *
 	 * @return array<string,list<string>>
@@ -338,12 +359,24 @@ class TotalForm implements \Stringable
 	protected bool $useFormGrid;
 	protected bool $addOnly;
 	protected bool $register;
+	protected string $verifyRedirect;
+	protected bool $botProtection;
 	protected ?FormActionRegistry $formActionRegistry;
 	protected ?\Closure $translator;
-	protected string $formgrid;
+	protected string $formgrid = '';
 	protected bool $fieldIcons;
 	/** @var array<string,string> */
 	protected array $attributes;
+
+	/** Shown, alone, instead of a form for another member's object. */
+	public const OWNER_REFUSAL = 'You do not have permission to edit this object.';
+
+	/**
+	 * Set when init() refused the form (the owner check): build() then
+	 * renders only the buildError message — no fields, no save button, no
+	 * object id.
+	 */
+	protected bool $refused = false;
 
 	public function __construct(
 		// Everything a form shares with every other form. Built once by
@@ -375,6 +408,8 @@ class TotalForm implements \Stringable
 		$this->useFormGrid        = $options->useFormGrid;
 		$this->addOnly            = $options->addOnly;
 		$this->register           = $options->register;
+		$this->verifyRedirect     = $options->verifyRedirect;
+		$this->botProtection      = $options->botProtection;
 		$this->formActionRegistry = $options->formActionRegistry;
 		$this->translator         = $options->translator;
 		$this->formgrid           = $options->formgrid;
@@ -528,6 +563,33 @@ class TotalForm implements \Stringable
 	/** @var array<string,array<string,mixed>> */
 	private array $autoFieldOptions = [];
 
+	/**
+	 * True when the current actor may not edit object `$this->id`: on an owned
+	 * collection, anyone but its owner or a trusted actor (see
+	 * {@see AccessGuard::ownerDecision()}). Skipped (false) when the form was
+	 * built without the access services. The caller checks that the object
+	 * exists first.
+	 */
+	protected function ownerForbids(): bool
+	{
+		$guard  = $this->services->guard;
+		$actors = $this->services->actors;
+		if (!$guard instanceof AccessGuard || !$actors instanceof ActorContext) {
+			return false;
+		}
+
+		return $guard->ownerDecision($actors->current(), $this->collection, Operation::Update, $this->id) !== Decision::Allow;
+	}
+
+	/**
+	 * Refuse the form: build() renders only this message.
+	 */
+	protected function refuse(string $message): void
+	{
+		$this->buildError = $message;
+		$this->refused    = true;
+	}
+
 	protected function buildError(): string
 	{
 		if ($this->buildError === '') {
@@ -539,6 +601,10 @@ class TotalForm implements \Stringable
 
 	public function build(string $content = '', string $contentAfter = ''): string
 	{
+		if ($this->refused) {
+			return $this->buildError();
+		}
+
 		$formId       = null;
 		$formStyleTag = '';
 		$sectionHtml  = '';
@@ -548,7 +614,7 @@ class TotalForm implements \Stringable
 		// be empty and still mean "no grid" — a SchemaData with no formgrid falls
 		// back to one field per row, as it always has.
 		$hasSchemaData = $this->schemaData instanceof SchemaData;
-		$rawFormgrid   = $hasSchemaData ? $this->schemaData->formgrid : $this->formgrid;
+		$rawFormgrid   = $this->activeFormgrid();
 
 		if ($this->useFormGrid && ($hasSchemaData || $rawFormgrid !== '')) {
 			$formgrid = $rawFormgrid;
@@ -637,6 +703,20 @@ class TotalForm implements \Stringable
 		}
 
 		return $formStyleTag . $form . $contentAfter;
+	}
+
+	/**
+	 * The grid this form lays out with: the `formgrid` option when given, so
+	 * a front-end form can arrange a subset of a schema's fields without
+	 * changing the admin's layout; otherwise the schema's own.
+	 */
+	protected function activeFormgrid(): string
+	{
+		if ($this->formgrid !== '') {
+			return $this->formgrid;
+		}
+
+		return $this->schemaData instanceof SchemaData ? $this->schemaData->formgrid : '';
 	}
 
 	public function layout2Columns(string $col1, string $col2): string
@@ -855,21 +935,29 @@ class TotalForm implements \Stringable
 	 * `$this->collection` (works for ObjectForm). Returns an empty list when no
 	 * source is available or the schema can't be loaded.
 	 *
+	 * `$types` keeps only properties of those JSON-Schema types (an untyped
+	 * property counts as `string`); empty keeps every property. `$ownerOnly`
+	 * keeps only properties that can hold an owner (see OwnerPropertyKind).
+	 *
+	 * @param array<string> $types
+	 *
 	 * @return array<string>
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = ''): array
+	public function schemaPropertyKeys(string $collection = '', array $types = [], bool $ownerOnly = false): array
 	{
 		if ($collection !== '') {
-			return $this->optionSources()->schemaPropertyKeys($collection);
+			return $this->optionSources()->schemaPropertyKeys($collection, '', $types, $ownerOnly);
 		}
 
 		// CollectionForm path: schema name lives on the loaded CollectionData
 		if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
-			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema);
+			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema, $types, $ownerOnly);
 		}
 
 		// ObjectForm path: collection name on the form itself
-		return $this->optionSources()->schemaPropertyKeys($this->collection);
+		return $this->optionSources()->schemaPropertyKeys($this->collection, '', $types, $ownerOnly);
 	}
 
 	/**
@@ -971,8 +1059,8 @@ class TotalForm implements \Stringable
 		$content = '';
 		$root    = null;
 
-		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
-			$root = new FormGridBuilder($this->schemaData->formgrid);
+		if ($this->schemaData instanceof SchemaData && $this->activeFormgrid() !== '' && $this->useFormGrid) {
+			$root = new FormGridBuilder($this->activeFormgrid());
 			$content .= $root->buildGridSectionHtml();
 		}
 
@@ -1250,7 +1338,8 @@ class TotalForm implements \Stringable
 	/**
 	 * Base URL with no `/api` suffix — for admin-routed iframes (`/admin/...`)
 	 * and any other URL that lives outside the `/api/...` surface that
-	 * `$this->api` points at. Mirrors the dispatch in TotalFormFactory::totalform().
+	 * `$this->api` points at. Server-side counterpart of the JS rule in
+	 * TotalCMS::buildApiQuery(), which resolves /admin routes the same way.
 	 */
 	public function baseApi(): string
 	{
@@ -1284,6 +1373,17 @@ class TotalForm implements \Stringable
 	public function localeList(): array
 	{
 		return $this->optionSources()->localeList();
+	}
+
+	/**
+	 * Return every country as `{value, label}` options — feeds
+	 * `propertyOptions: "countries"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function countryList(): array
+	{
+		return $this->optionSources()->countryList();
 	}
 
 	/**

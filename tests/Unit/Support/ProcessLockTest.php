@@ -10,7 +10,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-	@unlink($this->path);
+	is_file($this->path) && unlink($this->path);
 });
 
 test('a second holder cannot take the lock until the first releases it', function (): void {

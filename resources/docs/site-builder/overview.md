@@ -214,6 +214,12 @@ Setup:
 
 If multiple pages have status 404, the first one found wins. If no page has status 404, Slim's plain default is used.
 
+A template can ask for the same answer itself. A collection URL matches every object, drafts included, so a page template that finds it has nothing to serve calls [`cms.notFound()`](docs/twig/totalcms#notfound): rendering stops and the 404 page renders in place, at the visitor's URL, with status `404`.
+
+```twig
+{% if object.draft %}{{ cms.notFound() }}{% endif %}
+```
+
 ## Redirects
 
 Set a page's status to `301` (permanent) or `302` (temporary) and fill in **Redirect To** with the destination. The middleware sends a `Location` header instead of rendering the template:
@@ -240,7 +246,7 @@ The page form's **Features** section is a checklist populated from the registry.
 
 | Name | Behavior |
 |------|----------|
-| `auth` | Requires a logged-in visitor. Redirects logged-out browsers to `/admin/login` (with `?redirect=` to bring them back). Returns `401 {"error": "Authentication required"}` for JSON requests (`Accept: application/json` or `?_format=json`). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
+| `auth` | Requires a logged-in visitor. Redirects logged-out visitors to `/admin/login` (with `?redirect=` to bring them back). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
 
 Common uses for `auth`: legal documents that need a login, draft preview links, member-only pages.
 

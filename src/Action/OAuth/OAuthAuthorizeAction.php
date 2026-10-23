@@ -5,25 +5,23 @@ declare(strict_types=1);
 namespace TotalCMS\Action\OAuth;
 
 use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
+use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthLoginCollection;
 use TotalCMS\Domain\OAuth\Service\OAuthRedirectClassifier;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Support\Config;
 
 readonly class OAuthAuthorizeAction
 {
@@ -34,10 +32,10 @@ readonly class OAuthAuthorizeAction
 		private OAuthClientRepository $clients,
 		private OAuthScopeRegistry $scopes,
 		private CSRFTokenManager $csrf,
-		private AccessControlService $accessControl,
+		private LeagueScopeRepository $scopeRepository,
 		private UserValidationService $userValidation,
-		private Config $config,
 		private OAuthRedirectClassifier $redirectClassifier,
+		private OAuthLoginCollection $loginCollection,
 	) {
 	}
 
@@ -45,7 +43,7 @@ readonly class OAuthAuthorizeAction
 	{
 		try {
 			$authRequest = $this->authServer->validateAuthorizationRequest($request);
-			$this->normalizeRequestedScopes($authRequest);
+			$this->scopeRepository->normalizeRequested($authRequest);
 		} catch (OAuthServerException $e) {
 			// Do NOT redirect on validation errors — the redirect_uri may be attacker-controlled.
 			return $this->twig->template(
@@ -59,19 +57,14 @@ readonly class OAuthAuthorizeAction
 		}
 
 		$userId = $this->session->get(SessionKeys::AUTH_USER);
-		if ($userId === null) {
-			// Return-to via the session, the same mechanism DualAuthMiddleware
-			// uses for admin pages: AuthLoginSubmitAction reads
-			// REQUEST_ORIGIN_URL after authentication and sends the operator
-			// back here — full authorize query string intact — so the consent
-			// screen appears instead of the dashboard. (A `next` query param
-			// was passed previously, but nothing ever consumed it.)
-			$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
-			$loginUrl = RouteContext::fromRequest($request)->getRouteParser()->urlFor('login');
-
-			return $response
-				->withStatus(302)
-				->withHeader('Location', $loginUrl);
+		// A session from an auth collection that may not authorize (see
+		// OAuthLoginCollection) is treated as logged out.
+		if ($userId === null || !$this->loginCollection->accepts(
+			(string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: ''),
+			(string)$userId,
+			$authRequest->getClient()->getIdentifier(),
+		)) {
+			return $this->toLogin($request, $response);
 		}
 
 		// Persist the parsed AuthorizationRequest for the POST handler.
@@ -80,27 +73,7 @@ readonly class OAuthAuthorizeAction
 
 		$client = $this->clients->find($authRequest->getClient()->getIdentifier());
 
-		// The list must show what approving will actually grant. finalizeScopes()
-		// narrows admin-gated scopes away for users who can't convey them, so
-		// displaying them here would ask the user to consent to a permission the
-		// token will never carry. Mirrors LeagueScopeRepository::finalizeScopes()'s
-		// widened gate: super admin OR SOME admin-domain access-group grant
-		// (schemas, collectionsMeta, or a utils allow) — see
-		// UserAuthority::hasAdminDomainGrants(). isAdmin() short-circuits first so
-		// the common case never pays for authorityFor()'s group lookup.
-		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
-		$ref        = OAuthUserRef::parse((string)$userId, $collection);
-		$isAdmin    = $this->accessControl->isAdmin((string)$userId, $collection)
-			|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
-		$scopeRows = [];
-		foreach ($authRequest->getScopes() as $scope) {
-			$id = $scope->getIdentifier();
-			if (!$isAdmin && in_array($id, OAuthScopeRegistry::ADMIN_GATED, true)) {
-				continue;
-			}
-			$desc        = $this->scopes->has($id) ? $this->scopes->get($id)->description : $id;
-			$scopeRows[] = ['identifier' => $id, 'description' => $desc];
-		}
+		$scopeRows = $this->consentScopes($authRequest, (string)$userId);
 
 		// Where approval sends the code. league leaves getRedirectUri() null
 		// when the request omitted redirect_uri and the client's registered
@@ -127,41 +100,55 @@ readonly class OAuthAuthorizeAction
 	}
 
 	/**
+	 * The scopes the consent screen lists: what approving will actually grant.
+	 * finalizeScopes() narrows admin-gated scopes away for users who can't
+	 * convey them, so displaying them here would ask the user to consent to a
+	 * permission the token will never carry. Both ask the scope repository
+	 * the same question.
+	 *
+	 * @return list<array{identifier: string, description: string}>
+	 */
+	private function consentScopes(AuthorizationRequestInterface $authRequest, string $userId): array
+	{
+		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
+		$isAdmin    = $this->scopeRepository->userCanConveyAdmin($collection !== '' ? OAuthUserRef::compose($collection, $userId) : $userId);
+
+		$rows = [];
+		foreach ($authRequest->getScopes() as $scope) {
+			$id = $scope->getIdentifier();
+			if (!$isAdmin && in_array($id, OAuthScopeRegistry::ADMIN_GATED, true)) {
+				continue;
+			}
+			$rows[] = ['identifier' => $id, 'description' => $this->scopes->has($id) ? $this->scopes->get($id)->description : $id];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Send the caller to sign in, then back here.
+	 *
+	 * Return-to via the session, the same mechanism DualAuthMiddleware uses
+	 * for admin pages: AuthLoginSubmitAction reads REQUEST_ORIGIN_URL after
+	 * authentication and sends the operator back here — full authorize query
+	 * string intact — so the consent screen appears instead of the dashboard.
+	 * (A `next` query param was passed previously, but nothing ever consumed
+	 * it.) The login page is the OAuth login collection's, when one is set.
+	 */
+	private function toLogin(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
+		$configured = $this->loginCollection->configured();
+		$loginUrl   = RouteContext::fromRequest($request)->getRouteParser()->urlFor('login', $configured !== '' ? ['collection' => $configured] : []);
+
+		return $response->withStatus(302)->withHeader('Location', $loginUrl);
+	}
+
+	/**
 	 * Human-facing identity for the "signed in as" line. The session stores
 	 * the user's object id, which can be as opaque as "3"; prefer their name,
 	 * then email, before falling back to the raw id.
 	 */
-	/**
-	 * Drop scope labels T3 doesn't define from the parsed request, and when
-	 * nothing known remains substitute the oauth.defaultScope baseline.
-	 *
-	 * MCP clients request labels from their own vocabulary (claude.ai sends
-	 * `scope=claudeai`). getScopeEntityByIdentifier() is tolerant so league
-	 * doesn't reject the request outright; this is where the unknowns are
-	 * actually removed — BEFORE the consent screen renders and BEFORE the
-	 * request is serialized for the approve handler, so the user consents to
-	 * exactly what the token will carry. Without the default substitution an
-	 * unknown-only request would yield a scope-less token that MCP rejects
-	 * with insufficient_scope on every call.
-	 */
-	private function normalizeRequestedScopes(AuthorizationRequestInterface $authRequest): void
-	{
-		$known = array_values(array_filter(
-			$authRequest->getScopes(),
-			fn (ScopeEntityInterface $s): bool => $this->scopes->has($s->getIdentifier()),
-		));
-
-		if ($known === []) {
-			$default = (string)($this->config->oauth['defaultScope'] ?? 'cms:read mcp:tools mcp:resources mcp:prompts');
-			$known   = array_map(
-				static fn (string $id): LeagueScopeEntity => new LeagueScopeEntity($id),
-				array_values(array_filter(explode(' ', $default), $this->scopes->has(...))),
-			);
-		}
-
-		$authRequest->setScopes($known);
-	}
-
 	private function displayName(string $userId): string
 	{
 		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
@@ -14,6 +15,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
@@ -23,6 +25,11 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *
  * Handler flow:
  *   1. Persona check (collection.mcp.access vs current persona).
+ *      Then, once the collection is fetched, a call-time exposure check —
+ *      McpSchemaResolver::isAccessibleTo() on the live collection — so a
+ *      collection whose access was tightened after registration is refused.
+ *      An owned collection is narrowed in step 2: a non-admin caller reads it
+ *      only when it is public, and never sees its drafts.
  *   2. Group-read check (Task 10b) — PersonaContext::canReadCollection().
  *   3. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
  *   4. Build REST-style include/exclude strings + persona-aware safety filters.
@@ -74,6 +81,7 @@ final readonly class SavedQueryTool
 		private McpObjectShaper $shaper,
 		private CollectionRepository $collectionRepository,
 		private CollectionQueryResultFormatter $resultFormatter,
+		private McpSchemaResolver $schemaResolver,
 	) {
 	}
 
@@ -101,6 +109,13 @@ final readonly class SavedQueryTool
 				));
 			}
 
+			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value, $this->personaContext->getLimitedKey() instanceof ApiKeyData)) {
+				throw new ToolCallException(sprintf(
+					'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
+					$this->definition->collectionName,
+				));
+			}
+
 			if (!$this->personaContext->canReadCollection($this->definition->collectionName, $collection)) {
 				throw new ToolCallException(sprintf(
 					"Your account's groups do not grant read on '%s'.",
@@ -110,7 +125,7 @@ final readonly class SavedQueryTool
 
 			$resolved = $this->resolveFilters($args);
 			$params   = $this->buildQueryParams($resolved);
-			$result   = $this->indexQueryService->query($this->definition->collectionName, $params);
+			$result   = $this->indexQueryService->query($this->definition->collectionName, $params, $this->personaContext->readScope($this->definition->collectionName, $collection));
 
 			$items = [];
 			foreach ($result->items as $object) {
@@ -136,7 +151,7 @@ final readonly class SavedQueryTool
 
 	private function personaCanAccess(McpPersona $persona): bool
 	{
-		return McpAccessLevel::fromString($this->definition->access)->allows($persona);
+		return McpAccessLevel::fromString($this->definition->access)->allows($persona, $this->personaContext->getLimitedKey() instanceof ApiKeyData);
 	}
 
 	/**
@@ -184,13 +199,9 @@ final readonly class SavedQueryTool
 			$include = trim($include . ',' . implode(',', $includeParts), ',');
 		}
 
-		// Draft-authority safety filter applied last: only ADMIN or a caller
-		// whose access groups grant `read` on this collection sees drafts —
-		// see PersonaContext::canReadDrafts().
+		// Drafts and other members' objects the caller may not read are
+		// removed by the read scope the query service applies first.
 		$exclude = $this->definition->exclude;
-		if (!$this->personaContext->canReadDrafts($this->definition->collectionName)) {
-			$exclude = trim($exclude . ',draft:true', ',');
-		}
 
 		$params = [
 			'limit'  => (string)$this->definition->limit,

@@ -3,6 +3,7 @@
 namespace Tests\Unit\Middleware;
 
 use Odan\Session\SessionManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -51,9 +52,7 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->middleware->process($this->createRequest('/mysite/imageworks/photo.png'), $this->handler);
 	}
 
-	/**
-	 * @dataProvider assetPaths
-	 */
+	#[DataProvider('assetPaths')]
 	public function testSkipsSessionForStaticAssets(string $path): void
 	{
 		// A started session sets PHPSESSID on the response, and a CDN will not
@@ -76,6 +75,11 @@ final class LazySessionStartMiddlewareTest extends TestCase
 			'core asset, sub-path'    => ['/mysite/api/assets/icons.css'],
 			'nested core asset'       => ['/api/assets/build/site.css'],
 			'extension asset'         => ['/api/ext/totalcms/docs/assets/docs.js'],
+			// A Site Builder page that serves an image (a badge pasted on other
+			// sites): one session per view of every page it sits on otherwise.
+			'page image'              => ['/badges/pill-light.svg'],
+			'page image, dynamic'     => ['/@joeworkman/badge.svg'],
+			'page image, sub-path'    => ['/mysite/og/card.png'],
 		];
 	}
 
@@ -132,6 +136,32 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->session->expects($this->once())->method('save');
 
 		$this->middleware->process($this->createRequest('/admin/imageworks-settings'), $this->handler);
+	}
+
+	#[DataProvider('sessionImagePaths')]
+	public function testImageExtensionsUnderAdminOrApiKeepTheirSession(string $path): void
+	{
+		// The image-extension rule is for front-end pages only: the admin and
+		// the API check login state on every request, whatever the URL ends in.
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->method('handle')->willReturn($response);
+
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->once())->method('start');
+		$this->session->expects($this->once())->method('save');
+
+		$this->middleware->process($this->createRequest($path), $this->handler);
+	}
+
+	/** @return array<string,array{string}> */
+	public static function sessionImagePaths(): array
+	{
+		return [
+			'admin'          => ['/admin/media/logo.svg'],
+			'api'            => ['/api/collections/svg/logo.svg'],
+			'admin sub-path' => ['/mysite/admin/icons/x.png'],
+			'not at the end' => ['/badges/pill.svg/edit'],
+		];
 	}
 
 	private function createRequest(string $path): ServerRequestInterface

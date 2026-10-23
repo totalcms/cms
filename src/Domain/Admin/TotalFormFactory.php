@@ -98,11 +98,11 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
-		// Admin routes (/admin/...) don't have the /api prefix
-		$api     = str_starts_with($route, '/admin') ? $this->services->config->api : $this->api;
+		// data-api is always the REST base; the JS resolves /admin/... routes
+		// against the site base itself (TotalCMS::buildApiQuery).
 		$options = array_merge($this->buttonLabels($options), [
 			'route'                    => $route,
-			'api'                      => $api,
+			'api'                      => $this->api,
 			'formActionRegistry'       => $this->formActionRegistry,
 			'translator'               => $this->translationService->trans(...),
 		]);

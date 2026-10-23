@@ -1,22 +1,57 @@
 {% extends "admin-dashboard.twig" %}
 
+{% block head %}
+<script type="module" src="{{ cms.api }}/assets/extension-install.js?v={{ cms.version }}"></script>
+{% endblock %}
+
 {% block dashcontent %}
 
 {% set enabledExts = extensions|filter(e => e.enabled) %}
 {% set disabledExts = extensions|filter(e => not e.enabled) %}
 
 <main class="dash-main-content" style="max-width:100%;">
-	<header>
+	<header style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
 		<h1>{{ t('nav.extensions') }}</h1>
+		<button type="button" class="dash-button transparent" id="ext-install-toggle" aria-expanded="false" aria-controls="ext-install-panel">Install Extension</button>
 	</header>
+
+	<section class="dash-content-section ext-install-panel" id="ext-install-panel" hidden>
+		<h2 class="ext-group-heading">Install from a zip</h2>
+		<div class="ext-install-drop dz-clickable" tabindex="0" role="button" aria-label="Choose an extension zip" data-api="{{ cms.api }}">
+			<span class="ext-install-drop-icon" aria-hidden="true"></span>
+			<p class="ext-install-drop-text">Drop an extension zip here, or click to choose</p>
+			{% if uploadLimit %}
+			<p class="ext-install-help">This server accepts files up to {{ uploadLimit }}.</p>
+			{% endif %}
+		</div>
+		<div class="total-preview"></div>
+		<template class="ext-install-template">
+			<div class="ext-install-card">
+				<span class="ext-install-card-icon" aria-hidden="true"></span>
+				<div class="ext-install-card-body">
+					<div class="ext-install-card-meta"><span class="ext-install-card-name" data-dz-name></span> <span class="ext-install-card-size" data-dz-size></span></div>
+					<div class="ext-install-progress"><span class="ext-install-progress-bar" data-dz-uploadprogress></span></div>
+					<p class="ext-install-card-error" data-dz-errormessage></p>
+				</div>
+			</div>
+		</template>
+		<div class="ext-install-messages" aria-live="polite"></div>
+		<p class="ext-install-note">A new extension is installed <strong>disabled</strong>; you review what it does before enabling it. Uploading an extension that is already installed replaces its files and keeps its settings. Bundled, Composer and project extensions cannot be replaced here.</p>
+	</section>
 
 	<section class="dash-content-section ext-section">
 		{% if extensions is empty %}
 		<div class="dash-empty-state">
 			<p>No extensions installed.</p>
-			<p>Place extensions in <code>tcms-data/extensions/vendor/name/</code></p>
+			<p>Use <strong>Install Extension</strong> above to upload a zip, or place a folder in <code>tcms-data/extensions/vendor/name/</code>.</p>
 		</div>
 		{% else %}
+
+		{% if installed %}
+		<div class="ext-installed-status" role="status">
+			Installed <strong>{{ installed.name|e }}</strong> {{ installed.version|e }}. It stays disabled until you enable it.
+		</div>
+		{% endif %}
 
 		{# Per-stack soft budget warning: sum of avg ms across all extensions that
 		   have profiled metrics. Only shown when the combined cost exceeds the
@@ -33,7 +68,7 @@
 		<h2 class="ext-group-heading">Enabled <span class="dash-badge muted sm">{{ enabledExts|length }}</span></h2>
 		<div class="dash-card-grid">
 			{% for ext in enabledExts %}
-				{{ _self.extensionCard(ext, cms, budgets) }}
+				{{ _self.extensionCard(ext, cms, budgets, installed) }}
 			{% endfor %}
 		</div>
 		{% endif %}
@@ -42,7 +77,7 @@
 		<h2 class="ext-group-heading">Disabled <span class="dash-badge muted sm">{{ disabledExts|length }}</span></h2>
 		<div class="dash-card-grid">
 			{% for ext in disabledExts %}
-				{{ _self.extensionCard(ext, cms, budgets) }}
+				{{ _self.extensionCard(ext, cms, budgets, installed) }}
 			{% endfor %}
 		</div>
 		{% endif %}
@@ -98,22 +133,202 @@
 		overflow           : hidden;
 		min-height         : calc(var(--ext-description-font) * var(--ext-description-lh) * var(--ext-description-lines));
 	}
+	.ext-install-panel {
+		margin-bottom : 1rem;
+	}
+	/* .dash-content-section sets display: grid, which beats the hidden attribute. */
+	.ext-install-panel[hidden] {
+		display : none;
+	}
+	.ext-install-drop {
+		display        : flex;
+		flex-direction : column;
+		align-items    : center;
+		gap            : 0.5rem;
+		padding        : 2rem 1rem;
+		text-align     : center;
+		cursor         : pointer;
+		border         : 2px dashed oklch(var(--totalform-border-color));
+		border-radius  : var(--totalform-radius);
+		background     : oklch(var(--totalform-nearwhite));
+		transition     : border-color 200ms ease-in-out, background-color 200ms ease-in-out;
+	}
+	.ext-install-drop:hover,
+	.ext-install-drop:focus-visible,
+	.ext-install-drop.dz-drag-hover {
+		border-color : oklch(var(--totalform-accent));
+	}
+	.ext-install-drop:focus-visible {
+		outline        : 2px solid oklch(var(--totalform-accent));
+		outline-offset : 2px;
+	}
+	.ext-install-drop.dz-drag-hover {
+		background : oklch(var(--totalform-accent) / 0.06);
+	}
+	/* An upload is running (or redirecting): further drops are ignored. */
+	.ext-install-drop[aria-disabled="true"] {
+		cursor       : progress;
+		opacity      : 0.6;
+		border-color : oklch(var(--totalform-border-color));
+		background   : oklch(var(--totalform-nearwhite));
+	}
+	.ext-install-drop-icon {
+		width            : 48px;
+		height           : 48px;
+		opacity          : 0.5;
+		background-color : oklch(var(--totalform-darkgray));
+		mask-image       : var(--icon-upload);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+		transition       : opacity 200ms ease-in-out, scale 200ms ease-in-out;
+		pointer-events   : none;
+	}
+	.ext-install-drop:hover .ext-install-drop-icon,
+	.ext-install-drop.dz-drag-hover .ext-install-drop-icon {
+		opacity : 0.8;
+		scale   : 1.05;
+	}
+	.ext-install-drop-text {
+		margin      : 0;
+		font-weight : 600;
+		color       : oklch(var(--totalform-text-color));
+	}
+	.ext-install-drop p {
+		pointer-events : none;
+	}
+	.total-preview:empty {
+		display : none;
+	}
+	.ext-install-card {
+		display       : flex;
+		gap           : 0.75rem;
+		align-items   : center;
+		margin-top    : 0.75rem;
+		padding       : 0.75rem;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-purewhite));
+	}
+	.ext-install-card-icon {
+		flex             : none;
+		width            : 32px;
+		height           : 32px;
+		background-color : oklch(var(--totalform-darkgray));
+		mask-image       : var(--icon-file-zip);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+	.ext-install-card.dz-error .ext-install-card-icon {
+		background-color : oklch(var(--totalform-error));
+	}
+	.ext-install-card.dz-success .ext-install-card-icon {
+		background-color : oklch(var(--totalform-success));
+	}
+	.ext-install-card-body {
+		flex      : 1;
+		min-width : 0;
+	}
+	.ext-install-card-meta {
+		font-size     : 0.9rem;
+		overflow      : hidden;
+		text-overflow : ellipsis;
+		white-space   : nowrap;
+	}
+	.ext-install-card-name {
+		font-weight : 600;
+	}
+	.ext-install-card-size {
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.8rem;
+	}
+	.ext-install-progress {
+		height        : 6px;
+		margin-top    : 0.4rem;
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-border-color));
+		overflow      : hidden;
+	}
+	.ext-install-progress-bar {
+		display    : block;
+		width      : 0;
+		height     : 100%;
+		background : oklch(var(--totalform-accent));
+		transition : width 150ms linear;
+	}
+	.ext-install-card.dz-success .ext-install-progress-bar {
+		background : oklch(var(--totalform-success));
+	}
+	.ext-install-card.dz-error .ext-install-progress {
+		display : none;
+	}
+	/* The panel's alert line carries the message; the card only shows the error state. */
+	.ext-install-card-error {
+		display : none;
+	}
+	.ext-install-messages:empty {
+		display : none;
+	}
+	.ext-install-messages p {
+		margin        : 0.5rem 0 0;
+		padding       : 0.5rem 0.75rem;
+		border-radius : var(--totalform-radius);
+		font-size     : 0.9rem;
+	}
+	.ext-install-error {
+		color      : oklch(var(--totalform-error));
+		background : oklch(var(--totalform-error) / 0.08);
+		border     : 1px solid oklch(var(--totalform-error) / 0.4);
+	}
+	.ext-install-warning {
+		color      : oklch(var(--totalform-text-color));
+		background : oklch(var(--totalform-warning) / 0.12);
+		border     : 1px solid oklch(var(--totalform-warning) / 0.5);
+	}
+	.ext-install-messages p.ext-install-continue {
+		padding : 0;
+		color   : oklch(var(--totalform-darkgray));
+	}
+	.ext-install-help,
+	.ext-install-note {
+		margin    : 0.5rem 0 0;
+		font-size : 0.85rem;
+		color     : oklch(var(--totalform-darkgray));
+	}
+	.ext-install-help {
+		margin : 0;
+	}
+	.ext-installed-status {
+		margin        : 0.5rem 0 1rem;
+		padding       : 0.75rem 1rem;
+		border        : 1px solid oklch(var(--totalform-accent) / 0.5);
+		border-left   : 4px solid oklch(var(--totalform-accent));
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-accent) / 0.06);
+		color         : oklch(var(--totalform-text-color));
+	}
+	.ext-section .dash-card.ext-installed {
+		outline        : 2px solid oklch(var(--totalform-accent));
+		outline-offset : 2px;
+	}
 </style>
+
 
 {% endblock %}
 
-{% macro extensionCard(ext, cms, budgets) %}
-<article class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}">
+{% macro extensionCard(ext, cms, budgets, installed) %}
+<article id="ext-{{ ext.id|replace({'/': '-'}) }}" class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}{% if installed and installed.id == ext.id %} ext-installed{% endif %}">
 	<header>
 		{% if ext.hasSettings %}
 		<a href="{{ cms.dashboard }}/extensions/{{ ext.id }}/settings" class="ext-header-link">
 		{% endif %}
 			{% if ext.icon %}
-			<img src="{{ ext.icon }}" alt="" class="ext-icon">
+			<img src="{{ ext.icon|e('html_attr') }}" alt="" class="ext-icon">
 			{% endif %}
 			<div>
-				<h3>{{ ext.name }}</h3>
-				<p class="ext-description">{{ ext.description }}</p>
+				<h3>{{ ext.name|e }}</h3>
+				<p class="ext-description">{{ ext.description|e }}</p>
 			</div>
 		{% if ext.hasSettings %}
 		</a>
@@ -121,7 +336,7 @@
 	</header>
 
 	<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">
-		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name }}{% endif %}</span>
+		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name|e }}{% endif %}</span>
 		<span class="dash-badge-group">
 			{#- Where the files live, when it is not the operator's own upload:
 			    those three cannot be removed here — the package, Composer or
@@ -129,7 +344,7 @@
 			{% if ext.origin == 'bundled' %}<span class="dash-badge muted sm" title="Ships with Total CMS">Bundled</span>{% endif %}
 			{% if ext.origin == 'composer' %}<span class="dash-badge muted sm" title="Installed by Composer">Composer</span>{% endif %}
 			{% if ext.origin == 'project' %}<span class="dash-badge muted sm" title="Lives in the site's extensions/ directory">Project</span>{% endif %}
-			<span class="dash-badge muted sm">v{{ ext.version }}</span>
+			<span class="dash-badge muted sm">v{{ ext.version|e }}</span>
 		</span>
 	</div>
 
@@ -156,6 +371,7 @@
 	{% include 'admin/partials/extension-update-banner.twig' with {
 		updateDisabled: ext.updateDisabled,
 		updateDisabledReason: ext.updateDisabledReason,
+		updateNewFindings: ext.updateNewFindings,
 		updateFindings: ext.updateFindings,
 		extId: ext.id,
 	} only %}
@@ -165,7 +381,7 @@
 		<strong>Cannot be enabled:</strong>
 		<ul style="margin:0.25rem 0 0 1rem; padding:0;">
 			{% for reason in ext.incompatibility %}
-			<li>{{ reason }}</li>
+			<li>{{ reason|e }}</li>
 			{% endfor %}
 		</ul>
 	</div>
@@ -186,7 +402,7 @@
 		<div class="dash-badge-group">
 			{% for link in visibleLinks %}
 			{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
-			<a class="dash-badge" href="{{ link.url }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}</a>
+			<a class="dash-badge" href="{{ link.url|e('html_attr') }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label|e }}</a>
 			{% endfor %}
 		</div>
 	</div>
@@ -203,15 +419,27 @@
 				{{ csrf_field() }}
 				<button type="submit" class="btn btn-sm">Disable</button>
 			</form>
+			{% if ext.origin == 'user' %}
+			<form class="simple-form totalform ext-remove-form" data-route="/extensions/{{ ext.id }}/remove" data-method="POST" data-api="{{ cms.api }}" data-refresh="true" data-ajax="true" data-confirm="Remove {{ ext.name|e('html_attr') }}? Its files are deleted; its settings and data are kept." style="margin:0;">
+				{{ csrf_field() }}
+				<button type="submit" class="btn btn-sm btn-danger" title="Remove this extension">Remove</button>
+			</form>
+			{% endif %}
 		</div>
 		{% else %}
 		<span class="dash-status disabled">Disabled</span>
 		{% if ext.incompatibility %}
-		<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ') }}">Enable</button>
+		<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ')|e('html_attr') }}">Enable</button>
 		{% else %}
 		<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
 			{{ csrf_field() }}
 			<button type="submit" class="btn btn-sm btn-primary">Enable</button>
+		</form>
+		{% endif %}
+		{% if ext.origin == 'user' %}
+		<form class="simple-form totalform ext-remove-form" data-route="/extensions/{{ ext.id }}/remove" data-method="POST" data-api="{{ cms.api }}" data-refresh="true" data-ajax="true" data-confirm="Remove {{ ext.name|e('html_attr') }}? Its files are deleted; its settings and data are kept." style="margin:0;">
+			{{ csrf_field() }}
+			<button type="submit" class="btn btn-sm btn-danger" title="Remove this extension">Remove</button>
 		</form>
 		{% endif %}
 		{% endif %}

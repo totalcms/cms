@@ -35,9 +35,16 @@ class LoginService
 	 * config. UserValidationService::validateUser() dispatches between the
 	 * two lookup strategies transparently.
 	 *
+	 * With $fallbackToDefault, an identifier that matches no user in
+	 * $collection is looked up in the default collection instead (any user,
+	 * not only super admins), and the user returned is marked with
+	 * `_authenticated_collection`. Used for the OAuth login page, so staff can
+	 * connect an AI client from the members' login. A miss in both still
+	 * costs one password hash.
+	 *
 	 * @return array<string,mixed>
 	 */
-	public function authenticate(string $idOrEmail, string $password, string $collection = ''): array
+	public function authenticate(string $idOrEmail, string $password, string $collection = '', bool $fallbackToDefault = false): array
 	{
 		if ($this->firstLoginChecker->isNewInstallation()) {
 			$this->logger->info('First login detected, creating first user');
@@ -63,7 +70,10 @@ class LoginService
 
 		// Normal authentication flow for the requested collection
 		try {
-			$user = $this->validator->validateUser($idOrEmail, $collection);
+			$user = $this->findUser($idOrEmail, $collection, $fallbackToDefault ? $defaultCollection : '');
+			if (isset($user['_authenticated_collection'])) {
+				$collection = (string)$user['_authenticated_collection'];
+			}
 		} catch (\Exception $e) {
 			// Hash anyway, so a miss costs about what a wrong password does
 			// and response time doesn't say which one it was.
@@ -93,6 +103,28 @@ class LoginService
 		$this->logger->info("User {$this->account} logged in");
 
 		$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload($user['id'] ?? $this->account));
+
+		return $user;
+	}
+
+	/**
+	 * The user $idOrEmail names in $collection, else in $fallback (marked with
+	 * `_authenticated_collection`). Throws when neither has one.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function findUser(string $idOrEmail, string $collection, string $fallback): array
+	{
+		try {
+			return $this->validator->validateUser($idOrEmail, $collection);
+		} catch (\Exception $e) {
+			if ($fallback === '' || $fallback === $collection) {
+				throw $e;
+			}
+		}
+
+		$user                              = $this->validator->validateUser($idOrEmail, $fallback);
+		$user['_authenticated_collection'] = $fallback;
 
 		return $user;
 	}

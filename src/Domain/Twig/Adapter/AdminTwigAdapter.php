@@ -172,6 +172,19 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Extensions the system disabled on its own (risky update, quarantine),
+	 * for the warning every admin page shows.
+	 *
+	 * Usage in Twig: {% for notice in cms.admin.extensionsNeedingAttention() %}
+	 *
+	 * @return list<array{id:string,kind:string,message:string,link:string}>
+	 */
+	public function extensionsNeedingAttention(): array
+	{
+		return $this->dashboard->extensionsNeedingAttention();
+	}
+
+	/**
 	 * Dashboard automation list — all enabled automations combined with their
 	 * latest run status.
 	 *
@@ -416,6 +429,7 @@ readonly class AdminTwigAdapter
 
 		$sections = [
 			'general'    => ['label' => $t('settings.general'),           'description' => $t('settings.general_desc')],
+			'activity'   => ['label' => $t('settings.activity'),          'description' => $t('settings.activity_desc')],
 			'auth'       => ['label' => $t('settings.authentication'),    'description' => $t('settings.authentication_desc')],
 			'backups'    => ['label' => $t('settings.backups'),           'description' => $t('settings.backups_desc')],
 			'cache'      => ['label' => $t('settings.cache'),             'description' => $t('settings.cache_desc')],

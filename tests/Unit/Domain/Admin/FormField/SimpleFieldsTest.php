@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Admin\FormField\CheckboxField;
 use TotalCMS\Domain\Admin\FormField\ColorField;
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\ListField;
 use TotalCMS\Domain\Admin\FormField\MarkdownField;
 use TotalCMS\Domain\Admin\FormField\PriceField;
@@ -260,5 +262,45 @@ describe('Simple form fields', function (): void {
 
 		expect($field)->toBeInstanceOf(MarkdownField::class);
 		expect($field->build())->toContain('data-type="styledmarkdown"');
+	});
+});
+
+/**
+ * hide() is server-side hiding for a field that does not apply to the record
+ * being edited. It sets the same container markers as a false visibility
+ * rule, so the browser and its section auto-hide treat the two alike.
+ */
+describe('FormField::hide()', function (): void {
+	beforeEach(function (): void {
+		$this->form     = $this->createMock(TotalForm::class);
+		$this->form->id = '';
+		$this->form->method('isEditMode')->willReturn(false);
+	});
+
+	$container = static fn (string $html): string => (string)preg_replace('/^(<div[^>]*>).*$/s', '$1', $html);
+
+	test('a field is shown until hide() is called', function () use ($container): void {
+		$html = $container((new FormField(form: $this->form, name: 'title'))->build());
+
+		expect($html)->not->toContain('field-hidden')->not->toContain('display: none;');
+	});
+
+	test('a hidden field renders a container with field-hidden and display: none', function () use ($container): void {
+		$field = new FormField(form: $this->form, name: 'title');
+		$field->hide();
+		$html = $container($field->build());
+
+		expect($html)->toContain('field-hidden')->toContain('display: none;');
+	});
+
+	test('hide() is idempotent and does not repeat a false visibility rule\'s markers', function () use ($container): void {
+		$this->form->method('getFieldValue')->willReturn(null);
+		$field = new CheckboxField(form: $this->form, name: 'verify', settings: ['visibility' => ['watch' => 'toggle', 'value' => true, 'operator' => '==']]);
+		$field->hide();
+		$field->hide();
+		$html = $container($field->build());
+
+		expect(substr_count($html, 'field-hidden'))->toBe(1);
+		expect(substr_count($html, 'display: none;'))->toBe(1);
 	});
 });

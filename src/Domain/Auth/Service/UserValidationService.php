@@ -95,7 +95,7 @@ readonly class UserValidationService
 	}
 
 	/** @return array<string,mixed> */
-	public function validateUserById(string $userId, string $collection = ''): array
+	public function validateUserById(string $userId, string $collection = '', bool $withoutPasswords = false): array
 	{
 		if ($collection === '') {
 			$collection = $this->config->auth['collection'];
@@ -108,12 +108,14 @@ readonly class UserValidationService
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {
 			// Admin users from default auth collection are always allowed
 			if ($collection !== $this->config->auth['collection'] && $this->isSuperAdmin($userId)) {
-				return $this->validateUserById($userId);
+				return $this->validateUserById($userId, '', $withoutPasswords);
 			}
 			throw new \Exception("User $userId does not exist");
 		}
 
-		return $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user = $this->objectFetcher->fetchObject($collection, $userId);
+
+		return $withoutPasswords ? $user->toArrayWithoutPasswords() : $user->toArray();
 	}
 
 	/** @param string|array<string> $groups */

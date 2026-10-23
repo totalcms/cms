@@ -42,7 +42,16 @@ readonly class LoginForm implements \Stringable
 		// checkbox only: a request that posts `persistent_login` anyway is
 		// still honored by AuthLoginSubmitAction.
 		private bool $showRememberMe           = true,
+		// Same switch as the form builder's: false drops the icon slot beside
+		// the email and password inputs, for a front end without core's icons.
+		private bool $fieldIcons               = true,
 	) {
+	}
+
+	/** The icon slot beside an input, or nothing when fieldIcons is off. */
+	private function iconSlot(): string
+	{
+		return $this->fieldIcons ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
 	}
 
 	/** Translate an admin-domain key. */
@@ -185,8 +194,7 @@ readonly class LoginForm implements \Stringable
 			'autocomplete'     => 'username webauthn',
 		]);
 
-		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
-		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
+		$group = HTMLUtils::element('div', $input . $this->iconSlot(), ['class' => 'form-group']);
 
 		$labelEl = HTMLUtils::element('label', $label, ['for' => "field-{$uuid}"]);
 		$help    = HTMLUtils::element('p', $helpText, [
@@ -214,8 +222,7 @@ readonly class LoginForm implements \Stringable
 			'class'            => 'allow-enter',
 		]);
 
-		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
-		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
+		$group = HTMLUtils::element('div', $input . $this->iconSlot(), ['class' => 'form-group']);
 
 		$label = HTMLUtils::element('label', $this->label($this->passwordLabel, 'login.password_label'), ['for' => "field-{$uuid}"]);
 		$help  = HTMLUtils::element('p', $this->t('login.password_help'), [

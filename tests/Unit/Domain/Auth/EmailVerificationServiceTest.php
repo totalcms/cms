@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Auth;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\AuthTokenService;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -42,6 +43,7 @@ final class EmailVerificationServiceTest extends TestCase
 			$this->userValidator,
 			$this->objectUpdater,
 			$this->config,
+			new ActorContext(),
 			$loggerFactory,
 		);
 	}
@@ -184,6 +186,45 @@ final class EmailVerificationServiceTest extends TestCase
 
 		$this->assertTrue($result->success);
 		$this->assertSame('fresh-token', $result->data['token']);
+	}
+
+	public function testCreateVerificationTokenStoresTheRedirectOnTheToken(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, ['redirect' => '/welcome'])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'tok']));
+
+		$this->assertTrue($this->service->createVerificationToken('a@b.test', 'members', '/welcome')->success);
+	}
+
+	public function testCreateVerificationTokenWithoutRedirectAddsNoExtras(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, [])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'tok']));
+
+		$this->service->createVerificationToken('a@b.test', 'members');
+	}
+
+	public function testResendVerificationTokenStoresTheRedirectOnTheNewToken(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, ['redirect' => '/welcome'])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'fresh']));
+
+		$this->assertSame('fresh', $this->service->resendVerificationToken('a@b.test', 'members', '/welcome')->data['token']);
 	}
 
 	public function testResendVerificationTokenIsSilentForNonExistentUser(): void

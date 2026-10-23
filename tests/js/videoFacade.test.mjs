@@ -6,7 +6,7 @@ import initVideoFacades, { warmFacade } from '../../javascript/video-facade.js';
 // the iframe has loaded (or a hold timeout passes), and the first hover
 // preconnects the player's origins.
 //-----------------------------------------------
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 function buildFacade() {
     document.body.innerHTML = '';

@@ -105,7 +105,10 @@ class TotalCMS
 		try {
 			// Close a session the host page already opened before PhpSession starts
 			$sessionBootstrap     = $this->container->get(SessionBootstrap::class);
-			$preservedSessionData = $sessionBootstrap->resolveConflict($this->config->session['conflictStrategy'] ?? SessionBootstrap::PRESERVE);
+			$preservedSessionData = $sessionBootstrap->resolveConflict(
+				$this->config->session['conflictStrategy'] ?? SessionBootstrap::PRESERVE,
+				(string)($this->config->session['save_path'] ?? ''),
+			);
 
 			$this->session = $this->container->get(PhpSession::class);
 			$this->access  = $this->container->get(AccessManager::class);
@@ -533,7 +536,7 @@ class TotalCMS
 	/** @return array<string,mixed> */
 	public function userData(): array
 	{
-		return $this->access->userData();
+		return $this->access->publicUserData();
 	}
 
 	/**

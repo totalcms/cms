@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Factory\LogChannel;
@@ -42,6 +43,7 @@ class MediaTwigAdapter
 	public function __construct(
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly Config $config,
+		private readonly ImageGenerator $imageGenerator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
@@ -87,7 +89,7 @@ class MediaTwigAdapter
 				return '';
 			}
 
-			return self::buildImageworksAPI($this->config->api, $id, $image, $imageworks, $options);
+			return ImageworksUrl::buildImageworksAPI($this->config->api, $id, $image, $imageworks, $options);
 		}
 
 		$image = $this->fetchData($collection, $idOrObject, $rootProperty);
@@ -101,7 +103,69 @@ class MediaTwigAdapter
 			return '';
 		}
 
-		return self::buildImageworksAPI($this->config->api, $idOrObject, $image, $imageworks, $options);
+		return ImageworksUrl::buildImageworksAPI($this->config->api, $idOrObject, $image, $imageworks, $options);
+	}
+
+	/**
+	 * The largest render imageDataUri() embeds, in bytes. A data: URI is
+	 * shipped inline with every copy of the page or file it sits in, so it is
+	 * for thumbnails, not photos.
+	 */
+	public const DATA_URI_MAX_BYTES = 65536;
+
+	/**
+	 * An image property rendered by ImageWorks and returned as a `data:` URI,
+	 * for a file that cannot load anything from outside itself — an SVG
+	 * served as an <img>, an email. Takes the same arguments as imagePath();
+	 * pass a small `w`/`h`. Top-level image properties only.
+	 *
+	 * Returns '' when there is no image, the render fails, or it is larger
+	 * than DATA_URI_MAX_BYTES, so the caller can fall back to something else.
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
+	 * @param array<string,string|int> $imageworks
+	 * @param array<string,mixed> $options
+	 */
+	public function imageDataUri(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
+		$collection = (string)$options['collection'];
+		$property   = (string)$options['property'];
+		if (in_array($idOrObject, [null, '', []], true) || str_contains($property, '.')) {
+			return '';
+		}
+
+		$id    = is_array($idOrObject) ? (string)($idOrObject['id'] ?? '') : $idOrObject;
+		$image = is_array($idOrObject) ? ($idOrObject[$property] ?? null) : $this->fetchData($collection, $id, $property);
+		if ($id === '' || !is_array($image) || ($image['size'] ?? 0) === 0) {
+			return '';
+		}
+
+		try {
+			$response = $this->imageGenerator->generateImage($collection, $id, $property, $this->resolvePresetFormat($imageworks));
+		} catch (\Throwable $e) {
+			$this->logger->warning(sprintf('imageDataUri: %s/%s/%s did not render: %s', $collection, $id, $property, $e->getMessage()));
+
+			return '';
+		}
+
+		$type = strtolower(trim(explode(';', $response->getHeaderLine('Content-Type'))[0]));
+		$body = (string)$response->getBody();
+		if ($response->getStatusCode() !== 200 || !str_starts_with($type, 'image/') || $body === '') {
+			return '';
+		}
+
+		if (strlen($body) > self::DATA_URI_MAX_BYTES) {
+			$this->logger->warning(sprintf('imageDataUri: %s/%s/%s renders to %d bytes, over the %d-byte cap; pass a smaller w/h', $collection, $id, $property, strlen($body), self::DATA_URI_MAX_BYTES));
+
+			return '';
+		}
+
+		return 'data:' . $type . ';base64,' . base64_encode($body);
 	}
 
 	/**
@@ -221,7 +285,7 @@ class MediaTwigAdapter
 
 		$imageName = is_numeric($name) ? (string)($image['name'] ?? '') : $name;
 
-		return self::buildImageworksGalleryAPI($this->config->api, $id, $imageName, $image, $imageworks, $options);
+		return ImageworksUrl::buildImageworksGalleryAPI($this->config->api, $id, $imageName, $image, $imageworks, $options);
 	}
 
 	/**
@@ -269,7 +333,7 @@ class MediaTwigAdapter
 			return $values[array_rand($values)] ?? null;
 		}
 		if ($name === 'featured') {
-			$featured = array_filter($values, fn (array $img): bool => !empty($img['featured']));
+			$featured = array_filter($values, fn (mixed $img): bool => is_array($img) && !empty($img['featured']));
 			if ($featured !== []) {
 				return $featured[array_rand($featured)];
 			}
@@ -463,142 +527,6 @@ class MediaTwigAdapter
 	}
 
 	/**
-	 * Build an ImageWorks API URL.
-	 *
-	 * @param array<string,mixed> $image
-	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options
-	 */
-	public static function buildImageworksAPI(string $api, string $id, array $image, array $imageworks = [], array $options = []): string
-	{
-		$options = array_merge([
-			'collection' => 'image',
-			'property'   => 'image',
-		], $options);
-
-		$collection = $options['collection'];
-		// `property` can be a dot-notation path for nested images. Dots become
-		// URL slashes so `mycard.image` → `/coll/id/mycard/image.jpg` and
-		// `mydeck.item-3.image` → `/coll/id/mydeck/item-3/image.jpg`. The
-		// imageworks fetch route dispatches on data shape at the root property.
-		$propertyPath = str_replace('.', '/', (string)$options['property']);
-
-		if ($image === [] || !array_key_exists('name', $image) || $image['name'] === '') {
-			return '';
-		}
-
-		[$type, $imageworks] = self::imageType((string)$image['name'], $imageworks);
-		$imageworks['cache'] = self::resolveCacheToken($image);
-
-		return self::imageworksUrl($api . "/imageworks/$collection/$id/$propertyPath.$type", $imageworks);
-	}
-
-	/**
-	 * The output format for an ImageWorks URL: the `fm` parameter when given
-	 * (consumed from the parameters), else the source extension, falling back
-	 * to jpg for anything Glide cannot write.
-	 *
-	 * @param array<string,string|int> $imageworks
-	 *
-	 * @return array{0: string, 1: array<string,string|int>}
-	 */
-	private static function imageType(string $name, array $imageworks): array
-	{
-		$type = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-		if (array_key_exists('fm', $imageworks)) {
-			$type = (string)$imageworks['fm'];
-			unset($imageworks['fm']);
-		}
-
-		return [in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg', $imageworks];
-	}
-
-	/**
-	 * Append the ImageWorks parameters to a route, merging any query the base
-	 * API already carried (the Stacks preview server adds one). `datadir` and
-	 * `route` are internal and never reach the URL.
-	 *
-	 * @param array<string,string|int> $imageworks
-	 */
-	private static function imageworksUrl(string $api, array $imageworks): string
-	{
-		unset($imageworks['datadir'], $imageworks['route']);
-
-		$parsedUrl = parse_url($api);
-		if (!isset($parsedUrl['path'])) {
-			return '';
-		}
-
-		$existingParams = [];
-		if (isset($parsedUrl['query'])) {
-			parse_str($parsedUrl['query'], $existingParams);
-		}
-
-		return $parsedUrl['path'] . '?' . http_build_query(array_merge($existingParams, $imageworks));
-	}
-
-	/**
-	 * Pick the cache-busting token for an image URL.
-	 *
-	 * Prefers the deterministic content hash written on save; falls back to
-	 * a reversed uploadDate for records that predate the hash field.
-	 *
-	 * @param array<string,mixed> $image
-	 */
-	private static function resolveCacheToken(array $image): string
-	{
-		if (!empty($image['hash']) && is_string($image['hash'])) {
-			return $image['hash'];
-		}
-
-		return strrev((string)preg_replace('/\W+/', '', (string)($image['uploadDate'] ?? '')));
-	}
-
-	/**
-	 * Build an ImageWorks Gallery API URL.
-	 *
-	 * @param array<string,mixed> $image
-	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options
-	 */
-	public static function buildImageworksGalleryAPI(string $baseapi, string $id, string $name, array $image, array $imageworks = [], array $options = []): string
-	{
-		$options = array_merge([
-			'collection' => 'gallery',
-			'property'   => 'gallery',
-		], $options);
-
-		$collection = $options['collection'];
-		$property   = $options['property'];
-
-		$api                 = $baseapi . "/imageworks/$collection/$id/$property/$name";
-		$dynamicRoutes       = ['first', 'last', 'random', 'featured'];
-		$isDynamic           = in_array($name, $dynamicRoutes);
-
-		if ($isDynamic) {
-			// Random varies per request by design — keep uniqid so browsers and
-			// CDNs never cache a single pick. For first/last/featured the
-			// resolved image is known, so use its deterministic cache token.
-			$imageworks['cache'] = $name === 'random' || $image === []
-				? uniqid()
-				: self::resolveCacheToken($image);
-		} else {
-			if (!array_key_exists('uploadDate', $image) && empty($image['hash'])) {
-				return '';
-			}
-
-			[$type, $imageworks] = self::imageType((string)$image['name'], $imageworks);
-			$basename            = pathinfo($name)['filename'];
-
-			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
-
-			$imageworks['cache'] = self::resolveCacheToken($image);
-		}
-
-		return self::imageworksUrl($api, $imageworks);
-	}
-
-	/**
 	 * Fetch a data property from an object.
 	 */
 	private function fetchData(string $collection, string $id, string $property): mixed
@@ -617,7 +545,7 @@ class MediaTwigAdapter
 			return $this->dataCache[$key] = '';
 		}
 
-		$data = $object->toArray();
+		$data = $object->toArrayWithoutPasswords();
 
 		if (array_key_exists($property, $data)) {
 			return $this->dataCache[$key] = $data[$property];

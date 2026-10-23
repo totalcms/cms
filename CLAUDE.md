@@ -18,17 +18,18 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
-- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.x, Node.js/Yarn
+- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.x, Node.js with pnpm via Vite+ (`vp`)
 - **Rich Text**: Tiptap editor (replaced Froala)
 - **Search**: `SearchProvider` abstraction — built-in `text` provider by default, optional Algolia (`algolia/algoliasearch-client-php`)
-- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD, Rector
+- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD, Rector; Vitest + Oxlint for JS, both run through `vp`
 
 ## Common Development Commands
 
 ### Build and Development
 
 You do not need to worry about frontend asset building (primary development command).
-There is a watch script in dev that will autobuild all front end assets.
+There is a watch script in dev that will autobuild all front end assets and
+rebuild the bundle integrity manifest (`resources/bundle`) on every change.
 
 ```bash
 # Development with file watching (typically runs in background)
@@ -36,6 +37,15 @@ bin/watch.sh
 
 # Full application build (manual release builds only)
 composer run build
+
+# JS toolchain: Vite+ (`vp`, install with `curl -fsSL https://vite.plus | bash`)
+# fronts pnpm (pinned in package.json#devEngines), Vitest and Oxlint. The
+# esbuild build itself is unchanged — vp only replaced Yarn and the test/lint
+# runners. There is no yarn.lock any more; pnpm-lock.yaml is the lockfile.
+vp install            # dependencies (bin/build-assets.sh runs this)
+vp run test:js        # Vitest, ~5s
+vp run lint:js        # Oxlint over javascript/, warnings fail (.oxlintrc.json)
+vp run lint:js:fix    # Oxlint safe auto-fixes; also part of `composer run clean`
 
 # Create distribution bundle (manual release builds only)
 composer run bundle
@@ -51,7 +61,7 @@ composer run cs
 composer run cs:fix
 
 # Run tests — bin/runtests.sh is the normal entry point.
-# No args: bundle:check, stan, docs:validate, JS tests, PHP tests (~45s).
+# No args: bundle:check, stan, md, docs:validate, JS lint, JS tests, PHP tests (~45s).
 # With a filter: ONLY the matching PHP tests, for a fast edit-run loop.
 bin/runtests.sh                          # everything
 bin/runtests.sh SomeTest                 # tests matching a name
@@ -69,6 +79,8 @@ composer run test:all:parallel                   # stan + docs + PHP + JS
 # or the covered src/ files — a stale manifest breaks writes at runtime
 # with 400 "installation has been corrupted", and the test suite does NOT
 # catch it. See "Bundle integrity" under Testing Best Practices.
+# `bin/watch.sh` rebuilds it for you while it is running; this is the check
+# for when it was not.
 composer run bundle:check
 
 # Run all quality checks
@@ -77,6 +89,24 @@ composer run test:all
 
 `composer.json` defines ~40 scripts; the others worth knowing are `quality` /
 `quality:full`, `docs:validate`, `rector` / `rector:fix`, and `mcp:inspect`.
+
+### Mess detection (PHPMD)
+
+`composer run md` runs PHPMD 3 over `src/` and `config/` with `phpmd.yml` and
+reports only violations **not in `phpmd.baseline.xml`** — the baseline holds the
+structural debt accepted when the gate was set up (large methods, high
+coupling, etc.), keyed by rule + file + method so line edits do not disturb it.
+It is part of `bin/runtests.sh` and `test:build`, so a new over-complex method,
+unused variable or superglobal fails CI. When you refactor something that is in
+the baseline, delete its `<violation>` line from `phpmd.baseline.xml` by hand and
+run `composer run md` — a still-needed entry resurfaces as a violation. Do NOT run
+`composer run md:baseline`: under PHPMD 3.0.0 `--update-baseline` keeps only the
+violations it reports, which are the ones the baseline does not cover, so it
+empties the file (verified 2026-10-17, with and without the PDepend cache). Prefer a `@SuppressWarnings("PHPMD.Rule")`
+docblock with a reason over a baseline entry for anything deliberate.
+`pdepend.yml.dist` runs PDepend with its cache in memory: the on-disk cache in
+`~/.cache/pdepend` has produced both phantom violations and (2026-10-17) a clean
+local run for code CI then failed, so the local gate now always recomputes.
 
 ## Architecture Overview
 
@@ -147,7 +177,7 @@ composer run test:all
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
 - **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, search reindexing, and extension management
 - **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
-- **Event System**: Synchronous event dispatcher with 20 core events (object/collection/schema/template/user CRUD, import.*, bulk.deleted, extension lifecycle, devmode, cache.cleared)
+- **Event System**: Synchronous event dispatcher with 22 core events (object/collection/schema/template/user CRUD, import.*, bulk.deleted, extension lifecycle, devmode, cache.cleared, access.denied, file.downloaded); every payload carries `actor`
 - **Automations**: Schedule, webhook, and event-triggered automations with a job queue, run history, and guard rails; handlers are externalized code fields
 - **Built-in MCP Server**: OAuth 2.1, schema/collection/data-view tools, read-only Site Builder template tools, resources, prompts, and search providers so AI agents can query the site directly
 - **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
@@ -218,7 +248,7 @@ composer run test:all
 - **Parallel is the default and the suite is parallel-safe.** `--parallel` needs no flag from you — `test:parallel` is ~40s against ~140s serial. Each worker gets its own sandbox under `tests/.workers/{TEST_TOKEN}/{tcms-data,cache,tmp}` via `tests/worker-paths.php`, which `tests/bootstrap.php`, `tests/Pest.php` and `config/local.test.php` all read. If you add a path that tests write to, route it through there too or workers will race. Delete every sandbox with `rm -rf tests/.workers`.
 - **A global function declared in one `*Test.php` is invisible to another under `--parallel`** (the two files can land in different workers). Shared test helpers belong in `tests/Pest.php`.
 - **Never let a test reach the network.** `bootstrap()` in `tests/Pest.php` binds `HttpClientInterface` to `Tests\Fakes\OfflineHttpClient` (every request fails as if the network were down), so anything going through that interface is covered — saving a Vimeo video URL used to make a live oEmbed call per test. Code that bypasses the interface still needs its own stub: `tests/Feature/SyncMediaFieldTest.php` used to download from picsum.photos through the `image` factory rule, and broke whenever that service did — e.g. `FakerPicsum::setHttpClient()`
-- **Test memory limit**: `tests/bootstrap.php` sets it from `TCMS_TEST_MEMORY_LIMIT` (default `1G`). It runs after PHPUnit applies `phpunit.xml`'s `<ini>` block, so a plain `-d memory_limit=` on the command line is silently clobbered — use the env var. The coverage scripts set `4G`, without which the parallel run dies in paratest's `CoverageMerger` while merging per-worker data.
+- **Test memory limit**: `tests/bootstrap.php` sets it from `TCMS_TEST_MEMORY_LIMIT` (default `1G`). It runs after PHPUnit applies `phpunit.xml`'s `<ini>` block, so a plain `-d memory_limit=` on the command line is silently clobbered — use the env var. The coverage scripts set `4G`, without which the parallel run dies in paratest's `CoverageMerger` while merging per-worker data. A test that runs code calling `ini_set('memory_limit', …)` in-process must put the old value back in `afterEach` — `jobs:process` sets its `--memory` default of 512M that way, and before `JobsProcessCommandTest` restored it, CI's serial run (which, unlike the local parallel battery, keeps one process for all 12k tests) ran out of memory 500 files later (2026-10-17). The same goes for any process-global state: `session_save_path()`, `$_SERVER`, `ini_set()`.
 - **Coverage: use `test:coverage:parallel`.** It passes and takes ~40s. Serial `test:coverage` has ~37 pre-existing failures (mostly 403s in `IndexQueryTest` and `Mcp/McpAuthPersonaGroupAccessTest`) that look like rate limiting during the much longer single-process run — unrelated to the memory limit, and not present in parallel.
 - **API Endpoint Testing**: Use `postJson()` instead of `post()` for JSON endpoints
 - **Flexible Status Codes**: Use `toBeIn([200, 400, 404, 405])` instead of exact matches for better test framework compatibility
@@ -227,7 +257,7 @@ composer run test:all
 - **Error Handling**: Test both success and failure scenarios with graceful error handling
 - **Golden snapshots**: `tests/Feature/FormGoldenTest.php` pins the HTML of every form the factory builds against Pest snapshots in `tests/.pest/snapshots/`, which are **committed**. Pest never fails on a missing snapshot — it recreates it silently and marks the test incomplete, `--ci` included — so `bin/check-snapshots.php` fails when a snapshot is untracked or deleted-unstaged; it runs after the PHP tests in `bin/runtests.sh`, in `composer test:build`, and in the pre-commit hook. A snapshot diff is a behaviour change: intended → delete the file and re-run, then commit the new one; not intended → that is the regression
 - **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally. Under `--parallel` the cache is per-worker, so clear `tests/.workers/*/cache` (or just `rm -rf tests/.workers`) instead
-- **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
+- **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. `bin/watch.sh` does the rebuild automatically while it runs. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
   - **Tests do not catch this.** `tests/bootstrap.php` sets `APP_ENV=test`, which switches `BundleMiddleware`'s check off so the suite doesn't have to regenerate the manifest after every edit, and no test covers the manifest. `composer test` is plain pest with no bundle step. The gate is `composer run bundle:check` (~0.3s), which CI runs — but only after a push, so an install tracking `dev-develop` can pull the broken commit first. `bin/runtests.sh` runs it as its first step, so use that and you cannot miss it
   - Install the pre-commit hook with `bin/install-hooks.sh` to run that check automatically. Note the manifest hashes the **working tree, not the index**: rebuild with unstaged edits to a covered file present and it records content that isn't in the commit
 
@@ -312,14 +342,14 @@ These are non-obvious details that are important when working in these areas:
 ### CLI System (`tcms`)
 - **Framework**: Symfony Console via `CliApplication`
 - **Entry Point**: `resources/bin/tcms` (shipped; exposed as `vendor/bin/tcms` via Composer `bin`). In this repo run it as `php resources/bin/tcms` — there is no `bin/tcms` symlink.
-- **Commands**: `collection:list|get|export|import|query`, `object:list|get|create|patch|export|delete`, `schema:list|get|export|import|lint`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `check`, `pull`, `push`
+- **Commands**: `collection:list|get|create|update|export|import|query|convert`, `access-group:list|get|set|patch`, `object:list|get|create|patch|export|delete`, `schema:list|get|export|import|lint`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `check`, `pull`, `push`
 - **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
 - **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
 
 ### Event System
 - **Dispatcher**: `src/Domain/Event/Service/EventDispatcher.php` — synchronous, priority-ordered
 - **Event names**: Always use the `CoreEvent` consts (`src/Domain/Event/Data/CoreEvent.php`) at `dispatch()`/`listen()` call sites, never raw strings
-- **Core Events** (20): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.updated`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `bulk.deleted`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Core Events** (22): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.updated`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `bulk.deleted`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`, `access.denied`, `file.downloaded`
 - **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager, ObjectImporter, JumpStartImporter, DeckJsonImporter, DeckCsvImporter
 - **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
 - **Import-Time Behavior**: While a collection is mid-import (`EventDispatcher::suspendForImport($collection)`), `object.created` and `object.updated` events are **suppressed** for that collection — importers fire `import.created` / `import.updated` per object instead, with the same `ObjectEventPayload` shape. Listeners that want to react to import-time writes specifically subscribe to the `import.*` events. `import.completed` auto-resumes the suspension (safety net for forgetful importers). `ObjectImporter` self-suspends when called outside an explicit lifecycle (e.g. `JobRunner` processing a single queued job).
@@ -368,7 +398,7 @@ These are non-obvious details that are important when working in these areas:
 
 ### Documentation (`resources/docs/`)
 - **Source of truth**: `resources/docs/*.md` is mirrored to docs.totalcms.co. Template changes to `resources/templates/admin/docs.twig` only affect the in-admin viewer — the public site has its own template that needs parallel changes.
-- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 15 top-level groups: Get Started, Collections, Schemas, Fields, Site Builder, Twig, Forms, Automations, Admin, Notifications, Auth, APIs, MCP, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields, Twig, and Extensions & CLI use nested subgroups (the last via mixed `sub` + `groups`); everything else is flat.
+- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 15 top-level groups: Get Started, Collections, Schemas, Fields, Site Builder, Twig, Forms, Automations, Admin, Notifications, Auth, APIs, MCP, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields, Twig, and Extensions & CLI use nested subgroups (the last via mixed `sub` + `groups`); everything else is flat. Groups carrying `'sort' => 'alpha'` (Operations, Field Types, Bundled Extensions) sort themselves by title inside `menu.php`, with `'pinned' => true` entries held at the top — append new pages anywhere in those; learning-path groups are hand-ordered.
 - **Folder convention**: each doc lives in `resources/docs/<kebab-cased-group-name>/<page>.md` matching its menu group (e.g. `get-started/`, `site-builder/`, `apis/`, `operations/`). Subgroups (Field Types, Field Options, Twig Basics, etc.) exist only in the menu — the files themselves are flat within the group folder. URL = path = file path under `resources/docs/`.
 - **Images & screenshots**: co-locate with the section that uses them, in `resources/docs/<section>/images/<name>.png`. Reference in markdown as `docs/<section>/images/<name>.png` (the `docs/` prefix is required because of the admin's `<base href>`). `AdminDocsAction` serves png/jpg/gif/svg/webp at the same route as markdown pages — see the image-mime branch in that file. Use kebab-case filenames.
 - **Navigation primitives**: breadcrumbs, prev/next, and the related-pages footer are all derived from the menu — no extra config needed. Breadcrumb group label = whichever menu group the page lives in.

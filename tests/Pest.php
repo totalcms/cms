@@ -7,6 +7,7 @@ use Mcp\Schema\Wire\McpHeader;
 use Mcp\Server\Stateless\RequestMeta;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\NullLogger;
 use Random\RandomException;
@@ -16,6 +17,12 @@ use Tests\Fakes\OfflineHttpClient;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
@@ -29,6 +36,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Cron\Service\CronTokenProvider;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -46,6 +54,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -97,7 +106,7 @@ require_once __DIR__ . '/worker-paths.php';
 // Ensure Symfony Console Resources directory exists (missing in some CI environments)
 $consoleResourcesDir = dirname((new ReflectionClass(Application::class))->getFileName()) . '/Resources';
 if (!is_dir($consoleResourcesDir)) {
-	@mkdir($consoleResourcesDir, 0755, true);
+	is_dir($consoleResourcesDir) || mkdir($consoleResourcesDir, 0755, true);
 }
 
 /*
@@ -174,9 +183,93 @@ function bootstrap()
 	$container = $app->getContainer();
 	if ($container instanceof Container) {
 		$container->set(HttpClientInterface::class, new OfflineHttpClient());
+
+		// Setup code that calls services directly (seeding users, objects)
+		// acts as the operator, like the CLI. An HTTP request made through the
+		// app resets the actor at its start, so requests are enforced as
+		// whoever they authenticate as.
+		$container->get(ActorContext::class)->set(Actor::system());
 	}
 
 	return $app;
+}
+
+/**
+ * An actor context already holding the system actor: what a service built by
+ * hand in a unit test runs as, like the CLI.
+ */
+function systemActors(): ActorContext
+{
+	$actors = new ActorContext();
+	$actors->set(Actor::system());
+
+	return $actors;
+}
+
+/**
+ * A write gate that lets everything through, for unit tests of the storage
+ * services that are not about access. The system actor never reaches the
+ * guard's collaborators, so a bare guard is enough.
+ */
+function systemWriteGate(?ActorContext $actors = null): ObjectWriteGate
+{
+	return new ObjectWriteGate($actors ?? systemActors(), (new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(), (new ReflectionClass(AccessDenials::class))->newInstanceWithoutConstructor());
+}
+
+/**
+ * A real AccessGuard for MCP tests. `$owned` maps a collection to its owner
+ * property; every other collection is unowned. Auth is on.
+ *
+ * @param array<string,string> $owned
+ */
+function mcpGuard(TestCase $test, array $owned = []): AccessGuard
+{
+	// Closure::call() binds to the test so its protected createStub() is reachable.
+	return (function () use ($owned): AccessGuard {
+		$owners = $this->createStub(OwnerPropertyResolver::class);
+		$owners->method('resolve')->willReturnCallback(static fn (string $collection): string => $owned[$collection] ?? '');
+		$owners->method('isOutsider')->willReturn(false);
+
+		$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => true, 'collection' => 'auth'];
+
+		return new AccessGuard($this->createStub(SchemaFetcher::class), $this->createStub(ObjectFetcher::class), $owners, $config, $this->createStub(LoggerFactory::class));
+	})->call($test);
+}
+
+/**
+ * An actor context holding a member of the `auth` collection with the given
+ * group grants, as McpRequestAuthorizer sets one for an OAuth caller.
+ */
+function memberActors(UserAuthority $authority, string $userId = 'member-1'): ActorContext
+{
+	$actors = new ActorContext();
+	$actors->set(new Actor(ActorKind::Member, $userId, 'auth', $authority, []));
+
+	return $actors;
+}
+
+/**
+ * The `guard` and `actors` form services for an owner-check test: a real
+ * guard over the given owner resolver and object fetcher, and the actor a
+ * session for `$userId` would resolve to ('' = anonymous).
+ *
+ * @return array{guard: AccessGuard, actors: ActorContext}
+ */
+function formOwnerServices(string $userId, bool $superAdmin, string $authCollection, OwnerPropertyResolver $owners, ObjectFetcher $objects, Config $config, LoggerFactory $loggerFactory): array
+{
+	$actors = new ActorContext();
+	if ($userId !== '') {
+		$actors->set(new Actor($superAdmin ? ActorKind::Admin : ActorKind::Member, $userId, $authCollection !== '' ? $authCollection : (string)($config->auth['collection'] ?? '')));
+	}
+
+	// The owner check never reads a schema.
+	$schemas = (new ReflectionClass(SchemaFetcher::class))->newInstanceWithoutConstructor();
+
+	return [
+		'guard'  => new AccessGuard($schemas, $objects, $owners, $config, $loggerFactory),
+		'actors' => $actors,
+	];
 }
 
 /**
@@ -695,7 +788,7 @@ function testExtensionGuard(): ExtensionGuard
 	static $tmpRoot = null;
 	if ($tmpRoot === null) {
 		$tmpRoot = sys_get_temp_dir() . '/tcms-test-guard-' . bin2hex(random_bytes(6));
-		@mkdir($tmpRoot, 0777, true);
+		is_dir($tmpRoot) || mkdir($tmpRoot, 0777, true);
 		register_shutdown_function(function () use ($tmpRoot): void {
 			if (is_dir($tmpRoot)) {
 				recursiveDelete($tmpRoot, forceComplete: true);
@@ -837,7 +930,15 @@ function tcmsTestTempDir(string $prefix): string
 	if ($dirs === []) {
 		register_shutdown_function(static function () use (&$dirs): void {
 			foreach ($dirs as $created) {
-				foreach ((array)@scandir($created . '/.system') as $entry) {
+				// is_dir() first: scandir() on a missing folder warns even under @,
+				// and at shutdown PHPUnit's error handler turns that into a second
+				// fatal ("Cannot find TestCase object on call stack") that buries
+				// the real one.
+				if (!is_dir($created . '/.system')) {
+					@rmdir($created);
+					continue;
+				}
+				foreach ((array)scandir($created . '/.system') as $entry) {
 					if ($entry !== '.' && $entry !== '..') {
 						@unlink($created . '/.system/' . $entry);
 					}
@@ -870,7 +971,7 @@ function devModeManager(string $datadir): DevModeManager
 	$config->datadir = $datadir;
 
 	if (!is_dir($config->systemDir())) {
-		@mkdir($config->systemDir(), 0775, true);
+		is_dir($config->systemDir()) || mkdir($config->systemDir(), 0775, true);
 	}
 
 	return new DevModeManager(
@@ -992,4 +1093,56 @@ function jsonStoreArgs(string $absolutePath): array
 	);
 
 	return [$store, basename($absolutePath)];
+}
+
+/**
+ * Build a zip in a private temp dir from a map of entry name => contents.
+ * A value of null adds a directory entry. Returns the zip path.
+ *
+ * @param array<string,string|null> $entries
+ */
+function buildTestZip(array $entries, string $prefix = 'tcms-ext-zip'): string
+{
+	$dir = tcmsTestTempDir($prefix);
+	mkdir($dir, 0755, true);
+	$path = $dir . '/archive.zip';
+
+	$zip = new ZipArchive();
+	$zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+	foreach ($entries as $name => $contents) {
+		if ($contents === null) {
+			$zip->addEmptyDir($name);
+		} else {
+			$zip->addFromString($name, $contents);
+		}
+	}
+	$zip->close();
+
+	return $path;
+}
+
+/**
+ * extension.json contents for a fixture extension.
+ *
+ * @param array<string,mixed> $extra
+ */
+function testExtensionManifest(string $id, string $version = '1.0.0', array $extra = []): string
+{
+	return (string)json_encode(array_merge([
+		'id'          => $id,
+		'name'        => 'Fixture ' . $id,
+		'description' => 'A fixture',
+		'version'     => $version,
+		'requires'    => ['totalcms' => '>=3.0.0', 'php' => '>=8.2'],
+		'entrypoint'  => 'Extension.php',
+		'license'     => 'MIT',
+	], $extra), JSON_PRETTY_PRINT);
+}
+
+/** A minimal Extension.php body. $risky adds a shell_exec so the scanner flags it. */
+function testExtensionClass(bool $risky = false): string
+{
+	$body = $risky ? "\t\tshell_exec('ls');\n" : '';
+
+	return "<?php\n\ndeclare(strict_types=1);\n\nnamespace TestZip\\Fixture;\n\nuse TotalCMS\\Domain\\Extension\\ExtensionContext;\nuse TotalCMS\\Domain\\Extension\\ExtensionInterface;\n\nclass Extension implements ExtensionInterface\n{\n\tpublic function register(ExtensionContext \$context): void\n\t{\n{$body}\t}\n\n\tpublic function boot(ExtensionContext \$context): void\n\t{\n\t}\n}\n";
 }

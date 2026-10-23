@@ -6,10 +6,14 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Tool\Admin\MediaMetaEdit;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 
 /**
  * `describe_collection(collection)` — the detail layer in the three-step
@@ -80,8 +84,9 @@ readonly class DescribeCollectionTool
 				'id'            => ['type' => 'string'],
 				'description'   => ['type' => ['string', 'null'], 'description' => 'Collection-level mcp.description, falling back to the schema description.'],
 				'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
-				'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated'], 'description' => 'Persona that can query this collection.'],
+				'access'        => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public'], 'description' => 'Persona that can query this collection.'],
 				'total_objects' => ['type' => 'integer'],
+				'ownership'     => ['type' => ['string', 'null'], 'description' => 'Set when the collection limits the caller to their own objects, or has fields only the site sets: what the caller sees and may change.'],
 				'properties'    => [
 					'type'        => 'array',
 					'description' => 'One entry per exposed property (mcp.expose:false fields are stripped). Per-property mcp.description is surfaced here when set.',
@@ -124,8 +129,53 @@ readonly class DescribeCollectionTool
 			'url_pattern'   => $collectionData->url,
 			'access'        => $cfg['access'],
 			'total_objects' => max(0, $collectionData->totalObjects),
-			'properties'    => $this->schemaResolver->describeProperties($collectionData),
+			'ownership'     => $this->ownership($collection, $collectionData),
+			'properties'    => array_map($this->withMediaHint(...), $this->schemaResolver->describeProperties($collectionData)),
 		];
+	}
+
+	/**
+	 * An image, file, gallery or depot property says how to edit its
+	 * metadata over MCP, since its file cannot be written.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withMediaHint(array $property): array
+	{
+		$type = (string)($property['type'] ?? '');
+		if (MediaMetaPolicy::editableKeys($type) === []) {
+			return $property;
+		}
+
+		$hint                    = 'Files cannot be uploaded over MCP; edit the uploaded file\'s metadata with patch_object as ' . MediaMetaEdit::hint($type) . '.';
+		$property['description'] = trim(($property['description'] ?? '') . ' ' . $hint);
+
+		return $property;
+	}
+
+	/**
+	 * A sentence telling the agent up front what the caller may see and
+	 * change here, so it does not learn the limits one refusal at a time.
+	 */
+	private function ownership(string $collection, CollectionData $collectionData): ?string
+	{
+		$sentences = [];
+		$scope     = $this->personaContext->readScope($collection, $collectionData);
+		if ($scope->owner instanceof OwnerScope) {
+			$sentences[] = $scope->published
+				? 'You see your own objects (drafts included) and everyone else\'s published ones, and you can edit only your own.'
+				: 'You see and edit only your own objects.';
+			$sentences[] = sprintf('New objects are recorded as yours in "%s".', $scope->owner->property);
+		}
+
+		$siteFields = array_diff($this->personaContext->fieldsSetBySite($collection), [$scope->owner?->property]);
+		if ($siteFields !== []) {
+			$sentences[] = sprintf('The site sets these fields itself; values you send for them are ignored: %s.', implode(', ', $siteFields));
+		}
+
+		return $sentences === [] ? null : implode(' ', $sentences);
 	}
 
 	private function description(): string

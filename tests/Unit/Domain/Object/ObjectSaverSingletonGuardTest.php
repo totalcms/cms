@@ -36,6 +36,7 @@ function makeObjectSaverWithSingletonDeps(CollectionData $collection, array $exi
 		new EventDispatcher(new NullLogger()),
 		$fetcher,
 		$index,
+		systemWriteGate(),
 	);
 }
 

@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -47,7 +48,7 @@ final class SearchCollectionToolTest extends TestCase
 		// canReadCollection() call — the objects+read group gate is enforced
 		// entirely by McpServerFactory::guardHandler(), which this unit test
 		// (calling ->handler() directly) never exercises.
-		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->persona = new PersonaContext($this->collections, $this->resolver, mcpGuard($this), new ActorContext());
 
 		$this->tool = new SearchCollectionTool(
 			$this->searchService,
@@ -125,6 +126,7 @@ final class SearchCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::PUBLIC_);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('auth'));
 		$this->resolver->method('isAccessibleTo')->willReturn(false);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'admin', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => '']);
 
 		try {
 			$this->tool->handler(collection: 'auth', query: 'admin');
@@ -146,6 +148,8 @@ final class SearchCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
+		// A public caller only ever reaches a collection exposed publicly.
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => false, 'titleProperty' => '']);
 
 		$capturedQuery = null;
 		$this->searchService->expects($this->once())

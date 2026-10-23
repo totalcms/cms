@@ -46,6 +46,23 @@ readonly class LicenseStatus
 	 */
 	public function getSidebarStatus(): LicenseStatusData
 	{
+		// An offline license file that will not validate comes first. The
+		// validator has already fallen through to online or cached data, and
+		// that data's warnings — DNS verification above all — mean nothing on
+		// an air-gapped site. The usual cause is a domain mismatch: the file is
+		// named for, and signed for, the licensed domain, while Total CMS
+		// detected something else from the request (a port, an IP, a different
+		// hostname). Say so instead of leaving the stale warning on screen.
+		$offlineError = $this->licenseValidator->getOfflineLicenseError();
+		if ($offlineError !== null) {
+			return new LicenseStatusData(
+				showIcon : true,
+				severity : 'error',
+				tooltip  : 'Offline license file found but rejected: ' . $offlineError
+					. ' If the domains differ, set `domain` in config/tcms.php to the licensed one.'
+			);
+		}
+
 		try {
 			$license = $this->licenseValidator->validateLicense();
 
@@ -90,7 +107,9 @@ readonly class LicenseStatus
 				);
 			}
 
-			// DNS not verified
+			// DNS not verified. Unreachable with an offline license in play: a
+			// valid file reports the flag as true, and a rejected one returned
+			// above — so this only ever describes an online license.
 			if (!$license->trial && !$license->dnsVerified) {
 				return new LicenseStatusData(
 					showIcon : true,

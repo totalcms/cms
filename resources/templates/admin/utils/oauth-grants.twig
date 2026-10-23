@@ -57,7 +57,7 @@
 											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_read_label') }}</span>
 											<div class="dash-badge-group">
 												{% for id in reach.readable %}
-													<span class="dash-badge accent sm">{{ id }}</span>
+													<span class="dash-badge accent sm"{% if id in reach.own %} title="{{ t('oauth_grants.reach_own_title') }}"{% endif %}>{{ id }}{% if id in reach.own %} · {{ t('oauth_grants.reach_own') }}{% endif %}</span>
 												{% endfor %}
 												{% if reach.readableOverflow > 0 %}
 													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.readableOverflow}) }}</span>
@@ -70,23 +70,10 @@
 											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_write_label') }}</span>
 											<div class="dash-badge-group">
 												{% for id in reach.writable %}
-													<span class="dash-badge warning sm">{{ id }}</span>
+													<span class="dash-badge warning sm"{% if id in reach.own %} title="{{ t('oauth_grants.reach_own_title') }}"{% endif %}>{{ id }}{% if id in reach.own %} · {{ t('oauth_grants.reach_own') }}{% endif %}</span>
 												{% endfor %}
 												{% if reach.writableOverflow > 0 %}
 													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.writableOverflow}) }}</span>
-												{% endif %}
-											</div>
-										</div>
-									{% endif %}
-									{% if reach.deleteOnly|length > 0 %}
-										<div class="oauth-reach-row">
-											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_delete_only_label') }} <span class="oauth-reach-row-hint">{{ t('oauth_grants.reach_delete_only_hint') }}</span></span>
-											<div class="dash-badge-group">
-												{% for id in reach.deleteOnly %}
-													<span class="dash-badge muted sm">{{ id }}</span>
-												{% endfor %}
-												{% if reach.deleteOnlyOverflow > 0 %}
-													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.deleteOnlyOverflow}) }}</span>
 												{% endif %}
 											</div>
 										</div>

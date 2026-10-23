@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -71,7 +72,7 @@ readonly class CollectionResource
 		}
 
 		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value, $this->personaContext->getLimitedKey() instanceof ApiKeyData)) {
 			throw new ToolCallException(\sprintf(
 				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
 				$collection,
@@ -95,24 +96,14 @@ readonly class CollectionResource
 		$index = $this->indexReader->fetchIndex($collection);
 		$items = $index->objects->all();
 
-		// Drafts are hidden from anyone whose authority doesn't grant read on
-		// this collection — PersonaContext::canReadDrafts() is the single home
-		// for this rule (ADMIN always; an OAuth caller when their access
-		// groups grant read; false for public/anonymous). Deliberately NOT
-		// canReadCollection(): drafts always require the real grant, never
-		// mere public exposure — an AUTHENTICATED caller with no group grant
-		// reaches this line (not denied above) when $collection is
-		// mcp.access:'public' (Task 10b's carve-out), and this filter still
-		// strips their drafts even though the gate above admitted them. So
-		// this line strips drafts for PUBLIC_ AND for that ungranted-but-
-		// public-collection AUTHENTICATED case; ADMIN and a genuinely
-		// grant-holding AUTHENTICATED caller are the only ones who keep them.
-		if (!$this->personaContext->canReadDrafts($collection)) {
-			$items = array_values(array_filter(
-				$items,
-				static fn (array $i): bool => empty($i['draft']),
-			));
-		}
+		// Only what the caller's read scope allows (PersonaContext::readScope()):
+		// everything for ADMIN and a group grant on an unowned collection;
+		// a member's own objects (plus published ones when the collection is
+		// public) on an owned collection; published objects for everyone else.
+		// Deliberately NOT canReadCollection(): an AUTHENTICATED caller with
+		// no grant reaches this line when the collection is mcp.access:'public',
+		// and still sees no drafts.
+		$items = $this->personaContext->readScope($collection, $collectionData)->filter($items);
 
 		// `total` is intentionally the post-filter count — it reflects what
 		// the persona can see, not the raw index size. Public callers see

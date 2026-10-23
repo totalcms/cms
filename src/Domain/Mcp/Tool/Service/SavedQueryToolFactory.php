@@ -10,6 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
 
@@ -50,6 +51,7 @@ final readonly class SavedQueryToolFactory
 			shaper: $this->container->get(McpObjectShaper::class),
 			collectionRepository: $this->container->get(CollectionRepository::class),
 			resultFormatter: $this->container->get(CollectionQueryResultFormatter::class),
+			schemaResolver: $this->container->get(McpSchemaResolver::class),
 		);
 	}
 
@@ -180,6 +182,8 @@ final readonly class SavedQueryToolFactory
 	 * The eval() input is strictly validated: types restricted to
 	 * string|number|integer|boolean, names enforced against
 	 * ^[a-z][a-z0-9_]*$ by SavedQueryToolDefinition::fromArray().
+	 *
+	 * @SuppressWarnings("PHPMD.EvalExpression")
 	 */
 	public function closureFor(SavedQueryToolDefinition $definition, SavedQueryTool $tool): \Closure
 	{

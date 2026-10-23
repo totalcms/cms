@@ -67,6 +67,16 @@ describe('rejectNonOk', () => {
 		await expect(rejectNonOk(resp)).rejects.toMatchObject({ message: 'Forbidden', status: 403 });
 	});
 
+	test('reads a top-level message, the shape the settings actions answer with', async () => {
+		const resp = response(false, 400, { success: false, message: 'Invalid settings section' });
+		await expect(rejectNonOk(resp)).rejects.toMatchObject({ message: 'Invalid settings section', status: 400 });
+	});
+
+	test('names the HTTP status when the body says nothing', async () => {
+		const resp = response(false, 429, {});
+		await expect(rejectNonOk(resp)).rejects.toMatchObject({ message: 'HTTP 429', status: 429 });
+	});
+
 	test('a non-OK response without a JSON body still rejects, with no data', async () => {
 		const resp = { ok: false, status: 502, json: () => Promise.reject(new SyntaxError('Unexpected token <')) };
 		await expect(rejectNonOk(resp)).rejects.toSatisfy(err => err.data === undefined);

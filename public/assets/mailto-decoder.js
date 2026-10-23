@@ -1,2 +1,2 @@
-import"./chunk-JIYKKGXY.js";import"./chunk-CW345KIZ.js";
+import"./chunk-VQCNHHAL.js";import"./chunk-N5O52Q2M.js";
 //# sourceMappingURL=mailto-decoder.js.map

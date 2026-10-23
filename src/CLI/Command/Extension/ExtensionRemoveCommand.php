@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command\Extension;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 use TotalCMS\CLI\Command\BaseCommand;
-use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
-use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
-use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\Install\ExtensionRemover;
+use TotalCMS\Domain\Extension\Service\Install\InstallException;
 
 class ExtensionRemoveCommand extends BaseCommand
 {
@@ -30,74 +27,27 @@ class ExtensionRemoveCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$id        = (string)$input->getArgument('id');
-		$discovery = $this->totalcms->container()->get(ExtensionDiscovery::class);
-		$manager   = $this->totalcms->container()->get(ExtensionManager::class);
-		$stateRepo = $this->totalcms->container()->get(ExtensionStateRepository::class);
+		$id      = (string)$input->getArgument('id');
+		$remover = $this->totalcms->container()->get(ExtensionRemover::class);
 
-		$extPath = $discovery->getExtensionPath($id);
-		if ($extPath === null) {
-			return $this->outputError($input, $output, "Extension '{$id}' not found");
+		// Surface not-found and ownership refusals BEFORE asking for
+		// confirmation, so nobody confirms a removal that was never possible.
+		try {
+			$remover->assertRemovable($id);
+		} catch (InstallException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
 		}
 
-		// Bundled extensions ship with the T3 package and are managed by core
-		// updates. Removing files would be undone on the next composer/zip
-		// install — so we refuse and point the user at the disable path.
-		$manifests = $discovery->discover();
-		$manifest  = $manifests[$id] ?? null;
-		if ($manifest !== null && $manifest->bundled) {
-			return $this->outputError(
-				$input,
-				$output,
-				"Extension '{$id}' is bundled with Total CMS and cannot be removed. Use `tcms extension:disable {$id}` to turn it off.",
-			);
+		$refused = $this->confirmOrRefuse($input, $output, "Remove extension '{$id}'? This deletes the extension files but NOT its data. [y/N] ");
+		if ($refused !== null) {
+			return $refused;
 		}
 
-		// Project extensions live in the site's source-controlled extensions/
-		// directory — deleting files behind the repo's back invites a git-vs-disk
-		// mismatch. Removal belongs in source control.
-		if ($manifest !== null && $manifest->project) {
-			return $this->outputError(
-				$input,
-				$output,
-				"Extension '{$id}' lives in the project extensions directory and cannot be removed here. Delete it from source control instead, or use `tcms extension:disable {$id}` to turn it off.",
-			);
+		try {
+			$remover->remove($id);
+		} catch (InstallException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
 		}
-
-		// Composer installed it into vendor/ and Composer takes it out again —
-		// deleting the directory by hand leaves composer.json and the lockfile
-		// still requiring it, and the next `composer install` puts it back.
-		if ($manifest !== null && $manifest->composerPackage !== '') {
-			return $this->outputError(
-				$input,
-				$output,
-				"Extension '{$id}' is installed by Composer and cannot be removed here. Run `composer remove {$manifest->composerPackage}` instead, or use `tcms extension:disable {$id}` to turn it off.",
-			);
-		}
-
-		if (!$input->getOption('force') && !$this->isJson($input)) {
-			/** @var QuestionHelper $helper */
-			$helper   = $this->getHelper('question');
-			$question = new ConfirmationQuestion(
-				"Remove extension '{$id}'? This deletes the extension files but NOT its data. [y/N] ",
-				false,
-			);
-
-			if (!$helper->ask($input, $output, $question)) {
-				$output->writeln('Aborted.');
-
-				return Command::SUCCESS;
-			}
-		}
-
-		// Disable first
-		$manager->disable($id);
-
-		// Remove the extension directory
-		$this->removeDirectory($extPath);
-
-		// Clean up state
-		$stateRepo->removeState($id);
 
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode(['status' => 'removed', 'id' => $id]));
@@ -109,28 +59,5 @@ class ExtensionRemoveCommand extends BaseCommand
 		$output->writeln('<comment>Extension data in tcms-data was preserved.</comment>');
 
 		return Command::SUCCESS;
-	}
-
-	private function removeDirectory(string $path): void
-	{
-		if (!is_dir($path)) {
-			return;
-		}
-
-		$items = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::CHILD_FIRST,
-		);
-
-		foreach ($items as $item) {
-			/** @var \SplFileInfo $item */
-			if ($item->isDir()) {
-				rmdir($item->getRealPath());
-			} else {
-				unlink($item->getRealPath());
-			}
-		}
-
-		rmdir($path);
 	}
 }

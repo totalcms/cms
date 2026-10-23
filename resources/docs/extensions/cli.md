@@ -219,6 +219,34 @@ tcms collection:create about --schema=text --singleton --json
 
 Exits `1` when the collection already exists, when a non-reserved ID is given without `--schema`, or when the schema is unknown or is a reference schema (`totalcms`, `totalcms-item`).
 
+### `collection:update`
+
+Change some of an existing collection's settings, keeping the rest. The save validates the result as the collection form does and fires `collection.updated`, which editing `.meta.json` by hand skips.
+
+```bash
+tcms collection:update recipes --set ownerProperty=author
+tcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true
+tcms collection:update blog --set mcp.access=authenticated
+tcms collection:update products --set properties.price.label=Cost
+echo '{"seo":{"titleTemplate":"{title} | Recipes"}}' | tcms collection:update recipes -
+```
+
+`--set key=value` sets one setting and can be repeated. A dot reaches into a map: `mcp.access`, or `properties.price.label` for one field override. The value is read as JSON when it parses (`true`, `5`, `null`, `["a","b"]`) and as a string otherwise; to keep a string that looks like something else, quote it as JSON: `--set 'labelSingular="2024"'`.
+
+For bigger changes, pass JSON from a file or `-` for stdin; any `--set` is applied on top of it. These settings are maps that merge one key at a time, so send only the keys you change: `properties`, `customProperties`, `formSettings`, `mcp`, `seo`, `sitemap` and `feed`. A key set to `null` removes it. Field overrides live under `properties`, keyed by property name, and a field's overrides merge too, so changing its label keeps its help text. Every other setting is replaced by the value sent.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Collection ID |
+| `file` | No | JSON file holding the settings to change, or `-` for stdin |
+
+| Option | Description |
+|--------|-------------|
+| `--set key=value` | Set one setting; a dot reaches into a map. Repeatable |
+| `--json` | Print the saved settings |
+
+Exits `1` when the collection does not exist, when nothing is given to change, or when the save refuses the result. A collection cannot be renamed, and its storage format changes only with [`collection:convert`](#collectionconvert). Custom MCP tools (`mcp.tools`) are checked as the REST endpoints check them.
+
 ### `collection:query`
 
 Query a collection's index with filtering, searching, sorting, and pagination.
@@ -316,6 +344,64 @@ tcms collection:convert docs --to=json --json
 | `--dry-run` | Report what would change without writing anything |
 
 ---
+
+## Access Group Commands
+
+[Access groups](docs/auth/access-groups) live in `.system/access-groups.json`, not in a collection, so these commands are how a script or agent reads and changes them. Changing a group needs the Access Groups edition, as the admin page does; reading works on every edition.
+
+### `access-group:list`
+
+List every group with what it grants on collection content.
+
+```bash
+tcms access-group:list
+tcms access-group:list --json
+```
+
+### `access-group:get`
+
+Show one group. With `--json` it prints the full definition, the shape `access-group:set` takes.
+
+```bash
+tcms access-group:get editor
+tcms access-group:get editor --json
+```
+
+### `access-group:set`
+
+Create a group, or replace one, from a full JSON definition (a file, or `-` for stdin). Any permission section left out grants nothing.
+
+```bash
+tcms access-group:set authors authors.json
+tcms access-group:get editor --json | tcms access-group:set editor-copy -
+```
+
+```json
+{
+  "description": "Writes blog posts",
+  "permissions": {
+    "collections":     {"operations": ["create", "read", "update"], "all": false, "allowed": ["blog"]},
+    "collectionsMeta": {"operations": ["read"], "all": true},
+    "schemas":         {"operations": ["read"], "all": true},
+    "utils":           {"all": false, "allowed": ["cache"]},
+    "settings":        {"all": false, "allowed": []},
+    "extensions":      {"all": true},
+    "dataviews": false, "builder": false, "mailer": false,
+    "playground": false, "docs": true, "inlineEdit": true
+  }
+}
+```
+
+`collections` is content, `collectionsMeta` collection settings, and `schemas` schemas; each takes `operations` (from `create`, `read`, `update`, `delete`), `all`, and `allowed`, a list of ids used when `all` is false. `utils`, `settings` and `extensions` take `all` and `allowed`. The rest are true or false. An unknown section, key or operation is refused rather than saved, since a misspelled one would quietly grant nothing. The `admin` group cannot be changed.
+
+### `access-group:patch`
+
+Change part of an existing group. Each permission section merges key by key, so send only what changes; a list (`operations`, `allowed`) is replaced by the list sent.
+
+```bash
+echo '{"permissions":{"collections":{"allowed":["blog","news"]}}}' | tcms access-group:patch editor -
+echo '{"permissions":{"dataviews":true}}' | tcms access-group:patch analysts -
+```
 
 ## Object Commands
 
@@ -436,6 +522,8 @@ tcms object:delete blog my-post --force
 | Option | Description |
 |--------|-------------|
 | `--force, -f` | Skip the confirmation prompt (required for non-interactive/CI use) |
+
+The prompt defaults to no. A run that cannot answer it — no terminal on stdin, or `-n` — fails with exit code 1 and deletes nothing, so a script that forgets `--force` finds out rather than carrying on. The same holds for every command that confirms before acting: `backup:restore`, `update:apply`, `update:rollback` and `extension:remove`. `--json` also skips the prompt.
 
 ---
 
@@ -911,6 +999,49 @@ tcms extension:list --json
 
 `source` is where the extension was found: `bundled` (ships with Total CMS), `composer` (a `totalcms-extension` package in `vendor/`), `project` (the site's `extensions/` directory) or `user` (`tcms-data/extensions/`).
 
+### `extension:install`
+
+Install an extension from a zip into `tcms-data/extensions/{vendor}/{name}/`, or replace one that is already there.
+
+```bash
+tcms extension:install ~/Downloads/seo-pro-1.2.0.zip
+tcms extension:install seo-pro-1.2.0.zip --force     # replace without asking
+tcms extension:install seo-pro-1.2.0.zip --json
+```
+
+The zip is the extension folder zipped (a single top-level folder holding `extension.json`), or `extension.json` at the zip root. The install path comes from the manifest id. The archive is checked for unsafe paths and symlinks, the manifest is validated and checked against this site's Total CMS, PHP and edition requirements, and the code is scanned before it lands. A fresh install is **not** enabled; run `extension:enable` when you have reviewed it. Replacing an installed extension keeps its state, permissions and settings and asks for confirmation unless `--force` is given; an enabled extension whose replacement adds risky code is disabled pending review.
+
+An id owned by a bundled, Composer or project extension is refused with the owner named.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `zip` | Yes | Path to the extension zip |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Replace an existing copy without the confirmation prompt |
+
+### `extension:package`
+
+Build the distributable zip for an extension directory: `{name}-{version}.zip` with everything inside a single `{name}/` folder — the shape `extension:install` and the admin upload accept.
+
+```bash
+cd my-extension && tcms extension:package
+tcms extension:package path/to/my-extension --output ~/releases
+tcms extension:package . --force                       # overwrite an existing zip
+```
+
+`.git`, `.github`, `.DS_Store`, `node_modules` and `tests` are left out at any depth; everything else, including `vendor/`, goes in as found. Run `composer install --no-dev` first if the extension has Composer dependencies — the command warns when `composer.json` has requirements but there is no `vendor/autoload.php`.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `dir` | No | Extension directory containing `extension.json` (default: current directory) |
+
+| Option | Description |
+|--------|-------------|
+| `--output, -o` | Directory to write the zip into (default: next to the extension directory) |
+| `--force, -f` | Overwrite an existing zip |
+
 ### `extension:enable`
 
 Enable a discovered extension.
@@ -923,6 +1054,8 @@ tcms extension:enable acme/seo-pro --json
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `id` | Yes | Extension ID (e.g. `vendor/extension-name`) |
+
+Running it again on an extension that is already enabled keeps the operator's permission choices and turns **on** any capability the extension has gained since. That is the quick way to pick up a new registration while developing an extension: a capability Total CMS first sees at boot is added turned **off** (see [Stability & Safety](docs/extensions/safety#updates)), and the log says so with a warning naming the capability.
 
 ### `extension:disable`
 

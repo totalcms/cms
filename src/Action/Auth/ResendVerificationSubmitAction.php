@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Process a resend-verification request.
@@ -20,6 +21,9 @@ use TotalCMS\Support\Config;
  * Always responds with a generic success message — never reveals whether the
  * email exists or is already active (same anti-enumeration posture as
  * forgot-password).
+ *
+ * A `redirect` field (the resend form's hidden field) is checked same-origin
+ * and stored on the new token, and kept on the way back to the form.
  */
 readonly class ResendVerificationSubmitAction
 {
@@ -50,6 +54,15 @@ readonly class ResendVerificationSubmitAction
 			? $router->urlFor('resend-verification', ['collection' => $args['collection']])
 			: $router->urlFor('resend-verification');
 
+		$redirect = SameOriginRedirect::resolve(
+			is_string($data['redirect'] ?? null) ? $data['redirect'] : '',
+			$request->getUri()->getHost(),
+			'',
+		);
+		if ($redirect !== '') {
+			$url .= '?' . http_build_query(['redirect' => $redirect]);
+		}
+
 		$email = trim((string)($data['email'] ?? ''));
 
 		if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -58,7 +71,7 @@ readonly class ResendVerificationSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		$result = $this->verificationService->resendVerificationToken($email, $collection);
+		$result = $this->verificationService->resendVerificationToken($email, $collection, $redirect);
 
 		// Only actually send the email when the service issued a token. The
 		// service swallows the "already active" / "user not found" cases and
