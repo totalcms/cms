@@ -56,7 +56,7 @@ final readonly class ActivityCsvExporter
 	public function filename(ActivityFilter $filter): string
 	{
 		$range = match (true) {
-			$filter->from !== '' && $filter->to !== '' => "{$filter->from}-to-{$filter->to}",
+			$filter->from !== '' && $filter->to !== ''  => "{$filter->from}-to-{$filter->to}",
 			$filter->from !== ''                        => "from-{$filter->from}",
 			$filter->to !== ''                          => "to-{$filter->to}",
 			default                                     => date('Y-m-d'),

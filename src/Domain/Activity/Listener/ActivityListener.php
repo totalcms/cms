@@ -89,13 +89,13 @@ final readonly class ActivityListener
 				'collection' => $collection,
 				'objectId'   => $this->str($payload, 'id'),
 			],
-			CoreEvent::COLLECTION_UPDATED => ($payload['configChanged'] ?? true) === false ? null : ['collection' => $collection],
+			CoreEvent::COLLECTION_UPDATED                                => ($payload['configChanged'] ?? true) === false ? null : ['collection' => $collection],
 			CoreEvent::COLLECTION_CREATED, CoreEvent::COLLECTION_DELETED => [
 				'collection' => $collection,
 				'level'      => $event === CoreEvent::COLLECTION_DELETED ? ActivityEntry::LEVEL_WARNING : ActivityEntry::LEVEL_INFO,
 			],
-			CoreEvent::SCHEMA_SAVED, CoreEvent::SCHEMA_DELETED => ['objectId' => $this->str($payload, 'schema')],
-			CoreEvent::TEMPLATE_SAVED                          => ['objectId' => $this->str($payload, 'path')],
+			CoreEvent::SCHEMA_SAVED, CoreEvent::SCHEMA_DELETED          => ['objectId' => $this->str($payload, 'schema')],
+			CoreEvent::TEMPLATE_SAVED                                   => ['objectId' => $this->str($payload, 'path')],
 			CoreEvent::EXTENSION_ENABLED, CoreEvent::EXTENSION_DISABLED => ['objectId' => $this->str($payload, 'id')],
 			// The actor is still anonymous while the login request runs; the
 			// payload names the user who signed in.

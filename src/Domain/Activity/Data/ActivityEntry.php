@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Activity\Data;
 
+use TotalCMS\Domain\Auth\Data\Actor;
+
 /**
  * One row of the activity log: what happened, who did it, and to what.
  *
- * The actor columns are flattened from {@see \TotalCMS\Domain\Auth\Data\Actor::toArray()};
+ * The actor columns are flattened from {@see Actor::toArray()};
  * `initiator` is `kind:userId` of whoever started work the system carried out
  * (an automation run, a job), or '' when the actor acted directly.
  */

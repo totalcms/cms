@@ -24,6 +24,7 @@ use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -89,9 +90,9 @@ $parser = (new ParserFactory())->createForHostVersion();
 $finder = new NodeFinder();
 
 /** @return list<Node\Stmt> */
-function parseFile(string $path, \PhpParser\Parser $parser, bool $parents = false): array
+function parseFile(string $path, Parser $parser, bool $parents = false): array
 {
-	$stmts = $parser->parse((string) file_get_contents($path)) ?? [];
+	$stmts = $parser->parse((string)file_get_contents($path)) ?? [];
 	$t     = new NodeTraverser();
 	$t->addVisitor(new NameResolver());
 	if ($parents) {
@@ -122,9 +123,9 @@ function typeNames(?Node $type): array
 
 function classify(string $fqcn, string $kind, bool $abstract): array
 {
-	$parts = explode('\\', substr($fqcn, strlen(NS)));
-	$short = end($parts);
-	$area  = $parts[0];
+	$parts  = explode('\\', substr($fqcn, strlen(NS)));
+	$short  = end($parts);
+	$area   = $parts[0];
 	$domain = match ($area) {
 		'Domain', 'Action', 'Middleware' => count($parts) > 2 ? $parts[1] : $area,
 		default                          => $area,
@@ -132,21 +133,21 @@ function classify(string $fqcn, string $kind, bool $abstract): array
 	$path = implode('\\', array_slice($parts, 0, -1));
 
 	$role = match (true) {
-		$kind === 'interface'                                              => 'interface',
-		$kind === 'trait'                                                  => 'trait',
-		$kind === 'enum'                                                   => 'data',
-		$area === 'Action'                                                 => 'action',
-		$area === 'CLI' && str_contains($path, 'Command')                  => 'cli',
-		$area === 'Middleware'                                             => 'middleware',
-		(bool) preg_match('/^Domain\\\\Mcp\\\\(Tool|Resource|Prompt)/', $path) && !str_contains($path, 'Data') => 'mcp',
-		str_starts_with($path, 'Domain\\Twig\\Adapter')                    => 'twig',
-		str_contains($path, 'Exception') || str_ends_with($short, 'Exception') => 'exception',
+		$kind === 'interface'                                                                                       => 'interface',
+		$kind === 'trait'                                                                                           => 'trait',
+		$kind === 'enum'                                                                                            => 'data',
+		$area === 'Action'                                                                                          => 'action',
+		$area === 'CLI' && str_contains($path, 'Command')                                                           => 'cli',
+		$area === 'Middleware'                                                                                      => 'middleware',
+		(bool)preg_match('/^Domain\\\\Mcp\\\\(Tool|Resource|Prompt)/', $path) && !str_contains($path, 'Data')       => 'mcp',
+		str_starts_with($path, 'Domain\\Twig\\Adapter')                                                             => 'twig',
+		str_contains($path, 'Exception') || str_ends_with($short, 'Exception')                                      => 'exception',
 		str_contains($path, 'Listener') || str_ends_with($short, 'Listener') || str_ends_with($short, 'Subscriber') => 'listener',
-		str_contains($path, '\\Job') || str_ends_with($short, 'Job')       => 'job',
-		str_contains($path, 'Repository') || str_ends_with($short, 'Repository') => 'repository',
-		str_contains($path, '\\Data') || str_ends_with($short, 'Data') || str_ends_with($short, 'Payload') => 'data',
-		str_contains($path, 'Service')                                     => 'service',
-		default                                                            => 'other',
+		str_contains($path, '\\Job') || str_ends_with($short, 'Job')                                                => 'job',
+		str_contains($path, 'Repository') || str_ends_with($short, 'Repository')                                    => 'repository',
+		str_contains($path, '\\Data') || str_ends_with($short, 'Data') || str_ends_with($short, 'Payload')          => 'data',
+		str_contains($path, 'Service')                                                                              => 'service',
+		default                                                                                                     => 'other',
 	};
 
 	return [
@@ -162,9 +163,9 @@ function classify(string $fqcn, string $kind, bool $abstract): array
 
 // ---------------------------------------------------------------- classes
 
-$classes    = [];
-$rawEdges   = [];
-$implements = [];
+$classes        = [];
+$rawEdges       = [];
+$implements     = [];
 $serviceLocator = [];
 /** @var array<string,array<string,true>> $calls edge key → methods called */
 $calls = [];
@@ -340,7 +341,7 @@ foreach ($edges as $e) {
 
 // ---------------------------------------------------------------- routes
 
-$routes = [];
+$routes     = [];
 $surfaceFor = static function (string $file): string {
 	$base = basename($file, '.php');
 	if (str_contains($file, '/api/')) {
@@ -351,11 +352,11 @@ $surfaceFor = static function (string $file): string {
 	}
 
 	return match ($base) {
-		'mcp'                => 'mcp',
-		'oauth'              => 'oauth',
-		'xmlrpc'             => 'xmlrpc',
+		'mcp'                 => 'mcp',
+		'oauth'               => 'oauth',
+		'xmlrpc'              => 'xmlrpc',
 		'automations', 'cron' => 'webhook',
-		default              => 'public',
+		default               => 'public',
 	};
 };
 
@@ -460,10 +461,10 @@ foreach ($classes as $fqcn => $c) {
 		continue;
 	}
 	match ($c['role']) {
-		'cli'              => $entries['cli'][$fqcn] = true,
-		'mcp'              => $entries['mcp'][$fqcn] = true,
+		'cli'              => $entries['cli'][$fqcn]     = true,
+		'mcp'              => $entries['mcp'][$fqcn]     = true,
 		'twig'             => $entries['builder'][$fqcn] = true,
-		'listener', 'job'  => $entries['events'][$fqcn] = true,
+		'listener', 'job'  => $entries['events'][$fqcn]  = true,
 		default            => null,
 	};
 }
@@ -491,7 +492,7 @@ foreach (MODULES as $id => $m) {
 }
 foreach (MODULES as $id => $m) {
 	$allowed = array_merge($m['allowed'] ?? [], array_map(fn ($c) => $classes[$c]['path'] ?? '-', $m['front']));
-	$inside  = static function (string $caller) use ($allowed, $m, $classes): bool {
+	$inside  = static function (string $caller) use ($allowed, $m): bool {
 		if (in_array($caller, $m['front'], true) || in_array($caller, $m['internals'] ?? [], true) || isset(($m['parallel'] ?? [])[$caller])) {
 			return true;
 		}
@@ -639,7 +640,7 @@ $findings = array_values(array_unique($findings, SORT_REGULAR));
 
 $data = [
 	'generated' => date('Y-m-d H:i'),
-	'commit'    => trim((string) shell_exec('git -C ' . escapeshellarg($root) . ' rev-parse --short HEAD 2>/dev/null')),
+	'commit'    => trim((string)shell_exec('git -C ' . escapeshellarg($root) . ' rev-parse --short HEAD 2>/dev/null')),
 	'surfaces'  => $surfaces,
 	'entries'   => $entries,
 	'classes'   => $classes,
@@ -656,7 +657,7 @@ $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 file_put_contents($outDir . '/data.json', $json);
 // The template is a page body: artifact.html publishes as-is (the host adds
 // the document shell), index.html wraps it so it opens straight from disk.
-$page = str_replace('/*__DATA__*/null', $json, (string) file_get_contents(__DIR__ . '/architecture-map.html'));
+$page = str_replace('/*__DATA__*/null', $json, (string)file_get_contents(__DIR__ . '/architecture-map.html'));
 file_put_contents($outDir . '/artifact.html', $page);
 file_put_contents($outDir . '/index.html', "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n</head>\n<body>\n" . $page . "\n</body>\n</html>\n");
 

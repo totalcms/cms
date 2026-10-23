@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Data;
 
+use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
+
 /**
  * Runtime state for a single extension (stored in extensions.json).
  */
@@ -24,7 +26,7 @@ final class ExtensionState
 	 *             `ExtensionManager::enable()`, since that is real consent.
 	 * @param list<string>|null $approvedFindings The risky-code findings the
 	 *             operator saw and accepted when they last enabled the extension,
-	 *             as `pattern @ file` keys ({@see \TotalCMS\Domain\Extension\Service\DangerousCodeScanner::fingerprints()}).
+	 *             as `pattern @ file` keys ({@see DangerousCodeScanner::fingerprints()}).
 	 *             An update is disabled only for findings outside this set. Null
 	 *             for a record written before the baseline existed.
 	 */
