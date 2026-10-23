@@ -34,4 +34,9 @@ echo "  - Set 'Connect Mode' to 'Proxy' if Direct mode triggers OAuth detection 
 echo "  - For admin tools, add header X-API-Key: <your admin API key>"
 echo
 
+# Run npx outside the repo: package.json pins pnpm in devEngines, and npm 11
+# refuses to run anything (npx included) inside a project that names another
+# package manager. The inspector needs nothing from this project.
+cd "${TMPDIR:-/tmp}"
+
 NODE_TLS_REJECT_UNAUTHORIZED=0 exec npx @modelcontextprotocol/inspector "$@"
