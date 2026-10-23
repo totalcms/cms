@@ -680,6 +680,47 @@ public function boot(ExtensionContext $context): void
 
 Only use `$context->get()` in `boot()`, never in `register()`. The container is not fully built during registration.
 
+## Writing as the System
+
+Every object write is made for an actor: whoever is signed in, the API key or AI client that called, or an anonymous visitor. The storage layer applies that actor's rules to every save, whichever code makes it. For anyone but an admin, an API key or the system:
+
+- on a user collection (schema `auth`, or one inheriting it), `groups`, `active`, `expiration` and the other account fields are dropped on create and kept at their stored values on update;
+- fields marked `protected` in the schema are admin-only;
+- on an owned collection, the owner field is stamped with the actor.
+
+The refused fields are not an error. The rest of the save goes through, and `access.log` records a "Privileged field write neutralized" warning.
+
+So when your extension writes on a member's behalf, the save follows that member's rules. That is usually right. When the extension itself decides the write is allowed, such as creating a member account once someone in your Leadership group approves an application, run the save as the system actor:
+
+```php
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+
+public function boot(ExtensionContext $context): void
+{
+    $this->actors = $context->get(ActorContext::class);
+    $this->saver  = $context->get(ObjectSaver::class);
+}
+
+private function createMember(array $record): void
+{
+    // Check first: runAs() skips every access rule for the save inside it.
+    if (!$this->approverIsLeadership()) {
+        throw new \RuntimeException('Only Leadership can approve applications');
+    }
+
+    $this->actors->runAs(
+        Actor::system(),
+        fn () => $this->saver->saveObject('members', $record) // groups and active are kept
+    );
+}
+```
+
+`runAs()` puts the previous actor back afterwards, even when the save throws. Events fired inside it still name the member who started the work: the payload's `actor.initiator` is the approver, and the Activity Log shows the system acting for them.
+
+Elevate only around the one write you have authorized yourself, never around a whole request handler. Code that runs as the system can change any field on any object.
+
 ## Logging
 
 Extensions can write to the shared `extensions.log` file (`tcms-data/.system/logs/extensions.log`) using the same logger Total CMS uses internally. Get it from the context with `$context->logger()` — it returns a `Psr\Log\LoggerInterface`.

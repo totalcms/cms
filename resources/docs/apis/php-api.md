@@ -184,6 +184,8 @@ When running from CLI, set `DOCUMENT_ROOT` so Total CMS can locate your data dir
 <?php
 
 use Monolog\Level;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\TotalCMS;
 
 // Set DOCUMENT_ROOT for CLI mode
@@ -191,9 +193,20 @@ $_SERVER['DOCUMENT_ROOT'] = __DIR__ . '/../public';
 
 require_once __DIR__ . '/../public/vendor/autoload.php';
 $totalcms = new TotalCMS();
+
+// Write as the system, the way the tcms command does
+$totalcms->container()->get(ActorContext::class)->set(Actor::system());
 ```
 
 In CLI mode, the constructor automatically skips session and buffer initialization since they are not needed.
+
+Set the system actor before your script writes anything. Every write is made for an actor, and a script that does not say who it is runs as an anonymous visitor. For an anonymous visitor:
+
+- on user collections, `groups`, `active` and the other account fields are dropped;
+- fields marked `protected` in the schema are not saved;
+- on an owned collection, the owner field is left empty.
+
+None of these is an error. The rest of the save goes through, and `access.log` records a "Privileged field write neutralized" warning. Scripts that only read data do not need the line.
 
 ### Logging
 
