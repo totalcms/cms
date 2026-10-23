@@ -109,7 +109,7 @@ final readonly class MediaMetaEdit
 
 		$missing = array_diff(array_keys($edits), $found);
 		if ($missing !== []) {
-			$this->refuse($property, 'depot', sprintf('has no file at "%s"; use get_object to see the files and their folders', (string)reset($missing)));
+			$this->refuse($property, 'depot', sprintf('has no file at "%s"; use get_object to see the files and their folders', reset($missing)));
 		}
 
 		$stored['files'] = $files;
@@ -132,7 +132,7 @@ final readonly class MediaMetaEdit
 			if (!is_array($file)) {
 				continue;
 			}
-			$path = ltrim($prefix . '/' . (string)($file['name'] ?? ''), '/');
+			$path = ltrim($prefix . '/' . ($file['name'] ?? ''), '/');
 			if (($file['mime'] ?? '') === 'folder') {
 				$files[$index]['files'] = $this->walkDepot($property, is_array($file['files'] ?? null) ? $file['files'] : [], $path, $edits, $found);
 			} elseif (isset($edits[$path])) {

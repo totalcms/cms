@@ -18,6 +18,7 @@ use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\BotSubmissionGate;
 use TotalCMS\Renderer\JsonRenderer;
@@ -61,6 +62,10 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  *    collection's Registration Groups. If those groups reach gated content,
  *    every signup (including bot signups) gains that access once they verify.
  *  - Password validation (minimum length etc.) is the schema's responsibility.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") The count includes
+ * type-only references (ObjectData as a closure return type) that add no
+ * dependency; the action's real collaborators are its constructor arguments.
  */
 readonly class AuthRegisterSubmitAction
 {
@@ -150,7 +155,7 @@ readonly class AuthRegisterSubmitAction
 
 		// Saved as the system: `active` and `groups` are server values the
 		// anonymous registrant may not write. Errors bubble to Slim's handler.
-		$user = $this->actors->runAs(Actor::system(), fn () => $this->objectSaver->saveObject($collection, $data));
+		$user = $this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectSaver->saveObject($collection, $data));
 
 		if ($requiresVerification) {
 			$email = trim((string)($data['email'] ?? ''));

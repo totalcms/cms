@@ -44,9 +44,9 @@ class AccessGroupGetCommand extends BaseCommand
 	{
 		$permissions = (array)($data['permissions'] ?? []);
 
-		$output->writeln('<info>' . (string)($data['id'] ?? '') . '</info>');
+		$output->writeln('<info>' . ($data['id'] ?? '') . '</info>');
 		if (($data['description'] ?? '') !== '') {
-			$output->writeln('  ' . (string)$data['description']);
+			$output->writeln('  ' . $data['description']);
 		}
 		foreach (['collections' => 'Content', 'collectionsMeta' => 'Collection settings', 'schemas' => 'Schemas'] as $section => $label) {
 			$output->writeln(sprintf('  %-20s %s', $label . ':', AccessGroupFormat::reach((array)($permissions[$section] ?? []))));

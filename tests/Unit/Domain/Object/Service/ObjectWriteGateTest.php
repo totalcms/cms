@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Data\Actor;
@@ -10,7 +11,6 @@ use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
-use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -115,7 +115,7 @@ test('a refusal fires access.denied naming the actor before it throws', function
 
 test('an API key writes only to the collections its paths name', function (): void {
 	$key = Actor::apiKey('k1', ApiKeyGrants::authority(new ApiKeyData([
-		'id' => 'k1', 'name' => 'Blog', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+		'id'     => 'k1', 'name' => 'Blog', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
 		'scopes' => ['methods' => ['POST'], 'paths' => ['/xmlrpc.php', '/collections/blog']],
 	])));
 	$this->actors->set($key);

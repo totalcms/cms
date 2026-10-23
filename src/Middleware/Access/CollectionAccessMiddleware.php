@@ -12,11 +12,12 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Data\ReadScope;
-use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -50,7 +51,7 @@ use TotalCMS\Support\Config;
  * The list routes are handed the actor's {@see READ_SCOPE_ATTRIBUTE}, which
  * IndexQueryAction and IndexGetAction apply as a filter. Protected and
  * forced fields need nothing from here: the storage layer applies them to
- * every write ({@see \TotalCMS\Domain\Object\Service\ObjectWriteGate}).
+ * every write ({@see ObjectWriteGate}).
  */
 readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 {

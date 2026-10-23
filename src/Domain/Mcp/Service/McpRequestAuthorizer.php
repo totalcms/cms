@@ -20,7 +20,6 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Support\Config;
 
 /**
  * Everything /mcp does between the edition gate and building the server:

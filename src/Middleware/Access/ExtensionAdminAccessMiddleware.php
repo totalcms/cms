@@ -6,12 +6,12 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Interfaces\RouteInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\ActorResolver;
-use Slim\Interfaces\RouteInterface;
-use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;

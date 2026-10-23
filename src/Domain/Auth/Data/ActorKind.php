@@ -27,6 +27,6 @@ enum ActorKind: string
 
 	public function isTrusted(): bool
 	{
-		return $this === self::System || $this === self::ApiKey || $this === self::Admin;
+		return in_array($this, [self::System, self::ApiKey, self::Admin], true);
 	}
 }

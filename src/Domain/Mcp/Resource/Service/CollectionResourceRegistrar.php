@@ -57,7 +57,7 @@ readonly class CollectionResourceRegistrar
 
 		// An owned collection keeps its declared access: CollectionResource::read()
 		// narrows a member's read to their own objects through PersonaContext.
-		$access = McpAccessLevel::fromString($mcp['access'])->value;
+		$access       = McpAccessLevel::fromString($mcp['access'])->value;
 		$displayName  = $collection->name !== '' ? $collection->name : ucfirst($collection->id);
 		$sdkName      = $this->toSdkName($collection->id);
 		$desc         = (string)($mcp['description'] ?? '');

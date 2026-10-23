@@ -126,7 +126,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	private function resolveActor(ServerRequestInterface $request): Actor
 	{
 		return match ($request->getAttribute('authMethod')) {
-			'apikey'       => Actor::apiKey(self::apiKeyIdOf($request)),
+			'apikey'       => Actor::apiKey($this->apiKeyIdOf($request)),
 			'oauth_bearer' => $this->actorResolver->fromBearer(
 				(string)$request->getAttribute('oauth_user_id', ''),
 				ActorResolver::scopeIds($request->getAttribute('oauth_scopes')),
@@ -139,7 +139,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	/**
 	 * The id of the API key the auth middleware validated, for the record.
 	 */
-	private static function apiKeyIdOf(ServerRequestInterface $request): string
+	private function apiKeyIdOf(ServerRequestInterface $request): string
 	{
 		$apiKey = $request->getAttribute('apiKey');
 

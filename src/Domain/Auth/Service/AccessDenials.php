@@ -15,6 +15,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\AccessDeniedPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -25,7 +26,7 @@ use TotalCMS\Factory\LoggerFactory;
  * A refusal answers only "Access denied" (or a slightly fuller sentence in
  * dev), so without this there is no server-side record of who was refused
  * what. Used by the access middleware for a refused request and by
- * {@see \TotalCMS\Domain\Object\Service\ObjectWriteGate} for a write the
+ * {@see ObjectWriteGate} for a write the
  * storage layer refused.
  */
 final readonly class AccessDenials
@@ -57,7 +58,7 @@ final readonly class AccessDenials
 			'resource'    => $resource,
 			'operation'   => $operation,
 			'user_id'     => $actor->userId === '' ? '(none)' : $actor->userId,
-			'auth_method' => self::authMethod($actor),
+			'auth_method' => $this->authMethod($actor),
 			'route_name'  => $routeName,
 			'method'      => $request->getMethod(),
 			'path'        => $request->getUri()->getPath(),
@@ -88,7 +89,7 @@ final readonly class AccessDenials
 			'collection'  => $collection,
 			'id'          => $id,
 			'user_id'     => $actor->userId === '' ? '(none)' : $actor->userId,
-			'auth_method' => self::authMethod($actor),
+			'auth_method' => $this->authMethod($actor),
 		]);
 
 		$this->events->dispatch(CoreEvent::ACCESS_DENIED, new AccessDeniedPayload('object', $operation->value, $decision->reason(), $collection, $id));
@@ -104,7 +105,7 @@ final readonly class AccessDenials
 		$this->oauthActivityLogger->groupRejected((string)$request->getAttribute('oauth_client_id', ''), $operation, $actor->userId);
 	}
 
-	private static function authMethod(Actor $actor): string
+	private function authMethod(Actor $actor): string
 	{
 		return match (true) {
 			$actor->kind === ActorKind::ApiKey => 'apikey',

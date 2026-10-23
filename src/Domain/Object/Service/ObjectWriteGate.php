@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
@@ -76,7 +77,7 @@ final readonly class ObjectWriteGate
 
 	/**
 	 * Refuse a write by an API key whose paths do not cover the collection
-	 * ({@see \TotalCMS\Domain\Auth\Data\Actor::reaches()}). Every other
+	 * ({@see Actor::reaches()}). Every other
 	 * actor reaches every collection here; its groups are the entry point's
 	 * check.
 	 */

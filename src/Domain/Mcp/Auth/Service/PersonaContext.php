@@ -221,7 +221,7 @@ class PersonaContext
 	 *   - Otherwise, only an OAuth caller whose resolved UserAuthority grants
 	 *     `read` on $collection. On an owned collection that read is scoped to
 	 *     their own objects (plus published ones when exposed publicly): every
-	 *     read tool filters through {@see readScope()}.
+	 *     read tool filters through {@see ReadScope()}.
 	 *
 	 * $collectionData is an optional pre-fetched CollectionData for callers
 	 * that already have one in hand (loops over CollectionRepository::
@@ -230,7 +230,7 @@ class PersonaContext
 	 * fetches it itself (CollectionFetcher request-caches, so a second lookup
 	 * for the same id in the same request is cheap).
 	 *
-	 * Which objects the caller then sees is {@see readScope()}'s answer:
+	 * Which objects the caller then sees is {@see ReadScope()}'s answer:
 	 * reading a collection does not mean reading every object in it.
 	 */
 	public function canReadCollection(string $collection, ?CollectionData $collectionData = null): bool

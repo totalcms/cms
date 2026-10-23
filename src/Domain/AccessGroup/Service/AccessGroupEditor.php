@@ -54,7 +54,7 @@ final readonly class AccessGroupEditor
 		}
 		$this->assertShape($id, $definition);
 
-		$permissions = self::nothingGranted();
+		$permissions = $this->nothingGranted();
 		foreach ((array)($definition['permissions'] ?? []) as $section => $value) {
 			$permissions[$section] = is_array($value) ? array_merge($permissions[$section], $value) : $value;
 		}
@@ -81,7 +81,7 @@ final readonly class AccessGroupEditor
 		}
 		$this->assertShape($id, $patch);
 
-		$permissions = array_replace(self::nothingGranted(), $group->permissions);
+		$permissions = array_replace($this->nothingGranted(), $group->permissions);
 		foreach ((array)($patch['permissions'] ?? []) as $section => $value) {
 			$permissions[$section] = is_array($value) && is_array($permissions[$section] ?? null)
 				? array_merge($permissions[$section], $value)
@@ -135,13 +135,13 @@ final readonly class AccessGroupEditor
 
 		$unknown = array_diff(array_keys($definition), ['id', 'description', 'operations', 'permissions']);
 		if ($unknown !== []) {
-			throw new \DomainException(sprintf('Unknown key "%s". An access group has description, operations and permissions.', (string)reset($unknown)));
+			throw new \DomainException(sprintf('Unknown key "%s". An access group has description, operations and permissions.', reset($unknown)));
 		}
 		if (isset($definition['description']) && !is_string($definition['description'])) {
 			throw new \DomainException('description must be a string.');
 		}
 		if (array_key_exists('operations', $definition)) {
-			self::assertOperations('operations', $definition['operations']);
+			$this->assertOperations('operations', $definition['operations']);
 		}
 
 		$permissions = $definition['permissions'] ?? [];
@@ -149,14 +149,14 @@ final readonly class AccessGroupEditor
 			throw new \DomainException('permissions must be an object of sections.');
 		}
 		foreach ($permissions as $section => $value) {
-			self::assertSection((string)$section, $value);
+			$this->assertSection((string)$section, $value);
 		}
 	}
 
 	/**
 	 * @throws \DomainException
 	 */
-	private static function assertSection(string $section, mixed $value): void
+	private function assertSection(string $section, mixed $value): void
 	{
 		if (in_array($section, self::FLAGS, true)) {
 			if (!is_bool($value)) {
@@ -178,7 +178,7 @@ final readonly class AccessGroupEditor
 			throw new \DomainException("permissions.{$section} must be an object.");
 		}
 
-		self::assertSectionKeys($section, $value, $targeted ? ['operations', 'all', 'allowed'] : ['all', 'allowed']);
+		$this->assertSectionKeys($section, $value, $targeted ? ['operations', 'all', 'allowed'] : ['all', 'allowed']);
 	}
 
 	/**
@@ -189,19 +189,19 @@ final readonly class AccessGroupEditor
 	 *
 	 * @throws \DomainException
 	 */
-	private static function assertSectionKeys(string $section, array $value, array $keys): void
+	private function assertSectionKeys(string $section, array $value, array $keys): void
 	{
 		$unknown = array_diff(array_keys($value), $keys);
 		if ($unknown !== []) {
 			throw new \DomainException(sprintf('Unknown key "%s" in permissions.%s. It takes %s.', (string)reset($unknown), $section, implode(', ', $keys)));
 		}
 		if (array_key_exists('operations', $value)) {
-			self::assertOperations("permissions.{$section}.operations", $value['operations']);
+			$this->assertOperations("permissions.{$section}.operations", $value['operations']);
 		}
 		if (array_key_exists('all', $value) && !is_bool($value['all'])) {
 			throw new \DomainException("permissions.{$section}.all must be true or false.");
 		}
-		if (array_key_exists('allowed', $value) && !self::isStringList($value['allowed'])) {
+		if (array_key_exists('allowed', $value) && !$this->isStringList($value['allowed'])) {
 			throw new \DomainException("permissions.{$section}.allowed must be a list of ids.");
 		}
 	}
@@ -209,22 +209,22 @@ final readonly class AccessGroupEditor
 	/**
 	 * @throws \DomainException
 	 */
-	private static function assertOperations(string $path, mixed $operations): void
+	private function assertOperations(string $path, mixed $operations): void
 	{
-		if (!self::isStringList($operations)) {
+		if (!$this->isStringList($operations)) {
 			throw new \DomainException("{$path} must be a list of operations.");
 		}
 
 		$unknown = array_diff($operations, self::OPERATIONS);
 		if ($unknown !== []) {
-			throw new \DomainException(sprintf('Unknown operation "%s" in %s. Operations: %s.', (string)reset($unknown), $path, implode(', ', self::OPERATIONS)));
+			throw new \DomainException(sprintf('Unknown operation "%s" in %s. Operations: %s.', reset($unknown), $path, implode(', ', self::OPERATIONS)));
 		}
 	}
 
 	/**
 	 * @phpstan-assert-if-true list<string> $value
 	 */
-	private static function isStringList(mixed $value): bool
+	private function isStringList(mixed $value): bool
 	{
 		return is_array($value) && array_is_list($value) && array_filter($value, is_string(...)) === $value;
 	}
@@ -234,7 +234,7 @@ final readonly class AccessGroupEditor
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function nothingGranted(): array
+	private function nothingGranted(): array
 	{
 		$permissions = [];
 		foreach (self::TARGETED as $section) {

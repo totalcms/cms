@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
@@ -108,7 +109,7 @@ final readonly class SavedQueryTool
 				));
 			}
 
-			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value, $this->personaContext->getLimitedKey() !== null)) {
+			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value, $this->personaContext->getLimitedKey() instanceof ApiKeyData)) {
 				throw new ToolCallException(sprintf(
 					'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
 					$this->definition->collectionName,
@@ -150,7 +151,7 @@ final readonly class SavedQueryTool
 
 	private function personaCanAccess(McpPersona $persona): bool
 	{
-		return McpAccessLevel::fromString($this->definition->access)->allows($persona, $this->personaContext->getLimitedKey() !== null);
+		return McpAccessLevel::fromString($this->definition->access)->allows($persona, $this->personaContext->getLimitedKey() instanceof ApiKeyData);
 	}
 
 	/**

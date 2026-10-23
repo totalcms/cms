@@ -69,7 +69,7 @@ final class ListViewsToolTest extends TestCase
 	{
 		$this->persona->set(McpPersona::AUTHENTICATED);
 		$this->persona->setLimitedKey(new ApiKeyData([
-			'id' => 'k1', 'name' => 'Sales', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'id'     => 'k1', 'name' => 'Sales', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
 			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/dataviews/sales/data', '/dataviews/locked/data']],
 		]));
 		$this->lister->method('listViews')->willReturn([

@@ -22,7 +22,7 @@ require_once __DIR__ . '/McpAuthHelpers.php';
  */
 function dataViewAccessSeedView(mixed $app, string $prefix, string $access): string
 {
-	$id = $prefix . '-' . bin2hex(random_bytes(4));
+	$id        = $prefix . '-' . bin2hex(random_bytes(4));
 	$container = $app->getContainer();
 	mcpAuthEnsureDataviewsCollection($app);
 	$container->get(ObjectSaver::class)->saveObject('dataviews', [
@@ -89,7 +89,7 @@ beforeEach(function (): void {
 test('an OAuth member whose groups grant data views reads a view open to signed-in callers', function (): void {
 	dataViewAccessGrantViews('editor');
 	$viewId = dataViewAccessSeedView($this->app, 'members-orders', 'authenticated');
-	$mcp = dataViewAccessSession($this->app, 'editor-user-test-com');
+	$mcp    = dataViewAccessSession($this->app, 'editor-user-test-com');
 
 	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => []]);
 	expect(array_column($listed['result']['structuredContent']['views'] ?? [], 'id'))->toContain($viewId);
@@ -104,7 +104,7 @@ test('an OAuth member whose groups grant data views reads a view open to signed-
 
 test('an OAuth member whose groups do not grant data views cannot see or read it', function (): void {
 	$viewId = dataViewAccessSeedView($this->app, 'members-orders', 'authenticated');
-	$mcp = dataViewAccessSession($this->app, 'viewer-user-test-com');
+	$mcp    = dataViewAccessSession($this->app, 'viewer-user-test-com');
 
 	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => []]);
 	expect(array_column($listed['result']['structuredContent']['views'] ?? [], 'id'))->not->toContain($viewId);
@@ -120,7 +120,7 @@ test('an OAuth member whose groups do not grant data views cannot see or read it
 
 test('a public view needs no data views grant', function (): void {
 	$viewId = dataViewAccessSeedView($this->app, 'public-totals', 'public');
-	$mcp = dataViewAccessSession($this->app, 'viewer-user-test-com');
+	$mcp    = dataViewAccessSession($this->app, 'viewer-user-test-com');
 
 	$view = $mcp('tools/call', ['name' => 'get_view', 'arguments' => ['id' => $viewId]]);
 	expect($view['result']['isError'] ?? true)->toBeFalse();

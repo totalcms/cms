@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
@@ -26,7 +27,7 @@ readonly class LastLoginUpdateService
 		// index rebuild. Login timestamps aren't user edits — and the two
 		// fields are privileged, so the system writes them, not the user
 		// signing in.
-		$this->actors->runAs(Actor::system(), fn () => $this->objectPatcher->patchObject($collection, $id, [
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectPatcher->patchObject($collection, $id, [
 			'lastlogin'  => date('c'),
 			'loginCount' => $loginCount + 1,
 		], silent: true));

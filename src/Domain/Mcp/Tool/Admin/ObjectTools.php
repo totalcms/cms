@@ -16,6 +16,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -79,7 +80,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * **Owned and protected collections take member writes.** The storage
  * layer applies the request actor's rules to every write
- * ({@see \TotalCMS\Domain\Object\Service\ObjectWriteGate}): a create is
+ * ({@see ObjectWriteGate}): a create is
  * stamped with its owner, protected fields revert and forced ones take
  * their value. What is left here is the refusal's wording: an update of an
  * object the caller does not own answers exactly like a missing one, so an
@@ -388,7 +389,7 @@ readonly class ObjectTools
 	 * ADMIN always passes — isAccessibleTo() returns true unconditionally
 	 * for it, same as it does for the read tools.
 	 *
-		 * Returns the resolved CollectionData so callers can reuse it for
+	 * Returns the resolved CollectionData so callers can reuse it for
 	 * stripNonExposed() without a second lookup.
 	 */
 	private function requireExposed(string $collection, string $toolName): CollectionData

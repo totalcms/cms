@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Data;
 
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
+
 /**
  * Who is acting on the current request or run: the identity every access
- * decision in {@see \TotalCMS\Domain\Auth\Service\AccessGuard} is made for.
+ * decision in {@see AccessGuard} is made for.
  *
  * `authCollection` is always resolved: a session user who logged in at the
  * plain `/admin/login` route carries the default auth collection here, never
@@ -18,10 +23,10 @@ namespace TotalCMS\Domain\Auth\Data;
  * decision: `clientId` is the OAuth client (or `webmcp` for a browser
  * session over MCP), `apiKeyId` the API key, and `initiator` who started
  * work the system now does on their behalf (see
- * {@see \TotalCMS\Domain\Auth\Service\ActorContext::runAs()}).
+ * {@see ActorContext::runAs()}).
  *
- * Built by {@see \TotalCMS\Domain\Auth\Service\ActorResolver}; the current
- * one lives in {@see \TotalCMS\Domain\Auth\Service\ActorContext}.
+ * Built by {@see ActorResolver}; the current
+ * one lives in {@see ActorContext}.
  */
 final readonly class Actor
 {
@@ -52,13 +57,13 @@ final readonly class Actor
 
 	/**
 	 * An API key. $authority is the key's path list as grants
-	 * ({@see \TotalCMS\Domain\ApiKey\Service\ApiKeyGrants}) where the
+	 * ({@see ApiKeyGrants}) where the
 	 * surface limits the key that way (MCP); null leaves it unlimited, as on
 	 * REST, which checks the key's paths itself.
 	 */
 	public static function apiKey(string $apiKeyId = '', ?UserAuthority $authority = null): self
 	{
-		return new self(ActorKind::ApiKey, apiKeyId: $apiKeyId, authority: $authority);
+		return new self(ActorKind::ApiKey, authority: $authority, apiKeyId: $apiKeyId);
 	}
 
 	/**

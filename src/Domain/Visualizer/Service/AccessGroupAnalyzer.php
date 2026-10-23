@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Visualizer\Service;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -201,7 +202,7 @@ readonly class AccessGroupAnalyzer
 	 *   - `delete` → same rule as `create` (delete_object).
 	 *   - On an owned collection (ownerProperty) the same ops show, but over
 	 *                MCP they reach each member's own objects only
-	 *                ({@see \TotalCMS\Domain\Auth\Service\AccessGuard}).
+	 *                ({@see AccessGuard}).
 	 *                The matrix shows what the group may do, not whose
 	 *                objects; the OAuth Grants page marks owned reach per
 	 *                user.

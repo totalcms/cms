@@ -457,12 +457,12 @@ final class SavedQueryToolTest extends TestCase
 		$fetcher = $this->createStub(CollectionFetcher::class);
 		$fetcher->method('fetchCollection')->willReturn($portfolio);
 
-		$resolver = new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo);
+		$resolver  = new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo);
 		$authority = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
 			'id'          => 'members',
 			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['portfolio']]],
 		])]);
-		$actors = $persona === McpPersona::PUBLIC_ ? new ActorContext() : memberActors($authority);
+		$actors  = $persona === McpPersona::PUBLIC_ ? new ActorContext() : memberActors($authority);
 		$context = new PersonaContext($fetcher, $resolver, mcpGuard($this, ['portfolio' => 'owner']), $actors);
 		$context->set($persona);
 		$context->setAuthority($authority);

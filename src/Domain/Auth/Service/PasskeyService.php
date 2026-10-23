@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Auth\Data\Actor;
 use Odan\Session\SessionInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Uid\Uuid;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -182,7 +183,7 @@ class PasskeyService
 		}
 		$passkeys[] = $passkey;
 
-		$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $passkeys]));
+		$this->writePasskeys(fn (): ObjectData => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $passkeys]));
 
 		$this->logger->info("Passkey registered for user {$collection}/{$userId}: {$passkey['name']}");
 
@@ -331,7 +332,7 @@ class PasskeyService
 
 		$filtered = array_values(array_filter($passkeys, fn (mixed $passkey): bool => is_array($passkey) && ($passkey['credentialId'] ?? '') !== $credentialId));
 
-		$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]));
+		$this->writePasskeys(fn (): ObjectData => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]));
 
 		$this->logger->info("Passkey deleted for user {$collection}/{$userId}: {$credentialId}");
 	}
@@ -453,7 +454,7 @@ class PasskeyService
 		}
 
 		if ($updated) {
-			$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, (string)$user['id'], ['passkeys' => $passkeys]));
+			$this->writePasskeys(fn (): ObjectData => $this->objectPatcher->patchObject($collection, (string)$user['id'], ['passkeys' => $passkeys]));
 		}
 	}
 

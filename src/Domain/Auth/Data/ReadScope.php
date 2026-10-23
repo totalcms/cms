@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Data;
 
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 
 /**
  * Which objects of a collection an actor may read, from
- * {@see \TotalCMS\Domain\Auth\Service\AccessGuard::readScope()}.
+ * {@see AccessGuard::readScope()}.
  *
  * An object is visible when the actor owns it ({@see $owner}, drafts
  * included), or else when it is published and {@see $published} allows
@@ -51,7 +52,7 @@ final readonly class ReadScope
 	 */
 	public function isAll(): bool
 	{
-		return $this->owner === null && $this->published && $this->drafts;
+		return !$this->owner instanceof OwnerScope && $this->published && $this->drafts;
 	}
 
 	/**

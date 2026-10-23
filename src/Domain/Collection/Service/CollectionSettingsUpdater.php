@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
@@ -19,7 +20,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * validates it as a save from the collection form does.
  *
  * Callers add their own gates: who may change which collection, and the
- * `mcp.tools` check ({@see \TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator::settingsError()}).
+ * `mcp.tools` check ({@see McpToolsValidator::settingsError()}).
  */
 final readonly class CollectionSettingsUpdater
 {

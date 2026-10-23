@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Data;
 
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+
 /**
- * The outcome of an {@see \TotalCMS\Domain\Auth\Service\AccessGuard} check.
+ * The outcome of an {@see AccessGuard} check.
  * Each entry point maps it onto its own answer: REST answers 403 for the
  * denials, MCP answers "not found" for DenyOwner so another member's ids
  * cannot be probed.

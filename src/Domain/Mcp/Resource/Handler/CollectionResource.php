@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -71,7 +72,7 @@ readonly class CollectionResource
 		}
 
 		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value, $this->personaContext->getLimitedKey() !== null)) {
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value, $this->personaContext->getLimitedKey() instanceof ApiKeyData)) {
 			throw new ToolCallException(\sprintf(
 				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
 				$collection,

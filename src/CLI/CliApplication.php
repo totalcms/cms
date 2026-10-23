@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI;
 
-use TotalCMS\Domain\Auth\Service\ActorContext;
-use TotalCMS\Domain\Auth\Data\Actor;
 use Sentry\State\Scope;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;

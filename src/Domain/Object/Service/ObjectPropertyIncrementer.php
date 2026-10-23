@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 readonly class ObjectPropertyIncrementer
@@ -128,7 +129,7 @@ readonly class ObjectPropertyIncrementer
 		// decision — group, owner and protected-counter checks, or the
 		// counter's publicIncrement setting — and this write carries nothing
 		// but the value computed above.
-		$this->actors->runAs(Actor::system(), fn () => $this->objectUpdater->updateObject($collection, $id, $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectUpdater->updateObject($collection, $id, $data));
 
 		// Return just the property and value
 		return [

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Automation\Service;
 
-use TotalCMS\Domain\Auth\Service\ActorContext;
-use TotalCMS\Domain\Auth\Data\Actor;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Automation\Data\RunRecord;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;

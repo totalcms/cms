@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Event\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\EventPayload;
@@ -16,7 +17,7 @@ use TotalCMS\Domain\Event\Payload\EventPayload;
  * the exception is caught and logged — it cannot affect the core operation.
  *
  * Every payload a listener receives carries `actor`: who caused the event
- * ({@see \TotalCMS\Domain\Auth\Data\Actor::toArray()}), stamped here at
+ * ({@see Actor::toArray()}), stamped here at
  * dispatch time so a listener that defers its work (a queued automation, an
  * audit log) records the person rather than whoever runs the queue. A
  * payload that already names an actor keeps it.

@@ -508,7 +508,7 @@ final class CollectionResourceTest extends TestCase
 			new McpDescriptionResolver(),
 			$this->createStub(CollectionRepository::class),
 		);
-		$actors = $persona === McpPersona::AUTHENTICATED && $authority instanceof UserAuthority ? memberActors($authority) : new ActorContext();
+		$actors  = $persona === McpPersona::AUTHENTICATED && $authority instanceof UserAuthority ? memberActors($authority) : new ActorContext();
 		$context = new PersonaContext($this->collectionFetcher, $realResolver, mcpGuard($this, ['blog' => 'owner']), $actors);
 		$context->set($persona);
 		$context->setAuthority($authority);

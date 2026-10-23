@@ -60,7 +60,7 @@ final class McpAccessLevelTest extends TestCase
 	public function testALimitedKeySeesOnlyTheViewsItNamesUnlessPublic(): void
 	{
 		$key = new ApiKeyData([
-			'id' => 'k1', 'name' => 'Views', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'id'     => 'k1', 'name' => 'Views', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
 			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/dataviews/sales/data']],
 		]);
 

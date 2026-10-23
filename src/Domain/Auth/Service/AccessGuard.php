@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
@@ -29,7 +30,7 @@ use TotalCMS\Support\Config;
  *
  *   1. **Groups** ({@see groupAllows()}): the actor's access groups must grant
  *      the operation on the collection.
- *   2. **Ownership** ({@see ownerDecision()}, {@see readScope()}): on an owned
+ *   2. **Ownership** ({@see ownerDecision()}, {@see ReadScope()}): on an owned
  *      collection (its `ownerProperty` names a schema property) everyone but a
  *      trusted actor is limited to the objects they own.
  *   3. **Field policy** ({@see applyWrite()}, {@see canWriteProperty()}): which
@@ -48,7 +49,7 @@ use TotalCMS\Support\Config;
  * distrust, so every layer stands down, as the access middleware does.
  *
  * The storage layer applies layers 2 and 3 on every write through
- * {@see \TotalCMS\Domain\Object\Service\ObjectWriteGate}; entry points ask the
+ * {@see ObjectWriteGate}; entry points ask the
  * guard first so they can answer with a proper refusal.
  *
  * @SuppressWarnings("PHPMD.TooManyPublicMethods") the guard is the one place

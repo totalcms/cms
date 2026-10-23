@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
-use TotalCMS\Domain\Auth\Service\ActorContext;
-use TotalCMS\Domain\Auth\Data\Actor;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;

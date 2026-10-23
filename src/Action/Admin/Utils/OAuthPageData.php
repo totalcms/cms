@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
@@ -26,6 +27,10 @@ use TotalCMS\Support\Config;
  * OAuth Clients (static/dynamic buckets with active-grant counts, or the
  * new-client form) and OAuth Grants (every grant joined to its client with
  * expiry metadata and effective reach).
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") The count includes
+ * type-only references (OwnerScope in an instanceof check) that add no
+ * dependency; the page's real collaborators are its constructor arguments.
  */
 final readonly class OAuthPageData implements UtilsPageData
 {
@@ -300,7 +305,7 @@ final readonly class OAuthPageData implements UtilsPageData
 		$scope = $hasReadScope
 			? $this->guard->readScope($actor, $collection->id, $public)
 			: ($public ? ReadScope::publishedOnly() : ReadScope::none());
-		$own = $scope->owner !== null;
+		$own = $scope->owner instanceof OwnerScope;
 
 		// Writes need cms:write and any one of the create, update or delete
 		// grants (create_object, update_object/patch_object, delete_object).

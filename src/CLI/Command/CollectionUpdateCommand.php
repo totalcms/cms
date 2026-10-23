@@ -89,7 +89,7 @@ HELP);
 				return $this->outputError($input, $output, "--set takes key=value, got '{$assignment}'.");
 			}
 			[$path, $value] = explode('=', (string)$assignment, 2);
-			$settings       = self::assign($settings, explode('.', $path), self::parseValue($value));
+			$settings       = self::assign($settings, explode('.', $path), $this->parseValue($value));
 		}
 		if ($settings === []) {
 			return $this->outputError($input, $output, 'Nothing to update: pass --set key=value, or JSON from a file or "-" for stdin.');
@@ -142,7 +142,7 @@ HELP);
 	 * A --set value: JSON when it parses (true, 5, null, a list), a string
 	 * otherwise, so --set sortBy=date needs no quoting.
 	 */
-	private static function parseValue(string $value): mixed
+	private function parseValue(string $value): mixed
 	{
 		$decoded = json_decode($value, true);
 

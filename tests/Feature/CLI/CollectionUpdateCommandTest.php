@@ -20,7 +20,7 @@ beforeEach(function (): void {
 	}
 	$this->setUpApp(bootstrap());
 
-	$container = $this->app->getContainer();
+	$container         = $this->app->getContainer();
 	$this->collections = $container->get(CollectionFetcher::class);
 	$this->collections->fetchOrCreateReserved('blog');
 	$container->get(CollectionSaver::class)->patchCollection('blog', ['sortBy' => 'title', 'reverseSort' => false, 'mcp' => ['access' => 'admin', 'description' => 'Posts']]);
@@ -91,10 +91,10 @@ test('refuses what it cannot apply', function (array $input, string $message): v
 	expect($this->tester->getStatusCode())->not->toBe(0)
 		->and($this->tester->getDisplay())->toContain($message);
 })->with([
-	'a rename'         => [['--set' => ['id=journal']], 'cannot be renamed'],
-	'a format change'  => [['--set' => ['format=markdown']], 'collection:convert'],
-	'a bad --set'      => [['--set' => ['sortBy']], 'key=value'],
-	'nothing to do'    => [[], 'Nothing to update'],
+	'a rename'          => [['--set' => ['id=journal']], 'cannot be renamed'],
+	'a format change'   => [['--set' => ['format=markdown']], 'collection:convert'],
+	'a bad --set'       => [['--set' => ['sortBy']], 'key=value'],
+	'nothing to do'     => [[], 'Nothing to update'],
 	'invalid mcp.tools' => [['--set' => ['mcp.tools="not a list"']], 'mcp.tools'],
 ]);
 

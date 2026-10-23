@@ -99,7 +99,7 @@ final readonly class DeleteObjectTool
 		$stored       = $this->objectFetcher->fetchObject($collection, $id)->toArray();
 		$filesRemoved = [];
 		foreach ($schema->properties as $name => $property) {
-			if (in_array($property['field'] ?? '', self::FILE_FIELDS, true) && self::holdsFiles($stored[$name] ?? null)) {
+			if (in_array($property['field'] ?? '', self::FILE_FIELDS, true) && $this->holdsFiles($stored[$name] ?? null)) {
 				$filesRemoved[] = (string)$name;
 			}
 		}
@@ -123,7 +123,7 @@ final readonly class DeleteObjectTool
 	 * Whether a stored image, file, gallery or depot value has any upload:
 	 * a `name` (image, file), an item (gallery) or a file (depot).
 	 */
-	private static function holdsFiles(mixed $value): bool
+	private function holdsFiles(mixed $value): bool
 	{
 		if (!is_array($value) || $value === []) {
 			return false;

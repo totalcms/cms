@@ -78,7 +78,7 @@ final class ActorContext
 		$initiator   = $this->current();
 		$previous    = $this->actor;
 		$resolver    = $this->resolver;
-		$this->actor = $actor->initiator === null ? $actor->startedBy($initiator) : $actor;
+		$this->actor = $actor->initiator instanceof Actor ? $actor : $actor->startedBy($initiator);
 
 		try {
 			return $fn();

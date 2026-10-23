@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Data\Actor;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\Actor;
 
 /**
  * Utils Access Middleware.

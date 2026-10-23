@@ -79,7 +79,7 @@ describe('McpOwnedCollectionReads', function (): void {
 	it('a member reads their own objects plus published ones, writes only their own, and is stamped as owner', function (): void {
 		// Auth on, as on a live site: the storage layer then enforces ownership.
 		/** @var Config $config */
-		$config = $this->app->getContainer()->get(Config::class);
+		$config         = $this->app->getContainer()->get(Config::class);
 		$auth           = $config->auth;
 		$auth['enable'] = true;
 		$config->auth   = $auth;

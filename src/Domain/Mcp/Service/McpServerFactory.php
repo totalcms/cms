@@ -14,6 +14,7 @@ use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -244,7 +245,7 @@ readonly class McpServerFactory
 	public function registrableTools(McpPersona $persona): array
 	{
 		$tools = array_values(array_filter(
-			$this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() !== null),
+			$this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() instanceof ApiKeyData),
 			fn (McpToolDefinition $tool): bool => $this->licensed($tool->edition) && $this->grantsScopeFor($persona, $tool),
 		));
 		if (!$this->personaContext->isReadOnly()) {

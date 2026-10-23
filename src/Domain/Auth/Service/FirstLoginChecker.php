@@ -2,10 +2,11 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
@@ -56,7 +57,7 @@ readonly class FirstLoginChecker
 
 		// The first admin is created by the installer, before anyone can be
 		// signed in: the system writes `groups` and `active`.
-		$this->actors->runAs(Actor::system(), fn () => $this->objectSaver->saveObject($this->collection, [
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->objectSaver->saveObject($this->collection, [
 			'name'     => $name !== '' ? $name : 'Admin',
 			'email'    => $email,
 			'password' => $password,

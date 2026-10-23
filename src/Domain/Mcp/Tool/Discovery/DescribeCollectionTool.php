@@ -130,7 +130,7 @@ readonly class DescribeCollectionTool
 			'access'        => $cfg['access'],
 			'total_objects' => max(0, $collectionData->totalObjects),
 			'ownership'     => $this->ownership($collection, $collectionData),
-			'properties'    => array_map(self::withMediaHint(...), $this->schemaResolver->describeProperties($collectionData)),
+			'properties'    => array_map($this->withMediaHint(...), $this->schemaResolver->describeProperties($collectionData)),
 		];
 	}
 
@@ -142,7 +142,7 @@ readonly class DescribeCollectionTool
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function withMediaHint(array $property): array
+	private function withMediaHint(array $property): array
 	{
 		$type = (string)($property['type'] ?? '');
 		if (MediaMetaPolicy::editableKeys($type) === []) {
@@ -150,7 +150,7 @@ readonly class DescribeCollectionTool
 		}
 
 		$hint                    = 'Files cannot be uploaded over MCP; edit the uploaded file\'s metadata with patch_object as ' . MediaMetaEdit::hint($type) . '.';
-		$property['description'] = trim((string)($property['description'] ?? '') . ' ' . $hint);
+		$property['description'] = trim(($property['description'] ?? '') . ' ' . $hint);
 
 		return $property;
 	}

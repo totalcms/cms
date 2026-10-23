@@ -30,11 +30,11 @@ abstract readonly class AbstractMcpResource
 	 *                                  per their UserAuthority — unless $access is 'public', which stays
 	 *                                  visible to every AUTHENTICATED caller regardless of group grants.
 	 *                                  Mirrors the call-time gate CollectionResource::read() enforces.
-	 * @param string|null $viewId       Data view this resource reads, set by DataViewResourceRegistrar:
+	 * @param string|null $viewId       data view this resource reads, set by DataViewResourceRegistrar:
 	 *                                  an API key limited to some views sees it only when its paths
-	 *                                  name the view, unless $access is 'public'.
-	 * @param EditionFeature|null $edition The edition feature the resource belongs to; McpServerFactory
-	 *                                  leaves it out for every caller when the license lacks it.
+	 *                                  name the view, unless $access is 'public'
+	 * @param EditionFeature|null $edition the edition feature the resource belongs to; McpServerFactory
+	 *                                  leaves it out for every caller when the license lacks it
 	 */
 	public function __construct(
 		public string $name,

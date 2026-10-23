@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 require_once __DIR__ . '/McpAuthHelpers.php';
 
@@ -90,8 +91,8 @@ test('a key cannot reach a collection it names while that collection is admin on
 test('an OAuth member cannot reach an apikey collection', function (): void {
 	// An anonymous caller stands in for every non-key, non-admin caller: the
 	// level lets in admins and limited keys only.
-	/** @var TotalCMS\Support\Config $config */
-	$config      = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
+	/** @var Config $config */
+	$config      = $this->app->getContainer()->get(Config::class);
 	$config->mcp = array_merge($config->mcp, ['publicAccess' => true]);
 
 	$response = mcpStatelessCall($this->app, 'tools/call', ['name' => 'list_collections', 'arguments' => []], [], '203.0.113.126');
