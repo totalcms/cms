@@ -18,6 +18,14 @@ MCP is an open protocol that lets AI tools connect to external data sources. Whe
 
 Add the Total CMS MCP server to your AI tool's configuration. This is a one-time setup that works across all your Total CMS projects.
 
+### ChatGPT
+
+Total CMS is listed in the ChatGPT app directory. Open [Total CMS in ChatGPT](https://chatgpt.com/plugins/plugin_asdk_app_6abdb19953248191932b75de95b06dbd) and add it. There is nothing to configure and no account to connect: the docs tools are public.
+
+### Claude (claude.ai and the desktop app)
+
+Total CMS is listed in Claude's directory. Search it for **Total CMS** and add it; the plugin brings the docs connector and the Total CMS skill. As with ChatGPT, nothing needs configuring.
+
 ### Claude Code
 
 Add to `~/.claude/mcp.json`:
