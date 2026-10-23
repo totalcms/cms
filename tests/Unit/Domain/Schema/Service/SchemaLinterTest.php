@@ -237,3 +237,36 @@ it('errors on a protected value that is neither true nor an object with value', 
 	expect($result['errors'])->toContain("Property 'off' has an invalid protected value. Use true, or an object with a value key.");
 	expect($result['errors'])->toContain("Property 'noval' has an invalid protected value. Use true, or an object with a value key.");
 });
+
+it('warns about a field type neither core nor an enabled extension provides', function (): void {
+	// A disabled extension's field type: the admin renders no editor for it,
+	// and before the fix its field-type dropdown fell back to `code`.
+	$schema = makeSchema('shots', [
+		'id'    => idProperty(),
+		'image' => ['field' => 'screenshot', 'help' => 'A captured screenshot', '$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
+	]);
+	$result = makeLinter(['shots' => $schema])->lint('shots');
+
+	expect($result['warnings'])->toContain("Property 'image' uses field type 'screenshot', which neither core nor an enabled extension provides. The admin cannot render it; enable the extension that adds it, or change the field.");
+});
+
+it('warns when a field stores a different shape than its $ref', function (): void {
+	$schema = makeSchema('mismatch', [
+		'id'    => idProperty(),
+		'image' => ['field' => 'code', 'help' => 'An image', '$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
+	]);
+	$result = makeLinter(['mismatch' => $schema])->lint('mismatch');
+
+	expect($result['warnings'])->toContain("Property 'image' uses field 'code', which stores string, but its \$ref stores object. Pick the field that matches the \$ref.");
+});
+
+it('accepts a field that matches its $ref, or a $ref overridden by an explicit type', function (): void {
+	$schema = makeSchema('matched', [
+		'id'      => idProperty(),
+		'image'   => ['field' => 'image', 'help' => 'An image', '$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
+		'snippet' => ['field' => 'code', 'type' => 'string', 'help' => 'Code', '$ref' => 'https://www.totalcms.co/schemas/properties/json.json'],
+	]);
+	$result = makeLinter(['matched' => $schema])->lint('matched');
+
+	expect($result['warnings'])->toBeEmpty();
+});

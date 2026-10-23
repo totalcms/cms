@@ -91,7 +91,7 @@ class ExtensionInstaller
 			// state fails. Put the old record back if the swap does not happen.
 			$previous = $this->states->getState($id);
 			$previous = $previous instanceof ExtensionState ? clone $previous : null;
-			$disabled = $this->reconcileState($id, $plan, count($findings));
+			$disabled = $this->reconcileState($id, $plan, $findings);
 
 			try {
 				$this->swap($staging, $target, $id);
@@ -262,9 +262,11 @@ class ExtensionInstaller
 	}
 
 	/**
+	 * @param list<array{pattern:string,file:string,line:int,snippet:string}> $findings
+	 *
 	 * @return bool true when an enabled extension was disabled by the scan
 	 */
-	private function reconcileState(string $id, InstallPlan $plan, int $findings): bool
+	private function reconcileState(string $id, InstallPlan $plan, array $findings): bool
 	{
 		if (!$plan->isUpdate()) {
 			// A state record with no directory is orphaned (folder deleted by
@@ -285,16 +287,23 @@ class ExtensionInstaller
 		$state->error   = null;
 		$state->clearQuarantine();
 
+		// Same rule as ExtensionEnrollment's update gate: only findings beyond
+		// what the operator approved disable it, and a record from before the
+		// baseline existed takes today's findings as approved, once.
+		$state->approvedFindings ??= DangerousCodeScanner::fingerprints($findings);
+		$added                    = DangerousCodeScanner::unapproved($findings, $state->approvedFindings);
+
 		$disabled = false;
-		if ($state->enabled && $findings > 0) {
+		if ($state->enabled && $added !== []) {
 			$state->enabled        = false;
 			$state->updateDisabled = [
-				'reason'    => 'A new version of this extension added risky code patterns.',
-				'findings'  => $findings,
-				'updatedAt' => gmdate('c'),
+				'reason'      => 'A new version of this extension added risky code patterns.',
+				'findings'    => count($added),
+				'updatedAt'   => gmdate('c'),
+				'newFindings' => $added,
 			];
 			$disabled = true;
-			$this->logger->warning("Extension '{$id}' disabled: the uploaded version added risky code ({$findings} findings).");
+			$this->logger->warning("Extension '{$id}' disabled: the uploaded version added risky code: " . implode('; ', $added) . '.');
 		}
 
 		$this->states->saveState($id, $state);

@@ -104,12 +104,14 @@ The review happens when you enable an extension. But an extension can also be **
 
 When a sideloaded extension's version changes, Total CMS runs the static source scan on the new code (again, without executing it):
 
-- **If the new code contains high-risk patterns**, the extension is **disabled** until you review it. You'll see a banner explaining why, with a **Review & re-enable** button that walks you through the review screen for the new version. The risky new code never runs until you say so.
-- **If the new code is clean**, the extension keeps working — but any **new capability** the update introduces is turned **off by default**. It appears in the extension's settings as a toggle you can opt into. The extension doesn't silently start using a new privilege you didn't grant.
+The scan is compared with what you approved. When you enable an extension, Total CMS remembers the risky patterns its review showed you, by pattern and file (`curl_exec @ src/Client.php`). An update is measured against that list, not against zero:
 
-Clean updates that don't add capabilities install with no interruption at all.
+- **If the new code adds a risky pattern you have not approved** (a new call, or a known one in a new file), the extension is **disabled** until you review it. You'll see a banner listing just the new findings, with a **Review & re-enable** button that walks you through the review screen for the new version. Re-enabling approves the new version's findings in turn. The risky new code never runs until you say so.
+- **If it adds none**, the extension keeps working, including when it still has the patterns you approved. An HTTP client you accepted at 1.0 does not disable the extension at 1.1. Any **new capability** the update introduces is turned **off by default**. It appears in the extension's settings as a toggle you can opt into. The extension doesn't silently start using a new privilege you didn't grant.
 
-The same check runs when you **upload** a replacement on the Extensions page or run `tcms extension:install` over an installed extension — and there it does not depend on the version number changing. A replacement that adds risky code to an enabled extension is disabled pending review even if the developer shipped it under the same version.
+Updates that add no new risky code and no capabilities install with no interruption at all. An extension enabled before Total CMS 3.6.3 has no approved list yet; its next update takes the findings it has then as approved, rather than disabling it once more.
+
+The same check runs when you **upload** a replacement on the Extensions page or run `tcms extension:install` over an installed extension — and there it does not depend on the version number changing. A replacement that adds risky code you have not approved to an enabled extension is disabled pending review even if the developer shipped it under the same version.
 
 **Built-in (bundled) extensions are exempt** — they ship and update with Total CMS itself, so they're not re-reviewed on a core upgrade.
 

@@ -55,7 +55,13 @@ export default class SchemaPropertiesField extends PropertiesField {
 		// canonical option (checklist) instead of falling back to first.
 		const fieldSelect = field.querySelector('[name=field]');
 		if (fieldSelect && definition.field) {
-			fieldSelect.value = FIELD_ALIASES[definition.field] ?? definition.field;
+			const fieldType = FIELD_ALIASES[definition.field] ?? definition.field;
+			// A type the dropdown does not list (a disabled extension's) gets
+			// its own option, so it is kept rather than replaced on save.
+			if (fieldSelect.tagName === 'SELECT' && !Array.from(fieldSelect.options).some(option => option.value === fieldType)) {
+				fieldSelect.add(new Option(fieldType, fieldType));
+			}
+			fieldSelect.value = fieldType;
 			// Trigger change event to update UI
 			fieldSelect.dispatchEvent(new Event('change', { bubbles: true }));
 		}

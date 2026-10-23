@@ -55,6 +55,7 @@ readonly class ExtensionInfoBuilder
 			'updateDisabled'       => $state instanceof ExtensionState && $state->isUpdateDisabled(),
 			'updateDisabledReason' => $state?->updateDisabled['reason'] ?? null,
 			'updateFindings'       => $state?->updateDisabled['findings'] ?? null,
+			'updateNewFindings'    => $state?->updateDisabled['newFindings'] ?? [],
 			'health'               => $this->profiler->metricsFor($id),
 			'errorCount'           => $this->guard->failureCountFor($id),
 			'incompatibility'      => $this->manifestValidator->getIncompatibilityReasons($manifest),

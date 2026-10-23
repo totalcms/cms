@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
@@ -94,6 +95,7 @@ readonly class SchemaLinter
 			}
 			array_push($errors, ...$this->lintSchemaRef($name, $property));
 			array_push($errors, ...$this->lintProtected($name, $property));
+			array_push($warnings, ...$this->lintFieldType($name, $property));
 			if (trim((string)($property['help'] ?? '')) === '') {
 				$warnings[] = "Property '{$name}' has no help text — help feeds the MCP tool catalog AI agents read.";
 			}
@@ -106,6 +108,39 @@ readonly class SchemaLinter
 		array_push($errors, ...$this->metaValidate($raw));
 
 		return ['errors' => $errors, 'warnings' => $warnings];
+	}
+
+	/**
+	 * A field type the admin cannot render, or one that stores a different
+	 * shape than its `$ref`. Both save cleanly and fail later: the form shows
+	 * the wrong editor, and the next save from it can overwrite the type.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return list<string>
+	 */
+	private function lintFieldType(string $name, array $property): array
+	{
+		$field = TotalForm::canonicalFieldType((string)($property['field'] ?? ''));
+		if ($field === '') {
+			return [];
+		}
+
+		if (!TotalForm::isKnownFieldType($field)) {
+			return ["Property '{$name}' uses field type '{$field}', which neither core nor an enabled extension provides. The admin cannot render it; enable the extension that adds it, or change the field."];
+		}
+
+		if (!isset($property['$ref']) || isset($property['type'])) {
+			return [];
+		}
+
+		$refType   = PropertyDefinition::fromArray($property)->effectiveJsonType();
+		$fieldType = PropertyDefinition::jsonTypeFor(TotalForm::getDefaultTypeForField($field));
+		if ($refType === null || $refType === $fieldType) {
+			return [];
+		}
+
+		return ["Property '{$name}' uses field '{$field}', which stores {$fieldType}, but its \$ref stores {$refType}. Pick the field that matches the \$ref."];
 	}
 
 	/**

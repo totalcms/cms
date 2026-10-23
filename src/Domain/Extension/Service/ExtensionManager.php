@@ -349,6 +349,14 @@ class ExtensionManager
 			}
 		}
 
+		// What the operator is consenting to: today's risky-code findings become
+		// the baseline an update is measured against, so a later version is
+		// disabled only for code beyond this (ExtensionEnrollment, ExtensionInstaller).
+		$path                    = $this->discovery->getExtensionPath($extensionId);
+		$state->approvedFindings = $path !== null
+			? DangerousCodeScanner::fingerprints((new DangerousCodeScanner())->scan($path))
+			: [];
+
 		$this->stateRepository->saveState($extensionId, $state);
 		$this->dispatchEvent(CoreEvent::EXTENSION_ENABLED, new ExtensionEventPayload($extensionId));
 	}

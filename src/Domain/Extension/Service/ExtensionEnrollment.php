@@ -166,7 +166,8 @@ final readonly class ExtensionEnrollment
 			// Update re-consent: when a SIDELOADED extension's on-disk version no
 			// longer matches the version it was enabled at, the operator did not
 			// review this code. Statically scan the NEW code before it can register:
-			// risky patterns => disable it (and don't load it); clean => let it load
+			// risky patterns the operator did not already approve => disable it
+			// (and don't load it); nothing new => let it load
 			// but record the new version so any newly-registered capability lands
 			// OFF (see updateStoredCapabilities). Built-ins are exempt — they version
 			// with core and ship reviewed in the package.
@@ -198,19 +199,29 @@ final readonly class ExtensionEnrollment
 					$this->logger->warning("Extension '{$id}' updated but its directory could not be resolved; skipping update scan.");
 				}
 
-				if ($findings !== []) {
-					// Risky update — disable, record why, bump the stored version so
-					// the gate doesn't re-trigger every request, and do NOT load it.
-					// The new (risky) code never registers or runs.
+				// A record written before the baseline existed: take today's
+				// findings as the approved set, once, instead of disabling an
+				// extension the operator has been running. From here on only
+				// code beyond what they accepted disables it.
+				if ($state->approvedFindings === null) {
+					$state->approvedFindings = DangerousCodeScanner::fingerprints($findings);
+				}
+
+				$added = DangerousCodeScanner::unapproved($findings, $state->approvedFindings);
+				if ($added !== []) {
+					// Risky update — disable, record what is new, bump the stored
+					// version so the gate doesn't re-trigger every request, and do
+					// NOT load it. The new (risky) code never registers or runs.
 					$state->enabled        = false;
 					$state->updateDisabled = [
-						'reason'    => 'A new version of this extension added risky code patterns.',
-						'findings'  => count($findings),
-						'updatedAt' => gmdate('c'),
+						'reason'      => 'A new version of this extension added risky code patterns.',
+						'findings'    => count($added),
+						'updatedAt'   => gmdate('c'),
+						'newFindings' => $added,
 					];
 					$state->version = $manifest->version;
 					$this->stateRepository->saveState($id, $state);
-					$this->logger->warning("Extension '{$id}' disabled: an update added risky code (" . count($findings) . ' findings).');
+					$this->logger->warning("Extension '{$id}' disabled: an update added risky code: " . implode('; ', $added) . '.');
 
 					continue;
 				}
@@ -218,7 +229,7 @@ final readonly class ExtensionEnrollment
 				// Clean update — record the new version and let it load normally.
 				// Newly-registered capabilities land OFF via updateStoredCapabilities.
 				$this->logger->info(sprintf(
-					"Extension '%s' update re-consent: new version '%s' scanned clean; kept enabled (any new capabilities default off).",
+					"Extension '%s' update re-consent: new version '%s' adds no risky code beyond what was approved; kept enabled (any new capabilities default off).",
 					$id,
 					$manifest->version,
 				));

@@ -57,6 +57,39 @@ final class DangerousCodeScanner
 	private const SKIP_DIRS = ['vendor', 'node_modules', '.git'];
 
 	/**
+	 * Findings as `pattern @ file` keys, unique and sorted. Lines are left out:
+	 * an unrelated edit above a call moves its line, and that is not new code.
+	 *
+	 * @param list<array{pattern:string,file:string,line:int,snippet:string}> $findings
+	 *
+	 * @return list<string>
+	 */
+	public static function fingerprints(array $findings): array
+	{
+		$keys = array_unique(array_map(
+			static fn (array $finding): string => $finding['pattern'] . ' @ ' . $finding['file'],
+			$findings,
+		));
+		sort($keys);
+
+		return $keys;
+	}
+
+	/**
+	 * The fingerprints in $findings that $approved does not hold: what an update
+	 * added beyond the code the operator already accepted.
+	 *
+	 * @param list<array{pattern:string,file:string,line:int,snippet:string}> $findings
+	 * @param list<string>                                                    $approved
+	 *
+	 * @return list<string>
+	 */
+	public static function unapproved(array $findings, array $approved): array
+	{
+		return array_values(array_diff(self::fingerprints($findings), $approved));
+	}
+
+	/**
 	 * @return list<array{pattern:string,file:string,line:int,snippet:string}>
 	 */
 	public function scan(string $extensionDir): array

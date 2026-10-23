@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
@@ -92,10 +93,24 @@ function reconsentManager(ExtensionStateRepository $stateRepo): ExtensionManager
 	);
 }
 
+/**
+ * The scanner's fingerprints for a fixture extension under tests/fixtures/extensions/test-vendor/.
+ *
+ * @return list<string>
+ */
+function reconsentFingerprints(string $name): array
+{
+	$dir = dirname(__DIR__, 4) . '/fixtures/extensions/test-vendor/' . $name;
+	expect(is_dir($dir))->toBeTrue();
+
+	return DangerousCodeScanner::fingerprints((new DangerousCodeScanner())->scan($dir));
+}
+
 describe('ExtensionManager update re-consent — scanner gate', function (): void {
 	test('a flagged update disables the extension and never loads the risky code', function (): void {
 		// Stored at an OLDER version than the fixture manifest (1.0.0) => update.
-		$state     = new ExtensionState(enabled: true, installedAt: '', version: '0.9.0');
+		// Approved with no findings, so every finding in 1.0.0 is new.
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '0.9.0', approvedFindings: []);
 		$stateRepo = reconsentStateRepo(['test-vendor/dangerous-ext' => $state]);
 		$manager   = reconsentManager($stateRepo);
 
@@ -106,10 +121,57 @@ describe('ExtensionManager update re-consent — scanner gate', function (): voi
 			->and($after->enabled)->toBeFalse()
 			->and($after->isUpdateDisabled())->toBeTrue()
 			->and($after->updateDisabled['findings'])->toBeGreaterThan(0)
+			->and($after->updateDisabled['newFindings'])->toBe(reconsentFingerprints('dangerous-ext'))
 			->and($after->version)->toBe('1.0.0'); // bumped so the gate won't re-trigger
 
 		// The risky code never registered.
 		expect($manager->getLoadedExtensions())->not->toHaveKey('test-vendor/dangerous-ext');
+	});
+
+	test('an update with only the findings already approved stays enabled', function (): void {
+		// The reported bug: the same curl_exec / file_put_contents the operator
+		// accepted at 0.9.0 disabled the extension again on every version bump.
+		$approved  = reconsentFingerprints('dangerous-ext');
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '0.9.0', approvedFindings: $approved);
+		$stateRepo = reconsentStateRepo(['test-vendor/dangerous-ext' => $state]);
+		$manager   = reconsentManager($stateRepo);
+
+		$manager->discoverAndRegister();
+
+		$after = $stateRepo->getState('test-vendor/dangerous-ext');
+		expect($approved)->not->toBe([])
+			->and($after->enabled)->toBeTrue()
+			->and($after->isUpdateDisabled())->toBeFalse()
+			->and($after->version)->toBe('1.0.0')
+			->and($after->approvedFindings)->toBe($approved);
+
+		expect($manager->getLoadedExtensions())->toHaveKey('test-vendor/dangerous-ext');
+	});
+
+	test('an update disables only for findings beyond the approved set, and lists just those', function (): void {
+		$all       = reconsentFingerprints('dangerous-ext');
+		$approved  = array_slice($all, 1);
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '0.9.0', approvedFindings: $approved);
+		$stateRepo = reconsentStateRepo(['test-vendor/dangerous-ext' => $state]);
+
+		reconsentManager($stateRepo)->discoverAndRegister();
+
+		$after = $stateRepo->getState('test-vendor/dangerous-ext');
+		expect($after->enabled)->toBeFalse()
+			->and($after->updateDisabled['newFindings'])->toBe([$all[0]])
+			->and($after->updateDisabled['findings'])->toBe(1);
+	});
+
+	test('a record from before the baseline existed adopts the current findings once instead of disabling', function (): void {
+		$state     = new ExtensionState(enabled: true, installedAt: '', version: '0.9.0');
+		$stateRepo = reconsentStateRepo(['test-vendor/dangerous-ext' => $state]);
+
+		reconsentManager($stateRepo)->discoverAndRegister();
+
+		$after = $stateRepo->getState('test-vendor/dangerous-ext');
+		expect($after->enabled)->toBeTrue()
+			->and($after->isUpdateDisabled())->toBeFalse()
+			->and($after->approvedFindings)->toBe(reconsentFingerprints('dangerous-ext'));
 	});
 
 	test('a clean update stays enabled, loads, and records the new version', function (): void {

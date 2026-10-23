@@ -57,6 +57,7 @@
 		{% include 'admin/partials/extension-update-banner.twig' with {
 			updateDisabled: extension.updateDisabled,
 			updateDisabledReason: extension.updateDisabledReason,
+			updateNewFindings: extension.updateNewFindings,
 			updateFindings: extension.updateFindings,
 			extId: extension.id,
 		} only %}

@@ -210,6 +210,15 @@ readonly class PropertyDefinition
 	}
 
 	/**
+	 * The JSON type a property type name stores: `image` an object, `list` an
+	 * array, `text` (and anything unlisted) a string.
+	 */
+	public static function jsonTypeFor(string $propertyType): string
+	{
+		return self::REF_JSON_TYPES[$propertyType] ?? 'string';
+	}
+
+	/**
 	 * The JSON type a property's values take, resolved through its `$ref` when
 	 * the definition declares none: the property schemas under
 	 * resources/schemas/properties/ declare `array` for list and gallery,

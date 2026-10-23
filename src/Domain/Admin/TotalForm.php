@@ -215,6 +215,23 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Whether this install can render a field type: a built-in (aliases
+	 * included), an admin-only field with its own FormField class
+	 * (schemaProperties), or one an enabled extension registered. A schema can still
+	 * name a type that is neither — an extension's, after it was disabled.
+	 */
+	public static function isKnownFieldType(string $fieldType): bool
+	{
+		$fieldType = self::canonicalFieldType($fieldType);
+
+		return in_array($fieldType, self::FIELDS, true)
+			|| array_key_exists($fieldType, self::FIELD_DEFAULT_TYPE)
+			|| in_array($fieldType, array_merge(...array_values(self::FIELDS_BY_TYPE)), true)
+			|| array_key_exists($fieldType, self::$extensionFieldTypes)
+			|| self::resolveFieldClass($fieldType) !== FormField::class;
+	}
+
+	/**
 	 * Get all field types grouped by category, including extension types.
 	 *
 	 * @return array<string,list<string>>

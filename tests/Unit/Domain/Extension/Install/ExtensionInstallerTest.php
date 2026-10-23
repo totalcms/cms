@@ -157,7 +157,8 @@ describe('ExtensionInstaller update', function (): void {
 	test('a risky same-version update of an enabled extension disables it', function (): void {
 		['installer' => $installer, 'states' => $states] = installerHarness();
 		$installer->install(thingZip('1.0.0'));
-		$states->saveState('acme/thing', new ExtensionState(enabled: true, version: '1.0.0'));
+		// Approved while clean, so the risky code in the upload is new.
+		$states->saveState('acme/thing', new ExtensionState(enabled: true, version: '1.0.0', approvedFindings: []));
 
 		$result = $installer->install(thingZip('1.0.0', true));
 
@@ -166,6 +167,24 @@ describe('ExtensionInstaller update', function (): void {
 			->and($state?->enabled)->toBeFalse()
 			->and($state?->updateDisabled)->not->toBeNull()
 			->and($state?->updateDisabled['findings'] ?? 0)->toBe($result->findings);
+	});
+
+	test('an update carrying only the risky code already approved stays enabled', function (): void {
+		['installer' => $installer, 'states' => $states] = installerHarness();
+		$first = $installer->install(thingZip('1.0.0', true));
+		expect($first->findings)->toBeGreaterThan(0);
+
+		// The operator enabled 1.0.0 with its findings, as ExtensionManager::enable() records them.
+		$states->saveState('acme/thing', new ExtensionState(enabled: true, version: '1.0.0', approvedFindings: null));
+		$installer->install(thingZip('1.0.1', true)); // legacy record: adopts these findings as approved
+		$result = $installer->install(thingZip('1.0.2', true));
+
+		$state = $states->getState('acme/thing');
+		expect($result->disabled)->toBeFalse()
+			->and($state?->enabled)->toBeTrue()
+			->and($state?->updateDisabled)->toBeNull()
+			->and($state?->approvedFindings)->not->toBe([])
+			->and($state?->version)->toBe('1.0.2');
 	});
 
 	test('a risky update of a disabled extension is recorded but changes nothing else', function (): void {
@@ -258,7 +277,7 @@ describe('ExtensionInstaller failure handling', function (): void {
 		};
 		['installer' => $installer, 'states' => $states] = installerHarness(moveTree: $move);
 		$installer->install(thingZip('1.0.0'));
-		$states->saveState('acme/thing', new ExtensionState(enabled: true, version: '1.0.0'));
+		$states->saveState('acme/thing', new ExtensionState(enabled: true, version: '1.0.0', approvedFindings: []));
 
 		$result = $installer->install(thingZip('1.0.0', true));
 
