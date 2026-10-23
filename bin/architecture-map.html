@@ -1,0 +1,582 @@
+<title>Total CMS Architecture Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a header strip with the build stamp and four views as tabs; each view is one full-width working surface. */
+:root {
+	--bg: #f6f7f9;
+	--panel: #ffffff;
+	--ink: #17202b;
+	--muted: #5d6b7a;
+	--line: #dce2e9;
+	--accent: #1f6feb;
+	--accent-soft: #e3edfd;
+	--bad: #c93a2b;
+	--bad-soft: #fbe7e4;
+	--warn: #955800;
+	--warn-soft: #fbefd9;
+	--low: #5d6b7a;
+	--low-soft: #edf0f3;
+	--r-entry: #d97706;
+	--r-middleware: #7c4dcc;
+	--r-service: #1f6feb;
+	--r-repository: #0f7a50;
+	--r-other: #6b7d90;
+	--r-data: #a3afbb;
+	--band: #1f6feb;
+	--font-ui: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+	--font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	--radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #0f141a; --panel: #161d25; --ink: #e4e9ef; --muted: #93a1b0; --line: #2a3440;
+		--accent: #5a9cff; --accent-soft: #1a2a42; --bad: #ff7b6b; --bad-soft: #3a1f1c; --warn: #f0b04a; --warn-soft: #362a14;
+		--low: #93a1b0; --low-soft: #222b35; --r-entry: #f0a43a; --r-middleware: #a98bf0; --r-service: #5a9cff;
+		--r-repository: #3fc28a; --r-other: #8b9cae; --r-data: #5d6b7a; --band: #5a9cff; color-scheme: dark;
+	}
+}
+:root[data-theme="dark"] {
+	--bg: #0f141a; --panel: #161d25; --ink: #e4e9ef; --muted: #93a1b0; --line: #2a3440;
+	--accent: #5a9cff; --accent-soft: #1a2a42; --bad: #ff7b6b; --bad-soft: #3a1f1c; --warn: #f0b04a; --warn-soft: #362a14;
+	--low: #93a1b0; --low-soft: #222b35; --r-entry: #f0a43a; --r-middleware: #a98bf0; --r-service: #5a9cff;
+	--r-repository: #3fc28a; --r-other: #8b9cae; --r-data: #5d6b7a; --band: #5a9cff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font-ui); margin: 0; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; max-width: 1440px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+h1 { font-size: 22px; margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+.stamp { color: var(--muted); font: 12px var(--font-code); font-variant-numeric: tabular-nums; }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+code, .code { font-family: var(--font-code); font-size: 12.5px; }
+nav.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 18px 0 14px; border-bottom: 1px solid var(--line); }
+nav.tabs button { font: 600 14px var(--font-ui); background: none; border: 0; color: var(--muted); padding: 8px 12px; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--low-soft); color: var(--muted); font: 500 11px/18px var(--font-code); text-align: center; margin-left: 4px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+.scroll-x { overflow-x: auto; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.muted { color: var(--muted); }
+button.chip, .chip { font: 500 12px var(--font-ui); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 14px; padding: 3px 10px; cursor: pointer; }
+button.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.sev { display: inline-block; font: 600 11px/18px var(--font-ui); padding: 0 7px; border-radius: 9px; text-transform: uppercase; letter-spacing: 0.04em; }
+.sev.high { background: var(--bad-soft); color: var(--bad); }
+.sev.medium { background: var(--warn-soft); color: var(--warn); }
+.sev.low { background: var(--low-soft); color: var(--low); }
+a.cls, button.cls { font: 12.5px var(--font-code); color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; word-break: break-all; }
+a.cls:hover, button.cls:hover { text-decoration: underline; }
+
+/* Flow */
+.flow-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+@media (max-width: 960px) { .flow-grid { grid-template-columns: minmax(0, 1fr); } }
+#flowSvg text { font-family: var(--font-ui); fill: var(--ink); }
+#flowSvg .n { cursor: pointer; }
+#flowSvg .band { fill: var(--band); opacity: 0.16; transition: opacity 0.15s; }
+#flowSvg .band.on { opacity: 0.5; }
+#flowSvg .band.off { opacity: 0.04; }
+.side { padding: 14px 16px; min-width: 0; }
+.side h2 { display: flex; justify-content: space-between; gap: 8px; }
+.list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
+.list li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.dot { width: 9px; height: 9px; border-radius: 50%; }
+.num { font: 12px var(--font-code); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Explorer */
+.ex-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 12px; }
+.ex-bar input[type="search"] { font: 13px var(--font-code); padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); width: min(520px, 100%); }
+.ex-bar label { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.ex-bar select { font: 13px var(--font-ui); background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 4px; }
+.ex-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .ex-grid { grid-template-columns: minmax(0, 1fr); } }
+#graph { padding: 8px; min-height: 360px; }
+#graph svg text { font-family: var(--font-code); font-size: 11.5px; fill: var(--ink); }
+#graph .node rect { fill: var(--panel); stroke: var(--line); }
+#graph .node { cursor: pointer; }
+#graph .node:hover rect { stroke: var(--accent); }
+#graph .node.focus rect { stroke: var(--accent); stroke-width: 2; fill: var(--accent-soft); }
+#graph .node.hit rect { stroke: var(--bad); stroke-width: 1.5; }
+#graph .edge { fill: none; stroke: var(--muted); stroke-opacity: 0.45; }
+#graph .edge.soft { stroke-dasharray: 4 3; }
+#graph .edge.bad { stroke: var(--bad); stroke-opacity: 0.9; stroke-width: 1.6; }
+#graph .colhead { font-family: var(--font-ui); font-size: 11px; fill: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+#graph .more { font-family: var(--font-ui); fill: var(--muted); font-size: 11px; }
+.suggest { position: absolute; z-index: 5; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 2px; max-height: 320px; overflow: auto; width: min(520px, calc(100vw - 32px)); box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); }
+.suggest button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 5px 10px; font: 12.5px var(--font-code); color: var(--ink); cursor: pointer; }
+.suggest button:hover, .suggest button.act { background: var(--accent-soft); }
+.detail { padding: 14px 16px; min-width: 0; }
+.detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 10px 0; font-size: 13px; }
+.detail dt { color: var(--muted); }
+.detail dd { margin: 0; min-width: 0; word-break: break-word; }
+.detail h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 16px 0 6px; font-weight: 600; }
+.routes { display: grid; gap: 4px; font: 12px var(--font-code); }
+.routes div { word-break: break-all; }
+.meth { display: inline-block; min-width: 46px; font-weight: 500; color: var(--r-entry); }
+.methods { font: 12px var(--font-code); color: var(--muted); word-break: break-word; }
+
+/* Findings */
+.f-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.f-sum button { text-align: left; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); cursor: pointer; font: 13px var(--font-ui); display: grid; gap: 2px; }
+.f-sum button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.f-sum b { font: 600 20px var(--font-code); font-variant-numeric: tabular-nums; }
+.f-sum span { color: var(--muted); font-size: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.note { color: var(--muted); min-width: 260px; }
+.arrow { color: var(--muted); padding: 0 4px; }
+.loc { font: 11.5px var(--font-code); color: var(--muted); white-space: nowrap; }
+
+/* Modules */
+.mod { padding: 16px; margin-bottom: 16px; }
+.mod-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 12px; }
+.mod-col h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.mod-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+.mod-card.front { border-color: var(--accent); background: var(--accent-soft); }
+.mod-card ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 3px; }
+.mod-card li { font-size: 12px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.ok { color: var(--r-repository); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+	<header class="top">
+		<div>
+			<h1>Total CMS Architecture Map</h1>
+			<p class="lede">How requests get in, which services they reach, and where a caller goes around a service to the classes underneath it. Generated from the source by <code>bin/architecture-map.php</code>.</p>
+		</div>
+		<div class="stamp" id="stamp"></div>
+	</header>
+
+	<nav class="tabs" role="tablist">
+		<button role="tab" data-view="flow" aria-selected="true">Entry points</button>
+		<button role="tab" data-view="explorer" aria-selected="false">Class explorer</button>
+		<button role="tab" data-view="findings" aria-selected="false">Findings <span class="badge" id="findCount"></span></button>
+		<button role="tab" data-view="modules" aria-selected="false">Front doors</button>
+	</nav>
+
+	<section id="view-flow">
+		<div class="row" style="justify-content: space-between; margin-bottom: 10px;">
+			<p class="muted" style="margin:0; max-width:80ch">Each band is the number of distinct entry-class-to-service dependencies from a way into the app to a domain. Click an entry point to light up its bands, or a domain to see which of its classes the rest of the app actually calls.</p>
+		</div>
+		<div class="flow-grid">
+			<div class="panel scroll-x"><svg id="flowSvg" role="img" aria-label="Entry points flowing into domains"></svg></div>
+			<aside class="panel side" id="flowSide"></aside>
+		</div>
+	</section>
+
+	<section id="view-explorer" hidden>
+		<div class="ex-bar">
+			<div style="position: relative; flex: 1 1 320px; min-width: 0;">
+				<input type="search" id="exSearch" placeholder="Find a class, e.g. AccessGuard or ObjectSaver" autocomplete="off" aria-label="Find a class">
+				<div class="suggest" id="exSuggest" hidden></div>
+			</div>
+			<label for="exIn">Callers <select id="exIn"><option>0</option><option selected>1</option><option>2</option></select></label>
+			<label for="exOut">Depth <select id="exOut"><option>1</option><option selected>2</option><option>3</option></select></label>
+			<label for="exPlumb"><input type="checkbox" id="exPlumb"> Show plumbing</label>
+		</div>
+		<div class="legend" id="roleLegend" style="margin-bottom:10px"></div>
+		<div class="ex-grid">
+			<div class="panel scroll-x" id="graph"></div>
+			<aside class="panel detail" id="detail"></aside>
+		</div>
+	</section>
+
+	<section id="view-findings" hidden>
+		<div class="f-sum" id="fSum"></div>
+		<div class="row" style="margin-bottom:10px" id="fSev"></div>
+		<div class="panel scroll-x"><table id="fTable"></table></div>
+	</section>
+
+	<section id="view-modules" hidden>
+		<p class="muted" style="margin:0 0 14px; max-width:80ch">Front doors are declared in <code>MODULES</code> at the top of <code>bin/architecture-map.php</code>. Everything outside the module should call a front door; internals are for the module itself; parallel deciders still make the module's decision on their own and are what is left to fold in.</p>
+		<div id="modules"></div>
+	</section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(() => {
+	const D = DATA;
+	const C = D.classes;
+	const NS = 'TotalCMS\\';
+	const $ = (s, el = document) => el.querySelector(s);
+	const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+	const rel = f => f.startsWith(NS) ? f.slice(NS.length) : f;
+	const short = f => C[f]?.short ?? f.split('\\').pop();
+
+	// ---------- graph indexes
+	const out = new Map(), inn = new Map(), edgeInfo = new Map();
+	for (const [from, to, types, methods] of D.edges) {
+		if (types === 'extends') continue;
+		edgeInfo.set(from + '>' + to, { types, methods: methods || [] });
+		(out.get(from) || out.set(from, []).get(from)).push(to);
+		(inn.get(to) || inn.set(to, []).get(to)).push(from);
+	}
+	const entrySurfaces = new Map();
+	for (const [s, list] of Object.entries(D.entries)) for (const c of list) (entrySurfaces.get(c) || entrySurfaces.set(c, []).get(c)).push(s);
+	const routesBy = new Map();
+	for (const r of D.routes) (routesBy.get(r.action) || routesBy.set(r.action, []).get(r.action)).push(r);
+	const findingPairs = new Map();
+	for (const f of D.findings) findingPairs.set(f.caller + '>' + f.target, f);
+
+	const PLUMB_ROLES = new Set(['data', 'exception', 'interface', 'trait']);
+	const PLUMB_AREAS = new Set(['Support', 'Utils', 'Traits', 'Factory', 'Renderer']);
+	const isPlumbing = f => !C[f] || PLUMB_ROLES.has(C[f].role) || PLUMB_AREAS.has(C[f].area);
+	const roleGroup = f => {
+		if (entrySurfaces.has(f) || ['action', 'cli', 'mcp', 'twig', 'listener', 'job'].includes(C[f]?.role)) return 'entry';
+		const r = C[f]?.role;
+		if (r === 'middleware') return 'middleware';
+		if (r === 'service') return 'service';
+		if (r === 'repository') return 'repository';
+		if (isPlumbing(f)) return 'data';
+		return 'other';
+	};
+	const ROLE_LABEL = { entry: 'Entry point', middleware: 'Middleware', service: 'Service', repository: 'Repository / storage', other: 'Other domain class', data: 'Plumbing (data, config, utils)' };
+	const roleColor = g => `var(--r-${g})`;
+	const domainLabel = f => {
+		const c = C[f];
+		if (!c) return '?';
+		if (c.area === 'Domain') return c.domain;
+		if (c.area === 'Action' || c.area === 'Middleware') return c.area;
+		return c.area;
+	};
+
+	$('#stamp').textContent = `${D.commit || ''} · ${D.generated} · ${Object.keys(C).length} classes · ${D.edges.length} links · ${D.routes.length} routes`;
+	$('#findCount').textContent = D.findings.length;
+	$('#roleLegend').innerHTML = Object.entries(ROLE_LABEL).map(([k, v]) => `<span><i style="background:${roleColor(k)}"></i>${v}</span>`).join('')
+		+ '<span>— injected</span><span>- - new / static / container</span><span style="color:var(--bad)">— finding</span>';
+
+	// ---------- tabs
+	const views = ['flow', 'explorer', 'findings', 'modules'];
+	function show(view) {
+		if (!views.includes(view)) view = 'flow';
+		for (const v of views) $('#view-' + v).hidden = v !== view;
+		document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === view)));
+		try { history.replaceState(null, '', '#' + view); } catch (e) { /* sandboxed */ }
+	}
+	document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.view)));
+
+	// ---------- flow (entry surface → domain)
+	const flows = new Map(); // surface → Map(domain → weight)
+	const surfaceSeen = new Map();
+	for (const [s, list] of Object.entries(D.entries)) {
+		const m = new Map();
+		for (const e of list) {
+			for (const d of new Set(out.get(e) || [])) {
+				if (isPlumbing(d) || C[d].area !== 'Domain') continue;
+				m.set(C[d].domain, (m.get(C[d].domain) || 0) + 1);
+			}
+		}
+		flows.set(s, m);
+		surfaceSeen.set(s, list.length);
+	}
+	let flowSel = null;
+	function drawFlow() {
+		const svg = $('#flowSvg');
+		const surf = Object.keys(D.surfaces).filter(s => (surfaceSeen.get(s) || 0) > 0);
+		const domW = new Map();
+		const surfW = new Map();
+		for (const s of surf) for (const [d, w] of flows.get(s)) { domW.set(d, (domW.get(d) || 0) + w); surfW.set(s, (surfW.get(s) || 0) + w); }
+		surf.sort((a, b) => (surfW.get(b) || 0) - (surfW.get(a) || 0));
+		const doms = [...domW.keys()].sort((a, b) => domW.get(b) - domW.get(a));
+		const total = [...domW.values()].reduce((a, b) => a + b, 0);
+		const MIN_D = 16, gapR = 4, gapL = 14, W = 900, nodeW = 12, xL = 190, xR = W - 190;
+		const H = Math.max(560, doms.length * 21);
+		const k = (H - gapR * (doms.length - 1)) / total;
+		const kL = (H - gapL * (surf.length - 1)) / total;
+		const pos = new Map();
+		let y = 0;
+		for (const d of doms) { const h = Math.max(MIN_D, domW.get(d) * k); pos.set('d:' + d, { y, h, cur: y }); y += h + gapR; }
+		const HR = y;
+		y = Math.max(0, (HR - (total * kL + gapL * (surf.length - 1))) / 2);
+		for (const s of surf) { const h = Math.max(3, (surfW.get(s) || 0) * kL); pos.set('s:' + s, { y, h, cur: y }); y += h + gapL; }
+		const Htot = Math.max(HR, y) + 20;
+		svg.setAttribute('viewBox', `0 -10 ${W} ${Htot}`);
+		svg.setAttribute('width', W);
+		svg.setAttribute('height', Htot);
+		let bands = '';
+		for (const s of surf) {
+			const ps = pos.get('s:' + s);
+			const ds = [...flows.get(s)].sort((a, b) => doms.indexOf(a[0]) - doms.indexOf(b[0]));
+			for (const [d, w] of ds) {
+				const pd = pos.get('d:' + d);
+				const hl = w * kL * (ps.h / Math.max(3, (surfW.get(s) || 0) * kL)), hr = w * k * (pd.h / Math.max(MIN_D, domW.get(d) * k));
+				const y0 = ps.cur, y1 = pd.cur;
+				ps.cur += hl; pd.cur += hr;
+				const x0 = xL + nodeW, x1 = xR, mx = (x0 + x1) / 2;
+				const cls = flowSel ? ((flowSel === 's:' + s || flowSel === 'd:' + d) ? 'band on' : 'band off') : 'band';
+				bands += `<path class="${cls}" d="M${x0},${y0} C${mx},${y0} ${mx},${y1} ${x1},${y1} L${x1},${y1 + hr} C${mx},${y1 + hr} ${mx},${y0 + hl} ${x0},${y0 + hl} Z"><title>${esc(D.surfaces[s].label)} → ${esc(d)}: ${w}</title></path>`;
+			}
+		}
+		let nodes = '';
+		for (const s of surf) {
+			const p = pos.get('s:' + s);
+			const on = flowSel === 's:' + s;
+			nodes += `<g class="n" data-k="s:${s}" tabindex="0" role="button" aria-label="${esc(D.surfaces[s].label)}"><rect x="${xL}" y="${p.y}" width="${nodeW}" height="${p.h}" rx="2" fill="var(--r-entry)"${on ? ' stroke="var(--ink)"' : ''}></rect>`
+				+ `<text x="${xL - 8}" y="${p.y + p.h / 2 - 2}" text-anchor="end" font-size="13" font-weight="600">${esc(D.surfaces[s].label)}</text>`
+				+ `<text x="${xL - 8}" y="${p.y + p.h / 2 + 12}" text-anchor="end" font-size="11" fill="var(--muted)" style="fill:var(--muted)">${surfaceSeen.get(s)} entry classes</text></g>`;
+		}
+		for (const d of doms) {
+			const p = pos.get('d:' + d);
+			const on = flowSel === 'd:' + d;
+			nodes += `<g class="n" data-k="d:${d}" tabindex="0" role="button" aria-label="${esc(d)}"><rect x="${xR}" y="${p.y}" width="${nodeW}" height="${p.h}" rx="2" fill="var(--r-service)"${on ? ' stroke="var(--ink)"' : ''}></rect>`
+				+ `<text x="${xR + nodeW + 8}" y="${p.y + p.h / 2 + 4}" font-size="12"${on ? ' font-weight="700"' : ''}>${esc(d)} <tspan style="fill:var(--muted)" font-size="11">${domW.get(d)}</tspan></text></g>`;
+		}
+		svg.innerHTML = bands + nodes;
+		svg.querySelectorAll('.n').forEach(g => {
+			const act = () => { flowSel = flowSel === g.dataset.k ? null : g.dataset.k; drawFlow(); drawFlowSide(); };
+			g.addEventListener('click', act);
+			g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+		});
+	}
+	function clsLink(f, label) {
+		return `<button class="cls" data-focus="${esc(f)}" title="${esc(rel(f))}">${esc(label ?? short(f))}</button>`;
+	}
+	function drawFlowSide() {
+		const side = $('#flowSide');
+		if (!flowSel) {
+			const rows = Object.entries(D.surfaces).map(([s, v]) => `<li><span class="dot" style="background:var(--r-entry)"></span><span><b>${esc(v.label)}</b> <span class="muted">${esc(v.detail)}</span></span><span class="num">${surfaceSeen.get(s) || 0}</span></li>`).join('');
+			side.innerHTML = `<h2>Ways in</h2><p class="muted" style="margin:0">Every request starts at one of these. The number is how many entry classes each has.</p><ul class="list">${rows}</ul>`;
+			return;
+		}
+		const [kind, key] = [flowSel.slice(0, 1), flowSel.slice(2)];
+		if (kind === 's') {
+			const list = D.entries[key] || [];
+			const byDom = new Map();
+			for (const e of list) (byDom.get(domainLabel(e)) || byDom.set(domainLabel(e), []).get(domainLabel(e))).push(e);
+			const groups = [...byDom].sort((a, b) => b[1].length - a[1].length).map(([d, es]) =>
+				`<h3 style="font-size:12px;margin:12px 0 4px;color:var(--muted)">${esc(d)}</h3><ul class="list" style="margin:0">${es.sort().map(e => `<li><span class="dot" style="background:${roleColor(roleGroup(e))}"></span>${clsLink(e)}<span class="num">${(out.get(e) || []).filter(x => !isPlumbing(x)).length}</span></li>`).join('')}</ul>`).join('');
+			side.innerHTML = `<h2>${esc(D.surfaces[key].label)} <button class="chip" id="clearSel">Clear</button></h2><p class="muted" style="margin:0">${esc(D.surfaces[key].detail)}. Number = services it depends on.</p>${groups}`;
+		} else {
+			// Domain profile: which classes outsiders actually call
+			const members = Object.keys(C).filter(f => C[f].area === 'Domain' && C[f].domain === key && !isPlumbing(f));
+			const rows = members.map(f => {
+				const callers = new Set(inn.get(f) || []);
+				const outside = [...callers].filter(c => !(C[c]?.area === 'Domain' && C[c].domain === key));
+				return { f, outside: outside.length, inside: callers.size - outside.length };
+			}).sort((a, b) => b.outside - a.outside || b.inside - a.inside);
+			const front = rows.filter(r => r.outside > 0), back = rows.filter(r => r.outside === 0);
+			const li = r => `<li><span class="dot" style="background:${roleColor(roleGroup(r.f))}"></span>${clsLink(r.f)}<span class="num" title="callers outside / inside the domain">${r.outside} · ${r.inside}</span></li>`;
+			side.innerHTML = `<h2>${esc(key)} <button class="chip" id="clearSel">Clear</button></h2>
+				<p class="muted" style="margin:0">Classes the rest of the app calls, then ones only this domain uses. Numbers: callers outside · inside.</p>
+				<h3 style="font-size:12px;margin:12px 0 4px;color:var(--muted)">Called from outside (${front.length})</h3><ul class="list" style="margin:0">${front.map(li).join('') || '<li class="muted">None</li>'}</ul>
+				<h3 style="font-size:12px;margin:12px 0 4px;color:var(--muted)">Internal only (${back.length})</h3><ul class="list" style="margin:0">${back.map(li).join('') || '<li class="muted">None</li>'}</ul>`;
+		}
+		$('#clearSel')?.addEventListener('click', () => { flowSel = null; drawFlow(); drawFlowSide(); });
+	}
+	document.addEventListener('click', e => {
+		const b = e.target.closest('[data-focus]');
+		if (b) { focus(b.dataset.focus); show('explorer'); }
+	});
+
+	// ---------- explorer
+	const ex = { focus: null, din: 1, dout: 2, plumb: false };
+	const names = Object.keys(C).filter(f => C[f].kind !== 'trait').sort();
+	const search = $('#exSearch'), sug = $('#exSuggest');
+	let sugIdx = -1;
+	function renderSuggest() {
+		const q = search.value.trim().toLowerCase();
+		if (!q) { sug.hidden = true; return; }
+		const hits = names.filter(n => n.toLowerCase().includes(q))
+			.sort((a, b) => (short(a).toLowerCase().startsWith(q) ? 0 : 1) - (short(b).toLowerCase().startsWith(q) ? 0 : 1) || short(a).length - short(b).length)
+			.slice(0, 14);
+		sugIdx = hits.length ? 0 : -1;
+		sug.innerHTML = hits.map((h, i) => `<button data-pick="${esc(h)}" class="${i === 0 ? 'act' : ''}">${esc(rel(h))}</button>`).join('') || '<div class="muted" style="padding:6px 10px">No class matches</div>';
+		sug.hidden = false;
+	}
+	search.addEventListener('input', renderSuggest);
+	search.addEventListener('keydown', e => {
+		const btns = [...sug.querySelectorAll('button')];
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			e.preventDefault();
+			if (!btns.length) return;
+			sugIdx = (sugIdx + (e.key === 'ArrowDown' ? 1 : -1) + btns.length) % btns.length;
+			btns.forEach((b, i) => b.classList.toggle('act', i === sugIdx));
+		} else if (e.key === 'Enter' && btns[sugIdx]) {
+			e.preventDefault(); focus(btns[sugIdx].dataset.pick);
+		} else if (e.key === 'Escape') { sug.hidden = true; }
+	});
+	sug.addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) focus(b.dataset.pick); });
+	document.addEventListener('click', e => { if (!e.target.closest('.ex-bar')) sug.hidden = true; });
+	$('#exIn').addEventListener('change', e => { ex.din = +e.target.value; drawGraph(); });
+	$('#exOut').addEventListener('change', e => { ex.dout = +e.target.value; drawGraph(); });
+	$('#exPlumb').addEventListener('change', e => { ex.plumb = e.target.checked; drawGraph(); });
+
+	function focus(f) {
+		if (!C[f]) return;
+		ex.focus = f;
+		search.value = rel(f);
+		sug.hidden = true;
+		drawGraph();
+		drawDetail();
+	}
+
+	const MAX_COL = 36;
+	function drawGraph() {
+		const g = $('#graph');
+		if (!ex.focus) { g.innerHTML = '<p class="muted" style="padding:16px">Pick a class to see who calls it and what it calls.</p>'; return; }
+		const keep = f => ex.plumb || !isPlumbing(f) || f === ex.focus;
+		const col = new Map([[ex.focus, 0]]);
+		const cols = { 0: [ex.focus] };
+		const extra = {};
+		const walk = (dir, depth) => {
+			let frontier = [ex.focus];
+			for (let d = 1; d <= depth; d++) {
+				const next = [];
+				for (const f of frontier) {
+					for (const n of new Set((dir > 0 ? out : inn).get(f) || [])) {
+						if (col.has(n) || !keep(n)) continue;
+						const c = dir * d;
+						cols[c] = cols[c] || [];
+						if (cols[c].length >= MAX_COL) { extra[c] = (extra[c] || 0) + 1; continue; }
+						col.set(n, c); cols[c].push(n); next.push(n);
+					}
+				}
+				frontier = next;
+			}
+		};
+		walk(1, ex.dout);
+		walk(-1, ex.din);
+		const keys = Object.keys(cols).map(Number).sort((a, b) => a - b);
+		for (const c of keys) cols[c].sort((a, b) => roleGroup(a).localeCompare(roleGroup(b)) || domainLabel(a).localeCompare(domainLabel(b)) || short(a).localeCompare(short(b)));
+		const boxW = 232, boxH = 26, gapY = 6, gapX = 96, top = 30;
+		const maxRows = Math.max(...keys.map(c => cols[c].length + (extra[c] ? 1 : 0)));
+		const H = top + maxRows * (boxH + gapY) + 10;
+		const W = keys.length * (boxW + gapX) - gapX + 16;
+		const xy = new Map();
+		keys.forEach((c, i) => {
+			const x = 8 + i * (boxW + gapX);
+			const n = cols[c].length;
+			const offset = top + (maxRows - n) * (boxH + gapY) / 2;
+			cols[c].forEach((f, j) => xy.set(f, { x, y: offset + j * (boxH + gapY) }));
+		});
+		let edges = '';
+		for (const [a, pa] of xy) {
+			for (const b of new Set(out.get(a) || [])) {
+				const pb = xy.get(b);
+				if (!pb || col.get(b) !== col.get(a) + 1) continue;
+				const info = edgeInfo.get(a + '>' + b);
+				const bad = findingPairs.has(a + '>' + b);
+				const soft = info && !info.types.includes('inject') && !info.types.includes('binds');
+				const x0 = pa.x + boxW, y0 = pa.y + boxH / 2, x1 = pb.x, y1 = pb.y + boxH / 2, mx = (x0 + x1) / 2;
+				const tip = `${short(a)} → ${short(b)} (${info?.types || ''})${info?.methods?.length ? '\ncalls: ' + info.methods.join(', ') : ''}${bad ? '\n' + findingPairs.get(a + '>' + b).note : ''}`;
+				edges += `<path class="edge${soft ? ' soft' : ''}${bad ? ' bad' : ''}" d="M${x0},${y0} C${mx},${y0} ${mx},${y1} ${x1},${y1}"><title>${esc(tip)}</title></path>`;
+			}
+		}
+		const heads = { '-2': 'Callers of callers', '-1': 'Called by', '0': 'Selected', '1': 'Depends on', '2': 'Then on', '3': 'Then on' };
+		let nodes = keys.map((c, i) => `<text class="colhead" x="${8 + i * (boxW + gapX)}" y="14">${heads[c] ?? ''} · ${cols[c].length}${extra[c] ? '+' + extra[c] : ''}</text>`).join('');
+		const hitSet = new Set(D.findings.filter(f => f.caller === ex.focus || f.target === ex.focus).flatMap(f => [f.caller, f.target]));
+		for (const [f, p] of xy) {
+			const label = short(f).length > 22 ? short(f).slice(0, 21) + '…' : short(f);
+			const cls = 'node' + (f === ex.focus ? ' focus' : '') + (hitSet.has(f) && f !== ex.focus ? ' hit' : '');
+			nodes += `<g class="${cls}" data-node="${esc(f)}" tabindex="0" role="button" aria-label="${esc(rel(f))}"><title>${esc(rel(f))}\n${esc(ROLE_LABEL[roleGroup(f)])} · ${esc(domainLabel(f))}</title>`
+				+ `<rect x="${p.x}" y="${p.y}" width="${boxW}" height="${boxH}" rx="4"></rect>`
+				+ `<circle cx="${p.x + 11}" cy="${p.y + boxH / 2}" r="4" fill="${roleColor(roleGroup(f))}"></circle>`
+				+ `<text x="${p.x + 21}" y="${p.y + boxH / 2 + 4}">${esc(label)}</text>`
+				+ `<text x="${p.x + boxW - 7}" y="${p.y + boxH / 2 + 4}" text-anchor="end" style="fill:var(--muted)" font-size="10">${esc(domainLabel(f).slice(0, 10))}</text></g>`;
+		}
+		keys.forEach((c, i) => {
+			if (extra[c]) {
+				const n = cols[c].length;
+				const offset = top + (maxRows - n) * (boxH + gapY) / 2;
+				nodes += `<text class="more" x="${8 + i * (boxW + gapX)}" y="${offset + n * (boxH + gapY) + 14}">+${extra[c]} more not shown</text>`;
+			}
+		});
+		g.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Dependencies of ${esc(short(ex.focus))}">${edges}${nodes}</svg>`;
+		g.querySelectorAll('[data-node]').forEach(n => {
+			n.addEventListener('click', () => focus(n.dataset.node));
+			n.addEventListener('keydown', e => { if (e.key === 'Enter') focus(n.dataset.node); });
+		});
+	}
+
+	function drawDetail() {
+		const f = ex.focus, c = C[f], el = $('#detail');
+		if (!c) { el.innerHTML = '<p class="muted">Nothing selected.</p>'; return; }
+		const routes = routesBy.get(f) || [];
+		const surfaces = entrySurfaces.get(f) || [];
+		const callers = [...new Set(inn.get(f) || [])];
+		const deps = [...new Set(out.get(f) || [])];
+		const mine = D.findings.filter(x => x.caller === f || x.target === f);
+		const callerRows = callers.filter(x => !isPlumbing(x)).sort().map(x => {
+			const info = edgeInfo.get(x + '>' + f);
+			return `<li><span class="dot" style="background:${roleColor(roleGroup(x))}"></span><span>${clsLink(x)}${info?.methods?.length ? `<div class="methods">${esc(info.methods.join(', '))}</div>` : ''}</span><span class="num">${esc(domainLabel(x))}</span></li>`;
+		}).join('');
+		el.innerHTML = `<h2 style="word-break:break-all">${esc(c.short)}</h2>
+			<div class="code muted" style="word-break:break-all">${esc(rel(f))}</div>
+			<dl>
+				<dt>Role</dt><dd><span class="dot" style="display:inline-block;background:${roleColor(roleGroup(f))}"></span> ${esc(ROLE_LABEL[roleGroup(f)])}${c.abstract ? ' (abstract)' : ''}</dd>
+				<dt>Domain</dt><dd>${esc(domainLabel(f))}</dd>
+				<dt>File</dt><dd class="code">${esc(c.file)}:${c.line}</dd>
+				${surfaces.length ? `<dt>Entry</dt><dd>${surfaces.map(s => esc(D.surfaces[s].label)).join(', ')}</dd>` : ''}
+				<dt>Links</dt><dd>${callers.length} callers · ${deps.length} dependencies</dd>
+			</dl>
+			${routes.length ? `<h3>Routes</h3><div class="routes">${routes.map(r => `<div><span class="meth">${esc(r.methods.join('|'))}</span>${esc(r.path || '/')}${r.middleware.length ? `<div class="methods">via ${esc(r.middleware.map(short).join(' → '))}</div>` : ''}</div>`).join('')}</div>` : ''}
+			${mine.length ? `<h3>Findings (${mine.length})</h3>${mine.map(x => `<div style="margin-bottom:8px"><span class="sev ${x.severity}">${x.severity}</span> ${clsLink(x.caller)} <span class="arrow">→</span> ${clsLink(x.target)}<div class="muted" style="font-size:12px">${esc(x.note)}</div></div>`).join('')}` : ''}
+			${c.methods.length ? `<h3>Public methods</h3><div class="methods">${esc(c.methods.join(', '))}</div>` : ''}
+			<h3>Called by</h3><ul class="list" style="margin:0">${callerRows || `<li class="muted" style="display:block">Nothing in src/ depends on it${surfaces.length ? '; it is an entry point' : ''}.</li>`}</ul>`;
+	}
+
+	// ---------- findings
+	const KINDS = {
+		gateway: ['Reaches a module internal', 'Calls a class that only its module should use'],
+		parallel: ['Parallel decision', 'Uses a class that still decides on its own, outside the front door'],
+		bypass: ['Goes around a service', 'A service wraps this class, but the caller goes to it directly'],
+		layer: ['Skips the service layer', 'An action, command, tool or middleware talks to a repository'],
+		locator: ['Container lookup', 'Pulls a class from the container at runtime instead of injecting it'],
+	};
+	const fState = { kind: null, sev: new Set(['high', 'medium', 'low']) };
+	function drawFindings() {
+		const counts = {};
+		for (const f of D.findings) counts[f.kind] = (counts[f.kind] || 0) + 1;
+		$('#fSum').innerHTML = Object.entries(KINDS).map(([k, [t, d]]) => `<button data-kind="${k}" aria-pressed="${fState.kind === k}" title="${esc(d)}"><b>${counts[k] || 0}</b>${esc(t)}<span>${esc(d)}</span></button>`).join('');
+		$('#fSev').innerHTML = '<span class="muted" style="font-size:12px">Severity</span>' + ['high', 'medium', 'low'].map(s => `<button class="chip" data-sev="${s}" aria-pressed="${fState.sev.has(s)}">${s}</button>`).join('')
+			+ (fState.kind ? `<button class="chip" id="fAll">Show all kinds</button>` : '');
+		const rows = D.findings.filter(f => (!fState.kind || f.kind === fState.kind) && fState.sev.has(f.severity));
+		const file = f => C[f.caller] ? `${C[f.caller].file}${f.line ? ':' + f.line : ''}` : '';
+		$('#fTable').innerHTML = `<thead><tr><th>Severity</th><th>Caller → target</th><th>Why it is flagged</th><th>Where</th></tr></thead><tbody>`
+			+ (rows.map(f => `<tr><td><span class="sev ${f.severity}">${f.severity}</span></td><td>${clsLink(f.caller)}<span class="arrow">→</span>${clsLink(f.target)}${f.via && f.kind !== 'gateway' && f.kind !== 'parallel' ? `<div class="muted" style="font-size:12px">front door: ${clsLink(f.via)}</div>` : ''}</td><td class="note">${esc(f.note)}</td><td class="loc">${esc(file(f))}</td></tr>`).join('')
+				|| '<tr><td colspan="4" class="muted">Nothing matches these filters.</td></tr>') + '</tbody>';
+		$('#fSum').querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => { fState.kind = fState.kind === b.dataset.kind ? null : b.dataset.kind; drawFindings(); }));
+		$('#fSev').querySelectorAll('[data-sev]').forEach(b => b.addEventListener('click', () => { fState.sev.has(b.dataset.sev) ? fState.sev.delete(b.dataset.sev) : fState.sev.add(b.dataset.sev); drawFindings(); }));
+		$('#fAll')?.addEventListener('click', () => { fState.kind = null; drawFindings(); });
+	}
+
+	// ---------- modules
+	function drawModules() {
+		const html = Object.entries(D.modules).map(([id, m]) => {
+			const callersOf = x => [...new Set(inn.get(x) || [])].filter(c => !isPlumbing(c)).sort();
+			const card = (x, cls, extraHtml = '') => {
+				const fs = D.findings.filter(f => f.target === x && (f.kind === 'gateway' || f.kind === 'parallel'));
+				const list = cls === 'front'
+					? `<div class="muted" style="font-size:12px;margin-top:4px">${callersOf(x).length} callers</div>`
+					: (fs.length
+						? `<ul>${fs.map(f => `<li><span class="sev ${f.severity}">${f.severity}</span>${clsLink(f.caller)}${f.methods?.length ? `<span class="methods">${esc(f.methods.join(', '))}</span>` : ''}</li>`).join('')}</ul>`
+						: `<div style="font-size:12px;margin-top:4px"><span class="ok">Clean.</span> <span class="muted">No caller outside the module.</span></div>`);
+				return `<div class="mod-card ${cls}">${clsLink(x)}${extraHtml}${list}</div>`;
+			};
+			return `<div class="panel mod"><h2>${esc(m.label)}</h2>
+				<div class="mod-cols">
+					<div class="mod-col"><h3>Front doors</h3>${m.front.map(x => card(x, 'front')).join('')}</div>
+					<div class="mod-col"><h3>Internals</h3>${(m.internals || []).map(x => card(x, '')).join('') || '<p class="muted">None declared</p>'}</div>
+					<div class="mod-col"><h3>Parallel deciders</h3>${Object.entries(m.parallel || {}).map(([x, p]) => card(x, '', `<div class="muted" style="font-size:12px">${esc(p.why)}</div>`)).join('') || '<p class="muted">None</p>'}</div>
+				</div>
+				${(m.allowed || []).length ? `<p class="muted" style="font-size:12px;margin:8px 0 0">May also use internals: <code>${m.allowed.map(esc).join('</code>, <code>')}</code></p>` : ''}</div>`;
+		}).join('');
+		$('#modules').innerHTML = html || '<p class="muted">No modules declared.</p>';
+	}
+
+	drawFlow();
+	drawFlowSide();
+	drawFindings();
+	drawModules();
+	focus('TotalCMS\\Domain\\Auth\\Service\\AccessGuard');
+	const start = (location.hash || '').slice(1);
+	show(views.includes(start) ? start : 'flow');
+})();
+</script>
