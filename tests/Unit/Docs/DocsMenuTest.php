@@ -63,7 +63,7 @@ test('Operations is a sorted reference list', function (): void {
 	$operations = array_values(array_filter(docsMenuTestLoad(), static fn (array $g): bool => $g['title'] === 'Operations'))[0];
 
 	expect($operations['sort'] ?? null)->toBe('alpha');
-	expect(array_slice(array_column($operations['sub'], 'title'), 0, 3))->toBe(['Apache', 'Backups', 'Configuration']);
+	expect(array_slice(array_column($operations['sub'], 'title'), 0, 3))->toBe(['Activity Log', 'Apache', 'Backups']);
 });
 
 test('Field Types keeps its two intro pages first, then sorts the rest', function (): void {

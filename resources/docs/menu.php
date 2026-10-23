@@ -292,6 +292,7 @@ $menu = [
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Shared Data',       'path' => 'operations/shared-data'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
+			['title' => 'Activity Log',      'path' => 'operations/activity'],
 			['title' => 'Backups',           'path' => 'operations/backups'],
 			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
 			['title' => 'Cron URLs',         'path' => 'operations/cron-urls'],

@@ -37,6 +37,7 @@ final class CoreEvent
 	public const DEVMODE_DISABLED   = 'devmode.disabled';
 	public const CACHE_CLEARED      = 'cache.cleared';
 	public const ACCESS_DENIED      = 'access.denied';
+	public const FILE_DOWNLOADED    = 'file.downloaded';
 
 	/**
 	 * Every core event, in a sensible display order.
@@ -65,6 +66,7 @@ final class CoreEvent
 		self::DEVMODE_DISABLED,
 		self::CACHE_CLEARED,
 		self::ACCESS_DENIED,
+		self::FILE_DOWNLOADED,
 	];
 
 	/**

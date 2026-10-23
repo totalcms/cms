@@ -5781,6 +5781,18 @@
                     "method": "string",
                     "path": "string"
                 }
+            },
+            {
+                "name": "file.downloaded",
+                "description": "Fired when a file is served as an attachment from a `/download/...` URL, after its protection (access groups, password) passed. Who downloaded it is the payload's `actor`; for a visitor who is not signed in that is `anonymous`. Inline streams from `/stream/...` do not fire it, since a media player makes many range requests for one play.",
+                "payload": {
+                    "collection": "string",
+                    "id": "string",
+                    "property": "string",
+                    "filename": "string",
+                    "subpath": "string",
+                    "protected": "bool"
+                }
             }
         ],
         "permissions": [

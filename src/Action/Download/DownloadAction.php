@@ -8,6 +8,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Event\Payload\FileDownloadedPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Property\Service\PropertyFile;
 use TotalCMS\Domain\Property\Service\PropertyFileResolver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
@@ -35,6 +38,7 @@ abstract class DownloadAction
 		protected Config $config,
 		protected TranslationService $translator,
 		protected FileStreamRenderer $streamRenderer,
+		protected EventDispatcher $events,
 	) {
 	}
 
@@ -98,6 +102,15 @@ abstract class DownloadAction
 		if ($this->accessManager->isProtectedByGroups()) {
 			$this->accessManager->logDownload($file->collection, $file->id, $file->property, $file->name, $file->subpath);
 		}
+
+		$this->events->dispatch(CoreEvent::FILE_DOWNLOADED, new FileDownloadedPayload(
+			$file->collection,
+			$file->id,
+			$file->property,
+			$record->download,
+			(string)$file->subpath,
+			$this->accessManager->isProtectedByGroups() || $this->accessManager->isPasswordProtected(),
+		));
 
 		$this->session->delete('downloadAttempts');
 

@@ -13,7 +13,9 @@ use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
+use Mcp\Schema\Result\CallToolResult;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
@@ -70,6 +72,7 @@ readonly class McpServerFactory
 		private OAuthActivityLogger $activityLogger,
 		private NotificationBusInterface $notificationBus,
 		private EditionFeatureService $editionFeatures,
+		private McpToolActivity $toolActivity,
 	) {
 	}
 
@@ -144,7 +147,7 @@ readonly class McpServerFactory
 			$annotations = $tool->annotations ?? $readOnlyDefault;
 
 			$builder->addTool(
-				handler: $this->guardHandler($tool),
+				handler: $this->recordingHandler($tool->name, $this->guardHandler($tool)),
 				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
@@ -309,6 +312,39 @@ readonly class McpServerFactory
 	 * tests/Feature/McpToolGuardTest.php, which asserts a wrapped handler
 	 * receives its arguments intact.
 	 */
+	/**
+	 * Wrap a tool handler so each call lands in the activity log: tool, caller,
+	 * target, outcome and duration ({@see McpToolActivity}). Outermost, so a
+	 * call the guard refuses is recorded as a failure too.
+	 */
+	private function recordingHandler(string $toolName, \Closure $inner): \Closure
+	{
+		$activity = $this->toolActivity;
+
+		$wrapped = static function (array $arguments) use ($inner, $toolName, $activity): mixed {
+			$started = hrtime(true);
+			$elapsed = static fn (): int => (int)((hrtime(true) - $started) / 1_000_000);
+
+			try {
+				$result = (new ReferenceHandler())->handle(new ElementReference($inner), $arguments);
+			} catch (\Throwable $e) {
+				$activity->record($toolName, $arguments, false, $elapsed(), $e->getMessage());
+
+				throw $e;
+			}
+
+			$failed = $result instanceof CallToolResult && $result->isError;
+			$activity->record($toolName, $arguments, !$failed, $elapsed(), $failed ? 'tool returned an error' : null);
+
+			return $result;
+		};
+
+		// Same argument-binding trick as guardHandler(): scoped to
+		// ReferenceHandler so the SDK passes the raw argument bag through, and
+		// the inner handler is replayed with the SDK's normal dispatch.
+		return \Closure::bind($wrapped, null, ReferenceHandler::class);
+	}
+
 	private function guardHandler(McpToolDefinition $tool): \Closure
 	{
 		$requires = $tool->requires;

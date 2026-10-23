@@ -29,6 +29,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Action\Admin\Utils\AccessPageData;
+use TotalCMS\Action\Admin\Utils\ActivityPageData;
 use TotalCMS\Action\Admin\Utils\ImportPageData;
 use TotalCMS\Action\Admin\Utils\JumpStartPageData;
 use TotalCMS\Action\Admin\Utils\OAuthPageData;
@@ -36,6 +37,10 @@ use TotalCMS\Action\Admin\Utils\SyncPageData;
 use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
+use TotalCMS\Domain\Activity\Listener\ActivityListener;
+use TotalCMS\Domain\Activity\Repository\ActivityRepository;
+use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Form\FormServices;
@@ -797,6 +802,19 @@ return [
 		$dispatcher->listen('object.updated', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 
+		// ActivityListener — records who changed, downloaded or was refused
+		// what, for Utilities → Activity. Priority 100 = after the core
+		// listeners; it only writes a row, so order among the 100s is moot.
+		foreach (ActivityListener::EVENTS as $activityEvent) {
+			$dispatcher->listen(
+				$activityEvent,
+				static function (array $payload) use ($container, $activityEvent): void {
+					$container->get(ActivityListener::class)->handle($activityEvent, $payload);
+				},
+				100,
+			);
+		}
+
 		// AutomationEventSubscriber — fans every core event out to matching
 		// event-trigger automations (enqueued async). Priority 100 = after all
 		// core listeners, so index/cache are already updated when an automation
@@ -1119,6 +1137,7 @@ return [
 		$container->get(OAuthActivityLogger::class),
 		$container->get(NotificationBusInterface::class),
 		$container->get(EditionFeatureService::class),
+		$container->get(McpToolActivity::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at
@@ -1311,6 +1330,12 @@ return [
 
 	// The utilities page → builder map. Explicit rather than autowired so the
 	// set of pages each builder serves is visible in one place.
+	ActivityRecorder::class => fn (ContainerInterface $container): ActivityRecorder => new ActivityRecorder(
+		$container->get(ActivityRepository::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Activity),
+	),
+
 	UtilsPageDataResolver::class => function (ContainerInterface $container): UtilsPageDataResolver {
 		$oauth      = $container->get(OAuthPageData::class);
 		$access     = $container->get(AccessPageData::class);
@@ -1325,6 +1350,7 @@ return [
 			'project-setup'         => $import,
 			'import-totalcms-one'   => $import,
 			'import-rss'            => $import,
+			'activity'              => $container->get(ActivityPageData::class),
 			'update'                => $container->get(UpdatePageData::class),
 			'sync'                  => $container->get(SyncPageData::class),
 			'jumpstart'             => $container->get(JumpStartPageData::class),

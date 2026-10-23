@@ -1,0 +1,148 @@
+// Utilities → Activity Log
+.activity-log {
+	// A grid/flex child defaults to `min-width: auto` and grows to fit a
+	// wide table; 0 lets the table wrapper scroll instead.
+	min-width : 0;
+	max-width : 100%;
+
+	// Two rows of four equal columns (event · actor · collection · user,
+	// level · from · to), then the buttons on their own row. Two columns
+	// on narrow screens, one on phones.
+	.activity-filters {
+		display               : grid;
+		grid-template-columns : repeat(4, minmax(0, 1fr));
+		gap                   : 1rem 0.75rem;
+		margin-block          : 1.5rem 1rem;
+		padding               : 1.25rem;
+		background            : oklch(var(--totalform-nearwhite));
+		border                : 1px solid oklch(var(--totalform-border-color));
+		border-radius         : var(--totalform-radius);
+
+		@media (max-width: 900px) {
+			grid-template-columns : repeat(2, minmax(0, 1fr));
+		}
+
+		@media (max-width: 500px) {
+			grid-template-columns : minmax(0, 1fr);
+		}
+
+		// The TotalForm stylesheet sizes every label to its text
+		// (`width: max-content`); stretch these across their grid cell so the
+		// control inside can fill it.
+		label {
+			width       : 100%;
+			max-width   : none;
+			display     : grid;
+			gap         : 0.35rem;
+			font-size   : 0.8em;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		// One look for every control, so selects, the text box and the date
+		// pickers share a width and a height instead of their native sizes.
+		select,
+		input {
+			box-sizing    : border-box;
+			width         : 100%;
+			min-width     : 0;
+			height        : 2.5rem;
+			padding       : 0 0.75rem;
+			font          : inherit;
+			font-size     : 0.95rem;
+			font-weight   : normal;
+			color         : oklch(var(--totalform-text-color));
+			background    : oklch(var(--totalform-white));
+			border        : 1px solid oklch(var(--totalform-border-color));
+			border-radius : var(--totalform-radius);
+		}
+
+		select:focus,
+		input:focus {
+			outline        : 2px solid oklch(var(--totalform-accent));
+			outline-offset : 1px;
+		}
+	}
+
+	.activity-filter-actions {
+		grid-column : 1 / -1;
+		display     : flex;
+		flex-wrap   : wrap;
+		gap         : 0.5rem;
+
+		// Export sits at the far end, apart from Filter / Clear.
+		.activity-export {
+			margin-left : auto;
+		}
+	}
+
+	.activity-count {
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.85em;
+	}
+
+	.activity-table-wrap {
+		max-width     : 100%;
+		overflow-x    : auto;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+	}
+
+	// The columns keep a readable minimum and the wrapper scrolls sideways
+	// when the panel is narrower than their sum, instead of crushing them.
+	table.admin-table {
+		width      : 100%;
+		max-height : none;
+
+		.activity-col-when    { min-width : 11rem; }
+		.activity-col-event   { min-width : 10rem; }
+		.activity-col-who     { min-width : 14rem; }
+		.activity-col-target  { min-width : 16rem; }
+		.activity-col-details { min-width : 20rem; }
+
+		td {
+			white-space    : normal;
+			overflow       : visible;
+			text-overflow  : clip;
+			max-width      : none;
+			height         : auto;
+			vertical-align : top;
+			word-break     : break-word;
+		}
+	}
+
+	.activity-when {
+		white-space          : nowrap !important;
+		font-variant-numeric : tabular-nums;
+	}
+
+	tr.activity-warning {
+		background : oklch(var(--totalform-nearwhite));
+	}
+
+	.activity-meta {
+		display   : block;
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.8em;
+	}
+
+	.activity-details {
+		details summary {
+			cursor    : pointer;
+			font-size : 0.8em;
+			color     : oklch(var(--totalform-darkgray));
+		}
+
+		pre {
+			margin      : 0.25rem 0 0;
+			font-size   : 0.8em;
+			white-space : pre-wrap;
+		}
+	}
+
+	.activity-pager {
+		display         : flex;
+		justify-content : space-between;
+		margin-top      : 1rem;
+	}
+}

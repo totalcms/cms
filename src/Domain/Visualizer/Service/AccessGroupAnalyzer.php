@@ -41,6 +41,7 @@ readonly class AccessGroupAnalyzer
 	 * @var list<string>
 	 */
 	private const UTIL_PAGES = [
+		'activity',
 		'cache',
 		'collection-report',
 		'image-batcher',

@@ -82,6 +82,8 @@ class Config
 	public array $xmlrpc = [];
 	/** @var array<string,mixed> Object snapshot history — see BackupStore. */
 	public array $backups = [];
+	/** @var array<string,mixed> Activity log — see ActivityRecorder. */
+	public array $activity = [];
 	/** @var array<string,mixed> `tcms push` / `tcms pull` remote — see SyncConfig. */
 	public array $sync = [];
 
@@ -170,6 +172,7 @@ class Config
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
 		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
+		$this->activity           = is_array($this->rawSettings['activity'] ?? null) ? $this->rawSettings['activity'] : [];
 		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];
 
 		$siteId         = (string)($this->rawSettings['siteId'] ?? '');

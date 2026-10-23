@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Admin\ActivityExportAction;
 use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Admin\AdminBuilderAction;
@@ -110,7 +111,10 @@ return function (App $app): void {
 		$group->get('/utils/access-groups[/{action}]', AdminUtilsAction::class)->setName('admin-utils-access-groups')->add(AccessGroupsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 		$group->get('/utils/api-keys[/{action}]', AdminUtilsAction::class)->setName('admin-utils-api-keys')->add(ApiKeysEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 
-		$group->get('/utils/logs/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
+		// `{page:…}` so UtilsAccessMiddleware checks that page's own grant,
+		// not just access to some utility.
+		$group->get('/utils/{page:activity}/export', ActivityExportAction::class)->setName('admin-utils-activity-export')->add(UtilsAccessMiddleware::class);
+		$group->get('/utils/{page:logs}/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
 		$group->post('/utils/update/backup/delete', UpdateBackupDeleteAction::class)->setName('admin-update-backup-delete')->add(AdminOnlyMiddleware::class);

@@ -14,6 +14,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
@@ -123,6 +125,7 @@ final class McpServerFactoryTest extends TestCase
 			// only has to exist for the builder to accept it.
 			new InMemoryNotificationBus(),
 			$this->editions($dataViews),
+			new McpToolActivity($this->createStub(ActivityRecorder::class), new ActorContext()),
 		);
 	}
 

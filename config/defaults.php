@@ -621,6 +621,18 @@ $settings['backups'] = [
 	'maxAgeDays' => 30,
 ];
 
+// Activity log: who changed, downloaded or called what, recorded from core
+// events into tcms-data/.system/activity (SQLite) and shown under Utilities →
+// Activity. Anonymous downloads are never recorded; anonymous MCP tool calls
+// only when `mcpAnonymous` is on, since a public MCP server listed in an AI
+// directory would otherwise fill the log with docs lookups. Rows older than
+// `retentionDays` are pruned once a day. Editable under Settings → Activity.
+$settings['activity'] = [
+	'enable'        => true,
+	'retentionDays' => 90,
+	'mcpAnonymous'  => false,
+];
+
 // `tcms push` / `tcms pull` remote. Normally set in Settings → Sync, which
 // writes settings.json. Set it here (or in config/tcms.php) instead when
 // several installs share one tcms-data folder: settings.json is shared, so a

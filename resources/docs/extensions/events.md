@@ -353,6 +353,27 @@ $context->addEventListener('access.denied', function (array $payload): void {
 });
 ```
 
+### `file.downloaded`
+
+Fired when a file is served as an attachment from a `/download/...` URL, after its protection (access groups, password) passed. Who downloaded it is the payload's `actor`; for a visitor who is not signed in that is `anonymous`. Inline streams from `/stream/...` do not fire it, since a media player makes many range requests for one play.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | The collection |
+| `id` | `string` | The object ID |
+| `property` | `string` | The file, depot or styled-text property |
+| `filename` | `string` | The file name the download was saved as |
+| `subpath` | `string` | The depot subfolder, or `''` |
+| `protected` | `bool` | Whether the file is limited to access groups or a password |
+
+```php
+$context->addEventListener('file.downloaded', function (array $payload): void {
+    if ($payload['actor']['kind'] === 'member') {
+        // e.g. count downloads per member
+    }
+});
+```
+
 ## Listener Isolation
 
 Each listener is wrapped in a try/catch. If your listener throws:

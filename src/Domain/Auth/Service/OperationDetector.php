@@ -109,6 +109,7 @@ readonly class OperationDetector
 		'admin-utils',
 		'admin-utils-post',
 		'admin-utils-logs-download',
+		'admin-utils-activity-export',
 		'admin-builder',
 		'admin-builder-preview',
 		'admin-playground',
