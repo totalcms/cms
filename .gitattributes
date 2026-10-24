@@ -27,6 +27,7 @@ legacy/* linguist-generated
 /vendor-locales      export-ignore
 
 .editorconfig        export-ignore
+glama.json           export-ignore
 .env                 export-ignore
 .eslintrc.json       export-ignore
 .gitignore           export-ignore
