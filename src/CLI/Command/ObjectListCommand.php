@@ -41,7 +41,7 @@ class ObjectListCommand extends BaseCommand
 			$ids = $ids->slice($offset)->values();
 		}
 
-		$data = $ids->toArray();
+		$data = array_values($ids->toArray());
 
 		return $this->outputData($input, $output, $data);
 	}
