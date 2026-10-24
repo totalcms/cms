@@ -49,11 +49,38 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->session->expects($this->never())->method('start');
 		$this->session->expects($this->never())->method('save');
 
-		$this->middleware->process($this->createRequest('/mysite/imageworks/photo.png'), $this->handler);
+		$this->middleware->process($this->createRequest('/mysite/imageworks/photo.png', '/mysite/index.php'), $this->handler);
+	}
+
+	#[DataProvider('objectsNamedLikeRoutes')]
+	public function testAnObjectIdThatMatchesARouteKeepsItsSession(string $path, string $scriptName): void
+	{
+		// The rules match from the start of the route, not anywhere in the URL:
+		// an object whose id is `imageworks` lost its session on upload, and the
+		// remember-me restore then failed with a 500.
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->method('handle')->willReturn($response);
+
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->once())->method('start');
+		$this->session->expects($this->once())->method('save');
+
+		$this->middleware->process($this->createRequest($path, $scriptName), $this->handler);
+	}
+
+	/** @return array<string,array{string,string}> */
+	public static function objectsNamedLikeRoutes(): array
+	{
+		return [
+			'api upload'           => ['/api/collections/features/imageworks/gallery', '/index.php'],
+			'api upload, sub-path' => ['/mysite/api/collections/features/imageworks/gallery', '/mysite/index.php'],
+			'admin edit'           => ['/admin/collections/features/imageworks', '/index.php'],
+			'api object named api' => ['/api/collections/docs/api/assets/file', '/index.php'],
+		];
 	}
 
 	#[DataProvider('assetPaths')]
-	public function testSkipsSessionForStaticAssets(string $path): void
+	public function testSkipsSessionForStaticAssets(string $path, string $scriptName = '/index.php'): void
 	{
 		// A started session sets PHPSESSID on the response, and a CDN will not
 		// cache a response carrying Set-Cookie — so the immutable assets were
@@ -64,22 +91,23 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->session->expects($this->never())->method('start');
 		$this->session->expects($this->never())->method('save');
 
-		$this->assertSame($response, $this->middleware->process($this->createRequest($path), $this->handler));
+		$this->assertSame($response, $this->middleware->process($this->createRequest($path, $scriptName), $this->handler));
 	}
 
-	/** @return array<string,array{string}> */
+	/** @return array<string,array{0:string,1?:string}> */
 	public static function assetPaths(): array
 	{
 		return [
 			'core asset'              => ['/api/assets/content.css'],
-			'core asset, sub-path'    => ['/mysite/api/assets/icons.css'],
+			'core asset, sub-path'    => ['/mysite/api/assets/icons.css', '/mysite/index.php'],
+			'core asset, public dir'  => ['/tcms/api/assets/icons.css', '/tcms/public/index.php'],
 			'nested core asset'       => ['/api/assets/build/site.css'],
 			'extension asset'         => ['/api/ext/totalcms/docs/assets/docs.js'],
 			// A Site Builder page that serves an image (a badge pasted on other
 			// sites): one session per view of every page it sits on otherwise.
 			'page image'              => ['/badges/pill-light.svg'],
 			'page image, dynamic'     => ['/@joeworkman/badge.svg'],
-			'page image, sub-path'    => ['/mysite/og/card.png'],
+			'page image, sub-path'    => ['/mysite/og/card.png', '/mysite/index.php'],
 		];
 	}
 
@@ -139,7 +167,7 @@ final class LazySessionStartMiddlewareTest extends TestCase
 	}
 
 	#[DataProvider('sessionImagePaths')]
-	public function testImageExtensionsUnderAdminOrApiKeepTheirSession(string $path): void
+	public function testImageExtensionsUnderAdminOrApiKeepTheirSession(string $path, string $scriptName = '/index.php'): void
 	{
 		// The image-extension rule is for front-end pages only: the admin and
 		// the API check login state on every request, whatever the URL ends in.
@@ -150,27 +178,28 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->session->expects($this->once())->method('start');
 		$this->session->expects($this->once())->method('save');
 
-		$this->middleware->process($this->createRequest($path), $this->handler);
+		$this->middleware->process($this->createRequest($path, $scriptName), $this->handler);
 	}
 
-	/** @return array<string,array{string}> */
+	/** @return array<string,array{0:string,1?:string}> */
 	public static function sessionImagePaths(): array
 	{
 		return [
 			'admin'          => ['/admin/media/logo.svg'],
 			'api'            => ['/api/collections/svg/logo.svg'],
-			'admin sub-path' => ['/mysite/admin/icons/x.png'],
+			'admin sub-path' => ['/mysite/admin/icons/x.png', '/mysite/index.php'],
 			'not at the end' => ['/badges/pill.svg/edit'],
 		];
 	}
 
-	private function createRequest(string $path): ServerRequestInterface
+	private function createRequest(string $path, string $scriptName = '/index.php'): ServerRequestInterface
 	{
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn($path);
 
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getServerParams')->willReturn(['SCRIPT_NAME' => $scriptName]);
 
 		return $request;
 	}
