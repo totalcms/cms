@@ -48,7 +48,10 @@ container to change or remove any part); clearing is explicit (`""` / `[]`);
 omitting never clears; files (image/file/gallery/depot) can't be uploaded and
 always survive, but their metadata can be edited: `{"alt": "…"}` for an image,
 `[{"name": "x.jpg", "alt": "…"}]` for a gallery, `[{"path": "dir/x.pdf",
-"comments": "…"}]` for a depot (`describe_collection` lists the keys).
+"comments": "…"}]` for a depot (`describe_collection` lists the keys). Gallery
+images are matched by name, not position. A gallery list that names every
+stored image exactly once also sets their order — the first image leads the
+gallery (often the page's main image); a partial list keeps the stored order.
 
 **`update_object` merges exactly like `patch_object`** — omitted fields keep
 their values (it was a full replace in older versions). If you write back an
