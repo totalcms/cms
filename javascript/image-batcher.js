@@ -44,16 +44,15 @@ class ImageBatcher {
 		this.updateProgress(0, 'Loading images...');
 
 		try {
-			// Fetch collection data to get all items
-			const response = await fetch(`${this.batchData.apiUrl}/collections/${this.batchData.collection}/index`);
+			// Fetch full objects, not the index: image and gallery properties
+			// are often left out of a schema's index, so the index would hide them.
+			const response = await fetch(`${this.batchData.apiUrl}/export/collections/${this.batchData.collection}`);
 
 			if (!response.ok) {
 				throw new Error(`Failed to fetch collection: ${response.statusText}`);
 			}
 
-			const responseData = await response.json();
-			console.log('API Response:', responseData); // Debug log
-			const collectionData = responseData.data.objects;
+			const collectionData = await response.json();
 
 			// Extract images from the collection based on property type
 			this.images = this.extractImages(collectionData);
@@ -100,18 +99,20 @@ class ImageBatcher {
 				for (const image of propertyValue) {
 					if (image && typeof image === 'object' && image.name) {
 						images.push({
-							id   : object.id,
-							name : image.name,
-							type : 'gallery',
+							id    : object.id,
+							name  : image.name,
+							type  : 'gallery',
+							cache : this.cacheToken(image),
 						});
 					}
 				}
 			} else if (typeof propertyValue === 'object' && propertyValue.name) {
 				// Image property - single image object
 				images.push({
-					id   : object.id,
-					name : propertyValue.name,
-					type : 'image',
+					id    : object.id,
+					name  : propertyValue.name,
+					type  : 'image',
+					cache : this.cacheToken(propertyValue),
 				});
 			} else if (typeof propertyValue === 'string') {
 				// Styled text or other string property containing images
@@ -122,6 +123,15 @@ class ImageBatcher {
 		}
 
 		return images;
+	}
+
+	// Mirrors ImageworksUrl::resolveCacheToken(): the hash, else the reversed upload date
+	cacheToken(image) {
+		if (typeof image.hash === 'string' && image.hash !== '') {
+			return image.hash;
+		}
+
+		return String(image.uploadDate ?? '').replace(/\W+/g, '').split('').reverse().join('');
 	}
 
 	async startBatchProcessing() {
@@ -235,8 +245,9 @@ class ImageBatcher {
 				return false;
 			}
 
-			// Make a HEAD request to check if the URL exists and returns 200
-			const response = await fetch(exampleUrl, {
+			// Only the example's parameters are used, and its object id is often a
+			// placeholder, so check the parameters against the first real image.
+			const response = await fetch(this.generateImageUrl(this.images[0]), {
 				method: 'HEAD',
 				cache: 'no-cache'
 			});
@@ -278,8 +289,13 @@ class ImageBatcher {
 			params.set(key, value);
 		}
 
-		// Then override/add the specific parameters for this image
+		// Then override/add the specific parameters for this image. The example's
+		// cache token belongs to the example image, so each image gets its own.
 		params.set('collection', this.batchData.collection);
+		params.delete('cache');
+		if (image.cache) {
+			params.set('cache', image.cache);
+		}
 
 		// If it's a gallery image, add the name parameter
 		if (image.type === 'gallery') {
