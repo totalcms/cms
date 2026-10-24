@@ -20,7 +20,9 @@
 	--totalform-yellow : 91% 0.19 103.96;
 	--totalform-red    : 63% 0.22 32.01;
 
-	--totalform-accent : var(--totalform-blue);
+	--totalcms-orange : 70.49% 0.186 47.42; // The Total CMS brand orange, #F97318
+
+	--totalform-accent : var(--totalcms-orange);
 
 	--totalform-changed : var(--totalform-accent);
 	--totalform-info    : var(--totalform-blue);

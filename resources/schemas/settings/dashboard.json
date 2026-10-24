@@ -32,7 +32,7 @@
 			"field"   : "color",
 			"label"   : "Dashboard Accent Color",
 			"help"    : "The accent color used throughout the admin dashboard.",
-			"default" : "#4d91e2"
+			"default" : "#F97318"
 		},
 		"keepIdOnDuplicate": {
 			"type"    : "boolean",
