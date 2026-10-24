@@ -422,5 +422,5 @@
 	<script>
 		window.imageworksPresets = {{ cms.config("imageworks", "presets") | json_encode | raw }};
 	</script>
-	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
+	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js?v={{ cms.version }}"></script>
 {% endblock %}
