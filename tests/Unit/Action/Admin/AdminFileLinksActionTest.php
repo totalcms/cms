@@ -22,7 +22,7 @@ final class AdminFileLinksActionTest extends TestCase
 		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminFileLinksAction($this->renderer);
+		$this->action = new AdminFileLinksAction($this->renderer, mediaToolAccessAuthOff());
 	}
 
 	public function testRendersFileLinksTemplate(): void

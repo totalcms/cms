@@ -15,6 +15,7 @@ readonly class AdminFileLinksAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private MediaToolAccess $access,
 	) {
 	}
 
@@ -22,6 +23,8 @@ readonly class AdminFileLinksAction
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 	): ResponseInterface {
+		$this->access->assertCanRead($request, 'file');
+
 		return $this->twigRenderer->template($response, 'admin/filelinks.twig');
 	}
 }

@@ -51,6 +51,7 @@ use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
 use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
@@ -79,6 +80,24 @@ return function (App $app): void {
 	// response phase, where a session-bound CSRF token is not dependably available.
 	$app->post('/admin/impersonate/stop', ImpersonateStopAction::class)
 		->setName('admin-impersonate-stop');
+
+	// The ImageWorks and file-links tools open in a dialog from an image or
+	// file field, which can sit on a front-end form edited by a member of any
+	// auth collection. They live OUTSIDE the group (registered first for the
+	// same shadow reason as above) so they skip AuthMiddleware's
+	// operator-collection gate: DualAuthMiddleware accepts a session from any
+	// auth collection, and the actions check that the user may read the
+	// object named in the query (MediaToolAccess). The rest matches the group.
+	$app->group('/admin', function (RouteCollectorProxy $group): void {
+		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
+		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
+	})
+		->add(UserLocaleMiddleware::class)
+		->add(VersionCheckMiddleware::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(DualAuthMiddleware::class)
+		->add(NoCacheMiddleware::class)
+		->add(SecurityHeadersMiddleware::class);
 
 	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		// Display Admin Interface
@@ -147,9 +166,6 @@ return function (App $app): void {
 		// registered first or it would be swallowed by the {section} placeholder.
 		$group->post('/settings/mcp/connection-test', AdminMcpConnectionTestAction::class)->setName('admin-settings-mcp-test')->add(AdminOnlyMiddleware::class);
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);
-
-		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
-		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
 
 		// Extension management
 		$group->get('/extensions', AdminExtensionsAction::class)->setName('admin-extensions')->add(AdminOnlyMiddleware::class);

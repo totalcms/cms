@@ -15,6 +15,7 @@ readonly class AdminImageworksAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private MediaToolAccess $access,
 	) {
 	}
 
@@ -22,6 +23,8 @@ readonly class AdminImageworksAction
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 	): ResponseInterface {
+		$this->access->assertCanRead($request, 'image');
+
 		return $this->twigRenderer->template($response, 'admin/imageworks.twig');
 	}
 }

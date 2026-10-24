@@ -22,7 +22,7 @@ final class AdminImageworksActionTest extends TestCase
 		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminImageworksAction($this->renderer);
+		$this->action = new AdminImageworksAction($this->renderer, mediaToolAccessAuthOff());
 	}
 
 	public function testRendersImageworksTemplate(): void

@@ -14,6 +14,7 @@ use Random\RandomException;
 use Slim\App;
 use Symfony\Component\Console\Application;
 use Tests\Fakes\OfflineHttpClient;
+use TotalCMS\Action\Admin\MediaToolAccess;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
@@ -23,6 +24,7 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
@@ -1145,4 +1147,21 @@ function testExtensionClass(bool $risky = false): string
 	$body = $risky ? "\t\tshell_exec('ls');\n" : '';
 
 	return "<?php\n\ndeclare(strict_types=1);\n\nnamespace TestZip\\Fixture;\n\nuse TotalCMS\\Domain\\Extension\\ExtensionContext;\nuse TotalCMS\\Domain\\Extension\\ExtensionInterface;\n\nclass Extension implements ExtensionInterface\n{\n\tpublic function register(ExtensionContext \$context): void\n\t{\n{$body}\t}\n\n\tpublic function boot(ExtensionContext \$context): void\n\t{\n\t}\n}\n";
+}
+
+/**
+ * A MediaToolAccess with auth switched off, for unit tests of the ImageWorks
+ * and file-links actions that are about rendering, not access. The resolver
+ * and guard are never reached with auth off.
+ */
+function mediaToolAccessAuthOff(): MediaToolAccess
+{
+	$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->auth = ['enable' => false];
+
+	return new MediaToolAccess(
+		$config,
+		(new ReflectionClass(ActorResolver::class))->newInstanceWithoutConstructor(),
+		(new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(),
+	);
 }
