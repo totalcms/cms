@@ -47,14 +47,17 @@ if command -v script >/dev/null 2>&1; then
 fi
 usage() {
 	cat <<'USAGE'
-Usage: bin/runtests.sh [FILTER] [--lint] [-v]
+Usage: bin/runtests.sh [FILTER] [--lint] [--serial] [-v]
 
-  bin/runtests.sh                          Full battery (~45s)
-                                             bundle:check, stan, md, docs:validate,
-                                             PHP tests (parallel), JS lint, JS tests
+  bin/runtests.sh                          Full battery (~50s): every check CI runs
+                                             dependencies, composer validate, bundle:check,
+                                             stan, md, docs:validate, JS lint,
+                                             JS tests (coverage gate), PHP tests, snapshots
   bin/runtests.sh Barcode                  Only PHP tests matching "Barcode"
   bin/runtests.sh tests/Feature/Foo.php    Only that file or directory
   bin/runtests.sh --lint                   Also run phplint (~36s, off by default)
+  bin/runtests.sh --serial                 Run the PHP suite serially, exactly as CI
+                                             does (~140s instead of ~40s parallel)
   bin/runtests.sh -v                       Stream full output instead of summaries
 
 A FILTER runs ONLY the matching PHP tests — the static checks and JS tests are
@@ -66,12 +69,14 @@ USAGE
 }
 
 RUN_LINT=false
+SERIAL=false
 VERBOSE=false
 FILTER=""
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--lint)        RUN_LINT=true ;;
+		--serial)      SERIAL=true ;;
 		-v|--verbose)  VERBOSE=true ;;
 		-h|--help)     usage; exit 0 ;;
 		-*)            print_error "Unknown option: $1"; echo; usage; exit 1 ;;
@@ -240,6 +245,35 @@ run_step_live() {
 
 	printf "  ${GREEN}✓${NC} %-18s %5s  %s\n" "$label" "${secs}s" "$summary"
 }
+# ─── Dependencies as CI resolves them ────────────────────────────────────────
+# composer.lock is gitignored, so CI's `composer install` resolves the newest
+# versions composer.json allows on every run, while vendor/ here keeps whatever
+# was installed last. A newer PHPStan once failed CI on code that was clean
+# locally. `composer update --dry-run` lists exactly what CI would install
+# differently; any difference fails the step with the packages named.
+deps_check() {
+	local out status changes
+	out=$(composer update --dry-run --no-interaction --no-ansi 2>&1)
+	status=$?
+	if [ "$status" -ne 0 ]; then
+		echo "Could not resolve dependencies (offline?) — skipped the CI comparison"
+		return 0
+	fi
+
+	# Only the lock-file section: the package section after it repeats the same
+	# changes as they would be applied to vendor/.
+	changes=$(echo "$out" | sed -n '/^Lock file operations/,/^Installing dependencies/p' | grep -E '^ *- ')
+	if [ -n "$changes" ]; then
+		echo "CI installs newer packages than vendor/ has:"
+		echo "$changes"
+		echo
+		echo "Run \`composer update\`, then rerun the tests."
+		return 1
+	fi
+
+	echo "vendor/ matches what CI installs"
+}
+
 # ─── Filtered run: PHP tests only ────────────────────────────────────────────
 if [ -n "$FILTER" ]; then
 	# Pest prints no "Tests:" summary when a filter matches nothing — and still
@@ -263,6 +297,8 @@ fi
 
 # ─── Full battery, cheapest first ────────────────────────────────────────────
 run_step "PHP version"      'PHP [0-9]'     php -r 'echo "PHP ", PHP_VERSION, " (CI pins ", getenv("CI_PHP") ?: "'"$CI_PHP"'", ")\n";'
+run_step "Dependencies"     '.'             deps_check
+run_step "Composer validate" 'valid'        composer validate --no-ansi
 run_step "Bundle integrity" 'Bundle check'  composer run bundle:check
 run_step "Static analysis"  '\[OK\]|error'  composer run stan
 run_step "Mess detection"   'violations|mess' composer run md
@@ -274,8 +310,17 @@ fi
 
 # Oxlint prints nothing when clean and one line per finding otherwise.
 run_step "JS lint"   '.'                   composer run lint:js
-run_step "JS tests"  '^ *Tests '            composer run test:js
-run_step_live "PHP tests" '^ *Tests:'       composer run test:parallel -- --colors=always
+# CI runs the JS suite with its coverage gate, so a drop below the thresholds
+# in the Vitest config fails here too.
+run_step "JS tests"  '^ *Tests '            node_modules/.bin/vp run test:js:coverage
+# CI runs the suite serially (`composer test`). Parallel is the default here
+# for speed; --serial matches CI exactly — a few failures have only ever
+# shown up in the single-process run.
+if [ "$SERIAL" = true ]; then
+	run_step_live "PHP tests" '^ *Tests:'   composer run test -- --colors=always
+else
+	run_step_live "PHP tests" '^ *Tests:'   composer run test:parallel -- --colors=always
+fi
 # A golden test whose snapshot is not in git proves nothing (bin/check-snapshots.php).
 run_step "Golden snapshots" '.'             composer run snapshots:check
 
