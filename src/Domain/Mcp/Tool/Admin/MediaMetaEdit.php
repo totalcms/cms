@@ -11,11 +11,12 @@ use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
  * An agent's edit to an image, file, gallery or depot field, laid over the
  * stored value so only descriptive metadata changes ({@see MediaMetaPolicy}).
  *
- * Agents cannot upload, replace, add, remove or reorder files. They edit
- * what is already there:
+ * Agents cannot upload, replace, add or remove files. They edit what is
+ * already there:
  *
  *   - image / file: an object of keys, e.g. `{"alt": "Team photo"}`;
- *   - gallery: a list of images matched to stored ones by `name`;
+ *   - gallery: a list of images matched to stored ones by `name`; a list
+ *     naming every stored image once also sets their order;
  *   - depot: a list of files matched by `path` (`folder/name.pdf`, or just
  *     the name at the top level).
  *
@@ -84,12 +85,21 @@ final readonly class MediaMetaEdit
 	private function editList(string $property, string $type, array $stored, array $edit): array
 	{
 		$names = array_map(static fn (mixed $item): string => is_array($item) ? (string)($item['name'] ?? '') : '', $stored);
-		foreach ($this->editsBy($property, $type, $edit, 'name') as $name => $item) {
+		$edits = $this->editsBy($property, $type, $edit, 'name');
+		foreach ($edits as $name => $item) {
 			$index = array_search($name, $names, true);
 			if ($index === false) {
 				$this->refuse($property, $type, sprintf('has no image named "%s"; images here: %s', $name, implode(', ', $names) ?: '(none)'));
 			}
 			$stored[$index] = $this->mergeItem($property, $type, (array)$stored[$index], $item);
+		}
+
+		// Naming every stored image exactly once is a reorder: the payload's
+		// order becomes the stored order. Nothing can be added or dropped that
+		// way, so a partial list keeps the stored order as before.
+		if (count($edit) === count($names) && count($edits) === count($names)) {
+			$byName = array_combine($names, $stored);
+			$stored = array_map(static fn (string $name): mixed => $byName[$name], array_map('strval', array_keys($edits)));
 		}
 
 		return array_values(array_filter($stored, is_array(...)));
@@ -194,7 +204,7 @@ final readonly class MediaMetaEdit
 	private static function shape(string $type): string
 	{
 		return match ($type) {
-			'gallery' => 'a list of images, each with the "name" of a stored image',
+			'gallery' => 'a list of images, each with the "name" of a stored image; name every image once to set their order',
 			'depot'   => 'a list of files, each with the "path" of a stored file (folder/name)',
 			default   => 'an object of metadata keys',
 		};

@@ -1261,6 +1261,42 @@ final class ObjectToolsTest extends TestCase
 		$this->assertSame(['', 'Main stage', 'C'], array_column($written, 'alt'));
 	}
 
+	public function testPatchReordersAGalleryWhenEveryImageIsNamed(): void
+	{
+		$written = $this->patchMedia(
+			'gallery',
+			[['name' => 'a.jpg', 'alt' => ''], ['name' => 'b.jpg', 'alt' => 'B'], ['name' => 'c.jpg', 'alt' => '']],
+			[['name' => 'c.jpg', 'alt' => 'C'], ['name' => 'a.jpg'], ['name' => 'b.jpg']],
+		);
+
+		$this->assertSame(['c.jpg', 'a.jpg', 'b.jpg'], array_column($written, 'name'));
+		$this->assertSame(['C', '', 'B'], array_column($written, 'alt'));
+	}
+
+	public function testPatchKeepsGalleryOrderWhenAnImageIsLeftOut(): void
+	{
+		$written = $this->patchMedia(
+			'gallery',
+			[['name' => 'a.jpg'], ['name' => 'b.jpg'], ['name' => 'c.jpg']],
+			[['name' => 'c.jpg'], ['name' => 'a.jpg']],
+		);
+
+		$this->assertSame(['a.jpg', 'b.jpg', 'c.jpg'], array_column($written, 'name'));
+	}
+
+	public function testPatchKeepsGalleryOrderWhenANameRepeats(): void
+	{
+		// Three items but only two distinct images: b.jpg is not named, so
+		// this is an edit list, not a reorder.
+		$written = $this->patchMedia(
+			'gallery',
+			[['name' => 'a.jpg'], ['name' => 'b.jpg'], ['name' => 'c.jpg']],
+			[['name' => 'c.jpg'], ['name' => 'a.jpg'], ['name' => 'c.jpg']],
+		);
+
+		$this->assertSame(['a.jpg', 'b.jpg', 'c.jpg'], array_column($written, 'name'));
+	}
+
 	public function testPatchRefusesAGalleryImageThatIsNotStored(): void
 	{
 		$this->expectException(ToolCallException::class);
