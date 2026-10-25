@@ -6,7 +6,8 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 /**
  * Twig Adapter for the "Built with Total CMS" badges: `cms.badge.pill()`,
- * `.stacked()`, `.text()`, `.profile(handle)` and `.earned(handle)`.
+ * `.stacked()`, `.text()`, `.profile(handle)`, `.earned(handle)`,
+ * `.builtBy(handle)` and `.builtByText(handle)`.
  *
  * Every badge links to totalcms.co, and the images are served from there
  * (`/badges/{style}-{theme}.svg`, `/@{handle}/badge.svg`), so a member's
@@ -18,9 +19,11 @@ namespace TotalCMS\Domain\Twig\Adapter;
  * colour scheme through a <picture>. The text badge is inline HTML that
  * inherits the host's text colour; its themes are `color` and `mono`.
  *
- * `me: true` on a profile badge adds rel="me" to its link: the claim that
- * the site and the totalcms.co profile belong to the same person. For the
- * designer's own site only — on a client's site it would be false.
+ * The profile and earned badges add rel="me" to their link unless
+ * `me: false`: the claim that the site and the totalcms.co profile belong to
+ * the same person, since those badges go on the designer's own site. The
+ * built-by badges credit the designer on a client's site, so they never
+ * make that claim.
  */
 readonly class BadgeTwigAdapter
 {
@@ -33,7 +36,7 @@ readonly class BadgeTwigAdapter
 	private const SIZES = ['pill' => [167, 32], 'stacked' => [134, 46]];
 
 	/** Heights of the profile badges; their width follows the member. */
-	private const HEIGHTS = ['card' => 52, 'earned' => 32];
+	private const HEIGHTS = ['card' => 52, 'earned' => 32, 'builtby' => 32, 'builtbytext' => 16];
 
 	private const TEXT_STYLE = 'display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:1;color:inherit;text-decoration:none';
 
@@ -95,6 +98,33 @@ readonly class BadgeTwigAdapter
 		return $this->member('earned', $handle, $options);
 	}
 
+	/**
+	 * "Built by {studio}" in a pill beside the flame, for a client's site.
+	 * totalcms.co draws the studio, the member's company else their name, so
+	 * it stays current; `byName: true` credits the person even when they have
+	 * a company. Never rel="me": the site is the client's, not the designer's.
+	 *
+	 * @param array<string,mixed> $options theme: light|dark|auto, byName: bool
+	 */
+	public function builtBy(string $handle, array $options = []): string
+	{
+		return $this->builtByBadge('builtby', $handle, $options);
+	}
+
+	/**
+	 * The same credit as builtBy() without the pill: the flame and
+	 * "Built by {studio}" in ink on a transparent image, 16px high, to sit in
+	 * a footer line. `light` is dark ink for a light footer, `dark` light ink,
+	 * and `mono` draws the words and flame in `color` (3 or 6 hex digits, #
+	 * optional; the server's default ink when it is missing or invalid).
+	 *
+	 * @param array<string,mixed> $options theme: light|dark|auto|mono, color: hex, byName: bool
+	 */
+	public function builtByText(string $handle, array $options = []): string
+	{
+		return $this->builtByBadge('builtbytext', $handle, $options);
+	}
+
 	/** @param array<string,mixed> $options */
 	private function generic(string $style, array $options): string
 	{
@@ -107,8 +137,8 @@ readonly class BadgeTwigAdapter
 	/** @param array<string,mixed> $options */
 	private function member(string $style, string $handle, array $options): string
 	{
-		$handle = strtolower(trim($handle));
-		if (preg_match(self::HANDLE, $handle) !== 1) {
+		$handle = $this->handle($handle);
+		if ($handle === null) {
 			return $this->generic('pill', $options);
 		}
 
@@ -121,6 +151,51 @@ readonly class BadgeTwigAdapter
 
 		// rel="me" unless `me: false`: a member's badge is normally on their own site
 		return $this->link($this->href($style, $handle), $image, ($options['me'] ?? true) !== false);
+	}
+
+	/** The handle, trimmed and lowercased, or null when it is not a valid one. */
+	private function handle(string $handle): ?string
+	{
+		$handle = strtolower(trim($handle));
+
+		return preg_match(self::HANDLE, $handle) === 1 ? $handle : null;
+	}
+
+	/**
+	 * A built-by badge. Its width follows the studio name, so it gets a
+	 * height only; the alt names the handle, since only totalcms.co knows
+	 * the studio.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	private function builtByBadge(string $style, string $handle, array $options): string
+	{
+		$handle = $this->handle($handle);
+		if ($handle === null) {
+			return $this->generic('pill', $options);
+		}
+
+		$theme = $style === 'builtbytext' && ($options['theme'] ?? '') === 'mono' ? 'mono' : $this->theme($options);
+		$color = $theme === 'mono' ? $this->hex($options['color'] ?? null) : null;
+		$extra = (($options['byName'] ?? false) === true ? ['by' => 'name'] : []) + ($color !== null ? ['color' => $color] : []);
+		$src   = static fn (string $theme): string => self::HOST . '/@' . $handle . '/badge.svg?'
+			. http_build_query(['style' => $style, 'theme' => $theme] + $extra);
+
+		$image = $this->image($src, $theme, 'Built by @' . $handle, self::HEIGHTS[$style]);
+
+		return $this->link($this->href($style, $handle), $image);
+	}
+
+	/** A 3- or 6-digit hex colour, # optional, as 6 lowercase digits; null when it is not one. */
+	private function hex(mixed $color): ?string
+	{
+		if (!is_string($color) || preg_match('/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i', trim($color), $match) !== 1) {
+			return null;
+		}
+
+		$hex = strtolower($match[1]);
+
+		return strlen($hex) === 3 ? $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2] : $hex;
 	}
 
 	/** @param array<string,mixed> $options */

@@ -109,3 +109,72 @@ describe('member badges', function (): void {
 			->not->toContain('<script');
 	})->with(['', 'ab', '"><script>alert(1)</script>', '../admin', '-joe', str_repeat('a', 31)]);
 });
+
+describe('built-by badges', function (): void {
+	test('builtBy links through /badges/{handle} and sets only a height', function (): void {
+		$html = (new BadgeTwigAdapter())->builtBy('joeworkman');
+
+		expect($html)->toBe(
+			'<a href="https://totalcms.co/badges/joeworkman?mtm_campaign=badge&amp;mtm_source=joeworkman&amp;mtm_content=builtby&amp;mtm_medium=twig">'
+			. '<img src="https://totalcms.co/@joeworkman/badge.svg?style=builtby&amp;theme=light" alt="Built by @joeworkman" height="32"></a>'
+		);
+	});
+
+	test('builtByText is the 16px image with its own campaign content', function (): void {
+		$html = (new BadgeTwigAdapter())->builtByText('joeworkman');
+
+		expect($html)->toBe(
+			'<a href="https://totalcms.co/badges/joeworkman?mtm_campaign=badge&amp;mtm_source=joeworkman&amp;mtm_content=builtbytext&amp;mtm_medium=twig">'
+			. '<img src="https://totalcms.co/@joeworkman/badge.svg?style=builtbytext&amp;theme=light" alt="Built by @joeworkman" height="16"></a>'
+		);
+	});
+
+	test('byName: true credits the name', function (string $method, string $style): void {
+		expect((new BadgeTwigAdapter())->{$method}('joeworkman', ['byName' => true]))->toContain("style={$style}&amp;theme=light&amp;by=name\"")
+			->and((new BadgeTwigAdapter())->{$method}('joeworkman', ['byName' => false]))->not->toContain('by=')
+			->and((new BadgeTwigAdapter())->{$method}('joeworkman', ['byName' => 'yes']))->not->toContain('by=');
+	})->with([['builtBy', 'builtby'], ['builtByText', 'builtbytext']]);
+
+	test('theme and byName combine', function (string $method, string $style): void {
+		expect((new BadgeTwigAdapter())->{$method}('joeworkman', ['theme' => 'dark']))->toContain("style={$style}&amp;theme=dark\"")
+			->and((new BadgeTwigAdapter())->{$method}('joeworkman', ['theme' => 'dark', 'byName' => true]))->toContain("style={$style}&amp;theme=dark&amp;by=name\"");
+	})->with([['builtBy', 'builtby'], ['builtByText', 'builtbytext']]);
+
+	test('auto serves both images', function (): void {
+		$html = (new BadgeTwigAdapter())->builtByText('joeworkman', ['theme' => 'auto', 'byName' => true]);
+
+		expect($html)->toContain('srcset="https://totalcms.co/@joeworkman/badge.svg?style=builtbytext&amp;theme=dark&amp;by=name"')
+			->toContain('src="https://totalcms.co/@joeworkman/badge.svg?style=builtbytext&amp;theme=light&amp;by=name"');
+	});
+
+	test('builtByText mono passes the colour as 6 lowercase digits', function (mixed $color, string $query): void {
+		expect((new BadgeTwigAdapter())->builtByText('joeworkman', ['theme' => 'mono', 'color' => $color, 'byName' => true]))
+			->toContain('src="https://totalcms.co/@joeworkman/badge.svg?style=builtbytext&amp;theme=mono&amp;by=name' . $query . '"')
+			->not->toContain('<picture>');
+	})->with([
+		['#CFE3D6', '&amp;color=cfe3d6'],
+		['5b6170', '&amp;color=5b6170'],
+		['#AbC', '&amp;color=aabbcc'],
+		['#cfe3d', ''],
+		['red', ''],
+		['#cfe3d6"><script>', ''],
+		[null, ''],
+	]);
+
+	test('color is ignored outside mono, and mono only on builtByText', function (): void {
+		$adapter = new BadgeTwigAdapter();
+
+		expect($adapter->builtByText('joeworkman', ['theme' => 'dark', 'color' => '#cfe3d6']))->not->toContain('color=')
+			->and($adapter->builtBy('joeworkman', ['theme' => 'mono', 'color' => '#cfe3d6']))->toContain('style=builtby&amp;theme=light"');
+	});
+
+	test('never claims rel="me", even when asked', function (string $method): void {
+		expect((new BadgeTwigAdapter())->{$method}('joeworkman', ['me' => true]))->not->toContain('rel=');
+	})->with(['builtBy', 'builtByText']);
+
+	test('an invalid handle gives the pill', function (string $method): void {
+		expect((new BadgeTwigAdapter())->{$method}('"><script>', ['theme' => 'dark']))->toContain('pill-dark.svg')
+			->not->toContain('<script')
+			->not->toContain('/@');
+	})->with(['builtBy', 'builtByText']);
+});

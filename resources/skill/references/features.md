@@ -41,7 +41,7 @@
 | Template Designer (edit Twig blocks in the admin) | `twig/templates.md` | `{% templatedesigner %}` blocks sync between local and production. |
 | Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
 | Grids of objects (`{% cmsgrid %}`) | `twig/cmsgrid-tag.md` | `{% cmsgrid objects from 'blog' with 'blog compact' %}` renders a styled grid from a collection's objects with built-in layouts; reach for it before hand-writing card markup. |
-| "Built with Total CMS" badges | `twig/badges.md` | `cms.badge.pill()` / `.stacked()` / `.text()`, or a designer's `.profile(handle)` / `.earned(handle)`; images come from totalcms.co so they stay current. `me: true` on a designer's own site adds `rel="me"`. |
+| "Built with Total CMS" badges | `twig/badges.md` | `cms.badge.pill()` / `.stacked()` / `.text()`, or a designer's `.profile(handle)` / `.earned(handle)` for their own site (`rel="me"` by default, `me: false` drops it) and `.builtBy(handle)` / `.builtByText(handle)` (`byName: true` credits the name; `builtByText` also takes `theme: 'mono'` with a hex `color`) to credit them on a client's site (never `rel="me"`); images come from totalcms.co so they stay current. |
 | Barcodes and QR codes | `twig/barcodes.md`, `twig/qrcodes.md` | Edition-gated. |
 | Localization | `twig/locale.md`, `twig/localization.md` | Localized field types are Pro; full i18n routing is planned, not shipped. `"propertyOptions": "countries"` fills a select with ISO codes (`fields/property-options.md`); `\|country_name` shows a stored code as its name. |
 

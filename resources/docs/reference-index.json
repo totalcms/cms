@@ -897,6 +897,20 @@
             "url": "https://docs.totalcms.co/auth/twig/"
         },
         {
+            "name": "cms.badge.builtBy",
+            "signature": "builtBy(string $handle, array $options = []): string",
+            "description": "\"Built by {studio}\" in a pill beside the flame, for a client's site. totalcms.co draws the studio, the member's company else their name, so it stays current; `byName: true` credits the person even when they have a company. Never rel=\"me\": the site is the client's, not the designer's.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.builtByText",
+            "signature": "builtByText(string $handle, array $options = []): string",
+            "description": "The same credit as builtBy() without the pill: the flame and \"Built by {studio}\" in ink on a transparent image, 16px high, to sit in a footer line. `light` is dark ink for a light footer, `dark` light ink, and `mono` draws the words and flame in `color` (3 or 6 hex digits, # optional; the server's default ink when it is missing or invalid).",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.badge.earned",
             "signature": "earned(string $handle, array $options = []): string",
             "description": "\"Total CMS designer\" with the member's approved sites and extensions, linking to their profile on totalcms.co. The count is drawn by totalcms.co, so it stays current.",
