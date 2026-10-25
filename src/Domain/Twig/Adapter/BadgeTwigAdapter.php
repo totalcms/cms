@@ -76,7 +76,7 @@ readonly class BadgeTwigAdapter
 	 * linking to their profile on totalcms.co. An invalid handle gives the
 	 * pill, as totalcms.co does for a profile it cannot show.
 	 *
-	 * @param array<string,mixed> $options theme: light|dark|auto, me: bool
+	 * @param array<string,mixed> $options theme: light|dark|auto, me: bool (default true)
 	 */
 	public function profile(string $handle, array $options = []): string
 	{
@@ -88,7 +88,7 @@ readonly class BadgeTwigAdapter
 	 * linking to their profile on totalcms.co. The count is drawn by
 	 * totalcms.co, so it stays current.
 	 *
-	 * @param array<string,mixed> $options theme: light|dark|auto, me: bool
+	 * @param array<string,mixed> $options theme: light|dark|auto, me: bool (default true)
 	 */
 	public function earned(string $handle, array $options = []): string
 	{
@@ -119,7 +119,8 @@ readonly class BadgeTwigAdapter
 		// member's counts, so the browser takes it from the SVG itself.
 		$image = $this->image($src, $this->theme($options), '@' . $handle . ' on Total CMS', self::HEIGHTS[$style]);
 
-		return $this->link($this->href($style, $handle), $image, ($options['me'] ?? false) === true);
+		// rel="me" unless `me: false`: a member's badge is normally on their own site
+		return $this->link($this->href($style, $handle), $image, ($options['me'] ?? true) !== false);
 	}
 
 	/** @param array<string,mixed> $options */

@@ -55,21 +55,21 @@ Pass your handle on totalcms.co, the part after `/@` in your profile's address:
 - **profile** shows your photo (or your initial), "Total CMS designer" and your handle. It is available while your profile is public.
 - **earned** shows how many of your sites and extensions are approved in the showcase, naming only the kinds you have: "3 sites", "1 extension", or "3 sites · 2 extensions". It is available once you have at least one approved item.
 
-Both link to your profile. If your profile is hidden later, the link goes to the totalcms.co home page and the image falls back to the pill, so a badge on a client's site never breaks.
+Both link to your profile, marked as yours (see below). If your profile is hidden later, the link goes to the totalcms.co home page and the image falls back to the pill, so a badge on a client's site never breaks.
 
-### On your own site: `me`
+### The `me` option
 
-On your own studio or portfolio site, pass `me: true`:
-
-```twig
-{{ cms.badge.earned('joeworkman', {me: true}) }}
-```
-
-The badge link gets `rel="me"`, which says this site and your totalcms.co profile belong to the same person. Your profile already links back to your website, so the two now point at each other, and search engines and services such as Mastodon can confirm the pair.
+A profile badge goes on your own studio or portfolio site, so its link gets `rel="me"`, which says this site and your totalcms.co profile belong to the same person. Your profile already links back to your website, so the two now point at each other, and search engines and services such as Mastodon can confirm the pair.
 
 Add your profile to your structured data as well: in **Site SEO**, add `https://totalcms.co/@your-handle` to **Social Profiles**, which becomes the Organization's `sameAs`, so your structured data lists the profile among your other accounts.
 
-Use `me` and this Social Profiles entry on your own site only. On a client's site the badge credits you, but the site is not you, and the claim would be false.
+On a site that is not yours, such as a client's, pass `me: false`. The badge still links to your profile, but the site makes no claim to be you:
+
+```twig
+{{ cms.badge.earned('joeworkman', {me: false}) }}
+```
+
+Leave the Social Profiles entry off a client's site too.
 
 A handle that is not a valid totalcms.co handle gives the pill instead.
 

@@ -61,7 +61,7 @@ describe('member badges', function (): void {
 		$html = (new BadgeTwigAdapter())->earned('joeworkman');
 
 		expect($html)->toBe(
-			'<a href="https://totalcms.co/badges/joeworkman?mtm_campaign=badge&amp;mtm_source=joeworkman&amp;mtm_content=earned&amp;mtm_medium=twig">'
+			'<a href="https://totalcms.co/badges/joeworkman?mtm_campaign=badge&amp;mtm_source=joeworkman&amp;mtm_content=earned&amp;mtm_medium=twig" rel="me">'
 			. '<img src="https://totalcms.co/@joeworkman/badge.svg?style=earned&amp;theme=light" alt="@joeworkman on Total CMS" height="32"></a>'
 		);
 	});
@@ -81,17 +81,17 @@ describe('member badges', function (): void {
 			->toContain('src="https://totalcms.co/@joeworkman/badge.svg?style=earned&amp;theme=light"');
 	});
 
-	test('me: true adds rel="me" to the link', function (string $method): void {
-		$html = (new BadgeTwigAdapter())->{$method}('joeworkman', ['me' => true]);
+	test('the link has rel="me" by default', function (string $method): void {
+		$html = (new BadgeTwigAdapter())->{$method}('joeworkman');
 
 		expect($html)->toStartWith('<a href="https://totalcms.co/badges/joeworkman?')
 			->toContain('" rel="me"><img');
 	})->with(['profile', 'earned']);
 
-	test('without me there is no rel', function (): void {
-		expect((new BadgeTwigAdapter())->earned('joeworkman'))->not->toContain('rel=')
-			->and((new BadgeTwigAdapter())->earned('joeworkman', ['me' => 'yes']))->not->toContain('rel=');
-	});
+	test('me: false drops the rel', function (string $method): void {
+		expect((new BadgeTwigAdapter())->{$method}('joeworkman', ['me' => false]))->not->toContain('rel=')
+			->and((new BadgeTwigAdapter())->{$method}('joeworkman', ['me' => true]))->toContain('" rel="me"><img');
+	})->with(['profile', 'earned']);
 
 	test('an invalid handle never claims rel="me"', function (): void {
 		expect((new BadgeTwigAdapter())->earned('"x', ['me' => true]))->not->toContain('rel=');
