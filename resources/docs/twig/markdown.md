@@ -13,6 +13,7 @@ The markdown integration allows you to:
 - Process markdown content stored in CMS collections
 - Use extended markdown features like tables, footnotes, and fenced code blocks
 - Safely render user-generated markdown content with built-in XSS protection
+- Let HTML in trusted content through as markup with `markdown(true)`
 - Combine markdown with Twig templating for dynamic content
 
 ## Markdown Parser
@@ -22,7 +23,7 @@ Total CMS uses **ParsedownExtra** which extends the standard Parsedown library w
 - **Standard Markdown**: Headers, paragraphs, lists, links, images, emphasis
 - **GitHub Flavored Markdown**: Fenced code blocks, tables, strikethrough
 - **Extended Features**: Footnotes, definition lists, abbreviations
-- **Security**: Safe mode enabled to prevent XSS attacks
+- **Security**: Safe mode enabled to prevent XSS attacks (switch it off per call with `markdown(true)`)
 - **Line Breaks**: Automatic conversion of single line breaks to `<br>` tags
 
 ## Basic Usage
@@ -74,6 +75,18 @@ Use `|markdownInline` when you need to process markdown within existing HTML ele
 ```
 
 **Supported inline syntax:** bold (`**text**`), italic (`*text*`), code (`` `code` ``), links (`[text](url)`), and images (`![alt](url)`).
+
+### Letting HTML through
+
+Both filters escape HTML in the source by default, so `<mark>` or `<span class="note">` written into the Markdown shows up as text. Pass `true` to render it as markup instead. The named form is easier to read, and both work:
+
+```twig
+{{ post.body|markdown(true) }}
+{{ post.body|markdown(html: true) }}
+<h2>{{ page.title|markdownInline(html: true) }}</h2>
+```
+
+Code blocks and inline code are still escaped, so HTML samples in them show as code. Only use this on content your own editors write; see [Security Considerations](#security-considerations).
 
 ### Processing Collection Content
 
@@ -284,10 +297,12 @@ This is a text with footnote[^1].
 
 ParsedownExtra runs in **safe mode** by default, which:
 
-- Prevents execution of raw HTML that could contain malicious scripts
-- Filters out dangerous HTML attributes and elements
+- Escapes raw HTML in the source, so a `<script>` tag or an event attribute is shown as text, never run
+- Blocks dangerous link schemes such as `javascript:`
 - Protects against XSS (Cross-Site Scripting) attacks
 - Maintains the security of user-generated content
+
+`markdown(true)` and `markdownInline(true)` switch safe mode off for that call: HTML in the source is output as markup and `javascript:` links are no longer blocked. Use them only for content written by people you trust. For a field that visitors can write to, such as one filled in through a public form, keep the default, or turn on the field's `htmlclean` setting so unsafe HTML is stripped when the object is saved (see [Sanitizing](docs/fields/markdown#sanitizing)).
 
 ```twig
 {# Safe processing of user-generated markdown #}

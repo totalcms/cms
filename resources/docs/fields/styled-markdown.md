@@ -24,7 +24,7 @@ The value is Markdown source, so pass it through the [`markdown` filter](docs/tw
 {{ post.body|markdown }}
 ```
 
-The filter escapes any HTML in the source. Always render the field with the filter; printing the raw value shows the Markdown source and any HTML in it.
+The filter escapes any HTML in the source; to render it as markup, pass `true`: `{{ post.body|markdown(true) }}` (see [Letting HTML through](docs/twig/filters#letting-html-through)). Always render the field with the filter; printing the raw value shows the Markdown source and any HTML in it.
 
 ## The editor
 
@@ -105,7 +105,7 @@ Image and file uploads work as they do in Styled Text. An uploaded image is inse
 
 ## Sanitizing
 
-A styledmarkdown field holds source, so it is stored exactly as written, the same as a [code field](docs/fields/code-editor). HTML in the source is not removed when the object is saved. The `markdown` filter escapes it when the page renders, which is why code samples such as `<script>` inside a code block stay intact.
+A styledmarkdown field holds source, so it is stored exactly as written, the same as a [code field](docs/fields/code-editor). HTML in the source is not removed when the object is saved. The `markdown` filter escapes it when the page renders, which is why code samples such as `<script>` inside a code block stay intact. `markdown(true)` lets the HTML through instead, so only use it when the people writing to the field are trusted, or when `htmlclean` is on.
 
 If people you don't fully trust can write to the field, such as visitors using a public form, turn on `htmlclean` in the field's settings so unsafe HTML is stripped when the object is saved:
 

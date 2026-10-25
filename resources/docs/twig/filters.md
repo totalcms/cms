@@ -291,8 +291,8 @@ Converts SVG to symbol for icon systems.
 
 ### Markdown Filters
 
-#### `markdown(mixed $value): string`
-Processes full markdown syntax including block elements (paragraphs, headers, lists, etc.).
+#### `markdown(mixed $value, bool $html = false): string`
+Processes full markdown syntax including block elements (paragraphs, headers, lists, etc.). HTML in the source is escaped unless you pass `true` (see [Letting HTML through](#letting-html-through)).
 
 ```twig
 {% set content = "This is **bold** and [a link](https://example.com)" %}
@@ -313,9 +313,10 @@ Processes full markdown syntax including block elements (paragraphs, headers, li
 - GitHub Flavored Markdown (tables, fenced code blocks)
 - Extended features (footnotes, definition lists)
 - Wraps content in appropriate block elements (`<p>`, `<h1>`, etc.)
+- Escapes HTML in the source unless `html` is `true`
 
-#### `markdownInline(mixed $value): string`
-Processes only inline markdown syntax without wrapping content in `<p>` tags or other block elements. Perfect for processing markdown within existing HTML elements.
+#### `markdownInline(mixed $value, bool $html = false): string`
+Processes only inline markdown syntax without wrapping content in `<p>` tags or other block elements. Perfect for processing markdown within existing HTML elements. Takes the same `html` argument as `markdown`.
 
 ```twig
 {% set text = "This is **bold** and [a link](https://example.com)" %}
@@ -398,7 +399,27 @@ Processes only inline markdown syntax without wrapping content in `<p>` tags or 
 </blockquote>
 ```
 
-**Security Note:** Both markdown filters run in safe mode with XSS protection enabled.
+**Security Note:** Both markdown filters run in safe mode with XSS protection enabled, unless you pass `true`.
+
+#### Letting HTML through
+
+By default both filters escape HTML in the source, so `<mark>` shows up as text. Pass `true` to let it through as markup instead. The named form reads more clearly in a template, and both work:
+
+```twig
+{{ post.body | markdown(true) }}
+{{ post.body | markdown(html: true) }}
+<h2>{{ page.title | markdownInline(html: true) }}</h2>
+
+{% set note = "**Heads up:** <mark>sale ends Friday</mark>" %}
+{{ note | markdown }}
+{# Output: <p><strong>Heads up:</strong> &lt;mark&gt;sale ends Friday&lt;/mark&gt;</p> #}
+{{ note | markdown(true) }}
+{# Output: <p><strong>Heads up:</strong> <mark>sale ends Friday</mark></p> #}
+```
+
+Code blocks and inline code are still escaped, so an HTML sample in a fenced block shows as code either way.
+
+Only use it on content your own editors write. With `true`, the filter no longer escapes `<script>` or event attributes, and it no longer blocks `javascript:` links. If visitors can write to the field (a public form, for example), leave it off, or turn on the field's `htmlclean` setting so unsafe HTML is stripped when the object is saved. See [Sanitizing](docs/fields/markdown#sanitizing).
 
 ### Email and HTML Encoding
 

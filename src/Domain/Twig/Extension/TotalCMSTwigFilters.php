@@ -1054,7 +1054,11 @@ class TotalCMSTwigFilters
 	// Markdown Aliases
 	// -------------------------
 
-	public static function markdown(mixed $value): string
+	/**
+	 * @param bool $html let HTML in the source through instead of escaping it
+	 *   (trusted content only); `|markdown(true)` or `|markdown(html: true)`
+	 */
+	public static function markdown(mixed $value, bool $html = false): string
 	{
 		// This method serves as an alias for the built-in markdown_to_html filter
 		// Uses the same ParsedownMarkdown implementation as the native filter
@@ -1062,14 +1066,19 @@ class TotalCMSTwigFilters
 			$value = (string)$value;
 		}
 
-		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
-		static $markdown = null;
-		$markdown ??= new ParsedownMarkdown();
+		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension,
+		// one instance per HTML mode so a passthrough call never leaks into the safe one
+		static $markdown = [];
+		$markdown[(int)$html] ??= new ParsedownMarkdown(allowHtml: $html);
 
-		return $markdown->convert($value);
+		return $markdown[(int)$html]->convert($value);
 	}
 
-	public static function markdownInline(mixed $value): string
+	/**
+	 * @param bool $html let HTML in the source through instead of escaping it
+	 *   (trusted content only); `|markdownInline(true)` or `|markdownInline(html: true)`
+	 */
+	public static function markdownInline(mixed $value, bool $html = false): string
 	{
 		// Inline-only markdown processing (no <p> tags or block elements)
 		// Uses Parsedown's line() method for inline elements only
@@ -1077,15 +1086,16 @@ class TotalCMSTwigFilters
 			$value = (string)$value;
 		}
 
-		// Use ParsedownExtra with safe mode for inline processing
-		static $parsedown = null;
-		if ($parsedown === null) {
-			$parsedown = new \ParsedownExtra();
-			$parsedown->setSafeMode(true);
-			$parsedown->setBreaksEnabled(false); // No line breaks in inline mode
+		// ParsedownExtra in safe mode unless $html, one instance per mode
+		static $parsedown = [];
+		if (!isset($parsedown[(int)$html])) {
+			$parser = new \ParsedownExtra();
+			$parser->setSafeMode(!$html);
+			$parser->setBreaksEnabled(false); // No line breaks in inline mode
+			$parsedown[(int)$html] = $parser;
 		}
 
-		return $parsedown->line($value);
+		return $parsedown[(int)$html]->line($value);
 	}
 
 	// -------------------------

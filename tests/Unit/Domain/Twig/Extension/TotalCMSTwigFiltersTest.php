@@ -574,4 +574,30 @@ describe('TotalCMSTwigFilters', function (): void {
 		// Non-string input
 		expect(TotalCMSTwigFilters::markdown(123))->toBeString();
 	});
+
+	test('TotalCMSTwigFilters → markdown escapes HTML by default', function (): void {
+		$result = TotalCMSTwigFilters::markdown("**Bold** and <span class=\"hl\">kept</span>\n\n<div class=\"box\">Block</div>");
+
+		expect($result)->toContain('<strong>Bold</strong>')
+			->and($result)->toContain('&lt;span class="hl"&gt;')
+			->and($result)->not->toContain('<div class="box">');
+	});
+
+	test('TotalCMSTwigFilters → markdown passes HTML through when html is true', function (): void {
+		$result = TotalCMSTwigFilters::markdown("**Bold** and <span class=\"hl\">kept</span>\n\n<div class=\"box\">Block</div>", true);
+
+		expect($result)->toContain('<strong>Bold</strong>')
+			->and($result)->toContain('<span class="hl">kept</span>')
+			->and($result)->toContain('<div class="box">Block</div>');
+
+		// The default instance is not switched by an earlier passthrough call.
+		expect(TotalCMSTwigFilters::markdown('<em>x</em>'))->toContain('&lt;em&gt;');
+	});
+
+	test('TotalCMSTwigFilters → markdownInline escapes HTML unless html is true', function (): void {
+		$source = '**Bold** <abbr title="Total CMS">T3</abbr>';
+
+		expect(TotalCMSTwigFilters::markdownInline($source))->toContain('&lt;abbr')
+			->and(TotalCMSTwigFilters::markdownInline($source, true))->toBe('<strong>Bold</strong> <abbr title="Total CMS">T3</abbr>');
+	});
 });
