@@ -13,6 +13,7 @@ use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
+use TotalCMS\Domain\Twig\Markdown\TotalParsedown;
 use TotalCMS\Domain\Typography\Data\TypographyOptions;
 use TotalCMS\Domain\Typography\Service\Typographer;
 use Twig\TwigFilter;
@@ -1086,10 +1087,11 @@ class TotalCMSTwigFilters
 			$value = (string)$value;
 		}
 
-		// ParsedownExtra in safe mode unless $html, one instance per mode
+		// TotalParsedown (ParsedownExtra plus the new-tab link title) in safe
+		// mode unless $html, one instance per mode
 		static $parsedown = [];
 		if (!isset($parsedown[(int)$html])) {
-			$parser = new \ParsedownExtra();
+			$parser = new TotalParsedown();
 			$parser->setSafeMode(!$html);
 			$parser->setBreaksEnabled(false); // No line breaks in inline mode
 			$parsedown[(int)$html] = $parser;

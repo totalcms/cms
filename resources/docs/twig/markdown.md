@@ -145,6 +145,50 @@ ParsedownExtra supports GitHub-style tables:
 </div>
 ```
 
+### Image captions
+
+An image that sits alone in its paragraph and has a title renders as a figure, with the title as its caption:
+
+```markdown
+![Sync diagram](/stream/upload/erp/content/sync.svg "Orders sync every five minutes")
+```
+
+```html
+<figure>
+<img src="/stream/upload/erp/content/sync.svg" alt="Sync diagram" />
+<figcaption>Orders sync every five minutes</figcaption>
+</figure>
+```
+
+To use the alt text as the caption, set the title to `caption` (or `alt`). The image is then written without an `alt` attribute, because the caption already describes it and a screen reader would otherwise read the same sentence twice:
+
+```markdown
+![Orders sync every five minutes](sync.svg "caption")
+```
+
+```html
+<figure>
+<img src="sync.svg" />
+<figcaption>Orders sync every five minutes</figcaption>
+</figure>
+```
+
+Nothing else changes. An image without a title, or one inside a sentence or a link, renders as a plain `<img>` like before. The caption is text: HTML in a title is escaped.
+
+### Links that open in a new tab
+
+Give a link the title `external` (or `_blank`) to open it in a new tab. The link gets `target="_blank"` and no `title` attribute:
+
+```markdown
+[Read the spec](https://example.com/spec "external")
+```
+
+```html
+<a href="https://example.com/spec" target="_blank">Read the spec</a>
+```
+
+This works in `|markdown` and `|markdownInline`, and with reference-style links. Any other title stays a normal `title` attribute.
+
 ### Code Blocks
 
 Fenced code blocks with syntax highlighting:

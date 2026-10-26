@@ -30,6 +30,8 @@ The value is Markdown source, so pass it through the [`markdown` filter](docs/tw
 
 The filter escapes any HTML in the source; to render it as markup, pass `true`: `{{ post.body|markdown(true) }}` (see [Letting HTML through](docs/twig/filters#letting-html-through)). Always render the field with the filter; printing the raw value shows the Markdown source and any HTML in it.
 
+To caption an image, give it a title on a line of its own: `![Alt](url "Caption")` renders as a `<figure>` with a `<figcaption>`. See [Image captions](docs/twig/markdown#image-captions). To open a link in a new tab, title it `external`: `[Text](url "external")`. See [Links that open in a new tab](docs/twig/markdown#links-that-open-in-a-new-tab).
+
 ## The editor
 
 In the admin the editor highlights Markdown syntax as you type. On a public form it is a plain text area with the same toolbar.

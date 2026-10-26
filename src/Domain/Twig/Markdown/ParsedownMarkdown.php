@@ -12,14 +12,17 @@ use Twig\Extra\Markdown\MarkdownInterface;
  * unsafe link schemes (javascript:, data:…) are neutralized. With $allowHtml
  * the source's HTML passes through untouched, so only use it on content the
  * site's own editors wrote, never on visitor input.
+ *
+ * A titled image alone in its paragraph renders as a figure with the title as
+ * its caption (see TotalParsedown).
  */
 readonly class ParsedownMarkdown implements MarkdownInterface
 {
-	private \ParsedownExtra $parsedown;
+	private TotalParsedown $parsedown;
 
 	public function __construct(bool $allowHtml = false)
 	{
-		$this->parsedown = new \ParsedownExtra();
+		$this->parsedown = new TotalParsedown();
 
 		$this->parsedown->setSafeMode(!$allowHtml);
 		$this->parsedown->setBreaksEnabled(true);
