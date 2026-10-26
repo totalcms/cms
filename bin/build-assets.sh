@@ -14,10 +14,12 @@ done
 
 echo "Building frontend assets..."
 vp install
-PRODUCTION=$PRODUCTION node esbuild.config.js
-cp -r resources/fonts public/assets/fonts
-
-if [ $? -ne 0 ]; then
+# Copy the folder's contents, not the folder: `cp -r resources/fonts
+# public/assets/fonts` nests a second fonts/ inside when the target already
+# exists (two overlapping builds did exactly that).
+if ! PRODUCTION=$PRODUCTION node esbuild.config.js \
+    || ! mkdir -p public/assets/fonts \
+    || ! cp -R resources/fonts/. public/assets/fonts/; then
     echo "Failed to build frontend assets."
     exit 1
 fi

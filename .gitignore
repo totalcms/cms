@@ -8,6 +8,7 @@ composer.lock
 cache.properties
 .php_cs.cache
 .phpunit.result.cache
+.watch.pid
 
 vendor/
 build/

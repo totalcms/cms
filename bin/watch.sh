@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# One watcher per checkout. Two at once run every rebuild twice in parallel,
+# and the overlapping builds clobber each other's output in public/assets.
+PIDFILE=".watch.pid"
+if [ -f "$PIDFILE" ]; then
+    other=$(cat "$PIDFILE")
+    if kill -0 "$other" 2>/dev/null && ps -o command= -p "$other" | grep -q "watch.sh"; then
+        echo "watch.sh is already running (PID $other). Stop it first: kill $other"
+        exit 1
+    fi
+fi
+echo $$ > "$PIDFILE"
+# Take fswatch and the loop down with us so they don't outlive the script
+trap 'rm -f "$PIDFILE"; trap - EXIT; pkill -P $$' EXIT INT TERM
+
 bin/build-assets.sh
 
 echo "Watching..."
@@ -44,4 +58,9 @@ fswatch -0 css javascript src config resources | while read -d "" file; do
 
     echo "Watching..."
     echo ""
-done
+done &
+
+# In the background with a wait, not in the foreground: bash holds a trap until
+# the foreground pipeline exits, which fswatch never does, so a plain `kill`
+# would leave the watcher running.
+wait
