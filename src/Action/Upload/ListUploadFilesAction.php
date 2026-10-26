@@ -63,7 +63,12 @@ readonly class ListUploadFilesAction
 			$isVideo = in_array($ext, self::VIDEO_EXTENSIONS, true);
 			$isAudio = in_array($ext, self::AUDIO_EXTENSIONS, true);
 
-			if ($isImage) {
+			if ($ext === 'svg') {
+				// Stream, not ImageWorks: any ImageWorks parameter (thumbnail
+				// crop or preset) rasterizes an SVG to JPEG.
+				$thumbnail = $basePath . '/stream/upload/' . $path;
+				$url       = $thumbnail;
+			} elseif ($isImage) {
 				$thumbnail = $basePath . '/imageworks/upload/' . $path . '?w=200&h=200&fit=crop';
 				$url       = $basePath . '/imageworks/upload/' . $path;
 

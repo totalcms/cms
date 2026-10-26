@@ -93,8 +93,10 @@ readonly class UploadFileAction
 
 		$link = $this->buildLink($basePath, $path, $mime);
 
+		// SVGs skip the posted params: they are ImageWorks options (the
+		// field's imagePreset arrives as `p`), and an SVG has no use for them.
 		$params = $request->getParsedBody();
-		if (!empty($params)) {
+		if (!empty($params) && !$this->isSvg($path, $mime)) {
 			$link .= '?' . http_build_query($params);
 		}
 
@@ -104,9 +106,14 @@ readonly class UploadFileAction
 	/**
 	 * Build the response link based on MIME type.
 	 * Images use ImageWorks, audio/video use stream (range requests), everything else uses download.
+	 * SVGs use stream: any ImageWorks parameter rasterizes them to JPEG.
 	 */
 	private function buildLink(string $basePath, string $path, string $mime): string
 	{
+		if ($this->isSvg($path, $mime)) {
+			return $basePath . '/stream/upload/' . $path;
+		}
+
 		if ($this->matchesMime($mime, self::IMAGE_MIME_PREFIXES)) {
 			return $basePath . '/imageworks/upload/' . $path;
 		}
@@ -116,6 +123,11 @@ readonly class UploadFileAction
 		}
 
 		return $basePath . '/download/upload/' . $path;
+	}
+
+	private function isSvg(string $path, string $mime): bool
+	{
+		return $mime === 'image/svg+xml' || strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'svg';
 	}
 
 	/**

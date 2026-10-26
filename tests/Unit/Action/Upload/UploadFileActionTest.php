@@ -252,6 +252,21 @@ describe('UploadFileAction link building', function (): void {
 
 		expect($out['body']['link'])->toContain('?w=200&h=100');
 	});
+
+	it('serves an svg through stream with no imageworks params, which would rasterize it', function (): void {
+		$action = uploadAction($this->saved, $this->tmpdir);
+		$svg    = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
+
+		$out = uploadInvoke(
+			$action,
+			uploadTestFile('diagram.svg', 'image/svg+xml', $svg),
+			['collection' => 'blog', 'id' => 'post-1', 'property' => 'content'],
+			['p' => 'blog-inline']
+		);
+
+		expect($out['status'])->toBe(200);
+		expect($out['body']['link'])->toBe('/api/stream/upload/blog/post-1/content/diagram.svg');
+	});
 });
 
 describe('UploadFileAction subpath handling', function (): void {
