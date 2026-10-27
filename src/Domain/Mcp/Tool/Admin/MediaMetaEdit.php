@@ -99,7 +99,7 @@ final readonly class MediaMetaEdit
 		// way, so a partial list keeps the stored order as before.
 		if (count($edit) === count($names) && count($edits) === count($names)) {
 			$byName = array_combine($names, $stored);
-			$stored = array_map(static fn (string $name): mixed => $byName[$name], array_map('strval', array_keys($edits)));
+			$stored = array_map(static fn (string $name): mixed => $byName[$name], array_map(strval(...), array_keys($edits)));
 		}
 
 		return array_values(array_filter($stored, is_array(...)));

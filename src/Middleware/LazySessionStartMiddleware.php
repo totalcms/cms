@@ -36,7 +36,7 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		if ($this->isSessionlessPath(self::routePath($request))) {
+		if ($this->isSessionlessPath($this->routePath($request))) {
 			return $handler->handle($request);
 		}
 
@@ -58,7 +58,7 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 	 * path comes back and the anchored rules below don't match, which keeps
 	 * the session: a little slower, never logged out.
 	 */
-	private static function routePath(ServerRequestInterface $request): string
+	private function routePath(ServerRequestInterface $request): string
 	{
 		$path = $request->getUri()->getPath();
 

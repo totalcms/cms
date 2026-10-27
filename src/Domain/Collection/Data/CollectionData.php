@@ -61,10 +61,10 @@ class CollectionData
 	public string $ownerCollection        = '';
 	/** Auth collection a signed-out visitor signs in to when they open one of this collection's protected files. Empty means the default login. Site Builder pages carry their own. See LoginUrl. */
 	public string $accessCollection        = '';
-	public int $count                     = 0;                    // total number of objects created in this collection
-	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
-	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
-	public string $updated                = '';                // ISO 8601 datetime of last SETTINGS change (config timestamp — delta-stamped by CollectionSaver, never moved by content writes; sync diffs on it)
+	public int $count                      = 0;                    // total number of objects created in this collection
+	public int $totalObjects               = -1;                // current number of objects (-1 = not calculated yet)
+	public string $lastUpdated             = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
+	public string $updated                 = '';                // ISO 8601 datetime of last SETTINGS change (config timestamp — delta-stamped by CollectionSaver, never moved by content writes; sync diffs on it)
 
 	/** @var array<string> */
 	public array $groups = [];        // access groups that can access this collection
@@ -116,32 +116,32 @@ class CollectionData
 
 		/** @phpstan-ignore nullCoalesce.property */
 		$collection         = [
-			'id'                       => $this->id,
-			'schema'                   => $this->schema,
-			'name'                     => $this->name ?? ucfirst($this->id),
-			'description'              => $description,
-			'url'                      => $this->url,
-			'category'                 => $this->category,
-			'labelPlural'              => $labelPlural,
-			'labelSingular'            => $labelSingular,
-			'groups'                   => $this->groups,
-			'publicOperations'         => $this->publicOperations,
-			'requireBotProtection'     => $this->requireBotProtection,
-			'sortBy'                   => $this->sortBy,
-			'reverseSort'              => $this->reverseSort,
-			'prettyUrl'                => $this->prettyUrl,
-			'singleton'                => $this->singleton,
-			'format'                   => $this->format,
-			'publicRegistration'       => $this->publicRegistration,
-			'requireEmailVerification' => $this->requireEmailVerification,
-			'registrationGroups'       => $this->registrationGroups,
-			'ownerProperty'            => $this->ownerProperty,
-			'ownerCollection'          => $this->ownerCollection,
+			'id'                        => $this->id,
+			'schema'                    => $this->schema,
+			'name'                      => $this->name ?? ucfirst($this->id),
+			'description'               => $description,
+			'url'                       => $this->url,
+			'category'                  => $this->category,
+			'labelPlural'               => $labelPlural,
+			'labelSingular'             => $labelSingular,
+			'groups'                    => $this->groups,
+			'publicOperations'          => $this->publicOperations,
+			'requireBotProtection'      => $this->requireBotProtection,
+			'sortBy'                    => $this->sortBy,
+			'reverseSort'               => $this->reverseSort,
+			'prettyUrl'                 => $this->prettyUrl,
+			'singleton'                 => $this->singleton,
+			'format'                    => $this->format,
+			'publicRegistration'        => $this->publicRegistration,
+			'requireEmailVerification'  => $this->requireEmailVerification,
+			'registrationGroups'        => $this->registrationGroups,
+			'ownerProperty'             => $this->ownerProperty,
+			'ownerCollection'           => $this->ownerCollection,
 			'accessCollection'          => $this->accessCollection,
-			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
-			'count'                    => $this->count,
-			'totalObjects'             => max($this->totalObjects, 0),
-			'lastUpdated'              => $this->lastUpdated,
+			'queueRebuildOnSave'        => $this->queueRebuildOnSave,
+			'count'                     => $this->count,
+			'totalObjects'              => max($this->totalObjects, 0),
+			'lastUpdated'               => $this->lastUpdated,
 		];
 
 		// Only include updated once stamped — pre-existing meta files without

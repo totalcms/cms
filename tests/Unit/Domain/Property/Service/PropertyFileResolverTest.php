@@ -33,7 +33,7 @@ final class PropertyFileResolverTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->depotFetcher = $this->createMock(DepotFileFetcher::class);
+		$this->depotFetcher  = $this->createMock(DepotFileFetcher::class);
 		$this->fileFetcher   = $this->createMock(FileFetcher::class);
 		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
 		$this->actors        = new ActorContext();

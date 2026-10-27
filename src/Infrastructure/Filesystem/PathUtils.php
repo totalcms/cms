@@ -149,7 +149,7 @@ class PathUtils
 
 		if (class_exists(\Transliterator::class)) {
 			$translit = \Transliterator::create('Any-Latin; Latin-ASCII');
-			if ($translit !== null) {
+			if ($translit instanceof \Transliterator) {
 				$result = $translit->transliterate($value);
 				if (is_string($result)) {
 					return $result;

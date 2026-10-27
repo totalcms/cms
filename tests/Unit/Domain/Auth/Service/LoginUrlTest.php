@@ -28,7 +28,7 @@ describe('LoginUrl', function (): void {
 	});
 
 	it('sends visitors to the collection\'s login collection', function (): void {
-		$collection                  = new CollectionData();
+		$collection                   = new CollectionData();
 		$collection->accessCollection = 'dealers';
 
 		expect(loginUrlFor($collection)->forCollection('price-sheets', ''))
@@ -36,7 +36,7 @@ describe('LoginUrl', function (): void {
 	});
 
 	it('carries the return url as redirect', function (): void {
-		$collection                  = new CollectionData();
+		$collection                   = new CollectionData();
 		$collection->accessCollection = 'dealers';
 
 		expect(loginUrlFor($collection)->forCollection('price-sheets', 'https://example.test/download/price-sheets/a/file'))

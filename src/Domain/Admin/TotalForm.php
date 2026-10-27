@@ -1476,7 +1476,7 @@ class TotalForm implements \Stringable
 			$ref           = new \ReflectionClass($class);
 			$constructor   = $ref->getConstructor();
 			$cache[$class] = [];
-			if ($constructor !== null) {
+			if ($constructor instanceof \ReflectionMethod) {
 				foreach ($constructor->getParameters() as $param) {
 					$cache[$class][$param->getName()] = true;
 				}

@@ -53,7 +53,7 @@ readonly class CollectionReferences
 
 		$registration = $this->config->auth['publicRegistration'] ?? [];
 		if (is_array($registration) && in_array($collection, $registration, true)) {
-			$references[] = "auth.publicRegistration in the site config";
+			$references[] = 'auth.publicRegistration in the site config';
 		}
 
 		return $references;

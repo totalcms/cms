@@ -44,7 +44,7 @@ class SchemaDeleteCommand extends BaseCommand
 
 		try {
 			$deleted = $this->totalcms->schemaRemover()->deleteSchema($id);
-		} catch (\DomainException | \UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
 
