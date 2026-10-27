@@ -359,6 +359,28 @@ Access groups that can access files in this collection. Used for controlling dow
 
 ---
 
+### accessCollection
+
+**Type:** `string`
+**Required:** No
+**Default:** `""`
+
+The auth collection a signed-out visitor signs in to when they open a protected file in this collection. Shown as **Access Collection** under Access Controls.
+
+```json
+{
+    "accessCollection": "dealers"
+}
+```
+
+Empty sends visitors to the default login (`/admin/login`), which signs people in against the site's main auth collection. A portal whose users live in their own auth collection (a `dealers` collection on the `auth` schema) cannot sign in there, so set this to that collection and visitors go to `/admin/login/dealers` instead. Either way the visitor returns to the file after signing in.
+
+Site Builder pages have their own **Access Collection** field, next to Access Groups: see [Members in Their Own Auth Collection](docs/site-builder/overview#members-in-their-own-auth-collection).
+
+This only chooses where a signed-out visitor is sent. Who may open the file is still decided by [`groups`](#groups). Saving a collection whose `accessCollection` is missing or is not an auth collection (its schema is not `auth` and does not inherit from it) is rejected.
+
+---
+
 ### publicOperations
 
 **Type:** `array<string>`

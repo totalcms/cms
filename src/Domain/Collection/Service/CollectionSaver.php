@@ -65,7 +65,8 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 		$this->assertOwnerPropertyValid($data);
-		$this->assertOwnerCollectionValid($data);
+		$this->assertAuthCollectionSetting($data, 'ownerCollection');
+		$this->assertAuthCollectionSetting($data, 'accessCollection');
 
 		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
@@ -231,8 +232,9 @@ readonly class CollectionSaver
 	 * did not hand us the stored record. The metadata cascade (count bumps
 	 * on every object write) passes the record and changes neither, so it
 	 * skips the schema read; a patch changing either is validated here, on
-	 * the merged data. Same skip for ownerCollection: only a changed value
-	 * (or a call without the stored record) reads the named collection.
+	 * the merged data. Same skip for ownerCollection and accessCollection:
+	 * only a changed value (or a call without the stored record) reads the
+	 * named collection.
 	 *
 	 * @param array<string,mixed> $data
 	 *
@@ -247,10 +249,12 @@ readonly class CollectionSaver
 			$this->assertOwnerPropertyValid($data);
 		}
 
-		$ownerCollectionUnchanged = $callerSuppliedExisting
-			&& (string)($data['ownerCollection'] ?? '') === $existingCollection->ownerCollection;
-		if (!$ownerCollectionUnchanged) {
-			$this->assertOwnerCollectionValid($data);
+		foreach (['ownerCollection', 'accessCollection'] as $key) {
+			$unchanged = $callerSuppliedExisting
+				&& (string)($data[$key] ?? '') === $existingCollection->{$key};
+			if (!$unchanged) {
+				$this->assertAuthCollectionSetting($data, $key);
+			}
 		}
 	}
 
@@ -501,25 +505,27 @@ readonly class CollectionSaver
 	}
 
 	/**
-	 * An ownerCollection naming a missing or non-auth collection would make
-	 * every member an outsider: nobody could own anything. Reject it at save
-	 * time. The collection's schema must be `auth` or inherit from it.
+	 * A setting naming an auth collection ($key) must name one. An
+	 * ownerCollection that doesn't would make every member an outsider, so
+	 * nobody could own anything; a accessCollection would send visitors to a
+	 * login that cannot sign anyone in. Reject both at save time. The
+	 * collection's schema must be `auth` or inherit from it.
 	 *
 	 * @param array<string,mixed> $data
 	 *
 	 * @throws \DomainException
 	 */
-	private function assertOwnerCollectionValid(array $data): void
+	private function assertAuthCollectionSetting(array $data, string $key): void
 	{
-		$ownerCollection = $data['ownerCollection'] ?? '';
-		if (!is_string($ownerCollection) || $ownerCollection === '') {
+		$authCollection = $data[$key] ?? '';
+		if (!is_string($authCollection) || $authCollection === '') {
 			return;
 		}
 
-		$message = sprintf("ownerCollection '%s' is not an auth collection. Choose a collection whose schema is auth or inherits from it.", $ownerCollection);
+		$message = sprintf("%s '%s' is not an auth collection. Choose a collection whose schema is auth or inherits from it.", $key, $authCollection);
 
 		try {
-			$collection = $this->collectionFetcher->fetchCollection($ownerCollection);
+			$collection = $this->collectionFetcher->fetchCollection($authCollection);
 		} catch (\Throwable) {
 			throw new \DomainException($message);
 		}

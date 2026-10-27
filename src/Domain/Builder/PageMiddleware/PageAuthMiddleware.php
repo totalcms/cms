@@ -8,17 +8,18 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\LoginUrl;
 use TotalCMS\Domain\Builder\Data\PageData;
-use TotalCMS\Support\Config;
 
 /**
  * Core `auth` page middleware — gates a builder page behind a logged-in
  * session, optionally narrowed to one or more access groups.
  *
  * Two-tier check:
- *   1. **Not logged in** → 302 redirect to admin login. The original URL is
+ *   1. **Not logged in** → 302 redirect to login. The original URL is
  *      preserved as `?redirect=` so the visitor lands back on the gated page
- *      after signing in.
+ *      after signing in. The page's `accessCollection` picks which auth
+ *      collection they sign in to (see LoginUrl).
  *   2. **Logged in but `page.accessGroups` is set and the user isn't in any
  *      of those groups** → 403 forbidden. No login redirect — they're
  *      already logged in; sending them back to login would loop. SuperAdmins
@@ -32,7 +33,7 @@ readonly class PageAuthMiddleware implements PageMiddlewareInterface
 {
 	public function __construct(
 		private AccessManager $accessManager,
-		private Config $config,
+		private LoginUrl $loginUrl,
 	) {
 	}
 
@@ -40,7 +41,7 @@ readonly class PageAuthMiddleware implements PageMiddlewareInterface
 	{
 		// Stage 1: not logged in at all → kick to login.
 		if (!$this->accessManager->sessionHasUser()) {
-			return $this->redirectToLogin($request);
+			return $this->redirectToLogin($request, $page);
 		}
 
 		// Stage 2: logged in. If the page restricts to specific groups,
@@ -52,14 +53,10 @@ readonly class PageAuthMiddleware implements PageMiddlewareInterface
 		return null;
 	}
 
-	private function redirectToLogin(ServerRequestInterface $request): ResponseInterface
+	private function redirectToLogin(ServerRequestInterface $request, PageData $page): ResponseInterface
 	{
-		$loginUrl = rtrim($this->config->api, '/') . '/admin/login';
-
 		// Bring the visitor back to the page they were trying to reach.
-		$origin   = (string)$request->getUri();
-		$loginUrl .= (str_contains($loginUrl, '?') ? '&' : '?')
-			. http_build_query(['redirect' => $origin]);
+		$loginUrl = $this->loginUrl->forAccessCollection($page->accessCollection, (string)$request->getUri());
 
 		return (new Psr17Factory())->createResponse(302)
 			->withHeader('Location', $loginUrl);

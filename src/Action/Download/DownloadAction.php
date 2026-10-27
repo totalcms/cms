@@ -6,8 +6,8 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Auth\Service\LoginUrl;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\FileDownloadedPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -39,6 +39,7 @@ abstract class DownloadAction
 		protected TranslationService $translator,
 		protected FileStreamRenderer $streamRenderer,
 		protected EventDispatcher $events,
+		protected LoginUrl $loginUrl,
 	) {
 	}
 
@@ -76,7 +77,7 @@ abstract class DownloadAction
 
 		if ($this->accessManager->isProtectedByGroups()) {
 			if ($this->accessManager->sessionHasUser() === false) {
-				return $this->redirectToLogin($request, $response);
+				return $this->redirectToLogin($request, $response, $file->collection);
 			}
 			if ($this->accessManager->userHasAccess() === false) {
 				return $this->accessDenied($response);
@@ -132,9 +133,10 @@ abstract class DownloadAction
 		return null;
 	}
 
-	private function redirectToLogin(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	/** The file's collection picks the login (its `accessCollection`); the visitor comes back to the file afterwards. */
+	private function redirectToLogin(ServerRequestInterface $request, ResponseInterface $response, string $collection): ResponseInterface
 	{
-		$url = RouteContext::fromRequest($request)->getRouteParser()->urlFor('login');
+		$url = $this->loginUrl->forCollection($collection, (string)$request->getUri());
 
 		return $response->withStatus(302)->withHeader('Location', $url);
 	}

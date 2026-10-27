@@ -3922,6 +3922,17 @@
             "url": "https://docs.totalcms.co/collections/settings/"
         },
         {
+            "key": "accessCollection",
+            "type": "string",
+            "required": false,
+            "default": "\"\"",
+            "description": "The auth collection a signed-out visitor signs in to when they open a protected file in this collection. Shown as **Access Collection** under Access Controls.",
+            "examples": [
+                "{\n    \"accessCollection\": \"dealers\"\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
             "key": "publicOperations",
             "type": "array<string>",
             "required": false,

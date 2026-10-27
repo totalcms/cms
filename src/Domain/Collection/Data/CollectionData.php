@@ -6,6 +6,8 @@ use TotalCMS\Domain\Storage\SerializerFactory;
 
 /**
  * Data object.
+ *
+ * @SuppressWarnings("PHPMD.ExcessivePublicCount") Every public property is a collection setting stored in .meta.json; splitting them up would split the settings file's shape.
  */
 class CollectionData
 {
@@ -57,6 +59,8 @@ class CollectionData
 	public string $ownerProperty          = '';
 	/** Auth collection whose members may own objects here. Empty means any auth collection (the owner value is a bare user id, so ids must then be unique across auth collections). See OwnerPropertyResolver::ownerCollection(). */
 	public string $ownerCollection        = '';
+	/** Auth collection a signed-out visitor signs in to when they open one of this collection's protected files. Empty means the default login. Site Builder pages carry their own. See LoginUrl. */
+	public string $accessCollection        = '';
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
 	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
@@ -133,6 +137,7 @@ class CollectionData
 			'registrationGroups'       => $this->registrationGroups,
 			'ownerProperty'            => $this->ownerProperty,
 			'ownerCollection'          => $this->ownerCollection,
+			'accessCollection'          => $this->accessCollection,
 			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
 			'count'                    => $this->count,
 			'totalObjects'             => max($this->totalObjects, 0),

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Data;
 
+/**
+ * A Site Builder page record.
+ *
+ * @SuppressWarnings("PHPMD.TooManyFields") One field per builder-page schema property; the class mirrors the stored record.
+ */
 readonly class PageData
 {
 	public string $id;
@@ -30,6 +35,9 @@ readonly class PageData
 	/** @var list<string> Access group ids — restricts the `auth` middleware. Empty = any login. */
 	public array $accessGroups;
 
+	/** Auth collection a signed-out visitor signs in to under the `auth` middleware. Empty = the default login. */
+	public string $accessCollection;
+
 	/**
 	 * Page hierarchy and ordering live in the order file (.order.json) — not
 	 * here. PageData carries page CONTENT only.
@@ -38,21 +46,22 @@ readonly class PageData
 	 */
 	public function __construct(array $data)
 	{
-		$this->id              = (string)($data['id'] ?? '');
-		$this->title           = (string)($data['title'] ?? '');
-		$this->route           = (string)($data['route'] ?? '');
-		$this->template        = (string)($data['template'] ?? '');
-		$this->draft           = (bool)($data['draft'] ?? false);
-		$this->nav             = (bool)($data['nav'] ?? true);
-		$this->sitemap         = (bool)($data['sitemap'] ?? true);
-		$this->changeFrequency = (string)($data['changeFrequency'] ?? '');
-		$this->priority        = (float)($data['priority'] ?? 0);
-		$this->status          = $this->parseStatus($data['status'] ?? null);
-		$this->redirectTo      = (string)($data['redirectTo'] ?? '');
-		$this->data            = $this->parseData($data['data'] ?? null);
-		$this->seo             = is_array($data['seo'] ?? null) ? $data['seo'] : [];
-		$this->middleware      = $this->parseStringList($data['middleware'] ?? null);
-		$this->accessGroups    = $this->parseStringList($data['accessGroups'] ?? null);
+		$this->id               = (string)($data['id'] ?? '');
+		$this->title            = (string)($data['title'] ?? '');
+		$this->route            = (string)($data['route'] ?? '');
+		$this->template         = (string)($data['template'] ?? '');
+		$this->draft            = (bool)($data['draft'] ?? false);
+		$this->nav              = (bool)($data['nav'] ?? true);
+		$this->sitemap          = (bool)($data['sitemap'] ?? true);
+		$this->changeFrequency  = (string)($data['changeFrequency'] ?? '');
+		$this->priority         = (float)($data['priority'] ?? 0);
+		$this->status           = $this->parseStatus($data['status'] ?? null);
+		$this->redirectTo       = (string)($data['redirectTo'] ?? '');
+		$this->data             = $this->parseData($data['data'] ?? null);
+		$this->seo              = is_array($data['seo'] ?? null) ? $data['seo'] : [];
+		$this->middleware       = $this->parseStringList($data['middleware'] ?? null);
+		$this->accessGroups     = $this->parseStringList($data['accessGroups'] ?? null);
+		$this->accessCollection = (string)($data['accessCollection'] ?? '');
 	}
 
 	/**
@@ -143,21 +152,22 @@ readonly class PageData
 	public function toArray(): array
 	{
 		return [
-			'id'              => $this->id,
-			'title'           => $this->title,
-			'route'           => $this->route,
-			'template'        => $this->template,
-			'draft'           => $this->draft,
-			'nav'             => $this->nav,
-			'sitemap'         => $this->sitemap,
-			'changeFrequency' => $this->changeFrequency,
-			'priority'        => $this->priority,
-			'status'          => $this->status,
-			'redirectTo'      => $this->redirectTo,
-			'data'            => $this->data,
-			'seo'             => $this->seo,
-			'middleware'      => $this->middleware,
-			'accessGroups'    => $this->accessGroups,
+			'id'               => $this->id,
+			'title'            => $this->title,
+			'route'            => $this->route,
+			'template'         => $this->template,
+			'draft'            => $this->draft,
+			'nav'              => $this->nav,
+			'sitemap'          => $this->sitemap,
+			'changeFrequency'  => $this->changeFrequency,
+			'priority'         => $this->priority,
+			'status'           => $this->status,
+			'redirectTo'       => $this->redirectTo,
+			'data'             => $this->data,
+			'seo'              => $this->seo,
+			'middleware'       => $this->middleware,
+			'accessGroups'     => $this->accessGroups,
+			'accessCollection' => $this->accessCollection,
 		];
 	}
 }

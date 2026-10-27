@@ -26,6 +26,15 @@ to its `index`**, then make it the collection's Owner Property:
 Set `ownerCollection` to the members collection the same way when the site
 has more than one auth collection. Docs: `collections/settings.md#ownerproperty`.
 
+Set `accessCollection` to the members collection on every collection with
+group-protected files, and on every Site Builder page that uses the `auth`
+feature (a page field, next to `accessGroups`). Signed-out visitors are then
+sent to `/admin/login/<members>` instead of the default login, which cannot
+sign members in. To protect a collection's object pages (`/blog/{id}`), add a
+builder page with that route and `auth` on; the collection URL itself has no
+gate. Docs: `collections/settings.md#accesscollection`,
+`site-builder/overview.md#protecting-collection-pages`.
+
 What core then does for every user who is not a super admin:
 
 - stamps their id into `owner` on create, and reverts any change to it on update;

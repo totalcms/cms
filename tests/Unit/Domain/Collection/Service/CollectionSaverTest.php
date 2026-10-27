@@ -392,6 +392,27 @@ final class CollectionSaverTest extends TestCase
 		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'blog']);
 	}
 
+	public function testSaveAcceptsAnAuthAccessCollection(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->with('dealers')->willReturn($this->authCollection('dealers', 'auth'));
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->saveCollection(['id' => 'price-sheets', 'schema' => 'portfolio-schema', 'accessCollection' => 'dealers']);
+	}
+
+	public function testSaveRejectsANonAuthAccessCollection(): void
+	{
+		// Visitors would be sent to a login that cannot sign anyone in.
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->authCollection('blog', 'blog'));
+		$this->schemaFetcher->method('fetchRawSchema')->willReturn(new SchemaData());
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("accessCollection 'blog' is not an auth collection.");
+
+		$this->saver->saveCollection(['id' => 'price-sheets', 'schema' => 'portfolio-schema', 'accessCollection' => 'blog']);
+	}
+
 	public function testPatchRejectsANonAuthOwnerCollection(): void
 	{
 		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('portfolio-schema'));

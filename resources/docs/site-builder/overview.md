@@ -246,7 +246,7 @@ The page form's **Features** section is a checklist populated from the registry.
 
 | Name | Behavior |
 |------|----------|
-| `auth` | Requires a logged-in visitor. Redirects logged-out visitors to `/admin/login` (with `?redirect=` to bring them back). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
+| `auth` | Requires a logged-in visitor. Redirects logged-out visitors to the login page (with `?redirect=` to bring them back): `/admin/login`, or the page's **Access Collection**. Optionally restricted to specific access groups via the **Access Groups** field — see below. |
 
 Common uses for `auth`: legal documents that need a login, draft preview links, member-only pages.
 
@@ -261,6 +261,12 @@ Failure responses:
 - Logged-out visitors → 302 to login (same as before)
 - Logged-in users who aren't in any of the listed groups → **403 Forbidden** (no login redirect — they're already logged in; sending them to login would loop)
 - For JSON requests, both states return JSON error bodies (`401` or `403` respectively)
+
+### Members in Their Own Auth Collection
+
+The default login signs people in against the site's main auth collection. When a page's visitors live in another one (a `dealers` collection for a client portal), pick it in the page's **Access Collection** field, which appears next to Access Groups when `auth` is enabled. Signed-out visitors then go to `/admin/login/dealers`, and come back to the page after signing in.
+
+Empty (the default) sends visitors to `/admin/login`. Protected *files* use the same idea, set on the file's collection instead: see [`accessCollection`](docs/collections/settings#accesscollection).
 
 ### Registering Middleware from an Extension
 
@@ -296,7 +302,7 @@ Names must be lowercase letters, digits, and hyphens (e.g. `geo-redirect`, `rate
 
 ### Scope
 
-Per-page middleware applies only to **builder-page matches**. Collection-URL matches (where the rendered template is `pages/{collection-id}.twig` and the variable is `object.*`) don't currently support per-record middleware. Apply your own auth in the collection's template if you need it.
+Per-page middleware applies only to **builder-page matches**. Collection-URL matches (where the rendered template is `pages/{collection-id}.twig` and the variable is `object.*`) don't run page features. To protect a collection's object pages, give them a builder page: see [Protecting Collection Pages](#protecting-collection-pages).
 
 ## Collection URL Routing
 
@@ -365,6 +371,27 @@ Set the blog collection's URL to `/blog` (Pretty URLs enabled) so `objectUrl()` 
 ```
 
 The first approach is simpler when the detail page only renders one collection. The second approach is useful when the detail page needs the builder-page record (`page.title`, `page.data.*`) alongside the collection object — useful for SEO overrides, custom metadata, etc.
+
+### Protecting Collection Pages
+
+A collection URL serves every object to anyone. To put a collection's object pages behind a login (a members-only blog, a dealer portal's price sheets), use the second approach: a builder page always wins over the collection URL it shares a route with, and a builder page can turn on [`auth`](#restricting-auth-to-access-groups).
+
+1. Create a page with the collection's route (`/blog/{id}`) and a template (`blog-post`).
+2. Under **Features**, check `auth`. Optionally pick **Access Groups**, and an **Access Collection** if the members sign in to their own auth collection.
+3. In the template, load the object and send a real 404 when there is nothing to show. A builder page renders for any id, and drafts are not hidden for you:
+
+```twig
+{# pages/blog-post.twig #}
+{% set post = cms.data.object('blog', params.id) %}
+{% if post is empty or post.draft %}{{ cms.notFound() }}{% endif %}
+
+<h1>{{ post.title }}</h1>
+<div>{{ post.content | raw }}</div>
+```
+
+4. Turn off the collection's [sitemap](docs/collections/sitemap-builder) and [RSS feed](docs/collections/rss-feed). The page gates the URL, but the sitemap and feed would still publish every post's title and link.
+
+Links built with `objectUrl()` keep working: they point at the same `/blog/{id}` address, which the page now answers.
 
 See [Object Linking](docs/twig/object-linking) for full documentation on URL templates, canonical URLs, and the `objectUrl()` function.
 

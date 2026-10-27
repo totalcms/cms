@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"category"    : "Internal",
 	"description" : "A schema for a Site Builder page",
-	"formgrid"    : "draft .\ntitle title\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---SEO---\nseo seo\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---\nid id\nupdated created",
+	"formgrid"    : "draft .\ntitle title\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---SEO---\nseo seo\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---Features---\nmiddleware middleware\naccessGroups accessCollection\n---Page Data---\ndata data\n---\nid id\nupdated created",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -95,6 +95,23 @@
 				"duplicateItemsAllowed" : false,
 				"addChoices"            : false,
 				"visibility"            : {
+					"watch"    : "middleware",
+					"value"    : "auth",
+					"operator" : "in"
+				}
+			}
+		},
+		"accessCollection": {
+			"type"     : "string",
+			"label"    : "Access Collection",
+			"help"     : "The auth collection a signed-out visitor signs in to, for a page whose visitors live in their own auth collection (a client portal). Leave empty for the default login.",
+			"field"    : "select",
+			"default"  : "",
+			"options"  : [{ "value": "", "label": "Default" }],
+			"settings" : {
+				"propertyOptions" : "schemaCollections:auth",
+				"sortOptions"     : false,
+				"visibility"      : {
 					"watch"    : "middleware",
 					"value"    : "auth",
 					"operator" : "in"

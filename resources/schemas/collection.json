@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\nrequireBotProtection requireBotProtection\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\nrequireBotProtection requireBotProtection\n---\ngroups accessCollection\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "name": {
 			"type"        : "string",
@@ -183,6 +183,18 @@
 			"field"       : "select",
 			"default"     : "",
 			"options"     : [{ "value": "", "label": "Any auth collection" }],
+			"settings"    : {
+				"propertyOptions" : "schemaCollections:auth",
+				"sortOptions"     : false
+			}
+        },
+        "accessCollection": {
+			"type"        : "string",
+			"label"       : "Access Collection",
+			"help"        : "The auth collection a signed-out visitor signs in to when they open a protected file in this collection. Leave empty for the default login.",
+			"field"       : "select",
+			"default"     : "",
+			"options"     : [{ "value": "", "label": "Default" }],
 			"settings"    : {
 				"propertyOptions" : "schemaCollections:auth",
 				"sortOptions"     : false

@@ -8,8 +8,10 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\LoginUrl;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Support\Config;
 
 final class PageAuthMiddlewareTest extends TestCase
@@ -26,8 +28,23 @@ final class PageAuthMiddlewareTest extends TestCase
 		$this->config      = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->config->api = 'https://example.test';
 
-		$this->middleware = new PageAuthMiddleware($this->accessManager, $this->config);
+		$this->middleware = new PageAuthMiddleware($this->accessManager, new LoginUrl($this->config, $this->createStub(CollectionFetcher::class)));
 		$this->psr17      = new Psr17Factory();
+	}
+
+	public function testSignedOutVisitorIsSentToThePagesAccessCollection(): void
+	{
+		// A portal keeps its users in their own auth collection; the default
+		// login signs people in against auth.collection and cannot take them.
+		$this->accessManager->method('sessionHasUser')->willReturn(false);
+
+		$response = $this->middleware->handle(
+			$this->psr17->createServerRequest('GET', 'https://example.test/portal'),
+			new PageData(['id' => 'portal', 'middleware' => ['auth'], 'accessCollection' => 'dealers']),
+		);
+
+		$this->assertNotNull($response);
+		$this->assertStringStartsWith('https://example.test/admin/login/dealers?redirect=', $response->getHeaderLine('Location'));
 	}
 
 	public function testReturnsNullWhenLoggedIn(): void
