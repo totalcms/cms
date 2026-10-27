@@ -97,3 +97,4 @@ graphify-out/
 # PHPMD result caches (composer run md / md:tests)
 .phpmd.cache.php
 .phpmd-tests.cache.php
+.vitest/
