@@ -6,6 +6,10 @@ namespace Tests\Unit\Domain\Property\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\DepotFileFetcher;
@@ -23,18 +27,44 @@ final class PropertyFileResolverTest extends TestCase
 {
 	private MockObject $depotFetcher;
 	private MockObject $fileFetcher;
+	private MockObject $objectUpdater;
+	private ActorContext $actors;
 	private PropertyFileResolver $resolver;
 
 	protected function setUp(): void
 	{
 		$this->depotFetcher = $this->createMock(DepotFileFetcher::class);
-		$this->fileFetcher  = $this->createMock(FileFetcher::class);
-		$this->resolver     = new PropertyFileResolver(
+		$this->fileFetcher   = $this->createMock(FileFetcher::class);
+		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
+		$this->actors        = new ActorContext();
+		$this->resolver      = new PropertyFileResolver(
 			$this->fileFetcher,
 			$this->depotFetcher,
 			$this->createMock(PropertyFetcher::class),
-			$this->createMock(ObjectUpdater::class),
+			$this->objectUpdater,
+			$this->actors,
 		);
+	}
+
+	public function testTheDownloadCounterIsWrittenAsTheSystem(): void
+	{
+		// The counter is bookkeeping. Written as the visitor, a member opening
+		// a file on an object they do not own (an owned collection) was
+		// refused by the write gate and never got the file (TOTAL-CMS-R4).
+		$this->actors->set(Actor::anonymous());
+
+		$writtenAs = null;
+		$this->objectUpdater->expects($this->once())->method('updateObjectProperty')
+			->willReturnCallback(function () use (&$writtenAs): ObjectData {
+				$writtenAs = $this->actors->current()->kind;
+
+				return new ObjectData('doc-1', []);
+			});
+
+		$this->resolver->file('documents', 'doc-1', 'file')->recordDownload(new FileData(['name' => 'a.pdf']));
+
+		$this->assertSame(ActorKind::System, $writtenAs);
+		$this->assertSame(ActorKind::Anonymous, $this->actors->current()->kind, 'the visitor is restored afterwards');
 	}
 
 	public function testACardChildPathIsANestedFile(): void

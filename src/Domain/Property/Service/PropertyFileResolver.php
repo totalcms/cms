@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
@@ -24,6 +25,7 @@ final readonly class PropertyFileResolver
 		private DepotFileFetcher $depotFetcher,
 		private PropertyFetcher $propertyFetcher,
 		private ObjectUpdater $objectUpdater,
+		private ActorContext $actors,
 	) {
 	}
 
@@ -67,6 +69,6 @@ final readonly class PropertyFileResolver
 
 	private function make(PropertyFileKind $kind, string $collection, string $id, string $property, string $name = '', ?string $subpath = null, ?string $nestedSubpath = null, bool $missing = false): PropertyFile
 	{
-		return new PropertyFile($this->fileFetcher, $this->depotFetcher, $this->propertyFetcher, $this->objectUpdater, $kind, $collection, $id, $property, $name, $subpath, $nestedSubpath, $missing);
+		return new PropertyFile($this->fileFetcher, $this->depotFetcher, $this->propertyFetcher, $this->objectUpdater, $this->actors, $kind, $collection, $id, $property, $name, $subpath, $nestedSubpath, $missing);
 	}
 }

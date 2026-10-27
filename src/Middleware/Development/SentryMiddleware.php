@@ -402,6 +402,16 @@ class SentryMiddleware implements MiddlewareInterface
 			return null;
 		}
 
+		// Thrown by a site's own script that loads T3: a test harness in the
+		// project's tests/ or a `php -S` router in a scratch folder
+		// (TOTAL-CMS-QN, -R2, -R3). Nothing in T3 ran on the way, so nothing in
+		// T3 is at fault. A fatal error (ErrorException) is exempt: it carries
+		// no trace, so a memory or time limit hit inside a library during a T3
+		// request would look the same.
+		if (!$exception instanceof \ErrorException && self::raisedOutsideTotalCms($exception)) {
+			return null;
+		}
+
 		// Slim could not resolve a middleware or route handler class. T3's own
 		// are checked by PHPStan and the test suite, so this is a class a site
 		// added in its public/index.php (or a half-uploaded install) — the
@@ -479,5 +489,27 @@ class SentryMiddleware implements MiddlewareInterface
 		}
 
 		return $event;
+	}
+
+	/**
+	 * True when neither the throw site nor any frame of the trace is T3's own
+	 * code. Matched on src/, config/ and resources/ rather than the package
+	 * root, because a zip install's package root is the project root, which
+	 * also holds the site's vendor/, extensions/ and scripts.
+	 */
+	private static function raisedOutsideTotalCms(\Throwable $exception): bool
+	{
+		$root = PathResolver::packageRoot() . DIRECTORY_SEPARATOR;
+		$dirs = [$root . 'src' . DIRECTORY_SEPARATOR, $root . 'config' . DIRECTORY_SEPARATOR, $root . 'resources' . DIRECTORY_SEPARATOR];
+
+		foreach ([$exception->getFile(), ...array_column($exception->getTrace(), 'file')] as $file) {
+			foreach ($dirs as $dir) {
+				if (str_starts_with((string)$file, $dir)) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }

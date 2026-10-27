@@ -12,6 +12,7 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Support\PathResolver;
 
 final class SentryMiddlewareTest extends TestCase
 {
@@ -42,9 +43,18 @@ final class SentryMiddlewareTest extends TestCase
 		$this->assertContains(HttpNotFoundException::class, SentryMiddleware::ignoredExceptions(cli: true));
 	}
 
-	/** Run the private before_send filter on one exception, with the shipped options. */
-	private function filter(\Throwable $exception): ?Event
+	/**
+	 * Run the private before_send filter on one exception, with the shipped
+	 * options. The exception is made to look thrown from T3's src/ unless
+	 * $fromTotalCms is false: built here, it would otherwise come from a test
+	 * file, which the filter drops as a site's own script.
+	 */
+	private function filter(\Throwable $exception, bool $fromTotalCms = true): ?Event
 	{
+		if ($fromTotalCms) {
+			(new \ReflectionProperty($exception, 'file'))->setValue($exception, PathResolver::packageRoot() . '/src/Domain/Fake/Thrower.php');
+		}
+
 		// init() normally hands the options to the filter; tests never call it.
 		$config = new \ReflectionProperty(SentryMiddleware::class, 'filterConfig');
 		$config->setValue(null, (new \ReflectionClassConstant(SentryMiddleware::class, 'DEFAULT_OPTIONS'))->getValue());
@@ -108,5 +118,24 @@ final class SentryMiddlewareTest extends TestCase
 		$exception = new \RuntimeException('Callable things are not the problem here, the disk is full');
 
 		$this->assertInstanceOf(Event::class, $this->filter($exception));
+	}
+
+	public function testDropsAnExceptionFromASitesOwnScript(): void
+	{
+		// A customer's tests/keep_opcache_test.php and a scratch `php -S`
+		// router reached T3's Sentry (TOTAL-CMS-QN, -R2, -R3): no T3 frame at all.
+		$exception = new \RuntimeException('a fault in the code');
+		(new \ReflectionProperty($exception, 'file'))->setValue($exception, PathResolver::projectRoot() . '/tests/keep_opcache_test.php');
+
+		$this->assertNull($this->filter($exception, fromTotalCms: false));
+	}
+
+	public function testReportsAFatalErrorOutsideTotalCms(): void
+	{
+		// Fatals carry no trace: one raised inside a library during a T3
+		// request has no T3 frame either, and is still ours to see.
+		$exception = new \ErrorException('Allowed memory size of 134217728 bytes exhausted', 0, E_ERROR, PathResolver::packageRoot() . '/vendor/twig/twig/src/Environment.php', 10);
+
+		$this->assertInstanceOf(Event::class, $this->filter($exception, fromTotalCms: false));
 	}
 }

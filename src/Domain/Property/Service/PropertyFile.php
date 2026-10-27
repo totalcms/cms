@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -31,6 +33,7 @@ final readonly class PropertyFile
 		private DepotFileFetcher $depotFetcher,
 		private PropertyFetcher $propertyFetcher,
 		private ObjectUpdater $objectUpdater,
+		private ActorContext $actors,
 		private PropertyFileKind $kind,
 		public string $collection,
 		public string $id,
@@ -99,8 +102,19 @@ final readonly class PropertyFile
 	/**
 	 * Bump the download counter on the record, without touching siblings in
 	 * a depot or a parent card/deck.
+	 *
+	 * The counter is bookkeeping, not the visitor's edit, so it is written as
+	 * the system: a member opening a file on an object they do not own (an
+	 * owned collection) was refused by the write gate and never got the file.
 	 */
 	public function recordDownload(FileData $file): void
+	{
+		$this->actors->runAs(Actor::system(), function () use ($file): void {
+			$this->countDownload($file);
+		});
+	}
+
+	private function countDownload(FileData $file): void
 	{
 		switch ($this->kind) {
 			case PropertyFileKind::File:
