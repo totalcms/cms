@@ -15,6 +15,8 @@ use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\CollectionReferences;
+use TotalCMS\Domain\Collection\Service\CollectionRemover;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
 use TotalCMS\Domain\Import\CsvImporter;
@@ -51,6 +53,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLinter;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaRemover;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Session\Service\SessionBootstrap;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
@@ -167,6 +170,26 @@ class TotalCMS
 	public function collectionFetcher(): CollectionFetcher
 	{
 		return $this->container->get(CollectionFetcher::class);
+	}
+
+	/**
+	 * Get the collection remover for deleting a collection's settings.
+	 *
+	 * Usage:
+	 *   $totalcms->collectionRemover()->deleteCollection('old-news');
+	 */
+	public function collectionRemover(): CollectionRemover
+	{
+		return $this->container->get(CollectionRemover::class);
+	}
+
+	/**
+	 * What still points at a collection: Data Views, owner/access collection
+	 * settings, the public registration list.
+	 */
+	public function collectionReferences(): CollectionReferences
+	{
+		return $this->container->get(CollectionReferences::class);
 	}
 
 	public function indexReader(): IndexReader
@@ -349,6 +372,17 @@ class TotalCMS
 	public function schemaLister(): SchemaLister
 	{
 		return $this->container->get(SchemaLister::class);
+	}
+
+	/**
+	 * Get the schema remover for deleting custom schemas.
+	 *
+	 * Usage:
+	 *   $totalcms->schemaRemover()->deleteSchema('old-schema');
+	 */
+	public function schemaRemover(): SchemaRemover
+	{
+		return $this->container->get(SchemaRemover::class);
 	}
 
 	/**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Backup\Service\BackupStore;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
@@ -19,6 +20,7 @@ readonly class SchemaRemover
 		private SchemaRepository $storage,
 		private CollectionLister $collectionLister,
 		private EventDispatcher $eventDispatcher,
+		private BackupStore $backups,
 	) {
 	}
 
@@ -36,6 +38,8 @@ readonly class SchemaRemover
 		}
 		$this->collectionExistsWithSchema($id);
 		$this->schemaIsInherited($id);
+
+		$this->backups->backupSchema($id);
 
 		$result = $this->storage->deleteSchema($id);
 

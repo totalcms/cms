@@ -164,6 +164,25 @@ tcms schema:lint --json          # machine-readable report
 
 Exit code is `0` when no errors were found (warnings allowed), `1` when errors were found — or warnings under `--strict` — so it slots into CI.
 
+### `schema:delete`
+
+Delete a custom schema. It goes through the same checks as deleting from the admin: reserved schemas, schemas another schema inherits from (`inheritFrom`), and schemas a collection still uses are refused, and the error names what is in the way. A copy of the schema file is saved to `.system/backups/schemas/{id}/` first.
+
+```bash
+tcms schema:delete retired
+tcms schema:delete retired --force
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Schema ID |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Skip the confirmation prompt |
+
+Only custom schemas can be deleted. An extension's schemas go when the extension is removed.
+
 ---
 
 ## Collection Commands
@@ -246,6 +265,28 @@ For bigger changes, pass JSON from a file or `-` for stdin; any `--set` is appli
 | `--json` | Print the saved settings |
 
 Exits `1` when the collection does not exist, when nothing is given to change, or when the save refuses the result. A collection cannot be renamed, and its storage format changes only with [`collection:convert`](#collectionconvert). Custom MCP tools (`mcp.tools`) are checked as the REST endpoints check them.
+
+### `collection:delete`
+
+Delete a collection. As in the admin, only its settings are deleted: its objects and files stay on disk, hidden, and creating a collection with the same id brings them back. The settings are saved to `.system/backups/collections/{id}/` first, and the output says how many objects were kept.
+
+```bash
+tcms collection:delete old-news
+tcms collection:delete old-news --force
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Collection ID |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Skip the confirmation prompt, and delete even when something still refers to the collection |
+| `--json` | Print the result as JSON |
+
+The collections the site signs people in with (`auth.collection` and the OAuth login collection) are refused, with or without `--force`.
+
+Before deleting, the command looks for things that still refer to the collection: Data Views built from it, another collection's owner or access collection setting, and `auth.publicRegistration`. If it finds any, it lists them and stops, even under `--json`; `--force` deletes anyway and prints the list. These would not break the delete, but they break later and quietly. Templates and relational fields that query the collection are not checked.
 
 ### `collection:query`
 

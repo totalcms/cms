@@ -116,6 +116,7 @@ class CliApplication
 		$app->addCommand(new Command\SchemaExportCommand($totalcms));
 		$app->addCommand(new Command\SchemaImportCommand($totalcms));
 		$app->addCommand(new Command\SchemaLintCommand($totalcms));
+		$app->addCommand(new Command\SchemaDeleteCommand($totalcms));
 
 		// Collection commands
 		$app->addCommand(new Command\CollectionListCommand($totalcms));
@@ -126,6 +127,7 @@ class CliApplication
 		$app->addCommand(new Command\CollectionImportCommand($totalcms));
 		$app->addCommand(new Command\CollectionConvertCommand($totalcms));
 		$app->addCommand(new Command\CollectionUpdateCommand($totalcms));
+		$app->addCommand(new Command\CollectionDeleteCommand($totalcms));
 
 		// Access group commands
 		$app->addCommand(new Command\AccessGroup\AccessGroupListCommand($totalcms));

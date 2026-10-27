@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Backup\Service\BackupStore;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionRemover;
@@ -15,7 +14,6 @@ use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Support\Config;
 
 /**
  * `delete_collection`: delete a collection's settings.
@@ -38,9 +36,7 @@ final readonly class DeleteCollectionTool
 	public function __construct(
 		private CollectionFetcher $fetcher,
 		private CollectionRemover $remover,
-		private BackupStore $backups,
 		private PersonaContext $personaContext,
-		private Config $config,
 	) {
 	}
 
@@ -81,17 +77,13 @@ final readonly class DeleteCollectionTool
 	{
 		$collection = $this->existing($id);
 
-		$protected = array_filter([
-			...SchemaData::SYSTEM_COLLECTIONS,
-			(string)($this->config->auth['collection'] ?? ''),
-			(string)($this->config->oauth['loginCollection'] ?? ''),
-		]);
+		$protected = [...SchemaData::SYSTEM_COLLECTIONS, ...$this->remover->loginCollections()];
 		if (in_array($id, $protected, true)) {
 			throw new ToolCallException(sprintf('delete_collection: "%s" is a login or system collection; it cannot be deleted over MCP.', $id));
 		}
 
+		// The remover snapshots the settings to the backup history.
 		$settings = array_diff_key($collection->toArray(), array_flip(self::MANAGED_KEYS));
-		$this->backups->backupCollectionMeta($id);
 
 		return [
 			'deleted'     => $this->remover->deleteCollection($id),

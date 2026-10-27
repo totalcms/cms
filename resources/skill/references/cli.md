@@ -51,6 +51,10 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `collection:update <id> --set key=value` — change some settings, keep the rest; a dot
   reaches into a map (`--set mcp.access=authenticated`, `--set properties.price.label=Cost`),
   or pass JSON (`-` for stdin). Maps (`properties`, `mcp`, `seo`, …) merge key by key, null removes
+- `collection:delete <id>` — delete a collection's SETTINGS; objects stay on disk and come back
+  if the id is recreated. Refuses login collections; stops when a Data View, another
+  collection's owner/access collection or `auth.publicRegistration` still refers to it
+  (`--force` overrides). Confirm with the user first
 
 ### Access groups
 `.system/access-groups.json` is not a collection — never edit it by hand.
@@ -89,6 +93,8 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `schema:lint [id]` — validate stored schemas WITHOUT saving; run after editing
   schema JSON in place. Errors = structural breakage, warnings = missing
   help text (which feeds the MCP tool catalog). `--strict` fails on warnings.
+- `schema:delete <id>` — delete a custom schema; refused while a collection uses it or
+  another schema inherits it. A copy goes to `.system/backups/schemas/`
 
 ### Site Builder
 - `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`); `--frontend`, `--force`, `--list`

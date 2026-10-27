@@ -4328,6 +4328,28 @@
             "since": "3.5.0"
         },
         {
+            "name": "schema:delete",
+            "description": "Delete a custom schema. It goes through the same checks as deleting from the admin: reserved schemas, schemas another schema inherits from (`inheritFrom`), and schemas a collection still uses are refused, and the error names what is in the way. A copy of the schema file is saved to `.system/backups/schemas/{id}/` first.",
+            "arguments": [
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Schema ID"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--force, -f",
+                    "description": "Skip the confirmation prompt"
+                }
+            ],
+            "examples": [
+                "tcms schema:delete retired\ntcms schema:delete retired --force"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "collection:list",
             "description": "List all collections with their schema and object count.",
             "arguments": [],
@@ -4421,6 +4443,32 @@
             ],
             "examples": [
                 "tcms collection:update recipes --set ownerProperty=author\ntcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true\ntcms collection:update blog --set mcp.access=authenticated\ntcms collection:update products --set properties.price.label=Cost\necho '{\"seo\":{\"titleTemplate\":\"{title} | Recipes\"}}' | tcms collection:update recipes -"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "collection:delete",
+            "description": "Delete a collection. As in the admin, only its settings are deleted: its objects and files stay on disk, hidden, and creating a collection with the same id brings them back. The settings are saved to `.system/backups/collections/{id}/` first, and the output says how many objects were kept.",
+            "arguments": [
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Collection ID"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--force, -f",
+                    "description": "Skip the confirmation prompt, and delete even when something still refers to the collection"
+                },
+                {
+                    "name": "--json",
+                    "description": "Print the result as JSON"
+                }
+            ],
+            "examples": [
+                "tcms collection:delete old-news\ntcms collection:delete old-news --force"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"
