@@ -32,7 +32,7 @@ that this job be scheduled to run every 10 minutes. However, the time can be adj
 php <install_dir>/resources/bin/tcms jobs:process
 ```
 
-You can head over the to [Job Queue Manager](/admin/utils/jobqueue) page. It has a utility that
+You can head over to the [Job Queue Manager](/admin/utils/jobqueue) page. It has a utility that
 will assist you in getting the exact command that you need to run.
 
 ## CSV Files

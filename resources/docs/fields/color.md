@@ -1,6 +1,6 @@
 ---
 title: "Color Field"
-description: "Color picker field — renders the native swatch picker, accepts hex/rgb/hsl/oklch input, and stores both hex and OKLCH so templates can output any CSS color format."
+description: "Color picker field that accepts hex, rgb, hsl, or oklch input and stores both hex and OKLCH so templates can output any CSS color format."
 updated: "2026-06-25"
 related:
   - twig/colors

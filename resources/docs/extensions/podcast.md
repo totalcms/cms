@@ -1,6 +1,6 @@
 ---
 title: "Podcast (Bundled Extension)"
-description: "Host a podcast from two collections: the podcast and podcast-episode schemas, a feed the directories accept at its own address, and a podcast_feed() Twig function."
+description: "Host a podcast from two collections with the podcast and podcast-episode schemas, a directory-ready feed, and the podcast_feed() Twig function."
 since: "3.6.0"
 ---
 

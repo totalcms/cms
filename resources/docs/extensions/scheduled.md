@@ -1,6 +1,6 @@
 ---
 title: "Scheduled (Bundled Extension)"
-description: "Time-window gating for builder pages. Only renders a page between configured start and end timestamps — useful for holiday campaigns, embargoed announcements, and time-limited sales."
+description: "Only render a builder page between set start and end times. Useful for holiday campaigns, embargoed announcements, and time-limited sales."
 since: "3.5.0"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Price Field"
-description: "Locale-aware currency price field — live formatting as you type, a per-currency symbol and icon, configurable currency/decimals/locale, stored as a plain number."
+description: "Locale-aware currency price field with live formatting, a per-currency symbol and icon, and configurable currency, decimals, and locale."
 updated: "2026-06-10"
 ---
 

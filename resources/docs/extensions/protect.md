@@ -1,6 +1,6 @@
 ---
 title: "Protect (Bundled Extension)"
-description: "Gate a page behind a numeric passcode. Visitors enter a code to unlock the page — the session sticks via cookie. Useful for client previews, soft launches, and draft staging URLs."
+description: "Gate a page behind a numeric passcode that unlocks it for the session. Useful for client previews, soft launches, and draft staging URLs."
 since: "3.5.0"
 ---
 

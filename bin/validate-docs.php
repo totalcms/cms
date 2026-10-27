@@ -10,6 +10,7 @@
  *   3. Every menu.php entry's `path` resolves to an existing .md file.
  *   4. Every .md file is reachable from menu.php or linked from another doc page
  *      (orphan detection — catches pages that exist on disk but no nav points to them).
+ *   5. No doc links use the absolute `(/admin/docs/<page>)` form — it 404s on the public site.
  *
  * Run via:  composer run docs:validate
  *           php bin/validate-docs.php
@@ -56,6 +57,15 @@ $imageExts = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
 foreach ($mdFiles as $file) {
 	$rel     = ltrim(str_replace($docsDir, '', $file), '/');
 	$content = file_get_contents($file);
+
+	// Doc-to-doc links must use the relative docs/ form so they resolve both in
+	// the admin (via <base href>) and on docs.totalcms.co. Absolute /admin/docs/
+	// links only work inside the admin and 404 on the public site.
+	if (preg_match_all('/\(\/admin\/docs\/([^)"\s]+)\)/', $content, $adminDocLinks)) {
+		foreach ($adminDocLinks[1] as $target) {
+			$failures[] = "[link]  $rel → /admin/docs/$target (use docs/$target)";
+		}
+	}
 
 	// Match (docs/<anything-not-paren-or-quote>) in markdown link/image parens.
 	if (!preg_match_all('/\(docs\/([^)"\s#]+)(#[^)"\s]*)?\)/', $content, $matches, PREG_SET_ORDER)) {

@@ -1,6 +1,6 @@
 ---
 title: "Twig Playground"
-description: "Write Twig in the admin, render it against your real content, and keep the snippets that work. The Playground is where you learn Total CMS Twig and prototype a template before it goes into a page."
+description: "Write Twig in the admin, render it against your real content, and save the snippets that work. Learn Total CMS Twig and prototype templates."
 related:
   - twig/overview
   - twig/recipes

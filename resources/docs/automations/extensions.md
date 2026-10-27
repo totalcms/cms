@@ -1,6 +1,6 @@
 ---
 title: Extension Automations
-description: Ship automations from an extension with addAutomation().
+description: "Ship automations from a Total CMS extension with addAutomation(), so a recurring job or event reaction installs without manual setup."
 related:
   - automations/overview
   - extensions/extension-points

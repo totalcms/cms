@@ -1,6 +1,6 @@
 ---
 title: "Maintenance (Bundled Extension)"
-description: "Per-page 503 maintenance mode. Take individual pages offline with a custom message while the rest of the site stays up. Logged-in admins bypass the gate automatically."
+description: "Per-page 503 maintenance mode: take single pages offline with a custom message while the rest of the site stays up. Admins bypass it."
 since: "3.5.0"
 ---
 

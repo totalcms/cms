@@ -1,6 +1,6 @@
 ---
 title: "Index Filtering"
-description: "Filter and sort Total CMS collection indexes with include, exclude, and sort criteria for sitemaps, RSS feeds, and API endpoints using boolean, string, and array values."
+description: "Filter and sort Total CMS collection indexes with include, exclude, and sort criteria for sitemaps, RSS feeds, and API endpoints."
 ---
 
 # Index Filtering

@@ -1,6 +1,6 @@
 ---
 title: "Colors in Twig"
-description: "Read, output, and manipulate color-field values in Twig — emit any CSS color format (hex/rgb/hsl/oklch), set alpha, and lighten/darken/shift colors with OKLCH-based adjustment filters."
+description: "Output and adjust color-field values in Twig: emit hex, rgb, hsl, or oklch, set alpha, and lighten, darken, or shift colors with OKLCH filters."
 updated: "2026-06-25"
 related:
   - fields/color

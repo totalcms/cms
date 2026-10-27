@@ -1,6 +1,6 @@
 ---
 title: "Video"
-description: "Configure the video field in Total CMS: paste a URL from YouTube, Vimeo, Livid, Bunny, Cloudflare Stream, Loom, Wistia, Publitio or Jet-Stream (or a direct MP4/WebM link), and render it with cms.render.video()."
+description: "Configure the Total CMS video field: paste a YouTube, Vimeo, Bunny, Loom, Wistia, or direct MP4 link and render it with cms.render.video()."
 related:
   - fields/image-gallery
   - fields/file-depot

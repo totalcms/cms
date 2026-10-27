@@ -1,6 +1,6 @@
 ---
 title: "Cache Tag Reference"
-description: "Cache a rendered block of Twig with the {% cache %} tag — TTL plus optional collection tags that auto-invalidate when content changes, backed by the Total CMS cache backends."
+description: "Cache a rendered block of Twig with the {% cache %} tag, using a TTL and optional collection tags that invalidate when content changes."
 related:
   - twig/cmsgrid-tag
   - twig/collections

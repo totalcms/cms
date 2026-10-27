@@ -1,6 +1,6 @@
 ---
 title: "Builder CLI Commands"
-description: "CLI reference for the Site Builder: scaffold sites from starter templates, install a frontend pipeline, list registered routes, and manage template version history."
+description: "Site Builder CLI reference: scaffold sites from starter templates, install a frontend pipeline, list routes, and manage template history."
 since: "3.5.0"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Supported Locales"
-description: "Reference table of every locale code Total CMS recognizes — code, native-language name, English name, and writing direction. Used by the system locale setting and by content-localization (localizedtext / localizedstyledtext) field types."
+description: "Every locale code Total CMS recognizes, with native name, English name, and writing direction, for the system locale and localized text fields."
 audience: intermediate
 related:
   - fields/localized-text

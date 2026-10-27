@@ -1,6 +1,6 @@
 ---
 title: "WebMCP (Bundled Extension)"
-description: "Make your forms callable by a browser AI agent, and hand it the MCP server's read tools inside the visitor's own session, through the WebMCP origin trial in Chrome 149+. Experimental."
+description: "Experimental: let a browser AI agent call your forms and the MCP server's read tools through the WebMCP origin trial in Chrome 149+."
 since: "3.6.0"
 ---
 

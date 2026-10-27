@@ -1,6 +1,6 @@
 ---
 title: "RSS Feeds"
-description: "Publish a collection as an RSS feed at /feed/rss/{collection}: turn it on per collection, map the fields, choose what is left out, and build filtered variants with URL parameters."
+description: "Publish a collection as an RSS feed at /feed/rss/{collection}: enable it, map the fields, and build filtered variants with URL parameters."
 related:
   - twig/feeds
   - collections/sitemap-builder

@@ -1,6 +1,6 @@
 ---
 title: "Apache & .htaccess Configuration"
-description: "Apache and LiteSpeed rewrite rules for Total CMS — what ships in the box, where each .htaccess file lives, and common customizations like HTTPS redirects, caching, and compression."
+description: "Apache and LiteSpeed rewrite rules for Total CMS: the shipped .htaccess files and common changes like HTTPS redirects, caching, and compression."
 related:
   - operations/nginx
   - operations/security

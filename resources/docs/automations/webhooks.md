@@ -1,6 +1,6 @@
 ---
 title: Webhooks
-description: Authenticating and calling automation webhooks.
+description: "Call automation webhooks at POST /automations/{id}: choose none, sameOrigin, or apiKey authentication, sync or async runs, and the payload."
 related:
   - automations/triggers
   - automations/handlers

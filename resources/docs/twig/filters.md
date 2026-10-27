@@ -705,6 +705,8 @@ Adjusts multiple color properties at once.
 
 ## Array Filters
 
+### Array Manipulation
+
 #### `listify(?string $value, string $delimiter = ','): array`
 Splits a delimited string into a clean list — trims each item and drops empty entries (blanks, stray or trailing delimiters), reindexed. Returns an empty array for empty or null input. Handy for turning a comma-delimited setting into an array.
 

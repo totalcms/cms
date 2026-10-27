@@ -1,6 +1,6 @@
 ---
 title: "Twig Recipes"
-description: "Ready-to-paste Twig patterns for Total CMS: render stored content as Twig, archives, tag clouds, related posts, prev/next, scheduled publishing, calendars, SEO heads for detail pages, extra JSON-LD types, obfuscated contact details, daily picks, fragment caching, member-only blocks and signed links."
+description: "Ready-to-paste Twig patterns for Total CMS: archives, tag clouds, related posts, prev/next links, calendars, SEO heads, member-only blocks, and more."
 related:
   - twig/htmx
   - twig/filters

@@ -1,6 +1,6 @@
 ---
 title: "Podcasts"
-description: "Publish a podcast from Total CMS: create the show and episode collections from the built-in schemas, upload episodes, and serve a feed Apple Podcasts and Spotify accept with one line of Twig."
+description: "Publish a podcast from Total CMS: create show and episode collections from built-in schemas and serve a feed Apple Podcasts and Spotify accept."
 related:
   - twig/feeds
   - fields/file-depot

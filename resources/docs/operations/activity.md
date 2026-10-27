@@ -1,6 +1,6 @@
 ---
 title: "Activity Log"
-description: "See who changed, downloaded or called what, and when: content edits, logins, file downloads by signed-in users, refused requests and MCP tool calls, filterable by user, AI client, collection and date."
+description: "See who changed, downloaded, or called what, and when: content edits, logins, downloads, refused requests, and MCP tool calls, filterable by user."
 since: "3.6.3"
 related:
   - extensions/events

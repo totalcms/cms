@@ -1,6 +1,6 @@
 ---
 title: "Migrating from Total CMS v1"
-description: "Everything you need to move a Total CMS v1 site to Total CMS 3: the built-in v1 importer, what it brings over, rethinking repurposed blogs as custom schemas, and a full mapping of every v1 page macro to its Twig equivalent."
+description: "Move a Total CMS v1 site to Total CMS 3 with the built-in importer, rethink repurposed blogs as custom schemas, and map v1 macros to Twig."
 related:
   - twig/data
   - twig/media

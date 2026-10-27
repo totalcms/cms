@@ -1,6 +1,6 @@
 ---
 title: "Total CMS Badges"
-description: "Add a Built with Total CMS badge to a site's footer with cms.badge: generic pill, stacked and text badges, profile badges for a designer's own site, and Built by badges that credit the designer on a client's site."
+description: "Add a Built with Total CMS badge to a site footer with cms.badge: pill, stacked, and text styles, plus Built by badges that credit the designer."
 ---
 
 # cms.badge

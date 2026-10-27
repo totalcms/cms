@@ -1,6 +1,6 @@
 ---
 title: "A/B Split (Bundled Extension)"
-description: "Render an alternate page template at the same URL for a percentage of visitors. Useful for testing layout, copy, or CTA variations without changing the page URL."
+description: "Render an alternate page template at the same URL for a percentage of visitors to test layout, copy, or CTA variations."
 since: "3.5.0"
 ---
 

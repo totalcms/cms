@@ -1,7 +1,7 @@
-
+---
 title: "Schema Reference"
 description: "Complete reference for Total CMS schema settings including inheritance, required fields, indexed properties, form grid layout, and categories."
-
+---
 
 # Schema Reference
 

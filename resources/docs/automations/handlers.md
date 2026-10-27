@@ -1,6 +1,6 @@
 ---
 title: Writing Handlers
-description: The PHP handler and the AutomationContext API.
+description: "Write the PHP handler an automation runs: a closure that receives the AutomationContext API for reading, saving, and removing objects."
 related:
   - automations/triggers
   - automations/overview

@@ -1,6 +1,6 @@
 ---
 title: "Twig Data Reference"
-description: "Reference for the cms.data namespace providing access to text, code, styled text, toggles, dates, numbers, URLs, emails, SVGs, colors, images, galleries, files, and depot data."
+description: "Reference for the cms.data Twig namespace: read text, styled text, toggles, dates, numbers, URLs, colors, images, galleries, files, and depots."
 ---
 
 # cms.data

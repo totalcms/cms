@@ -163,6 +163,6 @@ Common errors include:
 
 ## Access Control
 
-Data Views require the **Pro** edition or higher. Access is controlled through [Access Groups](/admin/docs/auth/access-groups) using the `dataviews` permission. Users without this permission cannot view or manage data views.
+Data Views require the **Pro** edition or higher. Access is controlled through [Access Groups](docs/auth/access-groups) using the `dataviews` permission. Users without this permission cannot view or manage data views.
 
 **MCP adds the view's own `mcp.access` field.** A view surfaced to AI agents via the `mcp` card (`get_view`, `query_view`, and the `tcms://view/{id}` resource) needs the Pro edition, as on REST, and the caller must be one its `mcp.access` admits (`public` / `authenticated` / `apikey` / `admin`). A signed-in member also needs the `dataviews` permission, unless the view is public. An API key limited to some views reaches the ones its endpoints name. A view's result is built with full access, so per-collection grants and ownership do not narrow it: keep a view's `mcp.access` at `admin` (the default) unless its output is safe for everyone it admits — see [MCP Server → Data views follow the data views grant](docs/mcp/server#data-views-follow-the-data-views-grant).

@@ -1,6 +1,6 @@
 ---
 title: Automations
-description: Run server-side PHP on a schedule, a webhook, or a content event.
+description: "Automations run PHP handlers in Total CMS on a cron schedule, an incoming webhook, or a content event, with no separate worker service to deploy."
 related:
   - automations/triggers
   - automations/handlers

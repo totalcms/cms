@@ -1,6 +1,6 @@
 ---
 title: "Documentation Tools"
-description: "The bundled totalcms/docs extension exposes docs_search, docs_get, and docs_lookup MCP tools so AI agents can query this install's own documentation, matched to its own version."
+description: "The bundled docs extension gives AI agents docs_search, docs_get, and docs_lookup MCP tools to query this install's version-matched docs."
 audience: intermediate
 updated: 2026-08-13
 related:

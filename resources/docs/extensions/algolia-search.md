@@ -1,6 +1,6 @@
 ---
 title: "Algolia Search (Bundled Extension)"
-description: "Pluggable search provider backed by Algolia. Routes MCP search tools (and future site-wide search consumers) through Algolia's hosted keyword + neural search instead of T3's built-in text search."
+description: "Algolia search provider for Total CMS. Routes MCP search tools through Algolia's hosted keyword and neural search instead of built-in search."
 since: "3.5.0"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "System Requirements"
-description: "Server, PHP, and browser requirements for running Total CMS. Required and recommended PHP extensions, supported web servers, and admin dashboard browser support."
+description: "Server, PHP, and browser requirements for Total CMS: required and recommended PHP extensions, supported web servers, and admin browsers."
 related:
   - get-started/installation
   - operations/nginx

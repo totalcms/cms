@@ -1,6 +1,6 @@
 ---
 title: "User Impersonation"
-description: "Super-admins can temporarily browse and edit the site as another user to debug permission and access issues. All actions taken while impersonating are recorded in the access log."
+description: "Super-admins can browse and edit the site as another user to debug permission and access issues. Every action is recorded in the access log."
 updated: 2026-06-26
 ---
 

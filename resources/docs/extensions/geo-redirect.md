@@ -1,6 +1,6 @@
 ---
 title: "Geo Redirect (Bundled Extension)"
-description: "Redirect visitors based on their country. Reads the country from CDN-injected headers and 302s to a configured URL — useful for compliance redirects, regional landing pages, and sending visitors to localized URLs."
+description: "Redirect visitors by country using CDN-injected headers. Useful for compliance redirects, regional landing pages, and localized URLs."
 since: "3.5.0"
 ---
 

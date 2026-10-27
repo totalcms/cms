@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting MCP Connections"
-description: "Diagnose the connection failures operators can't see from the T3 side — CDN/WAF blocking AI clients, stripped Authorization headers, and subfolder-install discovery mismatches — plus a reading guide to the Test connection panel."
+description: "Fix MCP connection failures: CDN or WAF rules blocking AI clients, stripped Authorization headers, subfolder installs, and the Test connection panel."
 related:
   - mcp/server
   - apis/oauth

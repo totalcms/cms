@@ -1,6 +1,6 @@
 ---
 title: "Choosing a Field"
-description: "Which Total CMS field type to use for a given kind of value, why text is the last resort, the five things 'category' can mean, and where the reference schema that demonstrates every field lives."
+description: "Which Total CMS field type to use for each kind of value, why text is the last resort, and what 'category' can mean in a schema."
 related:
   - fields/all-fields
   - schemas/reference

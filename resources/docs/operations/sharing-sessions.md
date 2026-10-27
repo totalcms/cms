@@ -1,6 +1,6 @@
 ---
 title: "Sharing Sessions with Other PHP Apps"
-description: "Pass data between Total CMS pages and other PHP applications on the same site through $_SESSION: where Total CMS stores sessions, the one rule every app must follow, and how to diagnose a split session."
+description: "Share $_SESSION data between Total CMS and other PHP apps on the same site: where sessions live, the one rule to follow, and fixing split sessions."
 related:
   - apis/php-api
   - operations/security

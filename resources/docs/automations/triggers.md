@@ -1,6 +1,6 @@
 ---
 title: Triggers
-description: Schedule, webhook, and event triggers for automations.
+description: "Configure when an automation runs: cron schedules, incoming webhooks, and content events such as an object being created, alone or combined."
 related:
   - automations/overview
   - automations/webhooks

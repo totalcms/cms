@@ -1,6 +1,6 @@
 ---
 title: "Styled Markdown"
-description: "The styledmarkdown field edits Markdown in the Styled Text visual editor, with a source mode and preview. It stores Markdown source; render it with the markdown filter."
+description: "The styledmarkdown field edits Markdown in the Styled Text visual editor, with a source mode and preview, and stores Markdown source."
 related:
   - fields/markdown
   - fields/styled-text

@@ -1,6 +1,6 @@
 ---
 title: "ImageWorks"
-description: "Complete reference for ImageWorks image transformation parameters including resizing, cropping, effects, watermarks, presets, defaults, and color palette integration."
+description: "ImageWorks reference for Total CMS image transformations: resizing, cropping, effects, watermarks, presets, defaults, and color palettes."
 ---
 
 # ImageWorks

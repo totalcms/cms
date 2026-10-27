@@ -1,6 +1,6 @@
 ---
 title: "Git-First Templates"
-description: "Source-control your Site Builder templates and deploy them with git. Create a builder/ folder at the project root and templates become version-controlled, the admin editor goes read-only, and the repo is the single source of truth."
+description: "Keep Site Builder templates in git: add a builder/ folder to your project, and the repo becomes the source of truth that you deploy with git."
 since: "3.5.0"
 related:
   - operations/deployment

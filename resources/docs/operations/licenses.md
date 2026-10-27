@@ -1,6 +1,6 @@
 ---
 title: "Licenses"
-description: "How Total CMS licensing works: Standard and Pro editions, per-domain licenses, free development domains, the 45-day trial, update periods, license validation, and offline licenses."
+description: "How Total CMS licensing works: Standard and Pro editions, per-domain licenses, free dev domains, the 45-day trial, updates, and offline licenses."
 related:
   - operations/updates
   - operations/security
