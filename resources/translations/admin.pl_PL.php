@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Nie wylogowuj mnie',
 	'login.forgot_password'          => 'Nie pamiętasz hasła?',
 	'login.passkey'                  => 'Zaloguj się kluczem Passkey',
+	'login.meta_description'         => 'Zaloguj się, aby zarządzać: {name}.',
 	'login.or'                       => 'lub',
 	'login.username_label'           => 'Nazwa użytkownika',
 	'login.email_or_username_label'  => 'E-mail lub nazwa użytkownika',

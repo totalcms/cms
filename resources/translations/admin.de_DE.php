@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Angemeldet bleiben',
 	'login.forgot_password'          => 'Passwort vergessen?',
 	'login.passkey'                  => 'Mit Passkey anmelden',
+	'login.meta_description'         => 'Melden Sie sich an, um {name} zu verwalten.',
 	'login.or'                       => 'oder',
 	'login.username_label'           => 'Benutzername',
 	'login.email_or_username_label'  => 'E-Mail oder Benutzername',

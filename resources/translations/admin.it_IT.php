@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Resta connesso',
 	'login.forgot_password'          => 'Password dimenticata?',
 	'login.passkey'                  => 'Accedi con passkey',
+	'login.meta_description'         => 'Accedi per gestire {name}.',
 	'login.or'                       => 'o',
 	'login.username_label'           => 'Nome utente',
 	'login.email_or_username_label'  => 'Email o nome utente',

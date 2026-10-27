@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Keep me signed in',
 	'login.forgot_password'          => 'Forgot Password?',
 	'login.passkey'                  => 'Sign in with Passkey',
+	'login.meta_description'         => 'Sign in to manage {name}.',
 	'login.or'                       => 'or',
 	'login.username_label'           => 'Username',
 	'login.email_or_username_label'  => 'Email or Username',

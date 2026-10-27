@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Mantener la sesión iniciada',
 	'login.forgot_password'          => '¿Olvidó su contraseña?',
 	'login.passkey'                  => 'Iniciar sesión con clave de acceso',
+	'login.meta_description'         => 'Inicie sesión para administrar {name}.',
 	'login.or'                       => 'o',
 	'login.username_label'           => 'Nombre de usuario',
 	'login.email_or_username_label'  => 'Correo electrónico o nombre de usuario',

@@ -122,6 +122,7 @@ return [
 	'login.remember_me'              => 'Ingelogd blijven',
 	'login.forgot_password'          => 'Wachtwoord vergeten?',
 	'login.passkey'                  => 'Inloggen met passkey',
+	'login.meta_description'         => 'Log in om {name} te beheren.',
 	'login.or'                       => 'of',
 	'login.username_label'           => 'Gebruikersnaam',
 	'login.email_or_username_label'  => 'E-mail of gebruikersnaam',
