@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\JumpStart\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
@@ -183,7 +182,7 @@ readonly class JumpStartExporter
 				$config['pageOrder'] = $this->orderRepository->read($collection->id);
 			}
 
-			if ($this->isReservedEntry($collection)) {
+			if ($this->isReservedEntry($collection->id, $collection->schema)) {
 				$this->jumpstart->addReservedCollection($config);
 			} else {
 				$this->jumpstart->addCustomCollection($config);
@@ -252,7 +251,7 @@ readonly class JumpStartExporter
 			$collectionData = $collection->toArray();
 			unset($collectionData['totalObjects'], $collectionData['lastUpdated'], $collectionData['count']);
 
-			if ($this->isReservedEntry($collection)) {
+			if ($this->isReservedEntry($collection->id, $collection->schema)) {
 				// The object form, so the collection's own settings (url, sort,
 				// feed, sitemap, groups…) travel instead of only its id. The
 				// importer applies them as a raw patch over the provisioned
@@ -279,10 +278,9 @@ readonly class JumpStartExporter
 	 * its own id (the export wrote the schema id instead), and the importer
 	 * can only provision reserved ids anyway.
 	 */
-	private function isReservedEntry(CollectionData $collection): bool
+	private function isReservedEntry(string $id, string $schema): bool
 	{
-		return $collection->id === $collection->schema
-			&& in_array($collection->schema, SchemaData::RESERVED_SCHEMAS, true);
+		return $id === $schema && in_array($schema, SchemaData::RESERVED_SCHEMAS, true);
 	}
 
 	/** @param list<string>|null $filter */

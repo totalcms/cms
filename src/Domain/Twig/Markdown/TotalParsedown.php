@@ -26,59 +26,59 @@ class TotalParsedown extends \ParsedownExtra
 	private bool $inImage = false;
 
 	/**
-	 * @param array<string,mixed> $Excerpt
+	 * @param array<string,mixed> $excerpt
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	protected function inlineImage($Excerpt)
+	protected function inlineImage($excerpt)
 	{
 		$this->inImage = true;
 		try {
-			return parent::inlineImage($Excerpt);
+			return parent::inlineImage($excerpt);
 		} finally {
 			$this->inImage = false;
 		}
 	}
 
 	/**
-	 * @param array<string,mixed> $Excerpt
+	 * @param array<string,mixed> $excerpt
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	protected function inlineLink($Excerpt)
+	protected function inlineLink($excerpt)
 	{
-		$Link  = parent::inlineLink($Excerpt);
-		$title = $Link['element']['attributes']['title'] ?? null;
+		$link  = parent::inlineLink($excerpt);
+		$title = $link['element']['attributes']['title'] ?? null;
 
 		if ($this->inImage || !is_string($title) || !in_array(strtolower(trim($title)), self::NEW_TAB, true)) {
-			return $Link;
+			return $link;
 		}
 
-		unset($Link['element']['attributes']['title']);
-		$Link['element']['attributes']['target'] = '_blank';
+		unset($link['element']['attributes']['title']);
+		$link['element']['attributes']['target'] = '_blank';
 
-		return $Link;
+		return $link;
 	}
 
 	/**
-	 * @param array<string,mixed> $Element
+	 * @param array<string,mixed> $element
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function handle(array $Element)
+	protected function handle(array $element)
 	{
-		$Element = parent::handle($Element);
+		$element = parent::handle($element);
 
-		if (($Element['name'] ?? null) !== 'p' || !is_array($Element['elements'] ?? null)) {
-			return $Element;
+		if (($element['name'] ?? null) !== 'p' || !is_array($element['elements'] ?? null)) {
+			return $element;
 		}
 
-		$image = $this->soleImage($Element['elements']);
+		$image = $this->soleImage($element['elements']);
 		if ($image === null) {
-			return $Element;
+			return $element;
 		}
 
-		return $this->figure($image) ?? $Element;
+		return $this->figure($image) ?? $element;
 	}
 
 	/**
