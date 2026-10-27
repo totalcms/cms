@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\JumpStart\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
@@ -182,7 +183,7 @@ readonly class JumpStartExporter
 				$config['pageOrder'] = $this->orderRepository->read($collection->id);
 			}
 
-			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
+			if ($this->isReservedEntry($collection)) {
 				$this->jumpstart->addReservedCollection($config);
 			} else {
 				$this->jumpstart->addCustomCollection($config);
@@ -247,17 +248,41 @@ readonly class JumpStartExporter
 				continue;
 			}
 
-			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
-				$this->jumpstart->addReservedCollection($collection->schema);
-				continue;
-			}
-
 			// Exclude totalObjects and lastUpdated (these are calculated on import)
 			$collectionData = $collection->toArray();
 			unset($collectionData['totalObjects'], $collectionData['lastUpdated'], $collectionData['count']);
 
+			if ($this->isReservedEntry($collection)) {
+				// The object form, so the collection's own settings (url, sort,
+				// feed, sitemap, groups…) travel instead of only its id. The
+				// importer applies them as a raw patch over the provisioned
+				// collection, so `format` stays behind: patching it would relabel
+				// the target's files without converting them.
+				unset($collectionData['format']);
+				$this->jumpstart->addReservedCollection($collectionData);
+
+				continue;
+			}
+
 			$this->jumpstart->addCustomCollection($collectionData);
 		}
+	}
+
+	/**
+	 * Whether a collection travels as a reserved entry (a bare id the importer
+	 * provisions from its built-in definition) rather than a custom one.
+	 *
+	 * Only the reserved collection itself qualifies: its id IS the reserved
+	 * schema's id. A collection merely built on a reserved schema — `dealers`
+	 * on `auth`, `builder-pages` on `builder-page` — exports as custom with
+	 * its full settings, schema binding included. As a reserved entry it lost
+	 * its own id (the export wrote the schema id instead), and the importer
+	 * can only provision reserved ids anyway.
+	 */
+	private function isReservedEntry(CollectionData $collection): bool
+	{
+		return $collection->id === $collection->schema
+			&& in_array($collection->schema, SchemaData::RESERVED_SCHEMAS, true);
 	}
 
 	/** @param list<string>|null $filter */

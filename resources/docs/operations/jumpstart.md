@@ -91,6 +91,7 @@ When you export your current CMS data to JumpStart format:
 - **Collection Definitions**: Both reserved and custom collection configurations
 - **Custom Schemas**: Any custom schemas you've created
 - **Collection Settings**: Labels, sorting, and other collection configurations
+- **How collections are written**: a reserved collection (one whose id is a built-in schema, such as `blog`) exports in the object form under `reserved`, with its settings. A collection that only *uses* a built-in schema under its own id, such as a `dealers` collection on the `auth` schema or `builder-pages` on `builder-page`, exports under `custom` with its `schema` set, so it is recreated under the same id. Object counts and the storage format are left out; the importing site keeps its own.
 
 ### ❌ **What Gets Removed**
 - **Binary Uploads**: Image files, gallery images, uploaded files, and depot files are **not included** in JumpStart exports. Image, file, depot, and gallery field values are normalized/referenced but not embedded. If you need to preserve all files and binary data, use the **Export to Zip** option in each collection instead.

@@ -148,7 +148,15 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 		$this->jumpstart
 			->expects($this->once())
 			->method('addReservedCollection')
-			->with('auth');
+			->with($this->callback(function (array $data): bool {
+				// Reserved collections carry their settings, minus the computed ones
+				expect($data['id'])->toBe('auth');
+				expect($data)->not()->toHaveKey('totalObjects');
+				expect($data)->not()->toHaveKey('lastUpdated');
+				expect($data)->not()->toHaveKey('count');
+
+				return true;
+			}));
 
 		$this->jumpstart
 			->expects($this->never())
@@ -201,7 +209,15 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 		$this->jumpstart
 			->expects($this->once())
 			->method('addReservedCollection')
-			->with('auth');
+			->with($this->callback(function (array $data): bool {
+				// Reserved collections carry their settings, minus the computed ones
+				expect($data['id'])->toBe('auth');
+				expect($data)->not()->toHaveKey('totalObjects');
+				expect($data)->not()->toHaveKey('lastUpdated');
+				expect($data)->not()->toHaveKey('count');
+
+				return true;
+			}));
 
 		// Expect addCustomCollection for products WITHOUT calculated fields
 		$this->jumpstart

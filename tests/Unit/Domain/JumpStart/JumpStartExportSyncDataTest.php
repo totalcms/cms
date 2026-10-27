@@ -387,7 +387,9 @@ final class JumpStartExportSyncDataTest extends TestCase
 
 		$result = $this->exporter->exportSyncData();
 
-		$exported = array_values(array_filter($result->collections['reserved'], fn (array $c): bool => $c['id'] === 'docs'))[0] ?? null;
+		// `docs` is built on a reserved schema but is not the reserved
+		// collection itself, so it travels as custom.
+		$exported = array_values(array_filter($result->collections['custom'], fn (array $c): bool => $c['id'] === 'docs'))[0] ?? null;
 		expect($exported)->not->toBeNull()->and($exported)->not->toHaveKey('format');
 	}
 
