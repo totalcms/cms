@@ -99,6 +99,7 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
+use TotalCMS\Domain\JumpStart\Service\Export\AccessGroupExport;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
@@ -668,6 +669,7 @@ return [
 		$container->get(CacheManager::class),
 		$container->get(BuilderOrderRepository::class),
 		$container->get(LoggerFactory::class),
+		$container->get(AccessGroupExport::class),
 	),
 
 	EventDispatcher::class => function (ContainerInterface $container): EventDispatcher {

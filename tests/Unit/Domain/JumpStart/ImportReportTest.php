@@ -28,6 +28,7 @@ test('sections tally as they record and the summary keeps its shape', function (
 		'templates_created'     => 1,
 		'objects_created'       => 2,
 		'factory_items_created' => 6,
+		'access_groups_created' => 0,
 		'total_errors'          => 1,
 	])
 		->and($report->hasErrors())->toBeTrue()

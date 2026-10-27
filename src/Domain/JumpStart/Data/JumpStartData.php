@@ -21,6 +21,13 @@ class JumpStartData
 	public array $factory = [];
 	/** @var array<int,array<string,string>> */
 	public array $templates = [];
+	/**
+	 * Access group definitions (AccessGroupData::toArray()) the export's
+	 * collections and objects reference. Imported additively.
+	 *
+	 * @var array<int,array<string,mixed>>
+	 */
+	public array $accessGroups = [];
 
 	public function __construct(
 		public string $name        = 'Exported from Current CMS Data',
@@ -100,18 +107,25 @@ class JumpStartData
 		$this->templates[] = $template;
 	}
 
+	/** @param array<string,mixed> $group */
+	public function addAccessGroup(array $group): void
+	{
+		$this->accessGroups[] = $group;
+	}
+
 	/** @return array<string,mixed> */
 	public function toArray(): array
 	{
 		return [
-			'version'     => $this->version,
-			'name'        => $this->name,
-			'description' => $this->description,
-			'schemas'     => $this->schemas,
-			'collections' => $this->collections,
-			'objects'     => $this->objects,
-			'factory'     => $this->factory,
-			'templates'   => $this->templates,
+			'version'      => $this->version,
+			'name'         => $this->name,
+			'description'  => $this->description,
+			'schemas'      => $this->schemas,
+			'collections'  => $this->collections,
+			'objects'      => $this->objects,
+			'factory'      => $this->factory,
+			'templates'    => $this->templates,
+			'accessGroups' => $this->accessGroups,
 		];
 	}
 
@@ -123,12 +137,13 @@ class JumpStartData
 			$data['description'] ?? ''
 		);
 
-		$jumpstart->version     = $data['version'] ?? '1.0.0';
-		$jumpstart->schemas     = $data['schemas'] ?? [];
-		$jumpstart->collections = $data['collections'] ?? ['default' => [], 'custom' => []];
-		$jumpstart->objects     = $data['objects'] ?? [];
-		$jumpstart->factory     = $data['factory'] ?? [];
-		$jumpstart->templates   = $data['templates'] ?? [];
+		$jumpstart->version      = $data['version'] ?? '1.0.0';
+		$jumpstart->schemas      = $data['schemas'] ?? [];
+		$jumpstart->collections  = $data['collections'] ?? ['default' => [], 'custom' => []];
+		$jumpstart->objects      = $data['objects'] ?? [];
+		$jumpstart->factory      = $data['factory'] ?? [];
+		$jumpstart->templates    = $data['templates'] ?? [];
+		$jumpstart->accessGroups = $data['accessGroups'] ?? [];
 
 		return $jumpstart;
 	}
@@ -207,6 +222,11 @@ class JumpStartData
 		// Write templates array
 		fwrite($fileHandle, '  "templates": ');
 		fwrite($fileHandle, $this->encodeJson($this->templates, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		fwrite($fileHandle, ",\n");
+
+		// Write access groups array
+		fwrite($fileHandle, '  "accessGroups": ');
+		fwrite($fileHandle, $this->encodeJson($this->accessGroups, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 		fwrite($fileHandle, "\n");
 
 		// End JSON object
@@ -230,7 +250,8 @@ class JumpStartData
 			&& $this->schemas === []
 			&& $this->objects === []
 			&& $this->factory === []
-			&& $this->templates === [];
+			&& $this->templates === []
+			&& $this->accessGroups === [];
 	}
 
 	public function getTotalObjectCount(): int

@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\JumpStart\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JumpStart\Data\ImportReport;
+use TotalCMS\Domain\JumpStart\Service\Import\AccessGroupSection;
 use TotalCMS\Domain\JumpStart\Service\Import\CollectionSection;
 use TotalCMS\Domain\JumpStart\Service\Import\FactorySection;
 use TotalCMS\Domain\JumpStart\Service\Import\ImportRun;
@@ -33,6 +34,7 @@ readonly class JumpStartImporter
 		private TemplateSection $templates,
 		private ObjectSection $objects,
 		private FactorySection $factory,
+		private AccessGroupSection $accessGroups,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartImporter);
@@ -105,6 +107,11 @@ readonly class JumpStartImporter
 			'upsert'  => $upsert,
 		]);
 
+		// First: collections (groups, registrationGroups), pages and users
+		// that name a group expect to find it.
+		if (isset($definition['accessGroups']) && is_array($definition['accessGroups'])) {
+			$this->accessGroups->import($definition['accessGroups'], $run);
+		}
 		if (isset($definition['schemas'])) {
 			$this->schemas->import($definition['schemas'], $run);
 		}

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
+use TotalCMS\Domain\JumpStart\Service\Export\AccessGroupExport;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
@@ -23,6 +24,11 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
+/**
+ * Build a JumpStart (or sync payload) from the site's current data.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") It orchestrates every exportable section (schemas, collections, page order, objects, templates, access groups), and each section brings its own reader; that breadth is the class's job.
+ */
 readonly class JumpStartExporter
 {
 	private LoggerInterface $logger;
@@ -39,6 +45,7 @@ readonly class JumpStartExporter
 		private CacheManager $cacheManager,
 		private BuilderOrderRepository $orderRepository,
 		LoggerFactory $loggerFactory,
+		private AccessGroupExport $accessGroupExport,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartExporter);
 	}
@@ -212,6 +219,8 @@ readonly class JumpStartExporter
 		$this->exportCollections($options->collectionFilter);
 		$this->exportObjects($options->objectFilter);
 		$this->exportTemplates($options->templateFilter);
+		// Last: it reads the collections and objects exported above
+		$this->accessGroupExport->addReferenced($this->jumpstart);
 
 		$this->logger->info('Completed jumpstart export', [
 			'schemas'              => count($this->jumpstart->schemas),
@@ -219,6 +228,7 @@ readonly class JumpStartExporter
 			'custom_collections'   => count($this->jumpstart->collections['custom']),
 			'objects'              => count($this->jumpstart->objects),
 			'templates'            => count($this->jumpstart->templates),
+			'access_groups'        => count($this->jumpstart->accessGroups),
 		]);
 
 		return $this->jumpstart;

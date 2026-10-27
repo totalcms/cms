@@ -54,7 +54,8 @@ A JumpStart definition is a JSON file containing:
   },
   "schemas": [...],
   "objects": [...],
-  "factory": [...]
+  "factory": [...],
+  "accessGroups": [...]
 }
 ```
 
@@ -82,6 +83,29 @@ Common overrides:
 | `sortBy` | Default sort (e.g. `date:desc`, `title:asc`). |
 | `name` | Display name shown in the admin sidebar. |
 
+### Access Groups
+
+`accessGroups` holds the [access groups](docs/auth/access-groups) the JumpStart's collections and pages use, in the same shape as `tcms access-group:get`:
+
+```json
+{
+  "accessGroups": [
+    {
+      "id": "dealers",
+      "description": "Dealer portal",
+      "operations": ["read"],
+      "permissions": { "collections": { "allowed": ["price-sheets"], "operations": ["read"] } }
+    }
+  ]
+}
+```
+
+Import is **additive**. A group the site does not have is created. A group the site already has is never changed, and the import report lists it as `Access group dealers: exists, kept`. Check those lines: the same id can grant something different on this site. The `admin` group is never written.
+
+Creating a group grants permissions, so only a super admin, or `tcms jumpstart:import` on the command line, can import access groups. Any other import reports `Access groups: refused` and imports the rest.
+
+Access groups are imported first, so collections, pages and users that name a group find it. Auth collections are created before the other custom collections, so a collection whose [`ownerCollection`](docs/collections/settings#ownercollection) or [`accessCollection`](docs/collections/settings#accesscollection) names one finds it too.
+
 ## Export Behavior
 
 When you export your current CMS data to JumpStart format:
@@ -91,6 +115,7 @@ When you export your current CMS data to JumpStart format:
 - **Collection Definitions**: Both reserved and custom collection configurations
 - **Custom Schemas**: Any custom schemas you've created
 - **Collection Settings**: Labels, sorting, and other collection configurations
+- **Access Groups**: the groups that exported collections (`groups`, `registrationGroups`), pages (`accessGroups`) and users (`groups`) name. The built-in groups (`admin`, `default`, `editor`, `viewer`) are left out; every site has its own
 - **How collections are written**: a reserved collection (one whose id is a built-in schema, such as `blog`) exports in the object form under `reserved`, with its settings. A collection that only *uses* a built-in schema under its own id, such as a `dealers` collection on the `auth` schema or `builder-pages` on `builder-page`, exports under `custom` with its `schema` set, so it is recreated under the same id. Object counts and the storage format are left out; the importing site keeps its own.
 
 ### ❌ **What Gets Removed**

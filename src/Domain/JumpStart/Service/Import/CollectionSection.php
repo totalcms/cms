@@ -41,7 +41,7 @@ class CollectionSection
 		$collections = $this->stashPageOrder($collections);
 
 		if (isset($collections['custom'])) {
-			foreach ($collections['custom'] as $collectionDef) {
+			foreach ($this->authCollectionsFirst((array)$collections['custom']) as $collectionDef) {
 				if ($run->refuseSystemCollection((string)($collectionDef['id'] ?? ''), 'Collection')) {
 					continue;
 				}
@@ -71,6 +71,27 @@ class CollectionSection
 				}
 			}
 		}
+	}
+
+	/**
+	 * Custom collections with the auth schema go first, keeping the order
+	 * otherwise: another collection's `ownerCollection` or `accessCollection`
+	 * must name an existing auth collection, and a JumpStart lists
+	 * collections alphabetically, so `dealers` could come after the
+	 * `price-sheets` collection that points at it.
+	 *
+	 * @param array<int|string,mixed> $custom
+	 *
+	 * @return list<mixed>
+	 */
+	private function authCollectionsFirst(array $custom): array
+	{
+		$isAuth = static fn (mixed $def): bool => is_array($def) && ($def['schema'] ?? null) === 'auth';
+
+		return [
+			...array_values(array_filter($custom, $isAuth)),
+			...array_values(array_filter($custom, static fn (mixed $def): bool => !$isAuth($def))),
+		];
 	}
 
 	/**

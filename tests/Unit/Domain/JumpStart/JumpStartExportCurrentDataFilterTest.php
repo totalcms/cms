@@ -12,8 +12,10 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
+use TotalCMS\Domain\JumpStart\Service\Export\AccessGroupExport;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -102,6 +104,7 @@ final class JumpStartExportCurrentDataFilterTest extends TestCase
 			$cacheManager,
 			$this->createMock(BuilderOrderRepository::class),
 			$loggerFactory,
+			new AccessGroupExport($this->createStub(AccessGroupLister::class)),
 		);
 	}
 

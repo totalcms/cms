@@ -14,11 +14,12 @@ use Psr\Log\LoggerInterface;
  */
 final class ImportReport
 {
-	public const SCHEMAS     = 'schemas_created';
-	public const COLLECTIONS = 'collections_created';
-	public const TEMPLATES   = 'templates_created';
-	public const OBJECTS     = 'objects_created';
-	public const FACTORY     = 'factory_items_created';
+	public const SCHEMAS       = 'schemas_created';
+	public const COLLECTIONS   = 'collections_created';
+	public const TEMPLATES     = 'templates_created';
+	public const OBJECTS       = 'objects_created';
+	public const FACTORY       = 'factory_items_created';
+	public const ACCESS_GROUPS = 'access_groups_created';
 
 	/** @var list<string> */
 	private array $results = [];
@@ -28,11 +29,12 @@ final class ImportReport
 
 	/** @var array<string,int> */
 	private array $counts = [
-		self::SCHEMAS     => 0,
-		self::COLLECTIONS => 0,
-		self::TEMPLATES   => 0,
-		self::OBJECTS     => 0,
-		self::FACTORY     => 0,
+		self::SCHEMAS       => 0,
+		self::COLLECTIONS   => 0,
+		self::TEMPLATES     => 0,
+		self::OBJECTS       => 0,
+		self::FACTORY       => 0,
+		self::ACCESS_GROUPS => 0,
 	];
 
 	public function __construct(private readonly LoggerInterface $logger)
