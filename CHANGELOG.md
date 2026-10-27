@@ -2,6 +2,46 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.4] - 2026-10-27
+
+### Security
+
+- **The ImageWorks and file-links tools check access to the object they open.** Both tools open in a dialog from an image or file field. Before, any operator could open them for any collection, whatever their access groups. They now check that the user may read the object in the query (access groups first, then ownership). They also accept a session from any auth collection, so a member editing on a front-end form no longer gets the denied page inside the dialog
+- **The site's login collections can no longer be deleted.** The REST delete route had no guard, so an admin could delete the `auth` collection with a direct API call. The admin, REST, MCP and CLI deletes now use one guard that refuses login collections, and each delete backs up the collection's settings first. MCP still refuses all system collections
+
+### Added
+
+- **Portals send signed-out visitors to their own login page.** A new `accessCollection` setting is on Site Builder pages (next to Access Groups, shown when `auth` is on) and on collections (Access Controls, for protected files). A signed-out visitor who opens a protected page or file goes to `/admin/login/{accessCollection}`, so members of a portal's own auth collection (such as `dealers`) can sign in. The redirect keeps the requested URL, which the file-download redirect did not keep before. Leave the setting empty to keep `/admin/login`. A collection is refused if its `accessCollection` is not an auth collection
+- **JumpStart includes the access groups that an export uses.** An export now has a top-level `accessGroups` list. It holds only the groups that the export's collections, pages and users refer to, without the four built-in groups. Import adds these groups first, so collections and users can find them. Import never changes an existing group and never writes `admin`. Only trusted imports (super-admin or CLI) can create groups, because a group grants permissions. Auth collections are now created before other custom collections, so `accessCollection` and `ownerCollection` settings that name them resolve
+- **`tcms collection:delete` and `tcms schema:delete`.** `collection:delete` lists what still refers to the collection (Data Views, owner and access collection settings, `publicRegistration`) and stops unless you pass `--force`. Objects stay on disk, as they do when you delete from the admin. `schema:delete` uses the same checks as the admin, and it now backs up the schema file first
+- **Markdown image captions and new-tab links.** An image on its own line that has a title renders as a `<figure>` with a `<figcaption>`. Use the title `"caption"` or `"alt"` to use the alt text as the caption. A link with the title `"external"` or `"_blank"` opens in a new tab. Untitled images and links render as before, so existing content does not change. This works in `|markdown`, `|markdownInline`, `markdown_to_html` and RSS
+- **`|markdown(true)` lets HTML in the Markdown source through.** By default both Markdown filters escape HTML, so a `<mark>` or `<span class>` that an editor wrote showed as text. Pass `true` (or `html: true`) to `markdown()` or `markdownInline()` to keep it. Code blocks stay escaped. Safe mode off does not block `javascript:` links, so use it only for content from trusted editors. Use `htmlclean` for fields that visitors can write
+- **"Built by" badges.** `cms.badge.builtBy(handle)` shows a pill with "Built by {studio}", and `cms.badge.builtByText(handle)` shows the same credit as a 16px footer line (it also takes `theme: 'mono'` with a hex color). They go on a client's site, so they never add `rel="me"`
+- **MCP gallery edits can set the image order.** If `patch_object` or `update_object` sends a gallery list that names every stored image exactly once, that list sets the order. A partial list, or a list with a repeated name, keeps the stored order. Images still cannot be added or removed this way
+- **Total CMS orange is the default admin accent.** `--totalform-accent` now defaults to `#F97318`, which is also available to sites as `--totalcms-orange`
+
+### Changed
+
+- **Member badges add `rel="me"` by default.** `cms.badge.profile()` and `cms.badge.earned()` go on the designer's own site, so the link now pairs it with their totalcms.co profile. Pass `me: false` to remove it
+- **Every Site Builder starter footer ends with the "Powered by Total CMS" text badge.** This applies only to new `builder:init` sites. Existing sites keep their footer
+- **`schema:lint --strict` flags formgrid rows of uneven width.** Every row of `grid-template-areas` must have the same number of cells. One short row made the whole value invalid, so the browser dropped the form layout. Each short row is now an error. Fieldset and accordion grids are checked on their own
+
+### Fixed
+
+- **A member's PUT keeps the owner and the protected fields it leaves out.** A front-end edit form that sent only the fields it shows cleared the owner stamp and every protected field it did not include. The stored values are now kept. Other missing fields are still cleared by a PUT, so partial forms should use `method: 'PATCH'`
+- **JumpStart and sync keep a collection's ID and settings.** A collection on a reserved schema exported as the schema ID. For example, a `dealers` collection on `auth` imported as `auth`, and every `builder-pages` object failed with "Collection not found". Only a collection whose ID is the reserved schema ID is now exported as reserved. Reserved collections now export with their settings (URL, sort, name, feed, sitemap, groups), not with defaults
+- **Members can open files in owned collections.** Opening a file updates its download counter, and that write ran as the visitor. In an owned collection, a member who was allowed to open the file got a 403. The counter is now written as the system
+- **SVG uploads in Markdown and styled text fields stay SVG.** With an image preset on the field, the upload link went through ImageWorks, which converted the SVG to JPEG. SVGs are now served from the stream route with no ImageWorks parameters, in the upload link and in the dialog's Images tab
+- **An object with the ID `imageworks` no longer breaks uploads.** The sessionless-path rules matched anywhere in the URL, so that object's upload route ran without a session and the remember-me restore failed with a 500. The rules now match from the start of the route
+- **Image Batcher finds galleries that the index leaves out.** It read images from the collection index, so a gallery missing from the index stopped the batch with "No images found". It now reads full objects. Validation checks the first real image, not the example URL, and each image gets its own cache token
+- **Admin scripts update after an upgrade.** The file-links, ImageWorks builder and Image Batcher scripts loaded without a version string, so browsers kept the old copy for up to 30 days
+- **Errors from a site's own scripts are no longer sent to Sentry.** Exceptions from a script that loads Total CMS (such as a test harness or a `php -S` router), with no stack frame in Total CMS, are dropped. Fatal errors are still reported
+
+### Documentation
+
+- **Scripts and extensions write as the system actor.** Since 3.6.3, every write has an actor. A standalone script that sets no actor runs as anonymous, and extension code runs as the signed-in member, so account fields such as `groups` and `active` are dropped from the save. The PHP API example now sets `Actor::system()`, and the extension points page shows `ActorContext::runAs()`
+- **Protecting collection pages.** A new recipe explains the new `accessCollection` setting. Collection object pages (such as `/blog/{id}`) have no access check of their own, but a builder page on the same route takes priority and can turn on `auth`
+
 ## [3.6.3] - 2026-10-22
 
 ### Security
