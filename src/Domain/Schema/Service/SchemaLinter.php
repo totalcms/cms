@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -99,6 +100,10 @@ readonly class SchemaLinter
 			if (trim((string)($property['help'] ?? '')) === '') {
 				$warnings[] = "Property '{$name}' has no help text — help feeds the MCP tool catalog AI agents read.";
 			}
+		}
+
+		foreach ((new FormGridBuilder($raw->formgrid))->unevenRows() as $row) {
+			$errors[] = "formgrid row '{$row}' has a different number of names than the widest row. Every row needs the same count (pad with '.' or repeat a name), or the admin drops the form's layout.";
 		}
 
 		if (trim($raw->description) === '') {

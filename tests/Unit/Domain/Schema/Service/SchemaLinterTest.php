@@ -270,3 +270,32 @@ it('accepts a field that matches its $ref, or a $ref overridden by an explicit t
 
 	expect($result['warnings'])->toBeEmpty();
 });
+
+it('errors on a formgrid row with fewer names than the others', function (): void {
+	// One short row makes grid-template-areas invalid, and the browser then
+	// drops the whole form layout.
+	$schema           = makeSchema('uneven', ['id' => idProperty()], ['id'], ['id']);
+	$schema->formgrid = "id id\n--- Details\nsummary\nscreenshot video";
+
+	$errors = makeLinter(['uneven' => $schema])->lint('uneven')['errors'];
+
+	expect($errors)->toHaveCount(1);
+	expect($errors[0])->toContain("formgrid row 'summary'");
+});
+
+it('checks the rows inside a fieldset against that fieldset only', function (): void {
+	$schema           = makeSchema('nested', ['id' => idProperty()], ['id'], ['id']);
+	$schema->formgrid = "id id\n[[ Media\nimage\ncaption credit\n]]";
+
+	$errors = makeLinter(['nested' => $schema])->lint('nested')['errors'];
+
+	expect($errors)->toHaveCount(1);
+	expect($errors[0])->toContain("formgrid row 'image'");
+});
+
+it('passes a formgrid whose rows are all the same width', function (): void {
+	$schema           = makeSchema('even', ['id' => idProperty()], ['id'], ['id']);
+	$schema->formgrid = "id id\n---\nsummary .\n[[ Media\nimage\n]]";
+
+	expect(makeLinter(['even' => $schema])->lint('even')['errors'])->toBeEmpty();
+});

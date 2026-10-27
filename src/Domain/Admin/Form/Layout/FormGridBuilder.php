@@ -581,6 +581,47 @@ CSS;
 		return $this->blocks === [] ? 0 : max(1, $maxColumns);
 	}
 
+	/**
+	 * Rows with fewer names than the widest row. Every row of
+	 * grid-template-areas needs the same number of cells: one short row makes
+	 * the whole value invalid, and the browser drops the form's layout.
+	 * Fieldset and accordion grids are their own grids, checked on their own.
+	 *
+	 * @return list<string> the offending rows, as written
+	 */
+	public function unevenRows(): array
+	{
+		$columnCount = $this->getColumnCount();
+		$uneven      = [];
+
+		foreach ($this->blocks as $block) {
+			switch ($block['type'] ?? '') {
+				case 'row':
+					$line = (string)($block['line'] ?? '');
+					if (count(preg_split('/\s+/', $line) ?: []) !== $columnCount) {
+						$uneven[] = $line;
+					}
+					break;
+
+				case 'fieldset':
+					/** @var self $inner */
+					$inner = $block['inner'];
+					array_push($uneven, ...$inner->unevenRows());
+					break;
+
+				case 'accordion':
+					/** @var list<array{title:string,inner:self}> $panels */
+					$panels = $block['panels'];
+					foreach ($panels as $panel) {
+						array_push($uneven, ...$panel['inner']->unevenRows());
+					}
+					break;
+			}
+		}
+
+		return $uneven;
+	}
+
 	public function hasGrid(): bool
 	{
 		return $this->blocks !== [];

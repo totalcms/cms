@@ -145,7 +145,7 @@ tcms schema:import my-schema.json --json
 
 ### `schema:lint`
 
-Lint stored schemas without saving anything. `schema:import` validates on the way in, but schemas edited in place (by hand or by an AI agent) are never re-validated — the linter closes that gap. Errors are structural problems that break at runtime: no `id` property defined, `required`/`index` entries naming undefined properties, `inheritFrom` pointing at a missing schema, deck/card `schemaref` targets that don't exist or contain deck-incompatible types, and meta-schema violations. Warnings flag agent-legibility gaps — properties without help text (help feeds the MCP tool catalog) and schemas without a description.
+Lint stored schemas without saving anything. `schema:import` validates on the way in, but schemas edited in place (by hand or by an AI agent) are never re-validated — the linter closes that gap. Errors are structural problems that break at runtime: no `id` property defined, `required`/`index` entries naming undefined properties, `inheritFrom` pointing at a missing schema, deck/card `schemaref` targets that don't exist or contain deck-incompatible types, `formgrid` rows with a different number of names than the widest row (the browser drops the whole form layout when one row is short), and meta-schema violations. Warnings flag agent-legibility gaps — properties without help text (help feeds the MCP tool catalog) and schemas without a description.
 
 ```bash
 tcms schema:lint                 # all custom schemas

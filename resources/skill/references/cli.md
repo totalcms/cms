@@ -91,7 +91,8 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `schema:get totalcms --json` — the reference schema: every field type with settings
   and help text, to copy from
 - `schema:lint [id]` — validate stored schemas WITHOUT saving; run after editing
-  schema JSON in place. Errors = structural breakage, warnings = missing
+  schema JSON in place. Errors = structural breakage (incl. a formgrid row with
+  fewer names than the widest row, which drops the form layout), warnings = missing
   help text (which feeds the MCP tool catalog). `--strict` fails on warnings.
 - `schema:delete <id>` — delete a custom schema; refused while a collection uses it or
   another schema inherits it. A copy goes to `.system/backups/schemas/`
