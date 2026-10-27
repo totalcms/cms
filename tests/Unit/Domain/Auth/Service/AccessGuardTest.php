@@ -785,6 +785,28 @@ final class AccessGuardTest extends TestCase
 		expect($out['owner'])->toBe('member1');
 	}
 
+	public function testAPutThatLeavesOutTheOwnerAndProtectedFieldsKeepsThem(): void
+	{
+		// A front-end edit form PUTs only the fields it shows. Without the
+		// stored values put back, the save cleared the owner stamp and every
+		// protected field the form did not include.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['owner' => 'member1', 'featured' => true, 'title' => 'Old'],
+			props: ['id', 'title', 'owner'],
+			schemaId: 'showcase',
+			definitions: ['featured' => ['protected' => true]],
+			ownerProperty: 'owner',
+		);
+
+		$out = $policy->enforce('member1', 'showcase', 'site-1', ['title' => 'New']);
+
+		expect($out['owner'])->toBe('member1');
+		expect($out['featured'])->toBeTrue();
+		expect($out['title'])->toBe('New');
+		expect($this->logRecords())->toBe([]);
+	}
+
 	public function testListOwnerIsRevertedOnUpdateByAMember(): void
 	{
 		// Only admins and API keys change the owner list: a co-owner's edit to

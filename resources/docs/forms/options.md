@@ -84,6 +84,7 @@ The server then stamps `owner` on create and refuses any API read or write of so
 {% if user and site and site.owner == user.id %}
     {% set form = cms.form.builder('showcase', {
         id: site.id,
+        method: 'PATCH',
         actions: [{ action: 'message', text: 'Saved — your changes are back in the review queue.' }]
     }) %}
     {% do form.addField('name') %}
@@ -93,6 +94,8 @@ The server then stamps `owner` on create and refuses any API read or write of so
     <p>That submission is not yours to edit.</p>
 {% endif %}
 ```
+
+Use `method: 'PATCH'` on an edit form that shows only some of the fields. An edit form saves with `PUT` by default, which replaces the whole object, so every field the form leaves out is cleared. The owner and protected fields are kept either way (the server puts back what is stored), but `description`, images and anything else not on the form would be lost.
 
 The `if` is a belt-and-braces measure: `cms.form.builder()` itself refuses to load another member's object, rendering only "You do not have permission to edit this object." in place of the whole form (no fields, no save button), and the API returns `403` for the save. The deck item forms, `cms.form.deck()` and `cms.form.deckBuilder()`, refuse the same way when `id` names another member's object, whether they would edit one of its items (`itemId`) or add one. Keep the check in the template anyway so the page around the form (headings, other `cms.objects` calls) does not show the object either. Members are also refused the whole-collection routes beyond create, list and query (export, report, import, reindex, bulk delete and clone), so a portal cannot be used to pull the full collection.
 

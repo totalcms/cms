@@ -534,6 +534,14 @@ final class AccessGuard
 
 		foreach ($plain as $field) {
 			if (!array_key_exists($field, $incoming)) {
+				// Every update reaches the guard as the whole object (a PATCH is
+				// merged with the stored one first), so a field the client left
+				// out would be dropped: a PUT from a form without it would clear
+				// the owner or a protected field. Keep what is stored.
+				if (array_key_exists($field, $existing)) {
+					$incoming[$field] = $existing[$field];
+				}
+
 				continue;
 			}
 
