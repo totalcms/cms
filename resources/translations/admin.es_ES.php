@@ -1471,6 +1471,9 @@ return [
 	// ── Color Field ─────────────────────────────────────────────────────────
 	'color.clear'                   => 'Sin color',
 
+	// ── Date Field ──────────────────────────────────────────────────────────
+	'date.clear'                    => 'Borrar fecha',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'       => 'Filtrar archivos...',
 	'depot.preview'                  => 'Vista previa',

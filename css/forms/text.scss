@@ -263,6 +263,60 @@
 	}
 }
 
+// Clear button: the select's round clear button, inside the input and left
+// of the browser's own calendar button, shown only while the field holds a
+// date. Offsets are from the group's right edge: 3em of icon, then room for
+// the native picker.
+.date-clear {
+	--date-clear-right : calc(3em + 1rem);
+	position           : absolute;
+	right              : var(--date-clear-right);
+	top                : 50%;
+	transform          : translateY(-50%);
+	width              : 1rem;
+	height             : 1rem;
+	display            : grid;
+	place-items        : center;
+	padding            : 0;
+	border             : none;
+	border-radius      : 50%;
+	background-color   : oklch(var(--totalform-mediumgray));
+	color              : oklch(var(--totalform-purewhite));
+	cursor             : pointer;
+	transition         : all 0.2s ease-in-out;
+	z-index            : 1;
+
+	.form-group:not(:has(.form-group-icon)) & {
+		--date-clear-right : 1rem;
+	}
+
+	// A mask, not the select's &times; glyph: a mask centers by its box
+	&::before {
+		content          : "";
+		display          : block;
+		width            : 0.5rem;
+		height           : 0.5rem;
+		background-color : currentColor;
+		mask-image       : var(--icon-close);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-darkgray));
+		transform        : translateY(-50%) scale(1.2);
+	}
+
+	&:active {
+		transform : translateY(-50%) scale(0.95);
+	}
+
+	.date-empty & {
+		display : none;
+	}
+}
+
 //------------------------------
 // Time Field
 //------------------------------

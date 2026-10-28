@@ -10,7 +10,19 @@ export default class DateField extends TotalField {
 
 		// Set the value and do not mark as changed
         this.setValue(this.input.getAttribute('value'), false);
+
+		// Optional dates carry a clear button (DateField.php); it shows only
+		// while the container is not marked date-empty
+		this.container.querySelector('.date-clear')?.addEventListener('click', () => {
+			this.clearValue();
+			this.input.focus();
+		});
+		this.input.addEventListener('input', () => this.markEmpty());
     }
+
+	markEmpty() {
+		this.container.classList.toggle('date-empty', this.input.value === '');
+	}
 
 	getValue() {
 		if (this.input.value) {
@@ -24,6 +36,7 @@ export default class DateField extends TotalField {
 			value = this.formatDate(value);
 		}
 		this.input.value = value;
+		this.markEmpty();
 		if (markAsChanged) this.changed();
 	}
 
@@ -40,6 +53,7 @@ export default class DateField extends TotalField {
 
 	clearValue() {
 		this.input.value = "";
+		this.markEmpty();
 		this.changed();
 	}
 

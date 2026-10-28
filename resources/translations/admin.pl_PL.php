@@ -1471,6 +1471,9 @@ return [
 	// ── Color Field ─────────────────────────────────────────────────────────
 	'color.clear'                   => 'Brak koloru',
 
+	// ── Date Field ──────────────────────────────────────────────────────────
+	'date.clear'                    => 'Wyczyść datę',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'       => 'Filtruj pliki...',
 	'depot.preview'                  => 'Podgląd',

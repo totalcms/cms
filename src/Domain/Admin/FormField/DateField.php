@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class DateField extends FormField
 {
@@ -28,5 +29,48 @@ class DateField extends FormField
 		if (!empty($this->value)) {
 			$this->value = DateData::cleanDate($this->value, $this->dateFormat);
 		}
+	}
+
+	/**
+	 * Safari and Chrome give a native date input no way to empty it once set,
+	 * so an editable, optional date gets a button that clears it. CSS shows it
+	 * only while the field holds a date. It goes last in the group, as the
+	 * select's clear button does, so the input stays next to its icon.
+	 */
+	public function createFormGroup(string $content): string
+	{
+		if (!$this->clearable()) {
+			return parent::createFormGroup($content);
+		}
+
+		$label = $this->t('date.clear', 'Clear date');
+
+		// No text glyph: the icon is a CSS mask, the label is for assistive tech.
+		return parent::createFormGroup($content . HTMLUtils::element('button', '', [
+			'type'       => 'button',
+			'class'      => 'date-clear',
+			'title'      => $label,
+			'aria-label' => $label,
+		]));
+	}
+
+	/**
+	 * @param array<string,string> $extraStyles
+	 * @param list<string>         $extraClasses
+	 *
+	 * @return array<string,string>
+	 */
+	protected function buildFieldAttributes(array $extraStyles = [], array $extraClasses = []): array
+	{
+		if ($this->clearable() && empty($this->value)) {
+			$extraClasses[] = 'date-empty';
+		}
+
+		return parent::buildFieldAttributes($extraStyles, $extraClasses);
+	}
+
+	private function clearable(): bool
+	{
+		return !$this->readonly && !$this->required;
 	}
 }

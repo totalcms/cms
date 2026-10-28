@@ -1471,6 +1471,9 @@ return [
 	// ── Color Field ─────────────────────────────────────────────────────────
 	'color.clear'                   => 'Geen kleur',
 
+	// ── Date Field ──────────────────────────────────────────────────────────
+	'date.clear'                    => 'Datum wissen',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'       => 'Bestanden filteren...',
 	'depot.preview'                  => 'Voorbeeld',

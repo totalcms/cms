@@ -1471,6 +1471,9 @@ return [
 	// ── Color Field ─────────────────────────────────────────────────────────
 	'color.clear'                   => 'Nessun colore',
 
+	// ── Date Field ──────────────────────────────────────────────────────────
+	'date.clear'                    => 'Cancella data',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'       => 'Filtra file...',
 	'depot.preview'                  => 'Anteprima',
