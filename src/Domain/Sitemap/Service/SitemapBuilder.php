@@ -80,11 +80,13 @@ readonly class SitemapBuilder
 				$url = $baseUrl . '/' . ltrim($url, '/');
 			}
 
-			if (!empty($object[$dateProperty])) {
-				$options['date'] = $object[$dateProperty];
+			// Per object: an object without a date must not inherit the last one's
+			$locationOptions = $options;
+			if (!empty($object[$dateProperty]) && is_string($object[$dateProperty])) {
+				$locationOptions['date'] = $object[$dateProperty];
 			}
 
-			$location = $sitemap->newLocation($url, $options);
+			$location = $sitemap->newLocation($url, $locationOptions);
 			$sitemap->addLocation($location);
 		}
 

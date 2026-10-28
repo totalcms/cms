@@ -41,6 +41,16 @@ final class SitemapLocationTest extends TestCase
 		$this->assertNotNull($lastMod);
 	}
 
+	public function testConstructorSkipsUnparseableDate(): void
+	{
+		// The sitemap's date property pointed at a title field (TOTAL-CMS-R5)
+		$location = new SitemapLocation('https://example.com', [
+			'date' => 'Harbourline Plumbing',
+		]);
+
+		$this->assertNull($location->location()->getLastMod());
+	}
+
 	public function testConstructorWithFrequencyOption(): void
 	{
 		$location = new SitemapLocation('https://example.com', [

@@ -21,8 +21,14 @@ readonly class SitemapLocation
 		}
 		$this->location = new Url(trim($url));
 
+		// lastmod is optional, so a value that is not a date (the sitemap's date
+		// property pointed at a text field, say) drops the tag instead of the
+		// whole sitemap
 		if (!empty($options['date'])) {
-			$this->location->setLastMod(new \DateTime($options['date']));
+			try {
+				$this->location->setLastMod(new \DateTime($options['date']));
+			} catch (\Exception) {
+			}
 		}
 
 		if (!empty($options['frequency'])) {

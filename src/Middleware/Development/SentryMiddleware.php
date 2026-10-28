@@ -107,6 +107,9 @@ class SentryMiddleware implements MiddlewareInterface
 			'No file found in request',
 			'Unknown format',
 			'Upload target path is not writable',
+			// The MCP SDK's session store: the install's tmp folder is not
+			// writable by the web server user. A hosting permission, not T3.
+			'Session directory "',
 			'Cannot enable maintenance mode',
 			'it could not be created: Read-only file system',
 			'Permission denied',
