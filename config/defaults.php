@@ -283,7 +283,12 @@ $settings['extensions'] = [
 // Session
 $settings['session'] = [
 	// 'name'                   => 'tcms_' . md5($settings['domain']), // Domain-specific session name for isolation
-	'name'                   => null, // Use PHP default session name
+	// Stacks 6 opens every page's session as "Stacks", so a Stacks 6 install
+	// (published to site-assets) names its admin session the same or a login
+	// never reaches Page Lock. Decided by path, not APP_ENV, because admin
+	// requests have no Stacks page in front of them to set it. Stacks 5
+	// (rw_common) and every other install keep PHP's default name.
+	'name'                   => str_contains(__DIR__, '/site-assets/stacks/') ? 'Stacks' : null,
 	'cookie_domain'          => '', // Empty domain for maximum subdomain isolation
 	'cookie_path'            => '/', // Explicit path for cookie isolation
 	'cookie_samesite'        => 'Lax',

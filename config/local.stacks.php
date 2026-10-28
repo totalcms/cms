@@ -7,12 +7,12 @@ declare(strict_types=1);
 
 $settings['env'] = 'stacks';
 
-$settings['session']['name'] = 'Stacks';
-$settings['api']             = '/site-assets/stacks/tcms3/tcms';
+// The session name is set in defaults.php, by install path: admin requests
+// never load this file.
+$settings['api'] = '/site-assets/stacks/tcms3/tcms';
 
 if (str_contains(__DIR__, 'rw_common')) {
-	$settings['session']['name'] = null;
-	$settings['api']             = '/rw_common/plugins/stacks/tcms';
+	$settings['api'] = '/rw_common/plugins/stacks/tcms';
 }
 
 if (php_sapi_name() === 'cli-server') {
