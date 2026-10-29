@@ -10,7 +10,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\Builder\Service\BuilderFrontendInstaller;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Builder\Service\StarterService;
+use TotalCMS\Support\PathResolver;
 
 class BuilderInitCommand extends BaseCommand
 {
@@ -79,7 +81,9 @@ class BuilderInitCommand extends BaseCommand
 
 		$output->writeln('');
 		$output->writeln('Next steps:');
-		$output->writeln('  1. Edit your templates in tcms-data/builder/');
+		// Git-managed projects keep templates in <project>/builder, not the datadir.
+		$templateDir = $this->totalcms->container()->get(BuilderTemplatePaths::class)->writeTarget();
+		$output->writeln('  1. Edit your templates in ' . $this->relativeToProject($templateDir) . '/');
 		$output->writeln('  2. Add or edit pages in the admin under Site Builder');
 		$output->writeln('  3. Visit your site — pages are served dynamically (no build step needed)');
 		if ($frontendResult === null) {
@@ -89,6 +93,14 @@ class BuilderInitCommand extends BaseCommand
 		}
 
 		return Command::SUCCESS;
+	}
+
+	/** Show a path relative to the project root when it is inside it. */
+	private function relativeToProject(string $path): string
+	{
+		$root = rtrim(PathResolver::projectRoot(), '/') . '/';
+
+		return str_starts_with($path, $root) ? substr($path, strlen($root)) : $path;
 	}
 
 	private function listStarters(InputInterface $input, OutputInterface $output, StarterService $service): int
