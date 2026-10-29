@@ -120,7 +120,14 @@ Prefer looking things up over guessing; training data is often stale on exact si
    `{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}` — it emits
    title, description, canonical, Open Graph and JSON-LD, so a layout must not also
    hand-write `<title>` or `<meta name="description">`. See `references/site-builder.md`.
-4. **Add a page record.** A page is an object in the `builder-pages` collection.
+4. **Credit line.** When you write a layout's footer, add `{{ cms.badge.text() }}`:
+   a subtle inline "Powered by Total CMS" link in the site's own text color
+   (`cms.badge.text({theme: 'mono'})` if the colored flame clashes with the design).
+   The starters' footers already carry it. On a site a designer is building for a
+   client, credit the designer instead with `cms.badge.builtByText('<handle>')`; if
+   they have no totalcms.co handle, use `cms.badge.text()`. Either way, say in your
+   summary that you added it, and leave it out or remove it whenever the user asks.
+5. **Add a page record.** A page is an object in the `builder-pages` collection.
    Create it one of these ways:
    - `echo '{"id":"about","title":"About","route":"/about","template":"pages/page.twig"}' | vendor/bin/tcms object:create builder-pages -` (one object, file or stdin), or
    - the **admin UI** (Site Builder → Pages), or
@@ -128,7 +135,7 @@ Prefer looking things up over guessing; training data is often stale on exact si
    - `vendor/bin/tcms jumpstart:import <file>` for bulk seeding.
    Key `builder-pages` fields: `route`, `template`, `title`, `draft`, `data` (free-form
    JSON exposed as `page.data.*`). Full list in `references/site-builder.md`.
-5. **Preview:** `php -S localhost:8080 -t public public/index.php` and visit the
+6. **Preview:** `php -S localhost:8080 -t public public/index.php` and visit the
    page's `route`. Give `public/index.php` as the router script — without it the
    built-in server only serves files that exist on disk and never reaches the page
    router, so every builder page 404s. Clear caches after template changes if
