@@ -18,6 +18,8 @@ Total CMS 3 is a ground-up rewrite, so a v1 site moves over in two parts:
 
 This page is the one-stop guide for both. Read it top to bottom before you start a migration.
 
+Your Total CMS 1 license carries over too: enter it in the License Manager to see your upgrade pricing. See [Upgrading from a Total CMS 1 License](docs/operations/licenses#upgrading-from-a-total-cms-1-license).
+
 ## You probably don't need a custom admin
 
 In Total CMS v1 you had to **build your own admin pages** to manage content. You can still do that in Total CMS 3 if you want a fully custom admin area — the API and Twig layer make it entirely possible.

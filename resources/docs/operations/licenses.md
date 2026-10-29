@@ -66,6 +66,18 @@ Some local domains are **not** development domains:
 * **Network addresses** such as `192.168.1.20` or `10.0.0.5`, and other loopback addresses such as `::1`.
 * **Staging servers on a real domain**, such as `staging.clientsite.com`. Use one of your license's testing subdomains for those.
 
+## Upgrading from a Total CMS 1 License
+
+If you own a Total CMS 1 license, you can upgrade it to Total CMS 3 at upgrade pricing.
+
+1. Install Total CMS 3 on the site's domain.
+2. Open the **License Manager** (under Utilities in the admin).
+3. Enter your Total CMS 1 license key, the same way you would enter a Total CMS 3 key.
+
+The license is applied to that domain, and the License Manager then shows the upgrade options and prices available to you.
+
+To move the site's content across, see [Migrating from Total CMS v1](docs/operations/migration-total-cms-one).
+
 ## Free Trial
 
 You can install Total CMS on any domain and use it free for 45 days. A trial includes every Pro feature and needs no credit card.
