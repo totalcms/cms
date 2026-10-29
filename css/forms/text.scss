@@ -268,7 +268,7 @@
 // date. Offsets are from the group's right edge: 3em of icon, then room for
 // the native picker.
 .date-clear {
-	--date-clear-right : calc(3em + 1rem);
+	--date-clear-right : calc(3em + 1.75rem);
 	position           : absolute;
 	right              : var(--date-clear-right);
 	top                : 50%;
@@ -287,7 +287,7 @@
 	z-index            : 1;
 
 	.form-group:not(:has(.form-group-icon)) & {
-		--date-clear-right : 1rem;
+		--date-clear-right : 1.75rem;
 	}
 
 	// A mask, not the select's &times; glyph: a mask centers by its box
