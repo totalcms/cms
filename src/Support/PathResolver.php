@@ -51,6 +51,32 @@ class PathResolver
 	}
 
 	/**
+	 * Where tcms-data lives when config/tcms.php does not say.
+	 *
+	 * An existing folder wins: `<docroot>/../tcms-data`, then
+	 * `<docroot>/tcms-data`. When neither exists yet, a Composer install
+	 * uses `<project>/tcms-data`, outside the web root, and a zip install
+	 * uses `<docroot>/tcms-data` (the setup wizard can move it).
+	 *
+	 * The Composer case matters because data can be written before the
+	 * wizard runs: `composer create-project` scaffolds a starter from its
+	 * post-install hook, and defaulting to the docroot put that JSON in
+	 * public/ where anyone could fetch it.
+	 */
+	public static function defaultDataDir(string $docroot): string
+	{
+		$parent = dirname($docroot) . '/tcms-data';
+		$local  = $docroot . '/tcms-data';
+
+		return match (true) {
+			is_dir($parent)            => $parent,
+			is_dir($local)             => $local,
+			self::isComposerInstall()  => self::projectRoot() . '/tcms-data',
+			default                    => $local,
+		};
+	}
+
+	/**
 	 * Absolute path to the `tcms` executable, for cron / shell display.
 	 *
 	 * Composer installs must use the generated bin proxy (`vendor/bin/tcms`):

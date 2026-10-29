@@ -219,21 +219,10 @@ $settings['cache'] = [
 	],
 ];
 
-// Path to tcms-data folder - smart detection
-// Priority:
-// Auto-detect tcms-data directory:
-// 1. DOCUMENT_ROOT/../tcms-data if it exists
-// 2. DOCUMENT_ROOT/tcms-data if it exists
-// 3. Default to DOCUMENT_ROOT/tcms-data (setup wizard will create it)
-// Note: DOCUMENT_ROOT/tcms.php can override this for custom paths
-$parentDatadir = dirname($settings['docroot']) . '/tcms-data';
-$localDatadir  = $settings['docroot'] . '/tcms-data';
-
-// Auto-detect datadir: only use directories that actually exist
-// Priority: parent (above docroot) > local (in docroot)
-// Default to local (docroot) path
-// The setup wizard will create the chosen directory
-$settings['datadir'] = is_dir($parentDatadir) ? $parentDatadir : $localDatadir;
+// Path to tcms-data folder: an existing folder above or inside the docroot,
+// else outside the web root on a Composer install. See
+// PathResolver::defaultDataDir(). config/tcms.php can override it.
+$settings['datadir'] = PathResolver::defaultDataDir($settings['docroot']);
 
 // Error Handling
 $settings['error'] = [
