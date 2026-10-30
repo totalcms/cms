@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\Form;
 
+use TotalCMS\Domain\Admin\Form\Layout\FieldsetRenderer;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -26,6 +28,9 @@ use TotalCMS\Support\Config;
  */
 final readonly class SettingsForms
 {
+	/** The grid area of an extension's permissions fieldset when its settings use a formgrid. */
+	private const PERMISSIONS_AREA = 'ext-permissions';
+
 	public function __construct(
 		private TotalFormFactory $forms,
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
@@ -144,18 +149,54 @@ final readonly class SettingsForms
 	 */
 	public function extensionSettings(string $extensionId): string
 	{
-		$formfields  = $this->buildPermissionToggles($extensionId);
-		$formfields .= $this->buildExtensionSettingsFields($extensionId, $formfields !== '');
+		$schema      = $this->loadExtensionSettingsSchema($extensionId);
+		$permissions = $this->buildPermissionToggles($extensionId);
+		$formgrid    = $this->extensionFormgrid($schema, $permissions !== '');
+		if ($formgrid !== '' && $permissions !== '') {
+			// Only a grid with an area of this name may place the fieldset;
+			// in the plain form it would land in an implicit cell.
+			$permissions = str_replace('<fieldset class="ext-permissions">', '<fieldset class="ext-permissions" style="grid-area: ' . self::PERMISSIONS_AREA . ';">', $permissions);
+		}
+		$formfields  = $permissions . $this->buildExtensionSettingsFields($extensionId, $schema, $permissions !== '' && $formgrid === '');
 
 		if ($formfields === '') {
 			return '<p>This extension has no configurable settings.</p>';
 		}
 
 		return $this->forms->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
-			'method' => 'POST',
-			'save'   => $this->translationService->trans('btn.save_settings'),
-			'class'  => 'help-on-hover help-box',
+			'method'   => 'POST',
+			'save'     => $this->translationService->trans('btn.save_settings'),
+			'class'    => 'help-on-hover help-box',
+			'formgrid' => $formgrid,
 		]);
+	}
+
+	/**
+	 * The settings schema's own `formgrid`, with a full-width row for the
+	 * permissions fieldset on top. Empty when the schema has none, which keeps
+	 * the plain one-field-per-row form.
+	 *
+	 * @param array{properties: array<string,array<string,mixed>>, formgrid: string}|null $schema
+	 */
+	private function extensionFormgrid(?array $schema, bool $hasPermissions): string
+	{
+		$formgrid = trim($schema['formgrid'] ?? '');
+		if ($formgrid === '' || !$hasPermissions) {
+			return $formgrid;
+		}
+
+		// Every row of a grid needs the same number of cells, so the
+		// permissions row repeats its name across the widest row's columns.
+		$columns = 1;
+		foreach (explode("\n", $formgrid) as $line) {
+			$line = trim($line);
+			if ($line === '' || str_starts_with($line, '---') || str_starts_with($line, '[[') || str_starts_with($line, ']]')) {
+				continue;
+			}
+			$columns = max($columns, count(preg_split('/\s+/', $line) ?: []));
+		}
+
+		return implode(' ', array_fill(0, $columns, self::PERMISSIONS_AREA)) . "\n" . $formgrid;
 	}
 
 	private function buildPermissionToggles(string $extensionId): string
@@ -196,21 +237,19 @@ final readonly class SettingsForms
 			. '</fieldset>';
 	}
 
-	private function buildExtensionSettingsFields(string $extensionId, bool $hasPermissions): string
+	/**
+	 * @param array{properties: array<string,array<string,mixed>>, formgrid: string}|null $schema
+	 */
+	private function buildExtensionSettingsFields(string $extensionId, ?array $schema, bool $withHeading): string
 	{
-		$schema = $this->loadExtensionSettingsSchema($extensionId);
 		if ($schema === null) {
 			return '';
 		}
 
-		$settings   = $this->extensionSettingsManager->getSettings($extensionId);
-		$formfields = '';
+		$settings = $this->extensionSettingsManager->getSettings($extensionId);
+		$fields   = [];
 
-		if ($hasPermissions) {
-			$formfields .= '<h3 style="margin:2rem 0 0.5rem;">Settings</h3>';
-		}
-
-		foreach ($schema as $fieldName => $fieldSchema) {
+		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
 			$fieldType    = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
 			$currentValue = $settings[$fieldName] ?? $fieldSchema['default'] ?? '';
 
@@ -220,10 +259,39 @@ final readonly class SettingsForms
 
 			$fieldSettings = $this->fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
 
-			$formfields .= $this->forms->field($fieldType, $fieldName, $fieldSettings);
+			$fields[$fieldName] = $this->forms->field($fieldType, $fieldName, $fieldSettings);
 		}
 
-		return $formfields;
+		// A schema with a formgrid brings its own section headers.
+		$heading = $withHeading ? '<h3 style="margin:2rem 0 0.5rem;">Settings</h3>' : '';
+
+		return $heading . $this->wrapFieldsets($schema['formgrid'], $fields);
+	}
+
+	/**
+	 * Put the fields of each `[[ ]]` fieldset in the formgrid inside that
+	 * fieldset. A schema-driven form does this as it builds its fields; a
+	 * settings form hands TotalForm finished markup, so it is done here.
+	 * Fields outside any fieldset stay where they are.
+	 *
+	 * @param array<string,string> $fields rendered field markup by field name
+	 */
+	private function wrapFieldsets(string $formgrid, array $fields): string
+	{
+		$fieldsets = $formgrid === '' ? [] : (new FormGridBuilder($formgrid))->getFieldsets();
+		$renderer  = new FieldsetRenderer();
+		$wrapped   = '';
+
+		foreach ($fieldsets as $fieldset) {
+			$members = '';
+			foreach ($fieldset['fields'] as $name) {
+				$members .= $fields[$name] ?? '';
+				unset($fields[$name]);
+			}
+			$wrapped .= $renderer->render($fieldset['legend'], $members, $fieldset['inner'], '', $fieldset['id']);
+		}
+
+		return implode('', $fields) . $wrapped;
 	}
 
 	/**
@@ -256,9 +324,10 @@ final readonly class SettingsForms
 	}
 
 	/**
-	 * Load and validate the settings schema properties for an extension.
+	 * Load and validate an extension's settings schema: its properties, and its
+	 * formgrid layout (empty when it has none).
 	 *
-	 * @return array<string,array<string,mixed>>|null
+	 * @return array{properties: array<string,array<string,mixed>>, formgrid: string}|null
 	 */
 	private function loadExtensionSettingsSchema(string $extensionId): ?array
 	{
@@ -289,6 +358,9 @@ final readonly class SettingsForms
 			return null;
 		}
 
-		return $schema['properties'];
+		return [
+			'properties' => $schema['properties'],
+			'formgrid'   => is_string($schema['formgrid'] ?? null) ? $schema['formgrid'] : '',
+		];
 	}
 }

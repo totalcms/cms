@@ -1,7 +1,8 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Stock Photos",
-	"description": "Search Pixabay from the object editor. Photos you drop on a field are downloaded and stored with the photographer's credit.",
+	"description": "Search Pixabay and your own galleries from the object editor. Photos you drop on a field are copied into it with their alt text and credit.",
+	"formgrid": "[[ Library\ngalleries\n]]\n[[ Pixabay\npixabayKey\nsafeSearch\n]]\n[[ Search Panel\ndefaultOrientation\n]]",
 	"type": "object",
 	"properties": {
 		"pixabayKey": {
@@ -11,23 +12,48 @@
 			"help": "Sign up at <a href='https://pixabay.com/accounts/register/' target='_blank'>pixabay.com</a>, then copy your key from <a href='https://pixabay.com/api/docs/' target='_blank'>pixabay.com/api/docs</a>. The key stays on the server; the browser never sees it. Photos are used under the <a href='https://pixabay.com/service/license-summary/' target='_blank'>Pixabay Content License</a>.",
 			"default": ""
 		},
+		"galleries": {
+			"type": "array",
+			"field": "list",
+			"label": "Library Galleries",
+			"help": "Galleries editors can pick photos from, each shown as a tab in the panel in this order. A photo is copied into the field with its alt text, credit, tags, link and focal point; after that the copy is independent, and deleting it from the gallery changes nothing.",
+			"default": [],
+			"settings": {
+				"relationalOptions": {
+					"collection": "gallery",
+					"label": "id",
+					"value": "id"
+				},
+				"addChoices": false,
+				"duplicateItemsAllowed": false
+			}
+		},
 		"safeSearch": {
 			"type": "boolean",
 			"field": "toggle",
 			"label": "Safe Search",
-			"help": "Only show photos suitable for all ages.",
+			"help": "Only show Pixabay photos suitable for all ages.",
 			"default": true
 		},
 		"defaultOrientation": {
 			"type": "string",
 			"field": "select",
 			"label": "Default Orientation",
-			"help": "The orientation filter the search panel starts with.",
+			"help": "The orientation filter the search panel starts with, for every source.",
 			"default": "all",
 			"options": [
-				{ "value": "all", "label": "Any" },
-				{ "value": "horizontal", "label": "Landscape" },
-				{ "value": "vertical", "label": "Portrait" }
+				{
+					"value": "all",
+					"label": "Any"
+				},
+				{
+					"value": "horizontal",
+					"label": "Landscape"
+				},
+				{
+					"value": "vertical",
+					"label": "Portrait"
+				}
 			]
 		}
 	}

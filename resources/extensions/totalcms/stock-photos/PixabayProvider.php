@@ -52,6 +52,11 @@ final readonly class PixabayProvider implements PhotoProvider
 		return 'https://pixabay.com/service/license-summary/';
 	}
 
+	public function browses(): bool
+	{
+		return false;
+	}
+
 	public function search(string $query, int $page, string $orientation): array
 	{
 		if ($this->key === '') {

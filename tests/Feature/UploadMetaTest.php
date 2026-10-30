@@ -56,3 +56,24 @@ test('meta sent with a gallery upload lands on the new image only', function ():
 		->and($gallery[$second->name]['credit'])->toBe(['source' => 'Pixabay'])
 		->and($gallery[$first->name]['credit'] ?? [])->toBe([]);
 });
+
+test('a photo copied from a library gallery keeps its tags, link and focal point', function (): void {
+	$meta = [
+		'alt'        => 'Burrata with basil',
+		'tags'       => ['starter', 'cheese'],
+		'link'       => 'https://example.com/menu',
+		'focalpoint' => ['x' => 30, 'y' => 60],
+		'credit'     => ['author' => 'Nadin Sh', 'source' => 'Pexels'],
+	];
+
+	$image = $this->store->store('blog', $this->post, 'image', ($this->upload)('burrata.jpg'));
+	$image = $this->store->describe($image, 'blog', $this->post, 'image', $meta)->object->toArray()['image'];
+
+	$photo   = $this->store->store('blog', $this->post, 'gallery', ($this->upload)('burrata.jpg'));
+	$photo   = $this->store->describe($photo, 'blog', $this->post, 'gallery', $meta);
+	$gallery = array_column($photo->object->toArray()['gallery'], null, 'name')[$photo->name];
+
+	foreach ([$image, $gallery] as $stored) {
+		expect($stored)->toMatchArray($meta);
+	}
+});

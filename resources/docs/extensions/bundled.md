@@ -32,7 +32,7 @@ This keeps core lean for sites that don't need a particular feature, while still
 | `totalcms/protect` | Gate a page behind a numeric passcode. Visitors enter a code to unlock — cookie remembers them for 7 days. For client previews and soft launches. | [Protect →](docs/extensions/protect) |
 | `totalcms/pushover` | Send push notifications via Pushover when forms are submitted. Supports Twig templates, image attachments, and delivery groups. Pro edition. | [Pushover →](docs/extensions/pushover) |
 | `totalcms/scheduled` | Time-window gating. Only renders a page between configured start/end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales. | [Scheduled →](docs/extensions/scheduled) |
-| `totalcms/stock-photos` | Search free Pixabay photos in the object editor and drag them onto image and gallery fields, with alt text and the photographer's credit filled in. Needs a free Pixabay API key; off until one is entered. | [Stock Photos →](docs/extensions/stock-photos) |
+| `totalcms/stock-photos` | Search free Pixabay photos, or your own library galleries, in the object editor and drag them onto image and gallery fields, with alt text and credit filled in. Off until it has a Pixabay API key or a library gallery. | [Stock Photos →](docs/extensions/stock-photos) |
 | `totalcms/webmcp` | Make your forms and public collections callable by a browser AI agent inside the visitor's own session (Chrome 149+ origin trial). `webmcp_form()` annotates a form; the browser registers the MCP server's own read tools (`query_collection`, `get_object`, saved queries…), following each collection's MCP access. Experimental, off by default. | [WebMCP →](docs/extensions/webmcp) |
 
 ## How to enable / disable

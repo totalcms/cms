@@ -9,16 +9,17 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * GET /admin/ext/totalcms/stock-photos/search?q=&page=&orientation=
+ * GET /admin/ext/totalcms/stock-photos/search?source=&q=&page=&orientation=
  *
- * The panel's only way to the provider: the API key stays on the server. Each
+ * The panel's only way to a source: an API key stays on the server. A remote
  * photo's `download` is rewritten to this extension's download proxy, so the
- * browser fetches the file same-origin.
+ * browser fetches the file same-origin; a gallery photo already points at the
+ * library route. `source` defaults to the first source the editor may use.
  */
 final readonly class SearchAction
 {
 	public function __construct(
-		private PhotoProvider $provider,
+		private PhotoSources $sources,
 		private JsonRenderer $renderer,
 		private string $defaultOrientation = 'all',
 	) {
@@ -37,8 +38,14 @@ final readonly class SearchAction
 			$orientation = $this->defaultOrientation;
 		}
 
+		$sourceId = (string)($params['source'] ?? '');
+		$provider = $sourceId === '' ? ($this->sources->available()[0] ?? null) : $this->sources->get($sourceId);
+		if ($provider === null) {
+			return $this->renderer->json($response->withStatus(404), ['error' => 'That photo source is not available.']);
+		}
+
 		$data = [
-			'provider'    => ['id' => $this->provider->id(), 'label' => $this->provider->label(), 'url' => $this->provider->homeUrl(), 'license' => $this->provider->licenseUrl()],
+			'provider'    => self::describe($provider),
 			'query'       => $query,
 			'page'        => $page,
 			'orientation' => $orientation,
@@ -46,21 +53,39 @@ final readonly class SearchAction
 			'photos'      => [],
 		];
 
-		if ($query === '') {
+		if ($query === '' && !$provider->browses()) {
 			return $this->renderer->json($response, $data);
 		}
 
 		try {
-			$result = $this->provider->search($query, $page, $orientation);
+			$result = $provider->search($query, $page, $orientation);
 		} catch (\RuntimeException $e) {
 			return $this->renderer->json($response->withStatus(502), $data + ['error' => $e->getMessage()]);
 		}
 
 		$proxy = (string)preg_replace('#/search$#', '/download', $request->getUri()->getPath());
 		foreach ($result['photos'] as $i => $photo) {
-			$result['photos'][$i]['download'] = $proxy . '?' . http_build_query(['url' => $photo['download']]);
+			if ($provider->servesImage((string)$photo['download'])) {
+				$result['photos'][$i]['download'] = $proxy . '?' . http_build_query(['url' => $photo['download']]);
+			}
 		}
 
 		return $this->renderer->json($response, ['total' => $result['total'], 'photos' => $result['photos']] + $data);
+	}
+
+	/**
+	 * What the panel needs to show a source as a tab.
+	 *
+	 * @return array{id: string, label: string, url: string, license: string, browses: bool}
+	 */
+	public static function describe(PhotoProvider $provider): array
+	{
+		return [
+			'id'      => $provider->id(),
+			'label'   => $provider->label(),
+			'url'     => $provider->homeUrl(),
+			'license' => $provider->licenseUrl(),
+			'browses' => $provider->browses(),
+		];
 	}
 }

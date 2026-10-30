@@ -78,6 +78,44 @@ nav[popover] li.stock-photos {
 	cursor: pointer;
 }
 
+/* One tab per source; shown only when there is more than one. Scrolls sideways
+   rather than wrapping when there are many galleries. */
+.stock-photos-tabs {
+	display: flex;
+	flex: none;
+	gap: .25rem;
+	overflow-x: auto;
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+}
+
+.stock-photos-tabs[hidden] {
+	display: none;
+}
+
+.stock-photos-tabs [role="tab"] {
+	flex: none;
+	margin-bottom: -1px;
+	padding: .4rem .7rem;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	background: none;
+	color: oklch(var(--totalform-help-color));
+	font: inherit;
+	font-size: .85rem;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.stock-photos-tabs [role="tab"]:hover,
+.stock-photos-tabs [role="tab"]:focus-visible {
+	color: oklch(var(--totalform-text-color));
+}
+
+.stock-photos-tabs [role="tab"][aria-selected="true"] {
+	border-bottom-color: oklch(var(--totalform-accent));
+	color: oklch(var(--totalform-text-color));
+}
+
 .stock-photos-search {
 	display: grid;
 	grid-template-columns: 1fr auto;

@@ -13,7 +13,7 @@ use TotalCMS\Support\RemoteFileDownloader;
  *
  * Fetches one of the provider's own image files and hands the bytes back
  * same-origin, so the field can turn them into an upload without CORS. Only
- * the provider's image hosts are fetched (PhotoProvider::servesImage), through
+ * a source's own image hosts are fetched (PhotoProvider::servesImage), through
  * the public-only client, under the site's download size cap.
  */
 final readonly class DownloadAction
@@ -21,7 +21,7 @@ final readonly class DownloadAction
 	private const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 	public function __construct(
-		private PhotoProvider $provider,
+		private PhotoSources $sources,
 		private RemoteFileDownloader $downloader,
 	) {
 	}
@@ -31,9 +31,10 @@ final readonly class DownloadAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
 	{
-		$url = (string)($request->getQueryParams()['url'] ?? '');
-		if (!$this->provider->servesImage($url)) {
-			return $this->fail($response, 400, 'Only ' . $this->provider->label() . ' images can be downloaded here.');
+		$url      = (string)($request->getQueryParams()['url'] ?? '');
+		$provider = $this->sources->servingImage($url);
+		if ($provider === null) {
+			return $this->fail($response, 400, 'Only stock photo images can be downloaded here.');
 		}
 
 		try {
@@ -47,7 +48,7 @@ final readonly class DownloadAction
 		@unlink($path);
 
 		if (!in_array($mime, self::IMAGE_TYPES, true)) {
-			return $this->fail($response, 502, $this->provider->label() . ' did not return an image.');
+			return $this->fail($response, 502, $provider->label() . ' did not return an image.');
 		}
 
 		$response->getBody()->write($bytes);

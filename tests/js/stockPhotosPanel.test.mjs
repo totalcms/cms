@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 //-----------------------------------------------
 // The Stock Photos panel (bundled extension totalcms/stock-photos): the button
 // on each image and gallery field, the ⋯ menu item, the "Add to" picker, the
-// search results, the + button and Escape. The script runs its setup when it
+// source tabs, the search results, the + button and Escape. The script runs its setup when it
 // loads, so each test builds the page first and then loads a fresh copy.
 //-----------------------------------------------
 
@@ -53,12 +53,39 @@ const searchResult = {
 	],
 };
 
+const pixabaySource = { id: 'pixabay', label: 'Pixabay', url: 'https://pixabay.com/', license: 'https://pixabay.com/service/license-summary/', browses: false };
+const gallerySource = { id: 'gallery:restaurant', label: 'Restaurant', url: 'collections/gallery/restaurant', license: '', browses: true };
+
+const galleryResult = {
+	provider : gallerySource,
+	total    : 1,
+	photos   : [{
+		id: 'burrata.jpg', thumb: 't.jpg', preview: 't.jpg', download: 'ext/totalcms/stock-photos/library?gallery=restaurant&name=burrata.jpg',
+		filename: 'burrata.jpg', width: 2400, height: 1800, alt: 'Burrata', credit: { author: 'Nadin Sh', source: 'Pexels' },
+		tags: ['starter'], link: 'https://example.com/menu', focalpoint: { x: 30, y: 60 },
+	}],
+};
+
+/** The extension's routes: the sources list, and a search answered per source. */
+function routes({ sources = [pixabaySource], search = searchResult, ok = true, status = 200 } = {}) {
+	return vi.fn(async url => {
+		if (String(url).endsWith('/sources')) return { ok: true, json: async () => ({ sources }) };
+		const source = new URL(url).searchParams.get('source');
+		const body   = typeof search === 'function' ? search(source) : search;
+		return { ok, status, json: async () => body };
+	});
+}
+
+const searchCalls = () => fetch.mock.calls.map(([url]) => new URL(url)).filter(url => url.pathname.endsWith('/search'));
+const tabs        = () => [...panel().querySelectorAll('.stock-photos-tabs [role=tab]')];
+
 async function load() {
 	vi.resetModules();
 	await import(SCRIPT);
 }
 
 async function search(query) {
+	await vi.waitFor(() => expect(panel().querySelectorAll('.stock-photos-tabs [role=tab]').length).toBeGreaterThan(0));
 	panel().querySelector('input[type=search]').value = query;
 	panel().querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }));
 	await vi.waitFor(() => expect(panel().querySelector('.stock-photos-status').textContent).not.toBe('Searching…'));
@@ -66,7 +93,7 @@ async function search(query) {
 
 beforeEach(() => {
 	document.body.replaceChildren();
-	vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => searchResult })));
+	vi.stubGlobal('fetch', routes());
 });
 
 afterEach(() => {
@@ -172,8 +199,8 @@ describe('searching and adding', () => {
 		document.querySelector('.stock-photos-field-button').click();
 		await search('pasta');
 
-		const url = new URL(fetch.mock.calls[0][0]);
-		expect(url.pathname).toMatch(/ext\/totalcms\/stock-photos\/search$/);
+		const url = searchCalls()[0];
+		expect(url.searchParams.get('source')).toBe('pixabay');
 		expect(url.searchParams.get('q')).toBe('pasta');
 
 		expect(panel().querySelectorAll('.stock-photos-grid li')).toHaveLength(2);
@@ -185,7 +212,7 @@ describe('searching and adding', () => {
 
 	it('shows the error the search route returns', async () => {
 		field('image', 'Hero');
-		vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 502, json: async () => ({ ...searchResult, photos: [], error: 'Pixabay rate limit reached.' }) })));
+		vi.stubGlobal('fetch', routes({ ok: false, status: 502, search: { ...searchResult, photos: [], error: 'Pixabay rate limit reached.' } }));
 		await load();
 		document.querySelector('.stock-photos-field-button').click();
 		await search('pasta');
@@ -242,6 +269,99 @@ describe('searching and adding', () => {
 
 		expect(JSON.parse(data['application/x-totalcms-photo']).photos[0].filename).toBe('pasta-pixabay-1');
 		expect(event.dataTransfer.effectAllowed).toBe('copy');
+	});
+});
+
+describe('source tabs', () => {
+	it('are hidden when there is only one source', async () => {
+		field('image', 'Hero');
+		await load();
+		document.querySelector('.stock-photos-field-button').click();
+		await vi.waitFor(() => expect(tabs()).toHaveLength(1));
+
+		expect(panel().querySelector('.stock-photos-tabs').hidden).toBe(true);
+		expect(searchCalls()).toHaveLength(0);
+	});
+
+	it('switch to a gallery, which lists its photos without a query and has no license link', async () => {
+		field('image', 'Hero');
+		vi.stubGlobal('fetch', routes({ sources: [pixabaySource, gallerySource], search: source => (source === 'pixabay' ? searchResult : galleryResult) }));
+		await load();
+		document.querySelector('.stock-photos-field-button').click();
+		await vi.waitFor(() => expect(tabs()).toHaveLength(2));
+
+		expect(panel().querySelector('.stock-photos-tabs').hidden).toBe(false);
+		expect(tabs().map(tab => tab.getAttribute('aria-selected'))).toEqual(['true', 'false']);
+
+		tabs()[1].click();
+		await vi.waitFor(() => expect(panel().querySelectorAll('.stock-photos-grid li')).toHaveLength(1));
+
+		expect(tabs().map(tab => tab.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+		expect(searchCalls().at(-1).searchParams.get('source')).toBe('gallery:restaurant');
+		expect(searchCalls().at(-1).searchParams.get('q')).toBe('');
+		expect(panel().querySelector('.stock-photos-source').textContent).toBe('Open Restaurant');
+		expect(panel().querySelector('.stock-photos-license').hidden).toBe(true);
+		expect(panel().querySelector('input[type=search]').placeholder).toBe('Search Restaurant');
+	});
+
+	it('carry a query over: switching tabs runs the same search in the new source', async () => {
+		field('image', 'Hero');
+		vi.stubGlobal('fetch', routes({ sources: [pixabaySource, gallerySource], search: source => (source === 'pixabay' ? searchResult : galleryResult) }));
+		await load();
+		document.querySelector('.stock-photos-field-button').click();
+		await vi.waitFor(() => expect(tabs()).toHaveLength(2));
+		await search('burrata');
+
+		tabs()[1].click();
+		await vi.waitFor(() => expect(searchCalls().at(-1).searchParams.get('source')).toBe('gallery:restaurant'));
+		expect(searchCalls().at(-1).searchParams.get('q')).toBe('burrata');
+	});
+
+	it('a gallery photo goes in the field with all of its details', async () => {
+		const hero = field('image', 'Hero');
+		vi.stubGlobal('fetch', routes({ sources: [gallerySource], search: galleryResult }));
+		await load();
+		hero.querySelector('.stock-photos-field-button').click();
+		await vi.waitFor(() => expect(panel().querySelectorAll('.stock-photos-grid li')).toHaveLength(1));
+
+		panel().querySelector('.stock-photos-add').click();
+		await vi.waitFor(() => expect(hero.totalfield.insertPhotos).toHaveBeenCalled());
+
+		expect(hero.totalfield.insertPhotos).toHaveBeenCalledWith({ photos: [{
+			url        : 'ext/totalcms/stock-photos/library?gallery=restaurant&name=burrata.jpg',
+			filename   : 'burrata.jpg',
+			alt        : 'Burrata',
+			credit     : { author: 'Nadin Sh', source: 'Pexels' },
+			tags       : ['starter'],
+			link       : 'https://example.com/menu',
+			focalpoint : { x: 30, y: 60 },
+		}] });
+	});
+
+	it('drop a slow answer from a tab the editor has left', async () => {
+		field('image', 'Hero');
+		let answer;
+		const late = new Promise(resolve => { answer = resolve; });
+		vi.stubGlobal('fetch', vi.fn(async url => {
+			if (String(url).endsWith('/sources')) return { ok: true, json: async () => ({ sources: [gallerySource, pixabaySource] }) };
+			const source = new URL(url).searchParams.get('source');
+			if (source === 'gallery:restaurant') {
+				await late;
+				return { ok: true, json: async () => galleryResult };
+			}
+			return { ok: true, json: async () => searchResult };
+		}));
+		await load();
+		document.querySelector('.stock-photos-field-button').click();
+		await vi.waitFor(() => expect(tabs()).toHaveLength(2));
+
+		panel().querySelector('input[type=search]').value = 'pasta';
+		tabs()[1].click();
+		await vi.waitFor(() => expect(panel().querySelectorAll('.stock-photos-grid li')).toHaveLength(2));
+		answer();
+		await new Promise(resolve => setTimeout(resolve, 0));
+
+		expect(panel().querySelectorAll('.stock-photos-grid li')).toHaveLength(2);
 	});
 });
 

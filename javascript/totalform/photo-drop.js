@@ -5,13 +5,13 @@
 // The contract, public for any photo source:
 //
 //   dataTransfer type  application/x-totalcms-photo
-//   payload            {"photos": [{url, filename, alt, credit}, …]}  — always a list
+//   payload            {"photos": [{url, filename, alt, credit, tags, link, focalpoint}, …]}  — always a list
 //
 // `url` must be fetchable by the admin page: same-origin, or a host that sends
 // CORS headers. The field fetches each photo and hands it to its Dropzone as an
 // ordinary File, so rules, previews, progress and chunking work as for any
-// upload. `alt` and `credit` ride with the file as its `meta` form field, and
-// the server applies them to the stored image.
+// upload. `alt`, `credit`, `tags`, `link` and `focalpoint` ride with the file
+// as its `meta` form field, and the server applies them to the stored image.
 //
 // Without dragging: field.insertPhotos(payload) does the same.
 //-----------------------------------------------
@@ -60,11 +60,18 @@ export async function photosToFiles(photos, fetcher = globalThis.fetch.bind(glob
 	return files;
 }
 
-/** The descriptive keys the server keeps: alt text and the credit. */
+/**
+ * The descriptive details that ride with the upload: alt text, credit, tags,
+ * link and focal point. The server keeps only the keys an image may have.
+ */
 export function photoMeta(photo) {
 	const meta = {};
 	if (typeof photo.alt === "string" && photo.alt.trim() !== "") meta.alt = photo.alt.trim();
-	if (photo.credit && typeof photo.credit === "object") meta.credit = photo.credit;
+	if (typeof photo.link === "string" && photo.link.trim() !== "") meta.link = photo.link.trim();
+	if (Array.isArray(photo.tags) && photo.tags.length > 0) meta.tags = photo.tags;
+	for (const key of ["credit", "focalpoint"]) {
+		if (photo[key] && typeof photo[key] === "object" && !Array.isArray(photo[key])) meta[key] = photo[key];
+	}
 	return meta;
 }
 

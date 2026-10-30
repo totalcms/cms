@@ -643,6 +643,15 @@ Settings access is not a separate capability — `$context->setting()` and `$con
 
 Define a `settings_schema` in your manifest to enable a settings form in the admin UI. Settings are managed by admins through the extension settings page in the dashboard.
 
+The form shows one field per row, in the order of `properties`. To group fields, give the schema a `formgrid`, written as in a [collection schema](docs/schemas/formgrid): columns, `---` dividers, `--- Title` section headers and `[[ ]]` fieldsets (accordions are not supported here). The extension's permission toggles keep the top row.
+
+```json
+{
+  "formgrid": "[[ Library\ngalleries\n]]\n[[ Pixabay\npixabayKey\nsafeSearch\n]]",
+  "properties": { "...": {} }
+}
+```
+
 ## File Storage
 
 When your extension needs to persist files — generated secrets, caches, state — use the storage API instead of raw file functions:

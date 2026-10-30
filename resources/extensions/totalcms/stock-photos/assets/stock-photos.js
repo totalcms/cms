@@ -3,9 +3,10 @@
 //
 // Each image and gallery field gets a small button beside its label, and an
 // object page's actions menu (the ⋯ popover) gets a Stock Photos item. Both
-// open a side panel that searches the provider through this extension's admin
-// routes (the API key stays on the server) and hands photos to that field
-// through core's photo drop contract:
+// open a side panel with a tab per source (Pixabay, the site's library
+// galleries). It searches through this extension's admin routes (an API key
+// stays on the server) and hands photos to that field through core's photo
+// drop contract:
 //
 //   drag   dataTransfer "application/x-totalcms-photo" = {"photos": [...]}
 //   click  field.insertPhotos({"photos": [...]})
@@ -17,13 +18,16 @@
 
 const PHOTO_TYPE = "application/x-totalcms-photo";
 const FIELDS     = ".form-field.image-field, .form-field.gallery-field";
-const SEARCH_URL = new URL("ext/totalcms/stock-photos/search", document.baseURI);
+const SEARCH_URL  = new URL("ext/totalcms/stock-photos/search", document.baseURI);
+const SOURCES_URL = new URL("ext/totalcms/stock-photos/sources", document.baseURI);
 
-let panel  = null;
+let panel   = null;
+let sources = null; // the tabs, loaded once on first open
+let source  = null; // the active tab
 let target = null;  // the field container Add puts photos in
 let opener = null;  // what opened the panel, which gets focus back on close
 let fields = [];    // the containers listed in the panel's field picker
-let state  = { query: "", page: 1, orientation: "", total: 0, shown: 0 };
+let state   = { query: "", page: 1, orientation: "", total: 0, shown: 0 };
 
 //-----------------------------------------------
 // A button on each field that can take photos
@@ -139,6 +143,7 @@ function openFor(container, button, fromMenu = false) {
 	fillPicker();
 	panel.hidden = false;
 	panel.querySelector("input[type=search]").focus();
+	if (!sources) loadSources();
 }
 
 function closePanel() {
@@ -162,7 +167,7 @@ document.addEventListener("keydown", event => {
 //-----------------------------------------------
 
 function buildPanel() {
-	const input  = el("input", { type: "search", name: "q", placeholder: "Search photos", "aria-label": "Search photos", required: "" });
+	const input  = el("input", { type: "search", name: "q", placeholder: "Search photos", "aria-label": "Search photos" });
 	const select = el("select", { name: "orientation", "aria-label": "Orientation" },
 		el("option", { value: "" }, "Default"),
 		el("option", { value: "all" }, "Any shape"),
@@ -176,6 +181,7 @@ function buildPanel() {
 			el("h2", {}, "Stock Photos"),
 			el("button", { type: "button", class: "stock-photos-close", "aria-label": "Close" }, "×"),
 		),
+		el("div", { class: "stock-photos-tabs", role: "tablist", "aria-label": "Photo sources", hidden: "" }),
 		form,
 		el("label", { class: "stock-photos-target" }, "Add to ", el("select", { name: "field" })),
 		el("p", { class: "stock-photos-status", role: "status" }),
@@ -189,9 +195,7 @@ function buildPanel() {
 
 	form.addEventListener("submit", event => {
 		event.preventDefault();
-		state = { query: input.value.trim(), page: 1, orientation: select.value, total: 0, shown: 0 };
-		node.querySelector(".stock-photos-grid").replaceChildren();
-		search(node);
+		startSearch(node);
 	});
 	node.querySelector(".stock-photos-more").addEventListener("click", () => {
 		state.page++;
@@ -206,8 +210,78 @@ function buildPanel() {
 	return node;
 }
 
+//-----------------------------------------------
+// Sources: one tab each
+//-----------------------------------------------
+
+async function loadSources() {
+	const status = panel.querySelector(".stock-photos-status");
+	try {
+		const response = await fetch(SOURCES_URL, { credentials: "same-origin", headers: { Accept: "application/json" } });
+		const data = await response.json();
+		if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+		sources = data.sources ?? [];
+	} catch (error) {
+		status.textContent = `Photo sources could not be loaded: ${error.message}`;
+		return;
+	}
+	if (sources.length === 0) {
+		status.textContent = "No photo sources are available to you.";
+		return;
+	}
+
+	const tabs = panel.querySelector(".stock-photos-tabs");
+	tabs.replaceChildren(...sources.map(item => {
+		const tab = el("button", { type: "button", role: "tab", "aria-selected": "false", "data-source": item.id }, item.label);
+		tab.addEventListener("click", () => selectSource(item));
+		return tab;
+	}));
+	tabs.hidden = sources.length < 2;
+	selectSource(sources[0]);
+}
+
+function selectSource(item) {
+	source = item;
+	panel.querySelectorAll(".stock-photos-tabs [role=tab]").forEach(tab => {
+		tab.setAttribute("aria-selected", String(tab.dataset.source === item.id));
+	});
+
+	const input = panel.querySelector("input[type=search]");
+	input.placeholder = item.browses ? `Search ${item.label}` : "Search photos";
+
+	const link = panel.querySelector(".stock-photos-source");
+	link.href        = item.url;
+	link.textContent = item.browses ? `Open ${item.label}` : `Images from ${item.label}`;
+
+	// The terms editors agree to by using a photo, one click away.
+	const license = panel.querySelector(".stock-photos-license");
+	license.hidden = !item.license;
+	if (item.license) {
+		license.href        = item.license;
+		license.textContent = "License";
+	}
+
+	// A gallery lists itself; a stock service waits for a query.
+	panel.querySelector(".stock-photos-grid").replaceChildren();
+	panel.querySelector(".stock-photos-more").hidden = true;
+	panel.querySelector(".stock-photos-status").textContent = "";
+	if (item.browses || input.value.trim() !== "") startSearch(panel);
+}
+
+function startSearch(node) {
+	state = {
+		query       : node.querySelector("input[type=search]").value.trim(),
+		page        : 1,
+		orientation : node.querySelector("select[name=orientation]").value,
+		total       : 0,
+		shown       : 0,
+	};
+	node.querySelector(".stock-photos-grid").replaceChildren();
+	search(node);
+}
+
 async function search(node) {
-	if (state.query === "") return;
+	if (!source || (state.query === "" && !source.browses)) return;
 
 	const status = node.querySelector(".stock-photos-status");
 	const more   = node.querySelector(".stock-photos-more");
@@ -215,6 +289,7 @@ async function search(node) {
 	more.hidden = true;
 
 	const url = new URL(SEARCH_URL);
+	url.searchParams.set("source", source.id);
 	url.searchParams.set("q", state.query);
 	url.searchParams.set("page", String(state.page));
 	if (state.orientation) url.searchParams.set("orientation", state.orientation);
@@ -229,26 +304,22 @@ async function search(node) {
 		return;
 	}
 
-	const source = node.querySelector(".stock-photos-source");
-	source.href        = data.provider.url;
-	source.textContent = `Images from ${data.provider.label}`;
-
-	// The terms editors agree to by using a photo, one click away.
-	const license = node.querySelector(".stock-photos-license");
-	license.href        = data.provider.license;
-	license.textContent = "License";
+	// A slow answer from a tab the editor has since left is dropped.
+	if (data.provider.id !== source.id) return;
 
 	const grid = node.querySelector(".stock-photos-grid");
 	data.photos.forEach(photo => grid.append(tile(photo)));
 
 	state.total  = data.total;
 	state.shown += data.photos.length;
-	status.textContent = state.total === 0 ? "No photos found." : `${state.shown} of ${state.total} photos`;
+	const empty = source.browses && state.query === "" ? `${source.label} has no photos yet.` : "No photos found.";
+	status.textContent = state.total === 0 ? empty : `${state.shown} of ${state.total} photos`;
 	more.hidden = state.shown >= state.total || data.photos.length === 0;
 }
 
 function tile(photo) {
-	const payload = { photos: [{ url: photo.download, filename: photo.filename, alt: photo.alt, credit: photo.credit }] };
+	const { download, filename, alt, credit, tags, link, focalpoint } = photo;
+	const payload = { photos: [{ url: download, filename, alt, credit, tags, link, focalpoint }] };
 	const author  = photo.credit?.author || "";
 
 	const img = el("img", { src: photo.preview || photo.thumb, alt: photo.alt, loading: "lazy", draggable: "true", width: String(photo.width), height: String(photo.height) });

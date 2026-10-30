@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Bundled\StockPhotos;
 
 /**
- * A stock photo service the search panel can show. Pixabay is the only one
- * today; Pexels joins if it issues keys again. The panel and core never see
- * which one answered — they get the same result shape from every provider.
+ * A source the panel can show as a tab: a stock photo service (Pixabay) or
+ * one of the site's own galleries. The panel and core never see which one
+ * answered; they get the same result shape from every provider.
  */
 interface PhotoProvider
 {
@@ -20,8 +20,11 @@ interface PhotoProvider
 	/** The provider's home page, linked from the panel. */
 	public function homeUrl(): string;
 
-	/** The license photos are used under, linked from the panel so editors can read it. */
+	/** The license photos are used under, linked from the panel so editors can read it. Empty for none. */
 	public function licenseUrl(): string;
+
+	/** Whether an empty search lists photos (a gallery) or needs a query first (a stock service). */
+	public function browses(): bool;
 
 	/**
 	 * One page of results.
@@ -30,7 +33,10 @@ interface PhotoProvider
 	 *
 	 * @throws \RuntimeException when the provider has no key or cannot be reached
 	 *
-	 * @return array{total: int, photos: list<array{id: string, thumb: string, preview: string, download: string, filename: string, width: int, height: int, alt: string, credit: array<string,string>}>}
+	 * Each photo has id, thumb, preview, download, filename, width, height, alt
+	 * and credit; a gallery photo also carries tags, link and focalpoint.
+	 *
+	 * @return array{total: int, photos: list<array<string,mixed>>}
 	 */
 	public function search(string $query, int $page, string $orientation): array;
 

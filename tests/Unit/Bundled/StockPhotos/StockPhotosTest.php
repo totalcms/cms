@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use TotalCMS\Bundled\StockPhotos\DownloadAction;
+use TotalCMS\Bundled\StockPhotos\Extension;
+use TotalCMS\Bundled\StockPhotos\GalleryProvider;
+use TotalCMS\Bundled\StockPhotos\LibraryAction;
+use TotalCMS\Bundled\StockPhotos\PhotoSources;
 use TotalCMS\Bundled\StockPhotos\PixabayProvider;
 use TotalCMS\Bundled\StockPhotos\SearchAction;
+use TotalCMS\Bundled\StockPhotos\SourcesAction;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Property\Data\GalleryData;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -15,13 +24,11 @@ use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
 
 $dir = dirname(__DIR__, 4) . '/resources/extensions/totalcms/stock-photos';
-require_once $dir . '/PhotoProvider.php';
-require_once $dir . '/PixabayProvider.php';
-require_once $dir . '/SearchAction.php';
-require_once $dir . '/DownloadAction.php';
+require_once $dir . '/Extension.php';
 
-// The Pixabay provider and the extension's two admin routes, offline: the API
-// answers from a recorded response and the image proxy from the fixture JPEG.
+// The Pixabay and gallery sources and the extension's admin routes, offline:
+// the API answers from a recorded response, the image proxy from the fixture
+// JPEG, and galleries from a stubbed PropertyFetcher.
 
 function pixabayHit(array $overrides = []): array
 {
@@ -36,6 +43,50 @@ function pixabayHit(array $overrides = []): array
 		'imageHeight'   => 2250,
 		'user_id'       => 48777,
 		'user'          => 'Josch13',
+	];
+}
+
+/**
+ * The sources, as an editor who may (or may not) read the gallery collection
+ * sees them.
+ *
+ * @param list<\TotalCMS\Bundled\StockPhotos\PhotoProvider> $providers
+ */
+function stockPhotoSources(array $providers, bool $canReadGalleries = true): PhotoSources
+{
+	$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->auth = ['enable' => true];
+
+	$access = test()->createMock(AccessManager::class);
+	$access->method('userData')->willReturn(['id' => 'editor@example.com']);
+	$control = test()->createMock(AccessControlService::class);
+	$control->method('canAccessCollection')->willReturn($canReadGalleries);
+
+	return new PhotoSources($providers, $config, $access, $control);
+}
+
+/** A gallery source whose gallery holds $images. */
+function libraryGallery(array $images, string $id = 'restaurant'): GalleryProvider
+{
+	$fetcher = test()->createMock(PropertyFetcher::class);
+	$fetcher->method('fetchProperty')->willReturn(new GalleryData($images));
+
+	return new GalleryProvider($id, $fetcher, '');
+}
+
+function libraryImage(string $name, array $overrides = []): array
+{
+	return $overrides + [
+		'name'       => $name,
+		'alt'        => 'A plate of food',
+		'width'      => 2400,
+		'height'     => 1600,
+		'mime'       => 'image/jpeg',
+		'tags'       => [],
+		'link'       => '',
+		'focalpoint' => ['x' => 50, 'y' => 50],
+		'credit'     => [],
+		'uploadDate' => '2026-10-30T00:00:00+00:00',
 	];
 }
 
@@ -172,7 +223,7 @@ test('the search route points each download at the proxy and keeps the key serve
 	$psr17    = new Psr17Factory();
 	$request  = $psr17->createServerRequest('GET', '/admin/ext/totalcms/stock-photos/search?q=flower')->withQueryParams(['q' => 'flower', 'orientation' => 'sideways']);
 
-	$response = (new SearchAction($provider, new JsonRenderer(), 'vertical'))($request, $psr17->createResponse());
+	$response = (new SearchAction(stockPhotoSources([$provider]), new JsonRenderer(), 'vertical'))($request, $psr17->createResponse());
 	$body     = json_decode((string)$response->getBody(), true);
 
 	expect($response->getStatusCode())->toBe(200)
@@ -197,7 +248,7 @@ test('the download proxy returns a Pixabay image and refuses any other host', fu
 		},
 	);
 	$downloader = new RemoteFileDownloader(pixabayHttp(new HttpResponse(200, '')), $config, $public);
-	$action     = new DownloadAction(new PixabayProvider(pixabayHttp(new HttpResponse(200, '')), stockPhotosCache(), 'k'), $downloader);
+	$action     = new DownloadAction(stockPhotoSources([new PixabayProvider(pixabayHttp(new HttpResponse(200, '')), stockPhotosCache(), 'k')]), $downloader);
 	$psr17      = new Psr17Factory();
 	$get        = fn (string $url) => $action($psr17->createServerRequest('GET', '/download')->withQueryParams(['url' => $url]), $psr17->createResponse());
 
@@ -209,4 +260,124 @@ test('the download proxy returns a Pixabay image and refuses any other host', fu
 	expect($get('https://example.com/a.jpg')->getStatusCode())->toBe(400)
 		->and($get('http://127.0.0.1/a.jpg')->getStatusCode())->toBe(400)
 		->and($fetched)->toHaveCount(1);
+});
+
+test('the galleries setting is read as a list, from either shape, without blanks or repeats', function (): void {
+	expect(Extension::galleryIds(['restaurant', ' team ', '', 'restaurant']))->toBe(['restaurant', 'team'])
+		->and(Extension::galleryIds('restaurant, team,,'))->toBe(['restaurant', 'team'])
+		->and(Extension::galleryIds('["team","restaurant"]'))->toBe(['team', 'restaurant'])
+		->and(Extension::galleryIds(null))->toBe([]);
+});
+
+test('a gallery lists every photo on an empty search and filters by words and shape', function (): void {
+	$gallery = libraryGallery([
+		libraryImage('burrata.jpg', ['alt' => 'Burrata with basil', 'tags' => ['starter'], 'credit' => ['author' => 'Nadin Sh']]),
+		libraryImage('scallops.jpg', ['alt' => 'Seared scallops', 'width' => 2400, 'height' => 3200, 'credit' => ['author' => 'Nadin Sh']]),
+		libraryImage('dining-room.jpg', ['alt' => 'The dining room', 'tags' => ['interior']]),
+	]);
+
+	$names = fn (array $result): array => array_column($result['photos'], 'id');
+
+	expect($gallery->browses())->toBeTrue()
+		->and($names($gallery->search('', 1, 'all')))->toBe(['burrata.jpg', 'scallops.jpg', 'dining-room.jpg'])
+		->and($names($gallery->search('nadin', 1, 'all')))->toBe(['burrata.jpg', 'scallops.jpg'])
+		->and($names($gallery->search('STARTER basil', 1, 'all')))->toBe(['burrata.jpg'])
+		->and($names($gallery->search('dining', 1, 'all')))->toBe(['dining-room.jpg'])
+		->and($names($gallery->search('', 1, 'vertical')))->toBe(['scallops.jpg'])
+		->and($names($gallery->search('', 1, 'horizontal')))->toBe(['burrata.jpg', 'dining-room.jpg'])
+		->and($gallery->search('lobster', 1, 'all')['total'])->toBe(0);
+});
+
+test('a gallery photo carries its details and downloads its original from the library route', function (): void {
+	$credit = ['author' => 'Nadin Sh', 'source' => 'Pexels', 'license' => 'Pexels License'];
+	$photo  = libraryGallery([libraryImage('burrata.jpg', [
+		'alt'        => 'Burrata with basil',
+		'tags'       => ['starter', 'cheese'],
+		'link'       => '/menu',
+		'focalpoint' => ['x' => 30, 'y' => 60],
+		'credit'     => $credit,
+		'featured'   => true,
+	])])->search('', 1, 'all')['photos'][0];
+
+	expect($photo)->toMatchArray([
+		'filename'   => 'burrata.jpg',
+		'download'   => 'ext/totalcms/stock-photos/library?gallery=restaurant&name=burrata.jpg',
+		'alt'        => 'Burrata with basil',
+		'tags'       => ['starter', 'cheese'],
+		'link'       => '/menu',
+		'focalpoint' => ['x' => 30, 'y' => 60],
+		'credit'     => $credit,
+	])
+		->and($photo)->not->toHaveKey('featured')
+		->and($photo['thumb'])->toStartWith('/imageworks/gallery/restaurant/gallery/burrata.jpg');
+});
+
+test('a gallery pages its photos thirty at a time', function (): void {
+	$images  = array_map(fn (int $i): array => libraryImage("photo-$i.jpg"), range(1, 35));
+	$gallery = libraryGallery($images);
+
+	expect($gallery->search('', 1, 'all')['photos'])->toHaveCount(30)
+		->and($gallery->search('', 2, 'all')['photos'])->toHaveCount(5)
+		->and($gallery->search('', 2, 'all')['total'])->toBe(35);
+});
+
+test('an editor who cannot read galleries sees only the stock service', function (): void {
+	$pixabay = new PixabayProvider(pixabayHttp(new HttpResponse(200, '')), stockPhotosCache(), 'k');
+	$gallery = libraryGallery([libraryImage('a.jpg')]);
+
+	$ids = fn (PhotoSources $sources): array => array_map(fn ($provider): string => $provider->id(), $sources->available());
+
+	expect($ids(stockPhotoSources([$pixabay, $gallery])))->toBe(['pixabay', 'gallery:restaurant'])
+		->and($ids(stockPhotoSources([$pixabay, $gallery], canReadGalleries: false)))->toBe(['pixabay'])
+		->and(stockPhotoSources([$gallery], canReadGalleries: false)->gallery('restaurant'))->toBeNull();
+});
+
+test('the sources route lists the tabs, and search lists a gallery without a query or the proxy', function (): void {
+	$sources = stockPhotoSources([libraryGallery([libraryImage('burrata.jpg')])]);
+	$psr17   = new Psr17Factory();
+
+	$list = json_decode((string)(new SourcesAction($sources, new JsonRenderer()))($psr17->createServerRequest('GET', '/sources'), $psr17->createResponse())->getBody(), true);
+	expect($list['sources'])->toBe([[
+		'id'      => 'gallery:restaurant',
+		'label'   => 'Restaurant',
+		'url'     => 'collections/gallery/restaurant',
+		'license' => '',
+		'browses' => true,
+	]]);
+
+	$search  = new SearchAction($sources, new JsonRenderer());
+	$request = $psr17->createServerRequest('GET', '/admin/ext/totalcms/stock-photos/search');
+	$body    = json_decode((string)$search($request->withQueryParams(['source' => 'gallery:restaurant']), $psr17->createResponse())->getBody(), true);
+
+	expect($body['total'])->toBe(1)
+		->and($body['photos'][0]['download'])->toBe('ext/totalcms/stock-photos/library?gallery=restaurant&name=burrata.jpg');
+
+	expect($search($request->withQueryParams(['source' => 'pixabay', 'q' => 'flower']), $psr17->createResponse())->getStatusCode())->toBe(404);
+});
+
+test('the library route serves a listed image byte for byte and nothing else', function (): void {
+	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->datadir = sys_get_temp_dir() . '/stock-library-' . uniqid();
+	$config->auth    = ['enable' => false];
+	mkdir("{$config->datadir}/gallery/restaurant/gallery", 0755, true);
+	$jpeg = (string)file_get_contents(dirname(__DIR__, 3) . '/test-data/test-image.jpg');
+	file_put_contents("{$config->datadir}/gallery/restaurant/gallery/burrata.jpg", $jpeg);
+	file_put_contents("{$config->datadir}/gallery/restaurant/gallery/unlisted.jpg", $jpeg);
+	file_put_contents("{$config->datadir}/secret.txt", 'secret');
+
+	$action = new LibraryAction(stockPhotoSources([libraryGallery([libraryImage('burrata.jpg')])]), $config);
+	$psr17  = new Psr17Factory();
+	$get    = fn (array $query) => $action($psr17->createServerRequest('GET', '/library')->withQueryParams($query), $psr17->createResponse());
+
+	$image = $get(['gallery' => 'restaurant', 'name' => 'burrata.jpg']);
+	expect($image->getStatusCode())->toBe(200)
+		->and($image->getHeaderLine('Content-Type'))->toBe('image/jpeg')
+		->and((string)$image->getBody())->toBe($jpeg);
+
+	expect($get(['gallery' => 'restaurant', 'name' => 'unlisted.jpg'])->getStatusCode())->toBe(404)
+		->and($get(['gallery' => 'restaurant', 'name' => '../../../secret.txt'])->getStatusCode())->toBe(404)
+		->and($get(['gallery' => 'other', 'name' => 'burrata.jpg'])->getStatusCode())->toBe(404);
+
+	array_map('unlink', glob("{$config->datadir}/gallery/restaurant/gallery/*") ?: []);
+	@unlink("{$config->datadir}/secret.txt");
 });

@@ -45,13 +45,15 @@ A photo source hands the field a list of photos:
       "url": "/admin/ext/acme/library/file?id=42",
       "filename": "terrace-at-dusk",
       "alt": "The terrace at dusk",
-      "credit": { "author": "Ana Ruiz", "source": "Acme Library" }
+      "credit": { "author": "Ana Ruiz", "source": "Acme Library" },
+      "tags": ["terrace", "evening"],
+      "focalpoint": { "x": 40, "y": 60 }
     }
   ]
 }
 ```
 
-Only `url` is required. It must be one the admin page can fetch: on the same site, or on a server that allows cross-origin requests (CORS). The field downloads each photo, then uploads it like a dropped file, so the field's upload rules apply. `alt` and `credit` are saved on the stored image.
+Only `url` is required. It must be one the admin page can fetch: on the same site, or on a server that allows cross-origin requests (CORS). The field downloads each photo, then uploads it like a dropped file, so the field's upload rules apply. `alt`, `credit`, `tags`, `link` and `focalpoint` are saved on the stored image; anything else in a photo is ignored.
 
 There are two ways to hand over the list:
 

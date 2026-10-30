@@ -31,6 +31,12 @@ describe('turning photos into files', () => {
 		expect(photoMeta({ url: '/a.jpg', alt: ' ' })).toEqual({});
 	});
 
+	it('also carries tags, link and focal point, and drops empty or malformed ones', () => {
+		expect(photoMeta({ url: '/a.jpg', tags: ['starter'], link: ' https://example.com/menu ', focalpoint: { x: 30, y: 60 } }))
+			.toEqual({ tags: ['starter'], link: 'https://example.com/menu', focalpoint: { x: 30, y: 60 } });
+		expect(photoMeta({ url: '/a.jpg', tags: [], link: '', focalpoint: [1, 2], credit: 'Ana' })).toEqual({});
+	});
+
 	it('names the file from the photo, else its URL, with an extension for its type', () => {
 		expect(fileName({ url: '/x', filename: 'burrata plate' }, 'image/jpeg')).toBe('burrata-plate.jpg');
 		expect(fileName({ url: 'https://cdn.example.com/photos/dish.webp?w=640' }, 'image/webp')).toBe('dish.webp');
