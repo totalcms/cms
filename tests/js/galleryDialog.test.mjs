@@ -72,7 +72,7 @@ function galleryWithFields(fieldKeys) {
 
 describe('GalleryField populate -> read round-trip', () => {
 	test('preserves a fully-populated image exactly', () => {
-		const fields = ['name', 'alt', 'link', 'focalpoint-x', 'focalpoint-y', 'exif-author', 'exif-camera', 'palette-0', 'palette-1'];
+		const fields = ['name', 'alt', 'link', 'focalpoint-x', 'focalpoint-y', 'exif-author', 'exif-camera', 'credit-author', 'credit-source', 'palette-0', 'palette-1'];
 		const gallery = galleryWithFields(fields);
 
 		const original = {
@@ -81,6 +81,7 @@ describe('GalleryField populate -> read round-trip', () => {
 			link: 'https://example.com',
 			focalpoint: { x: 30, y: 70 },
 			exif: { author: 'Jane', camera: 'Canon' },
+			credit: { author: 'Christoph', source: 'Pixabay' },
 			palette: ['#ffffff', '#000000'],
 		};
 
@@ -94,6 +95,16 @@ describe('GalleryField populate -> read round-trip', () => {
 		gallery.populateSharedDialog({ name: 'pic.jpg' }); // no exif on the source
 
 		expect(gallery.readSharedDialog()).toEqual({ name: 'pic.jpg', exif: { nodata: '' } });
+	});
+
+	// The dialog used to show a stored credit blank, and editing any other
+	// field then saved the image without it.
+	test('keeps the credit, and sends cleared credit fields as empty', () => {
+		const gallery = galleryWithFields(['name', 'credit-author', 'credit-license']);
+
+		gallery.populateSharedDialog({ name: 'pic.jpg', credit: { author: 'Christoph' } });
+
+		expect(gallery.readSharedDialog()).toEqual({ name: 'pic.jpg', credit: { author: 'Christoph', license: '' }, exif: { nodata: '' } });
 	});
 });
 

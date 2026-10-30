@@ -264,6 +264,9 @@ export default class GalleryField extends ImageField {
 			} else if (key.startsWith("focalpoint-")) {
 				const fpKey = key.replace("focalpoint-","");
 				field.totalfield.setValue(imageData.focalpoint?.[fpKey] ?? 0);
+			} else if (key.startsWith("credit-")) {
+				const creditKey = key.replace("credit-","");
+				field.totalfield.setValue(imageData.credit?.[creditKey] ?? "");
 			} else if (key.startsWith("palette-")) {
 				const paletteIndex = parseInt(key.replace("palette-",""));
 				field.totalfield.setValue(imageData.palette ? imageData.palette[paletteIndex] : "");
@@ -303,6 +306,11 @@ export default class GalleryField extends ImageField {
 				key = key.replace("focalpoint-","");
 				if (!imageData["focalpoint"]) imageData["focalpoint"] = {};
 				imageData["focalpoint"][key] = value;
+			} else if (key.startsWith("credit-")) {
+				// Always sent, empty values included, so clearing a credit field saves.
+				key = key.replace("credit-","");
+				if (!imageData["credit"]) imageData["credit"] = {};
+				imageData["credit"][key] = value;
 			} else if (key.startsWith("palette-")) {
 				if (!imageData["palette"]) imageData["palette"] = [];
 				imageData["palette"].push(value.hex);
