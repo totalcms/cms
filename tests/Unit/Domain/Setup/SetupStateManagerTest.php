@@ -331,6 +331,27 @@ final class SetupStateManagerTest extends TestCase
 			recursiveRmdir($tmpDir);
 		}
 	}
+
+	public function testAnAuthCollectionWithNoUsersDoesNotCompleteSetup(): void
+	{
+		// A starter ships its auth collection empty: the collection's own
+		// .meta.json and .index.json, no user files. That is a new install,
+		// and the wizard must run so its owner creates the admin account.
+		$tmpDir = sys_get_temp_dir() . '/tcms-setup-test-' . uniqid();
+		mkdir($tmpDir . '/auth', 0755, true);
+		file_put_contents($tmpDir . '/auth/.meta.json', '{"id":"auth","schema":"auth"}');
+		file_put_contents($tmpDir . '/auth/.index.json', '{"objects":[]}');
+
+		try {
+			$config  = createTestConfig(['datadir' => $tmpDir, 'auth' => ['collection' => 'auth']]);
+			$manager = $this->makeManager($this->session, $config);
+
+			expect($manager->isSetupComplete())->toBeFalse();
+			expect(is_file($tmpDir . '/.system/setup-state.json'))->toBeFalse();
+		} finally {
+			recursiveRmdir($tmpDir);
+		}
+	}
 }
 
 /**

@@ -198,8 +198,10 @@ class SetupStateManager
 			return false;
 		}
 
+		// A user is an object file. The collection's own .meta.json and
+		// .index.json are there whether it has users or not.
 		foreach ($entries as $entry) {
-			if (str_ends_with($entry, '.json')) {
+			if (!str_starts_with($entry, '.') && str_ends_with($entry, '.json')) {
 				return true;
 			}
 		}
