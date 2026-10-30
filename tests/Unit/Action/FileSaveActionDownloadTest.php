@@ -5,6 +5,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
 use TotalCMS\Domain\Media\Service\HeicConverter;
+use TotalCMS\Domain\Media\Service\PropertyFileStore;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -30,7 +31,23 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	return new FileSaveAction($renderer, $factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), new ChunkedUploadAssembler($config));
+	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
+
+	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config));
+}
+
+/** The URL fetch FileSaveAction hands to PropertyFileStore, with the same downloader. */
+function fetchThroughStore(HttpClientInterface $httpClient, string $url, ?Config $config = null): string
+{
+	if (!$config instanceof Config) {
+		$config                  = test()->createMock(Config::class);
+		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+		$config->maxDownloadSize = 2048;
+	}
+
+	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
+
+	return $store->fetch($url);
 }
 
 function createDownloadRequest(string $url): ServerRequestInterface
@@ -58,13 +75,7 @@ describe('FileSaveAction URL Download', function (): void {
 			)
 			->willReturn(new HttpResponse(200, $fileContent));
 
-		$action = createFileSaveAction($httpClient);
-
-		// We need to test the private method indirectly via reflection
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$result = $method->invoke($action, 'https://example.com/photo.jpg');
+		$result = fetchThroughStore($httpClient, 'https://example.com/photo.jpg');
 
 		expect($result)->toBeString();
 		expect(file_exists($result))->toBeTrue();
@@ -91,12 +102,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$httpClient->method('request')
 			->willReturn(new HttpResponse(404, 'Not Found'));
 
-		$action = createFileSaveAction($httpClient);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$method->invoke($action, 'https://example.com/missing.jpg');
+		fetchThroughStore($httpClient, 'https://example.com/missing.jpg');
 	})->throws(RuntimeException::class, 'HTTP error when downloading file: 404');
 
 	test('throws exception when connection fails', function (): void {
@@ -104,12 +110,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$httpClient->method('request')
 			->willThrowException(new RuntimeException('Connection timed out'));
 
-		$action = createFileSaveAction($httpClient);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$method->invoke($action, 'https://example.com/photo.jpg');
+		fetchThroughStore($httpClient, 'https://example.com/photo.jpg');
 	})->throws(RuntimeException::class, 'Failed to download file from URL');
 
 	test('throws size exceeded exception when download exceeds max size', function (): void {
@@ -121,12 +122,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		$config->maxDownloadSize = 10;
 
-		$action = createFileSaveAction($httpClient, $config);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$method->invoke($action, 'https://example.com/huge-file.zip');
+		fetchThroughStore($httpClient, 'https://example.com/huge-file.zip', $config);
 	})->throws(RuntimeException::class, 'maximum download size');
 
 	test('passes max_bytes option when maxDownloadSize is configured', function (): void {
@@ -147,12 +143,7 @@ describe('FileSaveAction URL Download', function (): void {
 		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		$config->maxDownloadSize = 50;
 
-		$action = createFileSaveAction($httpClient, $config);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$result = $method->invoke($action, 'https://example.com/file.txt');
+		$result = fetchThroughStore($httpClient, 'https://example.com/file.txt', $config);
 
 		// Cleanup
 		if (is_string($result) && file_exists($result)) {
@@ -180,12 +171,7 @@ describe('FileSaveAction URL Download', function (): void {
 			)
 			->willReturn(new HttpResponse(200, 'content'));
 
-		$action = createFileSaveAction($httpClient);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('downloadFileFromUrl');
-
-		$result = $method->invoke($action, 'https://example.com/redirect-test.jpg');
+		$result = fetchThroughStore($httpClient, 'https://example.com/redirect-test.jpg');
 
 		if (is_string($result) && file_exists($result)) {
 			unlink($result);

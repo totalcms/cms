@@ -5,32 +5,24 @@ namespace TotalCMS\Action\Property\File;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Media\Exception\UploadRejectedException;
 use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
-use TotalCMS\Domain\Media\Service\HeicConverter;
-use TotalCMS\Domain\Media\Service\UploadPreviewUrl;
-use TotalCMS\Domain\Property\Service\SaverFactory;
-use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Domain\Media\Service\PropertyFileStore;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Support\Config;
-use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
  * Store a file on an object property, whether it arrives as a (chunked)
- * upload or as a URL to fetch. The pieces — chunk assembly, remote download,
- * HEIC conversion, the preview URL — each live in their own service; this
- * action only decides which of them a request needs.
+ * upload or as a URL to fetch. Chunk assembly is the action's own; fetching,
+ * HEIC conversion, saving and the preview URL are PropertyFileStore's, which
+ * the MCP file tools share. This action only decides which a request needs.
  */
 readonly class FileSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private SaverFactory $factory,
-		private Config $config,
-		private HeicConverter $heicConverter,
-		private RemoteFileDownloader $downloader,
-		private FileUploadValidator $validator,
+		private PropertyFileStore $store,
 		private ChunkedUploadAssembler $assembler,
 	) {
 	}
@@ -72,35 +64,26 @@ readonly class FileSaveAction
 				throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
 			}
 
-			// Never store an executable/script, even from a URL.
-			$nameCheck = $this->validator->validateFilename(RemoteFileDownloader::filenameFor($fileUrl));
-			if (!$nameCheck['valid']) {
-				return $this->validationFailed($response, $nameCheck['errors']);
+			// Never store an executable/script, even from a URL: refused by name before downloading.
+			try {
+				$finalFilePath = $this->store->fetch($fileUrl);
+			} catch (UploadRejectedException $e) {
+				return $this->validationFailed($response, $e->errors);
 			}
-
-			$finalFilePath = $this->downloadFileFromUrl($fileUrl);
 		} else {
 			// Block executables/scripts before storing — applies to every
 			// property upload (image/file/gallery/depot). Checked on the first
 			// chunk too (the client filename is sent with each chunk), so a
 			// dangerous upload fails fast.
-			$nameCheck = $this->validator->validateFilename((string)$file->getClientFilename());
-			if (!$nameCheck['valid']) {
-				return $this->validationFailed($response, $nameCheck['errors']);
+			try {
+				$this->store->assertFilename((string)$file->getClientFilename());
+			} catch (UploadRejectedException $e) {
+				return $this->validationFailed($response, $e->errors);
 			}
 
 			$finalFilePath = $this->assembler->receive($file, $body);
 			if ($finalFilePath === null) {
 				return $this->renderer->json($response, ['status' => 'chunk received']);
-			}
-		}
-
-		// Convert HEIC to JPEG if applicable (for image properties only). If
-		// conversion fails the original is saved as-is and can be retried later.
-		if ($this->heicConverter->isHeicFile($finalFilePath)) {
-			$conversionResult = $this->heicConverter->convertAndReplace($finalFilePath);
-			if ($conversionResult->success) {
-				$finalFilePath = (string)$conversionResult->data['path'];
 			}
 		}
 
@@ -111,18 +94,13 @@ readonly class FileSaveAction
 		$subpath = is_string($rawPath) && $rawPath !== '' ? PathUtils::sanitizeSubpath($rawPath) : '';
 		$subpath = $subpath === '' ? null : $subpath;
 
-		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id'], $subpath);
-		$object = $saver->save($args['collection'], $args['id'], $args['property'], $finalFilePath, $subpath);
+		$stored = $this->store->store($args['collection'], $args['id'], $args['property'], $finalFilePath, $subpath);
 
 		// Additive meta: the preview the droplet swaps in for its local thumbnail.
 		// Omitted when it can't be built; never fails the upload.
-		$meta    = [];
-		$preview = UploadPreviewUrl::build($saver->type, $this->config->api, $args['collection'], $args['id'], $args['property'], $subpath, $object);
-		if ($preview !== '') {
-			$meta['preview'] = $preview;
-		}
+		$meta = $stored->preview !== '' ? ['preview' => $stored->preview] : [];
 
-		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer(), $meta);
+		return $this->renderer->jsonItem($response, $stored->object, new ObjectMetaTransformer(), $meta);
 	}
 
 	/** @param array<string> $errors */
@@ -132,15 +110,5 @@ readonly class FileSaveAction
 			'error'   => 'File upload validation failed',
 			'details' => $errors,
 		])->withStatus(400);
-	}
-
-	/**
-	 * Download a file from a URL into the temp directory.
-	 *
-	 * @throws \RuntimeException If the download fails
-	 */
-	private function downloadFileFromUrl(string $url): string
-	{
-		return $this->downloader->download($url);
 	}
 }

@@ -15,6 +15,10 @@ use TotalCMS\Infrastructure\Filesystem\FileUtils;
  * response is capped at `maxDownloadSize`, redirects are bounded, and the
  * filename is derived from the URL and sanitised. Two importers used to carry
  * their own copies with verification switched off and no cap at all.
+ *
+ * downloadPublic() is the same download for a URL nobody on this site typed
+ * (an MCP agent's, a dropped photo's): it goes through PublicHttpClient, so it
+ * can only reach public addresses, never this server's own network.
  */
 final readonly class RemoteFileDownloader
 {
@@ -23,6 +27,7 @@ final readonly class RemoteFileDownloader
 	public function __construct(
 		private HttpClientInterface $httpClient,
 		private Config $config,
+		private PublicHttpClient $publicHttpClient = new PublicHttpClient(),
 	) {
 	}
 
@@ -66,6 +71,49 @@ final readonly class RemoteFileDownloader
 
 		if ($response->statusCode !== 200) {
 			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
+		}
+
+		if (file_put_contents($path, $response->body) === false) {
+			throw new \RuntimeException('Failed to save downloaded file to: ' . $path);
+		}
+
+		return $path;
+	}
+
+	/**
+	 * Download a URL that someone other than the operator chose. Only public
+	 * addresses are reached, each redirect is checked again, and the size cap
+	 * is the same as download()'s.
+	 *
+	 * @throws \RuntimeException when the URL is refused, the download fails, or it exceeds the size cap
+	 *
+	 * @return string absolute path of the downloaded file
+	 */
+	public function downloadPublic(string $url, int $timeout = 30): string
+	{
+		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
+		$path = $this->config->tmpdir . '/' . self::filenameFor($url);
+
+		// PublicHttpClient stops reading at max_bytes and keeps what it has, so
+		// ask for one byte past the cap: getting it back means the file is too big.
+		$maxBytes = $this->config->maxDownloadSize > 0 ? $this->config->maxDownloadSize * 1024 * 1024 : PHP_INT_MAX - 1;
+
+		try {
+			$response = $this->publicHttpClient->get($url, [
+				'timeout'       => $timeout,
+				'max_bytes'     => $maxBytes + 1,
+				'max_redirects' => 5,
+				'user_agent'    => self::DEFAULT_USER_AGENT,
+			]);
+		} catch (\RuntimeException $e) {
+			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
+		}
+
+		if ($response->statusCode !== 200) {
+			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
+		}
+		if (strlen($response->body) > $maxBytes) {
+			throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB');
 		}
 
 		if (file_put_contents($path, $response->body) === false) {
