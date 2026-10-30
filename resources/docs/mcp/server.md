@@ -261,6 +261,8 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `update_object` | admin‡ | Update a content object by id. Idempotent. Merges like `patch_object`: omitted fields keep their values. See *Binary fields* below. |
 | `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
 | `delete_object` | admin‡ | **Destructive.** Delete one object by id, as the admin's delete button does. Needs the `delete` grant (an API key: the DELETE method). The record stays in the [backup history](docs/operations/backups) when backups are on, but its uploaded files are deleted permanently; the result lists the fields that held files and whether a backup was kept. Marked destructive, so clients ask before calling it. |
+| `attach_file_from_url` | admin‡ | Download a file from a public URL onto an existing object's image, file, gallery or depot field, as an upload in the admin does. See *Files* below. |
+| `remove_file` | admin‡ | **Destructive.** Delete one uploaded file from an image, file, gallery or depot field, as the admin's delete button does. See *Files* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
 | `list_templates` | admin‡ | List the Site Builder Twig templates (builder templates only — reserved admin templates are never listed). Read-only. See *Site Builder templates* below. |
 | `get_template` | admin‡ | Fetch one template's raw Twig source plus the read layer it resolved from. Read-only. See *Site Builder templates* below. |
@@ -270,22 +272,43 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 
 #### Binary fields on the object write tools
 
-Files can't be uploaded through MCP — that needs an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. What an agent *can* do is describe a file that is already uploaded: alt text, tags, a focal point, a download label.
+The object write tools never put a file in a field; files come and go through `attach_file_from_url` and `remove_file` (see *Files* below). What the write tools *can* do is describe a file that is already there: alt text, a credit, tags, a focal point, a download label.
 
 - A collection that merely *contains* a binary field is fully writable — just **omit** those fields from your payload. On `create_object` they're left unset; on `update_object` and `patch_object` they keep their current value (a write never wipes an image you didn't touch).
-- `create_object` refuses a value in an image, file, gallery or depot field: there is no uploaded file to describe yet.
+- `create_object` refuses a value in an image, file, gallery or depot field: there is no uploaded file to describe yet. Create the object, then attach files.
 - `update_object` and `patch_object` take a **metadata edit** there, merged over the stored value:
 
 | Field | Send | Editable keys |
 |---|---|---|
-| image | `{"alt": "Team photo", "focalpoint": {"x": 40, "y": 30}}` | `alt`, `link`, `tags`, `featured`, `focalpoint`, `exif` |
+| image | `{"alt": "Team photo", "focalpoint": {"x": 40, "y": 30}}` | `alt`, `link`, `tags`, `featured`, `focalpoint`, `exif`, `credit` |
 | gallery | `[{"name": "stage.jpg", "alt": "Main stage"}]` — matched by `name` | as image |
 | file | `{"download": "Brochure (PDF)", "comments": "…"}` | `download`, `comments`, `tags` |
 | depot | `[{"path": "docs/guide.pdf", "comments": "…"}]` — matched by `path` | as file |
 
-`exif` and `focalpoint` merge one level deep; other keys replace. Gallery images and depot files cannot be added or removed, and naming one that is not stored is refused with the list that is. A gallery list that names every stored image exactly once also sets their order — the first is the gallery's lead image — while a partial list leaves the order alone. Depot files cannot be reordered. Keys that identify the file — `name`, `size`, `mime`, `width`, `height`, `hash`, `palette`, `uploadDate`, `count` — and a file's `password` / `protected` setting cannot change; echoing their stored values back is fine. `describe_collection` lists the editable keys on each media property. Video posters are uploads and stay refused.
+`exif`, `focalpoint` and `credit` merge one level deep; other keys replace. Gallery images and depot files cannot be added or removed this way (use the file tools), and naming one that is not stored is refused with the list that is. A gallery list that names every stored image exactly once also sets their order — the first is the gallery's lead image — while a partial list leaves the order alone. Depot files cannot be reordered. Keys that identify the file — `name`, `size`, `mime`, `width`, `height`, `hash`, `palette`, `uploadDate`, `count` — and a file's `password` / `protected` setting cannot change; echoing their stored values back is fine. `describe_collection` lists the editable keys on each media property. Video posters are uploads and stay refused.
 
 > Reading objects with `get_object` / `query_collection` returns binary fields too. Writing a fetched object back works as long as the media values are unchanged or only their editable keys changed. Sending only the fields you changed is simpler.
+
+#### Files
+
+`attach_file_from_url` and `remove_file` do what the admin's upload and delete buttons do, through the same code, so the same events fire and the same caches clear.
+
+```json
+attach_file_from_url {
+  "collection": "menu", "id": "burrata", "property": "image",
+  "url": "https://images.pexels.com/photos/25650514/pexels-photo-25650514.jpeg",
+  "meta": {"alt": "Burrata on grilled sourdough", "credit": {"author": "Nadin Sh", "source": "Pexels", "license": "Pexels License"}}
+}
+```
+
+- **The object must exist** (`create_object` first) and the property must be a top-level image, file, gallery or depot field. Fields inside a card or deck are not reachable.
+- **What happens to the field:** an image or file is replaced; a gallery gains the image at the end; a depot gains the file in `path` (a folder), and a file of the same name there is refused unless `replace: true`.
+- **`meta`** sets the editable keys from the table above on the new file in the same call. It is checked before anything is downloaded.
+- **The URL must be public.** It is fetched with the public-only client: http(s), no private, loopback, link-local or reserved address, every redirect checked again, and the site's maximum download size applies. Scripts and executables are refused by name before the download.
+- **Rate limit:** 60 attaches an hour per caller.
+- **`remove_file`** takes `name` for a gallery image (its stored name, from `get_object`) and `path` for a depot file (`folder/name.pdf`). An image or file field needs neither. Folders cannot be removed. The file is deleted permanently, so clients ask before calling it.
+
+Both need the same access as `patch_object`: the `update` grant on the collection, a collection exposed to MCP, and, on an owned collection, an object the caller owns.
 
 #### Site Builder templates
 

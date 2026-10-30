@@ -149,7 +149,7 @@ readonly class DescribeCollectionTool
 			return $property;
 		}
 
-		$hint                    = 'Files cannot be uploaded over MCP; edit the uploaded file\'s metadata with patch_object as ' . MediaMetaEdit::hint($type) . '.';
+		$hint                    = 'Put a file here with attach_file_from_url and take one off with remove_file; edit the uploaded file\'s metadata with patch_object as ' . MediaMetaEdit::hint($type) . '.';
 		$property['description'] = trim(($property['description'] ?? '') . ' ' . $hint);
 
 		return $property;

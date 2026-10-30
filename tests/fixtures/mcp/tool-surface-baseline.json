@@ -1,5 +1,6 @@
 {
     "api-key": [
+        "attach_file_from_url",
         "clear_cache",
         "create_collection",
         "create_object",
@@ -27,6 +28,7 @@
         "patch_object",
         "query_collection",
         "query_view",
+        "remove_file",
         "search",
         "search_collection",
         "search_collections",

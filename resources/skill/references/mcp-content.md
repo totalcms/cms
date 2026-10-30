@@ -45,13 +45,20 @@ Rules that prevent wasted calls:
 fields keep their current values, so there is no round-trip and nothing to
 lose. Rules: containers (card/deck/list) replace WHOLE (send the complete
 container to change or remove any part); clearing is explicit (`""` / `[]`);
-omitting never clears; files (image/file/gallery/depot) can't be uploaded and
-always survive, but their metadata can be edited: `{"alt": "…"}` for an image,
+omitting never clears; files (image/file/gallery/depot) always survive a
+write, and their metadata can be edited: `{"alt": "…"}` for an image,
 `[{"name": "x.jpg", "alt": "…"}]` for a gallery, `[{"path": "dir/x.pdf",
 "comments": "…"}]` for a depot (`describe_collection` lists the keys). Gallery
 images are matched by name, not position. A gallery list that names every
 stored image exactly once also sets their order — the first image leads the
 gallery (often the page's main image); a partial list keeps the stored order.
+
+**Files themselves:** `attach_file_from_url` puts a file from a public URL on an
+existing object's top-level image, file, gallery or depot field (image/file
+replace, gallery appends, depot adds at `path`). Pass `meta` in the same call:
+always `alt` for an image, and a `credit` (`author`, `authorUrl`, `source`,
+`sourceUrl`, `license`) for a stock photo. `remove_file` deletes one (gallery by
+`name`, depot by `path`); confirm with the user first.
 
 **`update_object` merges exactly like `patch_object`** — omitted fields keep
 their values (it was a full replace in older versions). If you write back an

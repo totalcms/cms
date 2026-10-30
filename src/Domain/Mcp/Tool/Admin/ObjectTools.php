@@ -39,12 +39,12 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * Binary fields are checked at the PAYLOAD level, not the schema level: a
  * collection that merely *contains* an image / file / gallery / depot field
- * can still be written. Upload needs a request shape MCP doesn't have
- * (multipart bodies, persistent storage handles), so create_object refuses a
- * value in a binary field. update_object / patch_object take a metadata edit
- * there instead — alt text, tags, a focal point, a download label — merged
- * over the uploaded file by {@see MediaMetaEdit}; the file itself never
- * changes. Omitted, the field keeps its value.
+ * can still be written. Files come and go through their own tools
+ * ({@see FileTools}: attach_file_from_url, remove_file), so create_object
+ * refuses a value in a binary field. update_object / patch_object take a
+ * metadata edit there instead — alt text, a credit, tags, a focal point, a
+ * download label — merged over the uploaded file by {@see MediaMetaEdit}; the
+ * file itself never changes. Omitted, the field keeps its value.
  *
  * Card and deck fields are allowed at the top level even though they
  * can nest binary fields, because most of the time they don't. If
@@ -101,8 +101,8 @@ readonly class ObjectTools
 	 * Field types whose data is binary or upload-shaped and cannot be
 	 * written via a plain JSON tool call. The list mirrors the same
 	 * set JumpStartExporter::processObjectData() normalizes for sync
-	 * export — anything here needs an upload pipeline MCP doesn't
-	 * carry, so we refuse upfront rather than corrupt the on-disk row.
+	 * export — a file reaches these through FileTools, so a value here
+	 * is refused upfront rather than corrupting the on-disk row.
 	 */
 	private const UNSUPPORTED_FIELD_TYPES = ['image', 'file', 'gallery', 'depot'];
 
@@ -120,7 +120,7 @@ readonly class ObjectTools
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'create_object',
-			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection. Files cannot be uploaded via MCP: omit image, file, gallery and depot fields (they are left unset) and upload in the admin UI; a payload that puts a value into one is refused. Once uploaded, their metadata is editable with patch_object.',
+			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection. Omit image, file, gallery and depot fields (they are left unset); a payload that puts a value into one is refused. After creating the object, add files with attach_file_from_url; their metadata is then editable with patch_object.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: [
@@ -148,7 +148,7 @@ readonly class ObjectTools
 						// → PHP [] workaround that mcp/sdk needs for optional
 						// fields.
 						'type'        => 'object',
-						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Omit image, file, gallery and depot fields — files cannot be uploaded via MCP, and a payload that sets one is refused. Their presence in the schema does not block the write.',
+						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Omit image, file, gallery and depot fields — a payload that sets one is refused; add files afterwards with attach_file_from_url. Their presence in the schema does not block the write.',
 					],
 				],
 			],
@@ -164,7 +164,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
-			description: 'Update an existing object. Required: collection + id + data. Same behavior as patch_object: fields present in data are written, omitted fields keep their current values — sending the complete object or only the fields you change both work. Container fields (card, deck, list) are replaced whole when present. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name" (name every stored image once and the list also sets their order); a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif; files download, comments, tags. Files cannot be uploaded, replaced, added or removed via MCP.',
+			description: 'Update an existing object. Required: collection + id + data. Same behavior as patch_object: fields present in data are written, omitted fields keep their current values — sending the complete object or only the fields you change both work. Container fields (card, deck, list) are replaced whole when present. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name" (name every stored image once and the list also sets their order); a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif, credit; files download, comments, tags. To add, replace or remove the file itself use attach_file_from_url and remove_file.',
 			access: 'admin',
 			handler: $this->updateHandler(...),
 			inputSchema: [
@@ -202,7 +202,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'patch_object',
-			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name" (name every stored image once and the list also sets their order); a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif; files download, comments, tags. Files cannot be uploaded, replaced, added or removed via MCP. update_object behaves the same way.',
+			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Image, file, gallery and depot fields take metadata edits only, merged over the uploaded file: an image or file takes an object such as {"alt": "…"}; a gallery a list of images matched by "name" (name every stored image once and the list also sets their order); a depot a list of files matched by "path" (folder/name). Editable: images alt, link, tags, featured, focalpoint, exif, credit; files download, comments, tags. To add, replace or remove the file itself use attach_file_from_url and remove_file. update_object behaves the same way.',
 			access: 'admin',
 			handler: $this->patchHandler(...),
 			inputSchema: [
@@ -455,7 +455,7 @@ readonly class ObjectTools
 		}
 
 		throw new ToolCallException(sprintf(
-			'%s: collection "%s" payload sets binary field(s) [%s]. Files can\'t be uploaded via MCP — omit these fields and upload in the admin UI. Once a file is uploaded, update_object / patch_object can edit its metadata (alt text, tags, focal point…).',
+			'%s: collection "%s" payload sets binary field(s) [%s]. Omit these fields, create the object, then add each file with attach_file_from_url. Once a file is there, update_object / patch_object can edit its metadata (alt text, credit, tags, focal point…).',
 			$toolName,
 			$collection,
 			implode(', ', array_map(

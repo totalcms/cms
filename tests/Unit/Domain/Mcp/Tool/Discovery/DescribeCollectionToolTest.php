@@ -287,7 +287,7 @@ final class DescribeCollectionToolTest extends TestCase
 
 		$properties = $this->tool->handler(collection: 'team')['properties'];
 
-		$this->assertStringStartsWith('Headshot Files cannot be uploaded over MCP', $properties[0]['description']);
+		$this->assertStringStartsWith('Headshot Put a file here with attach_file_from_url', $properties[0]['description']);
 		$this->assertStringContainsString('alt, link, tags', $properties[0]['description']);
 		$this->assertSame('Name', $properties[1]['description']);
 	}

@@ -11,8 +11,8 @@ use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
  * An agent's edit to an image, file, gallery or depot field, laid over the
  * stored value so only descriptive metadata changes ({@see MediaMetaPolicy}).
  *
- * Agents cannot upload, replace, add or remove files. They edit what is
- * already there:
+ * Files themselves come and go through attach_file_from_url and remove_file
+ * ({@see FileTools}); this edits what is already there:
  *
  *   - image / file: an object of keys, e.g. `{"alt": "Team photo"}`;
  *   - gallery: a list of images matched to stored ones by `name`; a list
@@ -67,7 +67,7 @@ final readonly class MediaMetaEdit
 	private function editOne(string $property, string $type, array $stored, array $edit): array
 	{
 		if ((string)($stored['name'] ?? '') === '') {
-			$this->refuse($property, $type, 'has no uploaded file to describe yet; upload one in the admin first');
+			$this->refuse($property, $type, 'has no uploaded file to describe yet; add one with attach_file_from_url first');
 		}
 		if (array_is_list($edit) && $edit !== []) {
 			$this->refuse($property, $type, 'expects ' . self::shape($type));
