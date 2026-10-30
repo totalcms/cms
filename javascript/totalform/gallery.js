@@ -3,6 +3,7 @@ import GalleryPreview from "./gallery-preview";
 import Dialog from "./dialog";
 import Details from "./details";
 import TotalSortable from "./total-sortable";
+import { attachPhotoDrop, insertPhotos } from "./photo-drop";
 import DropletArray from "./droplet-array";
 import Scrollable from "./scrollable";
 
@@ -391,6 +392,12 @@ export default class GalleryField extends ImageField {
 			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
+		attachPhotoDrop(this);
+	}
+
+	// Photos from a stock-photo panel or another photo source (photo-drop.js).
+	insertPhotos(payload) {
+		return insertPhotos(this.droplet, payload);
 	}
 
     getValue() {

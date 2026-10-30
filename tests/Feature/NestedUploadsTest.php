@@ -118,6 +118,20 @@ test('image inside a {container}: upload writes it back at the nested path, keep
 		->and(get("/api/upload/widgets/w1/{$prefix}/photo/test-image.jpg")->getStatusCode())->toBe(200);
 })->with($containers);
 
+test('image inside a {container}: alt and credit sent with the upload land on the nested image', function (string $prefix, string $siblingPath, string $siblingValue): void {
+	// A photo dropped from a stock-photo panel carries its meta as a form field.
+	$meta     = json_encode(['alt' => 'Terrace at dusk', 'credit' => ['author' => 'Ana', 'source' => 'Pixabay'], 'name' => 'renamed.jpg']);
+	$response = postUpload("/api/collections/widgets/w1/{$prefix}/photo", testData('test-image.jpg'), 'image/jpeg', 'photo', ['meta' => $meta]);
+	expect($response->getStatusCode())->toBe(200);
+
+	$object = widget();
+	$photo  = nestedValue($object, "{$prefix}/photo");
+	expect($photo['alt'] ?? '')->toBe('Terrace at dusk')
+		->and($photo['credit'] ?? [])->toBe(['author' => 'Ana', 'source' => 'Pixabay'])
+		->and($photo['name'] ?? '')->toBe('test-image.jpg')
+		->and(nestedValue($object, $siblingPath))->toBe($siblingValue);
+})->with($containers);
+
 test('image inside a {container}: a nested PUT replaces the child meta and a nested DELETE clears it and its directory', function (string $prefix, string $siblingPath, string $siblingValue): void {
 	postUpload("/api/collections/widgets/w1/{$prefix}/photo", testData('test-image.jpg'), 'image/jpeg', 'photo');
 	$before = nestedValue(widget(), "{$prefix}/photo");

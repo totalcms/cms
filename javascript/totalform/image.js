@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import { attachPhotoDrop, insertPhotos } from "./photo-drop";
 import Droplet from "./droplet";
 import ImagePreview from "./image-preview";
 
@@ -67,6 +68,12 @@ export default class ImageField extends TotalField {
 			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
+		attachPhotoDrop(this);
+	}
+
+	// Photos from a stock-photo panel or another photo source (photo-drop.js).
+	insertPhotos(payload) {
+		return insertPhotos(this.droplet, payload);
 	}
 
 	autosave(force = false) {

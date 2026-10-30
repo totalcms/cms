@@ -96,6 +96,13 @@ readonly class FileSaveAction
 
 		$stored = $this->store->store($args['collection'], $args['id'], $args['property'], $finalFilePath, $subpath);
 
+		// Optional alt text, credit and other descriptive keys sent with the file
+		// (a photo dropped from a stock-photo panel), applied as the dialog would.
+		$meta = json_decode((string)($body['meta'] ?? ''), true);
+		if (is_array($meta) && $meta !== [] && !array_is_list($meta)) {
+			$stored = $this->store->describe($stored, $args['collection'], $args['id'], $args['property'], $meta, $subpath);
+		}
+
 		// Additive meta: the preview the droplet swaps in for its local thumbnail.
 		// Omitted when it can't be built; never fails the upload.
 		$meta = $stored->preview !== '' ? ['preview' => $stored->preview] : [];

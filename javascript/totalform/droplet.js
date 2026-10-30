@@ -137,6 +137,13 @@ export default class Droplet {
         this.dropzone.processQueue();
     }
 
+	// Add Files made in the page (a dropped stock photo) as if the user had
+	// dropped them from disk. Single mode keeps only the first.
+	addFiles(files) {
+		const list = this.settings.singleMode ? files.slice(0, 1) : files;
+		list.forEach(file => this.dropzone.addFile(file));
+	}
+
     accept(file,done) {
         // Add accepts and reject methods to the file object to validate with the test sets
         file.acceptFile = done;
@@ -180,6 +187,11 @@ export default class Droplet {
 
     // Called just before the file is sent
     event_sending(file,xhr,formData) {
+		// Alt text and credit that came with a dropped photo (photo-drop.js);
+		// the server applies them to the stored image.
+		if (file.tcmsMeta && Object.keys(file.tcmsMeta).length > 0) {
+			formData.append("meta", JSON.stringify(file.tcmsMeta));
+		}
         // Add additional form data
         // formData.append("filesize", file.size);
         // formData.append("alt", file.size);

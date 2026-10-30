@@ -6,6 +6,7 @@ use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Media\Service\PropertyFileStore;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -31,7 +32,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
+	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config));
 }
@@ -45,7 +46,7 @@ function fetchThroughStore(HttpClientInterface $httpClient, string $url, ?Config
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
+	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return $store->fetch($url);
 }
