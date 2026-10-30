@@ -63,3 +63,13 @@ it('leaves the cache row out when the cache directory is disabled', function ():
 
 	expect($this->checker->checkPermissions())->not->toHaveKey('cache');
 });
+
+it('redacts sensitive config values, and everything under a sensitive key', function (): void {
+	$this->config->smtp        = ['host' => 'mail.example.com', 'password' => 'hunter2'];
+	$this->config->automations = ['runHistoryLimit' => 50, 'secrets' => ['stripe' => ['sk' => 'sk_live_x', 'url' => 'https://api.example.com']]];
+
+	$config = $this->checker->getConfig();
+
+	expect($config['smtp'])->toBe(['host' => 'mail.example.com', 'password' => '********']);
+	expect($config['automations'])->toBe(['runHistoryLimit' => 50, 'secrets' => ['stripe' => ['sk' => '********', 'url' => '********']]]);
+});

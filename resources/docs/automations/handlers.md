@@ -84,6 +84,7 @@ The handler is stored in its own `.php` file next to the automation object (an *
 | Property | What it is |
 |----------|------------|
 | `$ctx->mailer` | Send a [Mailer](docs/notifications/mailer) email — `sendEmail($mailerId, $data)` |
+| `$ctx->http` | Call a service whose URL you wrote (an API, a webhook) — `request($method, $url, $options)` returns `statusCode` and `body`. See below |
 | `$ctx->publicHttp` | GET a URL someone else typed — `get($url, $options)` returns `statusCode` and `body`. Public addresses only (see below) |
 | `$ctx->config` | Core configuration |
 | `$ctx->logger` | PSR-3 logger writing to `jobs.log` (channel `automations`) |
@@ -93,6 +94,57 @@ The handler is stored in its own `.php` file next to the automation object (an *
 | `$ctx->request` | The PSR-7 request — webhook triggers only |
 
 `$ctx->request` and `$ctx->event` are `null` for schedule runs.
+
+## Calling a service
+
+Use `$ctx->http` for a URL you wrote yourself in the handler or in config: a mailing-list API, a payment provider, a Slack webhook, a service on your own network. Use `$ctx->publicHttp` (below) for a URL that came from content. Don't create your own Guzzle or curl client: `$ctx->http` is the one core uses, and tests replace it so a handler under test never reaches the network.
+
+```php
+return function ($ctx) {
+    $sendy = $ctx->config->automations['secrets']['sendy'] ?? [];
+    $user  = $ctx->objectFetcher->fetchObject($ctx->event['collection'], $ctx->event['id']);
+
+    try {
+        $response = $ctx->http->request('POST', $sendy['url'] . '/subscribe', [
+            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+            'body'    => http_build_query([
+                'api_key' => $sendy['apiKey'],
+                'list'    => $sendy['list'],
+                'email'   => $user['email'],
+                'boolean' => 'true',
+            ]),
+            'timeout' => 15,
+        ]);
+    } catch (\RuntimeException $e) {
+        throw new \RuntimeException('Sendy is unreachable: ' . $e->getMessage());
+    }
+
+    return ['status' => $response->statusCode, 'body' => $response->body];
+};
+```
+
+Options: `headers` (name => value), `body` (a string: encode JSON with `json_encode()`, a form with `http_build_query()`), `timeout` and `connect_timeout` (seconds), `follow_redirects` (`false` by default, `true` or a number), `verify_ssl` (default `true`), `user_agent`, `max_bytes`. A 4xx or 5xx answer is returned, not thrown: check `$response->isSuccess()`. A connection failure throws `RuntimeException`. `$response->json()` decodes a JSON body.
+
+## Keeping API keys out of the handler
+
+Don't write a key into the handler. Handlers live in `tcms-data`, which travels with sync and JumpStart and is often editable in the admin. Put keys in `config/tcms.php`, under `automations.secrets`, and read them from `$ctx->config`:
+
+```php
+// config/tcms.php
+return [
+    'automations' => [
+        'secrets' => [
+            'sendy' => [
+                'url'    => 'https://newsletter.example.com',
+                'list'   => 'aBc123',
+                'apiKey' => getenv('SENDY_API_KEY') ?: '',
+            ],
+        ],
+    ],
+];
+```
+
+`config/tcms.php` is PHP, so the value can come from the server's environment (`getenv()`) or from a file you keep out of git (`require __DIR__ . '/secrets.php'`). Core does not read `.env` files. Core never uses the `secrets` block itself, and the admin's server check hides every value in it.
 
 ## Fetching a URL from content
 

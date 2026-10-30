@@ -30,6 +30,7 @@ use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PublicHttpClient;
 
 /**
@@ -68,6 +69,7 @@ final readonly class AutomationContext
 		public RssImporter $rssImporter,
 		public SyncService $syncService,
 		public EmailService $mailer,
+		public HttpClientInterface $http,
 		public PublicHttpClient $publicHttp,
 		public Config $config,
 		public LoggerInterface $logger,

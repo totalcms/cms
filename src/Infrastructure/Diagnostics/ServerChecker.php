@@ -168,30 +168,39 @@ class ServerChecker
 	}
 
 	/**
-	 * Recursively redact sensitive keys from config arrays.
+	 * Recursively redact sensitive keys from config arrays. Everything under a
+	 * sensitive key is redacted too, so a block such as `automations.secrets`
+	 * stays hidden whatever its own keys are called.
 	 *
-	 * @param array<string,mixed> $data
+	 * @template TKey of array-key
 	 *
-	 * @return array<string,mixed>
+	 * @param array<TKey,mixed> $data
+	 *
+	 * @return array<TKey,mixed>
 	 */
-	private function redactSensitiveValues(array $data): array
+	private function redactSensitiveValues(array $data, bool $redactAll = false): array
 	{
-		$sensitiveKeys = ['password', 'secret', 'token', 'key', 'credentials'];
-
 		foreach ($data as $k => $v) {
+			$sensitive = $redactAll || (is_string($k) && $this->isSensitiveKey($k));
 			if (is_array($v)) {
-				$data[$k] = $this->redactSensitiveValues($v);
-			} elseif (is_string($k)) {
-				foreach ($sensitiveKeys as $sensitive) {
-					if (stripos($k, $sensitive) !== false && $v !== null && $v !== '') {
-						$data[$k] = '********';
-						break;
-					}
-				}
+				$data[$k] = $this->redactSensitiveValues($v, $sensitive);
+			} elseif ($sensitive && $v !== null && $v !== '') {
+				$data[$k] = '********';
 			}
 		}
 
 		return $data;
+	}
+
+	private function isSensitiveKey(string $key): bool
+	{
+		foreach (['password', 'secret', 'token', 'key', 'credentials'] as $sensitive) {
+			if (stripos($key, $sensitive) !== false) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/** @return array<string,bool> */

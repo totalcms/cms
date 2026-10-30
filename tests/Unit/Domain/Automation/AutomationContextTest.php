@@ -31,6 +31,7 @@ use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PublicHttpClient;
 
 final class AutomationContextTest extends TestCase
@@ -41,6 +42,7 @@ final class AutomationContextTest extends TestCase
 		$deckItemSaver  = $this->createMock(DeckItemSaver::class);
 		$indexBuilder   = $this->createMock(IndexBuilder::class);
 		$incrementer    = $this->createMock(ObjectPropertyIncrementer::class);
+		$http           = $this->createMock(HttpClientInterface::class);
 		$publicHttp     = new PublicHttpClient();
 
 		$ctx = new AutomationContext(
@@ -67,6 +69,7 @@ final class AutomationContextTest extends TestCase
 			rssImporter: $this->createMock(RssImporter::class),
 			syncService: $this->createMock(SyncService::class),
 			mailer: $this->createMock(EmailService::class),
+			http: $http,
 			publicHttp: $publicHttp,
 			config: $config,
 			logger: new NullLogger(),
@@ -84,6 +87,7 @@ final class AutomationContextTest extends TestCase
 		expect($ctx->deckItemSaver)->toBe($deckItemSaver);
 		expect($ctx->indexBuilder)->toBe($indexBuilder);
 		expect($ctx->propertyIncrementer)->toBe($incrementer);
+		expect($ctx->http)->toBe($http);
 		expect($ctx->publicHttp)->toBe($publicHttp);
 	}
 }

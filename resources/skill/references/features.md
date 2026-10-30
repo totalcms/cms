@@ -70,7 +70,7 @@
 
 | Feature | Doc | The one thing to know |
 |---|---|---|
-| Automations (schedule / webhook / event triggers) | `automations/overview.md`, `automations/triggers.md`, `automations/handlers.md`, `automations/webhooks.md` | Handlers are PHP code fields; `automations:process` runs the queue; guard rails limit runtime. Fetch a URL that came from content with `$ctx->publicHttp->get($url)`, never curl/Guzzle: it refuses private and internal addresses. |
+| Automations (schedule / webhook / event triggers) | `automations/overview.md`, `automations/triggers.md`, `automations/handlers.md`, `automations/webhooks.md` | Handlers are PHP code fields; `automations:process` runs the queue; guard rails limit runtime. Call a service whose URL you wrote with `$ctx->http->request($method, $url, $options)`; fetch a URL that came from content with `$ctx->publicHttp->get($url)` (it refuses private and internal addresses). Never build your own curl/Guzzle client. API keys go in `config/tcms.php` under `automations.secrets`, read via `$ctx->config->automations['secrets']`, never in the handler. |
 | Event system (22 core events) | `extensions/events.md` | `object.created`/`updated` are suppressed during imports — subscribe to `import.*` for those. Every payload carries `actor` (who caused it); `access.denied` fires on every refusal. |
 | Activity Log (Utilities → Activity Log) | `operations/activity.md` | Who changed, downloaded or called what: core events, signed-in downloads (`file.downloaded`) and MCP tool calls, in SQLite at `.system/activity`. Settings → Activity: retention (90 days), anonymous MCP calls (off). |
 | REST API, index filters | `apis/rest-api.md`, `apis/index-filter.md`, `apis/openapi.html` | Query endpoints filter **indexed** properties only. |
