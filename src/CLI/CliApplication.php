@@ -167,6 +167,7 @@ class CliApplication
 		$app->addCommand(new Command\BuilderFrontendCommand($totalcms));
 		$app->addCommand(new Command\BuilderRoutesCommand($totalcms));
 		$app->addCommand(new Command\BuilderHistoryCommand($totalcms));
+		$app->addCommand(new Command\StarterExportCommand($totalcms));
 
 		// Skill commands
 		$app->addCommand(new Command\Skill\SkillInstallCommand($totalcms));

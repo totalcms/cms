@@ -5441,6 +5441,30 @@
             ],
             "url": "https://docs.totalcms.co/site-builder/cli/",
             "since": "3.5.0"
+        },
+        {
+            "name": "starter:export",
+            "description": "Write a clean copy of the current site as a Composer starter project: a complete site that others install with `composer create-project`.",
+            "arguments": [],
+            "options": [
+                {
+                    "name": "--name",
+                    "description": "Composer package name. Defaults to `totalcms/starter-<folder name>`."
+                },
+                {
+                    "name": "--description",
+                    "description": "Composer package description."
+                },
+                {
+                    "name": "--structure-only",
+                    "description": "Leave out every object except the Site Builder pages. Schemas, collections, pages and templates are kept."
+                }
+            ],
+            "examples": [
+                "tcms starter:export ~/Developer/starter-restaurant --name=totalcms/starter-restaurant\ntcms starter:export ../starter --structure-only"
+            ],
+            "url": "https://docs.totalcms.co/site-builder/cli/",
+            "since": "3.5.0"
         }
     ],
     "extension_api": {

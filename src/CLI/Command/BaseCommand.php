@@ -98,7 +98,7 @@ abstract class BaseCommand extends Command
 	 * is a terminal. An input with its own stream (a test harness feeding
 	 * answers) counts as answerable.
 	 */
-	private function canPrompt(InputInterface $input): bool
+	protected function canPrompt(InputInterface $input): bool
 	{
 		if (!$input->isInteractive()) {
 			return false;

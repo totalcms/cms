@@ -240,6 +240,16 @@ After running `builder:init`, you own all the template files. Common next steps:
 
 No build or generate step is needed — the page router serves your routes from the live collection.
 
+## Sharing a Whole Site as a Starter
+
+The starters above scaffold templates and demo pages into a site you already installed. To share a finished site instead (templates, schemas, content and settings) as a project others install in one step, export it with [`tcms starter:export`](docs/site-builder/cli#starter-export):
+
+```bash
+tcms starter:export ~/Developer/starter-restaurant --name=yourname/starter-restaurant
+```
+
+Commit the output to its own repository and publish it on Packagist. Anyone can then install it with `composer create-project yourname/starter-restaurant mysite`, and the setup wizard creates their admin account on first visit.
+
 ## Creating Custom Starters
 
 Starters live in `resources/builder/starters/{name}/`. Each starter needs:

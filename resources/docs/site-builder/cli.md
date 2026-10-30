@@ -6,7 +6,7 @@ since: "3.5.0"
 
 # Builder CLI Commands
 
-The Site Builder provides four CLI commands: scaffolding from starters, installing a frontend asset pipeline, inspecting registered routes, and managing template version history.
+The Site Builder provides five CLI commands: scaffolding from starters, installing a frontend asset pipeline, inspecting registered routes, managing template version history, and exporting a finished site as a starter.
 
 | Command | Purpose |
 |---------|---------|
@@ -14,6 +14,7 @@ The Site Builder provides four CLI commands: scaffolding from starters, installi
 | [`builder:frontend`](#builder-frontend) | Install a Vite-based frontend asset pipeline |
 | [`builder:routes`](#builder-routes) | List every route the page router would serve, with conflicts flagged |
 | [`builder:history`](#builder-history) | List, view, or restore template snapshot versions |
+| [`starter:export`](#starter-export) | Write a clean copy of the site as a Composer starter project |
 
 All commands accept `--json` for machine-readable output.
 
@@ -264,6 +265,51 @@ tcms builder:history pages/about --restore=<that-newest-timestamp>
 Snapshots live at `tcms-data/builder/.history/{path}/{timestamp}.twig`. The 50 newest snapshots per template are retained; older ones are pruned automatically on each save. You don't need to manage them manually.
 
 See [Template History](docs/site-builder/admin#template-history) for the same workflow from the admin UI perspective.
+
+## `starter:export`
+
+Write a clean copy of the current site as a Composer starter project: a complete site that others install with `composer create-project`.
+
+```bash
+tcms starter:export ~/Developer/starter-restaurant --name=totalcms/starter-restaurant
+tcms starter:export ../starter --structure-only
+```
+
+The command only reads the running site. It writes the copy to a folder outside the project, which must be empty unless you pass `--force`.
+
+### Arguments and Options
+
+| Argument / option | Description |
+|---|---|
+| `dir` | Folder to write the starter to. Must be outside this project. |
+| `--name` | Composer package name. Defaults to `totalcms/starter-<folder name>`. |
+| `--description` | Composer package description. |
+| `--structure-only` | Leave out every object except the Site Builder pages. Schemas, collections, pages and templates are kept. |
+| `--yes`, `-y` | Include the content without asking. |
+| `--force`, `-f` | Write into a folder that is not empty. |
+
+Without `--yes` or `--structure-only`, the command lists the collections that hold content and asks whether to include them. A site built for one client is the usual source, and its content belongs to that client.
+
+### What Is Copied
+
+- The project, minus `vendor/`, `cache/`, `tmp/`, `logs/`, `composer.lock`, `.git/`, `node_modules/` and `.cache/` image folders.
+- `tcms-data/` at the project root, with every collection, schema, page and object.
+- From `tcms-data/.system/`, only the settings, extension state and settings, access groups and the migration record. Everything else there is runtime state or a credential: the site key, API keys, OAuth keys and clients, sessions, logs, backups, the job queue and the setup state.
+
+### What Is Changed
+
+- **Users are left out.** Collections using the `auth` schema are copied empty, so the setup wizard runs for whoever installs the starter and creates their admin account.
+- **Secrets are blanked.** Every settings value whose field type is `password` or `secret` (SMTP password, sync key, extension keys) is emptied, and so is any value holding this project's path.
+- **`config/tcms.php` is replaced** with a blank one, because it can hold credentials and machine-specific paths. The command lists the keys your file set, so you can move what the starter needs into the admin's Settings.
+- **`composer.json`** gets the new name and description, the `totalcms-starter` keyword, `totalcms/cms` pinned to the running minor version (`^3.6`), and a post-install script that prints next steps.
+- **`.gitignore`** tracks `tcms-data/` (the plain skeleton ignores it) but leaves out runtime files.
+- **`README.md`** is written from a template unless you already wrote your own. `CREDITS.md` lists every image that has a [credit](docs/fields/image-gallery), grouped by source, and the report names the images that don't. A `CREDITS.md` you wrote yourself is kept.
+
+### Final Check
+
+The command then searches every output file for each secret the running site holds: the site key, API keys, OAuth client secrets, the cron token and sensitive settings values. If one turns up, the command lists the files and exits with an error. Don't publish the output until it passes.
+
+It also prints the largest files. Images are not resized for you: resize them in the site before exporting.
 
 ## See Also
 
