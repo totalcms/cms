@@ -88,6 +88,17 @@
       "$comment": "A URL to be associated with this image",
       "$ref": "https://www.totalcms.co/schemas/properties/url.json"
     },
+    "credit": {
+      "type": "object",
+      "$comment": "Who made the image and where it came from, for a credit line. All keys optional.",
+      "properties": {
+        "author": {"type": "string"},
+        "authorUrl": {"type": "string"},
+        "source": {"type": "string"},
+        "sourceUrl": {"type": "string"},
+        "license": {"type": "string"}
+      }
+    },
     "focalpoint": {
       "type": "object",
       "properties": {

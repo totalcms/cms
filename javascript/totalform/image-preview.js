@@ -335,6 +335,12 @@ setupActionBar() {
 				if (!imageData["focalpoint"]) imageData["focalpoint"] = {};
 				imageData["focalpoint"][key] = value;
 
+			} else if (key.startsWith("credit-")) {
+				// Always sent, empty values included, so clearing a credit field saves.
+				key = key.replace("credit-","");
+				if (!imageData["credit"]) imageData["credit"] = {};
+				imageData["credit"][key] = value;
+
 			} else if (key.startsWith("palette-")) {
 				if (!imageData["palette"]) imageData["palette"] = [];
 				imageData["palette"].push(value.hex); // only store the hex value
@@ -373,6 +379,10 @@ setupActionBar() {
 			} else if (key.startsWith("focalpoint-")) {
 				const focalpointKey = key.replace("focalpoint-","");
 				field.totalfield.setValue(image.focalpoint[focalpointKey]||0);
+
+			} else if (key.startsWith("credit-")) {
+				const creditKey = key.replace("credit-","");
+				field.totalfield.setValue(image.credit?.[creditKey] ?? "");
 
 			} else if (key.startsWith("palette-")) {
 				const paletteIndex = parseInt(key.replace("palette-",""));

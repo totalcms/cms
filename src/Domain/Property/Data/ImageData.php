@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
+
 /**
  * String type property data.
  */
@@ -15,6 +17,8 @@ class ImageData extends PropertyData implements \Stringable
 	public array $focalpoint;
 	/** @var array<string> */
 	public array $palette;
+	/** @var array<string,string> Who made the image and where it came from; empty when there is no credit. */
+	public array $credit;
 	public string $alt;
 	public string $mime;
 	public string $link;
@@ -34,6 +38,7 @@ class ImageData extends PropertyData implements \Stringable
 	public function __construct(array $file = [], public array $settings = [])
 	{
 		$this->alt        = $file['alt'] ?? '';
+		$this->credit     = MediaMetaPolicy::cleanCredit($file['credit'] ?? []);
 		$this->exif       = $file['exif'] ?? ['nodata' => ''];
 		$this->featured   = $file['featured'] ?? false;
 		$this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
@@ -59,7 +64,7 @@ class ImageData extends PropertyData implements \Stringable
 	/** @return array<string,mixed> */
 	public function transform(): array
 	{
-		return [
+		$data = [
 			'alt'        => $this->alt,
 			'exif'       => $this->exif,
 			'featured'   => $this->featured,
@@ -75,6 +80,13 @@ class ImageData extends PropertyData implements \Stringable
 			'uploadDate' => $this->uploadDate->transform(),
 			'width'      => $this->width,
 		];
+
+		// Only an image with a credit carries the key, so every other image keeps its stored shape.
+		if ($this->credit !== []) {
+			$data['credit'] = $this->credit;
+		}
+
+		return $data;
 	}
 
 	public function __toString(): string

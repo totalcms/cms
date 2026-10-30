@@ -5,6 +5,33 @@ description: "Configure image and gallery upload fields in Total CMS with valida
 
 # Image & Gallery
 
+## Photo Credit
+
+Every image, and every image in a gallery, can carry a credit: who made it and where it came from. Open the image's edit dialog and fill in the **Credit** section. All of it is optional.
+
+| Key | What it holds |
+|---|---|
+| `author` | The photographer or artist |
+| `authorUrl` | A link to them (http or https) |
+| `source` | Where the image came from, such as Pexels or Unsplash |
+| `sourceUrl` | The image's page at the source |
+| `license` | The license it is used under |
+
+It is stored on the image as a `credit` object, only when at least one key has a value. Links that are not http or https are dropped. Nothing prints it by default; a template shows it where the design wants one:
+
+```twig
+{% set credit = item.image.credit ?? {} %}
+{% if credit.author is defined %}
+  <small>
+    Photo:
+    {% if credit.authorUrl is defined %}<a href="{{ credit.authorUrl }}">{{ credit.author }}</a>{% else %}{{ credit.author }}{% endif %}
+    {% if credit.source is defined %} on {{ credit.source }}{% endif %}
+  </small>
+{% endif %}
+```
+
+Agents set it over MCP with `attach_file_from_url` or `patch_object`, and `tcms starter:export` lists every credited image in the starter's `CREDITS.md`.
+
 ## Upload Validation
 
 The following JSON is sample settings that you can use for image and file validation rules

@@ -16,13 +16,21 @@ namespace TotalCMS\Domain\Property\Service;
  * `protected` are editable only where the caller is allowed protection
  * settings (the REST meta routes, which the admin dialogs use), never over MCP.
  *
- * An edit merges into the stored value: `exif` and `focalpoint` merge one
- * level deep, every other key replaces.
+ * An edit merges into the stored value: `exif`, `focalpoint` and `credit`
+ * merge one level deep, every other key replaces. `credit` is cleaned on the
+ * way in: only its five keys, as trimmed strings, and its two links only when
+ * they are http(s), since templates print them as links.
  */
 final class MediaMetaPolicy
 {
 	/** @var list<string> */
-	public const IMAGE_KEYS = ['alt', 'link', 'tags', 'featured', 'focalpoint', 'exif'];
+	public const IMAGE_KEYS = ['alt', 'link', 'tags', 'featured', 'focalpoint', 'exif', 'credit'];
+
+	/** @var list<string> The keys of an image's `credit`. */
+	public const CREDIT_KEYS = ['author', 'authorUrl', 'source', 'sourceUrl', 'license'];
+
+	/** Credit keys that hold a link. */
+	private const CREDIT_URL_KEYS = ['authorUrl', 'sourceUrl'];
 
 	/** @var list<string> */
 	public const FILE_KEYS = ['download', 'comments', 'tags'];
@@ -31,7 +39,7 @@ final class MediaMetaPolicy
 	public const PROTECTION_KEYS = ['password', 'protected'];
 
 	/** Keys merged one level deep rather than replaced. */
-	private const NESTED_KEYS = ['exif', 'focalpoint'];
+	private const NESTED_KEYS = ['exif', 'focalpoint', 'credit'];
 
 	/**
 	 * The keys an edit may change for a field type (`image`, `gallery`,
@@ -93,6 +101,32 @@ final class MediaMetaPolicy
 				: $edit[$key];
 		}
 
+		if (array_key_exists('credit', $stored)) {
+			$stored['credit'] = self::cleanCredit($stored['credit']);
+		}
+
 		return $stored;
+	}
+
+	/**
+	 * A credit as stored: the known keys only, trimmed strings, empty values
+	 * dropped, and a link only when it is http or https.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function cleanCredit(mixed $credit): array
+	{
+		$clean = [];
+		foreach (self::CREDIT_KEYS as $key) {
+			$value = is_array($credit) && is_scalar($credit[$key] ?? null) ? trim((string)$credit[$key]) : '';
+			if (in_array($key, self::CREDIT_URL_KEYS, true) && preg_match('#^https?://#i', $value) !== 1) {
+				$value = '';
+			}
+			if ($value !== '') {
+				$clean[$key] = $value;
+			}
+		}
+
+		return $clean;
 	}
 }

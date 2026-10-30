@@ -14,6 +14,20 @@ class ImageField extends UploadField
 	public const PREVIEW_HEIGHT  = 600;
 	public const PREVIEW_QUALITY = 60;
 
+	/** Licenses stock and shared photos commonly come under, offered as the License field's suggestions. */
+	private const LICENSE_SUGGESTIONS = [
+		'Pexels License',
+		'Unsplash License',
+		'Pixabay Content License',
+		'Royalty-free',
+		'CC0 1.0',
+		'CC BY 4.0',
+		'CC BY-SA 4.0',
+		'Public domain',
+		'Used with permission',
+		'All rights reserved',
+	];
+
 	public function buildFormField(): string
 	{
 		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
@@ -128,6 +142,7 @@ class ImageField extends UploadField
 	protected function dialogFields(array $data): string
 	{
 		return $this->infoFields($data)
+			. $this->creditFields($data)
 			. $this->focalFields($data)
 			. $this->exifFields($data)
 			. $this->cameraFields($data)
@@ -181,6 +196,45 @@ class ImageField extends UploadField
 	protected function tagsHelp(): string
 	{
 		return $this->t('image.tags_help', 'Add tags to help organize your images.');
+	}
+
+	/**
+	 * Who made the image and where it came from: a stock photo's photographer
+	 * and license, or a credit typed in for an upload. Stored as the image's
+	 * `credit` object, which templates and `starter:export` read.
+	 *
+	 * @param array<string,mixed> $imageData
+	 */
+	private function creditFields(array $imageData): string
+	{
+		$credit = is_array($imageData['credit'] ?? null) ? $imageData['credit'] : [];
+		$fields = [
+			'author'    => ['text', 'image.credit_author', 'Photographer', 'image.credit_author_help', 'Who made the image. Shown wherever the site prints a credit line.'],
+			'authorUrl' => ['url', 'image.credit_author_url', 'Photographer Link', null, null],
+			'source'    => ['text', 'image.credit_source', 'Source', 'image.credit_source_help', 'Where the image came from, such as Pexels or Unsplash.'],
+			'sourceUrl' => ['url', 'image.credit_source_url', 'Source Link', null, null],
+			'license'   => ['text', 'image.credit_license', 'License', 'image.credit_license_help', 'The license the image is used under.'],
+		];
+
+		$content = '';
+		foreach ($fields as $key => [$field, $labelKey, $label, $helpKey, $help]) {
+			$settings = [
+				'field'    => $field,
+				'label'    => $this->t($labelKey, $label),
+				'value'    => $credit[$key] ?? '',
+				'required' => false,
+			];
+			if ($helpKey !== null) {
+				$settings['help'] = $this->t($helpKey, (string)$help);
+			}
+			if ($key === 'license') {
+				// Suggestions only (a datalist): any other license can be typed in.
+				$settings['options'] = self::LICENSE_SUGGESTIONS;
+			}
+			$content .= $this->form->subField('credit-' . $key, $settings);
+		}
+
+		return HTMLUtils::details($this->t('image.section_credit', 'Credit'), $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
