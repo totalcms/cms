@@ -13,7 +13,7 @@ Every image, and every image in a gallery, can carry a credit: who made it and w
 |---|---|
 | `author` | The photographer or artist |
 | `authorUrl` | A link to them (http or https) |
-| `source` | Where the image came from, such as Pexels or Unsplash |
+| `source` | Where the image came from, such as Pixabay |
 | `sourceUrl` | The image's page at the source |
 | `license` | The license it is used under |
 
@@ -31,6 +31,45 @@ It is stored on the image as a `credit` object, only when at least one key has a
 ```
 
 Agents set it over MCP with `attach_file_from_url` or `patch_object`, and `tcms starter:export` lists every credited image in the starter's `CREDITS.md`.
+
+## Adding photos from another source
+
+Image and gallery fields accept photos from other parts of the admin page, not only files from your computer. The [Stock Photos](docs/extensions/stock-photos) extension uses this, and an extension of your own can too: a panel for a client's photo library, say.
+
+A photo source hands the field a list of photos:
+
+```json
+{
+  "photos": [
+    {
+      "url": "/admin/ext/acme/library/file?id=42",
+      "filename": "terrace-at-dusk",
+      "alt": "The terrace at dusk",
+      "credit": { "author": "Ana Ruiz", "source": "Acme Library" }
+    }
+  ]
+}
+```
+
+Only `url` is required. It must be one the admin page can fetch: on the same site, or on a server that allows cross-origin requests (CORS). The field downloads each photo, then uploads it like a dropped file, so the field's upload rules apply. `alt` and `credit` are saved on the stored image.
+
+There are two ways to hand over the list:
+
+- **Drag:** on `dragstart`, put the JSON in the drag data as `application/x-totalcms-photo`.
+
+  ```js
+  img.addEventListener("dragstart", event => {
+    event.dataTransfer.setData("application/x-totalcms-photo", JSON.stringify(payload));
+  });
+  ```
+
+- **Insert:** call the field's `insertPhotos()`. Each image and gallery field's container (`.form-field.image-field`, `.form-field.gallery-field`) has its field object on `totalfield`.
+
+  ```js
+  document.querySelector(".gallery-field").totalfield.insertPhotos(payload);
+  ```
+
+An image field takes the first photo; a gallery takes them all, in order. `insertPhotos()` returns a promise of how many photos were added. A photo that fails to download is skipped.
 
 ## Upload Validation
 

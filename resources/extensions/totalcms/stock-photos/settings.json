@@ -1,0 +1,34 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Stock Photos",
+	"description": "Search Pixabay from the object editor. Photos you drop on a field are downloaded and stored with the photographer's credit.",
+	"type": "object",
+	"properties": {
+		"pixabayKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Pixabay API Key",
+			"help": "Sign up at <a href='https://pixabay.com/accounts/register/' target='_blank'>pixabay.com</a>, then copy your key from <a href='https://pixabay.com/api/docs/' target='_blank'>pixabay.com/api/docs</a>. The key stays on the server; the browser never sees it. Photos are used under the <a href='https://pixabay.com/service/license-summary/' target='_blank'>Pixabay Content License</a>.",
+			"default": ""
+		},
+		"safeSearch": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Safe Search",
+			"help": "Only show photos suitable for all ages.",
+			"default": true
+		},
+		"defaultOrientation": {
+			"type": "string",
+			"field": "select",
+			"label": "Default Orientation",
+			"help": "The orientation filter the search panel starts with.",
+			"default": "all",
+			"options": [
+				{ "value": "all", "label": "Any" },
+				{ "value": "horizontal", "label": "Landscape" },
+				{ "value": "vertical", "label": "Portrait" }
+			]
+		}
+	}
+}

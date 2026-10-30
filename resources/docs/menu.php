@@ -273,6 +273,7 @@ $menu = [
 					['title' => 'Protect',          'path' => 'extensions/protect'],
 					['title' => 'Pushover',         'path' => 'extensions/pushover'],
 					['title' => 'Scheduled',        'path' => 'extensions/scheduled'],
+					['title' => 'Stock Photos',     'path' => 'extensions/stock-photos'],
 					['title' => 'WebMCP',           'path' => 'extensions/webmcp'],
 				],
 			],

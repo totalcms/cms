@@ -1,0 +1,27 @@
+{
+	"id"              : "totalcms/stock-photos",
+	"name"            : "Stock Photos",
+	"description"     : "Search free stock photos from Pixabay in the object editor and drag them onto image and gallery fields. The photo is downloaded into the object with the photographer's credit. Needs a free Pixabay API key.",
+	"icon"            : "icon.png",
+	"requires"        : {
+		"totalcms" : ">=3.6.5",
+		"php"      : ">=8.2"
+	},
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/stock-photos"
+		},
+		{
+			"label" : "Pixabay API key",
+			"url"   : "https://pixabay.com/api/docs/"
+		}
+	]
+}
