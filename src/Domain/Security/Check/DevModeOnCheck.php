@@ -8,6 +8,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\Severity;
+use TotalCMS\Domain\Security\Service\SiteProbe;
 
 class DevModeOnCheck implements SecurityCheck
 {
@@ -23,10 +24,26 @@ class DevModeOnCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Dev mode';
+	}
+
 	public function run(SecurityContext $context): array
 	{
-		if ($context->isLocalHost() || !$this->devMode->isDevModeActive()) {
+		if (!$this->devMode->isDevModeActive()) {
 			return [SecurityFinding::ok(self::ID, 'Dev mode is off')];
+		}
+		if ($context->hostUnknown()) {
+			return [SecurityFinding::skipped(self::ID, $this->title(), SiteProbe::NO_URL)];
+		}
+		if ($context->isLocalHost()) {
+			return [SecurityFinding::ok(self::ID, 'Dev mode is on, which is fine for a local site')];
 		}
 
 		$minutes = max(1, (int)ceil($this->devMode->getRemainingTime() / 60));

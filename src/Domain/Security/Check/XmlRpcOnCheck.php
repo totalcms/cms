@@ -23,6 +23,16 @@ class XmlRpcOnCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'XML-RPC publishing';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		if (empty($this->config->xmlrpc['enable'])) {

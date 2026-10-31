@@ -9,15 +9,15 @@ use TotalCMS\Domain\Security\Data\SecurityContext;
 /** Server-specific wording for the fix text of the file exposure checks. */
 final class ServerRuleFix
 {
-	public static function denyFolder(SecurityContext $context, string $urlPath): string
+	/** $shipsHtaccess: the folder comes with a deny-all .htaccess (only the data folder does). */
+	public static function denyFolder(SecurityContext $context, string $urlPath, bool $shipsHtaccess = false): string
 	{
 		$path = '/' . trim($urlPath, '/');
 
 		if ($context->isApache()) {
-			return sprintf(
-				'Block web access to %s. On Apache, keep the .htaccess file that ships in that folder in place and make sure AllowOverride is enabled for this site.',
-				$path,
-			);
+			return $shipsHtaccess
+				? sprintf('Block web access to %s. On Apache, keep the .htaccess file that ships in that folder in place and make sure AllowOverride is enabled for this site.', $path)
+				: sprintf('Block web access to %s. On Apache, add a .htaccess file with `Require all denied` to that folder (AllowOverride must be enabled for this site), or move it outside the web folder.', $path);
 		}
 
 		return sprintf(

@@ -81,6 +81,8 @@ use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
+use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use TotalCMS\Domain\Security\Service\SecurityReportStore;
 use TotalCMS\Domain\Twig\Service\BuilderNavigation;
 use TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer;
 use TotalCMS\Domain\Twig\Service\CloneDialogRenderer;
@@ -600,7 +602,7 @@ function buildAdminTwigAdapter(
 		$cacheSizingAdvisor,
 		$translator,
 		$editionFeatures,
-		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository, $activity ?? new ActivityRepository($config)),
+		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository, $activity ?? new ActivityRepository($config), (new ReflectionClass(SecurityReportStore::class))->newInstanceWithoutConstructor(), (new ReflectionClass(SecurityAuditor::class))->newInstanceWithoutConstructor()),
 		new JobQueueRenderer($config, $jobManager, $cronTokens),
 		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
 		// The adapter tests never render the rail, so a bare ExtensionManager

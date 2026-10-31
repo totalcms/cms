@@ -36,7 +36,7 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 
 ### Site status
 - `info` — site status, version, configuration
-- `check` — the Server Checker on the CLI: integrity, license, permissions, PHP extensions; exits 1 when the install cannot run, so deploy scripts can gate on it
+- `check` — the Server Checker on the CLI: integrity, license, permissions, PHP extensions, plus a Security section (public data folder, exposed files, registration groups, debug, headers; fixes in `operations/security.md`). Exits 1 when the install cannot run or a non-ignored security finding is critical, so deploy scripts can gate on it. `--no-security` skips the section; `--json` adds a `security` key; ignore ids via `$settings['security']['ignore']`
 - `cache:clear` — clear all caches (run after template edits if stale)
 - `deploy` — post-deploy cleanup: wipe DI container, clear caches, run migrations
 

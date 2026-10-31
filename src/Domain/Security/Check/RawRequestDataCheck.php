@@ -31,6 +31,16 @@ class RawRequestDataCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Templates that print request data';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$findings = [];

@@ -9,7 +9,11 @@ use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\SecurityReport;
 use TotalCMS\Domain\Security\Data\Severity;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use Psr\Log\AbstractLogger;
+use TotalCMS\Domain\Security\Service\SiteProbe;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\HttpResponse;
 
 function secAuditConfig(array $ignore = []): Config
 {
@@ -35,6 +39,16 @@ function secAuditCheck(array $findings, bool $requests = false): SecurityCheck
 		{
 			return $this->requests;
 		}
+
+		public function id(): string
+		{
+			return 'stub';
+		}
+
+		public function title(): string
+		{
+			return 'Stub check';
+		}
 	};
 }
 
@@ -59,26 +73,124 @@ test('sorts findings critical, warning, info, with ok and skipped after found', 
 	expect($ids)->toBe(['crit1', 'warn1', 'info1', 'ok1', 'skip1']);
 });
 
-test('a check that throws becomes skipped with the exception message', function () {
+test('a check that throws becomes skipped under its own id and title, with a generic reason, and is logged', function () {
 	$thrower = new class implements SecurityCheck {
 		public function run(SecurityContext $context): array
 		{
-			throw new RuntimeException('boom');
+			throw new RuntimeException('boom /secret/path');
 		}
 
 		public function makesRequests(): bool
 		{
 			return false;
 		}
+
+		public function id(): string
+		{
+			return 'thrower';
+		}
+
+		public function title(): string
+		{
+			return 'Thrower check';
+		}
 	};
-	$auditor = new SecurityAuditor(secAuditConfig(), [$thrower, secAuditCheck([SecurityFinding::ok('next', 'Fine')])]);
+	$logger = new class extends AbstractLogger {
+		public array $records = [];
+
+		public function log($level, string|Stringable $message, array $context = []): void
+		{
+			$this->records[] = [$level, (string)$message, $context];
+		}
+	};
+	$auditor = new SecurityAuditor(secAuditConfig(), [$thrower, secAuditCheck([SecurityFinding::ok('next', 'Fine')])], null, $logger);
 
 	$findings = $auditor->audit(secAuditContext())->findings;
-	$byStatus = array_values(array_filter($findings, fn ($f) => $f->status === FindingStatus::Skipped));
+	$skipped  = array_values(array_filter($findings, fn ($f) => $f->status === FindingStatus::Skipped));
 
-	expect($byStatus)->toHaveCount(1)
-		->and($byStatus[0]->detail)->toContain('boom')
-		->and(array_map(fn ($f) => $f->id, $findings))->toContain('next');
+	expect($skipped)->toHaveCount(1)
+		->and($skipped[0]->id)->toBe('thrower')
+		->and($skipped[0]->title)->toBe('Thrower check')
+		->and($skipped[0]->detail)->toBe(SecurityAuditor::CHECK_FAILED)
+		->and($skipped[0]->detail)->not->toContain('boom')
+		->and(array_map(fn ($f) => $f->id, $findings))->toContain('next')
+		->and($logger->records)->toHaveCount(1)
+		->and($logger->records[0][1])->toContain('thrower')
+		->and($logger->records[0][2]['exception'] ?? null)->toBeInstanceOf(RuntimeException::class);
+});
+
+test('every registered check has a non-empty id and title', function () {
+	foreach (SecurityAuditor::CHECKS as $class) {
+		$check = (new ReflectionClass($class))->newInstanceWithoutConstructor();
+
+		expect($check->id())->not->toBe('')
+			->and($check->title())->not->toBe('');
+	}
+});
+
+test('audit resets the site probe so a previous audit\'s failure does not carry over', function () {
+	$client = new class implements HttpClientInterface {
+		public int $calls = 0;
+
+		public function request(string $method, string $url, array $options = []): HttpResponse
+		{
+			$this->calls++;
+
+			throw new RuntimeException('down');
+		}
+	};
+	$probe   = new SiteProbe($client, secAuditConfig());
+	$prober  = new class($probe) implements SecurityCheck {
+		public function __construct(private SiteProbe $probe)
+		{
+		}
+
+		public function run(SecurityContext $context): array
+		{
+			$this->probe->get('https://example.com/a');
+			$this->probe->get('https://example.com/b');
+
+			return [SecurityFinding::ok('p', 'P')];
+		}
+
+		public function makesRequests(): bool
+		{
+			return true;
+		}
+
+		public function id(): string
+		{
+			return 'p';
+		}
+
+		public function title(): string
+		{
+			return 'P';
+		}
+	};
+	$auditor = new SecurityAuditor(secAuditConfig(), [$prober], $probe);
+
+	$auditor->audit(secAuditContext());
+	$auditor->audit(secAuditContext());
+
+	expect($client->calls)->toBe(2);
+});
+
+test('applyIgnores re-applies the current ignore list to a stored report', function () {
+	$stored = new SecurityReport([
+		SecurityFinding::found('was-ignored', Severity::Critical, 't', '', '', '')->withIgnored(),
+		SecurityFinding::found('now-ignored', Severity::Critical, 't', '', '', ''),
+	], '2026-10-31T12:00:00+00:00');
+
+	$report = (new SecurityAuditor(secAuditConfig(['now-ignored']), []))->applyIgnores($stored);
+	$byId   = [];
+	foreach ($report->findings as $f) {
+		$byId[$f->id] = $f->ignored;
+	}
+
+	expect($byId)->toBe(['was-ignored' => false, 'now-ignored' => true])
+		->and($report->criticalCount())->toBe(1)
+		->and($report->checkedAt)->toBe('2026-10-31T12:00:00+00:00');
 });
 
 test('ignored ids are marked and do not count', function () {

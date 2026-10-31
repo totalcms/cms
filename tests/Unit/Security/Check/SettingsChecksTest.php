@@ -250,3 +250,31 @@ describe('VersionBehindCheck', function (): void {
 		expect((new VersionBehindCheck(test()->createMock(UpdateChecker::class)))->makesRequests())->toBeTrue();
 	});
 });
+
+describe('an unknown host', function (): void {
+	test('debug on with no known host is skipped, not a warning', function (): void {
+		$f = (new DebugOnCheck(settingsConfig(['debug' => true])))->run(settingsContext('', true, ''))[0];
+		expect($f->status)->toBe(FindingStatus::Skipped)
+			->and($f->id)->toBe('debug-on')
+			->and($f->detail)->toBe(SiteProbe::NO_URL);
+	});
+
+	test('debug off with no known host is still ok', function (): void {
+		expect((new DebugOnCheck(settingsConfig(['debug' => false])))->run(settingsContext('', true, ''))[0]->status)->toBe(FindingStatus::Ok);
+	});
+
+	test('dev mode on with no known host is skipped', function (): void {
+		$f = (new DevModeOnCheck(devMode(true, 60)))->run(settingsContext('', true, ''))[0];
+		expect($f->status)->toBe(FindingStatus::Skipped)
+			->and($f->detail)->toBe(SiteProbe::NO_URL);
+	});
+
+	test('no-https with a base URL but no host is skipped', function (): void {
+		$f = (new NoHttpsCheck())->run(new SecurityContext('http://', '', false, false, ''))[0];
+		expect($f->status)->toBe(FindingStatus::Skipped);
+	});
+
+	test('a bare IP host counts as local', function (): void {
+		expect((new DebugOnCheck(settingsConfig(['debug' => true])))->run(settingsContext('172.17.0.2', false, 'http://172.17.0.2'))[0]->status)->toBe(FindingStatus::Ok);
+	});
+});

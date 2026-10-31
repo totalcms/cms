@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Security\Check;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\Severity;
+use TotalCMS\Domain\Security\Service\SiteProbe;
 use TotalCMS\Support\Config;
 
 class DebugOnCheck implements SecurityCheck
@@ -23,10 +24,27 @@ class DebugOnCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Debug mode';
+	}
+
 	public function run(SecurityContext $context): array
 	{
-		if (!$this->config->debug || $context->isLocalHost()) {
+		if (!$this->config->debug) {
 			return [SecurityFinding::ok(self::ID, 'Debug mode is off')];
+		}
+		// Whether debug on is a problem depends on the host being live or local.
+		if ($context->hostUnknown()) {
+			return [SecurityFinding::skipped(self::ID, $this->title(), SiteProbe::NO_URL)];
+		}
+		if ($context->isLocalHost()) {
+			return [SecurityFinding::ok(self::ID, 'Debug mode is on, which is fine for a local site')];
 		}
 
 		return [SecurityFinding::found(

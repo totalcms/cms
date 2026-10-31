@@ -20,14 +20,27 @@ class NoHttpsCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return self::TITLE;
+	}
+
 	public function run(SecurityContext $context): array
 	{
-		if ($context->baseUrl === '') {
+		if ($context->baseUrl === '' || $context->hostUnknown()) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::NO_URL)];
 		}
 
-		if ($context->https || $context->isLocalHost()) {
+		if ($context->https) {
 			return [SecurityFinding::ok(self::ID, 'The site is served over HTTPS')];
+		}
+		if ($context->isLocalHost()) {
+			return [SecurityFinding::ok(self::ID, 'HTTPS is not needed for a local site')];
 		}
 
 		return [SecurityFinding::found(

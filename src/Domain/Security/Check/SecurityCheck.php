@@ -18,4 +18,10 @@ interface SecurityCheck
 
 	/** True when the check sends HTTP requests to the site's own origin. */
 	public function makesRequests(): bool;
+
+	/** The check's finding id, also used when the check fails to run. */
+	public function id(): string;
+
+	/** A short human name for the check, shown when it fails to run. */
+	public function title(): string;
 }

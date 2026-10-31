@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Check;
 
+use Throwable;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -31,6 +32,16 @@ class AdminAccountsCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Administrator accounts';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$collection = (string)($this->config->auth['collection'] ?? 'auth');
@@ -41,15 +52,27 @@ class AdminAccountsCheck implements SecurityCheck
 			}
 		}
 
-		$count    = count($adminIds);
-		$passkeys = 0;
+		$count      = count($adminIds);
+		$passkeys   = 0;
+		$unreadable = 0;
 		foreach ($adminIds as $id) {
-			if (!empty($this->objects->fetchObject($collection, $id)->toArray()['passkeys'])) {
+			// One missing or broken user file shouldn't hide the rest of the count.
+			try {
+				$user = $this->objects->fetchObject($collection, $id)->toArray();
+			} catch (Throwable) {
+				$unreadable++;
+
+				continue;
+			}
+			if (!empty($user['passkeys'])) {
 				$passkeys++;
 			}
 		}
 
 		$detail = sprintf('%d administrator accounts, %d with a passkey.', $count, $passkeys);
+		if ($unreadable > 0) {
+			$detail .= sprintf(' %d could not be read, so their passkeys were not counted.', $unreadable);
+		}
 		if ($count > self::MAX_ADMIN) {
 			return [SecurityFinding::found(
 				self::ID,

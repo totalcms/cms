@@ -18,7 +18,7 @@ use TotalCMS\Support\PathResolver;
  * Renders admin/utils.twig for every utility page. Page-specific data comes
  * from the UtilsPageData builder registered for the page (see the
  * UtilsPageDataResolver factory in config/container.php); pages with no
- * builder — logs, cache manager, server checker and the other HTMX-driven
+ * builder — logs, cache manager and the other HTMX-driven
  * utilities — render with the default payload only.
  */
 readonly class AdminUtilsAction
@@ -46,6 +46,7 @@ readonly class AdminUtilsAction
 		'visualizerData'         => null,
 		'objectVisualizerData'   => null,
 		'permissionMatrixData'   => null,
+		'securityReport'         => null,
 	];
 
 	public function __construct(

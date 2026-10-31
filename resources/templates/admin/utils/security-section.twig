@@ -1,0 +1,53 @@
+{# Security audit results. Expects `securityReport` (SecurityReport). Finding text is escaped explicitly: autoescape is off, and fixes contain literal tags such as <Files>. #}
+{% set findings = securityReport.findings %}
+{% set found = findings | filter(f => f.status.value == 'found') %}
+{% set skipped = findings | filter(f => f.status.value == 'skipped') %}
+<div class="security-section" id="security">
+	<h2>{{ t('security.title') }}</h2>
+
+	{% if found | length > 0 %}
+	<table class="admin-table">
+		<thead>
+			<tr>
+				<th>{{ t('security.severity') }}</th>
+				<th>{{ t('security.finding') }}</th>
+				<th>{{ t('security.detail') }}</th>
+				<th>{{ t('security.fix') }}</th>
+				<th>{{ t('security.docs') }}</th>
+			</tr>
+		</thead>
+		{% for f in found %}
+		<tr>
+			<td>
+				<span class="dash-badge {{ f.severity.value == 'critical' ? 'danger' : (f.severity.value == 'warning' ? 'warning' : 'muted') }}">{{ t('security.severity.' ~ f.severity.value) }}</span>
+				{% if f.ignored %}<span class="dash-badge muted sm">{{ t('security.ignored') }}</span>{% endif %}
+			</td>
+			<td>{{ f.title | e }}</td>
+			<td class="security-text">{{ f.detail | e }}</td>
+			<td class="security-text">{{ f.fix | e }}</td>
+			<td>{% if f.docs != '' %}<a href="docs/{{ f.docs }}">{{ t('security.docs') }}</a>{% endif %}</td>
+		</tr>
+		{% endfor %}
+	</table>
+	{% else %}
+	{% if skipped | length > 0 %}
+	<p><span class="dash-badge warning">{{ t('security.all_clear_skipped', {'{count}': skipped | length}) }}</span></p>
+	{% else %}
+	<p><span class="dash-badge success">{{ t('security.all_clear') }}</span></p>
+	{% endif %}
+	{% endif %}
+
+	{% if skipped | length > 0 %}
+	<details>
+		<summary>{{ t('security.not_checked') }} ({{ skipped | length }})</summary>
+		<table class="admin-table">
+			{% for f in skipped %}
+			<tr>
+				<td>{{ f.title | e }}</td>
+				<td class="security-text">{{ f.detail | e }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</details>
+	{% endif %}
+</div>

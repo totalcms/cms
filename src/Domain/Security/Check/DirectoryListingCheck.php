@@ -27,6 +27,16 @@ class DirectoryListingCheck implements SecurityCheck
 		return true;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return self::TITLE;
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$name   = trim((string)($this->config->builder['assetsPath'] ?? ''), '/\\');
@@ -43,6 +53,9 @@ class DirectoryListingCheck implements SecurityCheck
 		$response = $this->probe->get($url . '/');
 		if ($response === null) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::UNREACHABLE)];
+		}
+		if (SiteProbe::isRedirect($response)) {
+			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::redirectReason($response))];
 		}
 
 		if (str_contains($response->body, '<title>Index of')) {

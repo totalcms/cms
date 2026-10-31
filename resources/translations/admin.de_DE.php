@@ -809,6 +809,21 @@ return [
 	'pretty_url.nginx_desc'         => 'Fügen Sie dies in Ihre Server-Konfigurationsdatei ein.',
 	'pretty_url.invalid_path'       => 'Ungültiger Pfad angegeben.',
 
+	// ── Security ─────────────────────────────────────────────────────────────
+	'security.title' => 'Sicherheit',
+	'security.not_checked' => 'Nicht geprüft',
+	'security.ignored' => 'Ignoriert',
+	'security.severity.critical' => 'Kritisch',
+	'security.severity.warning' => 'Warnung',
+	'security.severity.info' => 'Info',
+	'security.docs' => 'Dokumentation',
+	'security.severity' => 'Schweregrad',
+	'security.finding' => 'Befund',
+	'security.detail' => 'Details',
+	'security.fix' => 'Behebung',
+	'security.all_clear' => 'Es wurden keine Sicherheitsprobleme gefunden.',
+	'security.all_clear_skipped' => 'Keine Probleme gefunden, aber {count} Prüfungen konnten nicht ausgeführt werden.',
+
 	// ── Server Checker ──────────────────────────────────────────────────────
 	'server.title'                  => 'Server-Prüfung',
 	'server.integrity_failed'       => 'Total CMS Installationsintegrität fehlgeschlagen',

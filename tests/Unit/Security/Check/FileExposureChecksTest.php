@@ -396,3 +396,103 @@ test('all file exposure checks make requests', function (): void {
 		->and((new DirectoryListingCheck($config, $probe))->makesRequests())->toBeTrue();
 	exposureCleanup($tmp);
 });
+
+describe('redirects are inconclusive', function (): void {
+	test('a redirected canary request skips the data folder check with the Location', function (): void {
+		[$tmp, $config] = exposureInstall();
+		$client         = exposureClient(static fn (): HttpResponse => new HttpResponse(301, '', ['location' => 'https://example.com/tcms-data/x.txt']), $config->docroot);
+		$findings       = (new DataFolderPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext('http://example.com'));
+
+		expect($findings)->toHaveCount(1)
+			->and($findings[0]->status)->toBe(FindingStatus::Skipped)
+			->and($findings[0]->detail)->toContain('redirected the test request')
+			->and($findings[0]->detail)->toContain('https://example.com/tcms-data/x.txt');
+		expect(leftoverCanaries($tmp))->toBe([]);
+		exposureCleanup($tmp);
+	});
+
+	test('a redirect without a Location still skips', function (): void {
+		[$tmp, $config] = exposureInstall();
+		$client         = exposureClient(static fn (): HttpResponse => new HttpResponse(302, ''), $config->docroot);
+		$findings       = (new DataFolderPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+
+		expect($findings[0]->status)->toBe(FindingStatus::Skipped)
+			->and($findings[0]->detail)->toBe('The site redirected the test request, so this couldn\'t be checked.');
+		exposureCleanup($tmp);
+	});
+
+	test('redirected folder and file probes skip the sensitive files check instead of passing', function (): void {
+		[$tmp, $config] = exposureInstall();
+		mkdir($config->logger['path'], 0777, true);
+		file_put_contents($tmp . '/public/composer.lock', '{"packages":[]}');
+		$config->root = $tmp . '/public';
+		$client       = exposureClient(static fn (): HttpResponse => new HttpResponse(301, '', ['location' => 'https://example.com/']), $config->docroot);
+		$findings     = (new SensitiveFilesPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+
+		expect($findings)->toHaveCount(1)
+			->and($findings[0]->status)->toBe(FindingStatus::Skipped)
+			->and($findings[0]->detail)->toContain('redirected the test request');
+		exposureCleanup($tmp);
+	});
+
+	test('a redirected file probe alone skips the sensitive files check', function (): void {
+		[$tmp, $config] = exposureInstall(false);
+		file_put_contents($tmp . '/public/.env', "APP_KEY=x\n");
+		$config->root = $tmp . '/public';
+		$client       = exposureClient(static fn (): HttpResponse => new HttpResponse(308, ''), $config->docroot);
+		$findings     = (new SensitiveFilesPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+
+		expect($findings[0]->status)->toBe(FindingStatus::Skipped);
+		exposureCleanup($tmp);
+	});
+
+	test('a redirected assets folder skips directory listing', function (): void {
+		[$tmp, $config] = exposureInstall();
+		mkdir($tmp . '/public/assets', 0777, true);
+		$client   = exposureClient(static fn (): HttpResponse => new HttpResponse(301, '', ['location' => 'https://example.com/assets/']), $config->docroot);
+		$findings = (new DirectoryListingCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+
+		expect($findings[0]->status)->toBe(FindingStatus::Skipped)
+			->and($findings[0]->detail)->toContain('redirected');
+		exposureCleanup($tmp);
+	});
+});
+
+test('only the data folder fix says a .htaccess ships in the folder', function (): void {
+	[$tmp, $config] = exposureInstall();
+	mkdir($config->logger['path'], 0777, true);
+	$client = exposureClient(exposureServeFromDisk(), $config->docroot);
+
+	$data = (new DataFolderPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+	$logs = array_values(array_filter(
+		(new SensitiveFilesPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext()),
+		static fn ($f): bool => str_contains($f->detail, '/logs'),
+	));
+
+	expect($data[0]->fix)->toContain('keep the .htaccess file that ships')
+		->and($logs[0]->fix)->not->toContain('ships')
+		->and($logs[0]->fix)->toContain('Require all denied')
+		->and($logs[0]->fix)->toContain('outside the web folder');
+	exposureCleanup($tmp);
+});
+
+test('the canary file is world-readable even under a strict umask', function (): void {
+	[$tmp, $config] = exposureInstall();
+	$modes  = [];
+	$client = exposureClient(static function (string $url, string $docroot) use (&$modes): HttpResponse {
+		$path    = $docroot . rawurldecode((string)parse_url($url, PHP_URL_PATH));
+		$modes[] = fileperms($path) & 0777;
+
+		return new HttpResponse(404, '');
+	}, $config->docroot);
+
+	$old = umask(0077);
+	try {
+		(new DataFolderPublicCheck($config, exposureProbe($client, $config)))->run(exposureContext());
+	} finally {
+		umask($old);
+	}
+
+	expect($modes)->toBe([0644]);
+	exposureCleanup($tmp);
+});

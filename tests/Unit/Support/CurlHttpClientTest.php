@@ -41,7 +41,30 @@ describe('CurlHttpClient', function (): void {
 			[1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
 			$pipes,
 		);
-		usleep(500000);
+		if (!is_resource($proc)) {
+			@unlink($dir . '/router.php');
+			@rmdir($dir);
+			$this->markTestSkipped('Could not start the PHP built-in server.');
+		}
+
+		// Wait until the server listens (up to ~5 s) instead of a fixed sleep.
+		$listening = false;
+		for ($i = 0; $i < 50 && !$listening; $i++) {
+			$socket = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
+			if (is_resource($socket)) {
+				fclose($socket);
+				$listening = true;
+			} else {
+				usleep(100000);
+			}
+		}
+		if (!$listening) {
+			proc_terminate($proc);
+			proc_close($proc);
+			@unlink($dir . '/router.php');
+			@rmdir($dir);
+			$this->markTestSkipped('The PHP built-in server never started listening.');
+		}
 
 		try {
 			$response = (new CurlHttpClient())->request('GET', 'http://127.0.0.1:' . $port . '/', ['timeout' => 3, 'connect_timeout' => 3]);

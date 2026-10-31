@@ -809,6 +809,21 @@ return [
 	'pretty_url.nginx_desc'         => 'Plaats dit in uw serverconfiguratie-bestand.',
 	'pretty_url.invalid_path'       => 'Ongeldig pad opgegeven.',
 
+	// ── Security ─────────────────────────────────────────────────────────────
+	'security.title' => 'Beveiliging',
+	'security.not_checked' => 'Niet gecontroleerd',
+	'security.ignored' => 'Genegeerd',
+	'security.severity.critical' => 'Kritiek',
+	'security.severity.warning' => 'Waarschuwing',
+	'security.severity.info' => 'Info',
+	'security.docs' => 'Documentatie',
+	'security.severity' => 'Ernst',
+	'security.finding' => 'Bevinding',
+	'security.detail' => 'Details',
+	'security.fix' => 'Oplossing',
+	'security.all_clear' => 'Er zijn geen beveiligingsproblemen gevonden.',
+	'security.all_clear_skipped' => 'Geen problemen gevonden, maar {count} controles konden niet worden uitgevoerd.',
+
 	// ── Server Checker ──────────────────────────────────────────────────────
 	'server.title'                  => 'Servercontrole',
 	'server.integrity_failed'       => 'Total CMS installatieintegriteit mislukt',

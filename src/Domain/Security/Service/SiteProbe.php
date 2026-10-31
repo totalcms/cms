@@ -4,21 +4,52 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Service;
 
+use Throwable;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 
-/** Lets security checks request the site's own origin, and map file paths to URLs. */
-readonly class SiteProbe
+/**
+ * Lets security checks request the site's own origin, and map file paths to URLs.
+ *
+ * Remembers the first transport failure (timeout, refused connection) so the
+ * rest of one audit doesn't wait out the timeout again on every probe. The
+ * auditor calls reset() at the start of each audit.
+ */
+class SiteProbe
 {
 	public const UNREACHABLE = 'The site couldn\'t reach itself over HTTP, so this wasn\'t checked.';
 	public const NO_URL      = 'The command line doesn\'t know this site\'s address yet. Visit the admin once, or set `domain` in config/tcms.php.';
 
+	private bool $unreachable = false;
+
 	public function __construct(
-		private HttpClientInterface $http,
-		private Config $config,
+		private readonly HttpClientInterface $http,
+		private readonly Config $config,
 	) {
+	}
+
+	/** Forget an earlier transport failure. */
+	public function reset(): void
+	{
+		$this->unreachable = false;
+	}
+
+	/** Any 3xx: the request was answered with a redirect, so the target wasn't tested. */
+	public static function isRedirect(HttpResponse $response): bool
+	{
+		return $response->statusCode >= 300 && $response->statusCode < 400;
+	}
+
+	/** The skip reason for a redirected probe, naming where it pointed when the server said. */
+	public static function redirectReason(HttpResponse $response): string
+	{
+		$location = trim($response->headers['location'] ?? '');
+
+		return $location !== ''
+			? sprintf('The site redirected the test request (to %s), so this couldn\'t be checked.', $location)
+			: 'The site redirected the test request, so this couldn\'t be checked.';
 	}
 
 	/**
@@ -50,17 +81,29 @@ readonly class SiteProbe
 
 	public function get(string $url): ?HttpResponse
 	{
+		if ($this->unreachable) {
+			return null;
+		}
+
 		try {
 			$response = $this->http->request('GET', $url, [
 				'timeout'          => 3,
 				'connect_timeout'  => 3,
 				'follow_redirects' => false,
 			]);
-		} catch (\Throwable) {
+		} catch (Throwable) {
+			$this->unreachable = true;
+
 			return null;
 		}
 
-		return $response->statusCode === 0 ? null : $response;
+		if ($response->statusCode === 0) {
+			$this->unreachable = true;
+
+			return null;
+		}
+
+		return $response;
 	}
 
 	/** Path relative to the docroot, matching lexically or by realpath; null when outside. */

@@ -33,6 +33,7 @@ use TotalCMS\Action\Admin\Utils\ActivityPageData;
 use TotalCMS\Action\Admin\Utils\ImportPageData;
 use TotalCMS\Action\Admin\Utils\JumpStartPageData;
 use TotalCMS\Action\Admin\Utils\OAuthPageData;
+use TotalCMS\Action\Admin\Utils\ServerCheckerPageData;
 use TotalCMS\Action\Admin\Utils\SyncPageData;
 use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
@@ -189,6 +190,7 @@ use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Security\Check\SecurityCheck;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use TotalCMS\Domain\Security\Service\SiteProbe;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowListener;
 use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
@@ -1135,6 +1137,8 @@ return [
 	SecurityAuditor::class => fn (ContainerInterface $container): SecurityAuditor => new SecurityAuditor(
 		$container->get(Config::class),
 		array_map(fn (string $class): SecurityCheck => $container->get($class), SecurityAuditor::CHECKS),
+		$container->get(SiteProbe::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
 	),
 
 	// McpServerFactory needs an explicit definition for its custom logger
@@ -1378,6 +1382,7 @@ return [
 			'import-rss'            => $import,
 			'activity'              => $container->get(ActivityPageData::class),
 			'update'                => $container->get(UpdatePageData::class),
+			'server-checker'        => $container->get(ServerCheckerPageData::class),
 			'sync'                  => $container->get(SyncPageData::class),
 			'jumpstart'             => $container->get(JumpStartPageData::class),
 			'twig-debugger'         => $container->get(TwigDebuggerPageData::class),

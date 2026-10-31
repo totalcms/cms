@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Service;
 
+use Psr\Log\LoggerInterface;
 use Throwable;
 use TotalCMS\Domain\Security\Check\AdminAccountsCheck;
 use TotalCMS\Domain\Security\Check\ApiKeysBroadCheck;
@@ -46,19 +47,20 @@ class SecurityAuditor
 		RawRequestDataCheck::class,
 	];
 
+	public const CHECK_FAILED = 'This check failed to run; see the log.';
+
 	/** @param list<SecurityCheck> $checks */
 	public function __construct(
 		private readonly Config $config,
 		private readonly array $checks,
+		private readonly ?SiteProbe $probe = null,
+		private readonly ?LoggerInterface $logger = null,
 	) {
 	}
 
 	public function audit(SecurityContext $context, bool $offlineOnly = false): SecurityReport
 	{
-		$ignore   = array_map(strval(...), array_filter(
-			(array)($this->config->security['ignore'] ?? []),
-			is_scalar(...),
-		));
+		$this->probe?->reset();
 		$findings = [];
 
 		foreach ($this->checks as $check) {
@@ -69,17 +71,35 @@ class SecurityAuditor
 			try {
 				$results = $check->run($context);
 			} catch (Throwable $e) {
-				$results = [SecurityFinding::skipped($check::class, $check::class, $e->getMessage())];
+				// The message can hold paths or other internals, so it goes to the log, not the report.
+				$this->logger?->error(sprintf('Security check "%s" failed to run: %s', $check->id(), $e->getMessage()), ['exception' => $e]);
+				$results = [SecurityFinding::skipped($check->id(), $check->title(), self::CHECK_FAILED)];
 			}
 
-			foreach ($results as $finding) {
-				$findings[] = in_array($finding->id, $ignore, true) ? $finding->withIgnored() : $finding;
-			}
+			$findings = [...$findings, ...$results];
 		}
 
 		usort($findings, static fn (SecurityFinding $a, SecurityFinding $b): int => self::order($a) <=> self::order($b));
 
-		return new SecurityReport($findings, date('c'));
+		return $this->applyIgnores(new SecurityReport($findings, date('c')));
+	}
+
+	/**
+	 * Mark findings by the current `security.ignore` list. Used on fresh audits
+	 * and on stored reports, so an id added to or removed from the list takes
+	 * effect without waiting for the next audit.
+	 */
+	public function applyIgnores(SecurityReport $report): SecurityReport
+	{
+		$ignore = array_map(strval(...), array_filter(
+			(array)($this->config->security['ignore'] ?? []),
+			is_scalar(...),
+		));
+
+		return new SecurityReport(
+			array_map(static fn (SecurityFinding $f): SecurityFinding => $f->withIgnored(in_array($f->id, $ignore, true)), $report->findings),
+			$report->checkedAt,
+		);
 	}
 
 	/** Found findings first by severity, then ok and skipped. */

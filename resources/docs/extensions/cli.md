@@ -70,11 +70,13 @@ tcms check --config    # also print the merged configuration, secrets redacted
 tcms check --json
 ```
 
-The command exits **1** when the install cannot run — the bundle is corrupted, `tcms-data`, `cache`, `logs` or `tmp` is not writable, or a required extension is missing — and **0** otherwise, so a deploy script can gate on it:
+The command exits **1** when the install cannot run — the bundle is corrupted, `tcms-data`, `cache`, `logs` or `tmp` is not writable, or a required extension is missing — **or** when the Security section has a critical finding that is not ignored. It exits **0** otherwise, so a deploy script can gate on it:
 
 ```bash
 composer update && vendor/bin/tcms check || exit 1
 ```
+
+The **Security** section looks for common problems: a public data folder, exposed logs and project files, risky registration groups, debug mode, missing headers and more. Each finding links to its fix in the [security guide](docs/operations/security#checking-your-install). Pass `--no-security` to skip the section and get the old exit behavior. With `--json`, a `security` key holds `checked`, `findings` and `url`; `url` is `null` when the command line does not know the site's address. That address is the one the site last recorded (see the `cache/.siteurl` rule below), so checks that make web requests are listed as not checked until someone visits the admin or `domain` is set. Ignore a finding on purpose with `$settings['security']['ignore'] = ['check-id']` in `config/tcms.php`. The data folder and sensitive file checks write a small, world-readable test file and fetch it; a redirected request is listed as not checked, never as blocked. In the human output each finding prints its detail and then its fix, indented under the title. The report is saved to `tcms-data/.system/security-report.json`, which the dashboard alert reads for 24 hours.
 
 The checks run in the command line's PHP, which is not the one serving pages: the extensions, limits, cache state and session settings it reports can differ from the web server's, and rows only a web request knows (the web server software) are left out. For the values a page request sees, use the Server Checker in the admin. The domain and license follow the same `cache/.siteurl` rule as `info`.
 

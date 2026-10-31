@@ -9,6 +9,11 @@
 	</div>
 	{% endif %}
 
+	{% set securityFirst = securityReport and (securityReport.criticalCount > 0 or (securityReport.findings | filter(f => f.status.value == 'found' and f.severity.value == 'warning' and not f.ignored) | length) > 0) %}
+	{% if securityReport and securityFirst %}
+		{% include 'admin/utils/security-section.twig' %}
+	{% endif %}
+
 	<h2>{{ t('server.license_info') }}</h2>
 	<table class="admin-table">
 		<thead>
@@ -136,6 +141,10 @@
 		</tr>
 		{% endfor %}
 	</table>
+
+	{% if securityReport and not securityFirst %}
+		{% include 'admin/utils/security-section.twig' %}
+	{% endif %}
 
 	<h2>{{ t('server.config_title') }}</h2>
 	<table class="admin-table">

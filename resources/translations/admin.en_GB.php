@@ -809,6 +809,21 @@ return [
 	'pretty_url.nginx_desc'         => 'Place this in your server config file.',
 	'pretty_url.invalid_path'       => 'Invalid path provided.',
 
+	// ── Security ─────────────────────────────────────────────────────────────
+	'security.title' => 'Security',
+	'security.not_checked' => 'Not checked',
+	'security.ignored' => 'Ignored',
+	'security.severity.critical' => 'Critical',
+	'security.severity.warning' => 'Warning',
+	'security.severity.info' => 'Info',
+	'security.docs' => 'Docs',
+	'security.severity' => 'Severity',
+	'security.finding' => 'Finding',
+	'security.detail' => 'Details',
+	'security.fix' => 'Fix',
+	'security.all_clear' => 'No security problems were found.',
+	'security.all_clear_skipped' => 'No problems found, but {count} checks couldn\'t run.',
+
 	// ── Server Checker ──────────────────────────────────────────────────────
 	'server.title'                  => 'Server Checker',
 	'server.integrity_failed'       => 'Total CMS Installation Integrity Failed',

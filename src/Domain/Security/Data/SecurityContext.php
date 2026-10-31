@@ -19,18 +19,26 @@ readonly class SecurityContext
 	) {
 	}
 
-	public static function fromRequest(ServerRequestInterface $request): self
+	/**
+	 * The scheme comes from `is_https` (which honors X-Forwarded-Proto) as well
+	 * as the request URI, so a site behind an HTTPS proxy or load balancer is
+	 * checked, and probed, as the HTTPS site visitors see.
+	 */
+	public static function fromRequest(ServerRequestInterface $request, Config $config): self
 	{
 		$uri    = $request->getUri();
-		$scheme = $uri->getScheme() !== '' ? $uri->getScheme() : 'http';
+		$https  = $uri->getScheme() === 'https' || $config->isHttps;
+		$scheme = $https ? 'https' : 'http';
 		$host   = $uri->getHost();
 		$port   = $uri->getPort();
+		// A proxy that terminates TLS talks to the backend on 80; that port isn't the public one.
+		$port   = in_array($port, [80, 443], true) ? null : $port;
 		$base   = $host === '' ? '' : $scheme . '://' . $host . ($port !== null ? ':' . $port : '');
 
 		return new self(
 			$base,
 			$host,
-			$scheme === 'https',
+			$https,
 			true,
 			(string)($request->getServerParams()['SERVER_SOFTWARE'] ?? ''),
 		);
@@ -45,13 +53,22 @@ readonly class SecurityContext
 		return new self($url, $host, str_starts_with($url, 'https://'), false, '');
 	}
 
+	/** No host is known (the CLI before any web visit), so host-dependent checks can't decide. */
+	public function hostUnknown(): bool
+	{
+		return trim($this->host) === '';
+	}
+
+	/** A development or non-routable host: localhost, a bare IP, `.localhost`, `.test` or `example.*`. */
 	public function isLocalHost(): bool
 	{
-		$host = strtolower($this->host);
+		$host = strtolower(trim($this->host));
+		if ($host === '') {
+			return false;
+		}
 
-		return in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true)
+		return Config::isNonRoutableHost($host)
 			|| str_ends_with($host, '.test')
-			|| str_ends_with($host, '.localhost')
 			|| str_starts_with($host, 'example.');
 	}
 

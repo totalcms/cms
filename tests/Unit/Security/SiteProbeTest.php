@@ -27,6 +27,7 @@ function probeClient(?HttpResponse $response, ?Throwable $throw = null): object
 {
 	return new class($response, $throw) implements HttpClientInterface {
 		public array $options = [];
+		public int $calls     = 0;
 
 		public function __construct(private ?HttpResponse $response, private ?Throwable $throw)
 		{
@@ -35,6 +36,7 @@ function probeClient(?HttpResponse $response, ?Throwable $throw = null): object
 		public function request(string $method, string $url, array $options = []): HttpResponse
 		{
 			$this->options = $options;
+			$this->calls++;
 			if ($this->throw !== null) {
 				throw $this->throw;
 			}
@@ -138,5 +140,39 @@ describe('SiteProbe', function (): void {
 		expect($client->options['timeout'])->toBe(3);
 		expect($client->options['connect_timeout'])->toBe(3);
 		expect($client->options['follow_redirects'])->toBeFalse();
+	});
+
+	test('after a transport failure later gets return null without a request until reset', function (): void {
+		$client = probeClient(null, new RuntimeException('timed out'));
+		$probe  = new SiteProbe($client, probeConfig('/tmp'));
+
+		expect($probe->get('https://example.test/a'))->toBeNull()
+			->and($probe->get('https://example.test/b'))->toBeNull()
+			->and($probe->get('https://example.test/c'))->toBeNull()
+			->and($client->calls)->toBe(1);
+
+		$probe->reset();
+		expect($probe->get('https://example.test/d'))->toBeNull()
+			->and($client->calls)->toBe(2);
+	});
+
+	test('a status 0 response also counts as unreachable for the rest of the audit', function (): void {
+		$client = probeClient(new HttpResponse(0, ''));
+		$probe  = new SiteProbe($client, probeConfig('/tmp'));
+
+		$probe->get('https://example.test/a');
+		$probe->get('https://example.test/b');
+
+		expect($client->calls)->toBe(1);
+	});
+
+	test('an HTTP error response does not stop later requests', function (): void {
+		$client = probeClient(new HttpResponse(404, ''));
+		$probe  = new SiteProbe($client, probeConfig('/tmp'));
+
+		$probe->get('https://example.test/a');
+		$probe->get('https://example.test/b');
+
+		expect($client->calls)->toBe(2);
 	});
 });

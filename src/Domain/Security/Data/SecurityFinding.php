@@ -33,9 +33,9 @@ readonly class SecurityFinding
 		return new self($id, Severity::Info, FindingStatus::Skipped, $title, $reason);
 	}
 
-	public function withIgnored(): self
+	public function withIgnored(bool $ignored = true): self
 	{
-		return new self($this->id, $this->severity, $this->status, $this->title, $this->detail, $this->fix, $this->docs, true);
+		return new self($this->id, $this->severity, $this->status, $this->title, $this->detail, $this->fix, $this->docs, $ignored);
 	}
 
 	/** True when this finding should fail `tcms check` and raise the dashboard alert. */

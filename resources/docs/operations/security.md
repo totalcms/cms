@@ -453,6 +453,243 @@ header {
 }
 ```
 
+## Checking Your Install
+
+Total CMS can check your install for common security problems. It looks at your settings, your accounts, your templates and, for a few checks, how your web server answers real requests. It never changes anything. Each finding says what it saw and how to fix it, and links to the matching section below.
+
+Findings have three severities:
+
+| Severity | Meaning |
+|---|---|
+| Critical | Something private is likely open to anyone. Fix it now. |
+| Warning | A real weakness. Fix it soon. |
+| Info | Worth knowing. No action needed if it is on purpose. |
+
+A check that could not run is shown as **not checked** with the reason. It is never shown as passing.
+
+### Where to run it
+
+- **Server Checker page.** Admin → Utilities → Server Checker has a Security section. It runs the checks live, using the real host name and HTTPS state of your request. Behind a proxy or CDN that ends HTTPS and forwards plain HTTP (Cloudflare Flexible, a load balancer, nginx in front of Apache), the HTTPS state comes from the `X-Forwarded-Proto` header, so the checks see the HTTPS site your visitors see.
+- **`tcms check`.** The command line prints the same Security section. See [`tcms check`](docs/extensions/cli#check).
+- **Dashboard.** Admins see a red alert on the dashboard when the last report had a critical finding. The last report is the one saved by the Server Checker page or `tcms check` in the past 24 hours, in `tcms-data/.system/security-report.json`, so the page and the command line share it. Your current ignore list is applied when the dashboard reads it. With no report from the past 24 hours, the dashboard runs only the checks that read settings and files.
+
+The command line does not have a host name, so it uses the address the site last recorded when someone loaded a page. On a fresh install, or after a cache clear, checks that need that address are listed as not checked until someone visits the admin or you set `domain` in `config/tcms.php`. Checks that only read your settings and files still run.
+
+### What changed for `tcms check`
+
+- `tcms check` now exits non-zero on any critical security finding that is not ignored. Before, it only failed when the install could not run.
+- `--no-security` skips the Security section and restores the old exit behavior.
+- `--json` has a `security` key with `checked`, `findings` and `url`. `url` is `null` when the command line does not know the site's address.
+
+```bash
+tcms check                 # includes the Security section
+tcms check --no-security   # the old behavior
+tcms check --json
+```
+
+### Ignoring a finding
+
+Some findings are on purpose. List their check ids in `config/tcms.php`:
+
+```php
+<?php
+return [
+	'security' => [
+		'ignore' => ['xmlrpc-on', 'dev-mode-on'],
+	],
+];
+```
+
+An ignored finding still shows, marked ignored. It does not count toward the exit code of `tcms check` and does not raise the dashboard alert.
+
+### How the web checks work
+
+The data folder and sensitive file checks write a small test file with a random name and random content, fetch it over HTTP, and delete it. If the web server returns that exact content, the folder is public. A server that answers every address with a page never causes a false alarm.
+
+The test file is made readable to everyone (mode 0644) before it is fetched, so a strict umask, or a command line that runs as a different user than the web server, can't make a public folder look blocked.
+
+A redirect is not an answer. If the site redirects a test request, for example from `http://` to `https://` or to a login page, the check is listed as not checked and names where the redirect pointed. It is never counted as blocked.
+
+If the site can't reach itself (a timeout or a refused connection), the first failed request ends the web checks for that run. The rest are listed as not checked straight away instead of each waiting for its own timeout.
+
+A folder counts as inside the public web folder when its configured path is inside it, or when the real path it resolves to (with symlinks followed) is inside it. So a data folder configured through a symlink that points into the web folder is checked, and so is a web folder that is itself a symlink. One layout is not caught: a data folder configured by its real path outside the web folder, with a separate symlink inside the web folder pointing to it. Total CMS doesn't search the web folder for symlinks, so that folder is reported as outside. Remove such a symlink, or set `datadir` to the symlink path so the check tests it.
+
+The checks only make requests to your own site. Titles and fixes are in English in every admin language.
+
+### Admin accounts
+
+**Check id:** `admin-accounts`
+
+Counts the accounts in the `admin` group and how many have a passkey. More than five administrators is a warning. Otherwise it is info.
+
+Every administrator can change anything, including schemas, API keys and extensions. Each extra account is another password that can be stolen.
+
+**Fix:** Give day-to-day users an access group with only the permissions they need. Keep `admin` for a few people. Turn on passkeys for administrators.
+
+### API keys broad
+
+**Check id:** `api-keys-broad`
+
+Looks for API keys that allow write methods (`POST`, `PUT`, `PATCH`, `DELETE`) on every path, and keys that were never used and created more than 30 days ago, or not used for 180 days. Info.
+
+A leaked key with write access to everything can change or delete all your content.
+
+**Fix:** Limit each key to the methods and paths its job needs. Delete keys you no longer use.
+
+### Data folder public
+
+**Check id:** `data-folder-public`
+
+Writes a test file into the data folder (`tcms-data`) when it is inside the public web folder, and tries to download it.
+
+- **Critical:** the test file could be downloaded. Anyone can read your content, users and settings.
+- **Info on Apache and LiteSpeed:** the folder is inside the web folder but blocked. This is normal for zip and Stacks installs, which are protected by the `.htaccess` file that ships in the folder.
+- **Warning on other servers:** the folder is inside the web folder and blocked, but only by a server rule. If that rule stops working, the folder becomes public.
+
+**Fix:** Move the data folder above the public web folder and update `datadir` in `config/tcms.php`. If it must stay, block it:
+
+On Apache, keep the `.htaccess` file in the folder and make sure `AllowOverride` is enabled for your site.
+
+On Nginx, `.htaccess` is ignored. Add this and reload:
+
+```nginx
+location ^~ /tcms-data/ {
+	deny all;
+	return 404;
+}
+```
+
+### Debug on
+
+**Check id:** `debug-on`
+
+Warns when the `debug` setting is on for a live site. Error pages can show file paths and code to visitors. A local site (`localhost`, a bare IP address, or a host ending in `.localhost` or `.test`) is fine. When the command line doesn't know the site's address yet, this is listed as not checked.
+
+**Fix:** Set `debug` to `false` in `config/tcms.php`.
+
+### Dev mode on
+
+**Check id:** `dev-mode-on`
+
+Reports when dev mode is active on a live site. Dev mode turns caching off and expires on its own. Info. Local sites and an unknown address are treated as in [Debug on](#debug-on).
+
+**Fix:** Turn dev mode off in the admin when you finish testing.
+
+### Directory listing
+
+**Check id:** `directory-listing`
+
+Requests your assets folder and looks for a file list ("Index of"). A listing shows visitors every file in the folder. Warning. A redirected request is listed as not checked.
+
+**Fix:** On Apache, add `Options -Indexes` to your `.htaccess` file. On Nginx, set `autoindex off;` in your server block and reload.
+
+### MCP anonymous
+
+**Check id:** `mcp-anonymous`
+
+When `mcp.publicAccess` is on, lists the collections that anonymous AI agents can read.
+
+- **Warning:** a public collection has an email or password field that MCP returns.
+- **Info:** collections are public over MCP and have no such fields.
+
+**Fix:** Set the collection's MCP access to something other than public, or mark the sensitive properties as not exposed to MCP. To close anonymous access, set `mcp.publicAccess` to `false`.
+
+### No HTTPS
+
+**Check id:** `no-https`
+
+Warns when a live site is served over plain HTTP. Logins and form data travel unencrypted. A site behind a proxy that sends `X-Forwarded-Proto: https` counts as HTTPS.
+
+**Fix:** Install a certificate (most hosts offer a free one) and redirect HTTP to HTTPS. See [HTTPS and Transport Security](#https-and-transport-security).
+
+### Raw request data
+
+**Check id:** `raw-request-data`
+
+Scans your Site Builder templates (not the built-in ones) for `getData`, `postData` or `sessionData` on the same line as `|raw`. Visitors control that data, so printing it unescaped lets them inject scripts into your page. Warning. Each finding names the file and line.
+
+This is a line-by-line pattern match, not a full analysis. It misses an expression split across lines and request data assigned to a variable first.
+
+**Fix:** Remove `|raw` so Twig escapes the value, or sanitize it first.
+
+### Registration group
+
+**Check id:** `registration-group`
+
+Looks at collections that allow public registration and the access groups new members join.
+
+- **Critical:** new members join `admin`, or a group that can do any of these: open any admin utility (access groups, API keys and the rest are utilities), create or change schemas, edit Site Builder templates, or create, change or delete collection settings (which would let a member open registration elsewhere or change its groups). The finding names what the group can do.
+- **Warning:** new members join a group that can create, update or delete collection content.
+- **Info:** registration gives new members no group.
+
+New members are logged in right away, so anyone, including bots, can sign up.
+
+**Fix:** Give the registration group read access only. Protect the form with a CAPTCHA, a rate limit or email verification. See [Access Groups](docs/auth/access-groups#users-without-a-group) for the no-group case.
+
+### Security headers
+
+**Check id:** `security-headers`
+
+Requests the home page and looks for `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy`. On HTTPS it also looks for `Strict-Transport-Security` (HSTS), reported separately as `security-headers-hsts`. Info.
+
+**Fix:** The `.htaccess` that ships in `public/` sets the first three on Apache. On Nginx add them to your server block and reload:
+
+```nginx
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+```
+
+HSTS makes browsers refuse plain HTTP for the full `max-age`. Make sure every page and subdomain works over HTTPS first, and start short:
+
+```apache
+Header always set Strict-Transport-Security "max-age=300"
+```
+
+```nginx
+add_header Strict-Transport-Security "max-age=300" always;
+```
+
+### Sensitive files public
+
+**Check id:** `sensitive-files-public`
+
+Tests the logs, cache and tmp folders with a test file, and requests project files, but only those that sit inside the public web folder:
+
+- **Critical:** a logs, cache or tmp folder is downloadable, or `.git/config` or `.env` is readable.
+- **Warning:** `composer.lock` or `vendor/composer/installed.json` is readable. They list every package and version you run.
+
+These files can hold passwords, tokens and source code.
+
+**Fix:** Move the folder or file above the public web folder, or block it. On Apache, add a `.htaccess` file containing `Require all denied` to the logs, cache or tmp folder (no `.htaccess` ships in these), add a `<Files>` deny rule for a file, and make sure `AllowOverride` is enabled. On Nginx, add a rule for each path and reload:
+
+```nginx
+location ^~ /logs/ {
+	deny all;
+	return 404;
+}
+location = /.env {
+	deny all;
+	return 404;
+}
+```
+
+### Version behind
+
+**Check id:** `version-behind`
+
+Asks the update checker whether a newer Total CMS version exists. Warning. Updates carry security fixes.
+
+**Fix:** Update from the admin, or run `tcms update:apply`. Composer installs update with `composer update`.
+
+### XMLRPC on
+
+**Check id:** `xmlrpc-on`
+
+Reports when the WordPress-compatible XML-RPC endpoint is on (`xmlrpc.enable`). It accepts API key logins from the internet. Info.
+
+**Fix:** If you do not publish from MarsEdit, Byword or Ulysses, set `xmlrpc.enable` to `false` in `config/tcms.php`.
+
 ## Error Monitoring
 
 Total CMS can report application errors to the developer so bugs get discovered and fixed quickly — often before you notice anything went wrong, and without you having to file a report. You choose during the setup wizard, and you can change your mind at any time in **Settings → General** ("Share Application Errors with Developer").

@@ -16,6 +16,12 @@ use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Security\Data\SecurityContext;
+use TotalCMS\Domain\Security\Data\SecurityFinding;
+use TotalCMS\Domain\Security\Data\SecurityReport;
+use TotalCMS\Domain\Security\Data\Severity;
+use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use TotalCMS\Domain\Security\Service\SecurityReportStore;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 use TotalCMS\Domain\Update\Data\UpdateInfo;
@@ -227,6 +233,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		// SMTP set up unless a test says otherwise.
 		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->smtp = $overrides['smtp'] ?? ['from' => 'site@example.com'];
+		$config->security = ['ignore' => $overrides['securityIgnore'] ?? []];
 
 		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
 		$ref     = new \ReflectionClass($adapter);
@@ -239,7 +246,26 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$ref->getProperty('activity')->setValue($adapter, $activity);
 		$ref->getProperty('config')->setValue($adapter, $config);
 
+		$store = $overrides['securityStore'] ?? $this->mockSecurityStore(new SecurityReport([], '2026-10-31T10:00:00+00:00'));
+		$ref->getProperty('securityReports')->setValue($adapter, $store);
+		$ref->getProperty('securityAuditor')->setValue($adapter, $overrides['securityAuditor'] ?? new SecurityAuditor($config, []));
+
 		return $adapter;
+	}
+
+	private function mockSecurityStore(?SecurityReport $report): SecurityReportStore
+	{
+		$mock = $this->createMock(SecurityReportStore::class);
+		$mock->method('latest')->willReturn($report);
+
+		return $mock;
+	}
+
+	private function criticalReport(bool $ignored = false): SecurityReport
+	{
+		$finding = SecurityFinding::found('data-folder-public', Severity::Critical, 'Data folder is public', 'd', 'f', 'operations/security#data-folder-public');
+
+		return new SecurityReport([$ignored ? $finding->withIgnored() : $finding], '2026-10-31T10:00:00+00:00');
 	}
 
 	private function mockFailedEmails(int $count): ActivityRepository
@@ -281,6 +307,63 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	public function testAllClearReturnsEmptyArray(): void
 	{
 		$this->assertSame([], $this->makeAlertsAdapter()->dashboardAlerts());
+	}
+
+	// -------------------------------------------------------------------------
+	// dashboardAlerts() — security
+	// -------------------------------------------------------------------------
+
+	public function testStoredCriticalReportRaisesSecurityAlert(): void
+	{
+		$alerts = $this->makeAlertsAdapter(['securityStore' => $this->mockSecurityStore($this->criticalReport())])->dashboardAlerts();
+
+		$this->assertCount(1, $alerts);
+		$this->assertSame('error', $alerts[0]['level']);
+		$this->assertTrue($alerts[0]['critical']);
+		$this->assertSame('utils/server-checker', $alerts[0]['link']);
+		$this->assertStringContainsString('1 critical security problem', $alerts[0]['message']);
+	}
+
+	public function testIgnoredCriticalRaisesNoSecurityAlert(): void
+	{
+		$alerts = $this->makeAlertsAdapter([
+			'securityStore'  => $this->mockSecurityStore($this->criticalReport(true)),
+			'securityIgnore' => ['data-folder-public'],
+		])->dashboardAlerts();
+
+		$this->assertSame([], $alerts);
+	}
+
+	public function testIdIgnoredAfterTheReportWasSavedRaisesNoSecurityAlert(): void
+	{
+		$alerts = $this->makeAlertsAdapter([
+			'securityStore'  => $this->mockSecurityStore($this->criticalReport()),
+			'securityIgnore' => ['data-folder-public'],
+		])->dashboardAlerts();
+
+		$this->assertSame([], $alerts);
+	}
+
+	public function testIdUnignoredAfterTheReportWasSavedRaisesTheAlert(): void
+	{
+		$alerts = $this->makeAlertsAdapter(['securityStore' => $this->mockSecurityStore($this->criticalReport(true))])->dashboardAlerts();
+
+		$this->assertCount(1, $alerts);
+	}
+
+	public function testNoStoredReportRunsOfflineChecksOnlyAndDoesNotSave(): void
+	{
+		$auditor = $this->createMock(SecurityAuditor::class);
+		$auditor->expects($this->once())
+			->method('audit')
+			->with($this->isInstanceOf(SecurityContext::class), true)
+			->willReturn($this->criticalReport());
+		$store = $this->mockSecurityStore(null);
+		$store->expects($this->never())->method('save');
+
+		$alerts = $this->makeAlertsAdapter(['securityStore' => $store, 'securityAuditor' => $auditor])->dashboardAlerts();
+
+		$this->assertCount(1, $alerts);
 	}
 
 	// -------------------------------------------------------------------------

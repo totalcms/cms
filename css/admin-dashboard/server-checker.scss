@@ -31,6 +31,10 @@
 		height         : auto;
 		word-break     : break-word;
 	}
+	// Security detail and fix text carries line breaks (header lines, Nginx blocks).
+	table.admin-table td.security-text {
+		white-space : pre-line;
+	}
 	th:first-child {
 		max-width : 200px !important;
 	}

@@ -31,6 +31,16 @@ class McpAnonymousCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Anonymous MCP access';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$mcp = (array)$this->config->mcp;

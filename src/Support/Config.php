@@ -22,6 +22,8 @@ class Config
 	/** @var list<string> Settings sections this install owns — see `siteId`. */
 	public array $siteOverrides = [];
 	public string $url          = '';
+	/** `is_https`: the request came over HTTPS, directly or through a proxy that sent X-Forwarded-Proto. */
+	public bool $isHttps        = false;
 	public string $api          = '';
 	public string $locale       = '';
 	/**
@@ -173,6 +175,7 @@ class Config
 		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->isHttps            = (bool)($this->rawSettings['is_https'] ?? false);
 		$this->security           = is_array($this->rawSettings['security'] ?? null) ? $this->rawSettings['security'] : [];
 		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
 		$this->activity           = is_array($this->rawSettings['activity'] ?? null) ? $this->rawSettings['activity'] : [];

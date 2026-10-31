@@ -26,6 +26,16 @@ class VersionBehindCheck implements SecurityCheck
 		return true;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return self::TITLE;
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		try {

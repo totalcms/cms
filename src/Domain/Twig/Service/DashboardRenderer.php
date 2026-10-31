@@ -24,6 +24,9 @@ use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\Data\SecurityContext;
+use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use TotalCMS\Domain\Security\Service\SecurityReportStore;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
@@ -59,6 +62,8 @@ readonly class DashboardRenderer
 		private AutomationRunReader $automationRunReader,
 		private ExtensionStateRepository $extensionStateRepository,
 		private ActivityRepository $activity,
+		private SecurityReportStore $securityReports,
+		private SecurityAuditor $securityAuditor,
 	) {
 	}
 
@@ -512,6 +517,12 @@ readonly class DashboardRenderer
 			}
 		}
 
+		// 4c. Critical security findings from the last audit
+		$securityAlert = $this->securityAlert();
+		if ($securityAlert !== null) {
+			$alerts[] = $securityAlert;
+		}
+
 		// 5. Extension boot failures (enabled extensions only)
 		$failedExtensions = [];
 		foreach ($this->extensionStateRepository->loadAll() as $extId => $state) {
@@ -579,6 +590,39 @@ readonly class DashboardRenderer
 			'message'  => 'Email is not set up, so no email can be sent — including the password reset email if you forget your password.',
 			'link'     => 'settings/smtp',
 			'linkText' => 'Set up SMTP',
+			'critical' => true,
+		];
+	}
+
+	/**
+	 * Critical security findings, from the last stored audit with today's
+	 * ignore list applied. With nothing stored it runs the offline checks only
+	 * (no self-requests on a dashboard load) and does not save them. Never
+	 * breaks the dashboard.
+	 *
+	 * @return array{level: string, message: string, link: string, linkText: string, critical: bool}|null
+	 */
+	private function securityAlert(): ?array
+	{
+		try {
+			$stored = $this->securityReports->latest();
+			$report = $stored !== null
+				? $this->securityAuditor->applyIgnores($stored)
+				: $this->securityAuditor->audit(SecurityContext::fromCli($this->config), offlineOnly: true);
+			$count = $report->criticalCount();
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if ($count === 0) {
+			return null;
+		}
+
+		return [
+			'level'    => 'error',
+			'message'  => $count === 1 ? '1 critical security problem was found.' : "{$count} critical security problems were found.",
+			'link'     => 'utils/server-checker',
+			'linkText' => 'View security report',
 			'critical' => true,
 		];
 	}

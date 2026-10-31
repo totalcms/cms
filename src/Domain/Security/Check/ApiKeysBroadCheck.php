@@ -29,6 +29,16 @@ class ApiKeysBroadCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'API keys';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$keys = $this->keys->getAllKeys();
@@ -60,7 +70,7 @@ class ApiKeysBroadCheck implements SecurityCheck
 				self::ID,
 				Severity::Info,
 				'Unused API keys',
-				sprintf('These keys were unused for %d days or never used: ', self::STALE_DAYS) . implode(', ', $stale) . '.',
+				sprintf('These keys were never used and created more than %d days ago, or not used for %d days: ', self::UNUSED_DAYS, self::STALE_DAYS) . implode(', ', $stale) . '.',
 				'Delete keys you no longer need.',
 				self::DOCS,
 			);

@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Domain\Security\Data\FindingStatus;
+use TotalCMS\Domain\Security\Data\SecurityContext;
+use TotalCMS\Domain\Security\Data\Severity;
+use TotalCMS\Domain\Security\Service\SecurityAuditor;
+use TotalCMS\Domain\Security\Service\SecurityReportStore;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Version;
 
@@ -27,7 +33,8 @@ class CheckCommand extends BaseCommand
 		$this
 			->setName('check')
 			->setDescription('Check the server: integrity, license, permissions, PHP extensions')
-			->addOption('config', null, InputOption::VALUE_NONE, 'Also show the merged configuration (secrets redacted)');
+			->addOption('config', null, InputOption::VALUE_NONE, 'Also show the merged configuration (secrets redacted)')
+			->addOption('no-security', null, InputOption::VALUE_NONE, 'Skip the security checks');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -60,6 +67,19 @@ class CheckCommand extends BaseCommand
 			'optional'    => $checker->getOptionalSoftwareDetails(),
 		];
 
+		if (!(bool)$input->getOption('no-security')) {
+			$context = SecurityContext::fromCli($this->totalcms->config);
+			$report  = $this->totalcms->container()->get(SecurityAuditor::class)->audit($context);
+			$this->totalcms->container()->get(SecurityReportStore::class)->save($report);
+
+			$data['security'] = [
+				'url'      => $context->baseUrl !== '' ? $context->baseUrl : null,
+				'checked'  => count($report->findings),
+				'findings' => $report->toArray()['findings'],
+			];
+			$data['ok'] = $ok = $ok && $report->criticalCount() === 0;
+		}
+
 		if ((bool)$input->getOption('config')) {
 			$data['config'] = $checker->getConfig();
 		}
@@ -82,6 +102,9 @@ class CheckCommand extends BaseCommand
 			$data['php']['sapi'],
 		));
 		$output->writeln('<comment>extensions, limits and cache state can differ: see Admin → Utilities → Server Checker.</comment>');
+		if (isset($data['security'])) {
+			$output->writeln('<comment>Checks that request the site use the address it last recorded: ' . OutputFormatter::escape((string)($data['security']['url'] ?? 'unknown, visit the admin once or set domain')) . '.</comment>');
+		}
 
 		$this->section($output, 'Integrity');
 		$output->writeln($data['integrity']
@@ -115,6 +138,13 @@ class CheckCommand extends BaseCommand
 				: "  <comment>–</comment> {$details['name']}  <comment>{$details['recommendation']}</comment>");
 		}
 
+		if (isset($data['security'])) {
+			$this->section($output, 'Security');
+			foreach ((array)$data['security']['findings'] as $finding) {
+				$this->renderFinding($output, (array)$finding);
+			}
+		}
+
 		if (isset($data['config'])) {
 			$this->section($output, 'Configuration');
 			$output->writeln((string)json_encode($data['config'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -125,6 +155,55 @@ class CheckCommand extends BaseCommand
 			? '<info>All checks passed.</info>'
 			: '<error>Some checks failed.</error>');
 		$output->writeln('');
+	}
+
+	/**
+	 * @param array<string,mixed> $finding
+	 */
+	private function renderFinding(OutputInterface $output, array $finding): void
+	{
+		$ignored = !empty($finding['ignored']) ? ' (ignored)' : '';
+		$title   = OutputFormatter::escape((string)$finding['title']);
+
+		if ($finding['status'] === FindingStatus::Ok->value) {
+			$output->writeln("  <info>✓</info> {$title}{$ignored}");
+
+			return;
+		}
+
+		if ($finding['status'] === FindingStatus::Skipped->value) {
+			$output->writeln("  <comment>?</comment> {$title}{$ignored}  <comment>" . OutputFormatter::escape((string)$finding['detail']) . "</comment>");
+
+			return;
+		}
+
+		$output->writeln(match ($finding['severity']) {
+			Severity::Critical->value => "  <error>✗</error> {$title}{$ignored}",
+			Severity::Warning->value  => "  <comment>!</comment> {$title}{$ignored}",
+			default                   => "  <comment>–</comment> {$title}{$ignored}",
+		});
+
+		if ((string)($finding['detail'] ?? '') !== '') {
+			$output->writeln($this->indented((string)$finding['detail']));
+		}
+		if ((string)($finding['fix'] ?? '') !== '') {
+			$output->writeln($this->indented((string)$finding['fix'], 'comment'));
+		}
+	}
+
+	/** Escape, then indent every line (blank lines stay blank), optionally inside a style tag per line. */
+	private function indented(string $text, string $style = ''): string
+	{
+		$lines = array_map(static function (string $line) use ($style): string {
+			if (trim($line) === '') {
+				return '';
+			}
+			$line = OutputFormatter::escape($line);
+
+			return '    ' . ($style !== '' ? "<{$style}>{$line}</{$style}>" : $line);
+		}, preg_split('/\R/', $text) ?: []);
+
+		return implode("\n", $lines);
 	}
 
 	private function section(OutputInterface $output, string $title): void

@@ -333,3 +333,44 @@ test('MCP off or no public collection is ok', function (): void {
 test('access checks make no requests', function (): void {
 	expect(keysCheck([])->makesRequests())->toBeFalse();
 });
+
+test('the critical registration detail names what makes the group admin-capable', function (): void {
+	$members = accessCollection('members', 'auth', true, [], ['g']);
+	$config  = accessConfig(['auth' => []]);
+	$detail  = fn (array $permissions): string => registrationCheck($config, [$members], ['g' => accessGroup('g', $permissions)])->run(accessContext())[0]->detail;
+
+	expect($detail(['builder' => true]))->toContain('Site Builder templates')
+		->and($detail(['collectionsMeta' => ['all' => true, 'operations' => ['update']]]))->toContain('collection settings')
+		->and($detail(['schemas' => ['all' => true, 'operations' => ['create']]]))->toContain('schemas')
+		->and($detail(['utils' => ['all' => false, 'allowed' => ['access-groups']]]))->toContain('access-groups')
+		->and($detail(['builder' => true, 'schemas' => ['all' => true, 'operations' => ['update']]]))->toContain('Site Builder templates')->toContain('schemas');
+
+	$admin = registrationCheck(accessConfig(['auth' => ['publicRegistrationGroup' => 'admin']]), [accessCollection('members', 'auth', true)], [])->run(accessContext());
+	expect($admin[0]->detail)->toContain('administrator group');
+});
+
+test('an admin whose user file cannot be read is counted as unreadable, not fatal', function (): void {
+	$objects = test()->createMock(ObjectFetcher::class);
+	$objects->method('fetchObject')->willReturnCallback(function (string $c, string $id): ObjectData {
+		if ($id === 'ghost') {
+			throw new UnexpectedValueException('Unable to fetch object auth/ghost');
+		}
+		$data = test()->createMock(ObjectData::class);
+		$data->method('toArray')->willReturn(['id' => $id, 'passkeys' => [['credentialId' => 'x']]]);
+
+		return $data;
+	});
+	$rows = [['id' => 'joe', 'groups' => ['admin']], ['id' => 'ghost', 'groups' => ['admin']]];
+
+	$findings = (new AdminAccountsCheck(accessConfig(['auth' => ['collection' => 'auth']]), accessIndex(['auth' => $rows]), $objects))->run(accessContext());
+
+	expect($findings[0]->status)->toBe(FindingStatus::Found)
+		->and($findings[0]->detail)->toContain('2 administrator accounts, 1 with a passkey.')
+		->and($findings[0]->detail)->toContain('1 could not be read');
+});
+
+test('the unused API key detail states both rules', function (): void {
+	$findings = keysCheck([apiKey('Old', ['GET'], ['/x'], null, gmdate('c', time() - 40 * 86400))])->run(accessContext());
+
+	expect($findings[0]->detail)->toContain('never used and created more than 30 days ago, or not used for 180 days');
+});

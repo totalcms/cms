@@ -38,6 +38,16 @@ class RegistrationGroupCheck implements SecurityCheck
 		return false;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return 'Public registration';
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$findings = [];
@@ -72,14 +82,15 @@ class RegistrationGroupCheck implements SecurityCheck
 		$writes = false;
 		foreach ($ids as $id) {
 			if ($id === UserValidationService::ADMINGROUP) {
-				return [$this->critical($collection, $id)];
+				return [$this->critical($collection, $id, ['is the built-in administrator group'])];
 			}
 			$group = $this->groups->findById($id);
 			if (!$group instanceof AccessGroupData) {
 				continue;
 			}
-			if ($this->isAdminCapable($group)) {
-				return [$this->critical($collection, $id)];
+			$reasons = $this->adminReasons($group);
+			if ($reasons !== []) {
+				return [$this->critical($collection, $id, $reasons)];
 			}
 			$writes = $writes || $this->canWriteCollections($group);
 		}
@@ -98,13 +109,14 @@ class RegistrationGroupCheck implements SecurityCheck
 		)];
 	}
 
-	private function critical(CollectionData $collection, string $group): SecurityFinding
+	/** @param list<string> $reasons */
+	private function critical(CollectionData $collection, string $group, array $reasons): SecurityFinding
 	{
 		return SecurityFinding::found(
 			self::ID,
 			Severity::Critical,
 			'Registration grants administrative access',
-			sprintf('Visitors who register in "%s" join the "%s" group, which can manage utilities, schemas or access groups.', $collection->id, $group),
+			sprintf('Visitors who register in "%s" join the "%s" group, which %s.', $collection->id, $group, implode(', ', $reasons)),
 			'Remove that group from `auth.publicRegistrationGroup` and the collection\'s registration groups. Use a group with limited permissions.',
 			self::DOCS,
 		);
@@ -129,20 +141,33 @@ class RegistrationGroupCheck implements SecurityCheck
 		);
 	}
 
-	private function isAdminCapable(AccessGroupData $group): bool
+	/**
+	 * What makes a group admin-capable, in words for the finding; empty when nothing does.
+	 *
+	 * @return list<string>
+	 */
+	private function adminReasons(AccessGroupData $group): array
 	{
-		$utils = (array)($group->permissions['utils'] ?? []);
-		if (!empty($utils['all']) || !empty($utils['allowed'])) {
-			return true;
+		$reasons = [];
+		$utils   = (array)($group->permissions['utils'] ?? []);
+		if (!empty($utils['all'])) {
+			$reasons[] = 'can open every admin utility';
+		} elseif (!empty($utils['allowed'])) {
+			$reasons[] = 'can open the admin utilities ' . implode(', ', array_map(strval(...), (array)$utils['allowed']));
 		}
-
-		// Template editing, or any change to collection settings (a registrant could open registration elsewhere or change registrationGroups).
+		// Template editing runs Twig on the server.
 		if (($group->permissions['builder'] ?? false) === true) {
-			return true;
+			$reasons[] = 'can edit Site Builder templates';
+		}
+		if ($this->grantsAnyTarget($group, 'schemas', ['create', 'update'])) {
+			$reasons[] = 'can create or change schemas';
+		}
+		// A registrant could open registration elsewhere or change registrationGroups.
+		if ($this->grantsAnyTarget($group, 'collectionsMeta', ['create', 'update', 'delete'])) {
+			$reasons[] = 'can change collection settings';
 		}
 
-		return $this->grantsAnyTarget($group, 'schemas', ['create', 'update'])
-			|| $this->grantsAnyTarget($group, 'collectionsMeta', ['create', 'update', 'delete']);
+		return $reasons;
 	}
 
 	private function canWriteCollections(AccessGroupData $group): bool

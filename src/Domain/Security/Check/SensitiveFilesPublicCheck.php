@@ -31,6 +31,16 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 		return true;
 	}
 
+	public function id(): string
+	{
+		return self::ID;
+	}
+
+	public function title(): string
+	{
+		return self::TITLE;
+	}
+
 	public function run(SecurityContext $context): array
 	{
 		$folders = $this->scanFolders($context);
@@ -49,6 +59,10 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 		if ($folders['unreachable'] || $files['unreachable']) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::UNREACHABLE)];
 		}
+		$redirect = $folders['redirect'] !== '' ? $folders['redirect'] : $files['redirect'];
+		if ($redirect !== '') {
+			return [SecurityFinding::skipped(self::ID, self::TITLE, $redirect)];
+		}
 
 		return [SecurityFinding::ok(
 			self::ID,
@@ -58,13 +72,13 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 		)];
 	}
 
-	/** @return array{findings:list<SecurityFinding>,noUrl:bool,noWrite:bool,unreachable:bool,probed:int} */
+	/** @return array{findings:list<SecurityFinding>,noUrl:bool,noWrite:bool,unreachable:bool,redirect:string,probed:int} */
 	private function scanFolders(SecurityContext $context): array
 	{
-		$scan = ['findings' => [], 'noUrl' => false, 'noWrite' => false, 'unreachable' => false, 'probed' => 0];
+		$scan = ['findings' => [], 'noUrl' => false, 'noWrite' => false, 'unreachable' => false, 'redirect' => '', 'probed' => 0];
 
 		foreach ($this->folders() as $dir) {
-			[$result, $path] = $this->canary->test($context, $dir);
+			[$result, $path, $reason] = $this->canary->test($context, $dir);
 
 			switch ($result) {
 				case CanaryProbe::NO_URL:
@@ -75,6 +89,9 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 					break;
 				case CanaryProbe::UNREACHABLE:
 					$scan['unreachable'] = true;
+					break;
+				case CanaryProbe::REDIRECTED:
+					$scan['redirect'] = $reason;
 					break;
 				case CanaryProbe::BLOCKED:
 					$scan['probed']++;
@@ -90,10 +107,10 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 		return $scan;
 	}
 
-	/** @return array{findings:list<SecurityFinding>,noUrl:bool,noWrite:bool,unreachable:bool,probed:int} */
+	/** @return array{findings:list<SecurityFinding>,noUrl:bool,noWrite:bool,unreachable:bool,redirect:string,probed:int} */
 	private function scanFiles(SecurityContext $context): array
 	{
-		$scan = ['findings' => [], 'noUrl' => false, 'noWrite' => false, 'unreachable' => false, 'probed' => 0];
+		$scan = ['findings' => [], 'noUrl' => false, 'noWrite' => false, 'unreachable' => false, 'redirect' => '', 'probed' => 0];
 
 		foreach ($this->files() as [$file, $severity, $exposedTest]) {
 			if (!is_file($file) || !$this->probe->insideDocroot($file)) {
@@ -108,6 +125,11 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 			$response = $this->probe->get($url);
 			if ($response === null) {
 				$scan['unreachable'] = true;
+
+				continue;
+			}
+			if (SiteProbe::isRedirect($response)) {
+				$scan['redirect'] = SiteProbe::redirectReason($response);
 
 				continue;
 			}

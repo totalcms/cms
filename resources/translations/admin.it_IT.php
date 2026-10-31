@@ -809,6 +809,21 @@ return [
 	'pretty_url.nginx_desc'         => 'Inserisci questa regola nel tuo file di configurazione del server.',
 	'pretty_url.invalid_path'       => 'Percorso non valido.',
 
+	// ── Security ─────────────────────────────────────────────────────────────
+	'security.title' => 'Sicurezza',
+	'security.not_checked' => 'Non verificato',
+	'security.ignored' => 'Ignorato',
+	'security.severity.critical' => 'Critico',
+	'security.severity.warning' => 'Avviso',
+	'security.severity.info' => 'Info',
+	'security.docs' => 'Documentazione',
+	'security.severity' => 'Gravità',
+	'security.finding' => 'Rilevamento',
+	'security.detail' => 'Dettagli',
+	'security.fix' => 'Soluzione',
+	'security.all_clear' => 'Non sono stati trovati problemi di sicurezza.',
+	'security.all_clear_skipped' => 'Nessun problema trovato, ma {count} controlli non sono stati eseguiti.',
+
 	// ── Server Checker ──────────────────────────────────────────────────────
 	'server.title'                  => 'Verifica server',
 	'server.integrity_failed'       => 'Integrità installazione Total CMS fallita',
