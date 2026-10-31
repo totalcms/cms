@@ -89,6 +89,7 @@ class CliApplication
 		$app->addCommand(new Command\InfoCommand($totalcms));
 		$app->addCommand(new Command\CheckCommand($totalcms));
 		$app->addCommand(new Command\CacheClearCommand($totalcms));
+		$app->addCommand(new Command\ImageWorksWarmCommand($totalcms));
 		$app->addCommand(new Command\BackupListCommand($totalcms));
 		$app->addCommand(new Command\BackupRestoreCommand($totalcms));
 		$app->addCommand(new Command\DeployCommand($totalcms));

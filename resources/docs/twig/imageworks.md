@@ -350,11 +350,71 @@ Use presets by passing the `p` parameter:
 
 Presets that use `crop-focalpoint` in their `fit` value will automatically use each image's saved focal point.
 
+## Warming the cache
+
+The first visitor to a page pays for every image on it. Each size and format is made on that first request. AVIF can take a second or more per file. A gallery page right after an import, a deploy or a launch is slow for whoever sees it first. A crawler that hits it first may give up.
+
+`tcms imageworks:warm` makes those files ahead of time, so every visit is fast. It writes only to the ImageWorks cache. It makes the same files the `/imageworks` route would serve, and it skips files that already exist, so it is safe to run again.
+
+```bash
+tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native
+```
+
+You must say which variants to make. A plain run never starts thousands of AVIF encodes by surprise. Give at least one of `--widths`, `--picture`, `--params`, `--preset` or `--url`. They combine and repeat.
+
+### Choosing variants
+
+Match what your templates ask for. A file the page never requests is wasted work.
+
+- **A responsive image grid.** `--widths` and `--formats` make every width in every format. It makes only the widths you give. A width wider than the image makes a file at the image's own width, because that is what ImageWorks serves for it. `native` means the image's own format (jpg, png), which is what the `<img>` fallback uses. `--widths` alone uses `native`. `--formats` needs `--widths` or `--picture`.
+- **`cms.render.picture()` with its defaults.** Use `--picture`. It takes the widths and formats from the `imageworks.picture` setting (480, 768, 1024, 1440, 1920 and avif, webp) and adds `native`. Like `picture()`, it also adds the image's own width as the largest size. It only matches templates that call `picture()` without their own `widths` or `formats`. A GIF gets only `gif`, because `picture()` keeps GIFs as they are.
+- **`picture()` with its own options.** Give the same options as a grid. `picture(img, {h: 600, fit: 'crop'})` is matched by `--picture --params="h=600&fit=crop"`. A `w` in `--params` caps the widths. `fm` is not allowed, because the grid sets the format.
+- **`image()` calls.** Use `--params` for one exact variant, such as `--params="w=800&h=600&fit=crop"`. Repeat it for more variants. `--preset=medium` makes a preset. A preset `p` in `--params` with a grid makes one file per width, because the preset sets the format.
+- **A URL from your page.** Copy an ImageWorks URL from your page's HTML and pass it to `--url`. The command takes the params and the format from it and ignores its collection and ID. A gallery URL that ends in `/first`, `/last` or `/featured` has no format, so only its params are used, as the route does.
+
+### Two examples
+
+With `--widths=480,768,1024,1440,1920 --formats=avif,webp,native`:
+
+- A 1600px `photo.jpg` gets widths 480, 768, 1024, 1440 and 1600 in avif, webp and jpg. 1920 is wider than the photo, so it becomes 1600. That is 15 files.
+- A 1000px `logo.png` gets widths 480, 768 and 1000 in avif, webp and png. 1024, 1440 and 1920 all become 1000. That is 9 files.
+
+### Big galleries
+
+Run with `--dry-run` first. It counts the files it would make and makes none, so you see "12,400 files" before you start an AVIF run.
+
+```bash
+tcms imageworks:warm photos --picture --dry-run
+tcms imageworks:warm photos --picture
+```
+
+Narrow a run with a property name (`tcms imageworks:warm blog image ...`) or `--id=a,b,c`. Use `--memory` to raise the memory limit (default 512M).
+
+### Deploys and cron
+
+Because re-runs skip cached files, the command fits in a deploy script or a cron job. Run it as the web server user. A run as another user (such as root) can make cache folders the web server can't read, and those images then fail on the site. The command warns you when you are not the owner of the data folder.
+
+For example:
+
+```bash
+tcms imageworks:warm blog --picture || echo "some images failed"
+```
+
+The command exits **1** when any image failed, and **0** otherwise. `--json` prints the counts and the list of failures.
+
+### Limits
+
+An image that has both an image watermark and a text watermark is made in two passes, and ImageWorks re-makes the second pass on every request. Warming cannot help those variants. The command counts them as "uncacheable" and tells you.
+
+A property with a watermark needs an edition that includes watermarks. If the command can't confirm that edition from this machine, it stops and warms nothing. Run `tcms check` to see the license the command reads.
+
+The command covers `image` and `gallery` properties. Images inside cards and decks, and video posters, are not warmed.
+
 ## Caching
 
 Transformed images are cached automatically on disk. The cache directory is `.cache` within the image storage directory. When the source image changes, cached versions are regenerated on the next request.
 
-To clear the ImageWorks cache, use the emergency cache clear endpoint or clear the `.cache` directories from storage.
+To make the cache ahead of time, see [Warming the cache](#warming-the-cache). To clear the ImageWorks cache, use the emergency cache clear endpoint or clear the `.cache` directories from storage.
 
 ## API Endpoint
 

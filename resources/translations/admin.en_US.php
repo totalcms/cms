@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batch Image Processor',
 	'image_batcher.desc'             => 'Process multiple images with ImageWorks settings in bulk.',
+	'image_batcher.cli_hint'        => 'For large collections, run <code>tcms imageworks:warm</code> from the command line instead.',
 	'image_batcher.step1'            => 'Step 1: Select Collection',
 	'image_batcher.step1_desc'       => 'Choose the collection containing the images you want to process.',
 	'image_batcher.step2'            => 'Step 2: Select Property',

@@ -831,6 +831,34 @@ Present means no request has replayed it yet. Gone means it was applied.
 
 > Note the `/api` prefix — `/emergency/cache/clear` without it returns a 404.
 
+### `imageworks:warm`
+
+Pre-build the ImageWorks cache for a collection, so the first visitor to a page does not wait for images to be made. It writes only to the ImageWorks cache and skips files that already exist.
+
+```bash
+tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native
+tcms imageworks:warm blog --picture --dry-run
+tcms imageworks:warm blog --params="w=800&h=600&fit=crop" --preset=medium
+tcms imageworks:warm blog --url="https://example.com/imageworks/blog/a/image.webp?w=800"
+tcms imageworks:warm blog --picture --id=a,b,c
+```
+
+| Argument / Option | Description |
+|-------------------|-------------|
+| `collection` | Collection ID (required) |
+| `property` | One image or gallery property (default: all of them) |
+| `--widths` | Comma list of widths. Makes every width in every format |
+| `--formats` | Comma list of formats for the grid: `avif`, `webp`, `native`, and so on. Defaults to `native` with `--widths`. Needs `--widths` or `--picture` |
+| `--picture` | The grid `cms.render.picture()` uses by default (the `imageworks.picture` setting) plus `native` |
+| `--params` | ImageWorks params as a query string. One exact variant, or extra params for the grid. Repeatable |
+| `--preset` | A preset name. Repeatable |
+| `--url` | Copy a variant from a real ImageWorks URL. A gallery URL ending in `/first`, `/last` or `/featured` gives its params only. Repeatable |
+| `--id` | Comma list of object IDs (default: the whole collection) |
+| `--dry-run` | Count what would be made and make nothing |
+| `--memory, -m` | Memory limit (default: 512M) |
+
+You must give at least one of `--widths`, `--picture`, `--params`, `--preset` or `--url`. The summary lists objects, images, variants made (or would make), already cached, original, uncacheable and failed, then the first five failures. With `--json` it prints the same counts and the full failure list. The command exits **1** when anything failed. Variants that use both an image and a text watermark cannot be warmed and are counted as uncacheable. If a property has a watermark and the command resolves an edition without watermarks, it stops with exit code **1** and warms nothing, `--dry-run` included. Check the license with `tcms check`. Run the command as the web server user; it warns when you are not the owner of the data folder. See [Warming the cache](docs/twig/imageworks#warming-the-cache) for choosing variants.
+
 ### `jobs:process`
 
 Process the pending job queue. This is typically run via cron.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
+use TotalCMS\Domain\ImageWorks\Service\PictureCandidates;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
@@ -20,32 +21,8 @@ use TotalCMS\Support\Config;
  */
 class ImageRenderer
 {
-	/**
-	 * What `picture()` does with no `widths` / `formats` / `sizes` given and
-	 * nothing under `imageworks.picture` in settings. The widths span phone
-	 * to a 2x desktop hero; the formats are the two every current browser
-	 * negotiates, best first; `100vw` is the honest default for `sizes` —
-	 * it is what a browser assumes anyway when the attribute is missing,
-	 * so stating it changes nothing until a template narrows it.
-	 *
-	 * @var array{widths: list<int>, formats: list<string>, sizes: string}
-	 */
-	public const PICTURE_DEFAULTS = [
-		'widths'  => [480, 768, 1024, 1440, 1920],
-		'formats' => ['avif', 'webp'],
-		'sizes'   => '100vw',
-	];
-
-	/** ImageWorks output extension → the MIME type a `<source type>` must carry. */
-	private const MIME = [
-		'jpg'  => 'image/jpeg',
-		'jpeg' => 'image/jpeg',
-		'pjpg' => 'image/jpeg',
-		'png'  => 'image/png',
-		'gif'  => 'image/gif',
-		'webp' => 'image/webp',
-		'avif' => 'image/avif',
-	];
+	/** Alias kept for callers that read the defaults from here. */
+	public const PICTURE_DEFAULTS = PictureCandidates::DEFAULTS;
 
 	public function __construct(
 		private readonly MediaTwigAdapter $media,
@@ -142,7 +119,7 @@ class ImageRenderer
 	 * (`h`, `fit`, `q`, a preset …). `w` there is a ceiling: no candidate
 	 * wider than it is emitted. The candidate widths, the formats and the
 	 * `sizes` attribute come from `$options`, else from `imageworks.picture`
-	 * in settings, else {@see PICTURE_DEFAULTS}.
+	 * in settings, else {@see PictureCandidates::DEFAULTS}.
 	 *
 	 * Each `w` descriptor is the width ImageWorks will actually deliver, not
 	 * the one requested — Glide never upscales, so a candidate wider than the
@@ -177,21 +154,22 @@ class ImageRenderer
 			return '';
 		}
 
-		$settings = $this->config?->imageworks['picture'] ?? [];
-		$widths   = $this->intList($options['widths'] ?? $settings['widths'] ?? self::PICTURE_DEFAULTS['widths']);
-		$formats  = $this->formatList($options['formats'] ?? $settings['formats'] ?? self::PICTURE_DEFAULTS['formats']);
-		$sizes    = (string)($options['sizes'] ?? $settings['sizes'] ?? self::PICTURE_DEFAULTS['sizes']);
+		$picture = PictureCandidates::settings($this->config, $options);
+		$widths  = $picture['widths'];
+		$formats = $picture['formats'];
+		$sizes   = $picture['sizes'];
 
 		// The image's own format is what the <img> fallback serves; a <source>
 		// in that same format would be redundant.
-		$native = $this->nativeFormat($image);
+		$native = PictureCandidates::nativeFormat($image);
 
 		$base = $imageworks;
 		unset($base['fm']);
-		$ceiling = isset($base['w']) ? (int)$base['w'] : null;
-		unset($base['w']);
 
-		$candidates = $this->candidateWidths($widths, $this->sourceWidth($image, $base), $ceiling);
+		// `w` in the transforms is a ceiling for the candidates, not a candidate.
+		$ceilinged  = $base;
+		$candidates = PictureCandidates::widths($widths, $image, $ceilinged);
+		unset($base['w']);
 		if ($candidates === []) {
 			return '';
 		}
@@ -204,12 +182,12 @@ class ImageRenderer
 		$dark    = $this->darkVariant($idOrObject, $options);
 		if ($dark !== null) {
 			[$darkTarget, $darkImage, $darkOptions] = $dark;
-			$darkCandidates                         = $this->candidateWidths($widths, $this->sourceWidth($darkImage, $base), $ceiling);
-			$darkNative                             = $this->nativeFormat($darkImage);
+			$darkCandidates                         = PictureCandidates::widths($widths, $darkImage, $ceilinged);
+			$darkNative                             = PictureCandidates::nativeFormat($darkImage);
 			foreach ($darkCandidates === [] ? [] : array_unique([...$formats, $darkNative]) as $format) {
 				$sources .= HTMLUtils::inlineElement('source', [
 					'media'  => '(prefers-color-scheme: dark)',
-					'type'   => self::MIME[$format],
+					'type'   => PictureCandidates::MIME[$format],
 					'srcset' => $this->srcset($darkTarget, $darkImage, $base, $darkOptions, $darkCandidates, $format),
 					'sizes'  => $sizes,
 				]);
@@ -222,7 +200,7 @@ class ImageRenderer
 					continue;
 				}
 				$sources .= HTMLUtils::inlineElement('source', [
-					'type'   => self::MIME[$format],
+					'type'   => PictureCandidates::MIME[$format],
 					'srcset' => $this->srcset($idOrObject, $image, $base, $options, $candidates, $format),
 					'sizes'  => $sizes,
 				]);
@@ -310,65 +288,11 @@ class ImageRenderer
 		}
 
 		$image = $this->imageData($target, $darkOptions);
-		if ($image === [] || (int)($image['size'] ?? 0) === 0 || $this->nativeFormat($image) === 'gif') {
+		if ($image === [] || (int)($image['size'] ?? 0) === 0 || PictureCandidates::nativeFormat($image) === 'gif') {
 			return null;
 		}
 
 		return [$target, $image, $darkOptions];
-	}
-
-	/**
-	 * The format the image is stored in, which is what its `<img>` fallback
-	 * (or, for a dark variant, its last-resort `<source>`) serves.
-	 *
-	 * @param array<string,mixed> $image
-	 */
-	private function nativeFormat(array $image): string
-	{
-		$native = strtolower(pathinfo((string)($image['name'] ?? ''), PATHINFO_EXTENSION));
-
-		return isset(self::MIME[$native]) ? $native : 'jpg';
-	}
-
-	/**
-	 * The width candidates are cut from: the stored width, or the `crop`
-	 * rect's when the transforms carry one.
-	 *
-	 * @param array<string,mixed> $image
-	 * @param array<string,string|int> $base
-	 */
-	private function sourceWidth(array $image, array $base): int
-	{
-		return ImageDimensionCalculator::sourceDimensions((int)($image['width'] ?? 0), (int)($image['height'] ?? 0), $base)['width'];
-	}
-
-	/**
-	 * Ascending, unique, positive widths no wider than the source or the
-	 * caller's ceiling, with the source width itself appended as the top
-	 * candidate when it is known and not already listed — the largest
-	 * candidate is then the true full-resolution file. With an unknown
-	 * source width (a record that predates dimension capture) the list is
-	 * used as given; there is nothing to guard against.
-	 *
-	 * @param list<int> $widths
-	 *
-	 * @return list<int>
-	 */
-	private function candidateWidths(array $widths, int $sourceWidth, ?int $ceiling): array
-	{
-		$max = $sourceWidth > 0 ? $sourceWidth : PHP_INT_MAX;
-		if ($ceiling !== null && $ceiling > 0) {
-			$max = min($max, $ceiling);
-		}
-
-		$out = array_values(array_unique(array_filter($widths, static fn (int $w): bool => $w > 0 && $w <= $max)));
-		sort($out);
-
-		if ($sourceWidth > 0 && $max === $sourceWidth && !in_array($sourceWidth, $out, true)) {
-			$out[] = $sourceWidth;
-		}
-
-		return $out;
 	}
 
 	/**
@@ -393,38 +317,6 @@ class ImageRenderer
 		}
 
 		return is_array($image) ? $image : [];
-	}
-
-	/** @return list<int> */
-	private function intList(mixed $value): array
-	{
-		if (!is_array($value)) {
-			return [];
-		}
-
-		return array_values(array_map(static fn (mixed $v): int => (int)$v, array_filter($value, is_numeric(...))));
-	}
-
-	/**
-	 * Only formats ImageWorks can write and a `<source type>` can name.
-	 *
-	 * @return list<string>
-	 */
-	private function formatList(mixed $value): array
-	{
-		if (!is_array($value)) {
-			return [];
-		}
-
-		$out = [];
-		foreach ($value as $format) {
-			$format = strtolower((string)$format);
-			if (isset(self::MIME[$format]) && !in_array($format, $out, true)) {
-				$out[] = $format;
-			}
-		}
-
-		return $out;
 	}
 
 	/**

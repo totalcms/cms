@@ -5068,6 +5068,54 @@
             "since": "3.5.0"
         },
         {
+            "name": "imageworks:warm",
+            "description": "Pre-build the ImageWorks cache for a collection, so the first visitor to a page does not wait for images to be made. It writes only to the ImageWorks cache and skips files that already exist.",
+            "arguments": [],
+            "options": [
+                {
+                    "name": "--widths",
+                    "description": "Comma list of widths. Makes every width in every format"
+                },
+                {
+                    "name": "--formats",
+                    "description": "Comma list of formats for the grid: `avif`, `webp`, `native`, and so on. Defaults to `native` with `--widths`. Needs `--widths` or `--picture`"
+                },
+                {
+                    "name": "--picture",
+                    "description": "The grid `cms.render.picture()` uses by default (the `imageworks.picture` setting) plus `native`"
+                },
+                {
+                    "name": "--params",
+                    "description": "ImageWorks params as a query string. One exact variant, or extra params for the grid. Repeatable"
+                },
+                {
+                    "name": "--preset",
+                    "description": "A preset name. Repeatable"
+                },
+                {
+                    "name": "--url",
+                    "description": "Copy a variant from a real ImageWorks URL. A gallery URL ending in `/first`, `/last` or `/featured` gives its params only. Repeatable"
+                },
+                {
+                    "name": "--id",
+                    "description": "Comma list of object IDs (default: the whole collection)"
+                },
+                {
+                    "name": "--dry-run",
+                    "description": "Count what would be made and make nothing"
+                },
+                {
+                    "name": "--memory, -m",
+                    "description": "Memory limit (default: 512M)"
+                }
+            ],
+            "examples": [
+                "tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native\ntcms imageworks:warm blog --picture --dry-run\ntcms imageworks:warm blog --params=\"w=800&h=600&fit=crop\" --preset=medium\ntcms imageworks:warm blog --url=\"https://example.com/imageworks/blog/a/image.webp?w=800\"\ntcms imageworks:warm blog --picture --id=a,b,c"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "jobs:process",
             "description": "Process the pending job queue. This is typically run via cron.",
             "arguments": [],

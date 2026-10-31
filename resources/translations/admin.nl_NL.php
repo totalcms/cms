@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batchafbeeldingsverwerker',
 	'image_batcher.desc'             => 'Verwerk meerdere afbeeldingen in bulk met ImageWorks-instellingen.',
+	'image_batcher.cli_hint'        => 'Voer voor grote collecties in plaats daarvan <code>tcms imageworks:warm</code> uit op de opdrachtregel.',
 	'image_batcher.step1'            => 'Stap 1: Selecteer Collection',
 	'image_batcher.step1_desc'       => 'Kies de Collection met de afbeeldingen die u wilt verwerken.',
 	'image_batcher.step2'            => 'Stap 2: Selecteer eigenschap',

@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Procesador de imágenes por lotes',
 	'image_batcher.desc'             => 'Procese múltiples imágenes con la configuración de ImageWorks de forma masiva.',
+	'image_batcher.cli_hint'        => 'Para colecciones grandes, ejecute <code>tcms imageworks:warm</code> desde la línea de comandos.',
 	'image_batcher.step1'            => 'Paso 1: Seleccionar Collection',
 	'image_batcher.step1_desc'       => 'Elija la Collection que contiene las imágenes que desea procesar.',
 	'image_batcher.step2'            => 'Paso 2: Seleccionar propiedad',

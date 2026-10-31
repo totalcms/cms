@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Bild-Stapelverarbeitung',
 	'image_batcher.desc'             => 'Mehrere Bilder mit ImageWorks-Einstellungen gesammelt verarbeiten.',
+	'image_batcher.cli_hint'        => 'Führen Sie bei großen Sammlungen stattdessen <code>tcms imageworks:warm</code> in der Befehlszeile aus.',
 	'image_batcher.step1'            => 'Schritt 1: Collection auswählen',
 	'image_batcher.step1_desc'       => 'Wählen Sie die Collection, die die zu verarbeitenden Bilder enthält.',
 	'image_batcher.step2'            => 'Schritt 2: Eigenschaft auswählen',

@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Wsadowe przetwarzanie obrazów',
 	'image_batcher.desc'             => 'Przetwarzaj wiele obrazów naraz z ustawieniami ImageWorks.',
+	'image_batcher.cli_hint'        => 'W przypadku dużych kolekcji uruchom zamiast tego <code>tcms imageworks:warm</code> z wiersza poleceń.',
 	'image_batcher.step1'            => 'Krok 1: Wybierz Collection',
 	'image_batcher.step1_desc'       => 'Wybierz collection zawierającą obrazy do przetworzenia.',
 	'image_batcher.step2'            => 'Krok 2: Wybierz właściwość',

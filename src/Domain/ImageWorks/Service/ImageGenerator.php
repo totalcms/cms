@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
+use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
@@ -52,19 +53,78 @@ class ImageGenerator
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
+		$imageData = $this->fetchImage($collection, $id, $property);
+		$this->prepare($collection, $id, $property, null, $params, $imageData);
+
+		return $this->responseFromImageData($imageData, $request);
+	}
+
+	/**
+	 * Whether the file the public route would serve for these params is
+	 * already cached. `$galleryName` is null for an image property, or the
+	 * gallery image's name without its extension (what the route passes);
+	 * `$params` are shaped as the route shapes them (`fm` included).
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	public function cacheState(string $collection, string $id, string $property, ?string $galleryName, array $params): CacheState
+	{
+		$imageData = $galleryName === null
+			? $this->fetchImage($collection, $id, $property)
+			: $this->galleryImage($this->fetchGallery($collection, $id, $property), $galleryName);
+
+		$this->prepare($collection, $id, $property, null, $params, $imageData);
+
+		if ($this->params === []) {
+			return CacheState::Original;
+		}
+
+		$render = $this->glideRender($imageData);
+
+		if ($render['marks'] !== null) {
+			return CacheState::Uncacheable;
+		}
+
+		return $render['glide']->cacheFileExists($imageData->name, $render['params'])
+			? CacheState::Cached
+			: CacheState::Missing;
+	}
+
+	private function fetchImage(string $collection, string $id, string $property): ImageData
+	{
 		$imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
 		if (!$imageData instanceof ImageData) {
 			throw new \UnexpectedValueException('Invalid image property found');
 		}
 
+		return $imageData;
+	}
+
+	private function fetchGallery(string $collection, string $id, string $property): GalleryData
+	{
+		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+
+		if (!$galleryData instanceof GalleryData) {
+			throw new \UnexpectedValueException('Invalid gallery property found');
+		}
+
+		return $galleryData;
+	}
+
+	/**
+	 * Set the per-render state every entry point shares: where the source
+	 * lives and the cleaned-up params.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	private function prepare(string $collection, string $id, string $property, ?string $subpath, array $params, ImageData $imageData): void
+	{
 		$this->collection = $collection;
 		$this->id         = $id;
 		$this->property   = $property;
-		$this->subpath    = null;
+		$this->subpath    = $subpath;
 		$this->params     = $this->cleanupParams($params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
 	}
 
 	/** @param array<string,mixed> $params */
@@ -103,14 +163,19 @@ class ImageGenerator
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
 
-		$galleryData = $propertyData;
+		// Gallery uses single-segment `path` as the image name (or special token).
+		$imageData = $this->galleryImage($propertyData, $path);
+		$this->prepare($collection, $id, $property, null, $params, $imageData);
 
+		return $this->responseFromImageData($imageData, $request);
+	}
+
+	/** Pick a gallery image by name (without extension) or by first/last/random/featured. */
+	private function galleryImage(GalleryData $galleryData, string $name): ImageData
+	{
 		if ($galleryData->images === []) {
 			throw new \UnexpectedValueException('Gallery has no images');
 		}
-
-		// Gallery uses single-segment `path` as the image name (or special token).
-		$name = $path;
 
 		$imageData = match ($name) {
 			'first'    => array_shift($galleryData->images),
@@ -124,13 +189,7 @@ class ImageGenerator
 			throw new \UnexpectedValueException('Gallery Image not found');
 		}
 
-		$this->collection = $collection;
-		$this->id         = $id;
-		$this->property   = $property;
-		$this->subpath    = null;
-		$this->params     = $this->cleanupParams($params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
+		return $imageData;
 	}
 
 	/**
@@ -166,12 +225,7 @@ class ImageGenerator
 		}
 
 		$imageData = new ImageData($cursor);
-
-		$this->collection = $collection;
-		$this->id         = $id;
-		$this->property   = $property;
-		$this->subpath    = $path;
-		$this->params     = $this->cleanupParams($params, $imageData);
+		$this->prepare($collection, $id, $property, $path, $params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
 	}
@@ -192,11 +246,7 @@ class ImageGenerator
 		// $imageData->width  = 0;
 		// $imageData->height = 0;
 
-		$this->collection = $collection;
-		$this->id         = $id;
-		$this->property   = $property;
-		$this->subpath    = $subpath;
-		$this->params     = $this->cleanupParams($params, $imageData);
+		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
 
 		return $this->responseFromImageData($imageData, $request);
 	}
@@ -258,7 +308,7 @@ class ImageGenerator
 
 		$defaults      = $this->config->imageworks['defaults'] ?? [];
 		$hasDefaults   = is_array($defaults) && $defaults !== [];
-		$hasWatermarks = $this->getSchemaWatermarkSettings() !== [];
+		$hasWatermarks = $this->watermarkSettings($this->collection, $this->property, $this->id) !== [];
 
 		// If no params are provided, no defaults configured, and no watermark settings, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
@@ -313,7 +363,7 @@ class ImageGenerator
 		// }
 
 		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
-		$schemaWatermarks = $this->getSchemaWatermarkSettings();
+		$schemaWatermarks = $this->watermarkSettings($this->collection, $this->property, $this->id);
 		// Check if watermark should be applied based on limit setting
 		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
 			// Remove limit setting before merging (not a valid imageworks parameter)
@@ -354,16 +404,16 @@ class ImageGenerator
 	}
 
 	/**
-	 * Get watermark settings from property metadata.
-	 * Resolves watermark settings across all three levels: schema, collection, and per-object overrides.
+	 * The watermark settings one property resolves to: schema, then
+	 * collection, then the object's own override. [] when it has none.
 	 * Watermarks are enforced and cannot be overridden via URL parameters.
 	 *
 	 * @return array<string,string|int>
 	 */
-	private function getSchemaWatermarkSettings(): array
+	public function watermarkSettings(string $collection, string $property, string $id = ''): array
 	{
 		try {
-			$settings = $this->metaResolver->resolveSettings($this->collection, $this->property, $this->id);
+			$settings = $this->metaResolver->resolveSettings($collection, $property, $id);
 
 			return $settings['watermark'] ?? [];
 		} catch (\Exception) {
@@ -555,24 +605,19 @@ class ImageGenerator
 		return $finalResponse;
 	}
 
-	private function responseFromImageData(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
+	/**
+	 * The one step that turns the prepared params into what Glide renders:
+	 * builds the watermarks, the Glide server and the final Glide params.
+	 * The route and cacheState() both go through here, so a cache check keys
+	 * exactly the file the route makes. When both an image and a text
+	 * watermark apply, `marks` holds them and `params` are the pre-watermark
+	 * params for the two-pass render; otherwise `marks` is null and `params`
+	 * are final.
+	 *
+	 * @return array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}}
+	 */
+	private function glideRender(ImageData $imageData): array
 	{
-		if ($this->params === []) {
-			return $this->returnOriginalImage($imageData, $request);
-		}
-
-		// Generate cache headers for processed images
-		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
-		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
-
-		// Check if we should return 304 Not Modified
-		if ($cacheHeaders['not_modified']) {
-			return (new Response())
-				->withStatus(304)
-				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
-				->withHeader('ETag', $cacheHeaders['etag']);
-		}
-
 		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
 		// Use requested width if specified, otherwise use original image width
 		$effectiveWidth = isset($this->params['w']) ? (int)$this->params['w'] : $imageData->width;
@@ -592,29 +637,43 @@ class ImageGenerator
 		$params = $this->filterWatermarkParams();
 
 		if ($hasImageMark && $hasTextMark) {
-			$response = $this->handleBothWatermarks($glide, $imageData, $imageMark, $textMark, $params);
-
-			return $this->addCacheHeaders($response, $cacheHeaders);
+			return ['glide' => $glide, 'params' => $params, 'marks' => [$imageMark, $textMark]];
 		}
 
 		if ($hasTextMark) {
-			// Only text watermark provided, return image with params
-			$params   = array_merge($params, $textMark->toArray());
-			$response = $glide->getImageResponse($imageData->name, $params);
-
-			return $this->addCacheHeaders($response, $cacheHeaders);
+			// Only text watermark provided
+			$params = array_merge($params, $textMark->toArray());
+		} elseif ($hasImageMark) {
+			// Only image watermark provided
+			$params = array_merge($params, $imageMark->toArray());
 		}
 
-		if ($hasImageMark) {
-			// Only image watermark provided, return image with params
-			$params   = array_merge($params, $imageMark->toArray());
-			$response = $glide->getImageResponse($imageData->name, $params);
+		return ['glide' => $glide, 'params' => $params, 'marks' => null];
+	}
 
-			return $this->addCacheHeaders($response, $cacheHeaders);
+	private function responseFromImageData(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
+	{
+		if ($this->params === []) {
+			return $this->returnOriginalImage($imageData, $request);
 		}
 
-		// No watermarks provided, return image with params
-		$response = $glide->getImageResponse($imageData->name, $params);
+		// Generate cache headers for processed images
+		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
+		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
+
+		// Check if we should return 304 Not Modified
+		if ($cacheHeaders['not_modified']) {
+			return (new Response())
+				->withStatus(304)
+				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
+				->withHeader('ETag', $cacheHeaders['etag']);
+		}
+
+		$render = $this->glideRender($imageData);
+
+		$response = $render['marks'] !== null
+			? $this->handleBothWatermarks($render['glide'], $imageData, $render['marks'][0], $render['marks'][1], $render['params'])
+			: $render['glide']->getImageResponse($imageData->name, $render['params']);
 
 		return $this->addCacheHeaders($response, $cacheHeaders);
 	}

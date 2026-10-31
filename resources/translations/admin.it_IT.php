@@ -568,6 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Elaboratore batch immagini',
 	'image_batcher.desc'             => 'Elabora più immagini in blocco con le impostazioni ImageWorks.',
+	'image_batcher.cli_hint'        => 'Per le raccolte grandi, esegui invece <code>tcms imageworks:warm</code> dalla riga di comando.',
 	'image_batcher.step1'            => 'Passo 1: seleziona raccolta',
 	'image_batcher.step1_desc'       => 'Scegli la raccolta che contiene le immagini da elaborare.',
 	'image_batcher.step2'            => 'Passo 2: seleziona proprietà',
