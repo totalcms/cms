@@ -109,7 +109,7 @@ final readonly class StarterExporter
 	{
 		foreach ($this->entries($from) as $name) {
 			$path = $from . '/' . $name;
-			if (in_array($name, self::ALWAYS_SKIP, true) || $path === $datadir) {
+			if (in_array($name, self::ALWAYS_SKIP, true) || $path === $datadir || self::isWriteLeftover($name)) {
 				continue;
 			}
 			if ($from === $projectRoot && in_array($name, self::PROJECT_SKIP, true)) {
@@ -173,7 +173,7 @@ final readonly class StarterExporter
 	{
 		$this->makeDir($to);
 		foreach ($this->entries($from) as $name) {
-			if (str_starts_with($name, '.') && is_file($from . '/' . $name) && $name !== '.meta.json' && $name !== '.index.json') {
+			if (str_starts_with($name, '.') && is_file($from . '/' . $name) && $name !== '.meta.json' && $name !== '.index.json' && !self::isWriteLeftover($name)) {
 				copy($from . '/' . $name, $to . '/' . $name);
 			}
 		}
@@ -336,6 +336,18 @@ final readonly class StarterExporter
 		sort($entries, SORT_STRING);
 
 		return $entries;
+	}
+
+	/**
+	 * A lock file beside a file that saves read and rewrite (.meta.json.lock),
+	 * or the temp of a write that was killed before its rename
+	 * (.cake.json.tmp.1a2b3c4d) — runtime leftovers, and a temp can hold a
+	 * user record.
+	 */
+	private static function isWriteLeftover(string $name): bool
+	{
+		return str_starts_with($name, '.')
+			&& (str_ends_with($name, '.lock') || preg_match('/\.tmp\.[0-9a-f]{8}$/', $name) === 1);
 	}
 
 	private function makeDir(string $dir): void

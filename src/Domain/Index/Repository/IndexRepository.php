@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Index\Repository;
 
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Storage\FileLock;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
@@ -26,8 +27,25 @@ class IndexRepository extends StorageRepository
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly CacheManager $cacheManager,
+		private readonly FileLock $fileLock,
 	) {
 		parent::__construct($filesystem);
+	}
+
+	/**
+	 * Run $fn holding the collection's index lock. Everything that reads,
+	 * changes and writes back the index does so under it, so two saves at
+	 * once cannot each write over the other's change.
+	 *
+	 * @template T
+	 *
+	 * @param callable(): T $fn
+	 *
+	 * @return T
+	 */
+	public function withIndexLock(string $collection, callable $fn): mixed
+	{
+		return $this->fileLock->withLock($this->buildIndexPath($collection), $fn);
 	}
 
 	/**
@@ -207,9 +225,8 @@ class IndexRepository extends StorageRepository
 		// Rewind stream to beginning for reading
 		rewind($handle);
 
-		// Write stream to filesystem via Flysystem
 		$indexFile = $this->buildIndexPath($collection);
-		$this->filesystem->flysystem()->writeStream($indexFile, $handle);
+		$this->filesystem->writeStream($indexFile, $handle);
 
 		fclose($handle);
 

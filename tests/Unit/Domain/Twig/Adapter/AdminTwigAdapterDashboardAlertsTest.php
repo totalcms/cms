@@ -143,6 +143,11 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 				return true;
 			}
 
+			public function writeStream(string $location, $stream): bool
+			{
+				return true;
+			}
+
 			public function import(string $import, string $dest): bool
 			{
 				return true;

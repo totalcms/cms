@@ -124,8 +124,62 @@ readonly class CollectionSaver
 	 */
 	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null, bool $preserveDates = false): CollectionData
 	{
+		// Under the meta lock, against the record on disk: the caller's data
+		// and snapshot may predate saves that bumped the counts since.
+		[$collection, $configChanged] = $this->storage->withMetaLock(
+			$collectionId,
+			fn (): array => $this->writeCollection($collectionId, $data, $existingCollection, $preserveDates, $this->storage->fetchCollection($collectionId)),
+		);
+		$this->dispatchUpdated($collectionId, $configChanged);
+
+		return $collection;
+	}
+
+	/**
+	 * Set totalObjects to the number of object files on disk, counted under
+	 * the meta lock. An index rebuild calls this rather than patching the
+	 * count it took when it listed the folder: a create that landed after
+	 * that listing would otherwise be counted and then written over.
+	 */
+	public function recountTotalObjects(string $collectionId): void
+	{
+		$written = $this->storage->withMetaLock($collectionId, function () use ($collectionId): ?array {
+			$collection = $this->storage->fetchCollection($collectionId);
+			$onDisk     = count($this->indexRepository->fetchObjectIdsFromDisk($collectionId));
+			if (!$collection instanceof CollectionData || $collection->totalObjects === $onDisk) {
+				return null;
+			}
+
+			$data                 = $collection->toArray();
+			$data['totalObjects'] = $onDisk;
+
+			return $this->writeCollection($collectionId, $data, $collection, false, $collection);
+		});
+
+		if ($written !== null) {
+			$this->dispatchUpdated($collectionId, $written[1]);
+		}
+	}
+
+	/**
+	 * updateCollection() without the event, so a caller holding the meta lock
+	 * can fire it after letting go (see mutateMetadata()).
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @param ?CollectionData $onDisk the record as read under the meta lock;
+	 *                                the lifetime count never drops below its count
+	 *
+	 * @return array{0: CollectionData, 1: bool} the saved collection, and whether its settings changed
+	 */
+	private function writeCollection(string $collectionId, array $data, ?CollectionData $existingCollection, bool $preserveDates, ?CollectionData $onDisk): array
+	{
 		$data          = $this->normalizeSubmittedData($data);
 		$data['count'] = $this->initializeCount($collectionId, $data);
+		// Lowering the lifetime count would hand out an ${oid} already in use.
+		if ($onDisk instanceof CollectionData && $data['count'] < $onDisk->count) {
+			$data['count'] = $onDisk->count;
+		}
 
 		// lastUpdated (the CONTENT timestamp) restamps on every update — the
 		// object-write cascade depends on that. The one exception is a sync
@@ -191,14 +245,17 @@ readonly class CollectionSaver
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collectionId);
 
+		return [$collection, $configChanged];
+	}
+
+	private function dispatchUpdated(string $collectionId, bool $configChanged): void
+	{
 		// The payload says whether this was a real settings change or only the
 		// metadata cascade (count / totalObjects / lastUpdated) that every
 		// object write and index build routes through here — listeners that
 		// care about the collection's configuration (MCP tool surface) skip
 		// the latter, otherwise every content save would drop every MCP session.
 		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId, $configChanged));
-
-		return $collection;
 	}
 
 	/**
@@ -348,16 +405,25 @@ readonly class CollectionSaver
 	 */
 	private function mutateMetadata(string $collectionId, callable $mutate): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
+		// Only the read → change → write is locked. collection.updated fires
+		// after: a listener may save to this collection again (an automation
+		// reading its index triggers a rebuild that patches totalObjects), and
+		// under the lock that save would wait on this one forever.
+		[$collection, $configChanged] = $this->storage->withMetaLock($collectionId, function () use ($collectionId, $mutate): array {
+			$collection = $this->storage->fetchCollection($collectionId);
 
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
+			if (!$collection instanceof CollectionData) {
+				throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+			}
 
-		$data = $collection->toArray();
-		$mutate($data);
+			$data = $collection->toArray();
+			$mutate($data);
 
-		return $this->updateCollection($collectionId, $data, $collection);
+			return $this->writeCollection($collectionId, $data, $collection, false, $collection);
+		});
+		$this->dispatchUpdated($collectionId, $configChanged);
+
+		return $collection;
 	}
 
 	/**

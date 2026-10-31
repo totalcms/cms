@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Data\IndexData;
@@ -59,6 +60,7 @@ function jobRunnerMocks(): array
 		'indexBuilder'         => test()->createMock(IndexBuilder::class),
 		'factoryImporter'      => test()->createMock(FactoryImporter::class),
 		'collectionRepository' => test()->createMock(CollectionRepository::class),
+		'collectionSaver'      => test()->createMock(CollectionSaver::class),
 		'viewBuilder'          => test()->createMock(DataViewBuilder::class),
 		'emailService'         => test()->createMock(EmailService::class),
 		'bulkMailerRepository' => test()->createMock(BulkMailerRepository::class),
@@ -86,6 +88,7 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 		$m['indexBuilder'],
 		$m['factoryImporter'],
 		$m['collectionRepository'],
+		$m['collectionSaver'],
 		$m['viewBuilder'],
 		$m['emailService'],
 		$m['bulkMailerRepository'],
@@ -348,8 +351,11 @@ describe('JobRunner import optimisation', function (): void {
 			jobRunnerJob(JobData::TYPE_IMPORT, 'blog'),
 		]);
 		$m['collectionRepository']->method('fetchCollection')->willReturn(jobRunnerCollection('blog'));
-		$m['collectionRepository']->expects(test()->once())->method('saveCollection')
-			->with(test()->callback(fn (CollectionData $c): bool => $c->queueRebuildOnSave === true));
+		// A patch through the saver, not a save of the fetched record: that
+		// record is a snapshot, and writing it back undid the counts of
+		// everything saved while the import ran.
+		$m['collectionSaver']->expects(test()->once())->method('patchCollection')->with('blog', ['queueRebuildOnSave' => true]);
+		$m['collectionRepository']->expects(test()->never())->method('saveCollection');
 
 		$optimised = jobRunnerFrom($m)->enableImportOptimization();
 
@@ -364,7 +370,7 @@ describe('JobRunner import optimisation', function (): void {
 			jobRunnerJob(JobData::TYPE_IMPORT, 'blog'),
 		]);
 		$m['collectionRepository']->method('fetchCollection')->willReturn(jobRunnerCollection('blog', true));
-		$m['collectionRepository']->expects(test()->never())->method('saveCollection');
+		$m['collectionSaver']->expects(test()->never())->method('patchCollection');
 
 		expect(jobRunnerFrom($m)->enableImportOptimization())->toBe([]);
 	});
@@ -395,8 +401,8 @@ describe('JobRunner import optimisation', function (): void {
 		$collection = jobRunnerCollection('blog', true);
 
 		$m['indexBuilder']->expects(test()->once())->method('buildIndex')->with('blog');
-		$m['collectionRepository']->expects(test()->once())->method('saveCollection')
-			->with(test()->callback(fn (CollectionData $c): bool => $c->queueRebuildOnSave === false));
+		$m['collectionSaver']->expects(test()->once())->method('patchCollection')->with('blog', ['queueRebuildOnSave' => false]);
+		$m['collectionRepository']->expects(test()->never())->method('saveCollection');
 
 		jobRunnerFrom($m)->finalizeImportOptimization([$collection]);
 	});

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
+use TotalCMS\Domain\Storage\FileLock;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 /**
@@ -40,6 +41,7 @@ beforeEach(function (): void {
 		$this->createMock(SchemaValidator::class),
 		$this->createMock(CacheManager::class),
 		$this->createMock(IndexRepository::class),
+		new FileLock($this->tmpRoot),
 	);
 });
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Storage;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
@@ -14,9 +13,9 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  * Three guarantees, each of which was hand-rolled in five or six places
  * before this class and got one of them wrong:
  *
- *  - Writes go to a sibling temp file and move() into place. The local
- *    adapter's move() is a rename(), which is atomic on POSIX, so a reader
- *    sees the old document or the new one, never a torn one.
+ *  - Writes replace the file atomically (the storage adapter's write() goes
+ *    through a temp file and rename()), so a reader sees the old document
+ *    or the new one, never a torn one.
  *  - An optional exclusive flock on a sidecar `.lock` file spans the whole
  *    load → change → save cycle, for files with concurrent writers.
  *  - A malformed read is handled by a policy the caller must name. In
@@ -32,11 +31,14 @@ final class AtomicJsonStore
 	/** @var array<string,true> paths whose last load was malformed under RefuseWrites */
 	private array $corrupt = [];
 
+	private readonly FileLock $lock;
+
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
 		private readonly string $datadir,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->lock = new FileLock($datadir);
 	}
 
 	/**
@@ -93,13 +95,17 @@ final class AtomicJsonStore
 			throw new \RuntimeException("Could not encode {$path} as JSON: " . json_last_error_msg());
 		}
 
+		if (!$secret) {
+			// The adapter's write() already replaces the file atomically.
+			return $this->filesystem->write($path, $json);
+		}
+
+		// A secret gets its own temp file so 0600 is set before the move: the
+		// adapter only keeps an existing file's mode, so a new secret file
+		// would be world-readable at its final path for a moment.
 		$tmp = $path . '.tmp.' . bin2hex(random_bytes(4));
 		$this->filesystem->write($tmp, $json);
-		if ($secret) {
-			// On the temp file, before the move, so the secret is never briefly
-			// world-readable at its final path.
-			@chmod(PathUtils::absolutePath($this->datadir, $tmp), 0600);
-		}
+		@chmod(PathUtils::absolutePath($this->datadir, $tmp), 0600);
 
 		return $this->filesystem->move($tmp, $path);
 	}
@@ -111,9 +117,7 @@ final class AtomicJsonStore
 	 */
 	public function mutate(string $path, callable $fn, CorruptPolicy $policy, bool $lock = false, bool $secret = false): bool
 	{
-		$handle = $lock ? $this->acquireLock($path) : null;
-
-		try {
+		$change = function () use ($path, $fn, $policy, $secret): bool {
 			$data = $this->load($path, $policy);
 			if (isset($this->corrupt[$path])) {
 				return false;
@@ -126,12 +130,9 @@ final class AtomicJsonStore
 			}
 
 			return $this->save($path, $updated, $secret);
-		} finally {
-			if (is_resource($handle)) {
-				flock($handle, LOCK_UN);
-				fclose($handle);
-			}
-		}
+		};
+
+		return $lock ? $this->lock->withLock($path, $change) : $change();
 	}
 
 	public function isCorrupt(string $path): bool
@@ -154,33 +155,5 @@ final class AtomicJsonStore
 		$this->logger->warning("{$path} is not valid JSON ({$reason}); starting fresh.");
 
 		return [];
-	}
-
-	/**
-	 * Exclusive lock on a sidecar, so the descriptor survives the move() that
-	 * replaces the data file. Same idiom as CronJobsAction's job-queue lock.
-	 *
-	 * @return resource
-	 */
-	private function acquireLock(string $path)
-	{
-		$lockPath = PathUtils::absolutePath($this->datadir, $path . '.lock');
-		$dir      = dirname($lockPath);
-
-		if (!FileUtils::ensureDirectory($dir)) {
-			throw new \RuntimeException("Unable to create the directory for {$path}");
-		}
-
-		$handle = fopen($lockPath, 'c');
-		if ($handle === false) {
-			throw new \RuntimeException("Unable to open the lock file for {$path}");
-		}
-		if (!flock($handle, LOCK_EX)) {
-			fclose($handle);
-
-			throw new \RuntimeException("Unable to lock {$path}");
-		}
-
-		return $handle;
 	}
 }

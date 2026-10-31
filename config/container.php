@@ -206,6 +206,7 @@ use TotalCMS\Domain\Skill\Listener\ExtensionSkillListener;
 use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
 use TotalCMS\Domain\Skill\Service\SkillInstaller;
 use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\FileLock;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
@@ -396,7 +397,7 @@ return [
 		// but not on instantiation. The setup wizard is responsible for creating the directory.
 		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
-		return new StorageFilesystemAdapter($filesystem);
+		return new StorageFilesystemAdapter($filesystem, $rootPath);
 	},
 
 	StorageAdapterInterface::class => fn (ContainerInterface $container) => $container->get(StorageFilesystemAdapter::class),
@@ -405,6 +406,12 @@ return [
 	// enforcing 0600 on settings files, which may hold extension secrets.
 	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
 		$container->get(StorageFilesystemAdapter::class),
+		(string)$container->get(Config::class)->datadir,
+	),
+
+	// The sidecar flock shared by everything that reads, changes and writes
+	// back one file (collection index and metadata, AtomicJsonStore).
+	FileLock::class => fn (ContainerInterface $container): FileLock => new FileLock(
 		(string)$container->get(Config::class)->datadir,
 	),
 

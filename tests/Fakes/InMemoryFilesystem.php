@@ -65,6 +65,14 @@ final class InMemoryFilesystem implements StorageAdapterInterface
 		return true;
 	}
 
+	/** @param resource $stream */
+	public function writeStream(string $location, $stream): bool
+	{
+		$this->files[$location] = (string)stream_get_contents($stream);
+
+		return true;
+	}
+
 	public function import(string $import, string $dest): bool
 	{
 		return true;

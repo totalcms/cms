@@ -16,8 +16,11 @@ readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	 * The constructor.
 	 *
 	 * @param FilesystemOperator $filesystem The filesystem handler
+	 * @param string $rootPath The filesystem's root on disk. Lets a write keep
+	 *                         an existing file's mode; without it the replaced
+	 *                         file gets the default mode.
 	 */
-	public function __construct(private FilesystemOperator $filesystem)
+	public function __construct(private FilesystemOperator $filesystem, private string $rootPath = '')
 	{
 	}
 
@@ -124,9 +127,68 @@ readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	 */
 	public function write(string $location, string $contents): bool
 	{
-		$this->filesystem->write($location, $contents);
+		$this->replace($location, fn (string $tmp) => $this->filesystem->write($tmp, $contents));
 
 		return $this->filesystem->fileExists($location);
+	}
+
+	/**
+	 * Write a stream to a file, replacing it the same way write() does.
+	 *
+	 * @param string $location The path of file to write to
+	 * @param resource $stream The data to write to the file
+	 */
+	public function writeStream(string $location, $stream): bool
+	{
+		$this->replace($location, fn (string $tmp) => $this->filesystem->writeStream($tmp, $stream));
+
+		return $this->filesystem->fileExists($location);
+	}
+
+	/**
+	 * Write to a temp file beside the target, then rename it into place. The
+	 * local adapter's move() is a rename(), which is atomic on POSIX, so a
+	 * reader sees the old file or the new one, never a half-written one.
+	 * The temp name starts with a dot so a collection listing never takes it
+	 * for an object.
+	 *
+	 * @param callable(string): void $writeTo writes the new contents to the temp path
+	 */
+	private function replace(string $location, callable $writeTo): void
+	{
+		$dir = dirname($location);
+		$tmp = ($dir === '.' ? '' : $dir . '/') . '.' . basename($location) . '.tmp.' . bin2hex(random_bytes(4));
+
+		try {
+			$writeTo($tmp);
+			$this->keepMode($location, $tmp);
+			$this->filesystem->move($tmp, $location);
+		} catch (\Throwable $e) {
+			if ($this->filesystem->fileExists($tmp)) {
+				$this->filesystem->delete($tmp);
+			}
+
+			throw $e;
+		}
+	}
+
+	/**
+	 * Give the temp file the mode of the file it replaces, so a file someone
+	 * made private (or group-writable) stays that way.
+	 */
+	private function keepMode(string $location, string $tmp): void
+	{
+		if ($this->rootPath === '') {
+			return;
+		}
+		$target = $this->rootPath . '/' . ltrim($location, '/');
+		if (!is_file($target)) {
+			return;
+		}
+		$mode = @fileperms($target);
+		if ($mode !== false) {
+			@chmod($this->rootPath . '/' . ltrim($tmp, '/'), $mode & 0777);
+		}
 	}
 
 	/**

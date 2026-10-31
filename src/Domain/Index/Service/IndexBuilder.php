@@ -84,41 +84,44 @@ class IndexBuilder
 			'collection' => $collection,
 		]);
 
-		// Bypass cache to ensure we get the current filesystem state.
-		// Cached IDs may include deleted objects or miss newly added ones.
-		$objectIds  = $this->storage->fetchObjectIdsFromDisk($collection);
-		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$indexProps = $schema->index;
+		// Held from listing the files to writing the index, so a rebuild cannot
+		// write over an append made while it read the files, and two rebuilds
+		// run one after the other instead of the slower one winning.
+		[$objectIds, $index] = $this->storage->withIndexLock($collection, function () use ($collection): array {
+			// Bypass cache to ensure we get the current filesystem state.
+			// Cached IDs may include deleted objects or miss newly added ones.
+			$objectIds  = $this->storage->fetchObjectIdsFromDisk($collection);
+			$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+			$indexProps = $schema->index;
 
-		$this->logger->info('Index build object count', [
-			'collection'    => $collection,
-			'object_count'  => count($objectIds),
-			'threshold'     => self::STREAMING_THRESHOLD,
-			'use_streaming' => count($objectIds) > self::STREAMING_THRESHOLD,
-			'id_only'       => $this->isIdOnlyIndex($indexProps),
-		]);
+			$this->logger->info('Index build object count', [
+				'collection'    => $collection,
+				'object_count'  => count($objectIds),
+				'threshold'     => self::STREAMING_THRESHOLD,
+				'use_streaming' => count($objectIds) > self::STREAMING_THRESHOLD,
+				'id_only'       => $this->isIdOnlyIndex($indexProps),
+			]);
 
-		// If the index only contains the id property, we can skip reading
-		// every JSON file since the ID is derived from the filename.
-		if ($this->isIdOnlyIndex($indexProps)) {
-			$index = $this->buildIndexFromIds($collection, $objectIds);
-		} elseif (count($objectIds) > self::STREAMING_THRESHOLD) {
-			// Use streaming for large collections to minimize memory usage
-			$index = $this->buildIndexStreaming($collection, $objectIds, $indexProps);
-		} else {
-			$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
-		}
+			// If the index only contains the id property, we can skip reading
+			// every JSON file since the ID is derived from the filename.
+			if ($this->isIdOnlyIndex($indexProps)) {
+				$index = $this->buildIndexFromIds($collection, $objectIds);
+			} elseif (count($objectIds) > self::STREAMING_THRESHOLD) {
+				// Use streaming for large collections to minimize memory usage
+				$index = $this->buildIndexStreaming($collection, $objectIds, $indexProps);
+			} else {
+				$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
+			}
+
+			return [$objectIds, $index];
+		});
 		$this->indexedCount = count($objectIds) - count($this->skippedIds);
 
-		// Reset totalObjects to match the authoritative count from disk — but only
-		// when it is actually off. On object.created the metadata listener has
-		// already recorded the new object (it runs before this rebuild), and on
-		// update or delete the count is unchanged, so this write was pure cost:
-		// another collection.updated dispatch and cache scan per object save.
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData || $collectionData->totalObjects !== count($objectIds)) {
-			$this->collectionSaver->patchCollection($collection, ['totalObjects' => count($objectIds)]);
-		}
+		// Reset totalObjects to the count on disk. It writes only when the
+		// count is actually off (on object.created the metadata listener has
+		// already recorded the new object), and it recounts under the meta
+		// lock: the listing above may be stale by now.
+		$this->collectionSaver->recountTotalObjects($collection);
 
 		return $index;
 	}
@@ -256,15 +259,17 @@ class IndexBuilder
 	 */
 	public function appendObjectToIndex(string $collection, ObjectData $object): void
 	{
-		// Get existing index or create new one if it doesn't exist
-		$index = $this->storage->fetchIndex($collection) ?? new IndexData();
+		// Read from disk under the lock: a cached copy may predate another
+		// process's append, and writing it back would drop that entry.
+		$this->storage->withIndexLock($collection, function () use ($collection, $object): void {
+			$index = $this->storage->fetchIndexFromDisk($collection) ?? new IndexData();
 
-		// Remove existing entry with same ID (for updates) and append new one
-		$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $object->id);
-		$index->objects->push($object->toArrayWithoutPasswords());
+			// Remove existing entry with same ID (for updates) and append new one
+			$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $object->id);
+			$index->objects->push($object->toArrayWithoutPasswords());
 
-		// Save the updated index
-		$this->storage->saveIndex($collection, $index);
+			$this->storage->saveIndex($collection, $index);
+		});
 	}
 
 	/**
@@ -291,16 +296,17 @@ class IndexBuilder
 	 */
 	public function removeObjectFromIndex(string $collection, string $objectId): void
 	{
-		$index = $this->storage->fetchIndex($collection);
-		if (!$index instanceof IndexData) {
-			return; // No index exists, nothing to remove
-		}
+		// Same as appendObjectToIndex(): from disk, under the lock.
+		$this->storage->withIndexLock($collection, function () use ($collection, $objectId): void {
+			$index = $this->storage->fetchIndexFromDisk($collection);
+			if (!$index instanceof IndexData) {
+				return; // No index exists, nothing to remove
+			}
 
-		// Remove the object from the index
-		$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $objectId);
+			$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $objectId);
 
-		// Save the updated index
-		$this->storage->saveIndex($collection, $index);
+			$this->storage->saveIndex($collection, $index);
+		});
 	}
 
 	public function smartBuildIndex(string $collection, ?ObjectData $newObject = null): void

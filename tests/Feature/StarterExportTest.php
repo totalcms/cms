@@ -61,6 +61,10 @@ beforeEach(function (): void {
 		'tcms-data/builder-pages/.index.json'           => json_encode(['objects' => [['id' => 'home']]]),
 		'tcms-data/builder-pages/.order.json'           => json_encode(['home']),
 		'tcms-data/builder-pages/home.json'             => json_encode(['id' => 'home']),
+		'tcms-data/auth/.meta.json.lock'                => '',
+		'tcms-data/auth/.1.json.tmp.ab12cd34'           => json_encode(['id' => '1', 'password' => '$2y$hash']),
+		'tcms-data/menu/.index.json.lock'               => '',
+		'tcms-data/menu/.cake.json.tmp.ab12cd34'        => '{}',
 	];
 
 	foreach ($files as $path => $content) {
@@ -120,6 +124,17 @@ it('blanks sensitive settings and keeps the rest', function (): void {
 		->and($settings['smtp']['host'])->toBe('smtp.example.com')
 		->and($settings['siteName'])->toBe('Juniper Table')
 		->and($result->scrubbedSettings)->toContain('settings.json: smtp.password', 'settings.json: sync.key');
+});
+
+it('leaves lock files and leftover write temps behind', function (): void {
+	// Saves leave a .lock beside .meta.json and .index.json in every
+	// collection, and a killed write can leave a .tmp — neither belongs in a
+	// starter, and the temp can hold a user record.
+	($this->export)();
+
+	expect(glob($this->dest . '/tcms-data/*/.*.lock'))->toBe([])
+		->and(glob($this->dest . '/tcms-data/*/.*.tmp.*'))->toBe([])
+		->and($this->dest . '/tcms-data/builder-pages/.order.json')->toBeFile();
 });
 
 it('empties the auth collection and resets its counters', function (): void {

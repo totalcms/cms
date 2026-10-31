@@ -1192,3 +1192,22 @@ function mediaToolAccessAuthOff(): MediaToolAccess
 		(new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(),
 	);
 }
+
+/**
+ * Start a child process that holds the lock on $lockFile for $seconds, and
+ * return once it has the lock.
+ *
+ * @return array{0: resource, 1: array<int,resource>}
+ */
+function holdLockInChild(string $lockFile, float $seconds): array
+{
+	$code = sprintf(
+		'$h = fopen(%s, "c"); flock($h, LOCK_EX); echo "locked\n"; usleep(%d); flock($h, LOCK_UN);',
+		var_export($lockFile, true),
+		(int)($seconds * 1_000_000),
+	);
+	$proc = proc_open([PHP_BINARY, '-r', $code], [1 => ['pipe', 'w']], $pipes);
+	expect(trim((string)fgets($pipes[1])))->toBe('locked');
+
+	return [$proc, $pipes];
+}

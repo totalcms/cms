@@ -54,11 +54,9 @@ describe('MigrationStateRepository', function (): void {
 		expect($repo->hasRun('partial'))->toBeFalse();
 	});
 
-	test('recordRan persists the entry atomically via tmp + move', function (): void {
+	test('recordRan writes the entry through the adapter, which replaces the file atomically', function (): void {
 		$writtenPath = '';
 		$writtenJson = '';
-		$movedFrom   = '';
-		$movedTo     = '';
 
 		$storage = test()->createMock(StorageFilesystemAdapter::class);
 		$storage->method('fileExists')->willReturn(false);
@@ -68,20 +66,14 @@ describe('MigrationStateRepository', function (): void {
 
 			return true;
 		});
-		$storage->method('move')->willReturnCallback(function (string $from, string $to) use (&$movedFrom, &$movedTo): bool {
-			$movedFrom = $from;
-			$movedTo   = $to;
-
-			return true;
-		});
+		$storage->expects(test()->never())->method('move');
 
 		$repo = new MigrationStateRepository($storage);
 		$repo->recordRan('templates-to-builder', 14);
 
-		// Atomic write: temp file is written, then moved over the real file.
-		expect($writtenPath)->toStartWith('.system/migrations.json.tmp.');
-		expect($movedFrom)->toBe($writtenPath);
-		expect($movedTo)->toBe('.system/migrations.json');
+		// The temp file and rename are StorageFilesystemAdapter::write()'s job
+		// (StorageFilesystemAdapterTest pins them); the store writes the real path.
+		expect($writtenPath)->toBe('.system/migrations.json');
 
 		$decoded = json_decode($writtenJson, true);
 		expect($decoded)->toHaveKey('templates-to-builder');

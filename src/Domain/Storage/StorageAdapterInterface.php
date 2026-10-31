@@ -69,6 +69,14 @@ interface StorageAdapterInterface
 	public function write(string $location, string $contents): bool;
 
 	/**
+	 * Write a stream to a file, replacing it atomically like write().
+	 *
+	 * @param string $location The path of file to write to
+	 * @param resource $stream The data to write to the file
+	 */
+	public function writeStream(string $location, $stream): bool;
+
+	/**
 	 * Import a file into the filesystem.
 	 *
 	 * @param string $import Path to the file to import

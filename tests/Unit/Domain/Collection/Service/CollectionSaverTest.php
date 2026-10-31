@@ -34,6 +34,7 @@ final class CollectionSaverTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->repository         = $this->createMock(CollectionRepository::class);
+		$this->repository->method('withMetaLock')->willReturnCallback(static fn (string $collection, callable $fn): mixed => $fn());
 		$this->factory            = $this->createMock(CollectionFactory::class);
 		$this->indexRepository    = $this->createMock(IndexRepository::class);
 		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
@@ -765,10 +766,11 @@ final class CollectionSaverTest extends TestCase
 		$collectionData->totalObjects = 5; // Old value
 		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
-		// fetchCollection should NOT be called since we pass existingCollection
+		// The caller's snapshot is used for the update; the read under the
+		// meta lock only keeps the lifetime count from going backwards.
 		$this->repository
-			->expects($this->never())
-			->method('fetchCollection');
+			->method('fetchCollection')
+			->willReturn($collectionData);
 
 		// Mock index repository to return 8 object IDs (the "real" count)
 		$this->indexRepository
@@ -808,10 +810,11 @@ final class CollectionSaverTest extends TestCase
 		$collectionData->totalObjects = 10;
 		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
-		// fetchCollection should NOT be called since we pass existingCollection
+		// The caller's snapshot is used for the update; the read under the
+		// meta lock only keeps the lifetime count from going backwards.
 		$this->repository
-			->expects($this->never())
-			->method('fetchCollection');
+			->method('fetchCollection')
+			->willReturn($collectionData);
 
 		$this->repository
 			->expects($this->once())

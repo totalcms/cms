@@ -8,6 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
+use TotalCMS\Domain\Storage\FileLock;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -31,8 +32,24 @@ class CollectionRepository extends StorageRepository
 		private readonly SchemaValidator $validator,
 		private readonly CacheManager $cacheManager,
 		private readonly IndexRepository $indexRepository,
+		private readonly FileLock $fileLock,
 	) {
 		parent::__construct($filesystem);
+	}
+
+	/**
+	 * Run $fn holding the collection's metadata lock, so two saves changing
+	 * the counts at once cannot each write over the other's change.
+	 *
+	 * @template T
+	 *
+	 * @param callable(): T $fn
+	 *
+	 * @return T
+	 */
+	public function withMetaLock(string $collection, callable $fn): mixed
+	{
+		return $this->fileLock->withLock($this->buildMetaPath($collection), $fn);
 	}
 
 	/**

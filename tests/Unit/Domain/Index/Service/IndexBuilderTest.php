@@ -34,6 +34,7 @@ final class IndexBuilderTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->storage           = $this->createMock(IndexRepository::class);
+		$this->storage->method('withIndexLock')->willReturnCallback(static fn (string $collection, callable $fn): mixed => $fn());
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
@@ -61,6 +62,19 @@ final class IndexBuilderTest extends TestCase
 		$schema->index = $indexProps;
 
 		return $schema;
+	}
+
+	public function testARebuildRecountsUnderTheMetaLockInsteadOfPatchingItsOwnCount(): void
+	{
+		// The count a rebuild took when it listed the files can be stale by
+		// the time it is written; the saver recounts under the meta lock.
+		$this->storage->method('fetchObjectIdsFromDisk')->willReturn(['post-1']);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->createSchemaWithIndex(['id']));
+
+		$this->collectionSaver->expects($this->once())->method('recountTotalObjects')->with('blog');
+		$this->collectionSaver->expects($this->never())->method('patchCollection');
+
+		$this->builder->buildIndex('blog');
 	}
 
 	public function testIdOnlyIndexSkipsObjectFetching(): void
@@ -313,7 +327,7 @@ final class IndexBuilderTest extends TestCase
 	{
 		// This is the update path. A second entry for the same id would show
 		// the object twice in every listing.
-		$this->storage->method('fetchIndex')->willReturn(new IndexData([
+		$this->storage->method('fetchIndexFromDisk')->willReturn(new IndexData([
 			['id' => 'post-1', 'title' => 'Old'],
 			['id' => 'post-2', 'title' => 'Other'],
 		]));
@@ -361,7 +375,7 @@ final class IndexBuilderTest extends TestCase
 
 	public function testAppendingToACollectionWithNoIndexYetStartsOne(): void
 	{
-		$this->storage->method('fetchIndex')->willReturn(null);
+		$this->storage->method('fetchIndexFromDisk')->willReturn(null);
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
@@ -380,7 +394,7 @@ final class IndexBuilderTest extends TestCase
 		// contains fields a rebuild will later drop. Anything reading a
 		// non-indexed property from the index works right after a save and
 		// stops working once the rebuild lands.
-		$this->storage->method('fetchIndex')->willReturn(new IndexData());
+		$this->storage->method('fetchIndexFromDisk')->willReturn(new IndexData());
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
@@ -401,7 +415,7 @@ final class IndexBuilderTest extends TestCase
 	{
 		// The delete path. Leaving the entry behind keeps a deleted object
 		// visible in listings until the next full rebuild.
-		$this->storage->method('fetchIndex')->willReturn(new IndexData([
+		$this->storage->method('fetchIndexFromDisk')->willReturn(new IndexData([
 			['id' => 'post-1'],
 			['id' => 'post-2'],
 			['id' => 'post-3'],
@@ -422,7 +436,7 @@ final class IndexBuilderTest extends TestCase
 	{
 		// No index means nothing to remove — writing one here would create an
 		// index that claims the collection is empty.
-		$this->storage->method('fetchIndex')->willReturn(null);
+		$this->storage->method('fetchIndexFromDisk')->willReturn(null);
 		$this->storage->expects($this->never())->method('saveIndex');
 
 		$this->builder->removeObjectFromIndex('blog', 'post-1');
@@ -447,7 +461,7 @@ final class IndexBuilderTest extends TestCase
 		// immediately, the queued job is what restores a correct index. Losing
 		// the append means new content does not appear until the queue runs.
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collectionWithQueueing(true));
-		$this->storage->method('fetchIndex')->willReturn(new IndexData());
+		$this->storage->method('fetchIndexFromDisk')->willReturn(new IndexData());
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';

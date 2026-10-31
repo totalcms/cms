@@ -7,6 +7,7 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -40,6 +41,7 @@ readonly class JobRunner
 		private IndexBuilder $indexBuilder,
 		private FactoryImporter $factoryImporter,
 		private CollectionRepository $collectionRepository,
+		private CollectionSaver $collectionSaver,
 		private DataViewBuilder $viewBuilder,
 		private EmailService $emailService,
 		private BulkMailerRepository $bulkMailerRepository,
@@ -79,9 +81,10 @@ readonly class JobRunner
 				continue;
 			}
 
-			// Enable if not already enabled
-			$collection->queueRebuildOnSave = true;
-			$this->collectionRepository->saveCollection($collection);
+			// Enable if not already enabled. A patch, not a save of the record
+			// fetched above: that record is a snapshot, and writing it back
+			// undoes the counts of everything saved since.
+			$this->collectionSaver->patchCollection($collectionId, ['queueRebuildOnSave' => true]);
 			$this->logger->info('Enabled queueRebuildOnSave for import optimization', [
 				'collection' => $collectionId,
 			]);
@@ -105,8 +108,7 @@ readonly class JobRunner
 			$this->indexBuilder->buildIndex($collection->id);
 			$this->logger->info('Rebuilt index after import', ['collection' => $collection->id]);
 
-			$collection->queueRebuildOnSave = false;
-			$this->collectionRepository->saveCollection($collection);
+			$this->collectionSaver->patchCollection($collection->id, ['queueRebuildOnSave' => false]);
 			$this->logger->info('Restored queueRebuildOnSave setting', [
 				'collection' => $collection->id,
 			]);
