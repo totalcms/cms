@@ -604,7 +604,7 @@ function buildAdminTwigAdapter(
 		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
 		// The adapter tests never render the rail, so a bare ExtensionManager
 		// (no constructor run) is enough to satisfy the registry's dependency.
-		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor()),
+		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor(), $collectionLister, (new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor()),
 	);
 }
 

@@ -1143,6 +1143,8 @@ return [
 	'dashboard.new_dataview'           => 'Nueva vista',
 	'dashboard.new_mailer'             => 'Nuevo correo',
 	'dashboard.new_automation'         => 'Nueva automatización',
+	'dashboard.new_object'             => 'Nuevo: {item}',
+	'dashboard.create'                 => 'Crear',
 	'dashboard.twig_playground'        => 'Twig Playground',
 	'dashboard.activity_log'           => 'Registro de actividad',
 	'dashboard.documentation'          => 'Documentación',

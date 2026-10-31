@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\Nav;
 
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -38,6 +40,8 @@ readonly class AdminNavRegistry
 		// so an optional manager would stay null and extension items would
 		// silently never reach the rail.
 		private ExtensionManager $extensions,
+		private CollectionLister $collections,
+		private CollectionEditionService $collectionEditions,
 	) {
 	}
 
@@ -163,7 +167,7 @@ readonly class AdminNavRegistry
 	/** The dashboard's Quick Actions, checked with the same rules as the rail. */
 	public function quickActions(): QuickActions
 	{
-		return new QuickActions($this, $this->translator, $this->config);
+		return new QuickActions($this, $this->translator, $this->config, $this->auth, $this->collections, $this->collectionEditions);
 	}
 
 	/** Whether the current user may use $entry: its edition, then its permission. */

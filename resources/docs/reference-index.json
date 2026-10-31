@@ -613,6 +613,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.quickNavNewItems",
+            "signature": "quickNavNewItems(): array",
+            "description": "Quick Navigation's \"New \u2026\" entries for the current user: the catalog's and one per collection they may add to.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.settingsSections",
             "signature": "settingsSections(): array",
             "description": "Canonical list of admin settings sections \u2014 the single source of truth for both the settings page sidebar (settings.twig) and the quick-nav index, so the two can never drift (mirrors how docsMenu() backs the docs nav).",

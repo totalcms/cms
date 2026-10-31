@@ -1143,6 +1143,8 @@ return [
 	'dashboard.new_dataview'           => 'Nieuwe weergave',
 	'dashboard.new_mailer'             => 'Nieuw e-mailsjabloon',
 	'dashboard.new_automation'         => 'Nieuwe automatisering',
+	'dashboard.new_object'             => 'Nieuw: {item}',
+	'dashboard.create'                 => 'Aanmaken',
 	'dashboard.twig_playground'        => 'Twig Playground',
 	'dashboard.activity_log'           => 'Activiteitenlog',
 	'dashboard.documentation'          => 'Documentatie',

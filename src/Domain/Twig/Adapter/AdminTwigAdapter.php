@@ -224,6 +224,17 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Quick Navigation's "New …" entries for the current user: the catalog's
+	 * and one per collection they may add to.
+	 *
+	 * @return list<array{label: string, section: string, path: string, keywords: string}>
+	 */
+	public function quickNavNewItems(): array
+	{
+		return $this->nav->quickActions()->quickNavItems();
+	}
+
+	/**
 	 * The newest activity log rows for the dashboard home; [] for anyone who
 	 * is not an admin.
 	 *

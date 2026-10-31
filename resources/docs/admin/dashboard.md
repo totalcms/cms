@@ -16,7 +16,7 @@ The admin is where you manage content, structure and the site's settings. This p
 
 The sidebar down the left side links to each part of the admin: Collections, Schemas, Data Views, Site Builder, Mailer, Automations, Twig Playground, anything extensions add, then Utils, Extensions, Settings and Docs. Each person only sees the pages their [access group](docs/auth/access-groups) and edition allow.
 
-Press **⌘⇧O** (**Ctrl+Shift+O** on Windows and Linux) for **Quick Navigation**, a search box that jumps to any admin page, collection, Site Builder page or setting.
+Press **⌘⇧O** (**Ctrl+Shift+O** on Windows and Linux) for **Quick Navigation**, a search box that jumps to any admin page, collection, Site Builder page or setting. It also creates things: type **New User**, **New Post** or **New Schema** to open that add form. Each collection you may add to has its own entry, shown with the collection's name, and the entries use your admin language.
 
 ### The More menu
 
@@ -66,8 +66,9 @@ A row of shortcuts under the statistics. Choose them under **Settings → Dashbo
 | New Data View, New Email, New Automation | The new view, email template or automation |
 | Twig Playground, Documentation, Settings | Those pages |
 | Activity Log, Log Analyzer, Job Queue Manager, Cache Manager | Those utilities |
+| New {item}, one per collection (Users, blog posts, galleries, your own collections…) | That collection's add form — labeled with the collection's singular label, such as **New Post**, and listed with its ID so two collections with the same label can be told apart |
 
-Until the setting is saved, the row shows New Collection, New Schema, New Template, Log Analyzer, Job Queue Manager and Cache Manager. Each person only sees the actions their access group and edition allow: the utilities, Settings and New Automation are for admins.
+Until the setting is saved, the row shows New Collection, New Schema, New Template, Log Analyzer, Job Queue Manager and Cache Manager. Each person only sees the actions their access group and edition allow: the utilities, Settings and New Automation are for admins, and a collection's New action only shows to people who may create objects in it. If a collection is deleted, its action quietly drops off the row.
 
 ### Collections and Recent Activity
 

@@ -34,6 +34,11 @@ window.TCMS_QUICK_NAV = [
 {% endfor %}
 {% endif %}
 
+{# ── New … : add a collection, schema, page or object (QuickActions) ── #}
+{% for item in cms.admin.quickNavNewItems() %}
+{"label":"{{ item.label | e('js') }}","section":"{{ item.section | e('js') }}","path":"{{ item.path | e('js') }}","keywords":"{{ item.keywords | e('js') }}"},
+{% endfor %}
+
 {# ── Individual data views ── #}
 {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
 {% for view in cms.view.list() %}

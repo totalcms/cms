@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\Nav;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Support\Config;
 
 /**
@@ -12,10 +16,26 @@ use TotalCMS\Support\Config;
  * `dashboard.quickActions` setting picks from and orders. Each action is a
  * {@see NavEntry}, so it is checked with the sidebar's own auth and edition
  * rules ({@see AdminNavRegistry::allows()}).
+ *
+ * Each collection adds a "New …" action too, saved as
+ * `new-object:{collection}`. It is shown to users who may create objects in
+ * that collection on this edition, and skipped once the collection is gone.
+ *
+ * Quick Navigation lists every "New …" action the user may use
+ * ({@see quickNavItems()}), so typing "New User" opens the add form.
  */
 final readonly class QuickActions
 {
 	public const SETTING = 'quickActions';
+
+	/** Id prefix of the per-collection "New …" actions. */
+	public const NEW_OBJECT = 'new-object:';
+
+	/**
+	 * Collections without a "New …" action: each has its own editor with a
+	 * New action in the catalog (or, for playground, none).
+	 */
+	private const NO_NEW_OBJECT = ['playground', 'mailer', 'dataviews', 'builder-pages', 'automations'];
 
 	/** What the dashboard shows until the setting is saved. */
 	public const DEFAULTS = ['new-collection', 'new-schema', 'new-template', 'logs', 'jobqueue', 'cache-manager'];
@@ -24,6 +44,9 @@ final readonly class QuickActions
 		private AdminNavRegistry $nav,
 		private TranslationService $translator,
 		private Config $config,
+		private AuthTwigAdapter $auth,
+		private CollectionLister $collections,
+		private CollectionEditionService $collectionEditions,
 	) {
 	}
 
@@ -56,14 +79,52 @@ final readonly class QuickActions
 	}
 
 	/**
+	 * A "New …" action for each collection, ordered by name; its keywords
+	 * hold the collection's name. The permission is not a nav permission:
+	 * {@see allows()} checks the collection itself.
+	 *
+	 * @return list<NavEntry>
+	 */
+	public function collectionItems(): array
+	{
+		$collections = array_values(array_filter(
+			$this->collections->listAllCollections(),
+			fn (CollectionData $collection): bool => !in_array($collection->id, self::NO_NEW_OBJECT, true),
+		));
+		usort($collections, fn (CollectionData $a, CollectionData $b): int => strnatcmp(mb_strtolower($a->name), mb_strtolower($b->name)));
+
+		return array_map(function (CollectionData $collection): NavEntry {
+			$item = $collection->labelSingular !== '' ? $collection->labelSingular : $collection->name;
+			// A schema without an icon of its name falls back to the collections icon.
+			$schema = (string)preg_replace('/[^a-z0-9-]/', '', strtolower($collection->schema));
+
+			return new NavEntry(
+				self::NEW_OBJECT . $collection->id,
+				$this->translator->trans('dashboard.new_object', ['{item}' => $item]),
+				"collections/{$collection->id}/add",
+				'collection:create',
+				null,
+				"var(--icon-{$schema}, var(--icon-collections))",
+				$collection->name,
+			);
+		}, $collections);
+	}
+
+	/**
 	 * List options for the setting: every action, whether or not the current
-	 * user can use it — an admin chooses them for the site.
+	 * user can use it — an admin chooses them for the site. A collection's
+	 * action names its id too, as two collections can share a label.
 	 *
 	 * @return list<array{value: string, label: string}>
 	 */
 	public function options(): array
 	{
-		return array_map(fn (NavEntry $entry): array => ['value' => $entry->id, 'label' => $entry->label], $this->items());
+		$options = array_map(fn (NavEntry $entry): array => ['value' => $entry->id, 'label' => $entry->label], $this->items());
+		foreach ($this->collectionItems() as $entry) {
+			$options[] = ['value' => $entry->id, 'label' => $entry->label . ' (' . substr($entry->id, strlen(self::NEW_OBJECT)) . ')'];
+		}
+
+		return $options;
 	}
 
 	/**
@@ -74,19 +135,62 @@ final readonly class QuickActions
 	 */
 	public function visible(): array
 	{
-		$byId = [];
+		$chosen = $this->chosen();
+		$byId   = [];
 		foreach ($this->items() as $entry) {
+			$byId[$entry->id] = $entry;
+		}
+		// Only read the collections when one of their actions is chosen.
+		$wantsCollections = array_filter($chosen, fn (string $id): bool => str_starts_with($id, self::NEW_OBJECT)) !== [];
+		foreach ($wantsCollections ? $this->collectionItems() : [] as $entry) {
 			$byId[$entry->id] = $entry;
 		}
 
 		$actions = [];
-		foreach ($this->chosen() as $id) {
-			if (isset($byId[$id]) && $this->nav->allows($byId[$id])) {
+		foreach ($chosen as $id) {
+			if (isset($byId[$id]) && $this->allows($byId[$id])) {
 				$actions[] = $byId[$id];
 			}
 		}
 
 		return $actions;
+	}
+
+	/**
+	 * Quick Navigation entries for every "New …" action the current user may
+	 * use: the catalog's (New Collection, New Schema, …) under a Create
+	 * section, and each collection's under the collection's name, which tells
+	 * apart two collections whose items share a label.
+	 *
+	 * @return list<array{label: string, section: string, path: string, keywords: string}>
+	 */
+	public function quickNavItems(): array
+	{
+		$create = $this->translator->trans('dashboard.create');
+		$items  = [];
+		foreach ($this->items() as $entry) {
+			if (str_starts_with($entry->id, 'new-') && $this->allows($entry)) {
+				$items[] = ['label' => $entry->label, 'section' => $create, 'path' => $entry->url, 'keywords' => 'new add create'];
+			}
+		}
+		foreach ($this->collectionItems() as $entry) {
+			if ($this->allows($entry)) {
+				$items[] = ['label' => $entry->label, 'section' => $entry->keywords, 'path' => $entry->url, 'keywords' => 'new add create ' . substr($entry->id, strlen(self::NEW_OBJECT))];
+			}
+		}
+
+		return $items;
+	}
+
+	private function allows(NavEntry $entry): bool
+	{
+		if (!str_starts_with($entry->id, self::NEW_OBJECT)) {
+			return $this->nav->allows($entry);
+		}
+
+		$collection = substr($entry->id, strlen(self::NEW_OBJECT));
+
+		return $this->collectionEditions->isAccessible($collection) && $this->auth->canAccessCollection($collection, 'create');
 	}
 
 	/** @return list<string> */

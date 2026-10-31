@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\Nav\NavEntry;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -33,6 +35,8 @@ describe('AdminNavRegistry', function (): void {
 			$translator,
 			$this->config,
 			$this->extensions,
+			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
+			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
 		);
 	});
 
@@ -49,6 +53,8 @@ describe('AdminNavRegistry', function (): void {
 			$translator,
 			$this->config,
 			$extensions,
+			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
+			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
 		);
 
 		$ids = array_map(fn (NavEntry $e): string => $e->id, $registry->items());
