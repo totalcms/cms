@@ -4,6 +4,9 @@
 # Users with "Keep me logged in" never timeout (handled separately by persistent tokens)
 # php_value session.gc_maxlifetime 86400
 
+# No directory listings, and no content negotiation guessing at file names
+Options -MultiViews -Indexes
+
 # Redirect to front controller
 RewriteEngine On
 

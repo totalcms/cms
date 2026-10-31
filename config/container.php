@@ -341,6 +341,18 @@ return [
 			$sessionConfig['lifetime'] = (int)$sessionConfig['cookie_lifetime'];
 		}
 
+		// The same goes for secure and httponly: start() passes odan's own
+		// options to session_set_cookie_params(), which overrides the
+		// session.cookie_* ini values. Unmapped, `secure` stayed at odan's
+		// default false and the session cookie went out without Secure on
+		// every HTTPS site (security scan, 2026-10-30).
+		if (isset($sessionConfig['cookie_secure']) && !isset($sessionConfig['secure'])) {
+			$sessionConfig['secure'] = (bool)$sessionConfig['cookie_secure'];
+		}
+		if (isset($sessionConfig['cookie_httponly']) && !isset($sessionConfig['httponly'])) {
+			$sessionConfig['httponly'] = (bool)$sessionConfig['cookie_httponly'];
+		}
+
 		return new PhpSession($sessionConfig);
 	},
 

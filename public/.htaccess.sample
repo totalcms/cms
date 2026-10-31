@@ -1,3 +1,6 @@
+# No directory listings, and no content negotiation guessing at file names
+Options -MultiViews -Indexes
+
 # Total CMS Upload Security Configuration
 # Copy this file to your tcms-data directory as .htaccess
 

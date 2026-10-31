@@ -1,3 +1,6 @@
+# No directory listings, and no content negotiation guessing at file names
+Options -MultiViews -Indexes
+
 RewriteEngine On
 
 # Compute this directory's URL prefix dynamically (equivalent to RewriteBase,
