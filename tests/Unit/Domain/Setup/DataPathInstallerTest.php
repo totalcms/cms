@@ -117,6 +117,31 @@ final class DataPathInstallerTest extends TestCase
 		);
 	}
 
+	public function testProtectsADocrootFolderThatAlreadyExisted(): void
+	{
+		// A request before the wizard (or a CLI command on a Composer
+		// install) creates the docroot folder without the .htaccess. Keeping
+		// the data there must still deny web access to it.
+		$existing = $this->docroot . '/tcms-data';
+		mkdir($existing . '/.system', 0755, true);
+		file_put_contents($existing . '/.system/extensions.json', '{}');
+
+		$result = $this->installer->install('docroot', '', $this->docroot, 'en_US');
+
+		$this->assertSame($existing, $result);
+		$this->assertFileExists($existing . '/.htaccess');
+		$this->assertStringContainsString('Require all denied', (string)file_get_contents($existing . '/.htaccess'));
+	}
+
+	public function testProtectsAFolderMovedIntoPlace(): void
+	{
+		mkdir($this->docroot . '/tcms-data/.system', 0755, true);
+
+		$result = $this->installer->install('default', '', $this->docroot, 'en_US');
+
+		$this->assertFileExists($result . '/.htaccess');
+	}
+
 	public function testWritesLocaleToSettingsJson(): void
 	{
 		$this->installer->install('default', '', $this->docroot, 'fr_FR');

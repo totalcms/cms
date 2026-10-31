@@ -157,6 +157,7 @@ use TotalCMS\Domain\Migration\Migration\EnableCollectionFeedsMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
+use TotalCMS\Domain\Migration\Migration\ProtectDataDirectoryMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
 use TotalCMS\Domain\Migration\Service\MigrationRunner;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
@@ -960,6 +961,8 @@ return [
 
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
+			// First: protect the data folder before anything else writes to it.
+			$container->get(ProtectDataDirectoryMigration::class),
 			$container->get(LegacyTemplatesMigration::class),
 			$container->get(EnsureMcpPromptCollectionMigration::class),
 			$container->get(EnsureAutomationsCollectionMigration::class),

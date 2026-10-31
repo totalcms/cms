@@ -95,13 +95,17 @@ readonly class DataPathInstaller
 
 		foreach ($candidates as $candidate) {
 			if ($this->directoryManager->moveDataDirectory($candidate, $dataPath)) {
-				return;
+				break;
 			}
 		}
 
 		if (!is_dir($dataPath)) {
 			$this->directoryManager->createDirectory($dataPath);
 		}
+
+		// A folder that was moved here, or already existed, was created by
+		// a request before the wizard, without the .htaccess.
+		$this->directoryManager->ensureSecurityFile($dataPath);
 	}
 
 	/**

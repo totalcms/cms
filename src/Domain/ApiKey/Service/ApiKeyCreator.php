@@ -12,6 +12,9 @@ use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
  */
 readonly class ApiKeyCreator
 {
+	/** Every key starts with this, which also tells it apart from an OAuth JWT. */
+	public const KEY_PREFIX = 'tcms_';
+
 	public function __construct(
 		private ApiKeyRepository $repository,
 	) {
@@ -68,7 +71,7 @@ readonly class ApiKeyCreator
 		$randomBytes = random_bytes(32);
 		$hexString   = bin2hex($randomBytes);
 
-		return 'tcms_' . $hexString;
+		return self::KEY_PREFIX . $hexString;
 	}
 
 	/**

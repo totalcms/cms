@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 
@@ -45,6 +46,13 @@ readonly class OAuthBearerMiddleware implements MiddlewareInterface
 	{
 		$auth = $request->getHeaderLine('Authorization');
 		if ($auth === '' || !str_starts_with(strtolower($auth), 'bearer ')) {
+			return $handler->handle($request);
+		}
+
+		// An API key sent as Bearer — the first way the API key docs show —
+		// is not a JWT. Leave it to ApiKeyAuthenticator, which refuses an
+		// unknown key with 401, so a bogus one never passes as anonymous.
+		if (str_starts_with(substr($auth, 7), ApiKeyCreator::KEY_PREFIX)) {
 			return $handler->handle($request);
 		}
 

@@ -22,15 +22,26 @@ readonly class DataDirectoryManager
 			throw new \RuntimeException('Failed to create directory: ' . $path);
 		}
 
-		$this->createSecurityFile($path);
+		$this->ensureSecurityFile($path);
 	}
 
 	/**
-	 * Create .htaccess file to deny direct web access.
+	 * Give the data directory a .htaccess that denies direct web access, unless
+	 * it already has one. An existing file is left as the operator wrote it.
+	 *
+	 * Written wherever the directory lives: inside the docroot it is what keeps
+	 * every object and .system/ (API keys among them) from being downloaded;
+	 * outside, Apache never reads it. Nginx ignores it either way.
+	 *
+	 * @return bool true when the file was written
 	 */
-	private function createSecurityFile(string $path): void
+	public function ensureSecurityFile(string $path): bool
 	{
-		$htaccessPath    = $path . '/.htaccess';
+		$htaccessPath = $path . '/.htaccess';
+		if (!is_dir($path) || file_exists($htaccessPath)) {
+			return false;
+		}
+
 		$htaccessContent = <<<'HTACCESS'
 # Deny direct access to all files and folders in tcms-data
 # This protects sensitive data including API keys, collections, and user data
@@ -43,7 +54,8 @@ readonly class DataDirectoryManager
 	Deny from all
 </IfModule>
 HTACCESS;
-		@file_put_contents($htaccessPath, $htaccessContent);
+
+		return @file_put_contents($htaccessPath, $htaccessContent) !== false;
 	}
 
 	/**

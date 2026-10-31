@@ -115,6 +115,21 @@ describe('DataDirectoryManager', function (): void {
 		expect($content)->toContain('Deny from all');
 	});
 
+	it('adds the .htaccess to a folder that has none', function (): void {
+		mkdir($this->testDir, 0755, true);
+
+		expect($this->manager->ensureSecurityFile($this->testDir))->toBeTrue()
+			->and((string)file_get_contents($this->testDir . '/.htaccess'))->toContain('Require all denied');
+	});
+
+	it('leaves an existing .htaccess as the operator wrote it', function (): void {
+		mkdir($this->testDir, 0755, true);
+		file_put_contents($this->testDir . '/.htaccess', "# mine\nRequire all denied\n");
+
+		expect($this->manager->ensureSecurityFile($this->testDir))->toBeFalse()
+			->and((string)file_get_contents($this->testDir . '/.htaccess'))->toBe("# mine\nRequire all denied\n");
+	});
+
 	it('throws exception when directory creation fails', function (): void {
 		// Skip this test - it triggers warnings that can't be suppressed in test environment
 		$this->markTestSkipped('Directory creation failure test triggers environment warnings');
