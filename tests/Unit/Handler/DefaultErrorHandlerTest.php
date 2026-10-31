@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use League\Flysystem\CorruptedPathDetected;
+use League\Flysystem\PathTraversalDetected;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -59,4 +61,26 @@ test('a write the storage layer refused is a 403, not a fault', function (): voi
 
 	expect($response->getStatusCode())->toBe(403)
 		->and($response->hasHeader('X-OPcache-Cleared'))->toBeFalse();
+});
+
+test('a path Flysystem refuses is a 400 and leaves OPcache alone', function (Throwable $exception): void {
+	// Control characters or `..` in a download/stream path: the request's
+	// fault, which answered 500 and recompiled the site (Schemathesis, 2026-10-30).
+	$this->opcache->expects($this->never())->method('clear');
+
+	$response = ($this->handler)($this->request, $exception, false, false);
+
+	expect($response->getStatusCode())->toBe(400)
+		->and($response->hasHeader('X-OPcache-Cleared'))->toBeFalse();
+})->with([
+	'control characters' => fn () => CorruptedPathDetected::forPath("a\x0cb.json"),
+	'dot-dot'            => fn () => PathTraversalDetected::forPath('../etc/passwd'),
+]);
+
+test('a validation error is a 400 and leaves OPcache alone', function (): void {
+	$this->opcache->expects($this->never())->method('clear');
+
+	$response = ($this->handler)($this->request, new InvalidArgumentException('Invalid collection: ..'), false, false);
+
+	expect($response->getStatusCode())->toBe(400);
 });

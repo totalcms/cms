@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use Odan\Session\Exception\SessionException;
 use Odan\Session\SessionManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -190,6 +191,42 @@ final class LazySessionStartMiddlewareTest extends TestCase
 			'admin sub-path' => ['/mysite/admin/icons/x.png', '/mysite/index.php'],
 			'not at the end' => ['/badges/pill.svg/edit'],
 		];
+	}
+
+	public function testASessionIdPhpRefusesStartsAFreshSession(): void
+	{
+		// A cookie holding `!!!!` or 300 characters made session_start() fail
+		// and every session page answer a blank 500 (security scan, 2026-10-30).
+		session_id('!!!!');
+		$calls = 0;
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->exactly(2))->method('start')->willReturnCallback(static function () use (&$calls): void {
+			if (++$calls === 1) {
+				throw new SessionException('Failed to start the session.');
+			}
+		});
+		$this->handler->method('handle')->willReturn($this->createMock(ResponseInterface::class));
+
+		try {
+			$this->middleware->process($this->createRequest('/admin'), $this->handler);
+			$this->assertMatchesRegularExpression('/^[a-zA-Z0-9,-]+$/', session_id());
+		} finally {
+			session_id('');
+		}
+	}
+
+	public function testASecondFailureStillThrows(): void
+	{
+		// Headers already sent fails the same way and a fresh id cannot help.
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->exactly(2))->method('start')->willThrowException(new SessionException('Failed to start the session.'));
+
+		try {
+			$this->expectException(SessionException::class);
+			$this->middleware->process($this->createRequest('/admin'), $this->handler);
+		} finally {
+			session_id('');
+		}
 	}
 
 	private function createRequest(string $path, string $scriptName = '/index.php'): ServerRequestInterface

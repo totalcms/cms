@@ -3,6 +3,8 @@
 namespace TotalCMS\Handler;
 
 use Fig\Http\Message\StatusCodeInterface;
+use League\Flysystem\CorruptedPathDetected;
+use League\Flysystem\PathTraversalDetected;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,6 +24,11 @@ use function Sentry\captureException;
 
 /**
  * Default Error Renderer.
+ *
+ * Mapping exceptions to status codes means knowing each exception type, so
+ * every one that earns its own status adds a dependency here.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 readonly class DefaultErrorHandler
 {
@@ -62,14 +69,15 @@ readonly class DefaultErrorHandler
 		bool $displayErrorDetails,
 		bool $logErrors,
 	): ResponseInterface {
+		$statusCode = $this->getHttpStatusCode($exception);
+
 		// Reset OPcache after a fault in the code so that, once the file is
-		// fixed, the fix takes effect immediately. An HTTP exception is not a
-		// fault: a routing 404 is the normal answer to a bot probing
-		// /wp-login.php, and resetting the pool-wide bytecode cache on every
-		// such hit would recompile the whole site each time. Nor is a write
-		// the storage layer refused the current actor.
-		$opcacheCleared = !$exception instanceof HttpException
-			&& !$exception instanceof AccessDeniedException
+		// fixed, the fix takes effect immediately. Only a 5xx is a fault: a
+		// routing 404 is the normal answer to a bot probing /wp-login.php, a
+		// 400 or 403 is the request's fault (a refused path, a refused write),
+		// and resetting the pool-wide bytecode cache on every such hit would
+		// recompile the whole site each time.
+		$opcacheCleared = $statusCode >= StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR
 			&& $this->opcacheService->isAvailable()
 			&& $this->opcacheService->clear();
 
@@ -99,9 +107,6 @@ readonly class DefaultErrorHandler
 		if (!$isExpected404) {
 			captureException($exception);
 		}
-
-		// Detect status code
-		$statusCode = $this->getHttpStatusCode($exception);
 
 		// Error message
 		$errorMessage = $this->getErrorMessage($exception, $statusCode, true);
@@ -200,6 +205,14 @@ readonly class DefaultErrorHandler
 
 		if ($exception instanceof \DomainException || $exception instanceof \InvalidArgumentException || $exception instanceof \UnexpectedValueException) {
 			// Bad request
+			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
+		}
+
+		if ($exception instanceof CorruptedPathDetected || $exception instanceof PathTraversalDetected) {
+			// Flysystem refused a path built from the request (control
+			// characters, `..`): the caller asked for a file that cannot exist.
+			// Every download, stream and object route answered these with a
+			// 500 (Schemathesis, 2026-10-30).
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
 		}
 

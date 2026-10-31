@@ -1,12 +1,14 @@
 <?php
 
 use Slim\App;
+use Slim\Factory\ServerRequestCreatorFactory;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
+use TotalCMS\Support\GlobalsRequestCreator;
 use TotalCMS\Support\PathResolver;
 
 // PHP built-in dev server (router-script mode, e.g.
@@ -74,5 +76,9 @@ $bootExtensions(static fn () => $extensionManager->discoverAndRegister(), 'disco
 
 // Boot extensions (register Twig items, schemas, events, etc.)
 $bootExtensions(static fn () => $extensionManager->bootAll(), 'bootAll()');
+
+// App::run() builds the request from globals; this creator survives a header
+// named only with digits, which slim/psr7 rejects with a blank 500.
+ServerRequestCreatorFactory::setServerRequestCreator(new GlobalsRequestCreator());
 
 return $app;

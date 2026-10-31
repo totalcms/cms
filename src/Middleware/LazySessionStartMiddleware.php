@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware;
 
+use Odan\Session\Exception\SessionException;
 use Odan\Session\SessionManagerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -41,13 +42,34 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 		}
 
 		if (!$this->session->isStarted()) {
-			$this->session->start();
+			$this->start();
 		}
 
 		$response = $handler->handle($request);
 		$this->session->save();
 
 		return $response;
+	}
+
+	/**
+	 * PHP refuses a session id that is too long or holds characters outside
+	 * `[a-zA-Z0-9,-]`: session_start() fails and odan throws, and every page
+	 * that starts a session answered a blank 500 until the visitor cleared the
+	 * cookie (security scan, 2026-10-30 — Schemathesis sent fuzzed cookies). A
+	 * cookie like that names no session we could have issued, so it is treated
+	 * like an expired one: a fresh id, and the response replaces the cookie.
+	 */
+	private function start(): void
+	{
+		try {
+			$this->session->start();
+		} catch (SessionException $e) {
+			if (session_status() === PHP_SESSION_ACTIVE) {
+				throw $e;
+			}
+			session_id((string)session_create_id());
+			$this->session->start();
+		}
 	}
 
 	/**
