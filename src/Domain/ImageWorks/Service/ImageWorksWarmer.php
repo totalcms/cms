@@ -14,11 +14,13 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
- * Pre-builds the ImageWorks cache for a collection: for every image and
- * gallery image, every variant `WarmVariants` asks for is checked with
+ * Pre-builds the ImageWorks cache for a collection: for every image, gallery
+ * image, video poster and named card or deck image, every variant
+ * `WarmVariants` asks for is checked with
  * `ImageGenerator::cacheState()` and, when missing, made through the same
  * `generate*()` entry point the public route uses, so both land on one file.
  *
@@ -28,7 +30,18 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  */
 final readonly class ImageWorksWarmer
 {
+	/**
+	 * Top-level fields the command warms when no property is named. A video
+	 * poster is warmed only when named: templates usually ask for one poster
+	 * URL, and a grid run would encode every width of it for nothing.
+	 */
 	private const FIELDS = ['image', 'gallery'];
+
+	/** Fields that hold nested images, addressed as `parent/child`. */
+	private const CONTAINERS = ['card' => 'card', 'deck' => 'deck', 'deckTable' => 'deck'];
+
+	/** Child fields a card or deck can hold that the route can serve. */
+	private const CHILD_FIELDS = ['image', 'video'];
 
 	public function __construct(
 		private ImageGenerator $generator,
@@ -40,28 +53,30 @@ final readonly class ImageWorksWarmer
 	}
 
 	/**
-	 * The collection's image and gallery properties, or the one named.
+	 * What to warm, keyed by the name the operator gave: the collection's
+	 * image and gallery properties, or the one named (a video too). A card or deck
+	 * image is named `parent/child` — `mycard/photo` is that card's photo,
+	 * `mydeck/photo` the photo of every deck item. A video child warms its
+	 * poster.
 	 *
-	 * @return array<string,string> name => 'image'|'gallery'
+	 * @return array<string,array{root:string,field:string,child:?string,childField:?string}>
 	 *
 	 * @throws InvalidArgumentException
 	 */
 	public function properties(string $collection, ?string $property): array
 	{
-		$found = [];
-		foreach ($this->schemaFetcher->fetchSchemaForCollection($collection)->properties as $name => $definition) {
-			$field = is_array($definition) ? ($definition['field'] ?? null) : null;
-			if (in_array($field, self::FIELDS, true)) {
-				$found[(string)$name] = $field;
-			}
-		}
+		$definitions = $this->schemaFetcher->fetchSchemaForCollection($collection)->properties;
 
 		if ($property !== null) {
-			if (!isset($found[$property])) {
-				throw new InvalidArgumentException("Property {$property} in collection {$collection} is not an image or gallery field.");
-			}
+			return [$property => $this->target($collection, $definitions, $property)];
+		}
 
-			return [$property => $found[$property]];
+		$found = [];
+		foreach ($definitions as $name => $definition) {
+			$field = is_array($definition) ? ($definition['field'] ?? null) : null;
+			if (in_array($field, self::FIELDS, true)) {
+				$found[(string)$name] = ['root' => (string)$name, 'field' => $field, 'child' => null, 'childField' => null];
+			}
 		}
 
 		if ($found === []) {
@@ -72,12 +87,103 @@ final readonly class ImageWorksWarmer
 	}
 
 	/**
+	 * One named target, checked against the schema.
+	 *
+	 * @param array<int|string,mixed> $definitions
+	 *
+	 * @return array{root:string,field:string,child:?string,childField:?string}
+	 *
+	 * @throws InvalidArgumentException
+	 */
+	private function target(string $collection, array $definitions, string $property): array
+	{
+		$parts = explode('/', $property);
+		if (count($parts) > 2 || in_array('', $parts, true)) {
+			throw new InvalidArgumentException("Property {$property} is not a valid name. Use a property, or parent/child for an image in a card or deck.");
+		}
+		[$root, $child] = [$parts[0], $parts[1] ?? null];
+
+		if (!array_key_exists($root, $definitions)) {
+			throw new InvalidArgumentException("Property {$root} is not in collection {$collection}.");
+		}
+		$definition = $definitions[$root];
+		$field      = is_array($definition) && is_string($definition['field'] ?? null) ? $definition['field'] : '';
+
+		if ($field === 'video') {
+			if (!in_array($child, [null, 'poster'], true)) {
+				throw new InvalidArgumentException("{$root} is a video. Name it as {$root} or {$root}/poster to warm its poster.");
+			}
+
+			return ['root' => $root, 'field' => 'video', 'child' => null, 'childField' => null];
+		}
+
+		if (in_array($field, self::FIELDS, true)) {
+			if ($child !== null) {
+				throw new InvalidArgumentException("{$root} has no fields inside it. Name it alone: {$root}.");
+			}
+
+			return ['root' => $root, 'field' => $field, 'child' => null, 'childField' => null];
+		}
+
+		if (isset(self::CONTAINERS[$field])) {
+			/** @var array<string,mixed> $definition */
+			$children = $this->imageChildren($root, $definition);
+			if ($child === null) {
+				$names = implode(', ', array_map(static fn (string $c): string => "{$root}/{$c}", array_keys($children)));
+
+				throw new InvalidArgumentException("{$root} is a {$field}. Name the image inside it as parent/child" . ($names === '' ? ', but it has no image or video fields.' : ": {$names}."));
+			}
+			if (!isset($children[$child])) {
+				throw new InvalidArgumentException("{$child} is not an image or video field in {$root}.");
+			}
+
+			return ['root' => $root, 'field' => self::CONTAINERS[$field], 'child' => $child, 'childField' => $children[$child]];
+		}
+
+		throw new InvalidArgumentException("Property {$property} in collection {$collection} is not an image, gallery, video, card or deck field.");
+	}
+
+	/**
+	 * The image and video fields of the schema a card or deck refers to.
+	 *
+	 * @param array<string,mixed> $definition
+	 *
+	 * @return array<string,string> name => field
+	 *
+	 * @throws InvalidArgumentException
+	 */
+	private function imageChildren(string $root, array $definition): array
+	{
+		$ref = PropertyDefinition::extractSchemaRef($definition);
+		if ($ref === null || $ref === '') {
+			return [];
+		}
+
+		$schemaId = SchemaFetcher::extractSchemaId($ref);
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+		} catch (\Throwable) {
+			throw new InvalidArgumentException("{$root} uses the schema {$schemaId}, which could not be read.");
+		}
+
+		$children = [];
+		foreach ($schema->properties as $name => $child) {
+			$field = is_array($child) ? ($child['field'] ?? null) : null;
+			if (in_array($field, self::CHILD_FIELDS, true)) {
+				$children[(string)$name] = $field;
+			}
+		}
+
+		return $children;
+	}
+
+	/**
 	 * The first property with a watermark this edition can't apply, or null.
 	 * The route strips such a watermark, so warming it would only fill the
 	 * cache with files the site never serves. Object overrides count too.
 	 *
-	 * @param array<string,string> $properties from properties()
-	 * @param list<string>         $ids        only these objects; [] for the whole collection
+	 * @param array<string,array{root:string,field:string,child:?string,childField:?string}> $properties from properties()
+	 * @param list<string> $ids only these objects; [] for the whole collection
 	 */
 	public function blockedWatermark(string $collection, array $properties, array $ids = []): ?string
 	{
@@ -88,9 +194,10 @@ final readonly class ImageWorksWarmer
 		}
 
 		$objects = ['', ...$this->objectIds($collection, $ids, new WarmReport())];
-		foreach (array_keys($properties) as $name) {
+		// A nested image takes the watermark of the property it lives in.
+		foreach ($properties as $name => $target) {
 			foreach ($objects as $id) {
-				$mark = $this->generator->watermarkSettings($collection, $name, $id);
+				$mark = $this->generator->watermarkSettings($collection, $target['root'], $id);
 				if ((!$image && !empty($mark['mark'])) || (!$text && !empty($mark['marktext']))) {
 					return $name;
 				}
@@ -133,12 +240,14 @@ final readonly class ImageWorksWarmer
 			$report->objects++;
 
 			foreach ($images as $name => $list) {
-				$field = $properties[$name];
-				foreach ($list as $image) {
+				$root   = $properties[$name]['root'];
+				$nested = in_array($properties[$name]['field'], ['card', 'deck', 'video'], true);
+				foreach ($list as ['image' => $image, 'path' => $path]) {
 					$report->images++;
-					$galleryName = $field === 'gallery' ? pathinfo((string)$image['name'], PATHINFO_FILENAME) : null;
+					// A nested image's failure row names where it lives: mydeck/item-3/photo.
+					$where = $nested ? "{$root}/{$path}" : $root;
 					foreach ($variants->forImage($image) as $params) {
-						$this->warmVariant($report, $collection, $id, $name, $galleryName, (string)$image['name'], $params, $dryRun);
+						$this->warmVariant($report, $collection, $id, $root, $path, $where, (string)$image['name'], $params, $dryRun);
 					}
 
 					if ($onImage !== null) {
@@ -189,43 +298,74 @@ final readonly class ImageWorksWarmer
 	/**
 	 * One object's images, per property. Throws when the object cannot be read.
 	 *
-	 * @param array<string,string> $properties
+	 * @param array<string,array{root:string,field:string,child:?string,childField:?string}> $properties
 	 *
-	 * @return array<string,list<array<string,mixed>>>
+	 * @return array<string,list<array{image:array<string,mixed>,path:?string}>>
 	 */
 	private function objectImages(string $collection, string $id, array $properties): array
 	{
 		$object = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
 
 		$images = [];
-		foreach ($properties as $name => $field) {
-			$images[$name] = $this->images($object, $name, $field);
+		foreach ($properties as $name => $target) {
+			$images[$name] = $this->images($object, $target);
 		}
 
 		return $images;
 	}
 
 	/**
-	 * The raw image arrays one property holds: the image itself, or each
-	 * gallery image. Entries without a `name` are skipped, and so is a gallery
-	 * image whose basename an earlier one has: the route looks images up by
-	 * name without extension and serves the first match.
+	 * The raw images one target holds, each with the `{path}` the route
+	 * addresses it by: null for an image property, the name without
+	 * extension for a gallery image, `poster` for a video, and the path
+	 * through the card or deck for a nested image (`photo`, `item-3/photo`,
+	 * `item-3/promo/poster`). Entries without a `name` are skipped, and so is
+	 * a gallery image whose basename an earlier one has: the route looks
+	 * images up by name without extension and serves the first match.
 	 *
-	 * @return list<array<string,mixed>>
+	 * @param array{root:string,field:string,child:?string,childField:?string} $target
+	 *
+	 * @return list<array{image:array<string,mixed>,path:?string}>
 	 */
-	private function images(ObjectData $object, string $property, string $field): array
+	private function images(ObjectData $object, array $target): array
 	{
-		$value = $object->properties->get($property);
+		$value = $object->properties->get($target['root']);
 		$raw   = $value instanceof PropertyData ? $value->transform() : null;
 		if (!is_array($raw) || $raw === []) {
 			return [];
 		}
 
-		$list = $field === 'gallery' ? $raw : [$raw];
+		$found = match ($target['field']) {
+			'gallery' => $this->galleryImages($raw),
+			'video'   => [[$raw['poster'] ?? null, 'poster']],
+			'card'    => [$this->childImage($raw, (string)$target['child'], $target['childField'], '')],
+			'deck'    => array_map(
+				fn (int|string $item): array => $this->childImage(is_array($raw[$item]) ? $raw[$item] : [], (string)$target['child'], $target['childField'], $item . '/'),
+				array_keys(array_filter($raw, is_array(...))),
+			),
+			default   => [[$raw, null]],
+		};
 
 		$images = [];
-		$seen   = [];
-		foreach ($list as $image) {
+		foreach ($found as [$image, $path]) {
+			if (is_array($image) && is_string($image['name'] ?? null) && $image['name'] !== '') {
+				$images[] = ['image' => $image, 'path' => $path];
+			}
+		}
+
+		return $images;
+	}
+
+	/**
+	 * @param array<int|string,mixed> $raw
+	 *
+	 * @return list<array{mixed,string}>
+	 */
+	private function galleryImages(array $raw): array
+	{
+		$found = [];
+		$seen  = [];
+		foreach ($raw as $image) {
 			if (!is_array($image) || !is_string($image['name'] ?? null) || $image['name'] === '') {
 				continue;
 			}
@@ -234,34 +374,52 @@ final readonly class ImageWorksWarmer
 				continue;
 			}
 			$seen[$basename] = true;
-			$images[]        = $image;
+			$found[]         = [$image, $basename];
 		}
 
-		return $images;
+		return $found;
+	}
+
+	/**
+	 * One card's (or deck item's) child image and its route path. A video
+	 * child yields its poster.
+	 *
+	 * @param array<int|string,mixed> $container
+	 *
+	 * @return array{mixed,string}
+	 */
+	private function childImage(array $container, string $child, ?string $childField, string $prefix): array
+	{
+		$value = $container[$child] ?? null;
+		if ($childField === 'video') {
+			return [is_array($value) ? ($value['poster'] ?? null) : null, "{$prefix}{$child}/poster"];
+		}
+
+		return [$value, $prefix . $child];
 	}
 
 	/** @param array<string,string|int> $params */
-	private function warmVariant(WarmReport $report, string $collection, string $id, string $property, ?string $galleryName, string $imageName, array $params, bool $dryRun): void
+	private function warmVariant(WarmReport $report, string $collection, string $id, string $property, ?string $path, string $where, string $imageName, array $params, bool $dryRun): void
 	{
 		try {
-			$state = $this->generator->cacheState($collection, $id, $property, $galleryName, $params);
+			$state = $this->generator->cacheState($collection, $id, $property, $path, $params);
 			match ($state) {
 				CacheState::Cached      => $report->cached++,
 				CacheState::Original    => $report->original++,
 				CacheState::Uncacheable => $report->uncacheable++,
-				CacheState::Missing     => $dryRun ? $report->wouldMake++ : $this->make($report, $collection, $id, $property, $galleryName, $params),
+				CacheState::Missing     => $dryRun ? $report->wouldMake++ : $this->make($report, $collection, $id, $property, $path, $params),
 			};
 		} catch (\Throwable $e) {
-			$report->fail($collection, $id, $property, $imageName, http_build_query($params), $e->getMessage());
+			$report->fail($collection, $id, $where, $imageName, http_build_query($params), $e->getMessage());
 		}
 	}
 
 	/** @param array<string,string|int> $params */
-	private function make(WarmReport $report, string $collection, string $id, string $property, ?string $galleryName, array $params): int
+	private function make(WarmReport $report, string $collection, string $id, string $property, ?string $path, array $params): int
 	{
-		$galleryName === null
+		$path === null
 			? $this->generator->generateImage($collection, $id, $property, $params)
-			: $this->generator->generateGalleryImage($collection, $id, $property, $galleryName, $params);
+			: $this->generator->generateGalleryImage($collection, $id, $property, $path, $params);
 
 		return ++$report->made;
 	}

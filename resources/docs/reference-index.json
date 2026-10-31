@@ -5110,7 +5110,7 @@
                 }
             ],
             "examples": [
-                "tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native\ntcms imageworks:warm blog --picture --dry-run\ntcms imageworks:warm blog --params=\"w=800&h=600&fit=crop\" --preset=medium\ntcms imageworks:warm blog --url=\"https://example.com/imageworks/blog/a/image.webp?w=800\"\ntcms imageworks:warm blog --picture --id=a,b,c"
+                "tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native\ntcms imageworks:warm blog --picture --dry-run\ntcms imageworks:warm blog --params=\"w=800&h=600&fit=crop\" --preset=medium\ntcms imageworks:warm blog --url=\"https://example.com/imageworks/blog/a/image.webp?w=800\"\ntcms imageworks:warm blog --picture --id=a,b,c\ntcms imageworks:warm products mydeck/photo --picture"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

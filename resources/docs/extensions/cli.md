@@ -841,12 +841,13 @@ tcms imageworks:warm blog --picture --dry-run
 tcms imageworks:warm blog --params="w=800&h=600&fit=crop" --preset=medium
 tcms imageworks:warm blog --url="https://example.com/imageworks/blog/a/image.webp?w=800"
 tcms imageworks:warm blog --picture --id=a,b,c
+tcms imageworks:warm products mydeck/photo --picture
 ```
 
 | Argument / Option | Description |
 |-------------------|-------------|
 | `collection` | Collection ID (required) |
-| `property` | One image or gallery property (default: all of them) |
+| `property` | One image, gallery or video property, or `parent/child` for an image in a card or deck: `mycard/photo`, or `mydeck/photo` for every deck item. A video gives its poster. Default: every image and gallery property; videos, cards and decks must be named |
 | `--widths` | Comma list of widths. Makes every width in every format |
 | `--formats` | Comma list of formats for the grid: `avif`, `webp`, `native`, and so on. Defaults to `native` with `--widths`. Needs `--widths` or `--picture` |
 | `--picture` | The grid `cms.render.picture()` uses by default (the `imageworks.picture` setting) plus `native` |

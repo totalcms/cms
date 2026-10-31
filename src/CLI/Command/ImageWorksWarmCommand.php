@@ -34,7 +34,7 @@ class ImageWorksWarmCommand extends BaseCommand
 			->setName('imageworks:warm')
 			->setDescription('Pre-build the ImageWorks cache for a collection')
 			->addArgument('collection', InputArgument::REQUIRED, 'Collection ID')
-			->addArgument('property', InputArgument::OPTIONAL, 'Image or gallery property (default: all of them)')
+			->addArgument('property', InputArgument::OPTIONAL, 'Image, gallery or video property, or parent/child for an image in a card or deck (default: every image, gallery and video)')
 			->addOption('widths', null, InputOption::VALUE_REQUIRED, 'Comma list of widths, e.g. 480,768,1024')
 			->addOption('formats', null, InputOption::VALUE_REQUIRED, 'Comma list of formats for the widths grid: avif, webp, native, ...')
 			->addOption('picture', null, InputOption::VALUE_NONE, 'Use the widths and formats cms.render.picture() uses by default, plus native')

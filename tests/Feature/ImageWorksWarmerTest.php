@@ -238,8 +238,8 @@ test('the report serializes its counts and failures', function (): void {
 });
 
 test('properties lists image and gallery fields', function (): void {
-	expect(($this->warmer)()->properties('snaps', null))->toBe(['photo' => 'image', 'pics' => 'gallery'])
-		->and(($this->warmer)()->properties('snaps', 'pics'))->toBe(['pics' => 'gallery']);
+	expect(array_map(static fn (array $t): string => $t['field'], ($this->warmer)()->properties('snaps', null)))->toBe(['photo' => 'image', 'pics' => 'gallery'])
+		->and(($this->warmer)()->properties('snaps', 'pics'))->toBe(['pics' => ['root' => 'pics', 'field' => 'gallery', 'child' => null, 'childField' => null]]);
 });
 
 test('no image properties is an error', function (): void {
@@ -255,4 +255,4 @@ test('no image properties is an error', function (): void {
 
 test('a non-image property is an error', function (): void {
 	($this->warmer)()->properties('snaps', 'title');
-})->throws(InvalidArgumentException::class, 'Property title in collection snaps is not an image or gallery field.');
+})->throws(InvalidArgumentException::class, 'Property title in collection snaps is not an image, gallery, video, card or deck field.');

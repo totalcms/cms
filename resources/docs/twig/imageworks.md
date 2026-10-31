@@ -362,6 +362,23 @@ tcms imageworks:warm blog image --widths=480,768,1024 --formats=avif,webp,native
 
 You must say which variants to make. A plain run never starts thousands of AVIF encodes by surprise. Give at least one of `--widths`, `--picture`, `--params`, `--preset` or `--url`. They combine and repeat.
 
+### Choosing images
+
+Without a property, the command warms every `image` and `gallery` property in the collection. Name one property to warm only that one.
+
+A video's poster is warmed only when you name the video: `tcms imageworks:warm blog myvideo --params="w=1200"`. Templates usually ask for one poster size, so give the params your template uses rather than a whole grid.
+
+An image inside a card or deck is named `parent/child`. Give both parts:
+
+```bash
+tcms imageworks:warm products mycard/photo --picture
+tcms imageworks:warm products mydeck/photo --picture
+```
+
+`mycard/photo` is the photo in that card. `mydeck/photo` is the photo in every item of the deck. If the child is a video field, its poster is warmed. A plain run does not reach into cards and decks, so name each one you want.
+
+An image inside a card or deck uses the watermark set on the card or deck, the same as on your pages.
+
 ### Choosing variants
 
 Match what your templates ask for. A file the page never requests is wasted work.
@@ -408,7 +425,7 @@ An image that has both an image watermark and a text watermark is made in two pa
 
 A property with a watermark needs an edition that includes watermarks. If the command can't confirm that edition from this machine, it stops and warms nothing. Run `tcms check` to see the license the command reads.
 
-The command covers `image` and `gallery` properties. Images inside cards and decks, and video posters, are not warmed.
+A card or deck image must be named as `parent/child`. Naming only the card or deck is an error, and the error lists the images inside it.
 
 ## Caching
 

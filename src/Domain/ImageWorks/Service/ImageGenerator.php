@@ -61,19 +61,20 @@ class ImageGenerator
 
 	/**
 	 * Whether the file the public route would serve for these params is
-	 * already cached. `$galleryName` is null for an image property, or the
-	 * gallery image's name without its extension (what the route passes);
-	 * `$params` are shaped as the route shapes them (`fm` included).
+	 * already cached. `$path` is null for an image property, or what the
+	 * route passes as `{path}`: a gallery image's name without its extension,
+	 * or a nested image's path (`photo`, `item-3/photo`, `poster`). `$params`
+	 * are shaped as the route shapes them (`fm` included).
 	 *
 	 * @param array<string,mixed> $params
 	 */
-	public function cacheState(string $collection, string $id, string $property, ?string $galleryName, array $params): CacheState
+	public function cacheState(string $collection, string $id, string $property, ?string $path, array $params): CacheState
 	{
-		$imageData = $galleryName === null
-			? $this->fetchImage($collection, $id, $property)
-			: $this->galleryImage($this->fetchGallery($collection, $id, $property), $galleryName);
+		[$imageData, $subpath] = $path === null
+			? [$this->fetchImage($collection, $id, $property), null]
+			: $this->pathImage($collection, $id, $property, $path);
 
-		$this->prepare($collection, $id, $property, null, $params, $imageData);
+		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
 
 		if ($this->params === []) {
 			return CacheState::Original;
@@ -101,17 +102,6 @@ class ImageGenerator
 		return $imageData;
 	}
 
-	private function fetchGallery(string $collection, string $id, string $property): GalleryData
-	{
-		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
-
-		if (!$galleryData instanceof GalleryData) {
-			throw new \UnexpectedValueException('Invalid gallery property found');
-		}
-
-		return $galleryData;
-	}
-
 	/**
 	 * Set the per-render state every entry point shares: where the source
 	 * lives and the cleaned-up params.
@@ -136,38 +126,47 @@ class ImageGenerator
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
+		[$imageData, $subpath] = $this->pathImage($collection, $id, $property, $path);
+		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
+
+		return $this->responseFromImageData($imageData, $request);
+	}
+
+	/**
+	 * The image the `/{prop}/{path:.+}.{format}` route addresses, and the
+	 * subpath its file lives under. One URL shape serves four property types,
+	 * so dispatch on the resolved data shape:
+	 *   - CardData    → `obj[prop][child]`         (path is `child`)
+	 *   - DeckData    → `obj[prop][itemId][child]` (path is `itemId/child`)
+	 *   - VideoData   → `obj[prop][poster]`        (path is always `poster`)
+	 *   - GalleryData → the gallery image named `path` (no subpath)
+	 *
+	 * @return array{ImageData, ?string}
+	 */
+	private function pathImage(string $collection, string $id, string $property, string $path): array
+	{
 		$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
-		// Same URL shape — `/{prop}/{path:.+}.{format}` — serves three property
-		// types. Dispatch on the resolved data shape:
-		//   - CardData  → `obj[prop][child]`     (path is single segment)
-		//   - DeckData  → `obj[prop][itemId][child]` (path is `itemId/child`)
-		//   - VideoData → `obj[prop][poster]`    (path is always `poster`)
-		//   - GalleryData → existing gallery image lookup (path is the filename)
 		if ($propertyData instanceof CardData) {
-			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->card, $params, $request);
+			return [$this->nestedImage($propertyData->card, $property, $path), $path];
 		}
 
 		if ($propertyData instanceof DeckData) {
-			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->deck, $params, $request);
+			return [$this->nestedImage($propertyData->deck, $property, $path), $path];
 		}
 
 		// A video's one nested image is its typed `poster` — hand it over in the
 		// same `[childKey => imageRaw]` shape a card exposes so the lookup below
 		// is shared. Any other path under a video is simply not found.
 		if ($propertyData instanceof VideoData) {
-			return $this->generateNestedImage($collection, $id, $property, $path, ['poster' => $propertyData->poster], $params, $request);
+			return [$this->nestedImage(['poster' => $propertyData->poster], $property, $path), $path];
 		}
 
 		if (!$propertyData instanceof GalleryData) {
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
 
-		// Gallery uses single-segment `path` as the image name (or special token).
-		$imageData = $this->galleryImage($propertyData, $path);
-		$this->prepare($collection, $id, $property, null, $params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
+		return [$this->galleryImage($propertyData, $path), null];
 	}
 
 	/** Pick a gallery image by name (without extension) or by first/last/random/featured. */
@@ -193,25 +192,17 @@ class ImageGenerator
 	}
 
 	/**
-	 * Serve an image stored as a child of a card or deck field. The `$path` is
-	 * a slash-separated path through the parent property's nested data:
+	 * An image stored as a child of a card or deck field. The `$path` is a
+	 * slash-separated path through the parent property's nested data:
 	 *   - Card child:   `path = "childKey"`        → `parentRaw[childKey]`
 	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`.
 	 *
 	 * The disk file lives at `coll/id/property/<path>/<filename>`.
 	 *
 	 * @param array<int|string,mixed> $parentRaw
-	 * @param array<string,mixed>     $params
 	 */
-	private function generateNestedImage(
-		string $collection,
-		string $id,
-		string $property,
-		string $path,
-		array $parentRaw,
-		array $params,
-		?ServerRequestInterface $request = null,
-	): ResponseInterface {
+	private function nestedImage(array $parentRaw, string $property, string $path): ImageData
+	{
 		$segments = $path === '' ? [] : explode('/', $path);
 		$cursor   = $parentRaw;
 		foreach ($segments as $segment) {
@@ -224,10 +215,7 @@ class ImageGenerator
 			throw new \UnexpectedValueException("Nested image '{$path}' has no file");
 		}
 
-		$imageData = new ImageData($cursor);
-		$this->prepare($collection, $id, $property, $path, $params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
+		return new ImageData($cursor);
 	}
 
 	/** @param array<string,mixed> $params */
