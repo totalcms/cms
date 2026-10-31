@@ -13,8 +13,8 @@ Work through the ones that match the symptom. Each has caught real "bugs".
 |---|---|---|
 | Behavior contradicts this skill | This skill copy is older than the CMS | `vendor/bin/tcms skill:install --check` |
 | A template or schema edit has no effect | Stale cache | `vendor/bin/tcms cache:clear`; restart `php -S` after adding page records |
-| An object is missing from admin tables, queries or the sitemap | JSON written straight into `tcms-data/` (no index entry) | `vendor/bin/tcms repair:index <collection>`, then write through the CLI from now on |
-| A whole collection errors or shows nothing | Invalid JSON in a hand-edited file | Validate the files with `jq`, fix, then `repair:index` |
+| An object is missing from admin tables, queries or the sitemap | JSON written straight into `tcms-data/` (no index entry) | `vendor/bin/tcms repair:index <collection> --check` to see the drift, then `repair:index <collection>`; write through the CLI from now on |
+| A whole collection errors or shows nothing | Invalid JSON in a hand-edited file | `vendor/bin/tcms repair:index <collection> --check` names the unreadable files; fix them, then `repair:index` |
 | Imports fail with `The required properties (id) are missing` | The schema lacks an `id` property | Add it; `vendor/bin/tcms schema:lint <id> --strict` |
 | Deck import rejected | Deck sent as an array, or a key with a hyphen | Decks are dictionaries keyed by item `id`, letters/numbers/underscores only |
 | Every save fails with 400 "installation has been corrupted" | Files inside the CMS were modified | `vendor/bin/tcms check` (Integrity). Undo the edit; never change CMS files |

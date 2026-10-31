@@ -944,6 +944,7 @@ Rebuild a collection's `.index.json` and `totalObjects` count from the objects o
 ```bash
 tcms repair:index blog
 tcms repair:index --all
+tcms repair:index blog --check
 ```
 
 | Argument | Required | Description |
@@ -953,6 +954,54 @@ tcms repair:index --all
 | Option | Description |
 |--------|-------------|
 | `--all` | Rebuild the index for every collection |
+| `--check` | Only report how the index and the object files disagree; change nothing |
+
+#### Checking before you rebuild
+
+A rebuild makes the index match the files, so it also hides what was wrong. `--check` reports instead, and changes nothing:
+
+- object files that cannot be read (invalid JSON, broken front matter)
+- ids in the index with no object file
+- object files the index does not list
+- an index file that is missing or unreadable
+- a collection object count that does not match the files
+
+It reads every object, so it takes about as long as a rebuild. It exits with `1` when it finds a problem and `0` when the collection is consistent, so a script can gate on it. Combine with `--all` to check every collection and with `--json` for machine-readable output:
+
+```bash
+tcms repair:index blog --check
+```
+
+```
+'blog': 2 problem(s) — 41 object file(s), 42 in the index:
+  In the index but no file: old-post
+  The collection's object count says 42; there are 41 on disk
+Nothing was changed. Run without --check to rebuild the index from the files.
+```
+
+**JSON output** (`--check --json`):
+```json
+{
+    "status": "problems",
+    "collections": {
+        "blog": {
+            "objects": 41,
+            "indexed": 42,
+            "indexReadable": true,
+            "recordedCount": 42,
+            "unreadable": [],
+            "missingFiles": ["old-post"],
+            "notIndexed": [],
+            "problems": [
+                "In the index but no file: old-post",
+                "The collection's object count says 42; there are 41 on disk"
+            ]
+        }
+    }
+}
+```
+
+`indexed` is `null` when there is no readable index file; `recordedCount` is `null` when the count was never calculated.
 
 ---
 

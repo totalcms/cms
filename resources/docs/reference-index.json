@@ -5190,10 +5190,16 @@
                 {
                     "name": "--all",
                     "description": "Rebuild the index for every collection"
+                },
+                {
+                    "name": "--check",
+                    "description": "Only report how the index and the object files disagree; change nothing"
                 }
             ],
             "examples": [
-                "tcms repair:index blog\ntcms repair:index --all"
+                "tcms repair:index blog\ntcms repair:index --all\ntcms repair:index blog --check",
+                "tcms repair:index blog --check",
+                "'blog': 2 problem(s) \u2014 41 object file(s), 42 in the index:\n  In the index but no file: old-post\n  The collection's object count says 42; there are 41 on disk\nNothing was changed. Run without --check to rebuild the index from the files."
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

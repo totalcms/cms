@@ -121,7 +121,7 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `oauth:gc` — prune expired grants and stale self-registered clients
 
 ### Maintenance
-- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk (`--all` for every collection)
+- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk (`--all` for every collection); `--check` only reports unreadable files, index/file drift and a wrong count, changes nothing, exits 1 on a problem
 - `repair:files` — rebuild blanked file/image/gallery metadata from files on disk
 - `search:reindex [collection]` — re-index against the active search provider (`--all` site-wide)
 - `jobs:process` / `automations:process` — process queued jobs / fire due automations

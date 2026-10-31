@@ -83,6 +83,16 @@ class IndexRepository extends StorageRepository
 	}
 
 	/**
+	 * The index as it is on disk, bypassing every cache — for checking it
+	 * against the object files. Null when there is no index file; throws
+	 * CorruptedStorageFileException when the file is not valid JSON.
+	 */
+	public function fetchIndexFromDisk(string $collection): ?IndexData
+	{
+		return $this->fetchAndDeserialize($this->buildIndexPath($collection), IndexData::class);
+	}
+
+	/**
 	 * Get an array of object IDs in.
 	 *
 	 * @return array<string>
