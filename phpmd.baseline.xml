@@ -105,9 +105,9 @@
   <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Mailer/Data/MailerData.php" method="__construct"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mailer/Service/BulkMailerService.php" method="queueBulkSend"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mailer/Service/BulkMailerService.php" method="queueBulkSend"/>
-  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
-  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mailer/Service/EmailSender.php" method="transmit"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="transmit"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="transmit"/>
   <violation rule="PHPMD\Rule\UnusedLocalVariable" file="src/Domain/Mcp/Prompt/Service/PromptRegistrar.php"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Service/McpRequestAuthorizer.php" method="authorize"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Mcp/Service/McpServerFactory.php"/>

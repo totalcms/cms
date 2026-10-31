@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mailer\Service;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -23,6 +24,7 @@ readonly class EmailSender
 
 	public function __construct(
 		private Config $config,
+		private MailActivity $activity,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::EmailSender);
@@ -31,10 +33,27 @@ readonly class EmailSender
 	/**
 	 * Send an email using PHPMailer.
 	 *
+	 * Each send is recorded in the activity log, unless the caller records it
+	 * itself (EmailService, which knows the mailer template) or not at all
+	 * (bulk sends, which have their own Send History).
+	 *
 	 * @param array<string,mixed> $emailData
 	 * @param int $timeout SMTP connection timeout in seconds (default: 30)
 	 */
-	public function send(array $emailData, int $timeout = 30): OperationResult
+	public function send(array $emailData, int $timeout = 30, bool $recordActivity = true): OperationResult
+	{
+		$result = $this->transmit($emailData, $timeout);
+		if ($recordActivity) {
+			$this->activity->sent($emailData, $result);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * @param array<string,mixed> $emailData
+	 */
+	private function transmit(array $emailData, int $timeout): OperationResult
 	{
 		$mail = new PHPMailer(true);
 

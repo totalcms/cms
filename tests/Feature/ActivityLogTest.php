@@ -6,6 +6,7 @@ use TotalCMS\Domain\Activity\Data\ActivityEntry;
 use TotalCMS\Domain\Activity\Data\ActivityFilter;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
@@ -18,6 +19,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postUpload;
@@ -169,6 +171,69 @@ describe('MCP tool calls', function (): void {
 		$this->config->activity = ['mcpAnonymous' => true];
 		$activity->record('docs_search', ['query' => 'twig'], true, 3);
 		expect(activityRows()[0]->detail['arguments'] ?? null)->toBe(['query' => 'twig']);
+	});
+});
+
+describe('email', function (): void {
+	it('records a send with its template, subject and recipient, never its body', function (): void {
+		$this->actors->set(Actor::anonymous());
+
+		$this->app->getContainer()->get(MailActivity::class)->sent([
+			'to'       => 'jane@example.com',
+			'subject'  => 'New message from the contact form',
+			'bodyHtml' => '<p>My phone number is 555-0100</p>',
+			'cc'       => ['office@example.com', ''],
+			'bcc'      => [],
+		], OperationResult::success('Email sent successfully'), 'contact-form');
+
+		$row = activityRows()[0];
+
+		expect($row->event)->toBe(MailActivity::SENT)
+			->and($row->level)->toBe(ActivityEntry::LEVEL_INFO)
+			->and($row->actorKind)->toBe('anonymous')
+			->and($row->collection)->toBe('mailer')
+			->and($row->objectId)->toBe('contact-form')
+			->and($row->summary)->toBe('New message from the contact form')
+			->and($row->detail)->toBe(['to' => 'jane@example.com', 'cc' => 1])
+			->and(json_encode($row->detail))->not->toContain('555-0100');
+	});
+
+	it('marks a failed send as a warning with the reason', function (): void {
+		$this->app->getContainer()->get(MailActivity::class)->sent(
+			['to' => 'jane@example.com', 'subject' => 'Password Reset Request'],
+			OperationResult::failure('SMTP connect() failed.', 'SMTP connect() failed.'),
+		);
+
+		$row = activityRows()[0];
+
+		expect($row->level)->toBe(ActivityEntry::LEVEL_WARNING)
+			->and($row->collection)->toBe('')
+			->and($row->summary)->toBe('Password Reset Request: SMTP connect() failed.')
+			->and($row->detail['error'] ?? null)->toBe('SMTP connect() failed.');
+	});
+
+	it('records a refusal before the email was built', function (): void {
+		$this->app->getContainer()->get(MailActivity::class)->sent([], OperationResult::failure('Email template is not active'), 'newsletter');
+
+		$row = activityRows()[0];
+
+		expect($row->level)->toBe(ActivityEntry::LEVEL_WARNING)
+			->and($row->objectId)->toBe('newsletter')
+			->and($row->summary)->toBe('Email template is not active');
+	});
+
+	it('records a bulk send once, when it is queued', function (): void {
+		$this->actors->set(new Actor(ActorKind::Admin, 'joe', 'auth'));
+
+		$this->app->getContainer()->get(MailActivity::class)->bulkQueued('newsletter', 'members', 240, null);
+
+		$row = activityRows()[0];
+
+		expect($row->event)->toBe(MailActivity::BULK_QUEUED)
+			->and($row->userId)->toBe('joe')
+			->and($row->objectId)->toBe('newsletter')
+			->and($row->summary)->toBe('240 emails from members')
+			->and($row->detail)->toBe(['recipients' => 'members']);
 	});
 });
 

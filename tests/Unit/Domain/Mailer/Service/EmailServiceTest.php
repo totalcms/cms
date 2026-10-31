@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mailer\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
@@ -25,6 +26,7 @@ final class EmailServiceTest extends TestCase
 	private MockObject $twigEngine;
 	private MockObject $config;
 	private MockObject $editionFeatures;
+	private MockObject $activity;
 	private MockObject $logger;
 
 	protected function setUp(): void
@@ -34,6 +36,7 @@ final class EmailServiceTest extends TestCase
 		$this->twigEngine      = $this->createMock(TwigEngine::class);
 		$this->config          = $this->createMock(Config::class);
 		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
+		$this->activity        = $this->createMock(MailActivity::class);
 		// By default, allow mailer actions (can be overridden in individual tests)
 		$this->editionFeatures->method('can')->willReturn(true);
 		$this->logger          = $this->createMock(LoggerInterface::class);
@@ -47,8 +50,47 @@ final class EmailServiceTest extends TestCase
 			$this->twigEngine,
 			$this->config,
 			$this->editionFeatures,
+			$this->activity,
 			$loggerFactory
 		);
+	}
+
+	public function testRecordsTheSendOnceWithItsTemplate(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+
+		// The sender would record a row of its own without the mailer id.
+		$this->emailSender->expects($this->once())->method('send')
+			->with($this->anything(), 30, false)
+			->willReturn(OperationResult::success('Email sent'));
+		$this->activity->expects($this->once())->method('sent')
+			->with($this->callback(static fn (array $email): bool => $email['to'] === 'user@example.com' && $email['subject'] === 'Test Subject'), $this->anything(), 'contact-form');
+
+		$this->service->sendEmail('contact-form');
+	}
+
+	public function testRecordsARefusal(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData(active: false));
+
+		$this->activity->expects($this->once())->method('sent')
+			->with([], $this->callback(static fn (OperationResult $result): bool => !$result->success), 'contact-form');
+
+		$this->service->sendEmail('contact-form');
+	}
+
+	public function testABulkSendIsNotRecordedPerRecipient(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => []];
+		$this->emailSender->method('send')->willReturn(OperationResult::success('Email sent'));
+
+		$this->activity->expects($this->never())->method('sent');
+
+		$this->service->sendEmail('newsletter', recordActivity: false);
 	}
 
 	public function testSendEmailSuccessfully(): void

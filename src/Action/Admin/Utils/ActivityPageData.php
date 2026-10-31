@@ -9,6 +9,7 @@ use TotalCMS\Domain\Activity\Data\ActivityFilter;
 use TotalCMS\Domain\Activity\Listener\ActivityListener;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Activity\Service\McpToolActivity;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 
@@ -28,7 +29,7 @@ final readonly class ActivityPageData implements UtilsPageData
 
 		// Every event the log can hold, plus any an older or newer version
 		// recorded, so a row is always findable by its own event name.
-		$events = array_values(array_unique([...ActivityListener::EVENTS, McpToolActivity::EVENT, ...$this->repository->distinct('event')]));
+		$events = array_values(array_unique([...ActivityListener::EVENTS, McpToolActivity::EVENT, ...MailActivity::EVENTS, ...$this->repository->distinct('event')]));
 		sort($events);
 
 		return [

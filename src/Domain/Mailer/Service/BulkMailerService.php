@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -31,6 +32,7 @@ readonly class BulkMailerService
 		private EditionFeatureService $editionFeatures,
 		private TwigEngine $twigEngine,
 		private BulkMailerRepository $bulkMailerRepository,
+		private MailActivity $activity,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::BulkMailer);
@@ -130,6 +132,7 @@ readonly class BulkMailerService
 		}
 
 		$this->bulkMailerRepository->recordBatch($batchId, $mailerId, $collection, $count, $excluded, $effectiveOverrideTo, $scheduledAt);
+		$this->activity->bulkQueued($mailerId, $collection, $count, $effectiveOverrideTo);
 
 		$this->logger->info('Bulk send queued', [
 			'mailerId'   => $mailerId,

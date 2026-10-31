@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -28,6 +29,7 @@ readonly class EmailService
 		private TwigEngine $twigEngine,
 		private Config $config,
 		private EditionFeatureService $editionFeatures,
+		private MailActivity $activity,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Email);
@@ -40,8 +42,28 @@ readonly class EmailService
 	 * @param array<string,mixed> $data Data for Twig processing
 	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
 	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
+	 * @param bool $recordActivity false for a bulk send, whose Send History records each email
 	 */
-	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = []): OperationResult
+	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = [], bool $recordActivity = true): OperationResult
+	{
+		$email  = [];
+		$result = $this->deliver($mailerId, $data, $overrideTo, $user, $email);
+		if ($recordActivity) {
+			$this->activity->sent($email, $result, $mailerId);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Build the email from the template and send it. $email is the message as
+	 * sent, or stays [] when it is refused before it is built.
+	 *
+	 * @param array<string,mixed> $data
+	 * @param array<string,mixed> $user
+	 * @param array<string,mixed> $email
+	 */
+	private function deliver(string $mailerId, array $data, ?string $overrideTo, array $user, array &$email): OperationResult
 	{
 		// Mailer actions require Standard edition or higher
 		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
@@ -90,13 +112,15 @@ readonly class EmailService
 			];
 
 			// Validate email whitelist if enabled
+			$email = $processedEmail;
+
 			$whitelistResult = $this->validateEmailWhitelist($processedEmail['to']);
 			if (!$whitelistResult->success) {
 				return $whitelistResult;
 			}
 
 			// Send email
-			$result = $this->emailSender->send($processedEmail);
+			$result = $this->emailSender->send($processedEmail, recordActivity: false);
 
 			if ($result->success) {
 				$this->logger->info('Email sent successfully', [

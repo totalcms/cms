@@ -30,10 +30,12 @@ It answers questions like:
 | `file.downloaded` | A **signed-in** user downloads a file from a `/download/...` link. Downloads by visitors who are not signed in are not recorded. |
 | `access.denied` | A request is refused by access groups, ownership or a protected field. |
 | `mcp.tool.called` | An AI client calls an MCP tool: the tool, its target (collection, ID, query) and how long it took. The content an agent writes is never stored. |
+| `mailer.sent` | An email is sent or refused: from a form, a password reset or verification, an automation, PHP, or the SMTP test. The row names the mailer template, the subject and the recipient; the body is never stored. |
+| `mailer.bulk.queued` | A [bulk send](docs/notifications/mailer#bulk-send) is queued: one row with the template, the collection and how many emails, not one per recipient. Each recipient is in the template's Send History. |
 | `import.completed`, `bulk.deleted` | An import finishes (one row with the counts, not one per object), or objects are deleted in bulk. |
 | `extension.*`, `devmode.*`, `cache.cleared` | An extension is enabled or disabled, dev mode is toggled, or the cache is cleared. |
 
-Deletes, bulk deletes, refusals and failed MCP calls are marked as **warning**, so they stand out and can be filtered on their own.
+Deletes, bulk deletes, refusals, failed MCP calls and emails that were not sent are marked as **warning**, so they stand out and can be filtered on their own.
 
 ## Who Did It
 

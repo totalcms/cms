@@ -373,7 +373,7 @@ readonly class JobRunner
 		}
 
 		// Send email
-		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo);
+		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo, recordActivity: false);
 
 		// Log result
 		$this->bulkMailerRepository->log([

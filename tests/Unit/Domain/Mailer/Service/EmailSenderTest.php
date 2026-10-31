@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mailer\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -71,7 +72,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		// We can't directly test the internal configuration, but we can verify
 		// the service is created without errors
@@ -86,7 +87,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -130,7 +131,7 @@ final class EmailSenderTest extends TestCase
 
 		$config        = new Config($settings);
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -166,7 +167,7 @@ final class EmailSenderTest extends TestCase
 
 		$config        = new Config($settings);
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		// Should use defaults from code (127.0.0.1, port 25)
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
@@ -178,7 +179,7 @@ final class EmailSenderTest extends TestCase
 	{
 		$config        = $this->createConfig();
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		// Verify service created
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
@@ -227,7 +228,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -241,7 +242,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -255,7 +256,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -268,7 +269,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -280,7 +281,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -292,7 +293,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}
@@ -308,7 +309,7 @@ final class EmailSenderTest extends TestCase
 		]);
 
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		// Service should be created without errors
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
@@ -357,7 +358,7 @@ final class EmailSenderTest extends TestCase
 
 		$config        = new Config($settings);
 		$loggerFactory = $this->createMockLoggerFactory();
-		$emailSender   = new EmailSender($config, $loggerFactory);
+		$emailSender   = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 
@@ -372,7 +373,7 @@ final class EmailSenderTest extends TestCase
 		$config        = $this->createConfig();
 		$loggerFactory = $this->createMockLoggerFactory();
 
-		$emailSender = new EmailSender($config, $loggerFactory);
+		$emailSender = new EmailSender($config, $this->createMock(MailActivity::class), $loggerFactory);
 
 		$this->assertInstanceOf(EmailSender::class, $emailSender);
 	}

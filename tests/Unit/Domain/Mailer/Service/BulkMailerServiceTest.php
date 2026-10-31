@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mailer\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -32,6 +33,7 @@ final class BulkMailerServiceTest extends TestCase
 	private MockObject $twigEngine;
 	private MockObject $logger;
 	private MockObject $bulkMailerRepository;
+	private MockObject $activity;
 
 	protected function setUp(): void
 	{
@@ -44,6 +46,7 @@ final class BulkMailerServiceTest extends TestCase
 		$this->logger          = $this->createMock(LoggerInterface::class);
 
 		$this->bulkMailerRepository = $this->createMock(BulkMailerRepository::class);
+		$this->activity             = $this->createMock(MailActivity::class);
 
 		// By default, allow bulk mailer actions
 		$this->editionFeatures->method('can')->willReturn(true);
@@ -60,6 +63,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->editionFeatures,
 			$this->twigEngine,
 			$this->bulkMailerRepository,
+			$this->activity,
 			$loggerFactory,
 		);
 	}
@@ -85,6 +89,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->editionFeatures,
 			$this->twigEngine,
 			$this->bulkMailerRepository,
+			$this->createMock(MailActivity::class),
 			$loggerFactory,
 		);
 
@@ -160,6 +165,17 @@ final class BulkMailerServiceTest extends TestCase
 		$this->assertTrue($result->success);
 		$this->assertSame(3, $result->data['count']);
 		$this->assertArrayHasKey('batchId', $result->data);
+	}
+
+	public function testRecordsTheQueuedSendOnce(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1'], ['id' => 'obj-2']]);
+		$this->jobQueuer->method('queueEmail')->willReturn($this->createMock(JobData::class));
+
+		$this->activity->expects($this->once())->method('bulkQueued')->with('test-mailer', 'subscribers', 2, null);
+
+		$this->service->queueBulkSend('test-mailer', 'subscribers');
 	}
 
 	public function testPassesOverrideToThroughToJobData(): void
