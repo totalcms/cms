@@ -9,9 +9,13 @@ namespace TotalCMS\Support;
  */
 readonly class HttpResponse
 {
+	/**
+	 * @param array<string,string> $headers Response headers keyed by lowercase name; repeats joined by ", "
+	 */
 	public function __construct(
 		public int $statusCode,
 		public string $body,
+		public array $headers = [],
 	) {
 	}
 

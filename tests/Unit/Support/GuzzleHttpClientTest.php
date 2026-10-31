@@ -47,6 +47,17 @@ describe('GuzzleHttpClient', function (): void {
 		expect($sent[0]['options'][RequestOptions::HTTP_ERRORS])->toBeFalse();
 	});
 
+	test('exposes response headers lowercased with repeats joined', function (): void {
+		$stack = HandlerStack::create(new MockHandler([
+			new Response(200, ['X-Frame-Options' => 'DENY', 'Set-Cookie' => ['a=1', 'b=2']], 'ok'),
+		]));
+		$client   = new GuzzleHttpClient(new Client(['handler' => $stack]));
+		$response = $client->request('GET', 'https://example.test/');
+
+		expect($response->headers['x-frame-options'])->toBe('DENY');
+		expect($response->headers['set-cookie'])->toBe('a=1, b=2');
+	});
+
 	test('throws RuntimeException on connection failure', function (): void {
 		$handler = new MockHandler([
 			static fn (RequestInterface $request): PromiseInterface => Create::rejectionFor(

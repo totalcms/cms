@@ -7,6 +7,7 @@ namespace TotalCMS\Support;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Guzzle-based implementation of HttpClientInterface.
@@ -110,6 +111,18 @@ class GuzzleHttpClient implements HttpClientInterface
 		return new HttpResponse(
 			$response->getStatusCode(),
 			(string)$response->getBody(),
+			self::flattenHeaders($response),
 		);
+	}
+
+	/** @return array<string,string> */
+	private static function flattenHeaders(ResponseInterface $response): array
+	{
+		$flat = [];
+		foreach ($response->getHeaders() as $name => $values) {
+			$flat[strtolower((string)$name)] = implode(', ', $values);
+		}
+
+		return $flat;
 	}
 }

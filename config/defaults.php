@@ -604,6 +604,13 @@ $settings['xmlrpc'] = [
 	'ratePerIp' => 60,
 ];
 
+// Security check (`tcms check`, admin dashboard). `ignore` lists check ids the
+// operator has accepted; an ignored finding still shows, marked ignored, but
+// does not count toward the exit code or the dashboard alert.
+$settings['security'] = [
+	'ignore' => [],
+];
+
 // Object snapshot history. Every save keeps the record's pre-save state and
 // every delete keeps its final state, under tcms-data/.system/backups/objects/.
 // Records only — never uploaded files or images. Sync's pre-overwrite

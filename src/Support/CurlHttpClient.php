@@ -113,6 +113,21 @@ class CurlHttpClient implements HttpClientInterface
 			): int => ($downloadSize > $maxBytes || $downloaded > $maxBytes) ? 1 : 0;
 		}
 
+		// Collect response headers; a redirect restarts the block at each status line
+		$responseHeaders = [];
+		$curlOptions[CURLOPT_HEADERFUNCTION] = static function (\CurlHandle $handle, string $line) use (&$responseHeaders): int {
+			if (str_starts_with($line, 'HTTP/')) {
+				$responseHeaders = [];
+			} elseif (str_contains($line, ':')) {
+				[$name, $value] = explode(':', $line, 2);
+				$name           = strtolower(trim($name));
+				$value          = trim($value);
+				$responseHeaders[$name] = isset($responseHeaders[$name]) ? $responseHeaders[$name] . ', ' . $value : $value;
+			}
+
+			return strlen($line);
+		};
+
 		curl_setopt_array($ch, $curlOptions);
 
 		$result    = curl_exec($ch);
@@ -134,6 +149,6 @@ class CurlHttpClient implements HttpClientInterface
 
 		$body = is_string($result) ? $result : '';
 
-		return new HttpResponse($httpCode, $body);
+		return new HttpResponse($httpCode, $body, $responseHeaders);
 	}
 }

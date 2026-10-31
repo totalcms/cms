@@ -80,6 +80,8 @@ class Config
 	public array $automations = [];
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
+	/** @var array<string,mixed> Security check settings (`ignore` list of check ids) — see SecurityAuditor. */
+	public array $security = [];
 	/** @var array<string,mixed> Object snapshot history — see BackupStore. */
 	public array $backups = [];
 	/** @var array<string,mixed> Activity log — see ActivityRecorder. */
@@ -171,6 +173,7 @@ class Config
 		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->security           = is_array($this->rawSettings['security'] ?? null) ? $this->rawSettings['security'] : [];
 		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
 		$this->activity           = is_array($this->rawSettings['activity'] ?? null) ? $this->rawSettings['activity'] : [];
 		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];

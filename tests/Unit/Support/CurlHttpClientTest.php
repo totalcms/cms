@@ -31,6 +31,29 @@ describe('CurlHttpClient', function (): void {
 		expect($response->body)->not->toBe('');
 	})->skip(getenv('CI') !== false, 'Skipped in CI - requires network');
 
+	test('exposes response headers lowercased', function (): void {
+		$dir = sys_get_temp_dir() . '/tcms-curl-hdr-' . bin2hex(random_bytes(4));
+		mkdir($dir);
+		file_put_contents($dir . '/router.php', '<?php header("X-Probe-Header: yes"); echo "hi";');
+		$port = random_int(20000, 40000);
+		$proc = proc_open(
+			[PHP_BINARY, '-S', '127.0.0.1:' . $port, $dir . '/router.php'],
+			[1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
+			$pipes,
+		);
+		usleep(500000);
+
+		try {
+			$response = (new CurlHttpClient())->request('GET', 'http://127.0.0.1:' . $port . '/', ['timeout' => 3, 'connect_timeout' => 3]);
+			expect($response->headers['x-probe-header'] ?? null)->toBe('yes');
+		} finally {
+			proc_terminate($proc);
+			proc_close($proc);
+			@unlink($dir . '/router.php');
+			@rmdir($dir);
+		}
+	});
+
 	test('throws RuntimeException on connection failure', function (): void {
 		$client = new CurlHttpClient();
 		$client->request('GET', 'https://this-domain-does-not-exist-totalcms-test.invalid', [

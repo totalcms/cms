@@ -186,7 +186,9 @@ use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
+use TotalCMS\Domain\Security\Check\SecurityCheck;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Security\Service\SecurityAuditor;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowListener;
 use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
@@ -1128,6 +1130,11 @@ return [
 		$container->get(McpSchemaResolver::class),
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::McpPrompts, Level::Debug),
+	),
+
+	SecurityAuditor::class => fn (ContainerInterface $container): SecurityAuditor => new SecurityAuditor(
+		$container->get(Config::class),
+		array_map(fn (string $class): SecurityCheck => $container->get($class), SecurityAuditor::CHECKS),
 	),
 
 	// McpServerFactory needs an explicit definition for its custom logger

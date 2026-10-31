@@ -139,7 +139,7 @@ final readonly class ApiKeyGrants
 	 *
 	 * @return list<string>
 	 */
-	private static function paths(ApiKeyData $apiKey): array
+	public static function paths(ApiKeyData $apiKey): array
 	{
 		$paths = [];
 		foreach ((array)($apiKey->scopes['paths'] ?? []) as $path) {
