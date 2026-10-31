@@ -94,11 +94,6 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$method = $request->getMethod();
-		if ($method === 'HEAD') {
-			return $handler->handle($request);
-		}
-
 		// Check if an API key was provided (regardless of validity)
 		$hasApiKeyHeader = $this->authenticator->hasApiKeyHeader($request);
 
@@ -235,7 +230,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	 *
 	 * Requirements:
 	 * - Must have a collection route parameter
-	 * - HEAD/object-exists requests are always allowed (for ID validation)
+	 * - HEAD/object-exists requests only where the public may create or read
 	 * - Other operations must be in collection's publicOperations array
 	 */
 	private function propertyAllowsPublicIncrement(string $collectionId, string $property): bool
@@ -267,9 +262,13 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return false;
 		}
 
-		$method = $request->getMethod();
-		if ($method === 'HEAD') {
-			return true;
+		// A public form's id field asks with HEAD whether an id is taken, so a
+		// collection the public may create in or read answers it. Any other
+		// collection authenticates like a GET: answering a stranger there was
+		// an oracle for which ids exist, user ids in `auth` included
+		// (security scan, 2026-10-31).
+		if ($request->getMethod() === 'HEAD') {
+			return array_intersect(['create', 'read'], $this->publicOperations($collectionId)) !== [];
 		}
 
 		// Detect operation type from route
@@ -306,20 +305,22 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			}
 		}
 
-		// Check if collection allows this operation publicly
+		return in_array($operation, $this->publicOperations($collectionId), true);
+	}
+
+	/**
+	 * The collection's publicOperations, lowercased; none when it cannot be read.
+	 *
+	 * @return list<string>
+	 */
+	private function publicOperations(string $collectionId): array
+	{
 		try {
 			$collection = $this->collectionFetcher->fetchCollection($collectionId);
-			if (!$collection instanceof CollectionData) {
-				return false;
-			}
-
-			// Normalize to lowercase and check if operation is allowed
-			$publicOperations = array_map(strtolower(...), $collection->publicOperations);
-
-			return in_array($operation, $publicOperations, true);
 		} catch (\Throwable) {
-			// If we can't fetch the collection, don't allow public access
-			return false;
+			return [];
 		}
+
+		return $collection instanceof CollectionData ? array_values(array_map(strtolower(...), $collection->publicOperations)) : [];
 	}
 }

@@ -125,7 +125,8 @@
                     },
                     "default": {},
                     "enum": {
-                        "type": "array"
+                        "type": "array",
+                        "items": {}
                     },
                     "items": {
                         "$ref": "#/components/schemas/SchemaProperty"
@@ -7446,6 +7447,7 @@
                 "tags": [
                     "collections"
                 ],
+                "summary": "Decrement Property by 1",
                 "parameters": [
                     {
                         "name": "collection",
@@ -7777,6 +7779,7 @@
                 "tags": [
                     "collections"
                 ],
+                "summary": "Increment Property by 1",
                 "parameters": [
                     {
                         "name": "collection",
@@ -10508,6 +10511,7 @@
                 "x-tcms-route": "/api/jobqueue",
                 "x-tcms-action": "JobQueueClearAction",
                 "x-tcms-middleware": [
+                    "JobQueueAccessMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10697,6 +10701,7 @@
                 "x-tcms-route": "/api/jobqueue/status/failed",
                 "x-tcms-action": "JobQueueClearFailedAction",
                 "x-tcms-middleware": [
+                    "JobQueueAccessMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10736,6 +10741,7 @@
                 "x-tcms-route": "/api/jobqueue/{collection}",
                 "x-tcms-action": "JobQueueClearCollectionAction",
                 "x-tcms-middleware": [
+                    "JobQueueAccessMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"

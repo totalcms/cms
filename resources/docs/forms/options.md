@@ -134,6 +134,8 @@ Switch on **Allow Public Registration** in the **Public Registration** section o
 
 A registrant receives the global `publicRegistrationGroup` (auth settings) plus the collection's **Registration Groups**, with duplicates removed. `admin` is never granted from Registration Groups. A `groups` value submitted in the form is always ignored.
 
+A registrant who ends up in no group can sign in and see pages gated to signed-in users, but can't read or change any collection through the API. Give them a group here if your front-end forms need that. See [Users without a group](docs/auth/access-groups#users-without-a-group).
+
 ### Email Verification
 
 Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (in the Public Registration section, once **Allow Public Registration** is on).

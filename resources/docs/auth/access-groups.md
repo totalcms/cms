@@ -16,6 +16,14 @@ Access groups work at two levels:
 
 Super admin users (members of the `admin` group in the default `auth` collection) bypass all access checks automatically.
 
+### Users without a group
+
+A user of the default `auth` collection who belongs to no group gets the built-in `default` group, which reads every collection and schema and changes nothing.
+
+A member of any other auth collection, such as one that takes [public registrations](docs/forms/options#public-registration-forms), gets no permissions without a group. They can sign in, open pages gated to signed-in users, download files whose File Access Groups include `default`, and edit their own profile. They can't read or change collections through the admin, the REST API or MCP. To give members that, add a group to the collection's **Registration Groups** or assign one yourself.
+
+Before 3.6.5, these members also got the `default` group, so anyone who signed up could read every collection through the REST API, including drafts and the admin users' names and email addresses.
+
 ## Access Group Structure
 
 Access groups are defined in `tcms-data/.system/access-groups.json`:
@@ -181,6 +189,8 @@ Controls which extensions' **nav items, dashboard widgets, and admin pages** thi
 
 - **`all`** - If `true`, access all utility pages
 - **`allowed`** - Array of specific utility page names
+
+Some utilities also gate the API routes behind their page: `cache` for clearing caches and dev mode, `import` for the site importers, and `jobqueue` or `import` for clearing the job queue.
 
 ### Boolean Permissions
 

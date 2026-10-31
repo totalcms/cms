@@ -14,7 +14,8 @@ A collection on the `auth` schema (or one that inherits it) holds the
 members. Turn on **Allow Public Registration** and **Require Email
 Verification** in its Public Registration section. **Registration Groups**
 give new members the access group that grants `create` and `update` on the
-member collections. Write that group with `vendor/bin/tcms access-group:set <id> -`
+member collections. Grant `read` there too: since 3.6.5 a member with no group
+has no collection access at all, not even to their own objects. Write that group with `vendor/bin/tcms access-group:set <id> -`
 (or `access-group:patch`), never by editing `.system/access-groups.json`.
 Docs: `forms/options.md`, `auth/access-groups.md`.
 

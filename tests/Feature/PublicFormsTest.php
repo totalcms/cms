@@ -173,7 +173,10 @@ it('ignores invalid operation names', function (): void {
 	expect($response->getStatusCode())->toBeIn([200, 201]);
 });
 
-it('always allows HEAD requests for object existence checking', function (): void {
+// The suite runs with auth off, so this only shows the existence check answers.
+// With auth on, an anonymous HEAD answers only where the public may create or
+// read: see tests/Security/AuthorizationMatrixTest.php.
+it('answers HEAD requests for object existence checking', function (): void {
 	// Create collection with NO public operations
 	$collectionData = [
 		'id'               => 'private-head-test',

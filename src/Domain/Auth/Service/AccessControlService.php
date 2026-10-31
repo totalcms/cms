@@ -224,6 +224,12 @@ readonly class AccessControlService
 		return ($this->config->dashboard['inlineEditing'] ?? true) === true;
 	}
 
+	/** The admin's own auth collection; '' is a session from the plain login, which signs in there. */
+	private function isOperatorCollection(string $collection): bool
+	{
+		return $collection === '' || $collection === (string)($this->config->auth['collection'] ?? 'auth');
+	}
+
 	private function sessionCollection(): string
 	{
 		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
@@ -250,6 +256,16 @@ readonly class AccessControlService
 		// If user has no groups assigned, fall back to the 'default' group
 		// This also ensures the default group exists for backwards compatibility
 		if (empty($groupIds)) {
+			// Only for the operator collection. The default group reads every
+			// collection, so a member of any other auth collection — where
+			// public registration puts them — read every user record and every
+			// draft over the API (security scan, 2026-10-31). Members get access
+			// from their collection's Registration Groups, or from groups an
+			// admin assigns.
+			if (!$this->isOperatorCollection($collection)) {
+				return [];
+			}
+
 			$defaultGroup = $this->accessGroupLister->ensureDefaultGroupExists();
 			if ($defaultGroup instanceof AccessGroupData) {
 				return [$defaultGroup];
