@@ -35,6 +35,13 @@ class IndexBuilder
 	 */
 	private array $skippedIds = [];
 
+	/**
+	 * Objects written by the most recent buildIndex() call. Tracked because
+	 * a streamed build writes straight to disk and returns an empty
+	 * IndexData, so its count cannot come from the return value.
+	 */
+	private int $indexedCount = 0;
+
 	public function __construct(
 		private readonly IndexRepository $storage,
 		private readonly ObjectFetcher $objectFetcher,
@@ -58,6 +65,15 @@ class IndexBuilder
 	public function lastSkippedIds(): array
 	{
 		return $this->skippedIds;
+	}
+
+	/**
+	 * How many objects the most recent buildIndex() call put in the index,
+	 * streamed builds included.
+	 */
+	public function lastIndexedCount(): int
+	{
+		return $this->indexedCount;
 	}
 
 	public function buildIndex(string $collection): IndexData
@@ -92,6 +108,7 @@ class IndexBuilder
 		} else {
 			$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
 		}
+		$this->indexedCount = count($objectIds) - count($this->skippedIds);
 
 		// Reset totalObjects to match the authoritative count from disk — but only
 		// when it is actually off. On object.created the metadata listener has

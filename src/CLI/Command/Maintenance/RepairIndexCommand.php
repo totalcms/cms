@@ -69,8 +69,8 @@ class RepairIndexCommand extends BaseCommand
 		$results = [];
 		$skipped = [];
 		foreach ($collectionIds as $collectionId) {
-			$index                  = $indexBuilder->buildIndex($collectionId);
-			$results[$collectionId] = $index->objects->count();
+			$indexBuilder->buildIndex($collectionId);
+			$results[$collectionId] = $indexBuilder->lastIndexedCount();
 			$skipped[$collectionId] = $indexBuilder->lastSkippedIds();
 
 			// A hand-edited object file only becomes visible through a

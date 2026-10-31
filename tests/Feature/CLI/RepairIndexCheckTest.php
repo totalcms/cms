@@ -7,6 +7,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\Maintenance\RepairIndexCommand;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\TotalCMS;
@@ -60,11 +62,26 @@ beforeEach(function (): void {
 	$totalcms = $this->createMock(TotalCMS::class);
 	$totalcms->method('collectionFetcher')->willReturn($container->get(CollectionFetcher::class));
 	$totalcms->method('container')->willReturn($container);
+	$totalcms->method('indexBuilder')->willReturn($container->get(IndexBuilder::class));
+	$totalcms->method('objectFetcher')->willReturn($container->get(ObjectFetcher::class));
 
 	$app = new Application();
 	$app->addCommand(new RepairIndexCommand($totalcms));
 	$this->repair    = new CommandTester($app->find('repair:index'));
 	$this->indexFile = collectionPath('checknotes') . '.index.json';
+});
+
+test('a rebuild reports the real count for a collection large enough to stream', function (): void {
+	// Past 500 objects the index is streamed straight to disk, and the
+	// rebuild used to report the empty IndexData it got back: "0 object(s)".
+	for ($i = 0; $i < 600; $i++) {
+		file_put_contents(collectionPath('checknotes') . "bulk-{$i}.json", (string)json_encode(['id' => "bulk-{$i}", 'title' => "Bulk {$i}"]));
+	}
+
+	$code = $this->repair->execute(['collection' => 'checknotes']);
+
+	expect($code)->toBe(0);
+	expect($this->repair->getDisplay())->toContain("Rebuilt index for 'checknotes' — 603 object(s).");
 });
 
 test('a consistent collection passes', function (): void {

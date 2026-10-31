@@ -30,8 +30,14 @@ Manage them under **Automations** in the admin (or `tcms` on the CLI). The edito
 Webhook and event automations fire the moment their trigger happens. **Schedules** need a heartbeat — a single command run by cron:
 
 ```bash
-* * * * * cd /path/to/site && php bin/tcms automations:process
+# Composer install
+* * * * * php /path/to/site/vendor/bin/tcms automations:process
+
+# Zip install
+* * * * * php /path/to/site/resources/bin/tcms automations:process
 ```
+
+Run `jobs:process` from cron the same way, for the job queue. If your host has no cron for command-line PHP, see [Cron URLs](docs/operations/cron-urls).
 
 Each tick `automations:process`:
 
