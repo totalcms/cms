@@ -13,6 +13,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
 use TotalCMS\Factory\LoggerFactory;
@@ -186,5 +187,38 @@ final class CacheManagerVersionCheckTest extends TestCase
 
 		$manager = $this->createCacheManager();
 		$manager->clearIfVersionChanged();
+	}
+
+	public function testAFullClearWritesTheStampBackSoTheNextRequestDoesNotClearAgain(): void
+	{
+		file_put_contents($this->appVersionFile, Version::get());
+		// The filesystem clear deletes the cache directory, stamp included.
+		$this->filesystemService->method('clear')->willReturnCallback(function (): bool {
+			unlink($this->appVersionFile);
+
+			return true;
+		});
+
+		$manager = $this->createCacheManager();
+		$manager->clearAllCaches();
+
+		$this->assertSame(Version::get(), trim((string)file_get_contents($this->appVersionFile)));
+		$this->assertFalse($manager->clearIfVersionChanged());
+	}
+
+	public function testReplayingTheCliClearDoesNotAnnounceItAgain(): void
+	{
+		$fired = 0;
+		$this->eventDispatcher->listen(CoreEvent::CACHE_CLEARED, function () use (&$fired): void {
+			$fired++;
+		});
+		$this->filesystemService->method('clear')->willReturn(true);
+
+		$manager = $this->createCacheManager();
+		$manager->clearAllCaches();
+		$manager->setSuppressSignals(true);
+		$manager->clearAllCaches();
+
+		$this->assertSame(1, $fired);
 	}
 }

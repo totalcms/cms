@@ -168,8 +168,10 @@ class CacheManager
 	}
 
 	/**
-	 * Control whether invalidation signals are written.
-	 * Used by CacheInvalidationMiddleware during replay to prevent recursion.
+	 * Control whether invalidation signals are written, and whether a full
+	 * clear fires `cache.cleared`. Used by CacheInvalidationMiddleware during
+	 * replay, to prevent recursion and to keep the CLI's clear from being
+	 * announced (and logged) a second time.
 	 */
 	public function setSuppressSignals(bool $suppress): void
 	{
@@ -554,7 +556,7 @@ class CacheManager
 		// content — in shared mode the entry directory is common to every
 		// install, so two installs on different versions would each see the
 		// other's stamp, clear all caches, and thrash on every request.
-		$appVersionFile = $this->filesystemService->getLocalDir() . '/.app_version';
+		$appVersionFile = $this->appVersionFile();
 		$currentVersion = Version::get();
 		$storedVersion  = is_file($appVersionFile) ? trim((string)file_get_contents($appVersionFile)) : '';
 
@@ -567,10 +569,34 @@ class CacheManager
 			'current'  => $currentVersion,
 		]);
 
+		// Writes the new stamp too.
 		$this->clearAllCaches();
-		file_put_contents($appVersionFile, $currentVersion);
 
 		return true;
+	}
+
+	private function appVersionFile(): string
+	{
+		return $this->filesystemService->getLocalDir() . '/.app_version';
+	}
+
+	/**
+	 * Record the running version in the cache directory. A full clear
+	 * deletes the directory with the stamp in it, so every clear writes it
+	 * back — otherwise the next request reads no stamp, takes it for an
+	 * update and clears everything a second time.
+	 */
+	private function stampAppVersion(): void
+	{
+		if (!$this->filesystemService->isAvailable()) {
+			return;
+		}
+
+		$file = $this->appVersionFile();
+		if (!is_dir(dirname($file)) && !@mkdir(dirname($file), 0755, true) && !is_dir(dirname($file))) {
+			return;
+		}
+		file_put_contents($file, Version::get());
 	}
 
 	/**
@@ -669,12 +695,18 @@ class CacheManager
 
 		$results['success'] = $overallSuccess;
 
+		$this->stampAppVersion();
+
 		// Signal for cross-process invalidation (CLI → web)
 		if ($this->isCli && !$this->suppressSignals) {
 			$this->invalidationSignal->signalFull();
 		}
 
-		$this->eventDispatcher->dispatch(CoreEvent::CACHE_CLEARED, new SystemEventPayload($results));
+		// Signals are suppressed only while the web side replays a clear the
+		// CLI already made — and announced — so it is not announced twice.
+		if (!$this->suppressSignals) {
+			$this->eventDispatcher->dispatch(CoreEvent::CACHE_CLEARED, new SystemEventPayload($results));
+		}
 
 		return $results;
 	}
