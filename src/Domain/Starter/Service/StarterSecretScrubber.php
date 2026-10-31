@@ -19,14 +19,14 @@ use TotalCMS\Support\PathResolver;
  * site holds, so the exporter can check the finished output for a leak the
  * exclusion list missed.
  */
-final class StarterSecretScrubber
+final readonly class StarterSecretScrubber
 {
 	/** Shorter values match too much ordinary text to be worth checking. */
 	private const MIN_SECRET_LENGTH = 12;
 
 	public function __construct(
-		private readonly SettingsSchemaFetcher $settingsSchemas,
-		private readonly string $bundledExtensionsDir,
+		private SettingsSchemaFetcher $settingsSchemas,
+		private string $bundledExtensionsDir,
 	) {
 	}
 

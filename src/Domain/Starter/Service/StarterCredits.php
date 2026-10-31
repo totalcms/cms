@@ -101,9 +101,9 @@ final class StarterCredits
 			return;
 		}
 
-		$line = '- ' . self::link((string)$image['name'], (string)($credit['sourceUrl'] ?? ''));
+		$line = '- ' . $this->link((string)$image['name'], (string)($credit['sourceUrl'] ?? ''));
 		if ($author !== '') {
-			$line .= ' by ' . self::link($author, (string)($credit['authorUrl'] ?? ''));
+			$line .= ' by ' . $this->link($author, (string)($credit['authorUrl'] ?? ''));
 		}
 		if (trim((string)($credit['license'] ?? '')) !== '') {
 			$line .= ', ' . trim((string)$credit['license']);
@@ -112,7 +112,7 @@ final class StarterCredits
 		$this->bySource[$source !== '' ? $source : 'Other'][] = $line;
 	}
 
-	private static function link(string $text, string $url): string
+	private function link(string $text, string $url): string
 	{
 		$text = str_replace(['[', ']'], ['\[', '\]'], $text);
 

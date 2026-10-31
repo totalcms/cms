@@ -39,7 +39,7 @@ readonly class MailActivity
 	 */
 	public function sent(array $email, OperationResult $result, string $mailerId = ''): void
 	{
-		$subject = self::str($email, 'subject');
+		$subject = $this->str($email, 'subject');
 		$summary = $result->success ? $subject : trim($subject . ': ' . ($result->error ?? $result->message), ' :');
 
 		$this->recorder->record(self::SENT, $this->actors->current()->toArray(), [
@@ -48,9 +48,9 @@ readonly class MailActivity
 			'objectId'   => $mailerId,
 			'summary'    => $summary,
 			'detail'     => array_filter([
-				'to'    => self::str($email, 'to'),
-				'cc'    => self::count($email, 'cc'),
-				'bcc'   => self::count($email, 'bcc'),
+				'to'    => $this->str($email, 'to'),
+				'cc'    => $this->count($email, 'cc'),
+				'bcc'   => $this->count($email, 'bcc'),
 				'error' => $result->success ? '' : ($result->error ?? $result->message),
 			]),
 		]);
@@ -68,7 +68,7 @@ readonly class MailActivity
 	}
 
 	/** @param array<string,mixed> $email */
-	private static function str(array $email, string $key): string
+	private function str(array $email, string $key): string
 	{
 		$value = $email[$key] ?? '';
 
@@ -76,7 +76,7 @@ readonly class MailActivity
 	}
 
 	/** @param array<string,mixed> $email */
-	private static function count(array $email, string $key): int
+	private function count(array $email, string $key): int
 	{
 		$value = $email[$key] ?? [];
 

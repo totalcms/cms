@@ -34,7 +34,7 @@ interface PhotoProvider
 	 * @throws \RuntimeException when the provider has no key or cannot be reached
 	 *
 	 * Each photo has id, thumb, preview, download, filename, width, height, alt
-	 * and credit; a gallery photo also carries tags, link and focalpoint.
+	 * and credit; a gallery photo also carries tags, link and focalpoint
 	 *
 	 * @return array{total: int, photos: list<array<string,mixed>>}
 	 */

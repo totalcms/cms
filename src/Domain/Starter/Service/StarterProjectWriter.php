@@ -19,14 +19,14 @@ use TotalCMS\Domain\Starter\Data\StarterExportResult;
  * survives a re-export. CREDITS.md is built from the image credits
  * ({@see StarterCredits}) unless the author wrote their own.
  */
-final class StarterProjectWriter
+final readonly class StarterProjectWriter
 {
 	/** The first line of the plain Total CMS skeleton's README. */
 	private const SKELETON_README = 'This is the project skeleton for [Total CMS]';
 
 	public function __construct(
-		private readonly string $templatesDir,
-		private readonly string $cmsVersion,
+		private string $templatesDir,
+		private string $cmsVersion,
 	) {
 	}
 

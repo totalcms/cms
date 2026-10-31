@@ -114,11 +114,11 @@ class StarterExportCommand extends BaseCommand
 
 	private function report(OutputInterface $output, StarterExportResult $result, string $name): void
 	{
-		$output->writeln(sprintf('<info>Exported %s</info> to %s (%d files, %s)', $name, $result->destination, $result->files, self::size($result->bytes)));
+		$output->writeln(sprintf('<info>Exported %s</info> to %s (%d files, %s)', $name, $result->destination, $result->files, $this->size($result->bytes)));
 
 		$lists = [
-			'Left out the objects of'                                   => $result->emptiedCollections,
-			'Blanked settings'                                          => $result->scrubbedSettings,
+			'Left out the objects of'                                    => $result->emptiedCollections,
+			'Blanked settings'                                           => $result->scrubbedSettings,
 			'Replaced config/tcms.php. Move what the starter needs from' => $result->configKeys,
 		];
 		foreach ($lists as $label => $items) {
@@ -140,7 +140,7 @@ class StarterExportCommand extends BaseCommand
 		$output->writeln('');
 		$output->writeln('Largest files (resize images in the site before exporting):');
 		foreach ($result->largestFiles as $file => $bytes) {
-			$output->writeln(sprintf('  %8s  %s', self::size($bytes), $file));
+			$output->writeln(sprintf('  %8s  %s', $this->size($bytes), $file));
 		}
 
 		if (!$result->passed()) {
@@ -152,7 +152,7 @@ class StarterExportCommand extends BaseCommand
 		}
 	}
 
-	private static function size(int $bytes): string
+	private function size(int $bytes): string
 	{
 		return $bytes >= 1048576 ? round($bytes / 1048576, 1) . ' MB' : max(1, (int)round($bytes / 1024)) . ' KB';
 	}

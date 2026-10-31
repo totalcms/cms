@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Support\RemoteFileDownloader;
 
 /**
- * GET /admin/ext/totalcms/stock-photos/download?url=
+ * GET /admin/ext/totalcms/stock-photos/download?url=.
  *
  * Fetches one of the provider's own image files and hands the bytes back
  * same-origin, so the field can turn them into an upload without CORS. Only

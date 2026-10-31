@@ -114,7 +114,7 @@ final readonly class PropertyFileStore
 		if (in_array($stored->type, ['gallery', 'depot'], true)) {
 			// The same merge the gallery and depot meta routes use, by stored name.
 			$patched = $this->patcher->patchObjectPropertyMeta($collection, $id, $property, $stored->name, $meta, $stored->type === 'depot' ? $subpath : null);
-		} elseif (self::isNested($stored->type, $subpath)) {
+		} elseif ($this->isNested($stored->type, $subpath)) {
 			// A card child (`child`) or a deck item's child (`item/child`).
 			$patched = $this->patcher->patchNestedProperty($collection, $id, $property, (string)$subpath, MediaMetaPolicy::merge($stored->type, $value, $meta));
 		} else {
@@ -127,12 +127,12 @@ final readonly class PropertyFileStore
 	/**
 	 * The stored value of the field: the property itself, or for an image or
 	 * file inside a card or deck item, the child at `$subpath`. (A gallery's
-	 * or depot's subpath is a folder, not a child.)
+	 * or depot's subpath is a folder, not a child.).
 	 */
 	private function fileValue(ObjectData $object, string $property, string $type, ?string $subpath): mixed
 	{
 		$value = $object->toArray()[$property] ?? null;
-		if (self::isNested($type, $subpath)) {
+		if ($this->isNested($type, $subpath)) {
 			foreach (explode('/', (string)$subpath) as $segment) {
 				$value = is_array($value) ? ($value[$segment] ?? null) : null;
 			}
@@ -141,7 +141,7 @@ final readonly class PropertyFileStore
 		return $value;
 	}
 
-	private static function isNested(string $type, ?string $subpath): bool
+	private function isNested(string $type, ?string $subpath): bool
 	{
 		return $subpath !== null && $subpath !== '' && in_array($type, ['image', 'file'], true);
 	}
@@ -157,8 +157,8 @@ final readonly class PropertyFileStore
 
 		return match (true) {
 			$type === 'gallery' && is_array($value) && array_is_list($value) && $value !== [] => (string)(end($value)['name'] ?? ''),
-			in_array($type, ['image', 'file'], true) && is_array($value)                     => (string)($value['name'] ?? ''),
-			default                                                                          => basename($localPath),
+			in_array($type, ['image', 'file'], true) && is_array($value)                      => (string)($value['name'] ?? ''),
+			default                                                                           => basename($localPath),
 		};
 	}
 }

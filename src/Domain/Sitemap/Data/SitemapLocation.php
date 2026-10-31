@@ -24,8 +24,8 @@ readonly class SitemapLocation
 		// lastmod is optional, so a value that is not a date (the sitemap's date
 		// property pointed at a text field, say) drops the tag instead of the
 		// whole sitemap
-		$lastMod = self::parseDate($options['date'] ?? '');
-		if ($lastMod !== null) {
+		$lastMod = $this->parseDate($options['date'] ?? '');
+		if ($lastMod instanceof \DateTime) {
 			$this->location->setLastMod($lastMod);
 		}
 
@@ -38,7 +38,7 @@ readonly class SitemapLocation
 		}
 	}
 
-	private static function parseDate(string $value): ?\DateTime
+	private function parseDate(string $value): ?\DateTime
 	{
 		if ($value === '') {
 			return null;

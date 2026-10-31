@@ -10,7 +10,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
- * GET /admin/ext/totalcms/stock-photos/library?gallery=&name=
+ * GET /admin/ext/totalcms/stock-photos/library?gallery=&name=.
  *
  * The original file of one image in a library gallery, so a dropped photo is
  * copied byte for byte rather than through ImageWorks (which would re-encode

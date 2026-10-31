@@ -19,7 +19,7 @@ use TotalCMS\Domain\Starter\Data\StarterExportResult;
  * default. Then StarterProjectWriter writes the starter's own project files,
  * and a final scan fails the export if a known secret reached the output.
  */
-final class StarterExporter
+final readonly class StarterExporter
 {
 	/** Top-level project entries never copied. tcms-data is copied on its own. */
 	private const PROJECT_SKIP = ['vendor', 'cache', 'tmp', 'logs', 'composer.lock', '.git', 'tcms-data'];
@@ -36,8 +36,8 @@ final class StarterExporter
 	private const LARGEST_FILES = 5;
 
 	public function __construct(
-		private readonly StarterSecretScrubber $scrubber,
-		private readonly StarterProjectWriter $projectWriter,
+		private StarterSecretScrubber $scrubber,
+		private StarterProjectWriter $projectWriter,
 	) {
 	}
 

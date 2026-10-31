@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * GET /admin/ext/totalcms/stock-photos/sources
+ * GET /admin/ext/totalcms/stock-photos/sources.
  *
  * The tabs the panel shows: every source the current editor may use.
  */

@@ -7,6 +7,7 @@ use TotalCMS\Bundled\StockPhotos\DownloadAction;
 use TotalCMS\Bundled\StockPhotos\Extension;
 use TotalCMS\Bundled\StockPhotos\GalleryProvider;
 use TotalCMS\Bundled\StockPhotos\LibraryAction;
+use TotalCMS\Bundled\StockPhotos\PhotoProvider;
 use TotalCMS\Bundled\StockPhotos\PhotoSources;
 use TotalCMS\Bundled\StockPhotos\PixabayProvider;
 use TotalCMS\Bundled\StockPhotos\SearchAction;
@@ -50,7 +51,7 @@ function pixabayHit(array $overrides = []): array
  * The sources, as an editor who may (or may not) read the gallery collection
  * sees them.
  *
- * @param list<\TotalCMS\Bundled\StockPhotos\PhotoProvider> $providers
+ * @param list<PhotoProvider> $providers
  */
 function stockPhotoSources(array $providers, bool $canReadGalleries = true): PhotoSources
 {
@@ -235,11 +236,11 @@ test('the search route points each download at the proxy and keeps the key serve
 });
 
 test('the download proxy returns a Pixabay image and refuses any other host', function (): void {
-	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->tmpdir  = sys_get_temp_dir() . '/stock-photos-' . uniqid();
+	$config                  = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->tmpdir          = sys_get_temp_dir() . '/stock-photos-' . uniqid();
 	$config->maxDownloadSize = 10;
-	$fetched         = [];
-	$public          = new PublicHttpClient(
+	$fetched                 = [];
+	$public                  = new PublicHttpClient(
 		static fn (string $host): array => ['93.184.216.34'],
 		static function (string $url) use (&$fetched): array {
 			$fetched[] = $url;

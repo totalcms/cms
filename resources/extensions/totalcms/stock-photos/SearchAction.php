@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * GET /admin/ext/totalcms/stock-photos/search?source=&q=&page=&orientation=
+ * GET /admin/ext/totalcms/stock-photos/search?source=&q=&page=&orientation=.
  *
  * The panel's only way to a source: an API key stays on the server. A remote
  * photo's `download` is rewritten to this extension's download proxy, so the
