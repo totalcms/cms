@@ -192,7 +192,9 @@ class IndexBuilder
 			'object_count' => count($objectIds),
 		]);
 
-		$scratch = tmpfile();
+		// php://temp, not tmpfile(): hosts disable tmpfile() in PHP-FPM.
+		// Like the index stream, it spills to disk past 2 MB.
+		$scratch = fopen('php://temp/maxmemory:2097152', 'w+');
 		if ($scratch === false) {
 			throw new \RuntimeException('Failed to open a scratch file for the index build');
 		}
