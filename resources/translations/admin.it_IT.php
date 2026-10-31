@@ -596,8 +596,8 @@ return [
 
 	// ── Job Queue ───────────────────────────────────────────────────────────
 	'jobqueue.title'                => 'Gestore coda lavori',
-	'jobqueue.clear_desc'           => 'Questo cancellerà tutti i lavori di importazione in sospeso per <em><u>ogni raccolta</u></em>. Non eliminerà gli elementi già importati.',
-	'jobqueue.clear_btn'            => 'Cancella coda di importazione',
+	'jobqueue.clear_desc'           => 'Questo cancellerà tutti i lavori in coda, di qualsiasi tipo e per <em><u>ogni raccolta</u></em>, compresi quelli falliti. Il lavoro già completato non viene annullato.',
+	'jobqueue.clear_btn'            => 'Cancella coda lavori',
 	'jobqueue.clear_failed_desc'    => 'I lavori falliti vengono conservati per permetterti di vedere cosa è andato storto. Cancellandoli si rimuove solo l\'elenco degli errori — <em><u>i lavori in sospeso non sono interessati</u></em>.',
 	'jobqueue.clear_failed_btn'     => 'Cancella lavori falliti',
 	'cron_url.summary'              => 'Nessun accesso shell? Usa un URL cron',
@@ -1139,6 +1139,13 @@ return [
 	'dashboard.log_analyzer'           => 'Analizzatore log',
 	'dashboard.job_queue_manager'      => 'Gestore coda lavori',
 	'dashboard.cache_manager'          => 'Gestore cache',
+	'dashboard.new_page'               => 'Nuova pagina',
+	'dashboard.new_dataview'           => 'Nuova vista',
+	'dashboard.new_mailer'             => 'Nuova email',
+	'dashboard.new_automation'         => 'Nuova automazione',
+	'dashboard.twig_playground'        => 'Twig Playground',
+	'dashboard.activity_log'           => 'Registro attività',
+	'dashboard.documentation'          => 'Documentazione',
 
 	// ── Dashboard Collections Table ─────────────────────────────────────────
 	'dashboard.recent_collections'     => 'Raccolte recenti',
@@ -1158,6 +1165,12 @@ return [
 	// ── Dashboard Recent Activity ───────────────────────────────────────────
 	'dashboard.recent_activity'        => 'Attività recente',
 	'dashboard.no_activity'            => 'Nessuna attività recente.',
+	'dashboard.view_all_activity'      => 'Vedi tutta l’attività',
+	'dashboard.needs_attention'        => 'Richiede attenzione',
+	'dashboard.col_when'               => 'Quando',
+	'dashboard.col_event'              => 'Evento',
+	'dashboard.col_target'             => 'Oggetto',
+	'dashboard.col_who'                => 'Chi',
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Raccolte vuote',

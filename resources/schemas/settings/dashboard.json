@@ -55,6 +55,19 @@
 			"help"    : "Master switch for editing values in place. Turning it off hides the pencil in every collection table and refuses inline saves for everyone, regardless of access groups. When it is on, access groups decide who may use it.",
 			"default" : true
 		},
+		"quickActions": {
+			"type"     : "array",
+			"items"    : { "type": "string" },
+			"field"    : "list",
+			"label"    : "Quick Actions",
+			"help"     : "The buttons under <strong>Quick Actions</strong> on the dashboard home, in the order listed. Drag to reorder. Each person only sees the actions their access group and edition allow. Remove them all to hide the section.",
+			"default"  : ["new-collection", "new-schema", "new-template", "logs", "jobqueue", "cache-manager"],
+			"settings" : {
+				"propertyOptions"       : "quickActions",
+				"addChoices"            : false,
+				"duplicateItemsAllowed" : false
+			}
+		},
 		"moreMenu": {
 			"type"     : "array",
 			"items"    : { "type": "string" },

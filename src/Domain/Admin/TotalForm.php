@@ -829,6 +829,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * The dashboard's quick action catalog as `{value, label}` options.
+	 * Used for propertyOptions: "quickActions".
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function quickActionList(): array
+	{
+		return $this->services->navRegistry?->quickActions()->options() ?? [];
+	}
+
+	/**
 	 * View IDs for propertyOptions: "viewIds".
 	 *
 	 * @return array<string>

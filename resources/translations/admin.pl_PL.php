@@ -596,8 +596,8 @@ return [
 
 	// ── Job Queue ───────────────────────────────────────────────────────────
 	'jobqueue.title'                => 'Menedżer Job Queue',
-	'jobqueue.clear_desc'           => 'To wyczyści wszystkie oczekujące zadania importu dla <em><u>każdej collection</u></em>. Nie usunie żadnych elementów, które zostały już zaimportowane.',
-	'jobqueue.clear_btn'            => 'Wyczyść kolejkę importu',
+	'jobqueue.clear_desc'           => 'To wyczyści wszystkie zadania w kolejce, dowolnego rodzaju i dla <em><u>każdej collection</u></em>, łącznie z nieudanymi. Praca już wykonana przez zadania nie zostanie cofnięta.',
+	'jobqueue.clear_btn'            => 'Wyczyść kolejkę zadań',
 	'jobqueue.clear_failed_desc'    => 'Nieudane zadania są zachowywane, aby można było zobaczyć, co poszło nie tak. Wyczyszczenie usuwa tylko listę błędów — <em><u>zadania oczekujące nie są naruszane</u></em>.',
 	'jobqueue.clear_failed_btn'     => 'Wyczyść nieudane zadania',
 	'cron_url.summary'              => 'Brak dostępu do powłoki? Użyj adresu URL cron',
@@ -1139,6 +1139,13 @@ return [
 	'dashboard.log_analyzer'           => 'Analizator logów',
 	'dashboard.job_queue_manager'      => 'Menedżer Job Queue',
 	'dashboard.cache_manager'          => 'Menedżer cache',
+	'dashboard.new_page'               => 'Nowa strona',
+	'dashboard.new_dataview'           => 'Nowy widok',
+	'dashboard.new_mailer'             => 'Nowy e-mail',
+	'dashboard.new_automation'         => 'Nowa automatyzacja',
+	'dashboard.twig_playground'        => 'Twig Playground',
+	'dashboard.activity_log'           => 'Dziennik aktywności',
+	'dashboard.documentation'          => 'Dokumentacja',
 
 	// ── Dashboard Collections Table ─────────────────────────────────────────
 	'dashboard.recent_collections'     => 'Ostatnie Collections',
@@ -1158,6 +1165,12 @@ return [
 	// ── Dashboard Recent Activity ───────────────────────────────────────────
 	'dashboard.recent_activity'        => 'Ostatnia aktywność',
 	'dashboard.no_activity'            => 'Brak ostatniej aktywności.',
+	'dashboard.view_all_activity'      => 'Zobacz całą aktywność',
+	'dashboard.needs_attention'        => 'Wymaga uwagi',
+	'dashboard.col_when'               => 'Kiedy',
+	'dashboard.col_event'              => 'Zdarzenie',
+	'dashboard.col_target'             => 'Cel',
+	'dashboard.col_who'                => 'Kto',
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Puste Collections',

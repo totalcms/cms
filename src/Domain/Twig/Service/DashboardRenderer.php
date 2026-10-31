@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Service;
 
+use TotalCMS\Domain\Activity\Data\ActivityEntry;
+use TotalCMS\Domain\Activity\Data\ActivityFilter;
+use TotalCMS\Domain\Activity\Repository\ActivityRepository;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -27,9 +31,12 @@ use TotalCMS\Support\Config;
 /**
  * The admin dashboard's data panels behind `cms.admin.dashboard*()`: stats,
  * recent and empty collections, recent objects, system status (with the
- * license row), the aggregated alerts, automations, and job-queue health.
+ * license row), the aggregated alerts, automations, job-queue health and
+ * recent activity.
  *
  * AdminTwigAdapter is the Twig-facing entry point and delegates here.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") one public method per dashboard panel
  */
 readonly class DashboardRenderer
 {
@@ -49,7 +56,23 @@ readonly class DashboardRenderer
 		private AutomationLoader $automationLoader,
 		private AutomationRunReader $automationRunReader,
 		private ExtensionStateRepository $extensionStateRepository,
+		private ActivityRepository $activity,
 	) {
+	}
+
+	/**
+	 * The newest activity log rows, for admins only: the log names users, API
+	 * keys and email recipients.
+	 *
+	 * @return list<ActivityEntry>
+	 */
+	public function dashboardRecentActivity(int $limit = 10): array
+	{
+		if (!$this->auth->isAdmin()) {
+			return [];
+		}
+
+		return $this->activity->query(new ActivityFilter(), $limit);
 	}
 
 	/**
@@ -363,6 +386,9 @@ readonly class DashboardRenderer
 	 *   message  : human-readable description
 	 *   link     : ?string — relative admin path (no leading slash) or null
 	 *   linkText : ?string — CTA label or null
+	 *   critical : bool — something is broken or will lock someone out; the
+	 *              home shows these as banners, the rest in its Needs
+	 *              Attention card
 	 *
 	 * Never forces a cache refresh; reads cached status only so this is cheap
 	 * on every page load.
@@ -371,7 +397,7 @@ readonly class DashboardRenderer
 	 * alert (it requires the raw simulation flag from the request context which
 	 * is not cleanly available here without contorting the adapter).
 	 *
-	 * @return list<array{level:string,message:string,link:?string,linkText:?string}>
+	 * @return list<array{level:string,message:string,link:?string,linkText:?string,critical:bool}>
 	 */
 	public function dashboardAlerts(): array
 	{
@@ -386,6 +412,7 @@ readonly class DashboardRenderer
 					'message'  => "Total CMS {$update->version} is available.",
 					'link'     => 'utils/update',
 					'linkText' => 'View update',
+					'critical' => false,
 				];
 			}
 		} catch (\Throwable) {
@@ -404,6 +431,8 @@ readonly class DashboardRenderer
 				'message'  => $licenseData->tooltip !== '' ? $licenseData->tooltip : 'License requires attention.',
 				'link'     => 'utils/license-manager',
 				'linkText' => 'License Manager',
+				// Invalid or expired; the trial countdown is not.
+				'critical' => $licenseData->severity === 'error',
 			];
 		}
 
@@ -414,6 +443,7 @@ readonly class DashboardRenderer
 				'message'  => 'Register your trial to get email reminders before it expires.',
 				'link'     => 'utils/license-manager',
 				'linkText' => 'Register trial',
+				'critical' => false,
 			];
 		}
 
@@ -425,6 +455,7 @@ readonly class DashboardRenderer
 				'message'  => "Job queue appears stalled — {$queueHealth->pendingCount} job(s) waiting over {$queueHealth->thresholdMinutes} minutes.",
 				'link'     => 'utils/jobqueue',
 				'linkText' => 'Job Queue',
+				'critical' => true,
 			];
 		}
 
@@ -444,7 +475,15 @@ readonly class DashboardRenderer
 				'message'  => "{$failedCount} {$noun} failed on last run.",
 				'link'     => 'automations',
 				'linkText' => 'View automations',
+				'critical' => false,
 			];
+		}
+
+		// 4b. Email: not set up, or emails that were not sent
+		foreach ([$this->smtpAlert(), $this->failedEmailAlert()] as $emailAlert) {
+			if ($emailAlert !== null) {
+				$alerts[] = $emailAlert;
+			}
 		}
 
 		// 5. Extension boot failures (enabled extensions only)
@@ -463,6 +502,7 @@ readonly class DashboardRenderer
 				'message'  => "{$count} {$noun} failed to load: " . implode(', ', $failedExtensions) . '.',
 				'link'     => 'extensions',
 				'linkText' => 'View extensions',
+				'critical' => true,
 			];
 		}
 
@@ -488,10 +528,59 @@ readonly class DashboardRenderer
 				),
 				'link'     => null,
 				'linkText' => null,
+				'critical' => true,
 			];
 		}
 
 		return $alerts;
+	}
+
+	/**
+	 * Without a From address every email fails, the password reset email
+	 * included, so an admin who forgets their password is locked out. A host
+	 * left at its default is not flagged: a local mail server may answer it.
+	 *
+	 * @return array{level: string, message: string, link: string, linkText: string, critical: bool}|null
+	 */
+	private function smtpAlert(): ?array
+	{
+		if (trim((string)($this->config->smtp['from'] ?? '')) !== '') {
+			return null;
+		}
+
+		return [
+			'level'    => 'warning',
+			'message'  => 'Email is not set up, so no email can be sent — including the password reset email if you forget your password.',
+			'link'     => 'settings/smtp',
+			'linkText' => 'Set up SMTP',
+			'critical' => true,
+		];
+	}
+
+	/**
+	 * Emails that failed or were refused since yesterday, from the activity
+	 * log (`mailer.sent` warnings), linked to those rows. Bulk sends keep
+	 * their failures in Send History instead.
+	 *
+	 * @return array{level: string, message: string, link: string, linkText: string, critical: bool}|null
+	 */
+	private function failedEmailAlert(): ?array
+	{
+		$filter = new ActivityFilter(event: MailActivity::SENT, level: ActivityEntry::LEVEL_WARNING, from: date('Y-m-d', strtotime('-1 day')));
+		$count  = $this->activity->count($filter);
+		if ($count === 0) {
+			return null;
+		}
+
+		$noun = $count === 1 ? 'email' : 'emails';
+
+		return [
+			'level'    => 'warning',
+			'message'  => "{$count} {$noun} could not be sent since yesterday.",
+			'link'     => 'utils/activity?' . http_build_query($filter->toQuery()),
+			'linkText' => 'View in Activity Log',
+			'critical' => false,
+		];
 	}
 
 	/**

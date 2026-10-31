@@ -411,7 +411,7 @@
         {
             "name": "cms.admin.dashboardAlerts",
             "signature": "dashboardAlerts(): array",
-            "description": "Aggregated dashboard alerts \u2014 one entry per actionable condition. Returns `[]` when everything is healthy (all-clear). Each entry: level : 'warning'|'error'|'info' message : human-readable description link : ?string \u2014 relative admin path (no leading slash) or null linkText : ?string \u2014 CTA label or null",
+            "description": "Aggregated dashboard alerts \u2014 one entry per actionable condition. Returns `[]` when everything is healthy (all-clear). Each entry: level : 'warning'|'error'|'info' message : human-readable description link : ?string \u2014 relative admin path (no leading slash) or null linkText : ?string \u2014 CTA label or null critical : bool \u2014 something is broken or will lock someone out; the home shows these as banners, the rest in its Needs Attention card",
             "examples": [],
             "url": "https://docs.totalcms.co/admin/twig/"
         },
@@ -435,6 +435,20 @@
             "name": "cms.admin.dashboardJobQueueHealth",
             "signature": "dashboardJobQueueHealth(): JobQueueHealthData",
             "description": "Job-queue health for the dashboard + Job Queue Manager warning. Returns a stalled flag (oldest waiting job past the threshold with no processor running) plus context for the message.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
+            "name": "cms.admin.dashboardQuickActions",
+            "signature": "dashboardQuickActions(): array",
+            "description": "The dashboard's quick actions for the current user, in the order the Dashboard settings list them.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
+            "name": "cms.admin.dashboardRecentActivity",
+            "signature": "dashboardRecentActivity(int $limit = 10): array",
+            "description": "The newest activity log rows for the dashboard home; [] for anyone who is not an admin.",
             "examples": [],
             "url": "https://docs.totalcms.co/admin/twig/"
         },

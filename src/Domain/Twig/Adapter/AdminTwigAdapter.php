@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Activity\Data\ActivityEntry;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\Nav\NavEntry;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -88,6 +89,19 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * The dashboard's quick actions for the current user, in the order the
+	 * Dashboard settings list them.
+	 *
+	 * Usage in Twig: {{ dashboard.quickActions(cms.admin.dashboardQuickActions()) }}
+	 *
+	 * @return list<NavEntry>
+	 */
+	public function dashboardQuickActions(): array
+	{
+		return $this->nav->quickActions()->visible();
+	}
+
+	/**
 	 * Job-queue health for the dashboard + Job Queue Manager warning. Returns a
 	 * stalled flag (oldest waiting job past the threshold with no processor
 	 * running) plus context for the message.
@@ -156,6 +170,9 @@ readonly class AdminTwigAdapter
 	 *   message  : human-readable description
 	 *   link     : ?string — relative admin path (no leading slash) or null
 	 *   linkText : ?string — CTA label or null
+	 *   critical : bool — something is broken or will lock someone out; the
+	 *              home shows these as banners, the rest in its Needs
+	 *              Attention card
 	 *
 	 * Never forces a cache refresh; reads cached status only so this is cheap
 	 * on every page load.
@@ -164,7 +181,7 @@ readonly class AdminTwigAdapter
 	 * alert (it requires the raw simulation flag from the request context which
 	 * is not cleanly available here without contorting the adapter).
 	 *
-	 * @return list<array{level:string,message:string,link:?string,linkText:?string}>
+	 * @return list<array{level:string,message:string,link:?string,linkText:?string,critical:bool}>
 	 */
 	public function dashboardAlerts(): array
 	{
@@ -204,6 +221,17 @@ readonly class AdminTwigAdapter
 	public function dashboardAutomations(): array
 	{
 		return $this->dashboard->dashboardAutomations();
+	}
+
+	/**
+	 * The newest activity log rows for the dashboard home; [] for anyone who
+	 * is not an admin.
+	 *
+	 * @return list<ActivityEntry>
+	 */
+	public function dashboardRecentActivity(int $limit = 10): array
+	{
+		return $this->dashboard->dashboardRecentActivity($limit);
 	}
 
 	/**

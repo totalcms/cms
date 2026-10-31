@@ -596,8 +596,8 @@ return [
 
 	// ── Job Queue ───────────────────────────────────────────────────────────
 	'jobqueue.title'                => 'Job Queue Manager',
-	'jobqueue.clear_desc'           => 'This will clear the all the pending import jobs for <em><u>every collection</u></em>. This will not delete any items that have already been imported.',
-	'jobqueue.clear_btn'            => 'Clear Import Queue',
+	'jobqueue.clear_desc'           => 'This will clear every job in the queue, whatever its kind and for <em><u>every collection</u></em>, failed jobs included. Work that jobs have already finished is not undone.',
+	'jobqueue.clear_btn'            => 'Clear Job Queue',
 	'jobqueue.clear_failed_desc'    => 'Failed jobs are kept so you can see what went wrong. Clearing them removes the error list only — <em><u>pending jobs are not affected</u></em>.',
 	'jobqueue.clear_failed_btn'     => 'Clear Failed Jobs',
 	'cron_url.summary'              => 'No shell access? Use a cron URL instead',
@@ -1139,6 +1139,13 @@ return [
 	'dashboard.log_analyzer'           => 'Log Analyser',
 	'dashboard.job_queue_manager'      => 'Job Queue Manager',
 	'dashboard.cache_manager'          => 'Cache Manager',
+	'dashboard.new_page'               => 'New Page',
+	'dashboard.new_dataview'           => 'New Data View',
+	'dashboard.new_mailer'             => 'New Email',
+	'dashboard.new_automation'         => 'New Automation',
+	'dashboard.twig_playground'        => 'Twig Playground',
+	'dashboard.activity_log'           => 'Activity Log',
+	'dashboard.documentation'          => 'Documentation',
 
 	// ── Dashboard Collections Table ─────────────────────────────────────────
 	'dashboard.recent_collections'     => 'Recent Collections',
@@ -1158,6 +1165,12 @@ return [
 	// ── Dashboard Recent Activity ───────────────────────────────────────────
 	'dashboard.recent_activity'        => 'Recent Activity',
 	'dashboard.no_activity'            => 'No recent activity yet.',
+	'dashboard.view_all_activity'      => 'View all activity',
+	'dashboard.needs_attention'        => 'Needs Attention',
+	'dashboard.col_when'               => 'When',
+	'dashboard.col_event'              => 'Event',
+	'dashboard.col_target'             => 'Target',
+	'dashboard.col_who'                => 'Who',
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Empty Collections',

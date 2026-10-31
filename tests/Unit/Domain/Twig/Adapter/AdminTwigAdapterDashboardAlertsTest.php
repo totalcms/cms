@@ -6,6 +6,9 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use League\Flysystem\FilesystemOperator;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Activity\Data\ActivityFilter;
+use TotalCMS\Domain\Activity\Repository\ActivityRepository;
+use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -17,6 +20,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 use TotalCMS\Domain\Update\Data\UpdateInfo;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Support\Config;
 
 /**
  * Unit tests for AdminTwigAdapter::dashboardAlerts().
@@ -218,6 +222,11 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$jobQueueHealth = $overrides['jobQueueHealth'] ?? $this->mockJobQueueHealth($this->healthyQueueData());
 		$runReader      = $overrides['runReader'] ?? $this->stubRunReader([]);
 		$stateRepo      = $overrides['stateRepo'] ?? $this->stubStateRepo([]);
+		$activity       = $overrides['activity'] ?? $this->mockFailedEmails(0);
+
+		// SMTP set up unless a test says otherwise.
+		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->smtp = $overrides['smtp'] ?? ['from' => 'site@example.com'];
 
 		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
 		$ref     = new \ReflectionClass($adapter);
@@ -227,8 +236,18 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$ref->getProperty('jobQueueHealth')->setValue($adapter, $jobQueueHealth);
 		$ref->getProperty('automationRunReader')->setValue($adapter, $runReader);
 		$ref->getProperty('extensionStateRepository')->setValue($adapter, $stateRepo);
+		$ref->getProperty('activity')->setValue($adapter, $activity);
+		$ref->getProperty('config')->setValue($adapter, $config);
 
 		return $adapter;
+	}
+
+	private function mockFailedEmails(int $count): ActivityRepository
+	{
+		$mock = $this->createMock(ActivityRepository::class);
+		$mock->method('count')->willReturn($count);
+
+		return $mock;
 	}
 
 	private function mockUpdateChecker(UpdateInfo $info): UpdateChecker
@@ -262,6 +281,48 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	public function testAllClearReturnsEmptyArray(): void
 	{
 		$this->assertSame([], $this->makeAlertsAdapter()->dashboardAlerts());
+	}
+
+	// -------------------------------------------------------------------------
+	// dashboardAlerts() — email
+	// -------------------------------------------------------------------------
+
+	public function testNoFromAddressWarnsThatEmailIsNotSetUp(): void
+	{
+		$alerts = $this->makeAlertsAdapter(['smtp' => ['host' => '127.0.0.1', 'from' => ' ']])->dashboardAlerts();
+
+		$this->assertCount(1, $alerts);
+		$this->assertSame('settings/smtp', $alerts[0]['link']);
+		$this->assertStringContainsString('password reset', $alerts[0]['message']);
+		$this->assertTrue($alerts[0]['critical'], 'a forgotten password cannot be reset, so it is a banner');
+	}
+
+	public function testFailedEmailsSinceYesterdayLinkToThoseActivityRows(): void
+	{
+		$activity = $this->createMock(ActivityRepository::class);
+		$activity->method('count')->willReturnCallback(function (ActivityFilter $filter): int {
+			$this->assertSame(MailActivity::SENT, $filter->event);
+			$this->assertSame('warning', $filter->level);
+			$this->assertSame(date('Y-m-d', strtotime('-1 day')), $filter->from);
+
+			return 3;
+		});
+
+		$alerts = $this->makeAlertsAdapter(['activity' => $activity])->dashboardAlerts();
+
+		$this->assertCount(1, $alerts);
+		$this->assertSame('3 emails could not be sent since yesterday.', $alerts[0]['message']);
+		$this->assertStringStartsWith('utils/activity?event=mailer.sent&level=warning&from=', $alerts[0]['link']);
+		$this->assertFalse($alerts[0]['critical']);
+	}
+
+	public function testOnlyAnInvalidLicenseIsCriticalNotATrialCountdown(): void
+	{
+		$invalid = $this->makeAlertsAdapter(['licenseStatus' => $this->mockLicenseStatus(new LicenseStatusData(showIcon: true, severity: 'error', tooltip: 'License invalid'))])->dashboardAlerts();
+		$trial   = $this->makeAlertsAdapter(['licenseStatus' => $this->mockLicenseStatus(new LicenseStatusData(showIcon: true, severity: 'warning', tooltip: 'Trial ends soon', daysRemaining: 5))])->dashboardAlerts();
+
+		$this->assertTrue($invalid[0]['critical']);
+		$this->assertFalse($trial[0]['critical']);
 	}
 
 	// -------------------------------------------------------------------------
@@ -459,6 +520,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 			$this->assertArrayHasKey('message', $alert);
 			$this->assertArrayHasKey('link', $alert);
 			$this->assertArrayHasKey('linkText', $alert);
+			$this->assertIsBool($alert['critical']);
 			$this->assertContains($alert['level'], ['warning', 'error', 'info']);
 			$this->assertIsString($alert['message']);
 			$this->assertTrue($alert['link'] === null || is_string($alert['link']));

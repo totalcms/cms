@@ -596,8 +596,8 @@ return [
 
 	// ── Job Queue ───────────────────────────────────────────────────────────
 	'jobqueue.title'                => 'Job-Queue-Manager',
-	'jobqueue.clear_desc'           => 'Dies löscht alle ausstehenden Import-Aufträge für <em><u>alle Collections</u></em>. Bereits importierte Einträge werden nicht gelöscht.',
-	'jobqueue.clear_btn'            => 'Import-Warteschlange leeren',
+	'jobqueue.clear_desc'           => 'Dies löscht alle Aufträge in der Warteschlange, jeder Art und für <em><u>alle Collections</u></em>, fehlgeschlagene eingeschlossen. Bereits erledigte Arbeit wird nicht rückgängig gemacht.',
+	'jobqueue.clear_btn'            => 'Job-Warteschlange leeren',
 	'jobqueue.clear_failed_desc'    => 'Fehlgeschlagene Aufträge bleiben erhalten, damit Sie sehen können, was schiefgelaufen ist. Beim Leeren wird nur die Fehlerliste entfernt — <em><u>ausstehende Aufträge sind nicht betroffen</u></em>.',
 	'jobqueue.clear_failed_btn'     => 'Fehlgeschlagene Aufträge leeren',
 	'cron_url.summary'              => 'Kein Shell-Zugriff? Nutzen Sie stattdessen eine Cron-URL',
@@ -1139,6 +1139,13 @@ return [
 	'dashboard.log_analyzer'           => 'Log-Analyse',
 	'dashboard.job_queue_manager'      => 'Job-Warteschlange',
 	'dashboard.cache_manager'          => 'Cache-Verwaltung',
+	'dashboard.new_page'               => 'Neue Seite',
+	'dashboard.new_dataview'           => 'Neue Ansicht',
+	'dashboard.new_mailer'             => 'Neue E-Mail',
+	'dashboard.new_automation'         => 'Neue Automation',
+	'dashboard.twig_playground'        => 'Twig Playground',
+	'dashboard.activity_log'           => 'Aktivitätsprotokoll',
+	'dashboard.documentation'          => 'Dokumentation',
 
 	// ── Dashboard Collections Table ─────────────────────────────────────────
 	'dashboard.recent_collections'     => 'Letzte Collections',
@@ -1158,6 +1165,12 @@ return [
 	// ── Dashboard Recent Activity ───────────────────────────────────────────
 	'dashboard.recent_activity'        => 'Letzte Aktivitäten',
 	'dashboard.no_activity'            => 'Noch keine Aktivitäten vorhanden.',
+	'dashboard.view_all_activity'      => 'Alle Aktivitäten anzeigen',
+	'dashboard.needs_attention'        => 'Erfordert Aufmerksamkeit',
+	'dashboard.col_when'               => 'Wann',
+	'dashboard.col_event'              => 'Ereignis',
+	'dashboard.col_target'             => 'Ziel',
+	'dashboard.col_who'                => 'Wer',
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Leere Collections',

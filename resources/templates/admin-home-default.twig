@@ -1,19 +1,19 @@
 {% import 'dashboard-widgets.twig' as dashboard %}
 
-{# Unified alert panel — folds in job-queue, extension boot failures, update, license, and simulation #}
+{# Alerts: critical ones (something is broken, or will lock you out) are
+   banners across the top; the rest go in the sidebar's Needs Attention card. #}
+{% set alerts = [] %}
 {% if cms.auth.isAdmin() %}
 	{% set alerts = cms.admin.dashboardAlerts() %}
 	{% if cms.edition.isSimulating %}
-		{% set alerts = [{level: 'warning', message: t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}), link: 'settings/license', linkText: t('dashboard.disable_simulation')}]|merge(alerts) %}
+		{% set alerts = [{level: 'warning', message: t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}), link: 'settings/license', linkText: t('dashboard.disable_simulation'), critical: true}]|merge(alerts) %}
 	{% endif %}
-	{{ dashboard.needsAttention(alerts) }}
+	{{ dashboard.criticalAlerts(alerts|filter(alert => alert.critical)) }}
 {% endif %}
 
 {# Get dashboard data #}
 {% set stats = cms.admin.dashboardStats() %}
 {% set collections = cms.admin.dashboardRecentCollections() %}
-{# This is sloooooow #}
-{# {% set recentObjects = cms.admin.dashboardRecentObjects() %} #}
 {% set emptyCollections = cms.admin.dashboardEmptyCollections() %}
 {% set systemStatus = cms.admin.dashboardSystemStatus() %}
 {% set inaccessibleCollections = cms.admin.inaccessibleCollections() %}
@@ -33,11 +33,16 @@
 	{{ dashboard.statsCard(stats) }}
 
 	{# Display quick actions #}
-	{{ dashboard.quickActions() }}
+	{{ dashboard.quickActions(cms.admin.dashboardQuickActions()) }}
 
 	{# Main content area - two column layout #}
 	<div class="dashboard-grid">
 		<div class="dashboard-main">
+			{# Recent activity from the activity log — admins only #}
+			{% if cms.auth.isAdmin() %}
+				{{ dashboard.recentActivity(cms.admin.dashboardRecentActivity(25)) }}
+			{% endif %}
+
 			{# Collections overview table #}
 			{{ dashboard.collectionsTable(collections) }}
 
@@ -58,17 +63,12 @@
 		</div>
 
 		<div class="dashboard-sidebar">
+			{# Alerts that are not critical; hidden when there are none #}
+			{{ dashboard.needsAttention(alerts|filter(alert => not alert.critical)) }}
+
 			{# Development mode toggle #}
 			{% if cms.auth.isAdmin() %}
 				{{ dashboard.devModeToggle() }}
-			{% endif %}
-
-			{# Recent activity - disabled until optimized #}
-			{# {{ dashboard.recentActivity() }} #}
-
-			{# System status #}
-			{% if cms.auth.isAdmin() %}
-				{{ dashboard.systemStatus(systemStatus) }}
 			{% endif %}
 
 			{# Automations widget #}
@@ -77,6 +77,11 @@
 				{% if automations %}
 					{{ dashboard.automationsWidget(automations) }}
 				{% endif %}
+			{% endif %}
+
+			{# System status #}
+			{% if cms.auth.isAdmin() %}
+				{{ dashboard.systemStatus(systemStatus) }}
 			{% endif %}
 
 			{# Extension widgets (sidebar) #}

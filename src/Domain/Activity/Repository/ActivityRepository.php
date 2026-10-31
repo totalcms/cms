@@ -53,11 +53,12 @@ class ActivityRepository
 	}
 
 	/**
-	 * Newest first, one page of the filter.
+	 * Newest first, one page of the filter. $limit shortens the page, for a
+	 * glance such as the dashboard's Recent Activity.
 	 *
 	 * @return list<ActivityEntry>
 	 */
-	public function query(ActivityFilter $filter): array
+	public function query(ActivityFilter $filter, int $limit = ActivityFilter::PAGE_SIZE): array
 	{
 		if (!$this->dbExists()) {
 			return [];
@@ -69,7 +70,7 @@ class ActivityRepository
 		foreach ($params as $key => $value) {
 			$stmt->bindValue($key, $value);
 		}
-		$stmt->bindValue(':limit', ActivityFilter::PAGE_SIZE, \PDO::PARAM_INT);
+		$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
 		$stmt->bindValue(':offset', $filter->offset(), \PDO::PARAM_INT);
 		$stmt->execute();
 

@@ -48,44 +48,21 @@
 </div>
 {% endmacro %}
 
-{# Quick Actions - Common tasks #}
-{% macro quickActions() %}
+{# Quick Actions - chosen and ordered in Settings → Dashboard #}
+{% macro quickActions(actions) %}
+{% if actions is not empty %}
 <div class="dashboard-section">
 	<h2>{{ t('dashboard.quick_actions') }}</h2>
 	<div class="quick-actions">
-		<a href="collections/new" class="action-button">
-			<span class="action-icon icon-collections"></span>
-			<span class="action-text">{{ t('dashboard.new_collection') }}</span>
+		{% for action in actions %}
+		<a href="{{ action.url }}" class="action-button">
+			<span class="action-icon" style="--action-icon: {{ action.icon }}"></span>
+			<span class="action-text">{{ action.label }}</span>
 		</a>
-
-		<a href="schemas/new" class="action-button">
-			<span class="action-icon icon-schema"></span>
-			<span class="action-text">{{ t('dashboard.new_schema') }}</span>
-		</a>
-
-		<a href="templates/new" class="action-button">
-			<span class="action-icon icon-templates"></span>
-			<span class="action-text">{{ t('dashboard.new_template') }}</span>
-		</a>
-
-		{% if cms.auth.isAdmin() %}
-		<a href="utils/logs" class="action-button">
-			<span class="action-icon icon-warn"></span>
-			<span class="action-text">{{ t('dashboard.log_analyzer') }}</span>
-		</a>
-
-		<a href="utils/jobqueue" class="action-button">
-			<span class="action-icon icon-terminal"></span>
-			<span class="action-text">{{ t('dashboard.job_queue_manager') }}</span>
-		</a>
-
-		<a href="utils/cache-manager" class="action-button">
-			<span class="action-icon icon-clean-o"></span>
-			<span class="action-text">{{ t('dashboard.cache_manager') }}</span>
-		</a>
-		{% endif %}
+		{% endfor %}
 	</div>
 </div>
+{% endif %}
 {% endmacro %}
 
 {# Collections Overview Table #}
@@ -157,26 +134,46 @@
 </div>
 {% endmacro %}
 
-{# Recent Activity #}
-{% macro recentActivity(recentObjects) %}
-<div class="dashboard-section">
-	<h2>{{ t('dashboard.recent_activity') }}</h2>
-	{% if recentObjects|length > 0 %}
-	<div class="recent-activity-list">
-		{% for object in recentObjects %}
-		<div class="activity-item">
-			<div class="activity-icon schema-{{ object.schema }}"></div>
-			<div class="activity-content">
-				<div class="activity-title">
-					<a href="{{ object.editUrl }}">{{ object.displayName }}</a>
-				</div>
-				<div class="activity-meta">
-					<span class="collection-name">{{ object.collectionName }}</span>
-					<span class="activity-time">{{ object.timestamp|date('M j, Y g:i A') }}</span>
-				</div>
-			</div>
-		</div>
-		{% endfor %}
+{# Recent Activity — the newest activity log rows. Admins only: the log names
+   users, API keys and email recipients. #}
+{% macro recentActivity(entries) %}
+<div class="dashboard-section recent-activity">
+	<div class="recent-activity-header">
+		<h2>{{ t('dashboard.recent_activity') }}</h2>
+		{% if entries|length > 0 %}
+		<a class="recent-activity-more" href="utils/activity">{{ t('dashboard.view_all_activity') }} →</a>
+		{% endif %}
+	</div>
+	{% if entries|length > 0 %}
+	<div class="recent-activity-table">
+		<table>
+			<thead>
+				<tr>
+					<th>{{ t('dashboard.col_when') }}</th>
+					<th>{{ t('dashboard.col_event') }}</th>
+					<th>{{ t('dashboard.col_target') }}</th>
+					<th>{{ t('dashboard.col_who') }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for entry in entries %}
+				<tr class="{{ entry.level == 'warning' ? 'activity-warning' }}"{% if entry.summary %} title="{{ entry.summary }}"{% endif %}>
+					<td class="activity-when"><time datetime="{{ entry.createdAt|date('c') }}" title="{{ entry.createdAt|date('Y-m-d H:i:s') }}">{{ entry.createdAt|date('M j, g:i A') }}</time></td>
+					<td><a class="dash-badge sm {{ entry.level == 'warning' ? 'warning' : 'accent' }}" href="utils/activity?{{ {event: entry.event}|url_encode }}">{{ entry.event }}</a></td>
+					<td class="activity-target">
+						{% if entry.collection and entry.objectId and entry.event starts with 'object.' and entry.event != 'object.deleted' %}
+							<a href="collections/{{ entry.collection|url_encode }}/{{ entry.objectId|url_encode }}">{{ entry.collection }} / {{ entry.objectId }}</a>
+						{% elseif entry.collection %}
+							{{ entry.collection }}{% if entry.objectId %} / {{ entry.objectId }}{% endif %}
+						{% else %}
+							{{ entry.objectId ?: entry.summary }}
+						{% endif %}
+					</td>
+					<td class="activity-who">{{ entry.actorLabel() }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
 	</div>
 	{% else %}
 	<div class="empty-state">
@@ -322,7 +319,9 @@
 {% endmacro %}
 
 {# Needs Attention — unified alert panel. Renders nothing when alerts is empty. #}
-{% macro needsAttention(alerts) %}
+{# Critical alerts — banners across the top of the home: something is broken
+   or will lock someone out. Renders nothing when there are none. #}
+{% macro criticalAlerts(alerts) %}
 {% if alerts|length > 0 %}
 <div class="dashboard-alerts-panel">
 	{% for alert in alerts %}
@@ -335,6 +334,29 @@
 		</div>
 	</div>
 	{% endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Needs Attention — the sidebar card for alerts worth a look where nothing is
+   down. Renders nothing when there are none. #}
+{% macro needsAttention(alerts) %}
+{% if alerts|length > 0 %}
+<div class="dashboard-section needs-attention">
+	<h2>{{ t('dashboard.needs_attention') }} <span class="needs-attention-count">{{ alerts|length }}</span></h2>
+	<ul class="needs-attention-list">
+		{% for alert in alerts %}
+		<li class="needs-attention-item needs-attention-item--{{ alert.level }}">
+			<span class="needs-attention-check" aria-hidden="true"></span>
+			<div class="needs-attention-body">
+				<span class="needs-attention-message">{{ alert.message | raw }}</span>
+				{% if alert.link is not null and alert.link %}
+				<a href="{{ alert.link }}">{{ alert.linkText ?? alert.link }} →</a>
+				{% endif %}
+			</div>
+		</li>
+		{% endfor %}
+	</ul>
 </div>
 {% endif %}
 {% endmacro %}

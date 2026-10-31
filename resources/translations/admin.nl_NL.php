@@ -596,8 +596,8 @@ return [
 
 	// ── Job Queue ───────────────────────────────────────────────────────────
 	'jobqueue.title'                => 'Taakwachtrijbeheerder',
-	'jobqueue.clear_desc'           => 'Dit wist alle wachtende importtaken voor <em><u>elke Collection</u></em>. Reeds geïmporteerde items worden niet verwijderd.',
-	'jobqueue.clear_btn'            => 'Importwachtrij wissen',
+	'jobqueue.clear_desc'           => 'Dit wist alle taken in de wachtrij, van elk type en voor <em><u>elke Collection</u></em>, mislukte taken inbegrepen. Werk dat al is afgerond, wordt niet ongedaan gemaakt.',
+	'jobqueue.clear_btn'            => 'Taakwachtrij wissen',
 	'jobqueue.clear_failed_desc'    => 'Mislukte taken blijven bewaard zodat u kunt zien wat er misging. Wissen verwijdert alleen de foutenlijst — <em><u>wachtende taken worden niet beïnvloed</u></em>.',
 	'jobqueue.clear_failed_btn'     => 'Mislukte taken wissen',
 	'cron_url.summary'              => 'Geen shell-toegang? Gebruik een cron-URL',
@@ -1139,6 +1139,13 @@ return [
 	'dashboard.log_analyzer'           => 'Log Analyzer',
 	'dashboard.job_queue_manager'      => 'Job Queue Manager',
 	'dashboard.cache_manager'          => 'Cache Manager',
+	'dashboard.new_page'               => 'Nieuwe pagina',
+	'dashboard.new_dataview'           => 'Nieuwe weergave',
+	'dashboard.new_mailer'             => 'Nieuw e-mailsjabloon',
+	'dashboard.new_automation'         => 'Nieuwe automatisering',
+	'dashboard.twig_playground'        => 'Twig Playground',
+	'dashboard.activity_log'           => 'Activiteitenlog',
+	'dashboard.documentation'          => 'Documentatie',
 
 	// ── Dashboard Collections Table ─────────────────────────────────────────
 	'dashboard.recent_collections'     => 'Recente Collections',
@@ -1158,6 +1165,12 @@ return [
 	// ── Dashboard Recent Activity ───────────────────────────────────────────
 	'dashboard.recent_activity'        => 'Recente activiteit',
 	'dashboard.no_activity'            => 'Nog geen recente activiteit.',
+	'dashboard.view_all_activity'      => 'Alle activiteit bekijken',
+	'dashboard.needs_attention'        => 'Vraagt aandacht',
+	'dashboard.col_when'               => 'Wanneer',
+	'dashboard.col_event'              => 'Gebeurtenis',
+	'dashboard.col_target'             => 'Doel',
+	'dashboard.col_who'                => 'Wie',
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Lege Collections',

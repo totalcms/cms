@@ -16,6 +16,7 @@ use Symfony\Component\Console\Application;
 use Tests\Fakes\OfflineHttpClient;
 use TotalCMS\Action\Admin\MediaToolAccess;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Auth\Data\Actor;
@@ -584,6 +585,7 @@ function buildAdminTwigAdapter(
 	ExtensionStateRepository $extensionStateRepository,
 	CronTokenProvider $cronTokens,
 	?AdminNavRegistry $nav = null,
+	?ActivityRepository $activity = null,
 ): AdminTwigAdapter {
 	return new AdminTwigAdapter(
 		$config,
@@ -597,7 +599,7 @@ function buildAdminTwigAdapter(
 		$cacheSizingAdvisor,
 		$translator,
 		$editionFeatures,
-		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository),
+		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository, $activity ?? new ActivityRepository($config)),
 		new JobQueueRenderer($config, $jobManager, $cronTokens),
 		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
 		// The adapter tests never render the rail, so a bare ExtensionManager

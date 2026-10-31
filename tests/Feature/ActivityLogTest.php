@@ -274,6 +274,41 @@ describe('the Activity page', function (): void {
 			->and($body)->not->toContain('other-post');
 	});
 
+	it('shows the newest rows on the dashboard home, linking an object to its edit page', function (): void {
+		$container = $this->app->getContainer();
+		foreach (['qa-one', 'qa-two', 'qa-three', 'qa-four'] as $id) {
+			$container->get(CollectionSaver::class)->saveCollection(['id' => $id, 'name' => $id, 'schema' => 'blog']);
+		}
+		$container->get(ActivityRecorder::class)->record('object.updated', ['kind' => 'admin', 'userId' => 'joe', 'authCollection' => 'auth'], ['collection' => 'blog', 'objectId' => 'hello-world', 'summary' => 'title']);
+
+		$body  = (string)get('/admin')->getBody();
+		$start = (int)strpos($body, 'class="dashboard-section recent-activity"');
+
+		expect($start)->toBeGreaterThan(0)
+			->and(substr($body, $start, 3000))->toContain('href="collections/blog/hello-world"', 'auth/joe', 'href="utils/activity"');
+	});
+
+	it('puts a critical alert in a banner and the rest in the Needs Attention card, which is hidden when empty', function (): void {
+		$container = $this->app->getContainer();
+		foreach (['qa-one', 'qa-two', 'qa-three', 'qa-four'] as $id) {
+			$container->get(CollectionSaver::class)->saveCollection(['id' => $id, 'name' => $id, 'schema' => 'blog']);
+		}
+		$config       = $container->get(Config::class);
+		$config->smtp = ['from' => 'site@example.com'];
+
+		expect((string)get('/admin')->getBody())->not->toContain('class="dashboard-section needs-attention"');
+
+		$container->get(ActivityRecorder::class)->record(MailActivity::SENT, ['kind' => 'system'], ['level' => 'warning', 'summary' => 'Hello: refused']);
+		$config->smtp = ['from' => ''];
+
+		$body   = (string)get('/admin')->getBody();
+		$banner = substr($body, (int)strpos($body, 'class="dashboard-alerts-panel"'), 1500);
+		$card   = substr($body, (int)strpos($body, 'class="dashboard-section needs-attention"'), 1500);
+
+		expect($banner)->toContain('settings/smtp')->not->toContain('could not be sent')
+			->and($card)->toContain('1 email could not be sent since yesterday.')->not->toContain('settings/smtp');
+	});
+
 	it('renders an empty log', function (): void {
 		$response = get('/admin/utils/activity');
 

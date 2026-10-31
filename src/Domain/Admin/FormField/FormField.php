@@ -680,6 +680,7 @@ class FormField
 			'pages'               => $this->form->pageListForBuilder(),
 			'pageMiddleware'      => $this->form->pageMiddlewareList(),
 			'navItems'            => $this->form->adminNavItemList(),
+			'quickActions'        => $this->form->quickActionList(),
 			'schemaProperties'    => $this->form->schemaPropertyKeys(),
 			'locales'             => $this->form->localeList(),
 			'countries'           => $this->form->countryList(),

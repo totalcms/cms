@@ -21,6 +21,9 @@ use TotalCMS\Support\Config;
  * applies them for the current request, and {@see menu()} then splits what
  * is left by the `dashboard.moreMenu` setting — ids the operator has moved
  * into the three-dots popover at the bottom of the rail.
+ *
+ * The dashboard's Quick Actions ({@see QuickActions}) use the same auth and
+ * edition rules through {@see allows()}.
  */
 readonly class AdminNavRegistry
 {
@@ -95,7 +98,7 @@ readonly class AdminNavRegistry
 	 */
 	public function visible(): array
 	{
-		return array_values(array_filter($this->items(), $this->allowed(...)));
+		return array_values(array_filter($this->items(), $this->allows(...)));
 	}
 
 	/**
@@ -157,24 +160,33 @@ readonly class AdminNavRegistry
 		return array_map(fn (NavEntry $entry): array => ['value' => $entry->id, 'label' => $entry->label], $this->items());
 	}
 
-	private function allowed(NavEntry $entry): bool
+	/** The dashboard's Quick Actions, checked with the same rules as the rail. */
+	public function quickActions(): QuickActions
+	{
+		return new QuickActions($this, $this->translator, $this->config);
+	}
+
+	/** Whether the current user may use $entry: its edition, then its permission. */
+	public function allows(NavEntry $entry): bool
 	{
 		if ($entry->edition !== null && !$this->edition->can($entry->edition)) {
 			return false;
 		}
 
 		return match ($entry->permission) {
-			'collections:read' => $this->auth->canAccessCollectionsOperation('read'),
-			'schemas:read'     => $this->auth->canAccessSchemasOperation('read'),
-			'dataviews'        => $this->auth->canAccessDataViews(),
-			'builder'          => $this->auth->canAccessBuilder(),
-			'mailer'           => $this->auth->canAccessMailer(),
-			'playground'       => $this->auth->canAccessPlayground(),
-			'utils'            => $this->auth->canAccessUtils(),
-			'docs'             => $this->auth->canAccessDocs(),
-			'admin'            => $this->auth->isAdmin(),
-			'extension'        => $this->auth->canAccessExtension($entry->extensionId),
-			default            => false,
+			'collections:read'   => $this->auth->canAccessCollectionsOperation('read'),
+			'collections:create' => $this->auth->canAccessCollectionsOperation('create'),
+			'schemas:read'       => $this->auth->canAccessSchemasOperation('read'),
+			'schemas:create'     => $this->auth->canAccessSchemasOperation('create'),
+			'dataviews'          => $this->auth->canAccessDataViews(),
+			'builder'            => $this->auth->canAccessBuilder(),
+			'mailer'             => $this->auth->canAccessMailer(),
+			'playground'         => $this->auth->canAccessPlayground(),
+			'utils'              => $this->auth->canAccessUtils(),
+			'docs'               => $this->auth->canAccessDocs(),
+			'admin'              => $this->auth->isAdmin(),
+			'extension'          => $this->auth->canAccessExtension($entry->extensionId),
+			default              => false,
 		};
 	}
 }
