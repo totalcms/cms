@@ -21,6 +21,13 @@ final class LazySessionStartMiddlewareTest extends TestCase
 
 	protected function setUp(): void
 	{
+		// The retry path reads session_status(), which is process-global: CI's
+		// serial run arrives here with a session an earlier test started still
+		// active, and the middleware then rightly rethrows instead of retrying.
+		if (session_status() === PHP_SESSION_ACTIVE) {
+			session_abort();
+		}
+
 		$this->session    = $this->createMock(SessionManagerInterface::class);
 		$this->handler    = $this->createMock(RequestHandlerInterface::class);
 		$this->middleware = new LazySessionStartMiddleware($this->session);
