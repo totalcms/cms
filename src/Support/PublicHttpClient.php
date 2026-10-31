@@ -42,7 +42,8 @@ final readonly class PublicHttpClient
 	 * @param array{timeout?: int, max_bytes?: int, max_redirects?: int, user_agent?: string, headers?: array<string,string>} $options
 	 *   Defaults: 10 second timeout, 2 MB, 3 redirects
 	 *
-	 * @throws \RuntimeException when the URL, a redirect or its address is refused, or the request fails
+	 * @throws RefusedUrlException when the URL, a redirect or its address is refused
+	 * @throws \RuntimeException   when the request fails
 	 */
 	public function get(string $url, array $options = []): HttpResponse
 	{
@@ -94,10 +95,10 @@ final readonly class PublicHttpClient
 		$host   = strtolower(trim((string)($parts['host'] ?? ''), '[]'));
 
 		if (!in_array($scheme, ['http', 'https'], true)) {
-			throw new \RuntimeException('Only http and https URLs can be fetched');
+			throw new RefusedUrlException('Only http and https URLs can be fetched');
 		}
 		if ($host === '' || isset($parts['user']) || isset($parts['pass'])) {
-			throw new \RuntimeException('The URL has no host, or carries credentials');
+			throw new RefusedUrlException('The URL has no host, or carries credentials');
 		}
 
 		return [$host, (int)($parts['port'] ?? ($scheme === 'https' ? 443 : 80))];
@@ -112,11 +113,11 @@ final readonly class PublicHttpClient
 	{
 		$ips = filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : ($this->resolver)($host);
 		if ($ips === []) {
-			throw new \RuntimeException('The host does not resolve: ' . $host);
+			throw new RefusedUrlException('The host does not resolve: ' . $host);
 		}
 		foreach ($ips as $ip) {
 			if (!self::isPublicIp($ip)) {
-				throw new \RuntimeException('The host resolves to a non-public address: ' . $host);
+				throw new RefusedUrlException('The host resolves to a non-public address: ' . $host);
 			}
 		}
 		usort($ips, static fn (string $a, string $b): int => (int)str_contains($a, ':') <=> (int)str_contains($b, ':'));

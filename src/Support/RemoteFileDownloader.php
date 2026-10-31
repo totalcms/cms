@@ -87,7 +87,8 @@ final readonly class RemoteFileDownloader
 	 *
 	 * @param array{timeout?: int, user_agent?: string, prefix?: string} $options
 	 *
-	 * @throws \RuntimeException when the URL is refused, the download fails, or it exceeds the size cap
+	 * @throws RefusedUrlException when the URL or an address it leads to is refused
+	 * @throws \RuntimeException   when the download fails, or it exceeds the size cap
 	 *
 	 * @return string absolute path of the downloaded file
 	 */
@@ -108,6 +109,9 @@ final readonly class RemoteFileDownloader
 				'max_redirects' => 5,
 				'user_agent'    => $options['user_agent'] ?? self::DEFAULT_USER_AGENT,
 			]);
+		} catch (RefusedUrlException $e) {
+			// Passed through unwrapped: the caller's URL was refused, not a download failure.
+			throw $e;
 		} catch (\RuntimeException $e) {
 			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
 		}

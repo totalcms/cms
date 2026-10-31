@@ -12,6 +12,7 @@ use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\RefusedUrlException;
 use TotalCMS\Support\RemoteFileDownloader;
 
 /**
@@ -59,7 +60,7 @@ final readonly class PropertyFileStore
 	 * own network or the cloud metadata address back out (security scan,
 	 * 2026-10-30). Only MCP callers were held to public addresses.
 	 *
-	 * @throws UploadRejectedException when the URL or its filename is refused
+	 * @throws UploadRejectedException when the URL, its address or its filename is refused
 	 * @throws \RuntimeException       when the download fails
 	 */
 	public function fetch(string $url): string
@@ -71,7 +72,11 @@ final readonly class PropertyFileStore
 
 		$this->assertFilename(RemoteFileDownloader::filenameFor($url));
 
-		return $this->downloader->downloadPublic($url);
+		try {
+			return $this->downloader->downloadPublic($url);
+		} catch (RefusedUrlException $e) {
+			throw new UploadRejectedException([$e->getMessage()]);
+		}
 	}
 
 	/**

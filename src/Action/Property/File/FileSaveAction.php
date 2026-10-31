@@ -61,10 +61,11 @@ readonly class FileSaveAction
 
 			$fileUrl = trim($body[$bodyKey]);
 			if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
-				throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
+				return $this->validationFailed($response, ['Invalid URL provided for property: ' . $bodyKey]);
 			}
 
-			// Never store an executable/script, even from a URL: refused by name before downloading.
+			// Refused before downloading: an executable/script by its name, and
+			// an address that is not public (the store's client checks that).
 			try {
 				$finalFilePath = $this->store->fetch($fileUrl);
 			} catch (UploadRejectedException $e) {

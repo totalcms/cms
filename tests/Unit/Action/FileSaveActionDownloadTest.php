@@ -98,6 +98,24 @@ describe('FileSaveAction URL Download', function (): void {
 		expect($result->getStatusCode())->toBe(400);
 	});
 
+	test('answers a URL on a non-public address with 400, not 500', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->never())->method('request');
+
+		$result = createFileSaveAction($httpClient)(createDownloadRequest('http://169.254.169.254/latest/meta-data/x.jpg'), new Response(), ['collection' => 'blog', 'id' => 'x', 'property' => 'testfile']);
+
+		expect($result->getStatusCode())->toBe(400);
+	});
+
+	test('answers a URL that is not a URL with 400', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->never())->method('request');
+
+		$result = createFileSaveAction($httpClient)(createDownloadRequest('not a url'), new Response(), ['collection' => 'blog', 'id' => 'x', 'property' => 'testfile']);
+
+		expect($result->getStatusCode())->toBe(400);
+	});
+
 	test('throws exception on HTTP error status', function (): void {
 		$httpClient = test()->createMock(HttpClientInterface::class);
 		$httpClient->method('request')
