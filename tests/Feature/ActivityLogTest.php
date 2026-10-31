@@ -288,25 +288,24 @@ describe('the Activity page', function (): void {
 			->and(substr($body, $start, 3000))->toContain('href="collections/blog/hello-world"', 'auth/joe', 'href="utils/activity"');
 	});
 
-	it('puts a critical alert in a banner and the rest in the Needs Attention card, which is hidden when empty', function (): void {
+	// Whether the card is hidden when empty is DashboardWidgetMacrosTest's job:
+	// here other alerts may be real (CI has no license), so only place these two.
+	it('puts a critical alert in a banner and the rest in the Needs Attention card', function (): void {
 		$container = $this->app->getContainer();
 		foreach (['qa-one', 'qa-two', 'qa-three', 'qa-four'] as $id) {
 			$container->get(CollectionSaver::class)->saveCollection(['id' => $id, 'name' => $id, 'schema' => 'blog']);
 		}
-		$config       = $container->get(Config::class);
-		$config->smtp = ['from' => 'site@example.com'];
-
-		expect((string)get('/admin')->getBody())->not->toContain('class="dashboard-section needs-attention"');
-
 		$container->get(ActivityRecorder::class)->record(MailActivity::SENT, ['kind' => 'system'], ['level' => 'warning', 'summary' => 'Hello: refused']);
-		$config->smtp = ['from' => ''];
+		$container->get(Config::class)->smtp = ['from' => ''];
 
-		$body   = (string)get('/admin')->getBody();
-		$banner = substr($body, (int)strpos($body, 'class="dashboard-alerts-panel"'), 1500);
-		$card   = substr($body, (int)strpos($body, 'class="dashboard-section needs-attention"'), 1500);
+		$body       = (string)get('/admin')->getBody();
+		$cardStart  = strpos($body, 'class="dashboard-section needs-attention"');
+		$bannerFrom = (int)strpos($body, 'class="dashboard-alerts-panel"');
+		$banner     = substr($body, $bannerFrom, (int)strpos($body, 'class="dashboard-grid"') - $bannerFrom);
 
-		expect($banner)->toContain('settings/smtp')->not->toContain('could not be sent')
-			->and($card)->toContain('1 email could not be sent since yesterday.')->not->toContain('settings/smtp');
+		expect($cardStart)->not->toBeFalse()
+			->and($banner)->toContain('settings/smtp')->not->toContain('could not be sent')
+			->and(substr($body, (int)$cardStart, 4000))->toContain('1 email could not be sent since yesterday.')->not->toContain('settings/smtp');
 	});
 
 	it('lists what visitors and members created beside Empty Collections, not what admins created', function (): void {
