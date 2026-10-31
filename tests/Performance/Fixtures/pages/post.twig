@@ -1,0 +1,18 @@
+{# Hot path: one post by id — the page visitors land on from search and social. #}
+{% extends 'layouts/default.twig' %}
+
+{% set post = cms.collection.object('posts', params.id) %}
+
+{% block content %}
+<section class="section">
+	{% if post %}
+		<article>
+			<h1>{{ post.title }}</h1>
+			<p class="post-meta">{{ post.date | date('F j, Y') }} &middot; {{ post.author }}</p>
+			<div>{{ post.body | raw }}</div>
+		</article>
+	{% else %}
+		<h1>Post Not Found</h1>
+	{% endif %}
+</section>
+{% endblock %}

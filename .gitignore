@@ -21,6 +21,7 @@ yarn.lock
 dist/
 
 tmp/*
+/.phpbench/
 logs/*
 tcms-data/*
 
@@ -98,3 +99,4 @@ graphify-out/
 .phpmd.cache.php
 .phpmd-tests.cache.php
 .vitest/
+/.schemathesis

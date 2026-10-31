@@ -1,0 +1,18 @@
+{# Hot path: the built-in text search over ?q= #}
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="section">
+	{% set q = getData.q | default('voluptatem') %}
+	<h1>Search: {{ q }}</h1>
+	{% for post in cms.collection.search('posts', q, ['title', 'summary', 'tags']) | slice(0, 20) %}
+		<article class="post-card">
+			<h2><a href="{{ cms.collection.objectUrl('posts', post) }}">{{ post.title }}</a></h2>
+			<p class="post-meta">{{ post.date | date('F j, Y') }} &middot; {{ post.author }}</p>
+			<div>{{ post.summary | raw }}</div>
+		</article>
+	{% else %}
+		<p>No results.</p>
+	{% endfor %}
+</section>
+{% endblock %}

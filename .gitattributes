@@ -45,6 +45,7 @@ phpcbf.xml           export-ignore
 phpcs.xml            export-ignore
 phpdoc.xml           export-ignore
 phpDocumentor.phar   export-ignore
+phpbench.json        export-ignore
 phpmd.xml            export-ignore
 phpstan.neon         export-ignore
 phpunit.xml          export-ignore

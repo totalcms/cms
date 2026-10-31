@@ -1,0 +1,16 @@
+{# Hot path: the common listing idiom — the whole index, newest first, first 20 shown. #}
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="section">
+	<h1>All posts</h1>
+	{% set posts = cms.collection.objects('posts') | sortCollection([{property: "date", reverse: true}]) | paginate(20, 1) %}
+	{% for post in posts %}
+		<article class="post-card">
+			<h2><a href="{{ cms.collection.objectUrl('posts', post) }}">{{ post.title }}</a></h2>
+			<p class="post-meta">{{ post.date | date('F j, Y') }} &middot; {{ post.author }}</p>
+			<div>{{ post.summary | raw }}</div>
+		</article>
+	{% endfor %}
+</section>
+{% endblock %}

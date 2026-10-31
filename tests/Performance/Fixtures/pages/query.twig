@@ -1,0 +1,23 @@
+{# Hot path: filter one category, newest first, paginated by ?page=N. #}
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="section">
+	{% set page = getData.page | default(1) | int %}
+	{% set category = getData.category | default('cat-3') %}
+	<h1>{{ category }} — page {{ page }}</h1>
+	{% set posts = cms.collection.objects('posts')
+		| filterCollection([{property: "category", operator: "equal", value: category}])
+		| sortCollection([{property: "date", reverse: true}])
+		| paginate(20, page) %}
+	{% for post in posts %}
+		<article class="post-card">
+			<h2><a href="{{ cms.collection.objectUrl('posts', post) }}">{{ post.title }}</a></h2>
+			<p class="post-meta">{{ post.date | date('F j, Y') }} &middot; {{ post.author }}</p>
+			<div>{{ post.summary | raw }}</div>
+		</article>
+	{% else %}
+		<p>No posts on this page.</p>
+	{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+{
+	"$schema": "./vendor/phpbench/phpbench/phpbench.schema.json",
+	"runner.bootstrap": "tests/Performance/bench-bootstrap.php",
+	"runner.path": "tests/Performance/Bench",
+	"runner.file_pattern": "*Bench.php",
+	"runner.php_config": {
+		"apc.enable_cli": 1,
+		"opcache.enable_cli": 1,
+		"memory_limit": "1G",
+		"opcache.file_cache": "tmp/perf/opcache"
+	},
+	"runner.revs": 1,
+	"runner.iterations": 5,
+	"runner.warmup": 0,
+	"runner.time_unit": "milliseconds",
+	"storage.xml_storage_path": ".phpbench",
+	"report.generators": {
+		"perf": {
+			"generator": "expression",
+			"cols": [
+				"benchmark",
+				"subject",
+				"set",
+				"its",
+				"mem_peak",
+				"mode",
+				"rstdev"
+			],
+			"break": [
+				"benchmark"
+			]
+		}
+	}
+}

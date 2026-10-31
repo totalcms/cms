@@ -1,0 +1,108 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/perf-post.json",
+	"id": "perf-post",
+	"type": "object",
+	"description": "Performance-test fixture: a blog-like post with no media fields",
+	"formgrid": "id id\ntitle title\ndate author\ncategory featured\nviews .\ntags tags\nsummary summary\nbody body\nupdated created",
+	"properties": {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Post ID",
+			"help"     : "Unique slug for the post.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Title",
+			"help"    : "Post title.",
+			"field"   : "text",
+			"factory" : "catchPhrase"
+		},
+		"date": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date",
+			"help"    : "Publication date.",
+			"field"   : "date",
+			"factory" : "iso8601"
+		},
+		"author": {
+			"type"    : "string",
+			"label"   : "Author",
+			"help"    : "Author name.",
+			"field"   : "text",
+			"factory" : "name"
+		},
+		"category": {
+			"type"    : "string",
+			"label"   : "Category",
+			"help"    : "One of ten categories, cat-0 to cat-9.",
+			"field"   : "select",
+			"options" : ["cat-0", "cat-1", "cat-2", "cat-3", "cat-4", "cat-5", "cat-6", "cat-7", "cat-8", "cat-9"],
+			"factory" : "bothify(cat-#)"
+		},
+		"featured": {
+			"type"    : "boolean",
+			"label"   : "Featured",
+			"help"    : "Featured post.",
+			"field"   : "toggle",
+			"factory" : "boolean"
+		},
+		"views": {
+			"type"    : "integer",
+			"label"   : "Views",
+			"help"    : "View count.",
+			"field"   : "number",
+			"factory" : "numberBetween(0,100000)"
+		},
+		"tags": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Tags",
+			"help"    : "Tags for the post.",
+			"field"   : "list",
+			"factory" : "tags"
+		},
+		"summary": {
+			"type"    : "string",
+			"label"   : "Summary",
+			"help"    : "Short summary.",
+			"field"   : "styledtext",
+			"factory" : "styledtext(1,2,false)"
+		},
+		"body": {
+			"type"    : "string",
+			"label"   : "Body",
+			"help"    : "Post body.",
+			"field"   : "styledtext",
+			"factory" : "styledtext(3,8,true)"
+		},
+		"created": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Created",
+			"help"     : "Created timestamp.",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onCreate": true,
+				"readonly": true
+			}
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated",
+			"help"     : "Updated timestamp.",
+			"field"    : "datetime",
+			"factory"  : "iso8601",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
+		}
+	},
+	"required": ["id", "title"],
+	"index": ["id", "title", "date", "author", "category", "featured", "views", "tags", "summary", "updated", "created"]
+}
