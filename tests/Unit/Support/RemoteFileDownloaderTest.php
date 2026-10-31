@@ -62,6 +62,25 @@ final class RemoteFileDownloaderTest extends TestCase
 		$this->assertSame('bytes', file_get_contents($path));
 	}
 
+	public function testThePublicDownloadTakesTheSameOptions(): void
+	{
+		$captured = [];
+		$http     = $this->createMock(HttpClientInterface::class);
+		$http->method('request')->willReturnCallback(function (string $method, string $url, array $options) use (&$captured): HttpResponse {
+			$captured = $options;
+
+			return new HttpResponse(200, 'bytes');
+		});
+
+		$path = (new RemoteFileDownloader($http, $this->config(50), stubPublicHttp($http)))
+			->downloadPublic('https://example.test/img/photo.jpg', ['timeout' => 15, 'prefix' => 'rss-import', 'user_agent' => 'Acme/1.0']);
+
+		$this->assertSame(15, $captured['timeout']);
+		$this->assertSame('Acme/1.0', $captured['user_agent']);
+		$this->assertStringStartsWith($this->tmpdir . '/rss-import-', $path);
+		$this->assertSame('bytes', file_get_contents($path));
+	}
+
 	public function testKeepsTheUrlsFilenameWhenNoPrefixIsGiven(): void
 	{
 		$http = $this->createMock(HttpClientInterface::class);

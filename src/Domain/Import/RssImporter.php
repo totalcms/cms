@@ -9,7 +9,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Support\Version;
 
@@ -26,6 +26,9 @@ use TotalCMS\Support\Version;
 class RssImporter
 {
 	private const USER_AGENT_TEMPLATE = 'TotalCMS/%s (+https://totalcms.co)';
+
+	/** A feed is read whole before parsing; past this it is refused, not truncated. */
+	private const MAX_FEED_BYTES = 20_000_000;
 
 	private const DEFAULT_FIELD_MAP = [
 		'title'      => 'title',
@@ -44,7 +47,7 @@ class RssImporter
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly JobQueuer $jobQueuer,
-		private readonly HttpClientInterface $httpClient,
+		private readonly PublicHttpClient $publicHttp,
 		private readonly RemoteFileDownloader $downloader,
 		private readonly FeedReader $reader,
 		LoggerFactory $loggerFactory,
@@ -140,10 +143,22 @@ class RssImporter
 		}
 	}
 
+	/**
+	 * The feed URL, and every image URL inside it, is chosen by whoever runs
+	 * the import or wrote the feed, so both go through the public-only client:
+	 * a feed at http://127.0.0.1/ or the cloud metadata address used to be
+	 * fetched and its errors echoed back (found by a security scan, 2026-10-30).
+	 */
 	private function fetchRawFeed(string $feedUrl): string
 	{
 		try {
-			$response = $this->httpClient->request('GET', $feedUrl, $this->requestOptions(30));
+			$response = $this->publicHttp->get($feedUrl, [
+				'timeout'       => 30,
+				// One byte past the cap: getting it back means the feed is too big.
+				'max_bytes'     => self::MAX_FEED_BYTES + 1,
+				'max_redirects' => 5,
+				'user_agent'    => $this->userAgent(),
+			]);
 		} catch (\RuntimeException $e) {
 			throw new \RuntimeException(sprintf('Failed to fetch feed from %s: %s', $feedUrl, $e->getMessage()), 0, $e);
 		}
@@ -156,20 +171,16 @@ class RssImporter
 			throw new \RuntimeException('Feed returned empty response');
 		}
 
+		if (strlen($response->body) > self::MAX_FEED_BYTES) {
+			throw new \RuntimeException(sprintf('Feed is larger than %d MB', self::MAX_FEED_BYTES / 1_000_000));
+		}
+
 		return $response->body;
 	}
 
-	/**
-	 * @return array<string,mixed>
-	 */
-	private function requestOptions(int $timeout): array
+	private function userAgent(): string
 	{
-		return [
-			'timeout'          => $timeout,
-			'verify_ssl'       => false,
-			'follow_redirects' => true,
-			'user_agent'       => $this->userAgent ?? sprintf(self::USER_AGENT_TEMPLATE, Version::number()),
-		];
+		return $this->userAgent ?? sprintf(self::USER_AGENT_TEMPLATE, Version::number());
 	}
 
 	/**
@@ -198,10 +209,10 @@ class RssImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$tempFile = $this->downloader->download($url, [
+			$tempFile = $this->downloader->downloadPublic($url, [
 				'timeout'    => 15,
 				'prefix'     => 'rss-import',
-				'user_agent' => $this->requestOptions(15)['user_agent'],
+				'user_agent' => $this->userAgent(),
 			]);
 			$this->logger->info(sprintf('Downloaded image: %s → %s', $url, $tempFile));
 

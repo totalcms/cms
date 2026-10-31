@@ -49,7 +49,7 @@ final class RssImporterUserAgentTest extends TestCase
 			$collectionFetcher,
 			$this->createMock(ObjectFetcher::class),
 			$this->createMock(JobQueuer::class),
-			$httpClient,
+			stubPublicHttp($httpClient),
 			rssTestDownloader($httpClient),
 			new FeedReader(),
 			$loggerFactory,

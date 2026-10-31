@@ -92,7 +92,7 @@ final readonly class RemoteMediaFetcher
 				throw new \RuntimeException('Could not create temp folder ' . $dir);
 			}
 
-			$tempFile = $this->downloader->download($url, ['timeout' => self::TIMEOUT, 'prefix' => 'remote-media']);
+			$tempFile = $this->downloader->downloadPublic($url, ['timeout' => self::TIMEOUT, 'prefix' => 'remote-media']);
 			$path     = $dir . '/' . RemoteFileDownloader::filenameFor($url);
 			if (!QuietCall::run(static fn (): bool => rename($tempFile, $path))) {
 				throw new \RuntimeException('Could not move the download into ' . $dir);

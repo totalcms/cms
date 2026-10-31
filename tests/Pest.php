@@ -100,6 +100,7 @@ use TotalCMS\Slim\Test\TestResponse;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
 
 $_SERVER['APP_ENV'] = 'test';
@@ -1066,13 +1067,35 @@ function drainStreamedBody(ResponseInterface|TestResponse $response): string
  * temp dir. Shared by the RSS importer suites (three files construct the
  * importer), which is why it lives here and not in one of them.
  */
-function rssTestDownloader(HttpClientInterface $httpClient): RemoteFileDownloader
+/**
+ * @param array<string,list<string>> $dns see stubPublicHttp()
+ */
+function rssTestDownloader(HttpClientInterface $httpClient, array $dns = []): RemoteFileDownloader
 {
 	$config                  = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->tmpdir          = sys_get_temp_dir() . '/totalcms-rss-test-' . uniqid();
 	$config->maxDownloadSize = 2048;
 
-	return new RemoteFileDownloader($httpClient, $config);
+	return new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient, $dns));
+}
+
+/**
+ * A PublicHttpClient that hands each request to a test HTTP client, so the
+ * suites keep stubbing one `request()` while the code goes through * the public-only client. DNS answers with a public address; pass $dns to
+ * map hosts to others (a private one, to see a fetch refused).
+ *
+ * @param array<string,list<string>> $dns
+ */
+function stubPublicHttp(HttpClientInterface $httpClient, array $dns = []): PublicHttpClient
+{
+	return new PublicHttpClient(
+		static fn (string $host): array => $dns[$host] ?? ['93.184.216.34'],
+		static function (string $url, string $host, int $port, string $ip, array $opts) use ($httpClient): array {
+			$response = $httpClient->request('GET', $url, $opts);
+
+			return ['status' => $response->statusCode, 'location' => '', 'body' => $response->body];
+		},
+	);
 }
 
 /**

@@ -83,16 +83,19 @@ final readonly class RemoteFileDownloader
 	/**
 	 * Download a URL that someone other than the operator chose. Only public
 	 * addresses are reached, each redirect is checked again, and the size cap
-	 * is the same as download()'s.
+	 * is the same as download()'s. Takes the same options.
+	 *
+	 * @param array{timeout?: int, user_agent?: string, prefix?: string} $options
 	 *
 	 * @throws \RuntimeException when the URL is refused, the download fails, or it exceeds the size cap
 	 *
 	 * @return string absolute path of the downloaded file
 	 */
-	public function downloadPublic(string $url, int $timeout = 30): string
+	public function downloadPublic(string $url, array $options = []): string
 	{
 		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
-		$path = $this->config->tmpdir . '/' . self::filenameFor($url);
+		$prefix = $options['prefix'] ?? null;
+		$path   = $this->config->tmpdir . '/' . ($prefix === null ? self::filenameFor($url) : self::uniqueFilenameFor($url, $prefix));
 
 		// PublicHttpClient stops reading at max_bytes and keeps what it has, so
 		// ask for one byte past the cap: getting it back means the file is too big.
@@ -100,10 +103,10 @@ final readonly class RemoteFileDownloader
 
 		try {
 			$response = $this->publicHttpClient->get($url, [
-				'timeout'       => $timeout,
+				'timeout'       => $options['timeout'] ?? 30,
 				'max_bytes'     => $maxBytes + 1,
 				'max_redirects' => 5,
-				'user_agent'    => self::DEFAULT_USER_AGENT,
+				'user_agent'    => $options['user_agent'] ?? self::DEFAULT_USER_AGENT,
 			]);
 		} catch (\RuntimeException $e) {
 			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);

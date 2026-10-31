@@ -44,7 +44,8 @@ final class RssImporterBehaviourTest extends TestCase
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 	}
 
-	private function importer(): RssImporter
+	/** @param array<string,list<string>> $dns host => addresses; the rest resolve public */
+	private function importer(array $dns = []): RssImporter
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
@@ -53,8 +54,8 @@ final class RssImporterBehaviourTest extends TestCase
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->jobQueuer,
-			$this->httpClient,
-			rssTestDownloader($this->httpClient),
+			stubPublicHttp($this->httpClient, $dns),
+			rssTestDownloader($this->httpClient, $dns),
 			new FeedReader(),
 			$loggerFactory,
 		);
@@ -195,7 +196,7 @@ final class RssImporterBehaviourTest extends TestCase
 			$fetcher,
 			$this->objectFetcher,
 			$this->jobQueuer,
-			$this->httpClient,
+			stubPublicHttp($this->httpClient),
 			rssTestDownloader($this->httpClient),
 			new FeedReader(),
 			$loggerFactory,
@@ -227,6 +228,60 @@ final class RssImporterBehaviourTest extends TestCase
 		$this->expectExceptionMessage('https://example.com/feed');
 
 		$this->importer()->import('https://example.com/feed', 'blog');
+	}
+
+	// ── Only public addresses ────────────────────────────────────────────────
+	// The feed URL is typed by whoever runs the import and the image URLs
+	// come from the feed's author. Both used to be fetched wherever they
+	// pointed — this server, its private network, the cloud metadata
+	// address — with the error echoed back (security scan, 2026-10-30).
+
+	public function testAFeedOnAPrivateAddressIsNeverFetched(): void
+	{
+		$this->httpClient->expects($this->never())->method('request');
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('non-public address');
+
+		$this->importer(['intranet.example' => ['10.0.0.5']])->analyze('https://intranet.example/feed');
+	}
+
+	public function testALoopbackFeedIsNeverFetched(): void
+	{
+		$this->httpClient->expects($this->never())->method('request');
+
+		$this->expectException(\RuntimeException::class);
+
+		$this->importer()->analyze('http://127.0.0.1/feed');
+	}
+
+	public function testAnImageOnAPrivateAddressIsSkippedAndTheEntryStillImports(): void
+	{
+		$fetched = [];
+		$this->httpClient->method('request')->willReturnCallback(function (string $method, string $url) use (&$fetched): HttpResponse {
+			$fetched[] = $url;
+
+			return new HttpResponse(200, $this->rss(
+				'<item><title>A Post</title><link>https://example.com/a</link>'
+				. '<enclosure url="http://169.254.169.254/latest/meta-data/x.jpg" type="image/jpeg" length="1"/></item>'
+			));
+		});
+
+		$queued = $this->capture(fn () => $this->importer()->import('https://example.com/feed', 'blog'));
+
+		$this->assertSame(['https://example.com/feed'], $fetched);
+		$this->assertCount(1, $queued);
+		$this->assertArrayNotHasKey('image', $queued[0]);
+	}
+
+	public function testAFeedPastTheSizeCapIsRefusedRatherThanParsedTruncated(): void
+	{
+		$this->serves(str_repeat('x', 20_000_001));
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('larger than 20 MB');
+
+		$this->importer()->analyze('https://example.com/feed');
 	}
 
 	// ── analyze(): the preview the operator decides from ─────────────────────

@@ -260,7 +260,7 @@ function objectImporterHarness(array $properties = [], array $options = []): obj
 		$handle->dispatcher,
 		$handle->collectionFetcher,
 		$handle->collectionSaver,
-		new RemoteMediaFetcher(new RemoteFileDownloader($httpClient, $config), $config, $loggerFactory),
+		new RemoteMediaFetcher(new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), $config, $loggerFactory),
 	);
 
 	return $handle;
@@ -773,6 +773,19 @@ describe('ObjectImporter::importObject remote media', function (): void {
 			->and(glob($handle->tmpdir . '/remote-media-*'))->toBe([]);
 
 		recursiveDelete($handle->tmpdir);
+	});
+
+	it('does not download remote media from a non-public address', function (): void {
+		// The URLs come from an uploaded WordPress export, so whoever wrote the
+		// export chooses them; a private address must not be fetched.
+		$handle = objectImporterHarness(['image' => ['$ref' => objectImporterRef('image')]]);
+
+		$handle->importer->importObject('blog', [
+			RemoteMediaFetcher::PAYLOAD_KEY => ['image' => 'http://127.0.0.1/wp-content/uploads/a.jpg'],
+		]);
+
+		expect($handle->downloadedUrls)->toBe([])
+			->and($handle->imageSaves)->toBe([]);
 	});
 
 	it('ignores remote media entries that are not http(s) URLs', function (): void {

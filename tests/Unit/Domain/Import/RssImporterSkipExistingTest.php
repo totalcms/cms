@@ -46,7 +46,7 @@ final class RssImporterSkipExistingTest extends TestCase
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->jobQueuer,
-			$this->httpClient,
+			stubPublicHttp($this->httpClient),
 			rssTestDownloader($this->httpClient),
 			new FeedReader(),
 			$loggerFactory,
