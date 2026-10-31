@@ -74,7 +74,7 @@ Until the setting is saved, the row shows New Collection, New Schema, New Templa
 
 At the top of the main column, admins see **Recent Activity**: a short table of the 25 newest rows of the [Activity Log](docs/operations/activity) — when, what happened, to what, and who — that scrolls within a fixed height. Hover a row for its summary. An object that still exists links to its edit page; **View all activity** opens the full log with its filters. Only admins see it, because the log names users, API keys and email recipients.
 
-Below it are the most recently changed collections, then any collections that are still empty, with a button to add their first object.
+Below it are the most recently changed collections. Then, side by side, **Empty Collections** — each with an **Add** link for its first object — and, for admins, **Newly Created**: objects that visitors and signed-in members created in the last 30 days, such as form submissions and registrations, each linked to its edit page. Each card only shows when it has something in it, and takes the full width when the other is hidden.
 
 ### The sidebar column
 

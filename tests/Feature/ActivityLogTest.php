@@ -309,6 +309,23 @@ describe('the Activity page', function (): void {
 			->and($card)->toContain('1 email could not be sent since yesterday.')->not->toContain('settings/smtp');
 	});
 
+	it('lists what visitors and members created beside Empty Collections, not what admins created', function (): void {
+		$container = $this->app->getContainer();
+		foreach (['qa-one', 'qa-two', 'qa-three', 'qa-four'] as $id) {
+			$container->get(CollectionSaver::class)->saveCollection(['id' => $id, 'name' => $id, 'schema' => 'blog']);
+		}
+		$recorder = $container->get(ActivityRecorder::class);
+		$recorder->record('object.created', ['kind' => 'anonymous'], ['collection' => 'signups', 'objectId' => 'from-a-visitor']);
+		$recorder->record('object.created', ['kind' => 'member', 'userId' => 'ann', 'authCollection' => 'members'], ['collection' => 'reviews', 'objectId' => 'from-ann']);
+		$recorder->record('object.created', ['kind' => 'admin', 'userId' => 'joe', 'authCollection' => 'auth'], ['collection' => 'blog', 'objectId' => 'from-the-admin']);
+
+		$body = (string)get('/admin')->getBody();
+		$card = substr($body, (int)strpos($body, 'class="dashboard-section site-submissions"'), 2500);
+
+		expect($card)->toContain('Newly Created', 'href="collections/signups/from-a-visitor"', 'Visitor', 'href="collections/reviews/from-ann"', '>ann<')
+			->not->toContain('from-the-admin');
+	});
+
 	it('renders an empty log', function (): void {
 		$response = get('/admin/utils/activity');
 

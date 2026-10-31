@@ -1176,7 +1176,8 @@ return [
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Lege Collections',
-	'dashboard.empty_collections_desc' => 'De volgende Collections bevatten nog geen Objects:',
+	'dashboard.site_submissions'       => 'Nieuw aangemaakt',
+	'dashboard.visitor'                => 'Bezoeker',
 
 	// ── Dashboard System Info ───────────────────────────────────────────────
 	'dashboard.system_info'            => 'Systeeminformatie',

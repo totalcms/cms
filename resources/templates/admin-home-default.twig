@@ -49,8 +49,14 @@
 			{# Inaccessible collections alert (edition downgrade) #}
 			{{ dashboard.inaccessibleCollectionsAlert(inaccessibleCollections) }}
 
-			{# Empty collections alert #}
-			{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
+			{# Empty collections beside what visitors added; either takes the
+			   full width when the other has nothing to show #}
+			<div class="dashboard-pair">
+				{{ dashboard.emptyCollectionsAlert(emptyCollections) }}
+				{% if cms.auth.isAdmin() %}
+					{{ dashboard.siteSubmissions(cms.admin.dashboardSiteSubmissions()) }}
+				{% endif %}
+			</div>
 
 			{# Extension widgets (main area) #}
 			{% if extensionDashWidgets is defined %}

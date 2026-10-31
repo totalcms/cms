@@ -188,19 +188,47 @@
 {% if emptyCollections|length > 0 %}
 <div class="dashboard-section empty-collections-section">
 	<h2>{{ t('dashboard.empty_collections') }}</h2>
-	<p>{{ t('dashboard.empty_collections_desc') }}</p>
-	<ul class="empty-collections-list">
-		{% for collection in emptyCollections %}
-		<li>
-			<span class="collection-icon schema-{{ collection.schema }}"></span>
-			<span class="collection-name">{{ collection.name }}</span>
-			<a href="{{ collection.addUrl }}" class="btn-small btn-icon">
-				<span class="btn-icon-svg icon-add"></span>
-				{{ t('dashboard.add') }}
-			</a>
-		</li>
-		{% endfor %}
-	</ul>
+	<div class="dash-compact-table">
+		<table>
+			<tbody>
+				{% for collection in emptyCollections %}
+				<tr>
+					<td class="empty-collection-name">
+						<span class="collection-icon schema-{{ collection.schema }}"></span>
+						<a href="{{ collection.viewUrl }}">{{ collection.name }}</a>
+					</td>
+					<td class="empty-collection-add"><a href="{{ collection.addUrl }}">+ {{ t('dashboard.add') }}</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Newly Created — objects visitors and signed-in members created in the
+   last 30 days (form submissions, registrations). Admins only; renders
+   nothing when there are none. #}
+{% macro siteSubmissions(entries) %}
+{% if entries|length > 0 %}
+<div class="dashboard-section site-submissions">
+	<h2>{{ t('dashboard.site_submissions') }}</h2>
+	<div class="dash-compact-table">
+		<table>
+			<tbody>
+				{% for entry in entries %}
+				<tr>
+					<td class="empty-collection-name">
+						<a href="collections/{{ entry.collection|url_encode }}/{{ entry.objectId|url_encode }}">{{ entry.collection }} / {{ entry.objectId }}</a>
+					</td>
+					<td class="site-submission-who">{{ entry.actorKind == 'anonymous' ? t('dashboard.visitor') : entry.userId }}</td>
+					<td class="empty-collection-add"><time datetime="{{ entry.createdAt|date('c') }}" title="{{ entry.createdAt|date('Y-m-d H:i:s') }}">{{ entry.createdAt|date('M j') }}</time></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
 </div>
 {% endif %}
 {% endmacro %}

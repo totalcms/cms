@@ -471,6 +471,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.dashboardSiteSubmissions",
+            "signature": "dashboardSiteSubmissions(int $limit = 8): array",
+            "description": "Objects visitors and members created in the last 30 days, for the dashboard home; [] for anyone who is not an admin.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.dashboardStats",
             "signature": "dashboardStats(): array",
             "description": "Get dashboard statistics.",

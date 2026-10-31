@@ -1176,7 +1176,8 @@ return [
 
 	// ── Dashboard Empty Collections ─────────────────────────────────────────
 	'dashboard.empty_collections'      => 'Leere Collections',
-	'dashboard.empty_collections_desc' => 'Die folgenden Collections enthalten noch keine Objects:',
+	'dashboard.site_submissions'       => 'Neu erstellt',
+	'dashboard.visitor'                => 'Besucher',
 
 	// ── Dashboard System Info ───────────────────────────────────────────────
 	'dashboard.system_info'            => 'Systeminformationen',

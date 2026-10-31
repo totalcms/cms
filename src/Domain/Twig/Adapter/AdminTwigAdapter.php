@@ -235,6 +235,17 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Objects visitors and members created in the last 30 days, for the
+	 * dashboard home; [] for anyone who is not an admin.
+	 *
+	 * @return list<ActivityEntry>
+	 */
+	public function dashboardSiteSubmissions(int $limit = 8): array
+	{
+		return $this->dashboard->dashboardSiteSubmissions($limit);
+	}
+
+	/**
 	 * The newest activity log rows for the dashboard home; [] for anyone who
 	 * is not an admin.
 	 *

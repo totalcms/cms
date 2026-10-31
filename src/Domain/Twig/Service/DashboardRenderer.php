@@ -8,10 +8,12 @@ use TotalCMS\Domain\Activity\Data\ActivityEntry;
 use TotalCMS\Domain\Activity\Data\ActivityFilter;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Activity\Service\MailActivity;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
@@ -73,6 +75,30 @@ readonly class DashboardRenderer
 		}
 
 		return $this->activity->query(new ActivityFilter(), $limit);
+	}
+
+	/**
+	 * Objects created from the site in the last 30 days, newest first: by
+	 * visitors (public forms, registration) and signed-in members, not by
+	 * admins, API keys or the system. Admins only, like Recent Activity.
+	 *
+	 * @return list<ActivityEntry>
+	 */
+	public function dashboardSiteSubmissions(int $limit = 8): array
+	{
+		if (!$this->auth->isAdmin()) {
+			return [];
+		}
+
+		$from    = date('Y-m-d', strtotime('-30 days'));
+		$entries = [];
+		foreach ([ActorKind::Anonymous, ActorKind::Member] as $kind) {
+			$filter  = new ActivityFilter(event: CoreEvent::OBJECT_CREATED, actorKind: $kind->value, from: $from);
+			$entries = [...$entries, ...$this->activity->query($filter, $limit)];
+		}
+		usort($entries, fn (ActivityEntry $a, ActivityEntry $b): int => [$b->createdAt, $b->id] <=> [$a->createdAt, $a->id]);
+
+		return array_slice($entries, 0, $limit);
 	}
 
 	/**
