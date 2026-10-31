@@ -5,7 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 /**
- * Integration tests for the needsAttention and automationsWidget Twig macros.
+ * Integration tests for the criticalAlerts, needsAttention and automationsWidget Twig macros.
  *
  * Uses TwigEngine::renderString() — the same pattern as JobQueueHealthDashboardTest —
  * so macro markup, t() calls, and variable bindings are all exercised through the
@@ -21,7 +21,73 @@ beforeEach(function (): void {
 });
 
 // ---------------------------------------------------------------------------
-// needsAttention macro
+// criticalAlerts macro — banners across the top of the home
+// ---------------------------------------------------------------------------
+
+it('criticalAlerts renders nothing when alerts list is empty', function (): void {
+	$twig = $this->app->getContainer()->get(TwigEngine::class);
+
+	$html = trim((string)$twig->renderString(
+		"{% import 'dashboard-widgets.twig' as d %}{{ d.criticalAlerts(alerts) }}",
+		['alerts' => []],
+	));
+
+	expect($html)->toBe('');
+});
+
+it('criticalAlerts renders a warning-box for each alert', function (): void {
+	$twig = $this->app->getContainer()->get(TwigEngine::class);
+
+	$alerts = [
+		['level' => 'warning', 'message' => 'Something needs attention', 'link' => null, 'linkText' => null],
+		['level' => 'error',   'message' => 'Critical problem detected',  'link' => null, 'linkText' => null],
+	];
+
+	$html = $twig->renderString(
+		"{% import 'dashboard-widgets.twig' as d %}{{ d.criticalAlerts(alerts) }}",
+		['alerts' => $alerts],
+	);
+
+	expect($html)
+		->toContain('warning-box')
+		->toContain('Something needs attention')
+		->toContain('Critical problem detected');
+});
+
+it('criticalAlerts renders a link when provided', function (): void {
+	$twig = $this->app->getContainer()->get(TwigEngine::class);
+
+	$alerts = [
+		['level' => 'info', 'message' => 'An update is available', 'link' => 'utils/update', 'linkText' => 'Update now'],
+	];
+
+	$html = $twig->renderString(
+		"{% import 'dashboard-widgets.twig' as d %}{{ d.criticalAlerts(alerts) }}",
+		['alerts' => $alerts],
+	);
+
+	expect($html)
+		->toContain('utils/update')
+		->toContain('Update now');
+});
+
+it('criticalAlerts applies level-specific CSS class', function (): void {
+	$twig = $this->app->getContainer()->get(TwigEngine::class);
+
+	$alerts = [
+		['level' => 'error', 'message' => 'Error alert', 'link' => null, 'linkText' => null],
+	];
+
+	$html = $twig->renderString(
+		"{% import 'dashboard-widgets.twig' as d %}{{ d.criticalAlerts(alerts) }}",
+		['alerts' => $alerts],
+	);
+
+	expect($html)->toContain('warning-box--error');
+});
+
+// ---------------------------------------------------------------------------
+// needsAttention macro — the sidebar card for alerts that are not critical
 // ---------------------------------------------------------------------------
 
 it('needsAttention renders nothing when alerts list is empty', function (): void {
@@ -35,12 +101,12 @@ it('needsAttention renders nothing when alerts list is empty', function (): void
 	expect($html)->toBe('');
 });
 
-it('needsAttention renders a warning-box for each alert', function (): void {
+it('needsAttention lists each alert with its count, level class and link', function (): void {
 	$twig = $this->app->getContainer()->get(TwigEngine::class);
 
 	$alerts = [
-		['level' => 'warning', 'message' => 'Something needs attention', 'link' => null, 'linkText' => null],
-		['level' => 'error',   'message' => 'Critical problem detected',  'link' => null, 'linkText' => null],
+		['level' => 'warning', 'message' => '2 automations failed on last run.', 'link' => 'automations', 'linkText' => 'View automations'],
+		['level' => 'info',    'message' => 'Register your trial.',              'link' => null,          'linkText' => null],
 	];
 
 	$html = $twig->renderString(
@@ -49,41 +115,11 @@ it('needsAttention renders a warning-box for each alert', function (): void {
 	);
 
 	expect($html)
-		->toContain('warning-box')
-		->toContain('Something needs attention')
-		->toContain('Critical problem detected');
-});
-
-it('needsAttention renders a link when provided', function (): void {
-	$twig = $this->app->getContainer()->get(TwigEngine::class);
-
-	$alerts = [
-		['level' => 'info', 'message' => 'An update is available', 'link' => 'utils/update', 'linkText' => 'Update now'],
-	];
-
-	$html = $twig->renderString(
-		"{% import 'dashboard-widgets.twig' as d %}{{ d.needsAttention(alerts) }}",
-		['alerts' => $alerts],
-	);
-
-	expect($html)
-		->toContain('utils/update')
-		->toContain('Update now');
-});
-
-it('needsAttention applies level-specific CSS class', function (): void {
-	$twig = $this->app->getContainer()->get(TwigEngine::class);
-
-	$alerts = [
-		['level' => 'error', 'message' => 'Error alert', 'link' => null, 'linkText' => null],
-	];
-
-	$html = $twig->renderString(
-		"{% import 'dashboard-widgets.twig' as d %}{{ d.needsAttention(alerts) }}",
-		['alerts' => $alerts],
-	);
-
-	expect($html)->toContain('warning-box--error');
+		->toContain('class="needs-attention-count">2<')
+		->toContain('needs-attention-item--warning', 'needs-attention-item--info')
+		->toContain('2 automations failed on last run.', 'Register your trial.')
+		->toContain('href="automations"', 'View automations')
+		->not->toContain('warning-box');
 });
 
 // ---------------------------------------------------------------------------
