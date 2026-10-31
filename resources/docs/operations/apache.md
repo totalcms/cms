@@ -193,7 +193,7 @@ RewriteRule ^(.*)$ https://example.com/$1 [L,R=301]
 
 ### Security Headers
 
-Defense-in-depth headers on every response:
+The `public/.htaccess` that ships with Total CMS already sends `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy`, with HSTS commented out. It uses `setifempty`, so the admin's own headers aren't doubled. To set them in the server config instead, or to add `Permissions-Policy`:
 
 ```apacheconf
 <IfModule mod_headers.c>

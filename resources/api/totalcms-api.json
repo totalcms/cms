@@ -199,7 +199,8 @@
           },
           "default": {},
           "enum": {
-            "type": "array"
+            "type": "array",
+            "items": {}
           },
           "items": {
             "$ref": "#/components/schemas/SchemaProperty"
@@ -1249,6 +1250,90 @@
         }
       }
     },
+    "/collections/{collection}/{id}/{property}/increment": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The numeric property to increment"
+        }
+      ],
+      "post": {
+        "summary": "Increment Property by 1",
+        "description": "Increment a numeric property value. Respects min/max schema settings. Returns the updated property value.",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "200": {
+            "description": "Property incremented successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "property": {
+                      "type": "string",
+                      "description": "The property name"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "description": "The new property value"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (e.g., property not numeric, exceeds max value)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/collections/{collection}/{id}/{property}/increment/{amount}": {
       "parameters": [
         {
@@ -1279,12 +1364,11 @@
         {
           "name": "amount",
           "in": "path",
-          "required": false,
+          "required": true,
           "schema": {
-            "type": "integer",
-            "default": 1
+            "type": "integer"
           },
-          "description": "Amount to increment by (default: 1)"
+          "description": "Amount to increment by. Leave the segment off to increment by 1."
         }
       ],
       "post": {
@@ -1343,6 +1427,90 @@
         }
       }
     },
+    "/collections/{collection}/{id}/{property}/decrement": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The numeric property to decrement"
+        }
+      ],
+      "post": {
+        "summary": "Decrement Property by 1",
+        "description": "Decrement a numeric property value. Respects min/max schema settings. Returns the updated property value.",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "200": {
+            "description": "Property decremented successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "property": {
+                      "type": "string",
+                      "description": "The property name"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "description": "The new property value"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (e.g., property not numeric, below min value)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/collections/{collection}/{id}/{property}/decrement/{amount}": {
       "parameters": [
         {
@@ -1373,12 +1541,11 @@
         {
           "name": "amount",
           "in": "path",
-          "required": false,
+          "required": true,
           "schema": {
-            "type": "integer",
-            "default": 1
+            "type": "integer"
           },
-          "description": "Amount to decrement by (default: 1)"
+          "description": "Amount to decrement by. Leave the segment off to decrement by 1."
         }
       ],
       "post": {

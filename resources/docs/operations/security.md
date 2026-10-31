@@ -418,7 +418,9 @@ Total CMS sets security headers on every admin, login, and setup page automatica
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 
-Your **public pages** are a different story: whether they may be framed, what referrer they send, and any Content Security Policy are decisions for your site, not the CMS. Set those at the server level if you want them:
+On **Apache**, the `.htaccess` that ships in `public/` sends the first three of those on your public pages too, including Site Builder pages, forms and assets: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. That stops another site framing your contact or sign-up form. If another site needs to embed your pages, delete the `X-Frame-Options` line. HSTS is in the same file, commented out. Turn it on only once HTTPS works everywhere on the domain, because browsers remember it for a year.
+
+A Content Security Policy for your public pages is your decision, not the CMS's, and so is anything on Nginx or Caddy, which don't read `.htaccess`. Set those at the server level:
 
 ### Apache
 ```apache

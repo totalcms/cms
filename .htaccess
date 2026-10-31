@@ -1,6 +1,18 @@
 # No directory listings, and no content negotiation guessing at file names
 Options -MultiViews -Indexes
 
+# Security headers for every page, the public site included. The admin sets
+# its own (SecurityHeadersMiddleware), and setifempty leaves those alone.
+# SAMEORIGIN stops other sites framing your pages (clickjacking a contact or
+# sign-up form); delete that line if another site has to embed yours.
+<IfModule mod_headers.c>
+	Header setifempty X-Frame-Options "SAMEORIGIN"
+	Header setifempty X-Content-Type-Options "nosniff"
+	Header setifempty Referrer-Policy "strict-origin-when-cross-origin"
+	# Only once HTTPS works everywhere on this domain: browsers remember it for a year.
+	# Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+
 RewriteEngine On
 
 # Compute this directory's URL prefix dynamically (equivalent to RewriteBase,
