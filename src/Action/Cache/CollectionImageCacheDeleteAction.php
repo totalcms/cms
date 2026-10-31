@@ -32,6 +32,10 @@ readonly class CollectionImageCacheDeleteAction
 		try {
 			$statsBefore = $this->imageCacheService->getCollectionImageCacheStats($collection);
 			$deleted     = $this->imageCacheService->clearCollectionImageCache($collection);
+		} catch (\InvalidArgumentException $e) {
+			return $this->renderer->json($response->withStatus(400), [
+				'error' => $e->getMessage(),
+			]);
 		} catch (\RuntimeException $e) {
 			return $this->renderer->json($response->withStatus(500), [
 				'error' => 'Failed to clear collection image cache: ' . $e->getMessage(),

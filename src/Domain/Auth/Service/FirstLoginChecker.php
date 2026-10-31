@@ -45,8 +45,19 @@ readonly class FirstLoginChecker
 		}
 	}
 
+	/**
+	 * @throws \DomainException when the install already has a user: this makes
+	 *                           an admin, so it only ever makes the first one
+	 */
 	public function createFirstUser(string $email, string $password, string $name = 'Admin'): void
 	{
+		// The setup wizard reached this on finished installs through an
+		// encoded path (`/%73etup/account`), so it must not trust its callers
+		// to have checked (security scan, 2026-10-30).
+		if (!$this->isNewInstallation()) {
+			throw new \DomainException('The first user already exists.');
+		}
+
 		// Ensure auth collection exists
 		$this->collectionFetcher->fetchOrCreateReserved($this->collection);
 

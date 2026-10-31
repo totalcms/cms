@@ -53,10 +53,16 @@ final readonly class PropertyFileStore
 	 * Fetch a URL into the temp directory, refusing a script or executable by
 	 * its name before anything is downloaded.
 	 *
+	 * Public addresses only, whoever asks. The admin's "save from URL" used to
+	 * fetch wherever the URL pointed and keep the reply as a downloadable
+	 * file, so anyone who could edit a collection could read this server's
+	 * own network or the cloud metadata address back out (security scan,
+	 * 2026-10-30). Only MCP callers were held to public addresses.
+	 *
 	 * @throws UploadRejectedException when the URL or its filename is refused
 	 * @throws \RuntimeException       when the download fails
 	 */
-	public function fetch(string $url, bool $publicOnly = false): string
+	public function fetch(string $url): string
 	{
 		$url = trim($url);
 		if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
@@ -65,7 +71,7 @@ final readonly class PropertyFileStore
 
 		$this->assertFilename(RemoteFileDownloader::filenameFor($url));
 
-		return $publicOnly ? $this->downloader->downloadPublic($url) : $this->downloader->download($url);
+		return $this->downloader->downloadPublic($url);
 	}
 
 	/**

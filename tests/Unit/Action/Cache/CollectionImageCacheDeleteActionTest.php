@@ -192,6 +192,26 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 		$this->assertSame($jsonResponse, $result);
 	}
 
+	public function testReturns400ForACollectionNameThatLeavesTheDataDir(): void
+	{
+		$this->request->method('getAttribute')->with('collection')->willReturn(null);
+		$this->request->method('getParsedBody')->willReturn(['collection' => '../../..']);
+
+		$this->imageCacheService->method('getCollectionImageCacheStats')
+			->willThrowException(new \InvalidArgumentException('Invalid collection: ../../..'));
+		$this->imageCacheService->expects($this->never())->method('clearCollectionImageCache');
+
+		$errorResponse = $this->createMock(ResponseInterface::class);
+		$this->response->expects($this->once())->method('withStatus')->with(400)->willReturn($errorResponse);
+
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())->method('json')
+			->with($errorResponse, ['error' => 'Invalid collection: ../../..'])
+			->willReturn($jsonResponse);
+
+		$this->assertSame($jsonResponse, ($this->action)($this->request, $this->response));
+	}
+
 	public function testReturns500WhenGetStatsFails(): void
 	{
 		$collection = 'products';

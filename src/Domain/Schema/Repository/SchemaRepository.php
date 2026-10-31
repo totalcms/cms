@@ -143,6 +143,10 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
+		if (!self::isPlainId($id)) {
+			return null;
+		}
+
 		$cached = $this->cached($id);
 		if ($cached instanceof SchemaData) {
 			return $cached;
@@ -169,6 +173,10 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
+		if (!self::isPlainId($id)) {
+			return null;
+		}
+
 		$cached = $this->cached($id);
 		if ($cached instanceof SchemaData) {
 			return $cached;
@@ -177,6 +185,19 @@ class SchemaRepository extends StorageRepository
 		$schema = $this->fetchAndDeserialize(self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT, SchemaData::class);
 
 		return $schema instanceof SchemaData ? $this->remember($id, $schema) : null;
+	}
+
+	/**
+	 * A schema id is a slug: one path segment, never a dot name. The default
+	 * and extension lookups read straight off disk, so an id with `../` in it
+	 * — the admin's duplicate form posts one — read any .json file the server
+	 * could see (security scan, 2026-10-30). Custom schemas go through
+	 * Flysystem, which refuses such a path, but by throwing; checked here
+	 * too, so every lookup answers "no such schema" the same way.
+	 */
+	private static function isPlainId(string $id): bool
+	{
+		return $id !== '' && $id[0] !== '.' && strpbrk($id, '/\\') === false;
 	}
 
 	/**
@@ -211,6 +232,10 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchExtensionSchema(string $id): ?SchemaData
 	{
+		if (!self::isPlainId($id)) {
+			return null;
+		}
+
 		foreach ($this->extensionSchemaDirs as $dir) {
 			$schema = $this->readExtensionSchema($dir . '/' . $id . '.json');
 			if ($schema instanceof SchemaData) {

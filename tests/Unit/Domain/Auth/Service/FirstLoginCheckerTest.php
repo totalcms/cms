@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -43,6 +44,21 @@ final class FirstLoginCheckerTest extends TestCase
 			$this->accessGroupManager,
 			systemActors(),
 		);
+	}
+
+	public function testCreateFirstUserRefusesOnceAUserExists(): void
+	{
+		// It makes an admin, so it must only ever make the first one: the
+		// setup wizard reached it on finished installs through an encoded
+		// path, and created an admin for an anonymous visitor (2026-10-30).
+		$this->config->datadir = sys_get_temp_dir();
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'joe']]));
+		$this->objectSaver->expects($this->never())->method('saveObject');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage('already exists');
+
+		$this->checker->createFirstUser('intruder@example.test', 'password123', 'Intruder');
 	}
 
 	public function testCreateFirstUserSavesTheSuppliedName(): void

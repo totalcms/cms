@@ -151,7 +151,7 @@ final readonly class FileTools
 		$this->spendAttach($tool);
 
 		try {
-			$local = $this->store->fetch($url, publicOnly: true);
+			$local = $this->store->fetch($url);
 			if ($type === 'depot' && $replace && $this->depotHasFile($collection, $id, $property, $name, $subpath)) {
 				$this->removers->generateRemoverService($collection, $property)->deleteFile($collection, $id, $property, $name, $subpath);
 			}

@@ -95,6 +95,25 @@ describe('ImageCacheService::clearCollectionImageCache', function (): void {
 			->toThrow(RuntimeException::class, 'Collection directory does not exist');
 	});
 
+	it('refuses a collection name that walks out of the data dir', function (string $name): void {
+		// The name came straight from the request body, and the path was a
+		// plain join: `../` cleared every .cache folder under the data dir's
+		// parent, and `../../..` walked the disk (security scan, 2026-10-30).
+		$outside = dirname($this->datadir) . '/' . basename($this->datadir) . '-outside';
+		imageCacheTree($outside, 'site', ['page' => 1]);
+		$name = str_replace('{outside}', basename($outside), $name);
+
+		try {
+			expect(fn () => imageCacheService($this->datadir)->clearCollectionImageCache($name))
+				->toThrow(InvalidArgumentException::class, 'Invalid collection');
+			expect(fn () => imageCacheService($this->datadir)->getCollectionImageCacheStats($name))
+				->toThrow(InvalidArgumentException::class, 'Invalid collection');
+			expect(is_dir("$outside/site/page/image/.cache"))->toBeTrue();
+		} finally {
+			exec('rm -rf ' . escapeshellarg($outside));
+		}
+	})->with(['../{outside}', '..', '.', 'blog/../../{outside}', '..\\{outside}', '/{outside}', '']);
+
 	it('invalidates the cached stats, which are now wrong', function (): void {
 		imageCacheTree($this->datadir, 'blog', ['post-1' => 1]);
 

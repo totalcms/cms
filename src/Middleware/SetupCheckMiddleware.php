@@ -52,7 +52,9 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$path = $this->stripBasePath($request->getUri()->getPath());
+		// Decoded, as the router matches it: compared raw, `/%73etup/account`
+		// was not a setup path here but still routed to the wizard.
+		$path = rawurldecode($this->stripBasePath($request->getUri()->getPath()));
 
 		// Public assets are always allowed (admin CSS/JS, vendor assets, etc.)
 		if (str_starts_with($path, '/api/assets/')) {

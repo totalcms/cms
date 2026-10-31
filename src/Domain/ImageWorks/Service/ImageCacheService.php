@@ -49,7 +49,7 @@ readonly class ImageCacheService
 	 */
 	private function removeCacheDirectories(string $collection): int
 	{
-		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
+		$collectionPath = $this->collectionPath($collection);
 
 		if (!is_dir($collectionPath)) {
 			throw new \RuntimeException("Collection directory does not exist: {$collectionPath}");
@@ -92,7 +92,7 @@ readonly class ImageCacheService
 	 */
 	public function getCollectionImageCacheStats(string $collection): array
 	{
-		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
+		$collectionPath = $this->collectionPath($collection);
 
 		$stats = [
 			'collection'        => $collection,
@@ -189,10 +189,10 @@ readonly class ImageCacheService
 			return $results;
 		}
 
-		// Get all collection directories
+		// Get all collection directories; dot folders (.system, .cache) are not collections
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir(PathUtils::absolutePath($datadir, $item))
+			fn (string $item): bool => !str_starts_with($item, '.') && is_dir(PathUtils::absolutePath($datadir, $item))
 		);
 
 		foreach ($collections as $collection) {
@@ -227,10 +227,10 @@ readonly class ImageCacheService
 			throw new \RuntimeException("Data directory does not exist: {$datadir}");
 		}
 
-		// Get all collection directories
+		// Get all collection directories; dot folders (.system, .cache) are not collections
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir(PathUtils::absolutePath($datadir, $item))
+			fn (string $item): bool => !str_starts_with($item, '.') && is_dir(PathUtils::absolutePath($datadir, $item))
 		);
 
 		foreach ($collections as $collection) {
@@ -286,5 +286,23 @@ readonly class ImageCacheService
 		if (!rmdir($path)) {
 			throw new \RuntimeException("Failed to remove root directory: {$path}");
 		}
+	}
+
+	/**
+	 * The collection's folder in the data dir. The name can come straight
+	 * from a request body, and the path used to be a plain join, so `../`
+	 * cleared every .cache folder under the data dir's parent and `../../..`
+	 * walked the disk (security scan, 2026-10-30). A collection id is a slug:
+	 * one path segment, never a dot name.
+	 *
+	 * @throws \InvalidArgumentException when the name is not a single segment
+	 */
+	private function collectionPath(string $collection): string
+	{
+		if ($collection === '' || $collection[0] === '.' || strpbrk($collection, '/\\') !== false) {
+			throw new \InvalidArgumentException('Invalid collection: ' . $collection);
+		}
+
+		return PathUtils::absolutePath($this->config->datadir, $collection);
 	}
 }

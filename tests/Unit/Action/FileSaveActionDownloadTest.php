@@ -32,7 +32,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
+	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config));
 }
@@ -46,7 +46,7 @@ function fetchThroughStore(HttpClientInterface $httpClient, string $url, ?Config
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
+	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return $store->fetch($url);
 }
@@ -70,9 +70,9 @@ describe('FileSaveAction URL Download', function (): void {
 			->with(
 				'GET',
 				'https://example.com/photo.jpg',
+				// Certificates are always verified: the public-only client has no switch for it.
 				test()->callback(fn (array $options): bool => ($options['timeout'] ?? 0) === 30
-						&& ($options['user_agent'] ?? '') === 'TotalCMS File Downloader'
-						&& ($options['verify_ssl'] ?? false) === true)
+						&& ($options['user_agent'] ?? '') === 'TotalCMS File Downloader')
 			)
 			->willReturn(new HttpResponse(200, $fileContent));
 
@@ -117,11 +117,11 @@ describe('FileSaveAction URL Download', function (): void {
 	test('throws size exceeded exception when download exceeds max size', function (): void {
 		$httpClient = test()->createMock(HttpClientInterface::class);
 		$httpClient->method('request')
-			->willThrowException(new RuntimeException('Download exceeds maximum size limit'));
+			->willReturn(new HttpResponse(200, str_repeat('x', 1024 * 1024 + 1)));
 
 		$config                  = test()->createMock(Config::class);
 		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
-		$config->maxDownloadSize = 10;
+		$config->maxDownloadSize = 1;
 
 		fetchThroughStore($httpClient, 'https://example.com/huge-file.zip', $config);
 	})->throws(RuntimeException::class, 'maximum download size');
@@ -134,8 +134,8 @@ describe('FileSaveAction URL Download', function (): void {
 				'GET',
 				test()->anything(),
 				test()->callback(
-					// 50 MB * 1024 * 1024 = 52428800 bytes
-					fn (array $options): bool => ($options['max_bytes'] ?? 0) === 50 * 1024 * 1024
+					// 50 MB, plus the one byte that tells "too big" from "exactly the cap"
+					fn (array $options): bool => ($options['max_bytes'] ?? 0) === 50 * 1024 * 1024 + 1
 				)
 			)
 			->willReturn(new HttpResponse(200, 'content'));
@@ -161,21 +161,18 @@ describe('FileSaveAction URL Download', function (): void {
 			->and(RemoteFileDownloader::filenameFor('https://example.com/my file (1).jpg'))->toContain('my_file__1_.jpg');
 	});
 
-	test('follows redirects with limit of 5', function (): void {
+	test('refuses a URL on a non-public address before downloading', function (string $url): void {
+		// Saving a file field from a URL used to fetch wherever it pointed and
+		// keep the reply as a downloadable file, so anyone who could edit a
+		// collection could read this server's network back out (2026-10-30).
 		$httpClient = test()->createMock(HttpClientInterface::class);
-		$httpClient->expects(test()->once())
-			->method('request')
-			->with(
-				'GET',
-				test()->anything(),
-				test()->callback(fn (array $options): bool => ($options['follow_redirects'] ?? 0) === 5)
-			)
-			->willReturn(new HttpResponse(200, 'content'));
+		$httpClient->expects(test()->never())->method('request');
 
-		$result = fetchThroughStore($httpClient, 'https://example.com/redirect-test.jpg');
-
-		if (is_string($result) && file_exists($result)) {
-			unlink($result);
-		}
-	});
+		expect(fn () => fetchThroughStore($httpClient, $url))
+			->toThrow(RuntimeException::class, 'non-public address');
+	})->with([
+		'cloud metadata' => 'http://169.254.169.254/latest/meta-data/iam.jpg',
+		'loopback'       => 'http://127.0.0.1:8080/admin.jpg',
+		'private range'  => 'http://10.0.0.5/internal.pdf',
+	]);
 });

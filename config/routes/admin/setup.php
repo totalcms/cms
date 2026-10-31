@@ -8,6 +8,7 @@ use TotalCMS\Action\Setup;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
 use TotalCMS\Middleware\SetupLocaleMiddleware;
+use TotalCMS\Middleware\SetupWizardOpenMiddleware;
 
 return function (App $app): void {
 	$app->group('/setup', function (RouteCollectorProxy $group): void {
@@ -40,6 +41,6 @@ return function (App $app): void {
 
 		// Step 7: Complete
 		$group->get('/complete', Setup\SetupCompleteAction::class)->setName('setup-complete');
-	})->add(SetupLocaleMiddleware::class)->add(NoCacheMiddleware::class)
+	})->add(SetupWizardOpenMiddleware::class)->add(SetupLocaleMiddleware::class)->add(NoCacheMiddleware::class)
 		->add(SecurityHeadersMiddleware::class);
 };
