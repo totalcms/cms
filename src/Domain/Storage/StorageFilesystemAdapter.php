@@ -273,6 +273,18 @@ readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 			->toArray();
 	}
 
+	public function listFileTimes(string $path): array
+	{
+		$times = [];
+		foreach ($this->filesystem->listContents($path) as $attributes) {
+			if ($attributes->isFile() && !str_starts_with(basename($attributes->path()), '.')) {
+				$times[$attributes->path()] = (int)$attributes->lastModified();
+			}
+		}
+
+		return $times;
+	}
+
 	/**
 	 * List files.
 	 *

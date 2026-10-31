@@ -127,6 +127,12 @@ final class InMemoryFilesystem implements StorageAdapterInterface
 		return array_keys($dirs);
 	}
 
+	/** @return array<string,int> */
+	public function listFileTimes(string $directory): array
+	{
+		return array_fill_keys($this->listFiles($directory), 0);
+	}
+
 	/** @return array<int,string> */
 	public function listFiles(string $directory): array
 	{

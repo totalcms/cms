@@ -35,6 +35,9 @@ final class IndexBuilderTest extends TestCase
 	{
 		$this->storage           = $this->createMock(IndexRepository::class);
 		$this->storage->method('withIndexLock')->willReturnCallback(static fn (string $collection, callable $fn): mixed => $fn());
+		// The files a build listed, unchanged since: modified long ago.
+		$this->storage->method('fetchObjectFileTimes')
+			->willReturnCallback(fn (string $collection): array => array_fill_keys($this->storage->fetchObjectIdsFromDisk($collection), 0));
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
@@ -276,8 +279,8 @@ final class IndexBuilderTest extends TestCase
 		$handle = fopen('php://memory', 'r+');
 		$this->storage->method('openIndexStream')->willReturn($handle);
 		$this->storage->method('writeIndexEntry')
-			->willReturnCallback(function ($h, array $entry, bool $isFirst) use (&$streamedEntry): void {
-				$streamedEntry ??= $entry;
+			->willReturnCallback(function ($h, string $json, bool $isFirst) use (&$streamedEntry): void {
+				$streamedEntry ??= json_decode($json, true);
 			});
 
 		$this->builder->buildIndex('blog');
@@ -318,6 +321,32 @@ final class IndexBuilderTest extends TestCase
 
 		$this->builder->buildIndex('blog');
 
+		fclose($handle);
+	}
+
+	public function testStreamingSkipsAnObjectThatCannotBeEncoded(): void
+	{
+		// Invalid UTF-8 (a .md file's frontmatter can carry it) makes
+		// json_encode fail. That object is skipped like an unreadable one;
+		// it must not stop the rebuild of the other 500.
+		$this->storage->method('fetchObjectIdsFromDisk')->willReturn($this->ids(501));
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->createSchemaWithIndex(['id', 'title']));
+
+		$calls = 0;
+		$this->objectFetcher->method('fetchObjectFromDisk')
+			->willReturnCallback(function () use (&$calls) {
+				return $this->objectWith(['title' => ++$calls === 3 ? "bad \xB1" : 'A post']);
+			});
+
+		$handle = fopen('php://memory', 'r+');
+		$this->storage->method('openIndexStream')->willReturn($handle);
+		$this->storage->expects($this->exactly(500))->method('writeIndexEntry');
+		$this->storage->expects($this->once())->method('closeIndexStream');
+
+		$this->builder->buildIndex('blog');
+
+		$this->assertCount(1, $this->builder->lastSkippedIds());
 		fclose($handle);
 	}
 

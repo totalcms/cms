@@ -161,6 +161,11 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 				);
 			}
 
+			public function listFileTimes(string $directory): array
+			{
+				return array_fill_keys($this->listFiles($directory), 0);
+			}
+
 			public function listFiles(string $directory): array
 			{
 				$parts = explode('/', $directory);

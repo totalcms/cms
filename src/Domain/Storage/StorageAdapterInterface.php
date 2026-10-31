@@ -125,4 +125,11 @@ interface StorageAdapterInterface
 	 * @return array<string>
 	 */
 	public function listFiles(string $directory): array;
+
+	/**
+	 * Like listFiles(), with each file's last-modified time.
+	 *
+	 * @return array<string,int> path => Unix time
+	 */
+	public function listFileTimes(string $directory): array;
 }

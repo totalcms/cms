@@ -161,6 +161,25 @@ class IndexRepository extends StorageRepository
 	}
 
 	/**
+	 * Object ids on disk with their file's last-modified time — the newer
+	 * one when an id has both a .json and a .md file. Not cached.
+	 *
+	 * @return array<string,int> id => Unix time (a numeric id is an int key)
+	 */
+	public function fetchObjectFileTimes(string $collection): array
+	{
+		$times = [];
+		foreach ($this->filesystem->listFileTimes($collection) as $path => $time) {
+			$id = self::objectIdFromFile(basename((string)$path));
+			if ($id !== null) {
+				$times[$id] = max($time, $times[$id] ?? 0);
+			}
+		}
+
+		return $times;
+	}
+
+	/**
 	 * save the index.
 	 */
 	public function saveIndex(string $collection, IndexData $index): void
@@ -195,19 +214,14 @@ class IndexRepository extends StorageRepository
 	}
 
 	/**
-	 * Write a single index entry to the streaming index.
+	 * Write a single index entry, already encoded as JSON, to the streaming index.
 	 *
 	 * @param resource $handle
-	 * @param array<string,mixed> $entry
 	 */
-	public function writeIndexEntry($handle, array $entry, bool $isFirst): void
+	public function writeIndexEntry($handle, string $json, bool $isFirst): void
 	{
 		if (!$isFirst) {
 			fwrite($handle, ',');
-		}
-		$json = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		if ($json === false) {
-			throw new \RuntimeException('Failed to encode index entry: ' . json_last_error_msg());
 		}
 		fwrite($handle, $json);
 	}
@@ -264,22 +278,34 @@ class IndexRepository extends StorageRepository
 	{
 		$ids = [];
 		foreach ($this->filesystem->listFiles($collection) as $path) {
-			$name = basename($path);
-			if (str_starts_with($name, '.')) {
-				continue;
-			}
-			foreach (['.json', '.md'] as $ext) {
-				if (str_ends_with($name, $ext)) {
-					// Keyed on the id to dedupe a .json/.md pair for the same
-					// id down to one entry. PHP casts a numeric-string key
-					// like "1" to the int 1, so array_keys() alone would hand
-					// back an int here — cast back to string on the way out.
-					$ids[substr($name, 0, -strlen($ext))] = true;
-					break;
-				}
+			$id = self::objectIdFromFile(basename($path));
+			if ($id !== null) {
+				// Keyed on the id to dedupe a .json/.md pair for the same
+				// id down to one entry. PHP casts a numeric-string key
+				// like "1" to the int 1, so array_keys() alone would hand
+				// back an int here — cast back to string on the way out.
+				$ids[$id] = true;
 			}
 		}
 
 		return array_map(strval(...), array_keys($ids));
+	}
+
+	/**
+	 * The object id a file in a collection directory holds, or null when it
+	 * holds none (a dot-file, or neither .json nor .md).
+	 */
+	private static function objectIdFromFile(string $name): ?string
+	{
+		if (str_starts_with($name, '.')) {
+			return null;
+		}
+		foreach (['.json', '.md'] as $ext) {
+			if (str_ends_with($name, $ext)) {
+				return substr($name, 0, -strlen($ext));
+			}
+		}
+
+		return null;
 	}
 }
