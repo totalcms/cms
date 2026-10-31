@@ -8,6 +8,7 @@ use Mcp\Exception\PromptGetException;
 use Mcp\Server;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Prompt\Data\PromptArgData;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
@@ -53,6 +54,29 @@ final class PromptRegistrarTest extends TestCase
 
 		$handlers = $this->captureHandlers($prompts, McpPersona::ADMIN);
 		$this->assertCount(2, $handlers);
+	}
+
+	/**
+	 * Arg names become PHP parameter names in eval()'d code. The args deck
+	 * allows keys like `1st`, which are not valid variable names: eval() threw
+	 * a ParseError and took down the whole MCP server build. A bad name is
+	 * skipped; the prompt and its other args still register.
+	 */
+	public function testSkipsAnArgNameThatIsNotAValidIdentifier(): void
+	{
+		$prompt = new PromptData(name: 'p1', description: 'd', body: 'b', access: 'public', args: [
+			new PromptArgData(name: '1st'),
+			new PromptArgData(name: 'topic'),
+		]);
+
+		$handlers = $this->captureHandlers([$prompt], McpPersona::ADMIN);
+
+		$this->assertCount(1, $handlers);
+		$params = array_map(
+			static fn (\ReflectionParameter $p): string => $p->getName(),
+			(new \ReflectionFunction($handlers[0]))->getParameters(),
+		);
+		$this->assertSame(['topic'], $params);
 	}
 
 	public function testHandlerThrowsWhenPersonaCannotAccess(): void

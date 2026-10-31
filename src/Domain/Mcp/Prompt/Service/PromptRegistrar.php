@@ -104,9 +104,11 @@ final readonly class PromptRegistrar
 	 * parameter name. Generating the closure via eval() with the right parameter
 	 * names is how SavedQueryToolFactory solves the same problem for MCP tools.
 	 *
-	 * Safety: arg names are validated against `^[a-z][a-z0-9_]*$` by the schema
-	 * (mcp-prompt-arg.json) and re-normalised by ObjectFactory's snakeCase
-	 * pipeline, so the eval input is bounded to safe identifiers.
+	 * Safety: each arg name must be a PHP identifier before it reaches eval().
+	 * The args deck accepts keys like `1st` (letters, digits, underscore in any
+	 * order), which are not valid variable names, so eval() threw a ParseError
+	 * and took down the whole MCP server build. Such an arg is logged and left
+	 * out; the prompt and its other args still register.
 	 *
 	 * @SuppressWarnings("PHPMD.EvalExpression")
 	 */
@@ -117,6 +119,14 @@ final readonly class PromptRegistrar
 		$paramSrc = [];
 		$argMap   = [];
 		foreach ($prompt->args as $arg) {
+			if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $arg->name) !== 1) {
+				$this->logger->warning('MCP prompt argument skipped: name is not a valid identifier', [
+					'prompt'   => $prompt->name,
+					'argument' => $arg->name,
+				]);
+				continue;
+			}
+
 			// All args land as nullable mixed; the renderer enforces required-ness.
 			$paramSrc[] = "mixed \${$arg->name} = null";
 			$argMap[]   = "'{$arg->name}' => \${$arg->name}";

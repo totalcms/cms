@@ -7,6 +7,7 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
+use TotalCMS\Middleware\Access\ImportAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
@@ -19,15 +20,15 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/collections/{collection}/deck/csv', Import\ImportDeckCsvAction::class)->setName('import-deck-csv')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/deck/json', Import\ImportDeckJsonAction::class)->setName('import-deck-json')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/json', Import\ImportJsonAction::class)->setName('import-json')->add(CollectionAccessMiddleware::class);
-		$group->post('/wordpress-analyze', Import\ImportWordpressAnalyzeAction::class)->setName('import-wordpress-analyze')->add(RssImportEditionMiddleware::class);
-		$group->post('/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress')->add(RssImportEditionMiddleware::class);
+		$group->post('/wordpress-analyze', Import\ImportWordpressAnalyzeAction::class)->setName('import-wordpress-analyze')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
+		$group->post('/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
 
 		$group->post('/schemas', Import\ImportSchemaAction::class)->setName('import-schema')->add(SchemaAccessMiddleware::class);
-		$group->post('/totalcms-one', Import\ImportTotalCmsOneAction::class)->setName('import-totalcms-one');
-		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze');
-		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy');
-		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze')->add(RssImportEditionMiddleware::class);
-		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss')->add(RssImportEditionMiddleware::class);
+		$group->post('/totalcms-one', Import\ImportTotalCmsOneAction::class)->setName('import-totalcms-one')->add(ImportAccessMiddleware::class);
+		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze')->add(ImportAccessMiddleware::class);
+		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy')->add(ImportAccessMiddleware::class);
+		$group->post('/rss-analyze', Import\ImportRssAnalyzeAction::class)->setName('import-rss-analyze')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
+		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
 	})->add(AuthMiddleware::class);
 
 	// JumpStart import route — super-admin only; support API key auth for CLI push/pull.
