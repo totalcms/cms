@@ -29,8 +29,8 @@ test('install requires authentication', function (): void {
 	$auth['enable'] = true;
 	$config->auth   = $auth;
 
-	// AuthMiddleware sends anonymous callers to the login page.
-	expect(post('/api/extensions/install')->getStatusCode())->toBe(302);
+	// An /api route answers an anonymous caller with a JSON 401, not the login page.
+	expect(post('/api/extensions/install')->getStatusCode())->toBe(401);
 });
 
 test('install is refused for a non-admin user', function (): void {
@@ -72,7 +72,7 @@ test('a valid wildcard API key without a session does not reach the install acti
 	$response = post('/api/extensions/install', [], ['X-API-Key' => $key->key]);
 
 	expect($response->getStatusCode())->not->toBe(400)
-		->and($response->getStatusCode())->toBeIn([302, 403])
+		->and($response->getStatusCode())->toBeIn([401, 403])
 		->and((string)$response->getBody())->not->toContain('No file');
 });
 
