@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Auth;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\PasskeyService;
 use TotalCMS\Renderer\JsonRenderer;
@@ -19,7 +20,11 @@ readonly class PasskeyDeleteAction
 	) {
 	}
 
-	/** @param array<string,string> $args */
+	/**
+	 * @param array<string,string> $args
+	 *
+	 * @throws HttpNotFoundException when the signed-in user has no passkey with that id
+	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -30,7 +35,9 @@ readonly class PasskeyDeleteAction
 		$collection   = (string)($user['collection'] ?? '');
 		$credentialId = $args['credentialId'] ?? '';
 
-		$this->passkeyService->deletePasskey($userId, $collection, $credentialId);
+		if (!$this->passkeyService->deletePasskey($userId, $collection, $credentialId)) {
+			throw new HttpNotFoundException($request, 'Passkey not found');
+		}
 
 		// HTMX requests get a retarget header to refresh the passkey list
 		if ($request->getHeaderLine('HX-Request') === 'true') {

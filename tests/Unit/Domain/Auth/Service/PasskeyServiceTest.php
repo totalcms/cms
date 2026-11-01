@@ -296,7 +296,7 @@ final class PasskeyServiceTest extends TestCase
 				})
 			);
 
-		$this->service->deletePasskey('admin', 'auth', 'delete-this');
+		$this->assertTrue($this->service->deletePasskey('admin', 'auth', 'delete-this'));
 	}
 
 	public function testDeletePasskeyHandlesNoPasskeys(): void
@@ -309,16 +309,10 @@ final class PasskeyServiceTest extends TestCase
 
 		$this->objectFetcher->method('fetchObject')->willReturn($userData);
 
-		// With no passkeys key, still patches with empty array (harmless no-op)
-		$this->objectPatcher->expects($this->once())
-			->method('patchObject')
-			->with(
-				'auth',
-				'admin',
-				$this->callback(fn (array $data): bool => $data['passkeys'] === [])
-			);
+		// Nothing to remove, so the user record is not written
+		$this->objectPatcher->expects($this->never())->method('patchObject');
 
-		$this->service->deletePasskey('admin', 'auth', 'nonexistent');
+		$this->assertFalse($this->service->deletePasskey('admin', 'auth', 'nonexistent'));
 	}
 
 	public function testDeletePasskeyHandlesNonexistentCredential(): void
@@ -334,17 +328,10 @@ final class PasskeyServiceTest extends TestCase
 
 		$this->objectFetcher->method('fetchObject')->willReturn($userData);
 
-		// Should still patch, but the filtered array will still contain all passkeys
-		$this->objectPatcher->expects($this->once())
-			->method('patchObject')
-			->with(
-				'auth',
-				'admin',
-				$this->callback(fn (array $data): bool => count($data['passkeys']) === 1
-						&& $data['passkeys'][0]['credentialId'] === 'existing-cred')
-			);
+		// An unknown id leaves the record alone instead of re-saving it unchanged
+		$this->objectPatcher->expects($this->never())->method('patchObject');
 
-		$this->service->deletePasskey('admin', 'auth', 'nonexistent-cred');
+		$this->assertFalse($this->service->deletePasskey('admin', 'auth', 'nonexistent-cred'));
 	}
 
 	public function testListPasskeysHandlesNonArrayPasskeys(): void

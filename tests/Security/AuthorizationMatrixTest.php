@@ -320,7 +320,7 @@ test('a read-only admin user writes nothing', function (): void {
 		|| in_array($op['method'], ['GET', 'HEAD', 'OPTIONS'], true)
 		|| in_array($op['template'], MATRIX_SELF_SERVICE, true);
 
-	expect(matrixRun($app, $allowed, static fn (): array => matrixSignIn($app, 'viewer-user-test-com', 'auth'), [...MATRIX_ANONYMOUS_WRITES, 'DELETE /api/passkeys/{credentialId}']))->toBe([]);
+	expect(matrixRun($app, $allowed, static fn (): array => matrixSignIn($app, 'viewer-user-test-com', 'auth'), MATRIX_ANONYMOUS_WRITES))->toBe([]);
 });
 
 test('a read-only admin user cannot open the operator areas', function (string $path): void {
@@ -343,7 +343,7 @@ test('an editor held to one collection writes nowhere else', function (): void {
 	$allowed = static fn (array $op): bool => !matrixGuarded($op)
 		|| in_array($op['method'], ['GET', 'HEAD', 'OPTIONS'], true)
 		|| in_array($op['template'], [...MATRIX_SELF_SERVICE, ...$granted], true);
-	$writes = [...MATRIX_ANONYMOUS_WRITES, 'DELETE /api/passkeys/{credentialId}', 'POST /api/templates', 'PUT /api/templates/{path}', 'DELETE /api/templates/{path}'];
+	$writes = [...MATRIX_ANONYMOUS_WRITES, 'POST /api/templates', 'PUT /api/templates/{path}', 'DELETE /api/templates/{path}'];
 
 	expect(matrixRun($app, $allowed, static fn (): array => matrixSignIn($app, 'blogger-user-test-com', 'auth'), $writes))->toBe([]);
 });

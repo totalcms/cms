@@ -322,19 +322,27 @@ class PasskeyService
 	/**
 	 * Delete a passkey by credential ID.
 	 */
-	public function deletePasskey(string $userId, string $collection, string $credentialId): void
+	/**
+	 * @return bool false when the user has no passkey with that id; nothing is written then
+	 */
+	public function deletePasskey(string $userId, string $collection, string $credentialId): bool
 	{
 		$user     = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
 		$passkeys = $user['passkeys'] ?? [];
 		if (!is_array($passkeys)) {
-			return;
+			return false;
 		}
 
 		$filtered = array_values(array_filter($passkeys, fn (mixed $passkey): bool => is_array($passkey) && ($passkey['credentialId'] ?? '') !== $credentialId));
+		if (count($filtered) === count($passkeys)) {
+			return false;
+		}
 
 		$this->writePasskeys(fn (): ObjectData => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]));
 
 		$this->logger->info("Passkey deleted for user {$collection}/{$userId}: {$credentialId}");
+
+		return true;
 	}
 
 	private function getRpEntity(): PublicKeyCredentialRpEntity
