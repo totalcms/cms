@@ -248,7 +248,7 @@ test('the download proxy returns a Pixabay image and refuses any other host', fu
 			return ['status' => 200, 'location' => '', 'body' => (string)file_get_contents(dirname(__DIR__, 3) . '/test-data/test-image.jpg')];
 		},
 	);
-	$downloader = new RemoteFileDownloader(pixabayHttp(new HttpResponse(200, '')), $config, $public);
+	$downloader = new RemoteFileDownloader($config, $public);
 	$action     = new DownloadAction(stockPhotoSources([new PixabayProvider(pixabayHttp(new HttpResponse(200, '')), stockPhotosCache(), 'k')]), $downloader);
 	$psr17      = new Psr17Factory();
 	$get        = fn (string $url) => $action($psr17->createServerRequest('GET', '/download')->withQueryParams(['url' => $url]), $psr17->createResponse());

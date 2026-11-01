@@ -8,13 +8,14 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\RefusedUrlException;
 use TotalCMS\Support\RemoteFileDownloader;
 
 // RemoteFileDownloader is the one way a URL becomes a local file: the admin
-// upload-from-URL path and the RSS and WordPress importers all go through it,
-// so the safety posture (certificate verification, the size cap, a sanitised
-// filename in the configured temp dir) is decided once. Before it existed,
-// each importer had its own copy with verification switched off and no cap.
+// upload-from-URL path, the importers and MCP all go through it, so the safety
+// posture (public addresses only, the size cap, a sanitized filename in the
+// configured temp dir) is decided once. Before it existed, each importer had
+// its own copy with verification switched off and no cap.
 final class RemoteFileDownloaderTest extends TestCase
 {
 	private string $tmpdir;
@@ -41,28 +42,16 @@ final class RemoteFileDownloaderTest extends TestCase
 		return $config;
 	}
 
-	public function testVerifiesCertificatesAndCapsTheSizeOnEveryDownload(): void
+	/**
+	 * A downloader whose HTTP is the given mock, reached through the public
+	 * client with a stubbed public DNS answer.
+	 */
+	private function downloader(HttpClientInterface $http, int $maxDownloadSizeMb = 2048): RemoteFileDownloader
 	{
-		$captured = [];
-		$http     = $this->createMock(HttpClientInterface::class);
-		$http->method('request')->willReturnCallback(function (string $method, string $url, array $options) use (&$captured): HttpResponse {
-			$captured = $options;
-
-			return new HttpResponse(200, 'bytes');
-		});
-
-		$path = (new RemoteFileDownloader($http, $this->config(50)))->download('https://example.test/img/photo.jpg', ['timeout' => 15, 'prefix' => 'wp-import']);
-
-		$this->assertTrue($captured['verify_ssl']);
-		$this->assertSame(50 * 1024 * 1024, $captured['max_bytes']);
-		$this->assertSame(15, $captured['timeout']);
-		$this->assertSame(5, $captured['follow_redirects']);
-		$this->assertStringStartsWith($this->tmpdir . '/wp-import-', $path);
-		$this->assertStringEndsWith('.jpg', $path);
-		$this->assertSame('bytes', file_get_contents($path));
+		return new RemoteFileDownloader($this->config($maxDownloadSizeMb), stubPublicHttp($http));
 	}
 
-	public function testThePublicDownloadTakesTheSameOptions(): void
+	public function testPassesTheOptionsAndCapsTheSize(): void
 	{
 		$captured = [];
 		$http     = $this->createMock(HttpClientInterface::class);
@@ -72,12 +61,13 @@ final class RemoteFileDownloaderTest extends TestCase
 			return new HttpResponse(200, 'bytes');
 		});
 
-		$path = (new RemoteFileDownloader($http, $this->config(50), stubPublicHttp($http)))
-			->downloadPublic('https://example.test/img/photo.jpg', ['timeout' => 15, 'prefix' => 'rss-import', 'user_agent' => 'Acme/1.0']);
+		$path = $this->downloader($http, 50)->downloadPublic('https://example.test/img/photo.jpg', ['timeout' => 15, 'prefix' => 'rss-import', 'user_agent' => 'Acme/1.0']);
 
 		$this->assertSame(15, $captured['timeout']);
 		$this->assertSame('Acme/1.0', $captured['user_agent']);
+		$this->assertSame(50 * 1024 * 1024 + 1, $captured['max_bytes']);
 		$this->assertStringStartsWith($this->tmpdir . '/rss-import-', $path);
+		$this->assertStringEndsWith('.jpg', $path);
 		$this->assertSame('bytes', file_get_contents($path));
 	}
 
@@ -86,7 +76,7 @@ final class RemoteFileDownloaderTest extends TestCase
 		$http = $this->createMock(HttpClientInterface::class);
 		$http->method('request')->willReturn(new HttpResponse(200, 'x'));
 
-		$path = (new RemoteFileDownloader($http, $this->config()))->download('https://example.test/a%20b/my photo (1).jpg?x=1');
+		$path = $this->downloader($http)->downloadPublic('https://example.test/a%20b/my photo (1).jpg?x=1');
 
 		$this->assertSame($this->tmpdir . '/my_photo__1_.jpg', $path);
 	}
@@ -96,7 +86,7 @@ final class RemoteFileDownloaderTest extends TestCase
 		$http = $this->createMock(HttpClientInterface::class);
 		$http->method('request')->willReturn(new HttpResponse(200, 'x'));
 
-		$path = (new RemoteFileDownloader($http, $this->config()))->download('https://example.test/download/');
+		$path = $this->downloader($http)->downloadPublic('https://example.test/download/');
 
 		$this->assertMatchesRegularExpression('#/downloaded_file_[0-9a-f]+\.tmp$#', $path);
 	}
@@ -109,32 +99,28 @@ final class RemoteFileDownloaderTest extends TestCase
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('HTTP error when downloading file: 404');
 
-		(new RemoteFileDownloader($http, $this->config()))->download('https://example.test/missing.jpg');
+		$this->downloader($http)->downloadPublic('https://example.test/missing.jpg');
 	}
 
 	public function testTheSizeCapFailureIsReportedInMegabytes(): void
 	{
 		$http = $this->createMock(HttpClientInterface::class);
-		$http->method('request')->willThrowException(new \RuntimeException('Response exceeded maximum size'));
+		$http->method('request')->willReturn(new HttpResponse(200, str_repeat('x', 1024 * 1024 + 1)));
 
 		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('File exceeds maximum download size of 10 MB');
+		$this->expectExceptionMessage('File exceeds maximum download size of 1 MB');
 
-		(new RemoteFileDownloader($http, $this->config(10)))->download('https://example.test/huge.zip');
+		$this->downloader($http, 1)->downloadPublic('https://example.test/huge.zip');
 	}
 
-	public function testNoCapWhenMaxDownloadSizeIsZero(): void
+	public function testAPrivateAddressIsRefused(): void
 	{
-		$captured = [];
-		$http     = $this->createMock(HttpClientInterface::class);
-		$http->method('request')->willReturnCallback(function (string $m, string $u, array $options) use (&$captured): HttpResponse {
-			$captured = $options;
+		$http = $this->createMock(HttpClientInterface::class);
+		$http->expects($this->never())->method('request');
 
-			return new HttpResponse(200, 'x');
-		});
+		$this->expectException(RefusedUrlException::class);
 
-		(new RemoteFileDownloader($http, $this->config(0)))->download('https://example.test/a.jpg');
-
-		$this->assertSame(0, $captured['max_bytes']);
+		(new RemoteFileDownloader($this->config(), stubPublicHttp($http, ['internal.test' => ['10.0.0.5']])))
+			->downloadPublic('https://internal.test/secret.jpg');
 	}
 }

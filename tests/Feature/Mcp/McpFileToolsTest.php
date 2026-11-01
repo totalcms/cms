@@ -14,7 +14,6 @@ use TotalCMS\Domain\Media\Service\PropertyFileStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
 
@@ -40,7 +39,7 @@ beforeEach(function (): void {
 			return ['status' => 200, 'location' => '', 'body' => (string)file_get_contents(__DIR__ . '/../../test-data/test-image.jpg')];
 		},
 	);
-	$c->set(RemoteFileDownloader::class, new RemoteFileDownloader($c->get(HttpClientInterface::class), $c->get(Config::class), $public));
+	$c->set(RemoteFileDownloader::class, new RemoteFileDownloader($c->get(Config::class), $public));
 	$c->get(PersonaContext::class)->set(McpPersona::ADMIN);
 	$c->get(CacheManager::class)->clearData('mcp-attach-' . md5('admin'));
 

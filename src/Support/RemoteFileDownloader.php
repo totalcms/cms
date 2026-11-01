@@ -10,82 +10,31 @@ use TotalCMS\Infrastructure\Filesystem\FileUtils;
  * Fetch a URL into the configured temp directory.
  *
  * Every path that turns a remote URL into a local file — the admin's
- * upload-from-URL, the RSS and WordPress importers — goes through here, so
- * the safety posture is decided once: certificates are always verified, the
- * response is capped at `maxDownloadSize`, redirects are bounded, and the
- * filename is derived from the URL and sanitised. Two importers used to carry
- * their own copies with verification switched off and no cap at all.
- *
- * downloadPublic() is the same download for a URL nobody on this site typed
- * (an MCP agent's, a dropped photo's): it goes through PublicHttpClient, so it
- * can only reach public addresses, never this server's own network.
+ * upload-from-URL, the RSS and WordPress importers, MCP agents, dropped stock
+ * photos — goes through here, so the safety posture is decided once: the
+ * request goes through PublicHttpClient, which reaches only public addresses
+ * and checks each redirect again, the response is capped at
+ * `maxDownloadSize`, redirects are bounded, and the filename is derived from
+ * the URL and sanitized. There is deliberately no way to fetch a private or
+ * loopback address through this class.
  */
 final readonly class RemoteFileDownloader
 {
 	private const DEFAULT_USER_AGENT = 'TotalCMS File Downloader';
 
 	public function __construct(
-		private HttpClientInterface $httpClient,
 		private Config $config,
 		private PublicHttpClient $publicHttpClient = new PublicHttpClient(),
 	) {
 	}
 
 	/**
+	 * Download a URL. Only public addresses are reached and each redirect is
+	 * checked again.
+	 *
 	 * @param array{timeout?: int, user_agent?: string, prefix?: string} $options
 	 *   `prefix` names the temp file `{prefix}-{unique}.{ext}` instead of
 	 *   keeping the URL's own filename.
-	 *
-	 * @throws \RuntimeException when the download fails or exceeds the size cap
-	 *
-	 * @return string absolute path of the downloaded file
-	 */
-	public function download(string $url, array $options = []): string
-	{
-		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
-
-		$prefix   = $options['prefix'] ?? null;
-		$filename = $prefix === null ? self::filenameFor($url) : self::uniqueFilenameFor($url, $prefix);
-		$path     = $this->config->tmpdir . '/' . $filename;
-
-		// 0 = unlimited
-		$maxBytes = $this->config->maxDownloadSize > 0
-			? $this->config->maxDownloadSize * 1024 * 1024
-			: 0;
-
-		try {
-			$response = $this->httpClient->request('GET', $url, [
-				'timeout'          => $options['timeout'] ?? 30,
-				'follow_redirects' => 5,
-				'user_agent'       => $options['user_agent'] ?? self::DEFAULT_USER_AGENT,
-				'verify_ssl'       => true,
-				'max_bytes'        => $maxBytes,
-			]);
-		} catch (\RuntimeException $e) {
-			if ($maxBytes > 0 && str_contains($e->getMessage(), 'maximum size')) {
-				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB', $e->getCode(), $e);
-			}
-
-			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
-		}
-
-		if ($response->statusCode !== 200) {
-			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
-		}
-
-		if (file_put_contents($path, $response->body) === false) {
-			throw new \RuntimeException('Failed to save downloaded file to: ' . $path);
-		}
-
-		return $path;
-	}
-
-	/**
-	 * Download a URL that someone other than the operator chose. Only public
-	 * addresses are reached, each redirect is checked again, and the size cap
-	 * is the same as download()'s. Takes the same options.
-	 *
-	 * @param array{timeout?: int, user_agent?: string, prefix?: string} $options
 	 *
 	 * @throws RefusedUrlException when the URL or an address it leads to is refused
 	 * @throws \RuntimeException   when the download fails, or it exceeds the size cap

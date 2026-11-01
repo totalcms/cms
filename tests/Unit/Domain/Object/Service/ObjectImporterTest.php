@@ -260,7 +260,7 @@ function objectImporterHarness(array $properties = [], array $options = []): obj
 		$handle->dispatcher,
 		$handle->collectionFetcher,
 		$handle->collectionSaver,
-		new RemoteMediaFetcher(new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), $config, $loggerFactory),
+		new RemoteMediaFetcher(new RemoteFileDownloader($config, stubPublicHttp($httpClient)), $config, $loggerFactory),
 	);
 
 	return $handle;

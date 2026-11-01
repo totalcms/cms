@@ -1078,7 +1078,7 @@ function rssTestDownloader(HttpClientInterface $httpClient, array $dns = []): Re
 	$config->tmpdir          = sys_get_temp_dir() . '/totalcms-rss-test-' . uniqid();
 	$config->maxDownloadSize = 2048;
 
-	return new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient, $dns));
+	return new RemoteFileDownloader($config, stubPublicHttp($httpClient, $dns));
 }
 
 /**

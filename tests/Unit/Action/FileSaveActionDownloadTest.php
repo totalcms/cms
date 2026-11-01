@@ -32,7 +32,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
+	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config));
 }
@@ -46,7 +46,7 @@ function fetchThroughStore(HttpClientInterface $httpClient, string $url, ?Config
 		$config->maxDownloadSize = 2048;
 	}
 
-	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($httpClient, $config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
+	$store = new PropertyFileStore(test()->createMock(SaverFactory::class), $config, test()->createMock(HeicConverter::class), new RemoteFileDownloader($config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
 	return $store->fetch($url);
 }
