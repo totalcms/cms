@@ -76,11 +76,11 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 2. Grant the members' access group `create`, `read`, `update` (and `delete` if they may withdraw) on the collection.
 3. Mark the moderation fields [`protected`](docs/schemas/validation#protected): `"draft": {"protected": {"value": true}}` sends every member edit back to review.
 
-The server then stamps `owner` on create and refuses any API read or write of someone else's object. The template, though, renders on the server with its own access to the collection: `cms.object.get()` loads any object you name, whoever is signed in. So check the owner before building the edit form:
+The server then stamps `owner` on create and refuses any API read or write of someone else's object. The template, though, renders on the server with its own access to the collection: `cms.collection.object()` loads any object you name, whoever is signed in. So check the owner before building the edit form:
 
 ```twig
 {% set user = cms.auth.userData() %}
-{% set site = cms.object.get('showcase', app.request.query.get('id')) %}
+{% set site = cms.collection.object('showcase', getData.id|default('')) %}
 {% if user and site and site.owner == user.id %}
     {% set form = cms.form.builder('showcase', {
         id: site.id,

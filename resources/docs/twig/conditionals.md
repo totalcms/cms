@@ -736,10 +736,10 @@ Always check existence before accessing files or images:
 ### Smart Defaults
 
 ```twig
-{# Provide sensible defaults #}
-{% set perPage = request.query.limit|default(10) %}
-{% set sortBy = request.query.sort|default('date') %}
-{% set order = request.query.order|default('desc') %}
+{# Provide sensible defaults for query-string values (?limit=20&sort=title) #}
+{% set perPage = getData.limit|default(10) %}
+{% set sortBy = getData.sort|default('date') %}
+{% set order = getData.order|default('desc') %}
 
 {# Validate and constrain values #}
 {% if perPage > 100 %}

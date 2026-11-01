@@ -53,3 +53,19 @@ test('a Data View query is retired by a save to any collection', function (): vo
 
 	expect($this->cache->getApiResponse('dataview-query:qc-view@' . $this->cache->queryVersion('dataviews'), []))->toBeNull();
 });
+
+test('a version lasts until a save, not a day', function (): void {
+	// It used to expire after 24 hours, retiring every cached query on a site
+	// nobody had touched. Only a save needs a new one.
+	if (!function_exists('apcu_enabled') || !apcu_enabled()) {
+		$this->markTestSkipped('APCu is not enabled in the CLI');
+	}
+	$this->cache->queryVersion('collection:qc-ttl');
+
+	$ttl = null;
+	foreach (new APCUIterator('/:ver:collection:qc-ttl$/') as $entry) {
+		$ttl = $entry['ttl'];
+	}
+
+	expect($ttl)->toBe(30 * 86400);
+});

@@ -58,8 +58,13 @@ class CacheManager
 	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
 	public const TTL_FLATTENED_SCHEMA    = 14400;       // 4 hours - flattened schemas (inheritance resolved)
 	public const TTL_API_RESPONSE        = 7200;          // 2 hours - invalidated explicitly on collection changes
-	/** Must outlive the responses keyed on it: an expired version only orphans them, but sooner than needed. */
-	private const TTL_QUERY_VERSION      = 86400;
+	/**
+	 * Must outlive the responses keyed on it: an expired version orphans them
+	 * early. It only needs to change on a save, so 30 days, the longest
+	 * relative TTL Memcached accepts (larger is read as a timestamp); APCu
+	 * would turn 0 into 24 hours.
+	 */
+	private const TTL_QUERY_VERSION      = 2592000;
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
 	/** Namespace for cached content that mirrors tcms-data. Follows `cache.domainScoped`. */

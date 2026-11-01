@@ -306,7 +306,7 @@ By default, gallery images display in their stored order. Use the `sort` option 
 ### Search with pagination
 ```twig
 {% set results = cms.collection.search('blog', query, ['title', 'content', 'tags']) %}
-{% set page = app.request.get('page', 1) %}
+{% set page = getData.page|default(1) %}
 {% set perPage = 10 %}
 {% set paged = results|paginate(perPage, page) %}
 
