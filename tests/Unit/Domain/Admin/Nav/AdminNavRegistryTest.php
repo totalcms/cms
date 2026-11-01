@@ -107,4 +107,35 @@ describe('AdminNavRegistry', function (): void {
 		expect($options[0])->toBe(['value' => 'collections', 'label' => 'T:nav.collections'])
 			->and(array_column($options, 'value'))->toContain('settings', 'docs');
 	});
+
+	test('lists a Quick Navigation entry for each extension settings page, for admins only', function (bool $admin, int $count): void {
+		$auth = $this->createMock(AuthTwigAdapter::class);
+		$auth->method('isAdmin')->willReturn($admin);
+		$extensions = $this->createMock(ExtensionManager::class);
+		$extensions->method('listSettingsPages')->willReturn(['totalcms/stock-photos' => 'Stock Photos']);
+		$registry = new AdminNavRegistry(
+			$auth,
+			(new ReflectionClass(EditionTwigAdapter::class))->newInstanceWithoutConstructor(),
+			$this->createMock(TranslationService::class),
+			$this->config,
+			$extensions,
+			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
+			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
+		);
+
+		$items = $registry->extensionSettingsItems();
+
+		expect($items)->toHaveCount($count);
+		if ($admin) {
+			expect($items[0])->toBe([
+				'label'    => 'Stock Photos Settings',
+				'section'  => 'Extensions',
+				'path'     => 'extensions/totalcms/stock-photos/settings',
+				'keywords' => 'extension plugin settings configure totalcms/stock-photos',
+			]);
+		}
+	})->with([
+		'admin'     => [true, 1],
+		'non-admin' => [false, 0],
+	]);
 });

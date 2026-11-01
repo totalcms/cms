@@ -357,6 +357,35 @@ describe('ExtensionManager', function (): void {
 		expect($helloWorld['hasSettings'])->toBeTrue();
 	});
 
+	test('listSettingsPages names the loaded extensions that have a settings page', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'test-vendor/hello-world' => [
+				'enabled'      => true,
+				'installed_at' => '',
+				'version'      => '1.0.0',
+				'error'        => null,
+				'permissions'  => ['twig:functions' => true],
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+
+		$manager = createExtensionManager($fixturesDir, new ExtensionStateRepository($storage));
+		$manager->discoverAndRegister();
+
+		// Only the enabled one: a disabled extension's settings page has nothing to show.
+		expect($manager->listSettingsPages())->toBe(['test-vendor/hello-world' => 'Hello World']);
+	});
+
+	test('listSettingsPages is empty before anything is loaded', function (): void {
+		$manager = createExtensionManager(dirname(__DIR__, 4) . '/fixtures');
+
+		expect($manager->listSettingsPages())->toBe([]);
+	});
+
 	test('enable and disable changes state', function (): void {
 		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
 

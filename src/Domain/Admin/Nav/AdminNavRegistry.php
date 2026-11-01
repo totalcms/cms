@@ -26,6 +26,11 @@ use TotalCMS\Support\Config;
  *
  * The dashboard's Quick Actions ({@see QuickActions}) use the same auth and
  * edition rules through {@see allows()}.
+ *
+ * It is the catalog of admin destinations, so each surface that lists them
+ * (rail, More menu, Quick Actions, Quick Navigation) gets an accessor here.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
 readonly class AdminNavRegistry
 {
@@ -162,6 +167,31 @@ readonly class AdminNavRegistry
 	public function options(): array
 	{
 		return array_map(fn (NavEntry $entry): array => ['value' => $entry->id, 'label' => $entry->label], $this->items());
+	}
+
+	/**
+	 * Quick Navigation entries for each extension's settings page. The
+	 * settings routes are admin-only, so nobody else gets any.
+	 *
+	 * @return list<array{label: string, section: string, path: string, keywords: string}>
+	 */
+	public function extensionSettingsItems(): array
+	{
+		if (!$this->auth->isAdmin()) {
+			return [];
+		}
+
+		$items = [];
+		foreach ($this->extensions->listSettingsPages() as $id => $name) {
+			$items[] = [
+				'label'    => $name . ' Settings',
+				'section'  => 'Extensions',
+				'path'     => "extensions/{$id}/settings",
+				'keywords' => "extension plugin settings configure {$id}",
+			];
+		}
+
+		return $items;
 	}
 
 	/** The dashboard's Quick Actions, checked with the same rules as the rail. */

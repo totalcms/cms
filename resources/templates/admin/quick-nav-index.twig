@@ -23,6 +23,11 @@ window.TCMS_QUICK_NAV = [
 {"label":"{{ entry.label | e('js') }}","section":"{{ entry.isExtension ? 'Extensions' : 'Navigation' }}","path":"{{ entry.slug | e('js') }}","keywords":"{{ entry.keywords | e('js') }}"},
 {% endfor %}
 
+{# ── Extension settings pages (admin only) ── #}
+{% for item in cms.admin.quickNavExtensionSettings() %}
+{"label":"{{ item.label | e('js') }}","section":"{{ item.section | e('js') }}","path":"{{ item.path | e('js') }}","keywords":"{{ item.keywords | e('js') }}"},
+{% endfor %}
+
 {# ── Individual collections ── #}
 {% if cms.auth.canAccessCollectionsOperation('read') %}
 {% for category, collections in cms.collection.byCategory() %}

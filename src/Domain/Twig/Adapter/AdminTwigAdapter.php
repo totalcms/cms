@@ -235,6 +235,17 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Quick Navigation entries for extension settings pages; [] for anyone
+	 * who is not an admin.
+	 *
+	 * @return list<array{label: string, section: string, path: string, keywords: string}>
+	 */
+	public function quickNavExtensionSettings(): array
+	{
+		return $this->nav->extensionSettingsItems();
+	}
+
+	/**
 	 * Objects visitors and members created in the last 30 days, for the
 	 * dashboard home; [] for anyone who is not an admin.
 	 *

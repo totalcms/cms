@@ -878,6 +878,32 @@ class ExtensionManager
 	}
 
 	/**
+	 * Loaded extensions whose settings page has something on it (a settings
+	 * form or capability toggles — the same test as the Extensions page's
+	 * `hasSettings`), as id => display name. Drives the Quick Navigation
+	 * entries, so it reads only what this request already loaded rather than
+	 * building the full listExtensions() info (icons, health) on every page.
+	 *
+	 * @return array<string,string>
+	 */
+	public function listSettingsPages(): array
+	{
+		$result = [];
+		foreach (array_keys($this->loadedExtensions) as $id) {
+			$manifest = $this->discoveredManifests[$id] ?? null;
+			if (!$manifest instanceof ExtensionManifest || $manifest->hidden) {
+				continue;
+			}
+			if ($manifest->settingsSchema === null && $this->getPermissions($id) === []) {
+				continue;
+			}
+			$result[$id] = $manifest->name;
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Extension schema directories to register on the SchemaRepository:
 	 * extension id => `<extensionPath>/schemas`, for permitted `schemas`
 	 * extensions whose directory exists.
