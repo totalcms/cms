@@ -4,11 +4,19 @@
 <section class="section">
 	<h1>Blog</h1>
 
-	{% set posts = cms.collection.objects('blog') | sortCollectionByString('date:desc') %}
-	{% for post in posts %}
+	{% set result = cms.collection.query('blog', {sort: 'date:desc', limit: 10, page: getData.page|default(1)}) %}
+	{% for post in result.objects %}
 		{% include 'partials/post-card.twig' with {post: post} %}
 	{% else %}
 		<p>No posts yet.</p>
 	{% endfor %}
+
+	{% if result.pages > 1 %}
+	<nav class="pagination">
+		{% if result.page > 1 %}<a href="?page={{ result.page - 1 }}">Newer posts</a>{% endif %}
+		<span>Page {{ result.page }} of {{ result.pages }}</span>
+		{% if result.hasMore %}<a href="?page={{ result.page + 1 }}">Older posts</a>{% endif %}
+	</nav>
+	{% endif %}
 </section>
 {% endblock %}

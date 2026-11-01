@@ -93,7 +93,7 @@ Full reference: `vendor/totalcms/cms/resources/docs/site-builder/seo.md`.
 - `cms.builder.url(pageId, params)` — build a URL to another page
 - `cms.builder.css('css/style.css')`, `cms.builder.js(...)`, `cms.builder.asset(...)`
   — emit asset URLs with mtime cache-busting
-- General data access: `cms.collection.objects(...)`, `cms.image(...)`,
+- General data access: `cms.collection.query(...)` for listings, `cms.collection.objects(...)`, `cms.image(...)`,
   `cms.config('key')`, `cms.env`. Exact signatures: `vendor/totalcms/cms/resources/docs/twig/`.
 
 ## Snapshots

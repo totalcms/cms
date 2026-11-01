@@ -59,7 +59,10 @@ Control structures use curly braces with percent signs:
 The most important Twig variable in Total CMS is `cms`, which fetches content from the CMS:
 
 ```twig
-{# Get all items from a collection #}
+{# Get one page of a collection, newest first #}
+{% set result = cms.collection.query('blog', {sort: 'date:desc', limit: 10}) %}
+
+{# Get every item in a collection #}
 {% set posts = cms.collection.objects('blog') %}
 
 {# Get a specific item by ID #}
@@ -180,7 +183,7 @@ Extend the base layout:
 ### Displaying Blog Posts
 
 ```twig
-{% set posts = cms.collection.objects('blog') %}
+{% set posts = cms.collection.query('blog', {sort: 'date:desc', limit: 10}).objects %}
 
 <div class="blog-posts">
     {% for post in posts %}

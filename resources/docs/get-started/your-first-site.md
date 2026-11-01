@@ -93,7 +93,7 @@ Paste this into the code box:
 
 {% block content %}
     <h1>Posts</h1>
-    {% for post in cms.collection.objects('blog') %}
+    {% for post in cms.collection.query('blog', {sort: 'date:desc', limit: 20}).objects %}
         <article>
             <h2>{{ post.title }}</h2>
             <p><small>{{ post.date | date('F j, Y') }}</small></p>
@@ -146,7 +146,7 @@ In about 10 minutes you used every core piece of Total CMS:
 | Filled in fields | Set the object's **properties** |
 | Saw the JSON file on disk | Saw flat-file storage in action |
 | Created a `/posts` page in Builder | Routed a URL to a template via the **builder-pages** collection |
-| Wrote a Twig template | Used `cms.collection.objects()` to fetch records and render them |
+| Wrote a Twig template | Used `cms.collection.query()` to fetch records and render them |
 
 Everything else in Total CMS — custom fields, forms, auth, extensions, APIs — builds on these foundations.
 

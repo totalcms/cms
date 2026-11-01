@@ -332,7 +332,7 @@ The `/blog` builder page handles the listing. Visiting `/blog/my-post` goes thro
 
 ```twig
 {# pages/blog-index.twig — list page (uses `page`) #}
-{% set posts = cms.collection.objects('blog') | sortCollectionByString('date:desc') %}
+{% set posts = cms.collection.query('blog', {sort: 'date:desc', limit: 20, page: getData.page|default(1)}).objects %}
 {% for post in posts %}
     <article>
         <h2><a href="{{ cms.collection.objectUrl('blog', post) }}">{{ post.title }}</a></h2>

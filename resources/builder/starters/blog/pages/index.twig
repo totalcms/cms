@@ -11,7 +11,7 @@
 <section class="section">
 	<h1>Latest Posts</h1>
 
-	{% set posts = cms.collection.objects('blog') | sortCollectionByString('date:desc') | slice(0, 5) %}
+	{% set posts = cms.collection.query('blog', {sort: 'date:desc', limit: 5}).objects %}
 	{% for post in posts %}
 		{% include 'partials/post-card.twig' with {post: post} %}
 	{% else %}

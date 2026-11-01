@@ -1197,7 +1197,7 @@
             "signature": "query(string $collection, array $options = []): array",
             "description": "One page of a collection: `cms.collection.query('blog', {filter: [...], sort: 'date:desc', limit: 10, page: 2})`. filter takes filterCollection rules, sort a sort string or sortCollection rules. Cached until the collection is saved, so unlike objects() it does not decode the whole index on every request. See TemplateQuery.",
             "examples": [
-                "{% set result = cms.collection.query('blog', {\n    filter: [\n        {property: 'draft', operator: 'isfalse'},\n        {property: 'category', value: 'news'}\n    ],\n    sort: 'date:desc',\n    limit: 10,\n    page: params.page|default(1)\n}) %}\n\n{% for post in result.objects %}\n    <h2><a href=\"{{ cms.collection.objectUrl('blog', post) }}\">{{ post.title }}</a></h2>\n{% endfor %}\n\n{% if result.hasMore %}\n    <a href=\"?page={{ result.page + 1 }}\">Older posts</a>\n{% endif %}"
+                "{% set result = cms.collection.query('blog', {\n    filter: [\n        {property: 'draft', operator: 'isfalse'},\n        {property: 'category', value: 'news'}\n    ],\n    sort: 'date:desc',\n    limit: 10,\n    page: getData.page|default(1)\n}) %}\n\n{% for post in result.objects %}\n    <h2><a href=\"{{ cms.collection.objectUrl('blog', post) }}\">{{ post.title }}</a></h2>\n{% endfor %}\n\n{% if result.hasMore %}\n    <a href=\"?page={{ result.page + 1 }}\">Older posts</a>\n{% endif %}"
             ],
             "url": "https://docs.totalcms.co/twig/collections/"
         },
@@ -2524,7 +2524,7 @@
             "signature": "query(string $viewId, array $options = []): array",
             "description": "One page of a data view whose output is a list of objects: `cms.view.query('top-posts', {filter: [...], sort: 'score:desc', limit: 10, page: 2})`. Same options and result as cms.collection.query(); cached until the view is rebuilt or any collection is saved.",
             "examples": [
-                "{% set result = cms.view.query('top-posts', {\n    filter: [{property: 'score', operator: 'gt', value: 4}],\n    sort: 'score:desc',\n    limit: 10,\n    page: params.page|default(1)\n}) %}\n{% for post in result.objects %}\n    <h2>{{ post.title }}</h2>\n{% endfor %}"
+                "{% set result = cms.view.query('top-posts', {\n    filter: [{property: 'score', operator: 'gt', value: 4}],\n    sort: 'score:desc',\n    limit: 10,\n    page: getData.page|default(1)\n}) %}\n{% for post in result.objects %}\n    <h2>{{ post.title }}</h2>\n{% endfor %}"
             ],
             "url": "https://docs.totalcms.co/twig/views/"
         }

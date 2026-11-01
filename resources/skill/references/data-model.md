@@ -164,7 +164,7 @@ the first that fits:
    anything not in the list. Editors never type a number.
 3. **Chain sorts before adding anything.** `sortCollection` takes several
    keys, so "featured first, then newest, then by title" is one call, not a
-   new field.
+   new field. The same rules are the `sort` option of `cms.collection.query()`.
 4. **Only then add a property, and make its name say why the item moves.**
    - A `featured` toggle lifts a few items to the top.
    - A small `weight` select (1 to 3, default 2) lets an editor lead with one

@@ -70,7 +70,7 @@ does not change.
 ## 4. The account page: forms with `cms.form.builder`
 
 One page where a member manages their work. List their objects with
-`cms.collection.objects(...)|filter(o => o.owner == me.id)` and open a form
+`cms.collection.query(..., {filter: [{property: 'owner', value: me.id}]}).objects` and open a form
 to add or edit:
 
 - **Add:** `addOnly: true`, so the form can only create. Alert the admin with

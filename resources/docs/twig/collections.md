@@ -62,6 +62,8 @@ Get the number of objects in a collection using cached metadata. This is much mo
 
 Get all objects from a collection. Takes the collection id and nothing else — to narrow the result, pipe it through the [`filterCollection`](docs/twig/collection-filtering) and sorting filters.
 
+> **Note:** For a listing, prefer [`query()`](#query). It takes the same filter and sort rules as options, returns only the page you show along with the numbers pagination needs, and caches that page until the collection is next saved. `objects()` loads the whole index on every request, which is fine for a small collection but slows down every page as the collection grows. Keep `objects()` for when you really need every object, such as building a menu or grouping a small collection.
+
 ```twig
 {% for post in cms.collection.objects('blog') %}
     <article>
@@ -92,7 +94,7 @@ Get one page of a collection, filtered and sorted. Use it instead of `objects()`
     ],
     sort: 'date:desc',
     limit: 10,
-    page: params.page|default(1)
+    page: getData.page|default(1)
 }) %}
 
 {% for post in result.objects %}

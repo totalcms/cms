@@ -38,7 +38,7 @@ Get one page of a data view, filtered and sorted. The view's output must be a li
     filter: [{property: 'score', operator: 'gt', value: 4}],
     sort: 'score:desc',
     limit: 10,
-    page: params.page|default(1)
+    page: getData.page|default(1)
 }) %}
 {% for post in result.objects %}
     <h2>{{ post.title }}</h2>
