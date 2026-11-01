@@ -2,7 +2,7 @@
 
 Measures how Total CMS behaves as collections grow: time and memory per request at 100, 1k, 10k and 50k objects, a profiler for any slow request, and load tests against a server set up like a BSH customer's. Nothing here ships: `bin/` and `tests/` are `export-ignore`.
 
-Design and findings: `docs/planning/3.6/performance-testing.md` (local only).
+Design and findings: `docs/planning/done/performance-testing.md` (local only).
 
 > **Mac numbers are relative, not absolute.** APFS and macOS file caching behave differently from ext4 on a Linux host, and file I/O is exactly what a flat-file CMS spends its time on. Use the Mac to compare before and after a change; quote throughput and concurrency from the load box only.
 
