@@ -124,7 +124,7 @@ test('a metadata change waits for another process that holds the meta lock', fun
 	[$proc, $pipes] = holdLockInChild(collectionPath('racenotes') . '.meta.json.lock', 1.0);
 
 	$start = microtime(true);
-	$saver->incrementObjectCounts('racenotes');
+	$saver->recordCreated('racenotes', true);
 	$waited = microtime(true) - $start;
 
 	fclose($pipes[1]);
@@ -146,7 +146,7 @@ test('collection.updated fires after the meta lock is released', function (): vo
 		$seen[] = shell_exec(escapeshellarg(PHP_BINARY) . ' -r ' . escapeshellarg($code));
 	});
 
-	$container->get(CollectionSaver::class)->incrementObjectCounts('racenotes');
+	$container->get(CollectionSaver::class)->recordCreated('racenotes', true);
 
 	expect($seen)->not->toBeEmpty();
 	expect(array_unique($seen))->toBe(['free']);
@@ -169,7 +169,7 @@ test('a settings save cannot lower the lifetime count', function (): void {
 	// committed since; a lower count reissues an ${oid} already in use.
 	$saver    = $this->app->getContainer()->get(CollectionSaver::class);
 	$snapshot = $this->app->getContainer()->get(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class)->fetchCollection('racenotes');
-	$saver->incrementObjectCounts('racenotes', 3);
+	$saver->incrementCount('racenotes', 3);
 	$counted = json_decode((string)file_get_contents(collectionPath('racenotes') . '.meta.json'), true)['count'];
 
 	$saver->updateCollection('racenotes', array_merge($snapshot->toArray(), ['name' => 'Renamed']), $snapshot);

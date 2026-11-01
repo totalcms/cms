@@ -112,7 +112,7 @@ class ObjectImporter
 				$this->collectionFetcher->incrementCachedCount($collection);
 			} else {
 				// incrementCount alone: updateCollection self-heals totalObjects
-				// from the object files. Calling incrementTotalObjects too would
+				// from the object files. Counting totalObjects as well would
 				// double it (it adds to an already self-healed value, and the
 				// count >= totalObjects clamp then bumps count as well).
 				$this->collectionSaver->incrementCount($collection);

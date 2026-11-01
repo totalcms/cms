@@ -9,6 +9,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -18,6 +19,7 @@ use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Storage\FileLock;
 
 final class ObjectSaverTest extends TestCase
 {
@@ -26,6 +28,8 @@ final class ObjectSaverTest extends TestCase
 	private MockObject $factory;
 	private MockObject $propertyProcessor;
 	private MockObject $dateFieldResetter;
+	private MockObject $oids;
+	private bool $insideCreate = false;
 	private EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
@@ -39,6 +43,15 @@ final class ObjectSaverTest extends TestCase
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
 		$this->dateFieldResetter = $this->createMock(DateFieldResetter::class);
 		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
+		$this->oids              = $this->createMock(OidAllocator::class);
+		$this->oids->method('creating')->willReturnCallback(function (string $collection, callable $fn): mixed {
+			$this->insideCreate = true;
+			try {
+				return $fn();
+			} finally {
+				$this->insideCreate = false;
+			}
+		});
 
 		// Capture dispatched events
 		$this->eventDispatcher->listen('object.created', function (array $payload): void {
@@ -57,6 +70,8 @@ final class ObjectSaverTest extends TestCase
 			$this->createMock(CollectionFetcher::class),
 			$this->createMock(IndexRepository::class),
 			systemWriteGate(),
+			new FileLock(cmsDataDir()),
+			$this->oids,
 		);
 	}
 
@@ -170,6 +185,55 @@ final class ObjectSaverTest extends TestCase
 		}
 
 		expect($this->dispatchedEvent)->toBeNull();
+	}
+
+	public function testTheIdIsGeneratedInsideTheAllocatorsCreate(): void
+	{
+		$generatedInside = null;
+		$this->factory->method('generateObject')->willReturnCallback(function () use (&$generatedInside): ObjectData {
+			$generatedInside = $this->insideCreate;
+
+			return $this->createTestObject('note-7');
+		});
+		$this->storage->method('existsObject')->willReturn(false);
+		$this->propertyProcessor->method('processBeforeSave')->willReturnArgument(0);
+
+		expect($this->saver->saveObject('posts', ['title' => 'Mine'])->id)->toBe('note-7');
+		expect($generatedInside)->toBeTrue();
+	}
+
+	public function testAnImportDoesNotClaimANumber(): void
+	{
+		$this->eventDispatcher->suspendForImport('posts');
+		$generatedInside = null;
+		$this->factory->method('generateObject')->willReturnCallback(function () use (&$generatedInside): ObjectData {
+			$generatedInside = $this->insideCreate;
+
+			return $this->createTestObject('note-1');
+		});
+		$this->storage->method('existsObject')->willReturn(false);
+		$this->propertyProcessor->method('processBeforeSave')->willReturnArgument(0);
+
+		$this->saver->saveObject('posts', ['title' => 'Imported']);
+
+		expect($generatedInside)->toBeFalse();
+	}
+
+	public function testACreateThatFindsItsIdTakenUnderTheLockFails(): void
+	{
+		// Free at the first look, taken by the time the create lock is held.
+		$looks = 0;
+		$this->factory->method('generateObject')->willReturn($this->createTestObject('note-1'));
+		$this->storage->method('existsObject')->willReturnCallback(function () use (&$looks): bool {
+			return ++$looks > 1;
+		});
+		$this->propertyProcessor->method('processBeforeSave')->willReturnArgument(0);
+		$this->storage->expects($this->never())->method('saveObject');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage('Object with id note-1 already exists in posts');
+
+		$this->saver->saveObject('posts', ['title' => 'Mine']);
 	}
 
 	/** @param array<PropertyData> $properties */

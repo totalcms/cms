@@ -63,6 +63,8 @@ class CollectionData
 	public string $accessCollection        = '';
 	public int $count                      = 0;                    // total number of objects created in this collection
 	public int $totalObjects               = -1;                // current number of objects (-1 = not calculated yet)
+	/** Set when CollectionRepository recounted totalObjects from disk on this read (a stored 0); never stored. */
+	public bool $totalObjectsRecounted     = false;
 	public string $lastUpdated             = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
 	public string $updated                 = '';                // ISO 8601 datetime of last SETTINGS change (config timestamp — delta-stamped by CollectionSaver, never moved by content writes; sync diffs on it)
 

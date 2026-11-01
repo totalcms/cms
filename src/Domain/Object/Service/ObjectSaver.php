@@ -4,15 +4,19 @@ namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Exception\ObjectExistsException;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Storage\FileLock;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 readonly class ObjectSaver
 {
@@ -25,6 +29,8 @@ readonly class ObjectSaver
 		private CollectionFetcher $collectionFetcher,
 		private IndexRepository $indexRepository,
 		private ObjectWriteGate $gate,
+		private FileLock $fileLock,
+		private OidAllocator $oids,
 	) {
 	}
 
@@ -63,12 +69,52 @@ readonly class ObjectSaver
 		// acting; a no-op for trusted actors and unprotected collections.
 		$objectData = $this->gate->beforeCreate($collection, $objectData);
 
-		$object = $this->factory->generateObject($collection, $objectData);
+		// A create claims its ${oid} number while the id is generated, so two
+		// creates that overlap cannot get the same one. An import keeps its own
+		// running count instead (see OidAllocator).
+		$import   = $this->eventDispatcher->isImportSuspended($collection);
+		$claimed  = false;
+		$generate = fn (): ObjectData => $this->factory->generateObject($collection, $objectData);
+		$object   = $import ? $generate() : $this->oids->creating($collection, $generate, $claimed);
 
 		if ($this->storage->existsObject($collection, $object->id)) {
-			throw new \DomainException(sprintf('Object with id %s already exists in %s', $object->id, $collection));
+			throw new ObjectExistsException($collection, $object->id);
 		}
 
+		$this->prepareForCreate($collection, $object, $preserveDates);
+		$this->createObject($collection, $object);
+
+		// Counted only once written, so a refused create changes nothing.
+		if (!$import) {
+			$this->oids->recordCreate($collection, $claimed);
+		}
+
+		$this->eventDispatcher->dispatch(CoreEvent::OBJECT_CREATED, new ObjectEventPayload($collection, $object->id, $object));
+
+		return $object;
+	}
+
+	/**
+	 * Write a new object, failing instead of writing over one already on disk.
+	 * The check and the write run under the collection's create lock, so two
+	 * creates of the same id cannot both find it free: the second one throws.
+	 *
+	 * @throws ObjectExistsException
+	 */
+	private function createObject(string $collection, ObjectData $object): void
+	{
+		$this->fileLock->withLock(PathUtils::buildPath(collection: $collection, filename: '.create'), function () use ($collection, $object): void {
+			if ($this->storage->existsObject($collection, $object->id)) {
+				throw new ObjectExistsException($collection, $object->id);
+			}
+
+			$this->storage->saveObject($collection, $object);
+		});
+	}
+
+	/** Reset creation dates and run the save-time property actions. */
+	private function prepareForCreate(string $collection, ObjectData $object, bool $preserveDates): void
+	{
 		// Reset onCreate date fields to current time (handles duplications where
 		// the original date was copied). Skipped when preserving: an authored
 		// creation date is history, and processBeforeSave still fills any empty
@@ -87,11 +133,5 @@ readonly class ObjectSaver
 
 			return $this->propertyProcessor->processBeforeSave($property);
 		});
-
-		$this->storage->saveObject($collection, $object);
-
-		$this->eventDispatcher->dispatch(CoreEvent::OBJECT_CREATED, new ObjectEventPayload($collection, $object->id, $object));
-
-		return $object;
 	}
 }

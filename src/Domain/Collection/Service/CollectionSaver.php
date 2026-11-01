@@ -360,29 +360,51 @@ readonly class CollectionSaver
 	}
 
 	/**
-	 * Record newly created objects: bump the lifetime count and the current
-	 * totalObjects in ONE write. Object creation used to call incrementCount()
-	 * then incrementTotalObjects(), writing and dispatching twice.
+	 * Claim the next ${oid} number: bump the lifetime count under the meta
+	 * lock and return it. Called before the object is written (see
+	 * OidAllocator), so a count still unset is seeded from the objects
+	 * already on disk, which do not include the new one yet.
 	 */
-	public function incrementObjectCounts(string $collectionId, int $incrementBy = 1): CollectionData
+	public function claimOid(string $collectionId): int
 	{
-		return $this->mutateMetadata($collectionId, function (array &$data) use ($collectionId, $incrementBy): void {
-			$data['count']        = $this->bumpedCount($collectionId, $data, $incrementBy);
-			$data['totalObjects'] = ($data['totalObjects'] ?? 0) + $incrementBy;
+		$collection = $this->mutateMetadata($collectionId, function (array &$data) use ($collectionId): void {
+			$count         = (int)($data['count'] ?? 0);
+			$data['count'] = ($count > 0 ? $count : count($this->indexRepository->fetchObjectIds($collectionId))) + 1;
+		});
+		$this->collectionFetcher->clearCache($collectionId);
+
+		return $collection->count;
+	}
+
+	/**
+	 * Record an object that was just written, in one write: totalObjects goes
+	 * up by one, and so does the lifetime count unless the create already
+	 * claimed its ${oid} number (claimOid()).
+	 *
+	 * A totalObjects the repository just recounted from disk (a stored 0)
+	 * already includes the new object, so it is kept as it is. Adding to it
+	 * counted a collection's first object twice, and the count >=
+	 * totalObjects floor then made its second ${oid} 3.
+	 */
+	public function recordCreated(string $collectionId, bool $countClaimed): CollectionData
+	{
+		return $this->mutateMetadata($collectionId, function (array &$data, CollectionData $collection) use ($collectionId, $countClaimed): void {
+			if (!$countClaimed) {
+				$data['count'] = $this->bumpedCount($collectionId, $data, 1);
+			}
+			if (!$collection->totalObjectsRecounted) {
+				$data['totalObjects'] = ($data['totalObjects'] ?? 0) + 1;
+			}
 		});
 	}
 
-	public function incrementTotalObjects(string $collectionId, int $incrementBy = 1): CollectionData
-	{
-		return $this->mutateMetadata($collectionId, static function (array &$data) use ($incrementBy): void {
-			$data['totalObjects'] = ($data['totalObjects'] ?? 0) + $incrementBy;
-		});
-	}
-
+	/** See recordCreated() for a count recounted on read. */
 	public function decrementTotalObjects(string $collectionId): CollectionData
 	{
-		return $this->mutateMetadata($collectionId, static function (array &$data): void {
-			$data['totalObjects'] = max(0, ($data['totalObjects'] ?? 0) - 1);
+		return $this->mutateMetadata($collectionId, static function (array &$data, CollectionData $collection): void {
+			if (!$collection->totalObjectsRecounted) {
+				$data['totalObjects'] = max(0, ($data['totalObjects'] ?? 0) - 1);
+			}
 		});
 	}
 
@@ -401,7 +423,8 @@ readonly class CollectionSaver
 	 * let $mutate change the array, save it through updateCollection() so
 	 * the self-healing, timestamps and the collection.updated event apply.
 	 *
-	 * @param callable(array<string,mixed>&): void $mutate
+	 * @param callable(array<string,mixed>&, CollectionData): void $mutate gets the
+	 *        record as an array to change, and the record as read
 	 */
 	private function mutateMetadata(string $collectionId, callable $mutate): CollectionData
 	{
@@ -417,7 +440,7 @@ readonly class CollectionSaver
 			}
 
 			$data = $collection->toArray();
-			$mutate($data);
+			$mutate($data, $collection);
 
 			return $this->writeCollection($collectionId, $data, $collection, false, $collection);
 		});

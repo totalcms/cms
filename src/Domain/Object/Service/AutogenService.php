@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 
 /**
@@ -25,7 +24,7 @@ readonly class AutogenService
 	public const MAX_FIELD_LENGTH = 100;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
+		private OidAllocator $oids,
 	) {
 	}
 
@@ -158,15 +157,11 @@ readonly class AutogenService
 	}
 
 	/**
-	 * Get the next OID for the collection.
+	 * The OID for the collection: the number claimed by the create in
+	 * progress, or a peek at the next one (see OidAllocator).
 	 */
 	private function getNextOid(string $collection): int
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData) {
-			return 1;
-		}
-
-		return $collectionData->count + 1;
+		return $this->oids->next($collection);
 	}
 }

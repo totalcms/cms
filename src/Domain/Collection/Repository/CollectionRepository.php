@@ -135,7 +135,8 @@ class CollectionRepository extends StorageRepository
 		// Calculate in-memory only - values persist on next normal save operation
 		// Recalculating for zero is cheap (empty directory scan) and catches stale counts
 		if ($collectionData->totalObjects <= 0) {
-			$collectionData->totalObjects = $this->calculateObjectCount($collection);
+			$collectionData->totalObjects          = $this->calculateObjectCount($collection);
+			$collectionData->totalObjectsRecounted = true;
 		}
 
 		return $collectionData;

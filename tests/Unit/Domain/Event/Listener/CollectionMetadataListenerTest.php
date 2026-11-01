@@ -29,15 +29,11 @@ final class CollectionMetadataListenerTest extends TestCase
 		(new CollectionMetadataListener($this->collectionSaver, $this->collectionFetcher))->register($this->dispatcher);
 	}
 
-	public function testObjectCreatedIncrementsCountAndTotalObjects(): void
+	public function testObjectCreatedLeavesTheCountsToWhoeverWroteIt(): void
 	{
-		$this->collectionSaver
-			->expects($this->once())
-			->method('incrementObjectCounts')
-			->with('posts');
-
+		// ObjectSaver and ObjectCloner count their creates (OidAllocator::recordCreate()).
+		$this->collectionSaver->expects($this->never())->method('recordCreated');
 		$this->collectionSaver->expects($this->never())->method('incrementCount');
-		$this->collectionSaver->expects($this->never())->method('incrementTotalObjects');
 
 		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id'));
 	}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -13,10 +14,19 @@ use TotalCMS\Domain\Object\Service\DateFieldResetter;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Storage\FileLock;
 
 /**
  * @param array<int,string> $existingIds
  */
+function passThroughOidAllocator(): OidAllocator
+{
+	$oids = test()->createMock(OidAllocator::class);
+	$oids->method('creating')->willReturnCallback(fn (string $collection, callable $fn): mixed => $fn());
+
+	return $oids;
+}
+
 function makeObjectSaverWithSingletonDeps(CollectionData $collection, array $existingIds): ObjectSaver
 {
 	$factory = test()->createMock(ObjectFactory::class);
@@ -37,6 +47,8 @@ function makeObjectSaverWithSingletonDeps(CollectionData $collection, array $exi
 		$fetcher,
 		$index,
 		systemWriteGate(),
+		new FileLock(cmsDataDir()),
+		passThroughOidAllocator(),
 	);
 }
 

@@ -339,7 +339,7 @@ final class CollectionSaverTest extends TestCase
 		$this->schemaFetcher->expects($this->never())->method('fetchSchema');
 		$this->repository->expects($this->once())->method('saveCollection');
 
-		$this->saver->incrementTotalObjects('portfolio');
+		$this->saver->recordCreated('portfolio', true);
 	}
 
 	private function authCollection(string $id, string $schema): CollectionData
@@ -435,7 +435,7 @@ final class CollectionSaverTest extends TestCase
 		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => '']);
 	}
 
-	public function testIncrementTotalObjects(): void
+	public function testRecordCreatedCountsTheObject(): void
 	{
 		$collectionData               = new CollectionData();
 		$collectionData->id           = 'test-collection';
@@ -465,7 +465,7 @@ final class CollectionSaverTest extends TestCase
 				return true;
 			}));
 
-		$result = $this->saver->incrementTotalObjects('test-collection');
+		$result = $this->saver->recordCreated('test-collection', true);
 
 		expect($result)->toBeInstanceOf(CollectionData::class);
 		expect($result->totalObjects)->toBe(6);
@@ -568,7 +568,7 @@ final class CollectionSaverTest extends TestCase
 		expect($result->totalObjects)->toBe(5); // Should not change
 	}
 
-	public function testIncrementTotalObjectsThrowsExceptionForMissingCollection(): void
+	public function testRecordCreatedThrowsExceptionForMissingCollection(): void
 	{
 		$this->repository
 			->expects($this->once())
@@ -579,7 +579,7 @@ final class CollectionSaverTest extends TestCase
 		$this->expectException(\UnexpectedValueException::class);
 		$this->expectExceptionMessage('Error fetching Collection with id nonexistent');
 
-		$this->saver->incrementTotalObjects('nonexistent');
+		$this->saver->recordCreated('nonexistent', true);
 	}
 
 	public function testDecrementTotalObjectsThrowsExceptionForMissingCollection(): void
@@ -610,7 +610,7 @@ final class CollectionSaverTest extends TestCase
 		$this->saver->updateLastUpdated('nonexistent');
 	}
 
-	public function testIncrementTotalObjectsHandlesMissingTotalObjects(): void
+	public function testRecordCreatedHandlesMissingTotalObjects(): void
 	{
 		$collectionData         = new CollectionData();
 		$collectionData->id     = 'test-collection';
@@ -633,7 +633,7 @@ final class CollectionSaverTest extends TestCase
 				return true;
 			}));
 
-		$result = $this->saver->incrementTotalObjects('test-collection');
+		$result = $this->saver->recordCreated('test-collection', true);
 
 		expect($result->totalObjects)->toBe(1);
 	}
@@ -667,37 +667,7 @@ final class CollectionSaverTest extends TestCase
 		expect($result->totalObjects)->toBe(0);
 	}
 
-	public function testIncrementTotalObjectsWithIncrementBy(): void
-	{
-		$collectionData               = new CollectionData();
-		$collectionData->id           = 'test-collection';
-		$collectionData->schema       = 'blog';
-		$collectionData->totalObjects = 5;
-		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
-
-		$this->repository
-			->expects($this->once())
-			->method('fetchCollection')
-			->with('test-collection')
-			->willReturn($collectionData);
-
-		$this->repository
-			->expects($this->once())
-			->method('saveCollection')
-			->with($this->callback(function (CollectionData $collection): bool {
-				// Verify totalObjects incremented by 10
-				expect($collection->totalObjects)->toBe(15);
-
-				return true;
-			}));
-
-		$result = $this->saver->incrementTotalObjects('test-collection', 10);
-
-		expect($result)->toBeInstanceOf(CollectionData::class);
-		expect($result->totalObjects)->toBe(15);
-	}
-
-	public function testIncrementObjectCountsBumpsBothCountersInOneWrite(): void
+	public function testRecordCreatedBumpsBothCountsInOneWrite(): void
 	{
 		$collectionData               = new CollectionData();
 		$collectionData->id           = 'test-collection';
@@ -706,25 +676,96 @@ final class CollectionSaverTest extends TestCase
 		$collectionData->totalObjects = 3;
 		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
-		$this->repository
-			->method('fetchCollection')
-			->with('test-collection')
-			->willReturn($collectionData);
+		$this->repository->method('fetchCollection')->willReturn($collectionData);
+		$this->repository->expects($this->once())->method('saveCollection')
+			->with($this->callback(fn (CollectionData $collection): bool => $collection->count === 6 && $collection->totalObjects === 4));
 
-		$this->repository
-			->expects($this->once())
-			->method('saveCollection')
-			->with($this->callback(function (CollectionData $collection): bool {
-				expect($collection->count)->toBe(7)
-					->and($collection->totalObjects)->toBe(5);
+		$this->saver->recordCreated('test-collection', false);
+	}
 
-				return true;
-			}));
+	public function testRecordCreatedLeavesACountTheCreateAlreadyClaimed(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 6;
+		$collectionData->totalObjects = 3;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
-		$result = $this->saver->incrementObjectCounts('test-collection', 2);
+		$this->repository->method('fetchCollection')->willReturn($collectionData);
+		$this->repository->expects($this->once())->method('saveCollection')
+			->with($this->callback(fn (CollectionData $collection): bool => $collection->count === 6 && $collection->totalObjects === 4));
 
-		expect($result->count)->toBe(7)
-			->and($result->totalObjects)->toBe(5);
+		$this->saver->recordCreated('test-collection', true);
+	}
+
+	public function testRecordCreatedKeepsACountTheRepositoryJustTookFromDisk(): void
+	{
+		// A stored 0 is recounted on read, and the recount already includes
+		// the object that was just created: adding one counted it twice.
+		$collectionData                        = new CollectionData();
+		$collectionData->id                    = 'test-collection';
+		$collectionData->schema                = 'blog';
+		$collectionData->count                 = 0;
+		$collectionData->totalObjects          = 1;
+		$collectionData->totalObjectsRecounted = true;
+		$collectionData->lastUpdated           = '2025-01-01T00:00:00+00:00';
+
+		$this->repository->method('fetchCollection')->willReturn($collectionData);
+		$this->indexRepository->method('fetchObjectIds')->willReturn(['only']);
+		$this->repository->expects($this->once())->method('saveCollection')
+			->with($this->callback(fn (CollectionData $collection): bool => $collection->totalObjects === 1 && $collection->count === 1));
+
+		$this->saver->recordCreated('test-collection', false);
+	}
+
+	public function testDecrementTotalObjectsKeepsACountTheRepositoryJustTookFromDisk(): void
+	{
+		$collectionData                        = new CollectionData();
+		$collectionData->id                    = 'test-collection';
+		$collectionData->schema                = 'blog';
+		$collectionData->count                 = 3;
+		$collectionData->totalObjects          = 2;
+		$collectionData->totalObjectsRecounted = true;
+		$collectionData->lastUpdated           = '2025-01-01T00:00:00+00:00';
+
+		$this->repository->method('fetchCollection')->willReturn($collectionData);
+		$this->repository->expects($this->once())->method('saveCollection')
+			->with($this->callback(fn (CollectionData $collection): bool => $collection->totalObjects === 2));
+
+		$this->saver->decrementTotalObjects('test-collection');
+	}
+
+	public function testClaimOidBumpsTheCountAndReturnsIt(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 5;
+		$collectionData->totalObjects = 3;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		$this->repository->method('fetchCollection')->with('test-collection')->willReturn($collectionData);
+		$this->repository->expects($this->once())->method('saveCollection')
+			->with($this->callback(fn (CollectionData $collection): bool => $collection->count === 6 && $collection->totalObjects === 3));
+
+		expect($this->saver->claimOid('test-collection'))->toBe(6);
+	}
+
+	public function testClaimOidSeedsAnUnsetCountFromTheObjectsAlreadyThere(): void
+	{
+		// Claimed before the new object is written, so it is not among them.
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 0;
+		$collectionData->totalObjects = 4;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		$this->repository->method('fetchCollection')->with('test-collection')->willReturn($collectionData);
+		$this->indexRepository->method('fetchObjectIds')->willReturn(['a', 'b', 'c', 'd']);
+
+		expect($this->saver->claimOid('test-collection'))->toBe(5);
 	}
 
 	public function testIncrementCountWithIncrementBy(): void

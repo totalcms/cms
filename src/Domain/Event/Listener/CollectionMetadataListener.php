@@ -16,22 +16,18 @@ readonly class CollectionMetadataListener
 	) {
 	}
 
+	/**
+	 * Creates are counted by whoever writes them (OidAllocator::recordCreate()),
+	 * not here: only ObjectSaver knows whether its create already took an
+	 * ${oid} number.
+	 */
 	public function register(EventDispatcher $dispatcher): void
 	{
-		$dispatcher->listen('object.created', $this->onObjectCreated(...), -100);
 		$dispatcher->listen('object.updated', $this->onObjectUpdated(...), -100);
 		$dispatcher->listen('object.deleted', $this->onObjectDeleted(...), -100);
 		// Before the index rebuild (-100): we must drop the in-memory OID bump
 		// and write the true count before anything else reads the cache.
 		$dispatcher->listen('import.completed', $this->onImportCompleted(...), -110);
-	}
-
-	/** @param array<string,mixed> $payload */
-	public function onObjectCreated(array $payload): void
-	{
-		$collection = (string)$payload['collection'];
-
-		$this->collectionSaver->incrementObjectCounts($collection);
 	}
 
 	/** @param array<string,mixed> $payload */

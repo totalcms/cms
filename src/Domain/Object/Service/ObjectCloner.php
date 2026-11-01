@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -14,6 +15,7 @@ readonly class ObjectCloner
 		private ObjectRepository $storage,
 		private DateFieldResetter $dateFieldResetter,
 		private EventDispatcher $eventDispatcher,
+		private OidAllocator $oids,
 	) {
 	}
 
@@ -41,6 +43,10 @@ readonly class ObjectCloner
 		$this->storage->saveObject($to['collection'], $object);
 
 		$this->storage->copyObjectFiles($from['collection'], $from['id'], $to['collection'], $to['id']);
+
+		// The copy keeps its given id, so it took no ${oid} number; count it
+		// as ObjectSaver does (object.created no longer does).
+		$this->oids->recordCreate($to['collection'], false);
 
 		$this->eventDispatcher->dispatch(CoreEvent::OBJECT_CREATED, new ObjectEventPayload($to['collection'], $object->id, $object));
 

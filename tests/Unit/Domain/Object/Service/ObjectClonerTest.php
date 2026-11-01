@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -23,11 +24,13 @@ final class ObjectClonerTest extends TestCase
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
+	private MockObject $oids;
 
 	protected function setUp(): void
 	{
 		$this->storage           = $this->createMock(ObjectRepository::class);
 		$this->dateFieldResetter = $this->createMock(DateFieldResetter::class);
+		$this->oids              = $this->createMock(OidAllocator::class);
 		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
 
 		$this->eventDispatcher->listen('object.created', function (array $payload): void {
@@ -38,7 +41,17 @@ final class ObjectClonerTest extends TestCase
 			$this->storage,
 			$this->dateFieldResetter,
 			$this->eventDispatcher,
+			$this->oids,
 		);
+	}
+
+	public function testACloneAdvancesTheLifetimeCount(): void
+	{
+		$this->storage->method('fetchObject')->willReturn($this->createTestObject('source-id'));
+		$this->storage->method('existsObject')->willReturn(false);
+		$this->oids->expects($this->once())->method('recordCreate')->with('posts', false);
+
+		$this->cloner->cloneObject(['collection' => 'blog', 'id' => 'source-id'], ['collection' => 'posts', 'id' => 'cloned-id']);
 	}
 
 	public function testCloneObjectReturnsClonedObject(): void
