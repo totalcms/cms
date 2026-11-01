@@ -3,6 +3,11 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"anyOf": [
 		{
+			"type"        : "array",
+			"maxItems"    : 0,
+			"description" : "No values yet: an empty locale dict encodes as an empty array"
+		},
+		{
 			"type"        : "object",
 			"description" : "Locale-keyed dict for the localizedtext and localizedstyledtext field types. One value per configured locale; keys use mixed-case POSIX codes (en_US, de, pt_BR). Values are plain strings for localizedtext or HTML for localizedstyledtext — sanitization is applied per-value when HTML is detected. Pro edition only.",
 			"patternProperties": {
