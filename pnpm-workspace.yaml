@@ -9,6 +9,10 @@ catalog:
 overrides:
   vite@*: "catalog:"
   vitest@*: "catalog:"
+  # js-beautify 2.0.3 (latest) pins advisory-affected versions; only its CLI
+  # uses these, the browser bundle does not. Drop once js-beautify updates.
+  "js-beautify>glob": "^14.0.2"
+  "editorconfig>minimatch": "^11.0.1"
 peerDependencyRules:
   allowAny:
     - vite
