@@ -117,9 +117,10 @@ function matrixFingerprint(): array
 	$root  = rtrim(cmsDataDir(), '/');
 	// Sessions, logs, rate-limit buckets and the cross-process cache marker
 	// change on any request, refused or not, and a collection's .index.json is
-	// rebuilt from its objects whenever a read finds it stale. A real write
+	// rebuilt from its objects whenever a read finds it stale. Lock files are
+	// empty and left behind by reads too (FileLock). A real write
 	// still shows up as the object file it changed.
-	$skip  = '#^\.system/(sessions|logs|activity|ratelimit|rate-limits|cache|jobqueue)(/|$)|^\.system/.*\.lock$|^\.system/\.cache_invalidate$|(^|/)\.index\.json$#';
+	$skip  = '#^\.system/(sessions|logs|activity|ratelimit|rate-limits|cache|jobqueue)(/|$)|\.lock$|^\.system/\.cache_invalidate$|(^|/)\.index\.json$#';
 	$files = [];
 	$it    = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
 	foreach ($it as $file) {
