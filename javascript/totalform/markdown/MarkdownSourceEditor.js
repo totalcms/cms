@@ -33,6 +33,12 @@ function markdownLabel(text) {
 	return String(text ?? '').replace(/([[\]])/g, '\\$1');
 }
 
+// An image or link title: ` "…"`, or nothing when there is none.
+function markdownTitle(title) {
+	const text = String(title ?? '').trim();
+	return text === '' ? '' : ` "${text.replace(/"/g, '\\"')}"`;
+}
+
 export default class MarkdownSourceEditor {
 
 	constructor(textarea, options = {}) {
@@ -158,7 +164,7 @@ export default class MarkdownSourceEditor {
 	insertTarget() {
 		return {
 			getContent: () => this.textarea.value,
-			insertImage: ({ src, alt }) => this.edit('insert', { text: `![${markdownLabel(alt)}](${markdownUrl(src)})` }),
+			insertImage: ({ src, alt, title }) => this.edit('insert', { text: `![${markdownLabel(alt)}](${markdownUrl(src)}${markdownTitle(title)})` }),
 			insertFileLink: ({ href, text }) => this.edit('insert', { text: `[${markdownLabel(text)}](${markdownUrl(href)})` }),
 		};
 	}

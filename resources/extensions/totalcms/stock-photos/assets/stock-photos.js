@@ -14,6 +14,9 @@
 // The field does the download (via the same-origin proxy URL in each photo)
 // and the upload, with the photo's alt text and credit. A photo can still be
 // dragged onto any field, not just the one the panel was opened from.
+//
+// styledtext and markdown fields get a Stock Photos tab in their Insert Image
+// dialog instead, through core's window.TotalCMS.imageDialogTabs hook.
 //-----------------------------------------------
 
 const PHOTO_TYPE = "application/x-totalcms-photo";
@@ -21,13 +24,10 @@ const FIELDS     = ".form-field.image-field, .form-field.gallery-field";
 const SEARCH_URL  = new URL("ext/totalcms/stock-photos/search", document.baseURI);
 const SOURCES_URL = new URL("ext/totalcms/stock-photos/sources", document.baseURI);
 
-let panel   = null;
-let sources = null; // the tabs, loaded once on first open
-let source  = null; // the active tab
-let target = null;  // the field container Add puts photos in
-let opener = null;  // what opened the panel, which gets focus back on close
-let fields = [];    // the containers listed in the panel's field picker
-let state   = { query: "", page: 1, orientation: "", total: 0, shown: 0 };
+let panel  = null;
+let target = null; // the field container Add puts photos in
+let opener = null; // what opened the panel, which gets focus back on close
+let fields = [];   // the containers listed in the panel's field picker
 
 //-----------------------------------------------
 // A button on each field that can take photos
@@ -142,8 +142,8 @@ function openFor(container, button, fromMenu = false) {
 	if (!fromMenu) button.setAttribute("aria-expanded", "true");
 	fillPicker();
 	panel.hidden = false;
-	panel.querySelector("input[type=search]").focus();
-	if (!sources) loadSources();
+	browser.input.focus();
+	browser.open();
 }
 
 function closePanel() {
@@ -163,10 +163,27 @@ document.addEventListener("keydown", event => {
 });
 
 //-----------------------------------------------
-// Panel
+// Photo browser: source tabs, search, results. The side panel and the
+// styledtext Insert Image dialog each build one; `tile` makes a result.
 //-----------------------------------------------
 
-function buildPanel() {
+let sourcesRequest = null; // fetched once, shared by every browser
+
+function fetchSources() {
+	sourcesRequest ??= fetch(SOURCES_URL, { credentials: "same-origin", headers: { Accept: "application/json" } })
+		.then(async response => {
+			const data = await response.json();
+			if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+			return data.sources ?? [];
+		})
+		.catch(error => {
+			sourcesRequest = null; // let the next open try again
+			throw error;
+		});
+	return sourcesRequest;
+}
+
+function createBrowser(tile) {
 	const input  = el("input", { type: "search", name: "q", placeholder: "Search photos", "aria-label": "Search photos" });
 	const select = el("select", { name: "orientation", "aria-label": "Orientation" },
 		el("option", { value: "" }, "Default"),
@@ -174,33 +191,162 @@ function buildPanel() {
 		el("option", { value: "horizontal" }, "Landscape"),
 		el("option", { value: "vertical" }, "Portrait"),
 	);
-	const form = el("form", { class: "stock-photos-search", role: "search" }, input, select, el("button", { type: "submit", class: "dash-button small" }, "Search"));
+	const parts = {
+		tabs   : el("div", { class: "stock-photos-tabs", role: "tablist", "aria-label": "Photo sources", hidden: "" }),
+		form   : el("form", { class: "stock-photos-search", role: "search" }, input, select, el("button", { type: "submit", class: "dash-button small" }, "Search")),
+		status : el("p", { class: "stock-photos-status", role: "status" }),
+		grid   : el("ul", { class: "stock-photos-grid" }),
+		more   : el("button", { type: "button", class: "stock-photos-more dash-button transparent small full", hidden: "" }, "Load more"),
+		footer : el("footer", { class: "stock-photos-footer" },
+			el("a", { class: "stock-photos-source", target: "_blank", rel: "noopener" }),
+			el("a", { class: "stock-photos-license", target: "_blank", rel: "noopener" }),
+		),
+	};
+
+	let sources = null; // the tabs, loaded on first open
+	let source  = null; // the active tab
+	let state   = { query: "", page: 1, orientation: "", total: 0, shown: 0 };
+
+	parts.form.addEventListener("submit", event => {
+		event.preventDefault();
+		startSearch();
+	});
+	parts.more.addEventListener("click", () => {
+		state.page++;
+		search();
+	});
+
+	async function loadSources() {
+		try {
+			sources = await fetchSources();
+		} catch (error) {
+			parts.status.textContent = `Photo sources could not be loaded: ${error.message}`;
+			return;
+		}
+		if (sources.length === 0) {
+			parts.status.textContent = "No photo sources are available to you.";
+			return;
+		}
+
+		parts.tabs.replaceChildren(...sources.map(item => {
+			const tab = el("button", { type: "button", role: "tab", "aria-selected": "false", "data-source": item.id }, item.label);
+			tab.addEventListener("click", () => selectSource(item));
+			return tab;
+		}));
+		parts.tabs.hidden = sources.length < 2;
+		selectSource(sources[0]);
+	}
+
+	function selectSource(item) {
+		source = item;
+		parts.tabs.querySelectorAll("[role=tab]").forEach(tab => {
+			tab.setAttribute("aria-selected", String(tab.dataset.source === item.id));
+		});
+
+		input.placeholder = item.browses ? `Search ${item.label}` : "Search photos";
+
+		const link = parts.footer.querySelector(".stock-photos-source");
+		link.href        = item.url;
+		link.textContent = item.browses ? `Open ${item.label}` : `Images from ${item.label}`;
+
+		// The terms editors agree to by using a photo, one click away.
+		const license = parts.footer.querySelector(".stock-photos-license");
+		license.hidden = !item.license;
+		if (item.license) {
+			license.href        = item.license;
+			license.textContent = "License";
+		}
+
+		// A gallery lists itself; a stock service waits for a query.
+		parts.grid.replaceChildren();
+		parts.more.hidden = true;
+		parts.status.textContent = "";
+		if (item.browses || input.value.trim() !== "") startSearch();
+	}
+
+	function startSearch() {
+		state = { query: input.value.trim(), page: 1, orientation: select.value, total: 0, shown: 0 };
+		parts.grid.replaceChildren();
+		search();
+	}
+
+	async function search() {
+		if (!source || (state.query === "" && !source.browses)) return;
+
+		parts.status.textContent = "Searching…";
+		parts.more.hidden = true;
+
+		const url = new URL(SEARCH_URL);
+		url.searchParams.set("source", source.id);
+		url.searchParams.set("q", state.query);
+		url.searchParams.set("page", String(state.page));
+		if (state.orientation) url.searchParams.set("orientation", state.orientation);
+
+		let data;
+		try {
+			const response = await fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } });
+			data = await response.json();
+			if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+		} catch (error) {
+			parts.status.textContent = `Search failed: ${error.message}`;
+			return;
+		}
+
+		// A slow answer from a tab the editor has since left is dropped.
+		if (data.provider.id !== source.id) return;
+
+		data.photos.forEach(photo => parts.grid.append(tile(photo, payloadFor(photo))));
+
+		state.total  = data.total;
+		state.shown += data.photos.length;
+		const empty = source.browses && state.query === "" ? `${source.label} has no photos yet.` : "No photos found.";
+		parts.status.textContent = state.total === 0 ? empty : `${state.shown} of ${state.total} photos`;
+		parts.more.hidden = state.shown >= state.total || data.photos.length === 0;
+	}
+
+	return {
+		parts,
+		input,
+		open() {
+			if (!sources) loadSources();
+		},
+	};
+}
+
+// A search result in core's photo-drop shape.
+function payloadFor(photo) {
+	const { download, filename, alt, credit, tags, link, focalpoint } = photo;
+	return { url: download, filename, alt, credit, tags, link, focalpoint };
+}
+
+function photoImage(photo) {
+	return el("img", { src: photo.preview || photo.thumb, alt: photo.alt, loading: "lazy", width: String(photo.width), height: String(photo.height) });
+}
+
+//-----------------------------------------------
+// Side panel
+//-----------------------------------------------
+
+let browser = null;
+
+function buildPanel() {
+	browser = createBrowser(panelTile);
+	const { tabs, form, status, grid, more, footer } = browser.parts;
 
 	const node = el("aside", { id: "stock-photos-panel", class: "stock-photos-panel", hidden: "", "aria-label": "Stock photos" },
 		el("header", {},
 			el("h2", {}, "Stock Photos"),
 			el("button", { type: "button", class: "stock-photos-close", "aria-label": "Close" }, "×"),
 		),
-		el("div", { class: "stock-photos-tabs", role: "tablist", "aria-label": "Photo sources", hidden: "" }),
+		tabs,
 		form,
 		el("label", { class: "stock-photos-target" }, "Add to ", el("select", { name: "field" })),
-		el("p", { class: "stock-photos-status", role: "status" }),
-		el("ul", { class: "stock-photos-grid" }),
-		el("button", { type: "button", class: "stock-photos-more dash-button transparent small full", hidden: "" }, "Load more"),
-		el("footer", {},
-			el("a", { class: "stock-photos-source", target: "_blank", rel: "noopener" }),
-			el("a", { class: "stock-photos-license", target: "_blank", rel: "noopener" }),
-		),
+		status,
+		grid,
+		more,
+		footer,
 	);
 
-	form.addEventListener("submit", event => {
-		event.preventDefault();
-		startSearch(node);
-	});
-	node.querySelector(".stock-photos-more").addEventListener("click", () => {
-		state.page++;
-		search(node);
-	});
 	node.querySelector(".stock-photos-close").addEventListener("click", closePanel);
 	node.querySelector(".stock-photos-target select").addEventListener("change", event => {
 		target = fields[Number(event.target.value)] ?? target;
@@ -210,119 +356,12 @@ function buildPanel() {
 	return node;
 }
 
-//-----------------------------------------------
-// Sources: one tab each
-//-----------------------------------------------
-
-async function loadSources() {
-	const status = panel.querySelector(".stock-photos-status");
-	try {
-		const response = await fetch(SOURCES_URL, { credentials: "same-origin", headers: { Accept: "application/json" } });
-		const data = await response.json();
-		if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
-		sources = data.sources ?? [];
-	} catch (error) {
-		status.textContent = `Photo sources could not be loaded: ${error.message}`;
-		return;
-	}
-	if (sources.length === 0) {
-		status.textContent = "No photo sources are available to you.";
-		return;
-	}
-
-	const tabs = panel.querySelector(".stock-photos-tabs");
-	tabs.replaceChildren(...sources.map(item => {
-		const tab = el("button", { type: "button", role: "tab", "aria-selected": "false", "data-source": item.id }, item.label);
-		tab.addEventListener("click", () => selectSource(item));
-		return tab;
-	}));
-	tabs.hidden = sources.length < 2;
-	selectSource(sources[0]);
-}
-
-function selectSource(item) {
-	source = item;
-	panel.querySelectorAll(".stock-photos-tabs [role=tab]").forEach(tab => {
-		tab.setAttribute("aria-selected", String(tab.dataset.source === item.id));
-	});
-
-	const input = panel.querySelector("input[type=search]");
-	input.placeholder = item.browses ? `Search ${item.label}` : "Search photos";
-
-	const link = panel.querySelector(".stock-photos-source");
-	link.href        = item.url;
-	link.textContent = item.browses ? `Open ${item.label}` : `Images from ${item.label}`;
-
-	// The terms editors agree to by using a photo, one click away.
-	const license = panel.querySelector(".stock-photos-license");
-	license.hidden = !item.license;
-	if (item.license) {
-		license.href        = item.license;
-		license.textContent = "License";
-	}
-
-	// A gallery lists itself; a stock service waits for a query.
-	panel.querySelector(".stock-photos-grid").replaceChildren();
-	panel.querySelector(".stock-photos-more").hidden = true;
-	panel.querySelector(".stock-photos-status").textContent = "";
-	if (item.browses || input.value.trim() !== "") startSearch(panel);
-}
-
-function startSearch(node) {
-	state = {
-		query       : node.querySelector("input[type=search]").value.trim(),
-		page        : 1,
-		orientation : node.querySelector("select[name=orientation]").value,
-		total       : 0,
-		shown       : 0,
-	};
-	node.querySelector(".stock-photos-grid").replaceChildren();
-	search(node);
-}
-
-async function search(node) {
-	if (!source || (state.query === "" && !source.browses)) return;
-
-	const status = node.querySelector(".stock-photos-status");
-	const more   = node.querySelector(".stock-photos-more");
-	status.textContent = "Searching…";
-	more.hidden = true;
-
-	const url = new URL(SEARCH_URL);
-	url.searchParams.set("source", source.id);
-	url.searchParams.set("q", state.query);
-	url.searchParams.set("page", String(state.page));
-	if (state.orientation) url.searchParams.set("orientation", state.orientation);
-
-	let data;
-	try {
-		const response = await fetch(url, { credentials: "same-origin", headers: { Accept: "application/json" } });
-		data = await response.json();
-		if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
-	} catch (error) {
-		status.textContent = `Search failed: ${error.message}`;
-		return;
-	}
-
-	// A slow answer from a tab the editor has since left is dropped.
-	if (data.provider.id !== source.id) return;
-
-	const grid = node.querySelector(".stock-photos-grid");
-	data.photos.forEach(photo => grid.append(tile(photo)));
-
-	state.total  = data.total;
-	state.shown += data.photos.length;
-	const empty = source.browses && state.query === "" ? `${source.label} has no photos yet.` : "No photos found.";
-	status.textContent = state.total === 0 ? empty : `${state.shown} of ${state.total} photos`;
-	more.hidden = state.shown >= state.total || data.photos.length === 0;
-}
-
-function tile(photo) {
-	const { download, filename, alt, credit, tags, link, focalpoint } = photo;
-	const payload = { photos: [{ url: download, filename, alt, credit, tags, link, focalpoint }] };
+function panelTile(photo, item) {
+	const payload = { photos: [item] };
 	const author  = photo.credit?.author || "";
 
-	const img = el("img", { src: photo.preview || photo.thumb, alt: photo.alt, loading: "lazy", draggable: "true", width: String(photo.width), height: String(photo.height) });
+	const img = photoImage(photo);
+	img.draggable = true;
 	img.addEventListener("dragstart", event => {
 		event.dataTransfer.setData(PHOTO_TYPE, JSON.stringify(payload));
 		event.dataTransfer.effectAllowed = "copy";
@@ -344,6 +383,62 @@ function tile(photo) {
 		),
 	);
 }
+
+//-----------------------------------------------
+// A tab in the styledtext Insert Image dialog (core's imageDialogTabs hook).
+// Core does the download, upload and insert; this only picks the photo.
+//-----------------------------------------------
+
+function renderDialogTab(container, ctx) {
+	let chosen = null;
+
+	const dialogBrowser = createBrowser((photo, item) => {
+		const author = photo.credit?.author || "";
+		const button = el("button", { type: "button", class: "stock-photos-pick", "aria-pressed": "false", title: author ? `Photo by ${author}` : "Photo" },
+			photoImage(photo),
+		);
+		button.addEventListener("click", () => {
+			chosen?.setAttribute("aria-pressed", "false");
+			chosen = button;
+			button.setAttribute("aria-pressed", "true");
+			ctx.select(item);
+		});
+		button.addEventListener("dblclick", () => {
+			ctx.select(item);
+			ctx.insert();
+		});
+
+		return el("li", {},
+			button,
+			el("div", { class: "stock-photos-meta" },
+				el("span", { class: "stock-photos-author", title: author }, author ? `by ${author}` : ""),
+			),
+		);
+	});
+
+	const { tabs, form, status, grid, more, footer } = dialogBrowser.parts;
+	// A new search clears the pick: its tile is gone.
+	form.addEventListener("submit", () => {
+		chosen = null;
+		ctx.select(null);
+	});
+	tabs.addEventListener("click", () => {
+		chosen = null;
+		ctx.select(null);
+	});
+
+	container.append(el("div", { class: "stock-photos-dialog" }, tabs, form, status, grid, more, footer));
+	dialogBrowser.open();
+	dialogBrowser.input.focus();
+}
+
+window.TotalCMS ??= {};
+window.TotalCMS.imageDialogTabs ??= [];
+if (!window.TotalCMS.imageDialogTabs.some(tab => tab?.id === "stock-photos")) {
+	window.TotalCMS.imageDialogTabs.push({ id: "stock-photos", label: "Stock Photos", render: renderDialogTab });
+}
+
+//-----------------------------------------------
 
 async function insert(payload, button) {
 	if (!target?.isConnected) {

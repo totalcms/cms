@@ -620,6 +620,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.quickNavExtensionSettings",
+            "signature": "quickNavExtensionSettings(): array",
+            "description": "Quick Navigation entries for extension settings pages; [] for anyone who is not an admin.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.quickNavNewItems",
             "signature": "quickNavNewItems(): array",
             "description": "Quick Navigation's \"New \u2026\" entries for the current user: the catalog's and one per collection they may add to.",

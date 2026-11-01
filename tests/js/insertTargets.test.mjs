@@ -31,6 +31,16 @@ describe('tiptapInsertTarget', () => {
 		]);
 	});
 
+	test('passes a title through (a stock photo credit)', () => {
+		const editor = fakeEditor();
+
+		tiptapInsertTarget(editor).insertImage({ src: '/a.png', alt: 'A', title: 'Photo by Jane on Pixabay' });
+
+		expect(editor.calls).toEqual([
+			['setImage', { src: '/a.png', alt: 'A', title: 'Photo by Jane on Pixabay' }],
+		]);
+	});
+
 	test('inserts a file link as the same anchor markup as before', () => {
 		const editor = fakeEditor();
 

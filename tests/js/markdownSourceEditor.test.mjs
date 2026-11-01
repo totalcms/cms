@@ -269,6 +269,17 @@ describe('images and files', () => {
 		expect(field.value).toBe('before ![Me](/img/my%20photo%20%281%29.png) after');
 	});
 
+	test('an image with a title (a stock photo credit) keeps it, quotes escaped', () => {
+		const { field, editor, source } = mount('', { uploadUrl: '/api/upload/notes/one/body' });
+		source.setSelectionRange(0, 0);
+		button(editor, 'image').click();
+		const [target] = createImageDialog.mock.calls[0];
+
+		target.insertImage({ src: '/a.jpg', alt: 'A', title: 'Photo by "Jo" on Pixabay' });
+
+		expect(field.value).toBe('![A](/a.jpg "Photo by \\"Jo\\" on Pixabay")');
+	});
+
 	test('the file dialog inserts a markdown link', () => {
 		const { field, editor } = mount('', { uploadUrl: '/api/upload/notes/one/body', fileUploadRules: { size: { max: 5 } } });
 

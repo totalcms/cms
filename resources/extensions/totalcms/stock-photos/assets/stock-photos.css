@@ -255,3 +255,49 @@ nav[popover] li.stock-photos {
 .stock-photos-license {
 	color: oklch(var(--totalform-accent));
 }
+
+/* The Stock Photos tab in the styledtext Insert Image dialog. The dialog body
+   scrolls, so the grid only needs a cap that keeps the footer in view. */
+.stock-photos-dialog {
+	display: flex;
+	flex-direction: column;
+	gap: .75rem;
+}
+
+.stock-photos-dialog .stock-photos-grid {
+	grid-template-columns: repeat(3, 1fr);
+	max-height: min(50vh, 420px);
+}
+
+.stock-photos-dialog .stock-photos-footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	font-size: .8rem;
+}
+
+.stock-photos-pick {
+	display: block;
+	padding: 0;
+	border: 2px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: none;
+	overflow: hidden;
+	cursor: pointer;
+}
+
+.stock-photos-pick img {
+	display: block;
+	border-radius: 0;
+	cursor: pointer;
+}
+
+.stock-photos-pick:hover,
+.stock-photos-pick:focus-visible {
+	border-color: oklch(var(--totalform-accent) / .6);
+}
+
+.stock-photos-pick[aria-pressed="true"] {
+	border-color: oklch(var(--totalform-accent));
+	box-shadow: 0 0 0 1px oklch(var(--totalform-accent));
+}

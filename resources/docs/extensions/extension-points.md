@@ -604,6 +604,26 @@ Within each helper, output ordering is:
 3. Preload hints (`<link rel="preload">` / `<link rel="modulepreload">`) — always emitted in the head regardless of the asset's own `position`.
 4. Script tags last.
 
+### Insert Image dialog tabs
+
+Styled text and markdown fields share an **Insert Image** dialog with **Upload** and **Images** tabs. An admin script can add its own tab, as the bundled Stock Photos extension does. Push a tab onto `window.TotalCMS.imageDialogTabs`. Create the array if it is not there yet; the dialog reads it each time it opens, so the order your script loads in does not matter.
+
+```js
+window.TotalCMS ??= {};
+window.TotalCMS.imageDialogTabs ??= [];
+window.TotalCMS.imageDialogTabs.push({
+	id    : "my-photos",
+	label : "My Photos",
+	render(panel, ctx) {
+		// Runs once, the first time the tab is shown. Fill `panel`.
+		// ctx.select(photo) picks a photo, ctx.select(null) clears it,
+		// ctx.insert() inserts the selection (use it for double-click).
+	},
+});
+```
+
+A photo has the same shape as a [photo drop](docs/fields/image-gallery#adding-photos-from-another-source): `{url, filename, alt, credit, …}`. The `url` must be same-origin or send CORS headers. Selecting a photo fills the alt text box, unless the editor typed their own. On **Insert**, core downloads the photo, checks the field's upload rules, uploads it to the field and inserts it with the alt text, and with the credit (*Photo by Jane on Pixabay*) as its title. A tab that throws while rendering shows an error in its panel and leaves the rest of the dialog working.
+
 ## Which admin surface?
 
 An extension has three ways to put something in front of an operator, and a

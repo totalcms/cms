@@ -48,6 +48,14 @@ Image fields inside cards and deck items work the same way. Press **Esc** or **Ã
 
 An image field takes one photo and replaces the one it has. A gallery adds the photo to the end. On a new object, the photo waits in the field and uploads when you save, like a file you dropped from your computer.
 
+### In styled text and markdown
+
+Styled text and markdown fields put images in the text, not in an image field, so they don't get the button. Open the editor's **Insert Image** dialog instead and choose the **Stock Photos** tab. It has the same sources, search and library tabs as the panel.
+
+Click a photo to select it, then press **Insert**, or double-click it. The photo is uploaded to the field, like a file from the **Upload** tab, and inserted at the cursor. The alt text box fills with the photo's alt text; type your own first and it is kept. A styled text image can't store a credit, so the credit goes in the image's title, such as *Photo by Jane on Pixabay*. Edit or remove it in the HTML if your page shows credits another way.
+
+The object must be saved before a photo can be added, as for any upload in the dialog.
+
 Every library photo arrives with the alt text, credit, tags, link and focal point it has in the gallery. Whether it is featured in the gallery doesn't carry over.
 
 Every Pixabay photo arrives with:

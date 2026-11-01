@@ -75,6 +75,20 @@ export function photoMeta(photo) {
 	return meta;
 }
 
+/**
+ * A one-line credit for a photo — "Photo by Jane on Pixabay" — for places that
+ * can't store the credit object (an <img title> in styledtext). "" when the
+ * credit names neither an author nor a source.
+ */
+export function creditText(credit) {
+	const author = typeof credit?.author === "string" ? credit.author.trim() : "";
+	const source = typeof credit?.source === "string" ? credit.source.trim() : "";
+	if (author && source) return `Photo by ${author} on ${source}`;
+	if (author) return `Photo by ${author}`;
+	if (source) return `Photo from ${source}`;
+	return "";
+}
+
 /** The photo's own filename, else one from its URL, with an extension that matches its type. */
 export function fileName(photo, mime = "") {
 	let name = typeof photo.filename === "string" ? photo.filename.trim() : "";
