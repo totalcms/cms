@@ -165,7 +165,7 @@ Most collections never need any of this. Read on if a collection holds tens of t
 
 ### What gets slower
 
-Any page or API call that lists, filters, sorts or searches a collection loads the collection's whole index into memory. The index holds one entry per object, with the fields listed in the schema's `index`. Its size grows with the number of objects and with how much text each entry carries.
+A page or API call that lists, filters, sorts or searches a collection loads the collection's whole index into memory. [`cms.collection.query()`](docs/twig/collections#query) and the REST API cache their result until the collection is next saved, so only the first request after a save pays for it; `cms.collection.objects()` loads the index every time. The index holds one entry per object, with the fields listed in the schema's `index`. Its size grows with the number of objects and with how much text each entry carries.
 
 Measured on a 1 CPU / 1 GB server with default PHP settings:
 
@@ -186,9 +186,15 @@ These are listed with the most effective first.
    "index": ["id", "title", "date", "category", "image"]
    ```
 
-2. **Give one listing its own smaller index.** A [Data View](docs/collections/data-views) (Pro edition and above) saves a filtered set of objects with only the fields you choose, and it is rebuilt on a schedule. A listing that reads a Data View never loads the full collection index.
+2. **Ask for only the page you show.** Replace `cms.collection.objects()` piped through `filterCollection`, `sortCollection` and `paginate` with [`cms.collection.query()`](docs/twig/collections#query). It takes the same filter and sort rules and returns one page, cached until the collection is saved.
 
-3. **Cache the rendered listing.** Wrap the listing in [`{% cache %}`](docs/twig/cache-tag). For a collection that is edited often, use a short `ttl` and no `tags`. A tag clears the cached copy on every save, so while editors are working, visitors keep rebuilding it. With a short `ttl`, visitors keep getting the cached copy and it refreshes on its own.
+   ```twig
+   {% set result = cms.collection.query('posts', {sort: 'date:desc', limit: 20, page: 1}) %}
+   ```
+
+3. **Give one listing its own smaller index.** A [Data View](docs/collections/data-views) (Pro edition and above) saves a filtered set of objects with only the fields you choose, and it is rebuilt on a schedule. A listing that reads a Data View never loads the full collection index.
+
+4. **Cache the rendered listing.** Wrap the listing in [`{% cache %}`](docs/twig/cache-tag). For a collection that is edited often, use a short `ttl` and no `tags`. A tag clears the cached copy on every save, so while editors are working, visitors keep rebuilding it. With a short `ttl`, visitors keep getting the cached copy and it refreshes on its own.
 
    ```twig
    {% cache 'latest-posts' ttl=60 %}
@@ -198,9 +204,9 @@ These are listed with the most effective first.
 
    On the test server at 50,000 objects, while editors were saving, a tagged cache gave visitors a 95th-percentile page time of 37 seconds. `ttl=60` without tags gave 0.5 seconds.
 
-4. **Turn on Queue Rebuild on Save.** Saving then appends the object to the index right away and rebuilds the full index in the background. See [Collection Settings](docs/collections/settings#queuerebuildonsave).
+5. **Turn on Queue Rebuild on Save.** Saving then appends the object to the index right away and rebuilds the full index in the background. See [Collection Settings](docs/collections/settings#queuerebuildonsave).
 
-5. **Size the server by memory, not cores.** Count about 170 MB per busy worker for a 50,000-object collection, and lower PHP-FPM's `pm.max_children` so those workers fit in RAM without swapping.
+6. **Size the server by memory, not cores.** Count about 170 MB per busy worker for a 50,000-object collection, and lower PHP-FPM's `pm.max_children` so those workers fit in RAM without swapping.
 
 ---
 

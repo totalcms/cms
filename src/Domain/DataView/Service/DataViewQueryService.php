@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\DataView\Service;
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\QueryPipeline;
 
@@ -19,6 +20,7 @@ readonly class DataViewQueryService
 		private DataViewFetcher $dataViewFetcher,
 		private DataViewBuilder $dataViewBuilder,
 		private QueryPipeline $pipeline,
+		private CacheManager $cacheManager,
 	) {
 	}
 
@@ -30,9 +32,11 @@ readonly class DataViewQueryService
 	 */
 	public function query(string $viewId, array $params): QueryResult
 	{
-		$items = $this->loadItems($viewId);
+		// Loaded only on a cache miss. Any collection save retires the
+		// 'dataviews' version, since a view can draw on any collection.
+		$prefix = 'dataview-query:' . $viewId . '@' . $this->cacheManager->queryVersion('dataviews');
 
-		return $this->pipeline->execute($items, $params, 'dataview-query:' . $viewId);
+		return $this->pipeline->execute(fn (): array => $this->items($viewId), $params, $prefix);
 	}
 
 	/**
@@ -40,14 +44,26 @@ readonly class DataViewQueryService
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function loadItems(string $viewId): array
+	private function items(string $viewId): array
 	{
 		if (!$this->dataViewFetcher->dataExists($viewId)) {
 			$this->dataViewBuilder->buildView($viewId);
 		}
 
-		$data = $this->dataViewFetcher->getViewData($viewId);
+		return self::asItems($this->dataViewFetcher->getViewData($viewId));
+	}
 
+	/**
+	 * A view's output as queryable items: a list of objects, re-indexed.
+	 * Anything else (a stats object, a list of strings) is empty. Shared with
+	 * cms.view.query() (TemplateQuery).
+	 *
+	 * @param array<mixed> $data
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function asItems(array $data): array
+	{
 		if ($data === []) {
 			return [];
 		}

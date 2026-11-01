@@ -28,7 +28,7 @@
 
 | Feature | Doc | The one thing to know |
 |---|---|---|
-| Twig: `cms` global, filters, functions | `twig/overview.md`, `twig/filters.md`, `twig/functions.md` | `cms.collection.objects()` — the bare `cms.objects()` is a deprecated proxy. |
+| Twig: `cms` global, filters, functions | `twig/overview.md`, `twig/filters.md`, `twig/functions.md` | `cms.collection.objects()` — the bare `cms.objects()` is a deprecated proxy. For a page of a large collection prefer `cms.collection.query('posts', {filter: [...], sort: 'date:desc', limit: 20, page: 1})` (filterCollection rules; cached until the collection is saved; returns `objects`, `total`, `page`, `pages`, `hasMore`); `cms.view.query('view-id', {...})` does the same over a Data View whose output is a list of objects. |
 | Typography filter (`\|typography`) | `twig/filters.md` § Typography | Curly quotes in the site locale, dashes, ellipsis, ×/±/©, no-break spaces, widow control; HTML-aware and idempotent. Filter *after* `\|markdown`. |
 | Twig recipes (archives, related posts, prev/next, scheduling, calendars, signed links) | `twig/recipes.md` | `template_from_string` renders a stored text field as Twig. |
 | Collection filtering and sorting in Twig | `twig/collection-filtering.md` | `filterCollection` operators include date windows (`todayPlusDays`, `thisMonth`) and array logic. |

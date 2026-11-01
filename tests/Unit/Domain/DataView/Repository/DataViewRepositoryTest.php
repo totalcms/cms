@@ -39,6 +39,16 @@ final class DataViewRepositoryTest extends TestCase
 		$this->repository->saveData('test-view', $data);
 	}
 
+	public function testSaveDataRetiresCachedViewQueries(): void
+	{
+		// A save bumps the version before the queued rebuild runs; a query in
+		// between caches the old output under the new version. Bumping again
+		// here retires it once the new output is written.
+		$this->cacheManager->expects($this->once())->method('bumpQueryVersion')->with('dataviews');
+
+		$this->repository->saveData('test-view', [['id' => '1']]);
+	}
+
 	public function testFetchDataReturnsCachedDataWhenAvailable(): void
 	{
 		$cachedData = ['cached' => true];

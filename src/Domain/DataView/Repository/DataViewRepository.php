@@ -27,6 +27,11 @@ class DataViewRepository extends StorageRepository
 		$json = json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
 		$this->filesystem->write(self::BASE_PATH . "/{$viewId}/data.json", $json);
 		$this->cacheManager->clearComputedData(self::CACHE_PREFIX . $viewId);
+
+		// Cached view queries (REST and cms.view.query()) were retired when
+		// the collection was saved, but this rebuild runs later from the queue:
+		// a query in between cached the old output under the new version.
+		$this->cacheManager->bumpQueryVersion('dataviews');
 	}
 
 	/**

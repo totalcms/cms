@@ -13,6 +13,8 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Query\Service\TemplateQuery;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -39,6 +41,7 @@ readonly class CollectionTwigAdapter
 		private IndexSearcher $indexSearcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectUrlBuilder $objectUrlBuilder,
+		private TemplateQuery $templateQuery,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
@@ -226,6 +229,28 @@ readonly class CollectionTwigAdapter
 		}
 
 		return $index->objects->toArray();
+	}
+
+	/**
+	 * One page of a collection: `cms.collection.query('blog', {filter: [...],
+	 * sort: 'date:desc', limit: 10, page: 2})`. filter takes filterCollection
+	 * rules, sort a sort string or sortCollection rules. Cached until the
+	 * collection is saved, so unlike objects() it does not decode the whole
+	 * index on every request. See TemplateQuery.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array{objects: array<int,array<string,mixed>>, total: int, limit: int, offset: int, page: int, pages: int, hasMore: bool}
+	 */
+	public function query(string $collection, array $options = []): array
+	{
+		try {
+			return $this->templateQuery->collection($collection, $options)->forTemplate();
+		} catch (\Exception $e) {
+			$this->logger->warning("Failed to query collection '{$collection}'", ['error' => $e->getMessage()]);
+
+			return (new QueryResult([], 0, 0, 0))->forTemplate();
+		}
 	}
 
 	// Get a list of all values from a property in a collection

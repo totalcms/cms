@@ -30,6 +30,38 @@ class CollectionRefiner
 	private const WHOLE_VALUE_OPERATORS = ['hasMin', 'hasMax', 'hasCount'];
 
 	/**
+	 * Operators whose answer changes with the clock rather than the data:
+	 * `past`, `today`, `thisMonth`… compare against now, and after/before/
+	 * between accept relative boundaries such as 'now' or '-7 days'. A cached
+	 * result that uses one must not outlive the minute it was made in.
+	 */
+	public const CLOCK_OPERATORS = [
+		'past', 'future', 'pastToday', 'futureToday', 'today', 'todayPlusDays', 'todayMinusDays',
+		'thisWeek', 'thisMonth', 'thisYear', 'after', 'before', 'between',
+	];
+
+	/**
+	 * Whether any of $rules (filterCollection rules) uses a clock operator,
+	 * negated or not.
+	 *
+	 * @param array<array<string,mixed>> $rules
+	 */
+	public static function usesClock(array $rules): bool
+	{
+		foreach ($rules as $rule) {
+			$operator = (string)($rule['operator'] ?? '');
+			if (str_starts_with($operator, 'not-')) {
+				$operator = substr($operator, 4);
+			}
+			if (in_array($operator, self::CLOCK_OPERATORS, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<array<string,mixed>> $collection

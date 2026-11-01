@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Index\Service;
 
 use TotalCMS\Domain\Auth\Data\ReadScope;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\QueryPipeline;
 
@@ -19,6 +20,7 @@ readonly class IndexQueryService
 	public function __construct(
 		private IndexFilter $indexFilter,
 		private QueryPipeline $pipeline,
+		private CacheManager $cacheManager,
 	) {
 	}
 
@@ -40,19 +42,26 @@ readonly class IndexQueryService
 	 */
 	public function query(string $collection, array $params, ?ReadScope $scope = null): QueryResult
 	{
-		$items = $this->indexFilter->fetchFilteredIndex($collection, []);
-		if ($scope instanceof ReadScope && !$scope->isAll()) {
-			$items = $scope->filter($items);
-		}
+		// An all-access scope filters nothing; treat it as no scope.
+		$scope = $scope instanceof ReadScope && !$scope->isAll() ? $scope : null;
 
-		// The pipeline caches by prefix + params. A scoped result must not be
-		// served to an unscoped caller (or to a differently scoped one), so the
-		// scope is part of the prefix.
-		$cachePrefix = 'collection-query:' . $collection;
-		if ($scope instanceof ReadScope && !$scope->isAll()) {
+		// Loaded only on a cache miss: at 50k objects the index decodes to
+		// over 100 MB, which a cached page must not pay for.
+		$load = function () use ($collection, $scope): array {
+			$items = $this->indexFilter->fetchFilteredIndex($collection, []);
+
+			return $scope !== null ? $scope->filter($items) : $items;
+		};
+
+		// The pipeline caches by prefix + params. The collection's query
+		// version retires the entries when it changes. A scoped result must
+		// not be served to an unscoped caller (or to a differently scoped
+		// one), so the scope is part of the prefix.
+		$cachePrefix = 'collection-query:' . $collection . '@' . $this->cacheManager->queryVersion('collection:' . $collection);
+		if ($scope !== null) {
 			$cachePrefix .= ':' . $scope->cacheKey();
 		}
 
-		return $this->pipeline->execute($items, $params, $cachePrefix);
+		return $this->pipeline->execute($load, $params, $cachePrefix);
 	}
 }

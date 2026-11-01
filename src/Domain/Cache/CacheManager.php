@@ -58,6 +58,8 @@ class CacheManager
 	public const TTL_CUSTOM_SCHEMA       = 14400;        // 4 hours - custom schemas change infrequently
 	public const TTL_FLATTENED_SCHEMA    = 14400;       // 4 hours - flattened schemas (inheritance resolved)
 	public const TTL_API_RESPONSE        = 7200;          // 2 hours - invalidated explicitly on collection changes
+	/** Must outlive the responses keyed on it: an expired version only orphans them, but sooner than needed. */
+	private const TTL_QUERY_VERSION      = 86400;
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
 	/** Namespace for cached content that mirrors tcms-data. Follows `cache.domainScoped`. */
@@ -284,6 +286,42 @@ class CacheManager
 		return $this->getData($key);
 	}
 
+	/**
+	 * The version cached query results for $scope are keyed on:
+	 * `collection:{id}` for a collection, `dataviews` for every Data View.
+	 * Bumping it retires them all at once without touching other scopes.
+	 *
+	 * A random token rather than a counter: a counter whose entry was
+	 * evicted would start again at a number older results are still stored
+	 * under, and serve them.
+	 */
+	public function queryVersion(string $scope): string
+	{
+		$key     = $this->queryVersionKey($scope);
+		$version = $this->getOperationalData($key);
+		if (is_string($version) && $version !== '') {
+			return $version;
+		}
+
+		$version = bin2hex(random_bytes(6));
+		$this->storeData($key, $version, self::TTL_QUERY_VERSION);
+
+		return $version;
+	}
+
+	/** Retire every cached query result for $scope (see queryVersion()). */
+	public function bumpQueryVersion(string $scope): void
+	{
+		// Deleting is enough: the next read makes a new token. clearData()
+		// also signals the web process when this runs from the CLI.
+		$this->clearData($this->queryVersionKey($scope));
+	}
+
+	private function queryVersionKey(string $scope): string
+	{
+		return $this->createKey(self::PREFIX_API_RESPONSE . ':ver:' . $scope);
+	}
+
 	/** Store computed/expensive operations (can be large, longer TTL). */
 	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
@@ -434,8 +472,11 @@ class CacheManager
 		$indexCleared     = $this->clearComputedData("index:{$collectionName}");
 		$objectIdsCleared = $this->clearComputedData("object_ids:{$collectionName}");
 
-		// Clear cached API/query responses that depend on this collection's data
-		$this->clearByType(self::PREFIX_API_RESPONSE);
+		// Retire this collection's cached query results, and every Data View's
+		// (a view can draw on any collection). Other collections keep theirs:
+		// clearing them all made nearly every query miss while editors worked.
+		$this->bumpQueryVersion('collection:' . $collectionName);
+		$this->bumpQueryVersion('dataviews');
 
 		return $collectionCleared || $indexCleared || $objectIdsCleared;
 	}

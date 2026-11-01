@@ -12,6 +12,7 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
 use TotalCMS\Domain\Query\Service\QueryPipeline;
@@ -27,7 +28,9 @@ final class IndexQueryServiceTest extends TestCase
 	/** @var list<string> cache prefixes the pipeline was asked to read */
 	private array $cachePrefixes = [];
 
-	private function service(): IndexQueryService
+	private int $indexReads = 0;
+
+	private function service(?QueryResult $cached = null): IndexQueryService
 	{
 		$index = new IndexData([
 			['id' => 'alex-site', 'owner' => 'alex', 'draft' => false, 'title' => 'Alex'],
@@ -36,20 +39,25 @@ final class IndexQueryServiceTest extends TestCase
 			['id' => 'other-alex', 'owner' => 'Alex', 'draft' => false, 'title' => 'Other Alex'],
 		]);
 		$reader = $this->createMock(IndexReader::class);
-		$reader->method('fetchIndex')->willReturn($index);
+		$reader->method('fetchIndex')->willReturnCallback(function () use ($index): IndexData {
+			$this->indexReads++;
+
+			return $index;
+		});
 
 		$cache = $this->createMock(CacheManager::class);
-		$cache->method('getApiResponse')->willReturnCallback(function (string $prefix): mixed {
+		$cache->method('getApiResponse')->willReturnCallback(function (string $prefix) use ($cached): mixed {
 			$this->cachePrefixes[] = $prefix;
 
-			return null;
+			return $cached;
 		});
+		$cache->method('queryVersion')->willReturnCallback(static fn (string $scope): string => "v({$scope})");
 		$cache->method('storeApiResponse')->willReturn(true);
 
 		$objectFilter = new ObjectFilter();
 		$pipeline     = new QueryPipeline($objectFilter, $this->createMock(ObjectSearcher::class), $cache);
 
-		return new IndexQueryService(new IndexFilter($reader, $objectFilter), $pipeline);
+		return new IndexQueryService(new IndexFilter($reader, $objectFilter), $pipeline, $cache);
 	}
 
 	/**
@@ -103,7 +111,7 @@ final class IndexQueryServiceTest extends TestCase
 
 		expect($this->cachePrefixes)->toHaveCount(3);
 		expect(count(array_unique($this->cachePrefixes)))->toBe(3);
-		expect($this->cachePrefixes[0])->toBe('collection-query:showcase');
+		expect($this->cachePrefixes[0])->toBe('collection-query:showcase@v(collection:showcase)');
 	}
 
 	public function testAScopedQueryExcludesACaseVariantOwner(): void
@@ -120,6 +128,15 @@ final class IndexQueryServiceTest extends TestCase
 		$scope = new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false);
 		$this->service()->query('showcase', [], $scope);
 
-		expect($this->cachePrefixes)->toBe(['collection-query:showcase:' . $scope->cacheKey()]);
+		expect($this->cachePrefixes)->toBe(['collection-query:showcase@v(collection:showcase):' . $scope->cacheKey()]);
+	}
+
+	public function testACachedQueryDoesNotReadTheIndex(): void
+	{
+		// At 50k objects the index decodes to ~120 MB; a hit must not pay that.
+		$result = $this->service(new QueryResult([['id' => 'cached']], 1, 20, 0))->query('showcase', []);
+
+		expect($this->ids($result->items))->toBe(['cached']);
+		expect($this->indexReads)->toBe(0);
 	}
 }

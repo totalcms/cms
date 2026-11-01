@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Query\Service\TemplateQuery;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -33,6 +34,7 @@ final class CollectionTwigAdapterSearchScoredTest extends TestCase
 			$indexSearcher,
 			$this->createMock(ObjectFetcher::class),
 			$this->createMock(ObjectUrlBuilder::class),
+			$this->createMock(TemplateQuery::class),
 			$loggerFactory,
 		);
 	}

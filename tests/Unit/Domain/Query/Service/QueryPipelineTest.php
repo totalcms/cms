@@ -285,6 +285,30 @@ final class QueryPipelineTest extends TestCase
 		$this->assertSame('cached', $result->items[0]['id']);
 	}
 
+	public function testACacheHitNeverLoadsTheItems(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(new QueryResult([['id' => 'cached']], 1, 20, 0));
+
+		$result = $this->pipeline->execute(fn (): array => $this->fail('a cache hit loaded the items'), [], 'test');
+
+		$this->assertSame('cached', $result->items[0]['id']);
+	}
+
+	public function testACacheMissLoadsTheItemsOnce(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(null);
+		$loads = 0;
+
+		$result = $this->pipeline->execute(function () use (&$loads): array {
+			$loads++;
+
+			return $this->makeItems(3);
+		}, [], 'test');
+
+		$this->assertSame(1, $loads);
+		$this->assertSame(3, $result->total);
+	}
+
 	public function testCacheMissStoresResult(): void
 	{
 		$this->cacheManager->method('getApiResponse')->willReturn(null);

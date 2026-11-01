@@ -45,6 +45,27 @@ readonly class QueryResult
 	}
 
 	/**
+	 * The shape cms.collection.query() and cms.view.query() give templates:
+	 * the page's objects plus what pagination markup needs.
+	 *
+	 * @return array{objects: array<int,array<string,mixed>>, total: int, limit: int, offset: int, page: int, pages: int, hasMore: bool}
+	 */
+	public function forTemplate(): array
+	{
+		$perPage = max(1, $this->limit);
+
+		return [
+			'objects' => $this->items,
+			'total'   => $this->total,
+			'limit'   => $this->limit,
+			'offset'  => $this->offset,
+			'page'    => intdiv($this->offset, $perPage) + 1,
+			'pages'   => (int)ceil($this->total / $perPage),
+			'hasMore' => $this->hasMore(),
+		];
+	}
+
+	/**
 	 * Apply pagination headers to a response.
 	 */
 	public function withPaginationHeaders(ResponseInterface $response): ResponseInterface

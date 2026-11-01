@@ -16,6 +16,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Data\StringData;
+use TotalCMS\Domain\Query\Service\TemplateQuery;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -36,6 +37,7 @@ final class CollectionTwigAdapterObjectTest extends TestCase
 			$this->createMock(IndexSearcher::class),
 			$objectFetcher,
 			$this->createMock(ObjectUrlBuilder::class),
+			$this->createMock(TemplateQuery::class),
 			$loggerFactory,
 		);
 	}

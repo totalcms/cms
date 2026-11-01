@@ -28,13 +28,16 @@ readonly class QueryPipeline
 	}
 
 	/**
-	 * Execute a query pipeline on pre-loaded items.
+	 * Execute a query pipeline.
 	 *
-	 * @param array<int,array<string,mixed>> $items       Pre-loaded items to query
-	 * @param array<string,string>           $params      Query parameters (limit, offset, sort, include, exclude, search)
-	 * @param string                         $cachePrefix Cache key prefix (e.g. "collection-query:blog" or "dataview-query:my-view")
+	 * Pass a loader rather than the items when loading them is expensive: it
+	 * runs only on a cache miss, so a hit never decodes the index.
+	 *
+	 * @param array<int,array<string,mixed>>|\Closure(): array<int,array<string,mixed>> $items       Items to query, or a loader for them
+	 * @param array<string,string>                                                   $params      Query parameters (limit, offset, sort, include, exclude, search)
+	 * @param string                                                                 $cachePrefix Cache key prefix (e.g. "collection-query:blog@{version}"); it must change whenever the items do
 	 */
-	public function execute(array $items, array $params, string $cachePrefix): QueryResult
+	public function execute(array|\Closure $items, array $params, string $cachePrefix): QueryResult
 	{
 		$limit  = $this->clampInt($params['limit'] ?? '', 1, self::MAX_LIMIT, self::DEFAULT_LIMIT);
 		$offset = max(0, (int)($params['offset'] ?? 0));
@@ -50,6 +53,10 @@ readonly class QueryPipeline
 			if ($cached instanceof QueryResult) {
 				return $cached;
 			}
+		}
+
+		if ($items instanceof \Closure) {
+			$items = $items();
 		}
 
 		// Explicit id set (the table's "show selected" view) takes precedence

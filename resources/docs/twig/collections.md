@@ -80,6 +80,42 @@ Get all objects from a collection. Takes the collection id and nothing else — 
 {% endfor %}
 ```
 
+### query()
+
+Get one page of a collection, filtered and sorted. Use it instead of `objects()` piped through filters when a collection is large: the result is cached until the collection is next saved, so a repeat of the same query does not load the whole index again.
+
+```twig
+{% set result = cms.collection.query('blog', {
+    filter: [
+        {property: 'draft', operator: 'isfalse'},
+        {property: 'category', value: 'news'}
+    ],
+    sort: 'date:desc',
+    limit: 10,
+    page: params.page|default(1)
+}) %}
+
+{% for post in result.objects %}
+    <h2><a href="{{ cms.collection.objectUrl('blog', post) }}">{{ post.title }}</a></h2>
+{% endfor %}
+
+{% if result.hasMore %}
+    <a href="?page={{ result.page + 1 }}">Older posts</a>
+{% endif %}
+```
+
+| Option | What it does |
+|---|---|
+| `filter` | A list of rules, written exactly as for [`filterCollection`](docs/twig/collection-filtering). |
+| `sort` | A sort string such as `'date:desc,title:asc'`, or a list of rules as for `sortCollection`. |
+| `limit` | Objects per page. Leave it out to get every match. |
+| `page` | The page to return, starting at 1. Needs a `limit`. |
+| `offset` | The number of objects to skip, as an alternative to `page`. |
+
+The result has `objects` (index data, like `objects()`), `total` (matches before paging), `limit`, `offset`, `page`, `pages` and `hasMore`.
+
+A filter that depends on today's date, such as `past`, `today`, `thisMonth` or `before: 'now'`, is cached for one minute at most, so a scheduled post appears within a minute of its date.
+
 ### object()
 Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.
 
