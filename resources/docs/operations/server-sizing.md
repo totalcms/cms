@@ -159,6 +159,51 @@ Every unique combination of image + processing parameters (size, crop, format, w
 
 ---
 
+## Large Collections
+
+Most collections never need any of this. Read on if a collection holds tens of thousands of objects.
+
+### What gets slower
+
+Any page or API call that lists, filters, sorts or searches a collection loads the collection's whole index into memory. The index holds one entry per object, with the fields listed in the schema's `index`. Its size grows with the number of objects and with how much text each entry carries.
+
+Measured on a 1 CPU / 1 GB server with default PHP settings:
+
+| Objects | Index file | Memory for one listing request | Pages, one visitor at a time |
+|---|---|---|---|
+| 10,000 | about 10 MB | about 30–50 MB | 0.2–0.3 s |
+| 50,000 | about 49 MB | about 170 MB | 0.1–0.7 s |
+
+At 50,000 objects, a single visitor is still fast. The problem is several visitors at once: five listing requests together need more memory than a 1 GB server has, so it starts swapping and every page slows down.
+
+### What to do about it
+
+These are listed with the most effective first.
+
+1. **Keep the index lean.** List only the fields that listings filter, sort or display in the schema's [`index`](docs/schemas/reference#index). Leave out long fields such as a post's body or an HTML summary: they are usually most of the index's size, and a detail page reads the object itself, not the index.
+
+   ```json
+   "index": ["id", "title", "date", "category", "image"]
+   ```
+
+2. **Give one listing its own smaller index.** A [Data View](docs/collections/data-views) (Pro edition and above) saves a filtered set of objects with only the fields you choose, and it is rebuilt on a schedule. A listing that reads a Data View never loads the full collection index.
+
+3. **Cache the rendered listing.** Wrap the listing in [`{% cache %}`](docs/twig/cache-tag). For a collection that is edited often, use a short `ttl` and no `tags`. A tag clears the cached copy on every save, so while editors are working, visitors keep rebuilding it. With a short `ttl`, visitors keep getting the cached copy and it refreshes on its own.
+
+   ```twig
+   {% cache 'latest-posts' ttl=60 %}
+       {# listing #}
+   {% endcache %}
+   ```
+
+   On the test server at 50,000 objects, while editors were saving, a tagged cache gave visitors a 95th-percentile page time of 37 seconds. `ttl=60` without tags gave 0.5 seconds.
+
+4. **Turn on Queue Rebuild on Save.** Saving then appends the object to the index right away and rebuilds the full index in the background. See [Collection Settings](docs/collections/settings#queuerebuildonsave).
+
+5. **Size the server by memory, not cores.** Count about 170 MB per busy worker for a 50,000-object collection, and lower PHP-FPM's `pm.max_children` so those workers fit in RAM without swapping.
+
+---
+
 ## Running Multiple Sites on One Server
 
 Each Total CMS installation runs independently with its own data directory, cache, and configuration. When hosting multiple sites on the same server, resources are shared and you need to plan accordingly.

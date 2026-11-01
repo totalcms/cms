@@ -37,7 +37,7 @@
 | Video field | `fields/video.md` | Store the URL; `cms.render.video()` renders any supported provider. |
 | Load More (progressive lists) | `twig/load-more.md` | Renders items through a template in `builder/templates/`; the API endpoint does the paging. |
 | HTMX recipes (live search, facets, lazy sections, forms) | `twig/htmx.md` | Any collection query can return rendered HTML with `format=html&template=…`. |
-| `{% cache %}` fragment tag | `twig/cache-tag.md` | Tag with collection ids to auto-invalidate; bypassed for logged-in users unless `shared=true`. |
+| `{% cache %}` fragment tag | `twig/cache-tag.md` | Tag with collection ids to auto-invalidate; bypassed for logged-in users unless `shared=true`. On often-edited or large collections use a short `ttl` without tags (tags clear on every save); see `operations/server-sizing.md` → Large Collections. |
 | Template Designer (edit Twig blocks in the admin) | `twig/templates.md` | `{% templatedesigner %}` blocks sync between local and production. |
 | Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
 | Grids of objects (`{% cmsgrid %}`) | `twig/cmsgrid-tag.md` | `{% cmsgrid objects from 'blog' with 'blog compact' %}` renders a styled grid from a collection's objects with built-in layouts; reach for it before hand-writing card markup. |
