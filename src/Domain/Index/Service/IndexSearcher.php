@@ -58,9 +58,31 @@ readonly class IndexSearcher
 			return collect([]);
 		}
 
+		return $this->searchObjects($index->objects, $query, $priorityProperties);
+	}
+
+	/**
+	 * search() over objects already in hand: a Data View's output, or a
+	 * collection's index that cms.collection.query() loaded. Same matching:
+	 * every word, as a whole word, in any field; `or` for any word;
+	 * `field:value` for one field. $priorityProperties only orders the
+	 * matches (a match in the first listed field first); it does not limit
+	 * which fields are searched.
+	 *
+	 * @param Collection<int,array<string,mixed>> $objects
+	 * @param string|array<string>                $priorityProperties
+	 *
+	 * @return Collection<int,array<string,mixed>>
+	 */
+	public function searchObjects(Collection $objects, string $query, string|array $priorityProperties = []): Collection
+	{
+		if (trim($query) === '') {
+			return collect([]);
+		}
+
 		$queries = $this->splitQuery($query);
 		$queries = array_diff($queries, ['and']);
-		$results = $index->objects;
+		$results = $objects;
 		$matchOR = false;
 
 		if (in_array('or', $queries)) {

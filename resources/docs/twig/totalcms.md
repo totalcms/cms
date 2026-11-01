@@ -305,16 +305,18 @@ By default, gallery images display in their stored order. Use the `sort` option 
 
 ### Search with pagination
 ```twig
-{% set results = cms.collection.search('blog', query, ['title', 'content', 'tags']) %}
-{% set page = getData.page|default(1) %}
-{% set perPage = 10 %}
-{% set paged = results|paginate(perPage, page) %}
+{% set result = cms.collection.query('blog', {
+    search: getData.q,
+    searchPriority: ['title', 'content', 'tags'],
+    limit: 10,
+    page: getData.page|default(1)
+}) %}
 
-{% for item in paged %}
+{% for item in result.objects %}
     <article>{{ item.title }}</article>
 {% endfor %}
 
-{{ cms.render.paginationFull(results|length, page, perPage) }}
+{{ cms.render.paginationFull(result.total, result.page, result.limit, 'page') }}
 ```
 
 ### Text watermark examples

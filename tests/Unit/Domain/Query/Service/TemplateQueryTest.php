@@ -5,6 +5,8 @@ declare(strict_types=1);
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Query\Service\ObjectSearcher;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\TemplateQuery;
@@ -55,7 +57,7 @@ beforeEach(function (): void {
 			: ['posts' => 12, 'pages' => 3];
 	});
 
-	$this->query = new TemplateQuery($reader, $views, $cache);
+	$this->query = new TemplateQuery($reader, new IndexSearcher($reader, new ObjectSearcher()), $views, $cache);
 });
 
 test('it filters with filterCollection rules, sorts and returns one page with the total', function (): void {
@@ -157,4 +159,67 @@ test('a result gives templates what pagination needs', function (): void {
 		'hasMore' => true,
 	]);
 	expect((new QueryResult([], 0, 0, 0))->forTemplate())->toMatchArray(['page' => 1, 'pages' => 0, 'hasMore' => false]);
+});
+
+test('search matches every word, then filters, sorts and pages', function (): void {
+	$result = $this->query->collection('posts', [
+		'search' => 'news',
+		'filter' => [['property' => 'draft', 'operator' => 'isfalse']],
+		'sort'   => 'date:desc',
+		'limit'  => 1,
+	]);
+
+	expect(array_column($result->items, 'id'))->toBe(['d']);
+	expect($result->total)->toBe(2);
+});
+
+test('search keeps search() syntax: or and field:value', function (): void {
+	expect(array_column($this->query->collection('posts', ['search' => 'alpha or bravo'])->items, 'id'))->toBe(['a', 'b']);
+	expect(array_column($this->query->collection('posts', ['search' => 'title:delta'])->items, 'id'))->toBe(['d']);
+});
+
+test('an empty search lists everything instead of nothing', function (): void {
+	expect($this->query->collection('posts', ['search' => '   '])->total)->toBe(4);
+});
+
+test('search text that differs only in case and spacing shares a cache entry', function (): void {
+	$this->query->collection('posts', ['search' => 'Alpha ', 'limit' => 10]);
+	$this->query->collection('posts', ['search' => '  alpha', 'limit' => 10]);
+
+	expect($this->indexReads)->toBe(1);
+});
+
+test('search text is capped before it becomes part of the cache key', function (): void {
+	$this->query->collection('posts', ['search' => str_repeat('a', 500)]);
+	$this->query->collection('posts', ['search' => str_repeat('a', 300)]);
+
+	expect($this->indexReads)->toBe(1);
+});
+
+test('searchPriority ranks a match in an earlier field first when there is no sort', function (): void {
+	$reader = $this->createMock(IndexReader::class);
+	$reader->method('fetchIndex')->willReturn(new IndexData([
+		['id' => 'body', 'title' => 'Other', 'body' => 'pasta night'],
+		['id' => 'title', 'title' => 'Pasta', 'body' => 'dinner'],
+	]));
+	$cache = $this->createMock(CacheManager::class);
+	$cache->method('queryVersion')->willReturn('v1');
+	$query = new TemplateQuery($reader, new IndexSearcher($reader, new ObjectSearcher()), $this->createMock(DataViewFetcher::class), $cache);
+
+	expect(array_column($query->collection('dinners', ['search' => 'pasta', 'searchPriority' => 'title, body'])->items, 'id'))->toBe(['title', 'body']);
+});
+
+test('a Data View can be searched too', function (): void {
+	expect(array_column($this->query->view('top-posts', ['search' => 'yankee'])->items, 'id'))->toBe(['y']);
+});
+
+test('a shuffle is fresh on every call; only the matches are cached', function (): void {
+	$orders = [];
+	for ($i = 0; $i < 20; $i++) {
+		$orders[] = implode(',', array_column($this->query->collection('posts', ['sort' => 'shuffle', 'limit' => 4])->items, 'id'));
+	}
+
+	expect(count(array_unique($orders)))->toBeGreaterThan(1);
+	expect($this->indexReads)->toBe(1);
+	expect($this->query->collection('posts', ['sort' => [['shuffle' => true]], 'filter' => [['property' => 'category', 'value' => 'news']]])->total)->toBe(3);
 });

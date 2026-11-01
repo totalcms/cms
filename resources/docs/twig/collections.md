@@ -108,6 +108,8 @@ Get one page of a collection, filtered and sorted. Use it instead of `objects()`
 
 | Option | What it does |
 |---|---|
+| `search` | Text to search for, matched as [`search()`](#search) matches it: every word, `or` for any word, `field:value` for one field. Empty means no search, so a search page with no query lists everything. |
+| `searchPriority` | A field name or a list of them. A match in an earlier field comes first. Used only when there is no `sort`. |
 | `filter` | A list of rules, written exactly as for [`filterCollection`](docs/twig/collection-filtering). |
 | `sort` | A sort string such as `'date:desc,title:asc'`, or a list of rules as for `sortCollection`. |
 | `limit` | Objects per page. Leave it out to get every match. |
@@ -117,6 +119,26 @@ Get one page of a collection, filtered and sorted. Use it instead of `objects()`
 The result has `objects` (index data, like `objects()`), `total` (matches before paging), `limit`, `offset`, `page`, `pages` and `hasMore`.
 
 A filter that depends on today's date, such as `past`, `today`, `thisMonth` or `before: 'now'`, is cached for one minute at most, so a scheduled post appears within a minute of its date.
+
+The search runs first, then the filter, the sort and the page. So a search page can show only published posts, newest first, ten at a time:
+
+```twig
+{% set result = cms.collection.query('blog', {
+    search: getData.q,
+    searchPriority: ['title', 'summary'],
+    filter: [{property: 'draft', operator: 'isfalse'}],
+    limit: 10,
+    page: getData.page|default(1)
+}) %}
+
+<p>{{ result.total }} results</p>
+{% for post in result.objects %}
+    <h2><a href="{{ cms.collection.objectUrl('blog', post) }}">{{ post.title }}</a></h2>
+{% endfor %}
+{{ cms.render.paginationFull(result.total, result.page, result.limit, 'page') }}
+```
+
+The search text comes from visitors, so only the page is cached, and the text is made lowercase with single spaces and cut to 200 characters first. "Pasta " and "pasta" share one cache entry.
 
 ### object()
 Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.
@@ -150,7 +172,7 @@ Get all unique values for a specific property across a collection. Useful for bu
 
 ### search()
 
-Search a collection by query string against one or more properties. Properties are searched in priority order.
+Search every field of a collection for a query string and return all the matches. Every word must match, as a whole word; put `or` between words to match any of them, or write `field:value` to search one field. The properties you pass only order the results: a match in the first property comes first. For a search page, prefer [`query()`](#query) with its `search` option, which pages the results and caches them.
 
 ```twig
 {# Search a single property #}
@@ -171,7 +193,7 @@ Search a collection by query string against one or more properties. Properties a
 |-----------|------|-------------|
 | `collection` | string | Collection to search |
 | `query` | string | Search query string |
-| `propertyPriorities` | string\|array | Property name or ordered array of properties to search |
+| `propertyPriorities` | string\|array | Property name or ordered array of properties. Matches in earlier properties come first. Every field is searched either way. |
 
 ### searchScored()
 
