@@ -3,7 +3,9 @@
 # TotalCMS test runner
 #
 # Full battery before committing, or a tight filtered loop while working.
-# Steps run cheapest-first and stop at the first failure.
+# The quick gates run first and stop at the first failure. The slower checks
+# that don't touch the PHP suite (dependencies, PHPMD, docs, JS) then run in
+# the background while the PHP tests run, and report when those finish.
 #
 # Output is quiet by default: one line per step with its result. A step's full
 # output is shown only when it fails — which is the only time you want it.
@@ -49,7 +51,7 @@ usage() {
 	cat <<'USAGE'
 Usage: bin/runtests.sh [FILTER] [--lint] [--serial] [-v]
 
-  bin/runtests.sh                          Full battery (~50s): every check CI runs
+  bin/runtests.sh                          Full battery (~45s): every check CI runs
                                              dependencies, composer validate, bundle:check,
                                              stan, md, docs:validate, JS lint,
                                              JS tests (coverage gate), PHP tests, snapshots
@@ -121,7 +123,14 @@ START=$(date +%s)
 STEP_OUT=""          # captured output of the most recent step
 REQUIRE_SUMMARY=""  # when set, a step producing no summary line fails with this message
 
-cleanup() { [ -n "$STEP_OUT" ] && rm -f "$STEP_OUT"; }
+BG_PID=""           # the background checks, while they run
+BG_OUT=""           # their report
+
+cleanup() {
+	[ -n "$STEP_OUT" ] && rm -f "$STEP_OUT"
+	[ -n "$BG_PID" ] && kill "$BG_PID" 2>/dev/null
+	[ -n "$BG_OUT" ] && rm -f "$BG_OUT"
+}
 trap cleanup EXIT
 
 elapsed() { echo "$(( $(date +%s) - START ))s"; }
@@ -295,24 +304,43 @@ if [ -n "$FILTER" ]; then
 	exit 0
 fi
 
-# ─── Full battery, cheapest first ────────────────────────────────────────────
+# ─── Full battery ────────────────────────────────────────────────────────────
+# Quick gates first: a broken checkout fails in seconds, not after the suite.
 run_step "PHP version"      'PHP [0-9]'     php -r 'echo "PHP ", PHP_VERSION, " (CI pins ", getenv("CI_PHP") ?: "'"$CI_PHP"'", ")\n";'
-run_step "Dependencies"     '.'             deps_check
 run_step "Composer validate" 'valid'        composer validate --no-ansi
 run_step "Bundle integrity" 'Bundle check'  composer run bundle:check
 run_step "Static analysis"  '\[OK\]|error'  composer run stan
-run_step "Mess detection"   'violations|mess' composer run md
-run_step "Docs validation"  '^OK:|^ *OK:'   composer run docs:validate
 
-if [ "$RUN_LINT" = true ]; then
-	run_step "PHP lint" 'Time:|files|OK'    composer run lint
+# The checks below share nothing with the PHP suite, which keeps only about
+# 5 of 12 cores busy, so they run beside it. Each still stops its own group at
+# the first failure; the group's report prints when the suite has finished.
+background_checks() {
+	trap '[ -n "$STEP_OUT" ] && rm -f "$STEP_OUT"' EXIT
+	STEP_OUT=""
+	run_step "Dependencies"     '.'             deps_check
+	run_step "Mess detection"   'violations|mess' composer run md
+	run_step "Docs validation"  '^OK:|^ *OK:'   composer run docs:validate
+	if [ "$RUN_LINT" = true ]; then
+		run_step "PHP lint" 'Time:|files|OK'    composer run lint
+	fi
+	# Oxlint prints nothing when clean and one line per finding otherwise.
+	run_step "JS lint"   '.'                   composer run lint:js
+	# CI runs the JS suite with its coverage gate, so a drop below the
+	# thresholds in the Vitest config fails here too.
+	run_step "JS tests"  '^ *Tests '            node_modules/.bin/vp run test:js:coverage
+}
+
+if [ "$VERBOSE" = true ]; then
+	background_checks
+else
+	BG_OUT=$(mktemp)
+	background_checks > "$BG_OUT" 2>&1 &
+	BG_PID=$!
+	# Low priority, inherited by every command the group starts: the PHP suite
+	# is the long pole, so it gets the CPU first.
+	renice -n 10 -p "$BG_PID" >/dev/null 2>&1 || true
 fi
 
-# Oxlint prints nothing when clean and one line per finding otherwise.
-run_step "JS lint"   '.'                   composer run lint:js
-# CI runs the JS suite with its coverage gate, so a drop below the thresholds
-# in the Vitest config fails here too.
-run_step "JS tests"  '^ *Tests '            node_modules/.bin/vp run test:js:coverage
 # CI runs the suite serially (`composer test`). Parallel is the default here
 # for speed; --serial matches CI exactly — a few failures have only ever
 # shown up in the single-process run.
@@ -321,6 +349,17 @@ if [ "$SERIAL" = true ]; then
 else
 	run_step_live "PHP tests" '^ *Tests:'   composer run test:parallel -- --colors=always
 fi
+
+if [ -n "$BG_PID" ]; then
+	wait "$BG_PID"
+	bg_status=$?
+	BG_PID=""
+	cat "$BG_OUT"
+	if [ "$bg_status" -ne 0 ]; then
+		exit 1
+	fi
+fi
+
 # A golden test whose snapshot is not in git proves nothing (bin/check-snapshots.php).
 run_step "Golden snapshots" '.'             composer run snapshots:check
 

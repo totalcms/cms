@@ -61,9 +61,11 @@ composer run cs
 composer run cs:fix
 
 # Run tests — bin/runtests.sh is the normal entry point.
-# No args: every check CI runs (~50s): dependencies vs. what CI resolves,
+# No args: every check CI runs (~48s): dependencies vs. what CI resolves,
 # composer validate, bundle:check, stan, md, docs:validate, JS lint, JS tests
-# with the coverage gate, PHP tests, golden snapshots.
+# with the coverage gate, PHP tests, golden snapshots. The quick gates run
+# first; dependencies, md, docs and the JS checks then run in the background
+# (at low priority) beside the PHP suite and report after it. -v runs them in order.
 # With a filter: ONLY the matching PHP tests, for a fast edit-run loop.
 # composer.lock is gitignored, so CI installs the newest versions composer.json
 # allows; the Dependencies step fails when vendor/ is behind (a newer PHPStan
