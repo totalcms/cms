@@ -7,8 +7,12 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use TotalCMS\Domain\ImageWorks\Exception\RenderBusyException;
+use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
+use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
+use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 use TotalCMS\Domain\ImageWorks\Service\RenderSlots;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
@@ -58,7 +62,18 @@ function publicRouteGenerator(string $root, ?RenderSlots $slots = null, array $i
 	$watermarks->method('createImageWatermark')->willReturn(null);
 	$watermarks->method('createTextWatermark')->willReturn(null);
 
-	return new ImageGenerator($storage, $fetcher, $meta, new GlideFactory($storage, $config), $watermarks, $config, $loggerFactory, $slots);
+	$glide = new GlideFactory($storage, $config);
+
+	return new ImageGenerator(
+		new ImageSourceResolver($fetcher),
+		new ImageRenderParams($meta, $config),
+		new ImageResponder($storage, $glide),
+		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
+		$glide,
+		$watermarks,
+		$config,
+		$slots,
+	);
 }
 
 /** What the route does with a query string: validate, add fm, render. */

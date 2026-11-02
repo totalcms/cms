@@ -5,55 +5,39 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
-use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
+use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
-use TotalCMS\Domain\Property\Data\CardData;
-use TotalCMS\Domain\Property\Data\DeckData;
-use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
-use TotalCMS\Domain\Property\Data\VideoData;
-use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
-use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Factory\LogChannel;
-use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
  * The one render path behind every ImageWorks URL, the warmer, the favicon
  * and Twig's data URIs.
  *
- * @SuppressWarnings("PHPMD.ExcessiveClassComplexity") The public-route gate (size ladder + render slots) tipped it past 100; the gate's own logic lives in SizeLadder and RenderSlots, and splitting the cache-header and watermark passes out of this class is the follow-up.
+ * Finding the source image is ImageSourceResolver's job, shaping the params
+ * is ImageRenderParams', the HTTP headers are ImageResponder's, and the
+ * two-pass render for both watermarks is DoubleWatermarkRenderer's. This
+ * class builds the Glide render and its watermarks, and holds cache misses
+ * to the render slots on the public route.
  */
 class ImageGenerator
 {
-	private string $collection;
-	private string $id;
-	private string $property;
-	private ?string $subpath = null;
-	/** @var array<string,mixed> */
-	private array $params;
-	private readonly LoggerInterface $logger;
 	/** Set by forPublicRoute(): rounds sizes to the ladder. */
 	private ?SizeLadder $sizeLadder = null;
 	/** Set by forPublicRoute(): cache misses wait for a render slot. */
 	private bool $limitRenders = false;
 
 	public function __construct(
-		private readonly StorageAdapterInterface $filesystem,
-		private readonly PropertyFetcher $propertyFetcher,
-		private readonly PropertyMetaResolver $metaResolver,
+		private readonly ImageSourceResolver $sources,
+		private readonly ImageRenderParams $renderParams,
+		private readonly ImageResponder $responder,
+		private readonly DoubleWatermarkRenderer $doubleMarks,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
 		private readonly Config $config,
-		LoggerFactory $loggerFactory,
 		private ?RenderSlots $renderSlots = null,
 	) {
-		$this->logger = $loggerFactory
-			->channelLogger(LogChannel::ImageGenerator);
 	}
 
 	/**
@@ -80,10 +64,44 @@ class ImageGenerator
 		array $params,
 		?ServerRequestInterface $request = null,
 	): ResponseInterface {
-		$imageData = $this->fetchImage($collection, $id, $property);
-		$this->prepare($collection, $id, $property, null, $params, $imageData);
+		$imageData = $this->sources->image($collection, $id, $property);
 
-		return $this->responseFromImageData($imageData, $request);
+		return $this->respond(new ImageLocation($collection, $id, $property), $imageData, $params, $request);
+	}
+
+	/** @param array<string,mixed> $params */
+	public function generateGalleryImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $path,
+		array $params,
+		?ServerRequestInterface $request = null,
+	): ResponseInterface {
+		[$imageData, $subpath] = $this->sources->pathImage($collection, $id, $property, $path);
+
+		return $this->respond(new ImageLocation($collection, $id, $property, $subpath), $imageData, $params, $request);
+	}
+
+	/**
+	 * An image by file name, for uploads that have no image property record
+	 * to read sizes or colors from.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	public function generateUploadImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $name,
+		array $params,
+		?ServerRequestInterface $request = null,
+		?string $subpath = null,
+	): ResponseInterface {
+		$imageData       = new ImageData();
+		$imageData->name = $name;
+
+		return $this->respond(new ImageLocation($collection, $id, $property, $subpath), $imageData, $params, $request);
 	}
 
 	/**
@@ -98,18 +116,98 @@ class ImageGenerator
 	public function cacheState(string $collection, string $id, string $property, ?string $path, array $params): CacheState
 	{
 		[$imageData, $subpath] = $path === null
-			? [$this->fetchImage($collection, $id, $property), null]
-			: $this->pathImage($collection, $id, $property, $path);
+			? [$this->sources->image($collection, $id, $property), null]
+			: $this->sources->pathImage($collection, $id, $property, $path);
 
-		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
+		$location = new ImageLocation($collection, $id, $property, $subpath);
+		$params   = $this->renderParams->clean($params, $imageData, $location, $this->sizeLadder);
 
-		if ($this->params === []) {
+		if ($params === []) {
 			return CacheState::Original;
 		}
 
-		return $this->isCached($this->glideRender($imageData), $imageData)
+		return $this->isCached($this->glideRender($location, $imageData, $params), $location, $imageData)
 			? CacheState::Cached
 			: CacheState::Missing;
+	}
+
+	/**
+	 * The watermark settings one property resolves to: schema, then
+	 * collection, then the object's own override. [] when it has none.
+	 *
+	 * @return array<string,string|int>
+	 */
+	public function watermarkSettings(string $collection, string $property, string $id = ''): array
+	{
+		return $this->renderParams->watermarkSettings($collection, $property, $id);
+	}
+
+	/** @param array<string,mixed> $params */
+	private function respond(ImageLocation $location, ImageData $imageData, array $params, ?ServerRequestInterface $request): ResponseInterface
+	{
+		$params    = $this->renderParams->clean($params, $imageData, $location, $this->sizeLadder);
+		$imagePath = $location->path($imageData->name);
+
+		if ($params === []) {
+			return $this->responder->original($imagePath, $request);
+		}
+
+		return $this->responder->processed($imagePath, $request, $params, function () use ($location, $imageData, $params): ResponseInterface {
+			$render = $this->glideRender($location, $imageData, $params);
+
+			$make = fn (): ResponseInterface => $render['marks'] !== null
+				? $this->doubleMarks->render($render['glide'], $location, $imageData, $render['marks'][0], $render['marks'][1], $render['params'])
+				: $render['glide']->getImageResponse($imageData->name, $render['params']);
+
+			// A cached file costs no render, so it never waits for a slot.
+			return $this->limitRenders && !$this->isCached($render, $location, $imageData)
+				? ($this->renderSlots ??= RenderSlots::fromConfig($this->config))->run($make)
+				: $make();
+		});
+	}
+
+	/**
+	 * The one step that turns the cleaned params into what Glide renders:
+	 * builds the watermarks, the Glide server and the final Glide params.
+	 * The route and cacheState() both go through here, so a cache check keys
+	 * exactly the file the route makes. When both an image and a text
+	 * watermark apply, `marks` holds them and `params` are the pre-watermark
+	 * params for the two-pass render; otherwise `marks` is null and `params`
+	 * are final.
+	 *
+	 * @param array<string,mixed> $params
+	 *
+	 * @return array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}}
+	 */
+	private function glideRender(ImageLocation $location, ImageData $imageData, array $params): array
+	{
+		$imageMark = $this->watermarkFactory->createImageWatermark($params);
+		// Use requested width if specified, otherwise use original image width
+		$effectiveWidth = isset($params['w']) ? (int)$params['w'] : $imageData->width;
+		$textMark       = $this->watermarkFactory->createTextWatermark($params, $effectiveWidth);
+
+		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
+		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();
+
+		$glide = $this->glideFactory->create(
+			source        : $location->path(),
+			imageData     : $imageData,
+			watermarkPath : $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR,
+		);
+
+		$glideParams = ImageRenderParams::withoutWatermarks($params);
+
+		if ($hasImageMark && $hasTextMark) {
+			return ['glide' => $glide, 'params' => $glideParams, 'marks' => [$imageMark, $textMark]];
+		}
+
+		if ($hasTextMark) {
+			$glideParams = array_merge($glideParams, $textMark->toArray());
+		} elseif ($hasImageMark) {
+			$glideParams = array_merge($glideParams, $imageMark->toArray());
+		}
+
+		return ['glide' => $glide, 'params' => $glideParams, 'marks' => null];
 	}
 
 	/**
@@ -118,651 +216,12 @@ class ImageGenerator
 	 *
 	 * @param array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}} $render
 	 */
-	private function isCached(array $render, ImageData $imageData): bool
+	private function isCached(array $render, ImageLocation $location, ImageData $imageData): bool
 	{
 		if ($render['marks'] === null) {
 			return $render['glide']->cacheFileExists($imageData->name, $render['params']);
 		}
 
-		$pass = $this->textPass($render['glide'], $imageData, $render['marks'][0], $render['marks'][1], $render['params']);
-
-		return $pass['server']->cacheFileExists($pass['name'], $pass['params']);
-	}
-
-	private function fetchImage(string $collection, string $id, string $property): ImageData
-	{
-		$imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
-
-		if (!$imageData instanceof ImageData) {
-			throw new \UnexpectedValueException('Invalid image property found');
-		}
-
-		return $imageData;
-	}
-
-	/**
-	 * Set the per-render state every entry point shares: where the source
-	 * lives and the cleaned-up params.
-	 *
-	 * @param array<string,mixed> $params
-	 */
-	private function prepare(string $collection, string $id, string $property, ?string $subpath, array $params, ImageData $imageData): void
-	{
-		$this->collection = $collection;
-		$this->id         = $id;
-		$this->property   = $property;
-		$this->subpath    = $subpath;
-		$this->params     = $this->cleanupParams($params, $imageData);
-	}
-
-	/** @param array<string,mixed> $params */
-	public function generateGalleryImage(
-		string $collection,
-		string $id,
-		string $property,
-		string $path,
-		array $params,
-		?ServerRequestInterface $request = null,
-	): ResponseInterface {
-		[$imageData, $subpath] = $this->pathImage($collection, $id, $property, $path);
-		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
-	}
-
-	/**
-	 * The image the `/{prop}/{path:.+}.{format}` route addresses, and the
-	 * subpath its file lives under. One URL shape serves four property types,
-	 * so dispatch on the resolved data shape:
-	 *   - CardData    → `obj[prop][child]`         (path is `child`)
-	 *   - DeckData    → `obj[prop][itemId][child]` (path is `itemId/child`)
-	 *   - VideoData   → `obj[prop][poster]`        (path is always `poster`)
-	 *   - GalleryData → the gallery image named `path` (no subpath)
-	 *
-	 * @return array{ImageData, ?string}
-	 */
-	private function pathImage(string $collection, string $id, string $property, string $path): array
-	{
-		$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
-
-		if ($propertyData instanceof CardData) {
-			return [$this->nestedImage($propertyData->card, $property, $path), $path];
-		}
-
-		if ($propertyData instanceof DeckData) {
-			return [$this->nestedImage($propertyData->deck, $property, $path), $path];
-		}
-
-		// A video's one nested image is its typed `poster` — hand it over in the
-		// same `[childKey => imageRaw]` shape a card exposes so the lookup below
-		// is shared. Any other path under a video is simply not found.
-		if ($propertyData instanceof VideoData) {
-			return [$this->nestedImage(['poster' => $propertyData->poster], $property, $path), $path];
-		}
-
-		if (!$propertyData instanceof GalleryData) {
-			throw new \UnexpectedValueException('Invalid gallery property found');
-		}
-
-		return [$this->galleryImage($propertyData, $path), null];
-	}
-
-	/** Pick a gallery image by name (without extension) or by first/last/random/featured. */
-	private function galleryImage(GalleryData $galleryData, string $name): ImageData
-	{
-		if ($galleryData->images === []) {
-			throw new \UnexpectedValueException('Gallery has no images');
-		}
-
-		$imageData = match ($name) {
-			'first'    => array_shift($galleryData->images),
-			'last'     => array_pop($galleryData->images),
-			'random'   => $this->getRandomImage($galleryData->images),
-			'featured' => $this->getFeaturedImage($galleryData->images),
-			default    => $this->getImageByName($galleryData->images, $name),
-		};
-
-		if (empty($imageData)) {
-			throw new \UnexpectedValueException('Gallery Image not found');
-		}
-
-		return $imageData;
-	}
-
-	/**
-	 * An image stored as a child of a card or deck field. The `$path` is a
-	 * slash-separated path through the parent property's nested data:
-	 *   - Card child:   `path = "childKey"`        → `parentRaw[childKey]`
-	 *   - Deck child:   `path = "itemId/childKey"` → `parentRaw[itemId][childKey]`.
-	 *
-	 * The disk file lives at `coll/id/property/<path>/<filename>`.
-	 *
-	 * @param array<int|string,mixed> $parentRaw
-	 */
-	private function nestedImage(array $parentRaw, string $property, string $path): ImageData
-	{
-		$segments = $path === '' ? [] : explode('/', $path);
-		$cursor   = $parentRaw;
-		foreach ($segments as $segment) {
-			if (!is_array($cursor) || !array_key_exists($segment, $cursor)) {
-				throw new \UnexpectedValueException("Nested image '{$path}' not found under '{$property}'");
-			}
-			$cursor = $cursor[$segment];
-		}
-		if (!is_array($cursor) || empty($cursor['name'])) {
-			throw new \UnexpectedValueException("Nested image '{$path}' has no file");
-		}
-
-		return new ImageData($cursor);
-	}
-
-	/** @param array<string,mixed> $params */
-	public function generateUploadImage(
-		string $collection,
-		string $id,
-		string $property,
-		string $name,
-		array $params,
-		?ServerRequestInterface $request = null,
-		?string $subpath = null,
-	): ResponseInterface {
-		// Create dummy ImageData object
-		$imageData         = new ImageData();
-		$imageData->name   = $name;
-		// $imageData->width  = 0;
-		// $imageData->height = 0;
-
-		$this->prepare($collection, $id, $property, $subpath, $params, $imageData);
-
-		return $this->responseFromImageData($imageData, $request);
-	}
-
-	/** @param array<ImageData> $images */
-	private function getImageByName(array $images, string $name): ?ImageData
-	{
-		$imageData = array_filter($images, fn (ImageData $image): bool => pathinfo($image->name)['filename'] === $name);
-
-		if ($imageData === []) {
-			return null;
-		}
-
-		return array_shift($imageData);
-	}
-
-	/** @param array<ImageData> $images */
-	private function getRandomImage(array $images): ImageData
-	{
-		$count = count($images) - 1;
-
-		if ($count === 0) {
-			return $images[0];
-		}
-
-		$randomKey = mt_rand(0, $count);
-
-		return $images[$randomKey];
-	}
-
-	/** @param array<ImageData> $images */
-	private function getFeaturedImage(array $images): ImageData
-	{
-		$featured = array_filter($images, fn (ImageData $image): bool => $image->featured);
-		$count    = count($featured);
-		if ($count === 0) {
-			// if no featured images are found, return a random image
-			return $this->getRandomImage($images);
-		}
-		if ($count > 1) {
-			shuffle($featured);
-		}
-
-		return array_shift($featured);
-	}
-
-	/**
-	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.NPathComplexity")
-	 *
-	 * @param array<string,mixed> $params
-	 *
-	 * @return array<string,int|string>
-	 */
-	private function cleanupParams(array $params, ImageData $imageData): array
-	{
-		// Remove metadata params that don't affect image processing
-		unset($params['id'], $params['collection'], $params['property'], $params['name'], $params['cache']);
-
-		$defaults      = $this->config->imageworks['defaults'] ?? [];
-		$hasDefaults   = is_array($defaults) && $defaults !== [];
-		$hasWatermarks = $this->watermarkSettings($this->collection, $this->property, $this->id) !== [];
-
-		// If no params are provided, no defaults configured, and no watermark settings, return the original image
-		// The Action class automatically adds the format to the params so we need to check for that
-		// If the only param is 'fm' and it matches the original image's format, return original
-		// But if defaults or watermarks exist, we must let Glide process the image
-		if (!$hasDefaults && !$hasWatermarks && ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm'])))) {
-			return [];
-		}
-
-		// Resolve preset first so dimension constraints apply to preset values too
-		if (isset($params['p'])) {
-			$params = $this->resolvePreset($params);
-		}
-
-		if ($this->sizeLadder instanceof SizeLadder) {
-			$params = $this->sizeLadder->snap($params, $imageData);
-		}
-
-		// Make sure that the requested width and height are not larger than the original image
-		if (isset($params['w']) && $params['w'] > $imageData->width && $imageData->width > 0) {
-			$params['w'] = $imageData->width;
-		}
-
-		if (isset($params['w']) && $params['w'] == 0) {
-			unset($params['w']);
-		}
-
-		if (isset($params['h']) && $params['h'] > $imageData->height && $imageData->height > 0) {
-			$params['h'] = $imageData->height;
-		}
-
-		if (isset($params['h']) && $params['h'] == 0) {
-			unset($params['h']);
-		}
-
-		if (isset($params['fit'])) {
-			$params['fit'] = GlideFactory::cropFocalpoint($params['fit'], $imageData->focalpoint);
-		}
-
-		if (isset($params['bg'])) {
-			$params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->palette);
-		}
-
-		if (isset($params['border'])) {
-			$params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
-		}
-
-		if (isset($params['mark']) && !isset($params['markw'])) {
-			$params['markw'] = '100w';
-		}
-
-		// Don't auto-set marktextw for text watermarks - allow fixed-size text via marktextsize
-		// Users can explicitly set marktextw if they want scaling behavior
-		// if (isset($params['marktext']) && !isset($params['marktextw'])) {
-		// 	$params['marktextw'] = '100w';
-		// }
-
-		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
-		$schemaWatermarks = $this->watermarkSettings($this->collection, $this->property, $this->id);
-		// Check if watermark should be applied based on limit setting
-		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
-			// Remove limit setting before merging (not a valid imageworks parameter)
-			unset($schemaWatermarks['limit']);
-			$params = array_merge($params, $schemaWatermarks);
-		}
-
-		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
-		return array_filter($params, fn ($value): bool => $value !== null && $value !== '');
-	}
-
-	/**
-	 * Resolve preset values into params.
-	 * Preset values are merged first, then explicit params override them.
-	 * This ensures dimension constraints are applied to preset w/h values.
-	 *
-	 * @param array<string,mixed> $params
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function resolvePreset(array $params): array
-	{
-		$presetName = (string)$params['p'];
-		$presets    = $this->config->imageworks['presets'] ?? [];
-
-		if (!isset($presets[$presetName])) {
-			return $params;
-		}
-
-		$presetValues = $presets[$presetName];
-
-		// Remove preset key since we're resolving it manually
-		unset($params['p']);
-
-		// Merge preset values first, then overlay explicit params
-		// This means explicit params take precedence over preset values
-		return array_merge($presetValues, $params);
-	}
-
-	/**
-	 * The watermark settings one property resolves to: schema, then
-	 * collection, then the object's own override. [] when it has none.
-	 * Watermarks are enforced and cannot be overridden via URL parameters.
-	 *
-	 * @return array<string,string|int>
-	 */
-	public function watermarkSettings(string $collection, string $property, string $id = ''): array
-	{
-		try {
-			$settings = $this->metaResolver->resolveSettings($collection, $property, $id);
-
-			return $settings['watermark'] ?? [];
-		} catch (\Exception) {
-			return [];
-		}
-	}
-
-	/**
-	 * Determine if watermark should be applied based on limit setting.
-	 * Watermark is applied if:
-	 * - No limit is set (always watermark), OR
-	 * - Requested width exceeds limit, OR
-	 * - Requested height exceeds limit, OR
-	 * - No dimensions requested (original image).
-	 *
-	 * @param array<string,string|int> $params Request parameters
-	 * @param array<string,string|int> $watermarkSettings Schema watermark settings
-	 */
-	private function shouldApplyWatermark(array $params, array $watermarkSettings): bool
-	{
-		// If no limit is set, always apply watermark
-		if (!isset($watermarkSettings['limit'])) {
-			return true;
-		}
-
-		$limit = (int)$watermarkSettings['limit'];
-
-		// If no dimensions requested (original image), apply watermark
-		if (!isset($params['w']) && !isset($params['h'])) {
-			return true;
-		}
-
-		// Check if requested width exceeds limit
-		if (isset($params['w']) && (int)$params['w'] > $limit) {
-			return true;
-		}
-
-		// Check if requested height exceeds limit
-		// Dimensions are below limit, don't apply watermark
-		return isset($params['h']) && (int)$params['h'] > $limit;
-	}
-
-	private function returnOriginalImage(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
-	{
-		// If no params are provided, return the original image
-		// The Action class automatically adds the format to the params so we need to check for that
-		$imagePath = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
-		$response  = $this->glideFactory->originalImage($imagePath);
-
-		// Generate cache headers
-		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request);
-
-		// Check if we should return 304 Not Modified
-		if ($cacheHeaders['not_modified']) {
-			return (new Response())
-				->withStatus(304)
-				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
-				->withHeader('ETag', $cacheHeaders['etag']);
-		}
-
-		return (new Response())
-			->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
-			->withHeader('Content-Length', (string)$this->filesystem->fileSize($imagePath))
-			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
-			->withHeader('ETag', $cacheHeaders['etag'])
-			->withHeader('Last-Modified', $cacheHeaders['last_modified'])
-			->withBody($response['stream']);
-	}
-
-	/**
-	 * Generate cache headers and check for conditional requests.
-	 *
-	 * @param array<string,mixed> $params Optional params for processed images
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function generateCacheHeaders(string $imagePath, ?ServerRequestInterface $request = null, array $params = []): array
-	{
-		// Try to get file modification time for ETag and Last-Modified
-		try {
-			$lastModified = $this->filesystem->flysystem()->lastModified($imagePath);
-		} catch (\Exception) {
-			$lastModified = time();
-		}
-
-		// Generate ETag from path, modification time, and params (for processed images)
-		$etagBase     = $imagePath . $lastModified . serialize($params);
-		$etag         = '"' . md5($etagBase) . '"';
-		$lastModDate  = gmdate('D, d M Y H:i:s', $lastModified) . ' GMT';
-		$cacheControl = 'public, max-age=31536000, immutable';
-
-		$notModified = false;
-
-		// Check conditional headers if request is provided
-		if ($request instanceof ServerRequestInterface) {
-			// Check If-None-Match (ETag)
-			$ifNoneMatch = $request->getHeaderLine('If-None-Match');
-			if ($ifNoneMatch === $etag) {
-				$notModified = true;
-			}
-
-			// Check If-Modified-Since (Last-Modified)
-			$ifModifiedSince = $request->getHeaderLine('If-Modified-Since');
-			if ($ifModifiedSince !== '' && strtotime($ifModifiedSince) >= $lastModified) {
-				$notModified = true;
-			}
-		}
-
-		return [
-			'etag'          => $etag,
-			'last_modified' => $lastModDate,
-			'cache_control' => $cacheControl,
-			'not_modified'  => $notModified,
-		];
-	}
-
-	/**
-	 * Add cache headers to a PSR-7 response.
-	 *
-	 * @param array<string,mixed> $cacheHeaders
-	 */
-	private function addCacheHeaders(ResponseInterface $response, array $cacheHeaders): ResponseInterface
-	{
-		return $response
-			->withHeader('Cache-Control', $cacheHeaders['cache_control'])
-			->withHeader('ETag', $cacheHeaders['etag'])
-			->withHeader('Last-Modified', $cacheHeaders['last_modified']);
-	}
-
-	/**
-	 * @param array<string,mixed> $params
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function filterWatermarkParams(array $params = []): array
-	{
-		$params = $params === [] ? $this->params : $params;
-
-		return array_filter(
-			$params,
-			fn ($param): bool => !str_starts_with((string)$param, 'mark'),
-			ARRAY_FILTER_USE_KEY
-		);
-	}
-
-	/**
-	 * Both watermarks take two Glide passes: the image mark, then the text
-	 * mark over that result. The intermediate file gets a unique temp name so
-	 * two requests at once cannot delete each other's, but the text pass's
-	 * cache key is pinned to a stable name (see textPass()), so the finished
-	 * image is cached like any other and the second request is a cache hit.
-	 *
-	 * The cache key used to come from the temp name, so every request
-	 * rendered again and left a `.cache/temp_*.png/` folder behind. A miss
-	 * here sweeps those leftovers from this image's cache folder.
-	 *
-	 * @param array<string,mixed> $params
-	 */
-	private function handleBothWatermarks(
-		Server $glide,
-		ImageData $imageData,
-		Watermark $imageMark,
-		Watermark $textMark,
-		array $params,
-	): ResponseInterface {
-		$pass = $this->textPass($glide, $imageData, $imageMark, $textMark, $params);
-
-		if ($pass['server']->cacheFileExists($pass['name'], $pass['params'])) {
-			return $pass['server']->getImageResponse($pass['name'], $pass['params']);
-		}
-
-		$this->removeLegacyTempCaches();
-
-		$firstPass    = $glide->getImageResponse($imageData->name, array_merge($params, $imageMark->toArray()));
-		$tempFileName = 'temp_' . bin2hex(random_bytes(8)) . '.png';
-		$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName, $this->subpath);
-		$this->filesystem->write($tempPath, (string)$firstPass->getBody());
-
-		try {
-			return $pass['server']->getImageResponse($tempFileName, $pass['params']);
-		} finally {
-			try {
-				$this->filesystem->delete($tempPath);
-			} catch (\Exception $e) {
-				// Log but don't fail if cleanup fails
-				$this->logger->warning('Failed to clean up temporary watermark file', [
-					'path'      => $tempPath,
-					'error'     => $e->getMessage(),
-					'exception' => $e::class,
-				]);
-			}
-		}
-	}
-
-	/**
-	 * The Glide server for the text pass, with its cache path fixed to a name
-	 * derived from the image pass's own cache key (which already covers the
-	 * source and every image-pass param). Whatever temp file the pass reads,
-	 * the same request lands on the same cache file.
-	 *
-	 * @param array<string,mixed> $params
-	 *
-	 * @return array{server: Server, name: string, params: array<string,mixed>}
-	 */
-	private function textPass(Server $glide, ImageData $imageData, Watermark $imageMark, Watermark $textMark, array $params): array
-	{
-		$name       = 'marks-' . hash('xxh3', $glide->getCachePath($imageData->name, array_merge($params, $imageMark->toArray()))) . '.png';
-		$textParams = array_merge($params, $textMark->toArray());
-
-		$server = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
-			imageData     : $imageData,
-			watermarkPath : TextWatermarkFactory::WATERMARK_DIR,
-		);
-
-		$cachePath = $server->getCachePath($name, $textParams);
-		$server->setCachePathCallable(fn (): string => $cachePath);
-
-		return ['server' => $server, 'name' => $name, 'params' => $textParams];
-	}
-
-	/** Delete the `.cache/temp_*.png/` folders the old two-pass render leaked. */
-	private function removeLegacyTempCaches(): void
-	{
-		$cacheDir = PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath) . '/' . GlideFactory::CACHEDIR;
-
-		try {
-			if (!$this->filesystem->directoryExists($cacheDir)) {
-				return;
-			}
-
-			foreach ($this->filesystem->listDirectories($cacheDir) as $dir) {
-				if (preg_match('/^temp_[0-9a-f.]+\.png$/', basename($dir)) === 1) {
-					$this->filesystem->deleteDirectory($dir);
-				}
-			}
-		} catch (\Exception $e) {
-			$this->logger->warning('Failed to remove leftover watermark cache folders', [
-				'path'  => $cacheDir,
-				'error' => $e->getMessage(),
-			]);
-		}
-	}
-
-	/**
-	 * The one step that turns the prepared params into what Glide renders:
-	 * builds the watermarks, the Glide server and the final Glide params.
-	 * The route and cacheState() both go through here, so a cache check keys
-	 * exactly the file the route makes. When both an image and a text
-	 * watermark apply, `marks` holds them and `params` are the pre-watermark
-	 * params for the two-pass render; otherwise `marks` is null and `params`
-	 * are final.
-	 *
-	 * @return array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}}
-	 */
-	private function glideRender(ImageData $imageData): array
-	{
-		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
-		// Use requested width if specified, otherwise use original image width
-		$effectiveWidth = isset($this->params['w']) ? (int)$this->params['w'] : $imageData->width;
-		$textMark       = $this->watermarkFactory->createTextWatermark($this->params, $effectiveWidth);
-
-		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
-		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();
-
-		$watermarkPath = $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR;
-
-		$glide = $this->glideFactory->create(
-			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
-			imageData     : $imageData,
-			watermarkPath : $watermarkPath,
-		);
-
-		$params = $this->filterWatermarkParams();
-
-		if ($hasImageMark && $hasTextMark) {
-			return ['glide' => $glide, 'params' => $params, 'marks' => [$imageMark, $textMark]];
-		}
-
-		if ($hasTextMark) {
-			// Only text watermark provided
-			$params = array_merge($params, $textMark->toArray());
-		} elseif ($hasImageMark) {
-			// Only image watermark provided
-			$params = array_merge($params, $imageMark->toArray());
-		}
-
-		return ['glide' => $glide, 'params' => $params, 'marks' => null];
-	}
-
-	private function responseFromImageData(ImageData $imageData, ?ServerRequestInterface $request = null): ResponseInterface
-	{
-		if ($this->params === []) {
-			return $this->returnOriginalImage($imageData, $request);
-		}
-
-		// Generate cache headers for processed images
-		$imagePath    = PathUtils::buildPath($this->collection, $this->id, $this->property, $imageData->name, $this->subpath);
-		$cacheHeaders = $this->generateCacheHeaders($imagePath, $request, $this->params);
-
-		// Check if we should return 304 Not Modified
-		if ($cacheHeaders['not_modified']) {
-			return (new Response())
-				->withStatus(304)
-				->withHeader('Cache-Control', $cacheHeaders['cache_control'])
-				->withHeader('ETag', $cacheHeaders['etag']);
-		}
-
-		$render = $this->glideRender($imageData);
-
-		$make = fn (): ResponseInterface => $render['marks'] !== null
-			? $this->handleBothWatermarks($render['glide'], $imageData, $render['marks'][0], $render['marks'][1], $render['params'])
-			: $render['glide']->getImageResponse($imageData->name, $render['params']);
-
-		// A cached file costs no render, so it never waits for a slot.
-		$response = $this->limitRenders && !$this->isCached($render, $imageData)
-			? ($this->renderSlots ??= RenderSlots::fromConfig($this->config))->run($make)
-			: $make();
-
-		return $this->addCacheHeaders($response, $cacheHeaders);
+		return $this->doubleMarks->isCached($render['glide'], $location, $imageData, $render['marks'][0], $render['marks'][1], $render['params']);
 	}
 }

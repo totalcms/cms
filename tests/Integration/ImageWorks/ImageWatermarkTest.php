@@ -6,8 +6,12 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
+use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
+use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
+use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -63,14 +67,16 @@ function watermarkGenerator(string $root, bool $editionAllows = true, array $wat
 
 	$textFactory = new TextWatermarkFactory($storage, $config, $editions, $loggerFactory);
 
+	$glide = new GlideFactory($storage, $config);
+
 	return new ImageGenerator(
-		$storage,
-		$fetcher,
-		$meta,
-		new GlideFactory($storage, $config),
+		new ImageSourceResolver($fetcher),
+		new ImageRenderParams($meta, $config),
+		new ImageResponder($storage, $glide),
+		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
+		$glide,
 		new WatermarkFactory($textFactory, $config, $storage, $editions),
 		$config,
-		$loggerFactory,
 	);
 }
 

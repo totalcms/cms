@@ -5,8 +5,12 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
+use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
+use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -65,14 +69,16 @@ function imageTransformGenerator(string $root, array $imageworks = []): ImageGen
 	$watermarks->method('createImageWatermark')->willReturn(null);
 	$watermarks->method('createTextWatermark')->willReturn(null);
 
+	$glide = new GlideFactory($storage, $config);
+
 	return new ImageGenerator(
-		$storage,
-		$fetcher,
-		$meta,
-		new GlideFactory($storage, $config),
+		new ImageSourceResolver($fetcher),
+		new ImageRenderParams($meta, $config),
+		new ImageResponder($storage, $glide),
+		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
+		$glide,
 		$watermarks,
 		$config,
-		$loggerFactory,
 	);
 }
 

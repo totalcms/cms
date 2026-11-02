@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Stream;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
+use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
+use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
@@ -66,13 +70,13 @@ function imageWorksGenerator(mixed $property, ?string &$captured = null): ImageG
 	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 	return new ImageGenerator(
-		$filesystem,
-		$fetcher,
-		test()->createMock(PropertyMetaResolver::class),
+		new ImageSourceResolver($fetcher),
+		new ImageRenderParams(test()->createMock(PropertyMetaResolver::class), $config),
+		new ImageResponder($filesystem, $glide),
+		new DoubleWatermarkRenderer($filesystem, $glide, $loggerFactory),
 		$glide,
 		test()->createMock(WatermarkFactory::class),
 		$config,
-		$loggerFactory,
 	);
 }
 

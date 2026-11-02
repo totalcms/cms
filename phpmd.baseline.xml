@@ -89,7 +89,6 @@
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Feed/Service/PodcastTags.php" method="applyToFeed"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Feed/Service/PodcastTags.php" method="applyToEntry"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/ImageWorks/Service/ImageDimensionCalculator.php" method="calculate"/>
-  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/ImageWorks/Service/ImageGenerator.php"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
