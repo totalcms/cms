@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-use function DI\autowire;
 use Tests\Fakes\FakeLicenseValidator;
 use Tests\Fakes\OfflineHttpClient;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Support\ContainerFactory;
 use TotalCMS\Support\HttpClientInterface;
+
+use function DI\autowire;
 
 // Mark the test environment via real APP_ENV provenance. BundleMiddleware (and
 // anything else gated on appEnv) keys off this; with it set, the bundle

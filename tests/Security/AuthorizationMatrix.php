@@ -20,7 +20,6 @@ use TotalCMS\Support\Config;
  * paratest gives each file to one worker, and as one file the matrix ran
  * alone for the last 13 seconds of the suite.
  *
- *
  * The routes come from resources/api/totalcms-api-full.json, which
  * FullOpenApiSpecTest keeps identical to the route table, so a new route is in
  * this matrix the day it is added. Each actor runs the whole table in one test
