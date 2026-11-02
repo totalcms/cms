@@ -2,19 +2,22 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
 readonly class WatermarkFactory
 {
+	/** A text mark with no size set spans this much of the image width. */
+	public const DEFAULT_TEXT_WIDTH = '40w';
+	/** Tiled marks cover the whole image, so they default to faint. */
+	public const DEFAULT_TILE_ALPHA = 30;
+
 	public function __construct(
 		private TextWatermarkFactory $textWatermarkFactory,
 		private Config $config,
 		private StorageAdapterInterface $filesystem,
-		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -29,11 +32,6 @@ readonly class WatermarkFactory
 	public function createImageWatermark(array $params = []): ?Watermark
 	{
 		if (!isset($params['mark']) || empty($params['mark'])) {
-			return null;
-		}
-
-		// Silently skip image watermarks if edition doesn't support it
-		if (!$this->editionFeatures->can(EditionFeature::IMAGE_WATERMARKS)) {
 			return null;
 		}
 
@@ -61,38 +59,26 @@ readonly class WatermarkFactory
 			return null;
 		}
 
-		// Silently skip text watermarks if edition doesn't support it
-		if (!$this->editionFeatures->can(EditionFeature::TEXT_WATERMARKS)) {
-			return null;
-		}
-
 		// Generate the text watermark image
 		$textWatermarkPath = $this->textWatermarkFactory->generateTextWatermark($params);
 
-		// Auto-scale if watermark is wider than base image (unless user explicitly set marktextw)
-		$markw = $params['marktextw'] ?? null;
-		if ($markw === null && $baseImageWidth > 0) {
-			// Get watermark dimensions
-			$watermarkPath = TextWatermarkFactory::WATERMARK_DIR . '/' . $textWatermarkPath;
-			try {
-				if ($this->filesystem->fileExists($watermarkPath)) {
-					$watermarkContent = $this->filesystem->read($watermarkPath);
-					$watermarkSize    = @getimagesizefromstring($watermarkContent);
-					if ($watermarkSize !== false && $watermarkSize[0] > $baseImageWidth) {
-						// Watermark is wider than base image, scale it down to 90% for safety margin
-						// (allows room for x/y offsets without overflowing)
-						$markw = '90w';
-					}
-				}
-			} catch (\Exception) {
-				// Silently fail - just don't auto-scale if we can't check dimensions
-			}
+		if (TextWatermarkStyle::isTiled($params)) {
+			// The pattern covers the whole image and is cropped to its shape.
+			return new Watermark(
+				mark      : $textWatermarkPath,
+				markpos   : 'center',
+				markw     : '100w',
+				markh     : '100h',
+				markfit   : 'crop',
+				markalpha : (string)($params['marktextalpha'] ?? self::DEFAULT_TILE_ALPHA),
+				path      : TextWatermarkFactory::WATERMARK_DIR,
+			);
 		}
 
 		return new Watermark(
 			mark      : $textWatermarkPath,
 			markpos   : $params['marktextpos'] ?? 'center',
-			markw     : $markw, // Auto-scales only if watermark is too wide
+			markw     : $this->textWidth($params, $textWatermarkPath, $baseImageWidth),
 			markh     : $params['marktexth'] ?? null,
 			markx     : $params['marktextx'] ?? null,
 			marky     : $params['marktexty'] ?? null,
@@ -101,5 +87,56 @@ readonly class WatermarkFactory
 			markalpha : $params['marktextalpha'] ?? null,
 			path      : TextWatermarkFactory::WATERMARK_DIR,
 		);
+	}
+
+	/**
+	 * How wide the text mark is drawn on the image:
+	 * - `marktextw` when set (`40w` is 40% of the image width);
+	 * - with only `marktextsize`, that fixed size, shrunk to 90% of the image
+	 *   when it would be wider;
+	 * - with neither, DEFAULT_TEXT_WIDTH, so the mark keeps its proportion on
+	 *   a thumbnail and on the original alike.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	private function textWidth(array $params, string $textWatermarkPath, int $baseImageWidth): ?string
+	{
+		if (isset($params['marktextw'])) {
+			return (string)$params['marktextw'];
+		}
+
+		if (!isset($params['marktextsize'])) {
+			return self::DEFAULT_TEXT_WIDTH;
+		}
+
+		if ($baseImageWidth <= 0) {
+			return null;
+		}
+
+		try {
+			$watermarkSize = @getimagesizefromstring($this->filesystem->read(TextWatermarkFactory::WATERMARK_DIR . '/' . $textWatermarkPath));
+			// Wider than the image: 90% leaves room for x/y offsets.
+			if ($watermarkSize !== false && $watermarkSize[0] > $baseImageWidth) {
+				return '90w';
+			}
+		} catch (\Exception) {
+			// Silently fail - just don't auto-scale if we can't check dimensions
+		}
+
+		return null;
+	}
+
+	/**
+	 * The image mark file's modified time, or null when it cannot be read. A
+	 * logo is named by file name only; this is what tells a new logo.png
+	 * from the old one.
+	 */
+	public function version(Watermark $imageMark): ?string
+	{
+		try {
+			return (string)$this->filesystem->flysystem()->lastModified($imageMark->path . '/' . $imageMark->mark);
+		} catch (\Throwable) {
+			return null;
+		}
 	}
 }

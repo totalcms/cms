@@ -6,8 +6,8 @@ namespace Tests\Unit\ImageWorks\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -17,20 +17,17 @@ class TextWatermarkFactoryTest extends TestCase
 	private TextWatermarkFactory $factory;
 	private MockObject $mockFilesystem;
 	private MockObject $mockConfig;
-	private MockObject $mockEditionFeatures;
 	private MockObject $mockLoggerFactory;
 
 	protected function setUp(): void
 	{
 		$this->mockFilesystem       = $this->createMock(StorageAdapterInterface::class);
 		$this->mockConfig           = $this->createMock(Config::class);
-		$this->mockEditionFeatures  = $this->createMock(EditionFeatureService::class);
 		$this->mockLoggerFactory    = $this->createMock(LoggerFactory::class);
 
 		$this->factory = new TextWatermarkFactory(
 			$this->mockFilesystem,
 			$this->mockConfig,
-			$this->mockEditionFeatures,
 			$this->mockLoggerFactory
 		);
 	}
@@ -158,102 +155,68 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testParseColorWithValidHexColor(): void
 	{
-		// Test the color parsing functionality through reflection since it's private
-		$reflection       = new \ReflectionClass($this->factory);
-		$parseColorMethod = $reflection->getMethod('parseColor');
-
-		$result = $parseColorMethod->invoke($this->factory, 'ff0000');
-
-		$this->assertIsArray($result);
-		$this->assertCount(3, $result);
-		$this->assertEquals([255, 0, 0], $result); // Red color
+		$this->assertEquals([255, 0, 0], TextWatermarkStyle::parseColor('ff0000'));
 	}
 
 	public function testParseColorWithShortHexColor(): void
 	{
-		$reflection       = new \ReflectionClass($this->factory);
-		$parseColorMethod = $reflection->getMethod('parseColor');
-
-		$result = $parseColorMethod->invoke($this->factory, 'f00');
-
-		$this->assertIsArray($result);
-		$this->assertEquals([255, 0, 0], $result); // Red color expanded
+		$this->assertEquals([255, 0, 0], TextWatermarkStyle::parseColor('f00'));
 	}
 
 	public function testParseColorWithHashPrefix(): void
 	{
-		$reflection       = new \ReflectionClass($this->factory);
-		$parseColorMethod = $reflection->getMethod('parseColor');
-
-		$result = $parseColorMethod->invoke($this->factory, '#00ff00');
-
-		$this->assertIsArray($result);
-		$this->assertEquals([0, 255, 0], $result); // Green color
+		$this->assertEquals([0, 255, 0], TextWatermarkStyle::parseColor('#00ff00'));
 	}
 
 	public function testParseColorWithInvalidColor(): void
 	{
-		$reflection       = new \ReflectionClass($this->factory);
-		$parseColorMethod = $reflection->getMethod('parseColor');
-
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid color format');
 
-		$parseColorMethod->invoke($this->factory, 'invalid');
+		TextWatermarkStyle::parseColor('invalid');
 	}
 
 	public function testGenerateCacheKey(): void
 	{
-		$reflection             = new \ReflectionClass($this->factory);
-		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
+		$params = ['marktext' => 'Test Text', 'marktextsize' => 100, 'marktextfont' => 'Arial', 'marktextbg' => '000000'];
 
-		$text            = 'Test Text';
-		$fontSize        = 100;
-		$fontColor       = [255, 255, 255];
-		$fontFamily      = 'Arial';
-		$backgroundColor = [0, 0, 0];
-		$padding         = 10;
-		$angle           = 0;
+		$result = (new TextWatermarkStyle($params))->cacheKey();
 
-		$result = $generateCacheKeyMethod->invoke(
-			$this->factory,
-			$text,
-			$fontSize,
-			$fontColor,
-			$fontFamily,
-			$backgroundColor,
-			$padding,
-			$angle
-		);
-
-		$this->assertIsString($result);
 		$this->assertNotEmpty($result);
-		// Hash should be consistent for same inputs
-		$result2 = $generateCacheKeyMethod->invoke(
-			$this->factory,
-			$text,
-			$fontSize,
-			$fontColor,
-			$fontFamily,
-			$backgroundColor,
-			$padding,
-			$angle
-		);
-		$this->assertEquals($result, $result2);
+		// Same style, same file
+		$this->assertEquals($result, (new TextWatermarkStyle($params))->cacheKey());
 	}
 
 	public function testGenerateCacheKeyDifferentForDifferentInputs(): void
 	{
-		$reflection             = new \ReflectionClass($this->factory);
-		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
+		$base = ['marktext' => 'Test', 'marktextsize' => 100];
 
-		$baseParams     = ['Test', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
-		$modifiedParams = ['Different Text', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
+		$this->assertNotEquals((new TextWatermarkStyle($base))->cacheKey(), (new TextWatermarkStyle(['marktext' => 'Different Text'] + $base))->cacheKey());
+		// Outline, shadow and tiling are part of the style too
+		$this->assertNotEquals((new TextWatermarkStyle($base))->cacheKey(), (new TextWatermarkStyle($base + ['marktextstroke' => 5]))->cacheKey());
+		$this->assertNotEquals((new TextWatermarkStyle($base))->cacheKey(), (new TextWatermarkStyle($base + ['marktextshadow' => 5]))->cacheKey());
+		$this->assertNotEquals((new TextWatermarkStyle($base))->cacheKey(), (new TextWatermarkStyle($base + ['marktextpos' => 'tile']))->cacheKey());
+	}
 
-		$result1 = $generateCacheKeyMethod->invokeArgs($this->factory, $baseParams);
-		$result2 = $generateCacheKeyMethod->invokeArgs($this->factory, $modifiedParams);
+	public function testTiledStyleDefaults(): void
+	{
+		$tiled = new TextWatermarkStyle(['marktext' => 'Proof', 'marktextpos' => 'tile']);
+		$plain = new TextWatermarkStyle(['marktext' => 'Proof']);
 
-		$this->assertNotEquals($result1, $result2);
+		$this->assertSame(TextWatermarkStyle::DEFAULT_TILES, $tiled->tiles);
+		$this->assertSame(TextWatermarkStyle::DEFAULT_TILE_ANGLE, $tiled->angle);
+		$this->assertSame(0, $plain->tiles);
+		$this->assertSame(0, $plain->angle);
+		$this->assertSame(12, (new TextWatermarkStyle(['marktext' => 'P', 'marktextpos' => 'tile', 'marktextrepeat' => 99]))->tiles);
+	}
+
+	public function testStrokeAndShadowArePercentagesOfTheFontSize(): void
+	{
+		$style = new TextWatermarkStyle(['marktext' => 'P', 'marktextsize' => 200, 'marktextstroke' => 5, 'marktextshadow' => 50]);
+
+		$this->assertSame(10, $style->stroke);
+		// capped at 25%
+		$this->assertSame(50, $style->shadow);
 	}
 
 	public function testDefaultParameterValues(): void

@@ -192,6 +192,8 @@ Watermark settings are enforced during image processing:
 - **markpos** - Position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
 - **markalpha** - Transparency (0-100, where 100 is fully opaque)
 
+Replacing the watermark image with a new file under the same name re-renders every image on its next request.
+
 ### Text Watermarks
 ```json
 {
@@ -211,13 +213,31 @@ Watermark settings are enforced during image processing:
 
 - **marktext** - Text to display as watermark
 - **marktextfont** - Font name (TTF/OTF fonts from watermark-fonts depot, or "RobotoRegular" default)
-- **marktextsize** - Font size in pixels
+- **marktextsize** - Font size in pixels. Set it without `marktextw` for a fixed size
 - **marktextcolor** - Text color in hex (without #)
 - **marktextangle** - Rotation angle in degrees
-- **marktextw** - Text width (pixels or percentage)
+- **marktextw** - Text width (pixels or percentage). With neither this nor `marktextsize`, the text spans 40% of the image width
 - **marktextpad** - Padding from edge in pixels
-- **marktextpos** - Position (same options as image watermark)
-- **marktextalpha** - Text transparency (0-100)
+- **marktextpos** - Position (same options as image watermark), or `tile` to repeat the text over the whole image
+- **marktextalpha** - Text transparency (0-100). Tiled marks default to 30
+- **marktextstroke** / **marktextstrokecolor** - Outline width as a percentage of the font size (0-25), and its color (default `000000`)
+- **marktextshadow** / **marktextshadowcolor** - Drop shadow offset as a percentage of the font size (0-25), and its color (default `000000`)
+- **marktextrepeat** - With `tile`, how many marks run across the image (1-12, default 4)
+
+#### Tiled Text Watermark
+
+```json
+{
+	"watermark": {
+		"marktext": "© Studio",
+		"marktextpos": "tile",
+		"marktextstroke": 2,
+		"limit": 800
+	}
+}
+```
+
+The text repeats in offset rows across the whole image at 30°, so no corner is left clean to crop out. See [ImageWorks → Text Watermarks](docs/twig/imageworks#text-watermarks) for every option.
 
 ### Combined Watermarks
 You can use both image and text watermarks together:
@@ -257,6 +277,8 @@ Watermarks are applied when:
 - **Requested width > limit** - Apply watermark
 - **Requested height > limit** - Apply watermark
 - **Both width AND height ≤ limit** - No watermark
+
+The width and height include `dpr`: `?w=600&dpr=3` is an 1800px image, so it is marked.
 
 #### Example Behavior (with limit: 800)
 

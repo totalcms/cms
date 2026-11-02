@@ -123,6 +123,26 @@ class PropertyRepositoryTest extends TestCase
 		$this->assertTrue($result);
 	}
 
+	public function testDeleteFileCacheAlsoClearsLogoWatermarkFolders(): void
+	{
+		// Renders carrying a logo are filed under .cache/mark-{version}/.
+		$cache = 'test-collection/test-object/test-property/.cache';
+		$this->mockFilesystem->method('directoryExists')->with($cache)->willReturn(true);
+		$this->mockFilesystem->method('listDirectories')->with($cache)
+			->willReturn([$cache . '/test-file.jpg', $cache . '/mark-1700000000', $cache . '/other.jpg']);
+
+		$deleted = [];
+		$this->mockFilesystem->method('deleteDirectory')->willReturnCallback(function (string $path) use (&$deleted): bool {
+			$deleted[] = $path;
+
+			return true;
+		});
+
+		$this->propertyRepository->deleteFileCache('test-collection', 'test-object', 'test-property', 'test-file.jpg');
+
+		$this->assertSame([$cache . '/test-file.jpg', $cache . '/mark-1700000000/test-file.jpg'], $deleted);
+	}
+
 	public function testDeleteFileCacheThrowsExceptionOnFailure(): void
 	{
 		$this->mockFilesystem

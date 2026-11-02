@@ -14,10 +14,6 @@ enum EditionFeature: string
 	case DEPOT_SCHEMA   = 'depot_schema';
 	case CUSTOM_SCHEMAS = 'custom_schemas';
 
-	// Watermark features
-	case IMAGE_WATERMARKS = 'image_watermarks';
-	case TEXT_WATERMARKS  = 'text_watermarks';
-
 	// Form action features
 	case MAILER_ACTIONS   = 'mailer_actions';
 	case WEBHOOK_ACTIONS  = 'webhook_actions';
@@ -63,8 +59,6 @@ enum EditionFeature: string
 			self::BLOG_SCHEMA            => 'Blog Schema',
 			self::DEPOT_SCHEMA           => 'Depot Schema',
 			self::CUSTOM_SCHEMAS         => 'Custom Schemas',
-			self::IMAGE_WATERMARKS       => 'Image Watermarks',
-			self::TEXT_WATERMARKS        => 'Text Watermarks',
 			self::MAILER_ACTIONS         => 'Mailer Form Actions',
 			self::WEBHOOK_ACTIONS        => 'Webhook Form Actions',
 			self::ALGOLIA_SEARCH         => 'Algolia Search',
@@ -118,13 +112,11 @@ enum EditionFeature: string
 			// Standard features
 			self::BLOG_SCHEMA,
 			self::DEPOT_SCHEMA,
-			self::IMAGE_WATERMARKS,
 			self::MAILER_ACTIONS,
 			self::QR_CODES,
 			self::WHITELABEL_STANDARD,
 			self::PASSKEYS,
 			self::ACCESS_GROUPS,
-			self::TEXT_WATERMARKS,
 			self::BARCODES,
 			// Standard and above. MCP is deliberately not a Lite feature: Lite
 			// exists as a free way in, and the AI surface is not what we give

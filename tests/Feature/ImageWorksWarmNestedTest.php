@@ -5,7 +5,6 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\ImageWorks\Data\WarmVariants;
 use TotalCMS\Domain\ImageWorks\Service\ImageWorksWarmer;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 
@@ -160,21 +159,6 @@ test('a deckTable with the legacy deckref is a deck', function (): void {
 
 	expect(($this->warmer)()->properties('legacy', 'rows/photo'))
 		->toBe(['rows/photo' => ['root' => 'rows', 'field' => 'deck', 'child' => 'photo', 'childField' => 'image']]);
-});
-
-test('a watermark on the deck refuses its images under an edition without watermarks', function (): void {
-	$c = $this->app->getContainer();
-	$c->get(SchemaSaver::class)->saveSchema(['id' => 'warm-widgets', 'type' => 'object', 'properties' => [
-		'id'     => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
-		'title'  => ['type' => 'string', 'field' => 'text'],
-		'mydeck' => ['$ref' => 'https://www.totalcms.co/schemas/properties/deck.json', 'field' => 'deck', 'schemaref' => 'https://www.totalcms.co/schemas/custom/warm-card.json', 'settings' => ['watermark' => ['marktext' => 'Sample']]],
-	], 'index' => ['id', 'title']]);
-	$editions = $this->createStub(EditionFeatureService::class);
-	$editions->method('can')->willReturn(false);
-	$c->set(EditionFeatureService::class, $editions);
-
-	$warmer = ($this->warmer)();
-	expect($warmer->blockedWatermark('widgets', $warmer->properties('widgets', 'mydeck/photo')))->toBe('mydeck/photo');
 });
 
 test('a top-level video warms its poster, named alone or as video/poster', function (string $name): void {

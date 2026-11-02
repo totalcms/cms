@@ -25,16 +25,6 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame('Custom Schemas', EditionFeature::CUSTOM_SCHEMAS->label());
 	}
 
-	public function testImageWatermarksLabel(): void
-	{
-		$this->assertSame('Image Watermarks', EditionFeature::IMAGE_WATERMARKS->label());
-	}
-
-	public function testTextWatermarksLabel(): void
-	{
-		$this->assertSame('Text Watermarks', EditionFeature::TEXT_WATERMARKS->label());
-	}
-
 	public function testMailerActionsLabel(): void
 	{
 		$this->assertSame('Mailer Form Actions', EditionFeature::MAILER_ACTIONS->label());
@@ -94,12 +84,10 @@ final class EditionFeatureTest extends TestCase
 	{
 		$this->assertSame(Edition::STANDARD, EditionFeature::BLOG_SCHEMA->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::DEPOT_SCHEMA->requiredEdition());
-		$this->assertSame(Edition::STANDARD, EditionFeature::IMAGE_WATERMARKS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::MAILER_ACTIONS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::QR_CODES->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::WHITELABEL_STANDARD->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::ACCESS_GROUPS->requiredEdition());
-		$this->assertSame(Edition::STANDARD, EditionFeature::TEXT_WATERMARKS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::BARCODES->requiredEdition());
 		// Standard, not Lite: Lite is the free tier and does not include the AI
 		// surface. Standard grants the anonymous persona only — writing needs
@@ -139,8 +127,6 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame('blog_schema', EditionFeature::BLOG_SCHEMA->value);
 		$this->assertSame('depot_schema', EditionFeature::DEPOT_SCHEMA->value);
 		$this->assertSame('custom_schemas', EditionFeature::CUSTOM_SCHEMAS->value);
-		$this->assertSame('image_watermarks', EditionFeature::IMAGE_WATERMARKS->value);
-		$this->assertSame('text_watermarks', EditionFeature::TEXT_WATERMARKS->value);
 		$this->assertSame('mailer_actions', EditionFeature::MAILER_ACTIONS->value);
 		$this->assertSame('webhook_actions', EditionFeature::WEBHOOK_ACTIONS->value);
 		$this->assertSame('external_rest_api', EditionFeature::EXTERNAL_REST_API->value);

@@ -131,17 +131,6 @@ class ImageGenerator
 			: CacheState::Missing;
 	}
 
-	/**
-	 * The watermark settings one property resolves to: schema, then
-	 * collection, then the object's own override. [] when it has none.
-	 *
-	 * @return array<string,string|int>
-	 */
-	public function watermarkSettings(string $collection, string $property, string $id = ''): array
-	{
-		return $this->renderParams->watermarkSettings($collection, $property, $id);
-	}
-
 	/** @param array<string,mixed> $params */
 	private function respond(ImageLocation $location, ImageData $imageData, array $params, ?ServerRequestInterface $request): ResponseInterface
 	{
@@ -193,6 +182,7 @@ class ImageGenerator
 			source        : $location->path(),
 			imageData     : $imageData,
 			watermarkPath : $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR,
+			cacheDir      : $hasImageMark ? $this->markCacheDir($imageMark) : null,
 		);
 
 		$glideParams = ImageRenderParams::withoutWatermarks($params);
@@ -208,6 +198,18 @@ class ImageGenerator
 		}
 
 		return ['glide' => $glide, 'params' => $glideParams, 'marks' => null];
+	}
+
+	/**
+	 * A logo is named by file name only, so a new logo.png would keep serving
+	 * every image cached with the old one. Renders that carry a logo are filed
+	 * under a cache folder named for the logo file's version instead.
+	 */
+	private function markCacheDir(Watermark $imageMark): ?string
+	{
+		$version = $this->watermarkFactory->version($imageMark);
+
+		return $version === null ? null : GlideFactory::CACHEDIR . '/mark-' . $version;
 	}
 
 	/**

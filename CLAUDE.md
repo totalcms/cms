@@ -398,7 +398,7 @@ These are non-obvious details that are important when working in these areas:
 
 ### Edition Gating
 - **Pattern**: Paid features are gated per-edition at the route level, not inline in services. `EditionFeature` (`src/Domain/License/Data/EditionFeature.php`) enumerates the gated features; each gets a thin middleware extending `BaseEditionMiddleware` that returns its `EditionFeature`, attached to the relevant route group.
-- **Current features** (10): `custom_schemas`, `image_watermarks`, `external_rest_api`, `qr_codes`, `barcodes`, `data_views`, `rss_import`, `bulk_mailer`, `passkeys`, `access_groups`
+- **Current features** (9): `custom_schemas`, `external_rest_api`, `qr_codes`, `barcodes`, `data_views`, `rss_import`, `bulk_mailer`, `passkeys`, `access_groups`
 - **Middlewares** live in `src/Middleware/License/` — 14 of them, since some features gate more than one route group (collections, schemas, templates, API keys, OAuth, automations, mailer)
 - **When adding a feature**: decide early whether it is edition-gated. Adding the gate later means retrofitting routes, and the middleware is the only enforcement point — services do not check editions themselves.
 

@@ -16,7 +16,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\ImageWorks\Data\WarmReport;
 use TotalCMS\Domain\ImageWorks\Data\WarmVariants;
 use TotalCMS\Domain\ImageWorks\Service\ImageWorksWarmer;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 /**
  * Pre-build the ImageWorks cache for a collection so the first visitor to a
@@ -60,7 +59,7 @@ class ImageWorksWarmCommand extends BaseCommand
 
 		$warmer   = $this->totalcms->container()->get(ImageWorksWarmer::class);
 		$ids      = $this->commaList($input->getOption('id'));
-		$variants = $this->preflight($input, $output, $warmer, $collection, $property, $ids);
+		$variants = $this->preflight($input, $output, $warmer, $collection, $property);
 		if (is_int($variants)) {
 			return $variants;
 		}
@@ -141,18 +140,17 @@ class ImageWorksWarmCommand extends BaseCommand
 	}
 
 	/**
-	 * Everything checked before anything is made: the property, the variant
-	 * options and the watermark edition. Returns the variants, or the exit
+	 * Everything checked before anything is made: the property and the
+	 * variant options. Returns the variants, or the exit
 	 * code of the error it printed. Warns when the run would make cache
 	 * folders the web server can't use.
-	 *
-	 * @param list<string> $ids
 	 */
-	private function preflight(InputInterface $input, OutputInterface $output, ImageWorksWarmer $warmer, string $collection, ?string $property, array $ids): WarmVariants|int
+	private function preflight(InputInterface $input, OutputInterface $output, ImageWorksWarmer $warmer, string $collection, ?string $property): WarmVariants|int
 	{
 		try {
-			$properties = $warmer->properties($collection, $property);
-			$variants   = WarmVariants::fromOptions(
+			// Throws for a property that doesn't exist or can't be warmed.
+			$warmer->properties($collection, $property);
+			$variants = WarmVariants::fromOptions(
 				$this->widths($input->getOption('widths')),
 				$this->commaList($input->getOption('formats')),
 				(bool)$input->getOption('picture'),
@@ -161,17 +159,10 @@ class ImageWorksWarmCommand extends BaseCommand
 				$this->stringList($input->getOption('url')),
 				$this->totalcms->config,
 			);
-			$blocked = $warmer->blockedWatermark($collection, $properties, $ids);
 		} catch (InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, 'Could not read collection "' . $collection . '": ' . $e->getMessage());
-		}
-
-		if ($blocked !== null) {
-			$edition = ucfirst($this->totalcms->container()->get(EditionFeatureService::class)->getEdition()->value);
-
-			return $this->outputError($input, $output, "{$blocked} has watermarks, but this run resolved the {$edition} edition, which doesn't include them. Nothing was warmed. Check the license from this machine with `tcms check`, or warm a property without watermarks.");
 		}
 
 		$warning = $this->ownerWarning($this->totalcms->config->datadir);

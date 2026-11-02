@@ -38,6 +38,11 @@ final class ImageParamValidator
 		'marktextalpha' => [0, 100],
 		'marktextsize'  => [1, 1000],
 		'marktextangle' => [-360, 360],
+		// Tiled mode: marks across the longer side
+		'marktextrepeat' => [1, 12],
+		// Outline width and shadow offset, as a percentage of the font size
+		'marktextstroke' => [0, 25],
+		'marktextshadow' => [0, 25],
 	];
 
 	/** Fractional numbers: [min, max]. */
@@ -82,6 +87,8 @@ final class ImageParamValidator
 		'marktextpos'   => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextcolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextbg'    => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'marktextstrokecolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'marktextshadowcolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		// File names: a watermark image, a font
 		'mark'          => '/^[A-Za-z0-9 ._\/-]{1,255}$/',
 		'marktextfont'  => '/^[A-Za-z0-9 ._\/-]{1,255}$/',

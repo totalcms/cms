@@ -158,6 +158,8 @@ You can configure watermarks at the schema, collection, or per-object level usin
 
 Watermark settings follow the three-level override hierarchy: **schema → collection → per-object**. Override at the collection level in collection meta, or per-object using custom properties.
 
+**Replacing the logo.** Watermarked renders are cached by the logo file's modified time, so uploading a new `logo.png` under the same name re-renders every image on its next request. The old renders stay on disk until you clear the cache.
+
 ### Protecting Original Images
 
 Schema-level watermarks are not just a convenience — they are how you stop the
@@ -214,6 +216,9 @@ The last row is the important one. A request with no width or height is asking
 for the original, which is exactly the case worth protecting, so it is treated
 as over the limit rather than under it.
 
+`dpr` counts. `w=600&dpr=3` renders an 1800px image, so with `limit: 800` it is
+marked.
+
 `limit` is a watermark-only setting and is removed before the remaining values
 are passed to the image processor.
 
@@ -225,14 +230,74 @@ Render text directly on images without needing a separate watermark image.
 |-----------|------|-------------|
 | `marktext` | string | Text to render |
 | `marktextfont` | string | Font family name (TTF/OTF from the watermark-fonts depot) |
-| `marktextsize` | integer | Text size in pixels (default: 500) |
+| `marktextsize` | integer | Font size the text is drawn at, in pixels (default: 500). Set it without `marktextw` for a fixed size; see [Text size](#text-size) |
 | `marktextcolor` | string | Text color as hex without `#` (e.g., `ffffff`) |
 | `marktextbg` | string | Background color as hex (optional, transparent if not set) |
 | `marktextpad` | integer | Padding around text in pixels (default: 10) |
 | `marktextangle` | integer | Rotation angle in degrees (-360 to 360, default: 0) |
-| `marktextpos` | string | Position (same options as image watermarks) |
-| `marktextw` | mixed | Max text width in pixels or relative (e.g., `50w` for 50% of image width) |
-| `marktextalpha` | integer | Transparency (0-100, where 100 is fully opaque) |
+| `marktextpos` | string | Position (same options as image watermarks), or `tile` to repeat the text over the whole image |
+| `marktextw` | mixed | Text width in pixels or relative to the image (e.g., `50w` for 50% of image width). Default: `40w` when `marktextsize` is not set |
+| `marktextalpha` | integer | Opacity (0-100, where 100 is fully opaque). Default: 100, or 30 when tiled |
+| `marktextstroke` | integer | Outline width as a percentage of the font size (0-25, default: 0) |
+| `marktextstrokecolor` | string | Outline color as hex (default: `000000`) |
+| `marktextshadow` | integer | Drop shadow offset as a percentage of the font size (0-25, default: 0) |
+| `marktextshadowcolor` | string | Shadow color as hex (default: `000000`) |
+| `marktextrepeat` | integer | Tiled mode only: marks across the image (1-12, default: 4) |
+
+### Text Size
+
+With no size set, the text spans 40% of the image's width, so the mark has
+the same weight on a 400px thumbnail as on the 2,400px original.
+
+- **`marktextw`** sets that width yourself: `25w` for a quarter of the image,
+  or a pixel width.
+- **`marktextsize` alone** draws the text at that fixed pixel size, whatever
+  the image size. If the text would be wider than the image, it is shrunk to
+  90% of the image width.
+
+### Tiled Watermarks
+
+`marktextpos: 'tile'` repeats the text over the whole image in offset rows,
+so there is no clean corner to crop out. The text runs at 30° unless you set
+`marktextangle`, and is faint (`marktextalpha` 30) unless you set the opacity.
+`marktextrepeat` sets how many marks run across the image. `marktextx`,
+`marktexty` and `marktextw` don't apply to a tiled mark.
+
+```twig
+{# Proof sheet: PROOF repeated across the image #}
+{{ cms.media.imagePath('photo', {
+    w: 1600,
+    marktext: 'PROOF',
+    marktextpos: 'tile',
+    marktextrepeat: 5
+}) }}
+```
+
+### Outline and Shadow
+
+White text disappears on a pale sky and black text on a dark one. An outline
+or a shadow keeps the mark readable on any image. Both are a percentage of the
+font size, so they keep their look at any image size.
+
+```twig
+{# White text with a thin black outline #}
+{{ cms.media.imagePath('photo', {
+    w: 1200,
+    marktext: '© Studio',
+    marktextstroke: 3
+}) }}
+
+{# Soft drop shadow #}
+{{ cms.media.imagePath('photo', {
+    w: 1200,
+    marktext: '© Studio',
+    marktextshadow: 5,
+    marktextshadowcolor: '333333'
+}) }}
+```
+
+Outline and shadow need a TTF or OTF font. On a server without FreeType, the
+text falls back to GD's built-in bitmap font and is drawn without them.
 
 ### Custom Fonts
 
@@ -420,8 +485,6 @@ tcms imageworks:warm blog --picture || echo "some images failed"
 The command exits **1** when any image failed, and **0** otherwise. `--json` prints the counts and the list of failures.
 
 ### Limits
-
-A property with a watermark needs an edition that includes watermarks. If the command can't confirm that edition from this machine, it stops and warms nothing. Run `tcms check` to see the license the command reads.
 
 A card or deck image must be named as `parent/child`. Naming only the card or deck is an error, and the error lists the images inside it.
 

@@ -17,6 +17,7 @@ use TotalCMS\Support\Config;
  */
 final readonly class ImageRenderParams
 {
+
 	public function __construct(
 		private PropertyMetaResolver $metaResolver,
 		private Config $config,
@@ -178,6 +179,9 @@ final readonly class ImageRenderParams
 	 * - Requested height exceeds limit, OR
 	 * - No dimensions requested (original image).
 	 *
+	 * Sizes count `dpr`: Glide multiplies the output by it, so `w=600&dpr=3`
+	 * is an 1800px image.
+	 *
 	 * @param array<string,string|int> $params Request parameters
 	 * @param array<string,string|int> $watermarkSettings Schema watermark settings
 	 */
@@ -189,6 +193,9 @@ final readonly class ImageRenderParams
 		}
 
 		$limit = (int)$watermarkSettings['limit'];
+		$dpr   = (float)($params['dpr'] ?? 1);
+		// Glide treats anything outside 0–8 as 1.
+		$dpr = $dpr > 0 && $dpr <= 8 ? $dpr : 1.0;
 
 		// If no dimensions requested (original image), apply watermark
 		if (!isset($params['w']) && !isset($params['h'])) {
@@ -196,12 +203,12 @@ final readonly class ImageRenderParams
 		}
 
 		// Check if requested width exceeds limit
-		if (isset($params['w']) && (int)$params['w'] > $limit) {
+		if (isset($params['w']) && (int)$params['w'] * $dpr > $limit) {
 			return true;
 		}
 
 		// Check if requested height exceeds limit
 		// Dimensions are below limit, don't apply watermark
-		return isset($params['h']) && (int)$params['h'] > $limit;
+		return isset($params['h']) && (int)$params['h'] * $dpr > $limit;
 	}
 }

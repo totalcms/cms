@@ -14,7 +14,6 @@ use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
 use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -40,16 +39,13 @@ const WATERMARK_SOURCE_H   = 1245;
  *
  * @param array<string,mixed> $watermarkSchema settings the schema would supply
  */
-function watermarkGenerator(string $root, bool $editionAllows = true, array $watermarkSchema = []): ImageGenerator
+function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGenerator
 {
 	$storage = new StorageFilesystemAdapter(new Filesystem(new LocalFilesystemAdapter($root)));
 
 	$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->imageworks = ['presets' => [], 'defaults' => [], 'watermarksGallery' => 'watermarks'];
 	$config->presets    = [];
-
-	$editions = test()->createMock(EditionFeatureService::class);
-	$editions->method('can')->willReturn($editionAllows);
 
 	$loggerFactory = test()->createMock(LoggerFactory::class);
 	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
@@ -65,7 +61,7 @@ function watermarkGenerator(string $root, bool $editionAllows = true, array $wat
 	$meta = test()->createMock(PropertyMetaResolver::class);
 	$meta->method('resolveSettings')->willReturn($watermarkSchema === [] ? [] : ['watermark' => $watermarkSchema]);
 
-	$textFactory = new TextWatermarkFactory($storage, $config, $editions, $loggerFactory);
+	$textFactory = new TextWatermarkFactory($storage, $config, $loggerFactory);
 
 	$glide = new GlideFactory($storage, $config);
 
@@ -75,7 +71,7 @@ function watermarkGenerator(string $root, bool $editionAllows = true, array $wat
 		new ImageResponder($storage, $glide),
 		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
 		$glide,
-		new WatermarkFactory($textFactory, $config, $storage, $editions),
+		new WatermarkFactory($textFactory, $config, $storage),
 		$config,
 	);
 }
@@ -90,10 +86,9 @@ function watermarkRun(
 	string $root,
 	array $params,
 	string $label,
-	bool $editionAllows = true,
 	array $watermarkSchema = [],
 ): array {
-	$response = watermarkGenerator($root, $editionAllows, $watermarkSchema)
+	$response = watermarkGenerator($root, $watermarkSchema)
 		->generateImage('blog', 'post-1', 'image', $params);
 
 	$body = (string)$response->getBody();
@@ -157,6 +152,40 @@ function watermarkPixelDiff(string $a, string $b): float
 
 	return $total > 0 ? $changed / $total * 100 : 0.0;
 }
+/**
+ * Where two renders differ: the share of the width the changed pixels span,
+ * and which quarters of the image hold any of them.
+ *
+ * @return array{span:float,quarters:int}
+ */
+function watermarkFootprint(string $a, string $b): array
+{
+	$ia = imagecreatefromstring($a);
+	$ib = imagecreatefromstring($b);
+	$w  = imagesx($ia);
+	$h  = imagesy($ia);
+
+	$minX     = $w;
+	$maxX     = 0;
+	$quarters = [];
+	for ($y = 0; $y < $h; $y += 2) {
+		for ($x = 0; $x < $w; $x += 2) {
+			$pa    = imagecolorat($ia, $x, $y);
+			$pb    = imagecolorat($ib, $x, $y);
+			$delta = abs((($pa >> 16) & 0xFF) - (($pb >> 16) & 0xFF))
+				+ abs((($pa >> 8) & 0xFF) - (($pb >> 8) & 0xFF))
+				+ abs(($pa & 0xFF) - ($pb & 0xFF));
+			if ($delta > 30) {
+				$minX                                                     = min($minX, $x);
+				$maxX                                                     = max($maxX, $x);
+				$quarters[(int)($x * 2 / $w) . ':' . (int)($y * 2 / $h)] = true;
+			}
+		}
+	}
+
+	return ['span' => $maxX > $minX ? ($maxX - $minX) / $w : 0.0, 'quarters' => count($quarters)];
+}
+
 beforeEach(function (): void {
 	$this->root = sys_get_temp_dir() . '/tcms-watermark-' . uniqid('', true);
 	mkdir($this->root . '/blog/post-1/image', 0700, true);
@@ -238,6 +267,59 @@ describe('ImageWorks text watermarks', function (): void {
 		expect(count($after))->toBe(count($before));
 	});
 
+	it('sizes the mark to the image when no size is set', function (): void {
+		// With neither marktextw nor marktextsize the mark spans 40% of the
+		// width, on a thumbnail and a large render alike.
+		foreach ([500, 1800] as $w) {
+			$plain  = watermarkRun($this->root, ['w' => $w], "wm-default-size-plain-{$w}");
+			$marked = watermarkRun($this->root, ['w' => $w, 'marktext' => 'Total CMS'], "wm-default-size-{$w}");
+
+			expect(watermarkFootprint($plain['body'], $marked['body'])['span'])->toBeGreaterThan(0.3)->toBeLessThan(0.45);
+		}
+	});
+
+	it('keeps a fixed size when only marktextsize is set', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 1800], 'wm-fixed-size-plain');
+		$marked = watermarkRun($this->root, ['w' => 1800, 'marktext' => 'Total CMS', 'marktextsize' => 60], 'wm-fixed-size');
+
+		// 60px Roboto "Total CMS" is about 300px: far short of 40% of 1800.
+		expect(watermarkFootprint($plain['body'], $marked['body'])['span'])->toBeLessThan(0.25);
+	});
+
+	it('tiles the mark over the whole image', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 1200], 'wm-tile-plain');
+		$single = watermarkRun($this->root, ['w' => 1200, 'marktext' => 'PROOF', 'marktextalpha' => 60], 'wm-tile-single');
+		$tiled  = watermarkRun($this->root, [
+			'w' => 1200, 'marktext' => 'PROOF', 'marktextpos' => 'tile', 'marktextalpha' => 60,
+		], 'wm-tile');
+
+		expect($tiled['width'])->toBe(1200)
+			->and($tiled['height'])->toBe((int)round(1200 * WATERMARK_SOURCE_H / WATERMARK_SOURCE_W));
+		expect(watermarkFootprint($plain['body'], $tiled['body'])['quarters'])->toBe(4);
+		expect(watermarkPixelDiff($plain['body'], $tiled['body']))->toBeGreaterThan(watermarkPixelDiff($plain['body'], $single['body']));
+	});
+
+	it('puts more marks on the image when marktextrepeat is higher', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 1200], 'wm-repeat-plain');
+		$few   = watermarkRun($this->root, ['w' => 1200, 'marktext' => 'PROOF', 'marktextpos' => 'tile', 'marktextrepeat' => 2, 'marktextalpha' => 80], 'wm-tile-repeat-2');
+		$many  = watermarkRun($this->root, ['w' => 1200, 'marktext' => 'PROOF', 'marktextpos' => 'tile', 'marktextrepeat' => 8, 'marktextalpha' => 80], 'wm-tile-repeat-8');
+
+		expect(watermarkPixelDiff($few['body'], $many['body']))->toBeGreaterThan(0.5);
+		expect(watermarkFootprint($plain['body'], $many['body'])['quarters'])->toBe(4);
+	});
+
+	it('draws an outline and a shadow around the text', function (): void {
+		$plain    = watermarkRun($this->root, ['w' => 900], 'wm-effects-plain');
+		$text     = watermarkRun($this->root, ['w' => 900, 'marktext' => 'Total CMS'], 'wm-effects-none');
+		$outlined = watermarkRun($this->root, ['w' => 900, 'marktext' => 'Total CMS', 'marktextstroke' => 4], 'wm-effects-stroke');
+		$shadowed = watermarkRun($this->root, ['w' => 900, 'marktext' => 'Total CMS', 'marktextshadow' => 4], 'wm-effects-shadow');
+
+		$bare = watermarkPixelDiff($plain['body'], $text['body']);
+		expect(watermarkPixelDiff($plain['body'], $outlined['body']))->toBeGreaterThan($bare);
+		expect(watermarkPixelDiff($plain['body'], $shadowed['body']))->toBeGreaterThan($bare);
+		expect(watermarkPixelDiff($outlined['body'], $shadowed['body']))->toBeGreaterThan(0.1);
+	});
+
 	it('renders a separate watermark when the styling differs', function (): void {
 		watermarkRun($this->root, ['w' => 600, 'marktext' => 'Styled', 'marktextcolor' => 'ffffff'], 'wm-style-a');
 		$one = count(glob($this->root . '/.system/watermarks/*.png') ?: []);
@@ -305,6 +387,24 @@ describe('ImageWorks image watermarks', function (): void {
 		expect(watermarkPixelDiff($a['body'], $b['body']))->toBeGreaterThan(0.1);
 	});
 
+	it('renders again when the logo file is replaced', function (): void {
+		// The logo is named by file name only, so a new logo.png used to keep
+		// serving every image cached with the old one.
+		$params = ['w' => 900, 'mark' => 'logo.png', 'markpos' => 'center', 'markw' => '400'];
+		$before = watermarkRun($this->root, $params, 'wm-logo-before');
+
+		$logoPath = $this->root . '/gallery/watermarks/gallery/logo.png';
+		$logo     = imagecreatetruecolor(300, 120);
+		imagefill($logo, 0, 0, imagecolorallocate($logo, 255, 0, 0));
+		imagepng($logo, $logoPath);
+		touch($logoPath, time() + 60);
+		clearstatcache();
+
+		$after = watermarkRun($this->root, $params, 'wm-logo-after');
+
+		expect(watermarkPixelDiff($before['body'], $after['body']))->toBeGreaterThan(0.5);
+	});
+
 	it('sweeps the temp folders the old two-pass render leaked', function (): void {
 		$cache = $this->root . '/blog/post-1/image/.cache';
 		mkdir($cache . '/temp_65a1b2c3d4e5f.png', 0700, true);
@@ -315,20 +415,6 @@ describe('ImageWorks image watermarks', function (): void {
 		], 'wm-both-sweep');
 
 		expect(is_dir($cache . '/temp_65a1b2c3d4e5f.png'))->toBeFalse();
-	});
-});
-
-describe('ImageWorks watermark edition gate', function (): void {
-	it('silently skips watermarks the edition does not include', function (): void {
-		// Not an error: a downgraded licence serves plain images rather than
-		// breaking every image URL on the site.
-		$plain  = watermarkRun($this->root, ['w' => 900], 'wm-gate-baseline', editionAllows: false);
-		$gated  = watermarkRun($this->root, [
-			'w' => 900, 'marktext' => 'Total CMS', 'mark' => 'logo.png',
-		], 'wm-gate-blocked', editionAllows: false);
-
-		expect($gated['width'])->toBe(900);
-		expect(watermarkPixelDiff($plain['body'], $gated['body']))->toBe(0.0);
 	});
 });
 
@@ -344,7 +430,7 @@ describe('ImageWorks schema-enforced watermarks', function (): void {
 		// shortcut does not hand out an unmarked original.
 		$plain = watermarkRun($this->root, ['w' => 900], 'wm-schema-baseline');
 
-		$protected = watermarkRun($this->root, [], 'wm-schema-forced-on-original', true, [
+		$protected = watermarkRun($this->root, [], 'wm-schema-forced-on-original', [
 			'marktext'      => 'PROTECTED',
 			'marktextsize'  => 140,
 			'marktextpos'   => 'center',
@@ -366,7 +452,7 @@ describe('ImageWorks schema-enforced watermarks', function (): void {
 
 		$schemaWins = watermarkRun($this->root, [
 			'w' => 900, 'marktext' => 'URL CHOICE', 'marktextsize' => 40, 'marktextpos' => 'top-left',
-		], 'wm-schema-overrides-url', true, [
+		], 'wm-schema-overrides-url', [
 			'marktext'     => 'SCHEMA WINS',
 			'marktextsize' => 120,
 			'marktextpos'  => 'center',
@@ -383,7 +469,7 @@ describe('ImageWorks watermark limit setting', function (): void {
 
 	it('skips the watermark below the limit, so thumbnails stay clean', function (): void {
 		$plain  = watermarkRun($this->root, ['w' => 300], 'wm-limit-thumb-plain');
-		$thumb  = watermarkRun($this->root, ['w' => 300], 'wm-limit-thumb', true, [
+		$thumb  = watermarkRun($this->root, ['w' => 300], 'wm-limit-thumb', [
 			'marktext' => 'PROTECTED', 'marktextsize' => 120, 'limit' => 800,
 		]);
 
@@ -392,18 +478,28 @@ describe('ImageWorks watermark limit setting', function (): void {
 
 	it('applies the watermark once the request exceeds the limit', function (): void {
 		$plain = watermarkRun($this->root, ['w' => 1200], 'wm-limit-large-plain');
-		$large = watermarkRun($this->root, ['w' => 1200], 'wm-limit-large', true, [
+		$large = watermarkRun($this->root, ['w' => 1200], 'wm-limit-large', [
 			'marktext' => 'PROTECTED', 'marktextsize' => 160, 'limit' => 800,
 		]);
 
 		expect(watermarkPixelDiff($plain['body'], $large['body']))->toBeGreaterThan(0.5);
 	});
 
+	it('counts dpr, so a small size at a high density is still marked', function (): void {
+		// w=600 at dpr=3 is an 1800px image; it must not pass as a 600px thumb.
+		$plain = watermarkRun($this->root, ['w' => 600, 'dpr' => 3], 'wm-limit-dpr-plain');
+		$dense = watermarkRun($this->root, ['w' => 600, 'dpr' => 3], 'wm-limit-dpr', [
+			'marktext' => 'PROTECTED', 'marktextsize' => 160, 'limit' => 800,
+		]);
+
+		expect(watermarkPixelDiff($plain['body'], $dense['body']))->toBeGreaterThan(0.5);
+	});
+
 	it('applies the watermark when no dimensions are requested at all', function (): void {
 		// The original is the thing most worth protecting, so "no dimensions"
 		// counts as over the limit rather than under it.
 		$plain     = watermarkRun($this->root, ['w' => 300], 'wm-limit-original-plain');
-		$original  = watermarkRun($this->root, [], 'wm-limit-original', true, [
+		$original  = watermarkRun($this->root, [], 'wm-limit-original', [
 			'marktext' => 'PROTECTED', 'marktextsize' => 200, 'limit' => 800,
 		]);
 

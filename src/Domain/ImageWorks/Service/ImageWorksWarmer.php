@@ -9,8 +9,6 @@ use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Data\WarmReport;
 use TotalCMS\Domain\ImageWorks\Data\WarmVariants;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\PropertyData;
@@ -55,7 +53,6 @@ final readonly class ImageWorksWarmer
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $indexReader,
 		private ObjectFetcher $objectFetcher,
-		private EditionFeatureService $editionFeatures,
 	) {
 		$this->generator = $generator->forPublicRoute(limitRenders: false);
 	}
@@ -183,36 +180,6 @@ final readonly class ImageWorksWarmer
 		}
 
 		return $children;
-	}
-
-	/**
-	 * The first property with a watermark this edition can't apply, or null.
-	 * The route strips such a watermark, so warming it would only fill the
-	 * cache with files the site never serves. Object overrides count too.
-	 *
-	 * @param array<string,array{root:string,field:string,child:?string,childField:?string}> $properties from properties()
-	 * @param list<string> $ids only these objects; [] for the whole collection
-	 */
-	public function blockedWatermark(string $collection, array $properties, array $ids = []): ?string
-	{
-		$image = $this->editionFeatures->can(EditionFeature::IMAGE_WATERMARKS);
-		$text  = $this->editionFeatures->can(EditionFeature::TEXT_WATERMARKS);
-		if ($image && $text) {
-			return null;
-		}
-
-		$objects = ['', ...$this->objectIds($collection, $ids, new WarmReport())];
-		// A nested image takes the watermark of the property it lives in.
-		foreach ($properties as $name => $target) {
-			foreach ($objects as $id) {
-				$mark = $this->generator->watermarkSettings($collection, $target['root'], $id);
-				if ((!$image && !empty($mark['mark'])) || (!$text && !empty($mark['marktext']))) {
-					return $name;
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/**

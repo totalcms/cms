@@ -151,33 +151,10 @@ test('unknown collection or property is an error', function (): void {
 	expect($this->tester->execute(['collection' => 'snaps', 'property' => 'id', '--params' => ['w=200']]))->toBe(Command::FAILURE);
 });
 
-test('a watermarked property under an edition without watermarks is refused and nothing is made', function (): void {
+test('a watermarked property is warmed on an edition without the watermark feature', function (): void {
+	// Watermarks are on every edition, so a Lite license is no reason to refuse.
 	($this->watermarked)();
 	($this->edition)(false);
-
-	$status = $this->tester->execute(['collection' => 'marked', '--params' => ['w=200']]);
-
-	expect($status)->toBe(Command::FAILURE)
-		->and($this->tester->getDisplay())->toContain('photo has watermarks, but this run resolved the Lite edition, which doesn\'t include them. Nothing was warmed.')
-		->and($this->tester->getDisplay())->toContain('tcms check')
-		->and(($this->markedCacheFiles)())->toBe(0);
-});
-
-test('the watermark refusal is JSON under --json and applies to --dry-run', function (): void {
-	($this->watermarked)();
-	($this->edition)(false);
-
-	$status = $this->tester->execute(['collection' => 'marked', '--params' => ['w=200'], '--dry-run' => true, '--json' => true]);
-
-	$json = json_decode($this->tester->getDisplay(), true);
-	expect($status)->toBe(Command::FAILURE)
-		->and($json['error'])->toContain('photo has watermarks')
-		->and(($this->markedCacheFiles)())->toBe(0);
-});
-
-test('a watermarked property under an edition with watermarks is warmed', function (): void {
-	($this->watermarked)();
-	($this->edition)(true);
 
 	$status = $this->tester->execute(['collection' => 'marked', '--params' => ['w=200'], '--json' => true]);
 

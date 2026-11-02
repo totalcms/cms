@@ -36,17 +36,33 @@ class PropertyRepository extends StorageRepository
 		return !$this->filesystem->fileExists($path);
 	}
 
+	/**
+	 * Delete one file's renders: `.cache/{file}/`, and the same folder under
+	 * each `.cache/mark-{version}/`, where renders carrying a logo watermark
+	 * are filed (see ImageGenerator::markCacheDir()).
+	 */
 	public function deleteFileCache(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): bool
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property, ".cache/$filename", $subpath);
+		$cacheDir = PathUtils::buildPath($collection, $objectID, $property, '.cache', $subpath);
+		$paths    = [$cacheDir . '/' . $filename];
 
 		try {
-			$this->filesystem->deleteDirectory($path);
+			if ($this->filesystem->directoryExists($cacheDir)) {
+				foreach ($this->filesystem->listDirectories($cacheDir) as $dir) {
+					if (str_starts_with(basename($dir), 'mark-')) {
+						$paths[] = $dir . '/' . $filename;
+					}
+				}
+			}
+
+			foreach ($paths as $path) {
+				$this->filesystem->deleteDirectory($path);
+			}
 		} catch (\Exception) {
 			throw new \RuntimeException('Unable to delete cache directory');
 		}
 
-		return !$this->filesystem->fileExists($path);
+		return !$this->filesystem->fileExists($paths[0]);
 	}
 
 	public function deleteFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): void

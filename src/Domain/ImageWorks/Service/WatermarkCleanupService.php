@@ -10,9 +10,8 @@ use TotalCMS\Factory\LoggerFactory;
 /**
  * Service for cleaning up watermark cache files.
  *
- * This is separate from TextWatermarkFactory to avoid circular dependencies,
- * since CacheManager needs cleanup capabilities but TextWatermarkFactory
- * requires EditionFeatureService which depends on CacheManager.
+ * This is separate from TextWatermarkFactory so CacheManager can clear the
+ * watermark cache without pulling in the whole rendering stack.
  */
 readonly class WatermarkCleanupService
 {
