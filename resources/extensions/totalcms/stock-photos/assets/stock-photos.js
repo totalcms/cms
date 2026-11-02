@@ -26,7 +26,8 @@ const SOURCES_URL = new URL("ext/totalcms/stock-photos/sources", document.baseUR
 
 let panel  = null;
 let target = null; // the field container Add puts photos in
-let opener = null; // what opened the panel, which gets focus back on close
+let opener = null; // what opened the panel
+let refocus = false; // whether the opener gets focus back on close: only after the keyboard opened it
 let fields = [];   // the containers listed in the panel's field picker
 
 //-----------------------------------------------
@@ -46,7 +47,11 @@ function addButtons() {
 			"aria-expanded" : "false",
 			"aria-controls" : "stock-photos-panel",
 		});
-		button.addEventListener("click", () => openFor(container, button));
+		// A click must not focus the button: it sits in the field, so focus
+		// would set the field's :focus-within and show its help (and with help
+		// on the label, fade the label out, button and all).
+		button.addEventListener("mousedown", event => event.preventDefault());
+		button.addEventListener("click", event => openFor(container, button, false, event.detail === 0));
 
 		// Inside the label keeps it on the label's line; a button in a label
 		// does not trigger the label's own click.
@@ -127,7 +132,7 @@ function queueButtons() {
 // Open and close
 //-----------------------------------------------
 
-function openFor(container, button, fromMenu = false) {
+function openFor(container, button, fromMenu = false, fromKeyboard = true) {
 	if (!panel) panel = buildPanel();
 
 	// A field's button again closes it.
@@ -139,6 +144,7 @@ function openFor(container, button, fromMenu = false) {
 	opener?.setAttribute("aria-expanded", "false");
 	target = container;
 	opener = button;
+	refocus = fromKeyboard;
 	if (!fromMenu) button.setAttribute("aria-expanded", "true");
 	fillPicker();
 	panel.hidden = false;
@@ -150,6 +156,11 @@ function closePanel() {
 	if (!panel || panel.hidden) return;
 	panel.hidden = true;
 	opener?.setAttribute("aria-expanded", "false");
+	if (!refocus) {
+		// Leave focus in the panel and it stays on a hidden element.
+		if (panel.contains(document.activeElement)) document.activeElement.blur();
+		return;
+	}
 	if (opener?.isConnected) opener.focus();
 }
 
