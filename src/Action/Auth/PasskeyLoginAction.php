@@ -56,7 +56,6 @@ readonly class PasskeyLoginAction
 			$this->session->set(SessionKeys::AUTH_USER, $user['id']);
 			$this->session->set(SessionKeys::AUTH_COLLECTION, $collection);
 			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, false);
-			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 			$this->session->set(SessionKeys::LICENSE_CHECK_DUE, true);
 
 			return $this->jsonRenderer->json($response, [

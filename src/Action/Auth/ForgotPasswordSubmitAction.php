@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
+use TotalCMS\Domain\Auth\Service\AuthThrottle;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -24,6 +25,7 @@ readonly class ForgotPasswordSubmitAction
 		private Config $config,
 		private PhpSession $session,
 		private TranslationService $translator,
+		private AuthThrottle $throttle,
 	) {
 	}
 
@@ -52,6 +54,14 @@ readonly class ForgotPasswordSubmitAction
 		$email = trim((string)($data['email'] ?? ''));
 		if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			$flash->add('error', $this->translator->trans('flash.invalid_email'));
+
+			return $response->withStatus(302)->withHeader('Location', $url);
+		}
+
+		// Per-IP cap so the form cannot flood someone's inbox. Over the cap
+		// nothing is sent, and the reply stays the same as a real send.
+		if (!$this->throttle->allowMail('forgot', $request)) {
+			$flash->add('success', $this->translator->trans('flash.forgot_password_sent'));
 
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}

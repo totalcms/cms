@@ -184,10 +184,29 @@ CMS does not currently provide.
 
 ### Account Security
 
-- Limit login attempts to prevent brute force attacks
-- Implement account lockout after failed attempts
-- Log authentication events for monitoring
-- Regularly review user accounts and remove inactive ones
+Total CMS limits the public auth forms on the server, by client IP address. The limits do not depend on the visitor's session, so a script that drops its cookies is limited too.
+
+- **Login.** After `auth.maxAttempts` failed logins (default 10) from one address, that address is locked out for `auth.deniedTimeout` minutes (default 7). It is not checked against any password while it is locked out. Each lockout within a day doubles the next one, up to a day. A good login clears the count.
+- **Accounts are never locked.** Locking an account would let anyone lock out an admin by typing their email. When many addresses guess at one account, each attempt on it is slowed by a second instead.
+- **Protected downloads.** After `auth.downloadMaxAttempts` wrong passwords (default 25) from one address, that address is locked out of download passwords, with the same lockout times as login. Only wrong passwords count; downloading many files does not.
+- **Forgot password and resend verification.** `auth.mailRatePerIp` sends per address per 15 minutes (default 5). Past the limit the form shows its usual message and sends nothing, so it cannot flood an inbox.
+- **Public registration.** `auth.registerRatePerIp` accounts per address per hour (default 20). Past the limit the endpoint answers 429. Set either limit to 0 to turn it off.
+
+Each lockout and refused form writes a warning to the login log with the address, so a fail2ban jail or WAF rule can block repeat offenders. The counts live in the cache, so clearing the cache resets them. With only APCu, each PHP worker counts on its own.
+
+```php
+return [
+	'auth' => [
+		'maxAttempts'         => 10,
+		'downloadMaxAttempts' => 25,
+		'deniedTimeout'       => 7,
+		'mailRatePerIp'       => 5,
+		'registerRatePerIp'   => 20,
+	],
+];
+```
+
+Also log authentication events for monitoring, and regularly review user accounts and remove inactive ones.
 
 ## Content Security
 

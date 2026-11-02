@@ -5,104 +5,65 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Session;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
- * Test SessionKeys constants and utility methods.
+ * The session keys are read from the class constants, so a key added to
+ * SessionKeys is checked here without editing a list.
  */
-class SessionKeysTest extends TestCase
+final class SessionKeysTest extends TestCase
 {
-	public function testSessionKeysConstants(): void
+	/**
+	 * The stored names. Renaming one signs out everyone holding the old one,
+	 * so a change here must be deliberate.
+	 */
+	public function testKeyValuesArePinned(): void
 	{
-		// Test that all constants are defined and have correct format
-		$this->assertEquals('totalcms.auth.user', SessionKeys::AUTH_USER);
-		$this->assertEquals('totalcms.auth.collection', SessionKeys::AUTH_COLLECTION);
-		$this->assertEquals('totalcms.auth.persistent_login', SessionKeys::AUTH_PERSISTENT_LOGIN);
-		$this->assertEquals('totalcms.requestOriginUrl', SessionKeys::REQUEST_ORIGIN_URL);
-		$this->assertEquals('totalcms.requestRefererUrl', SessionKeys::REQUEST_REFERER_URL);
-		$this->assertEquals('totalcms.lastActivity', SessionKeys::LAST_ACTIVITY);
-		$this->assertEquals('totalcms.loginAttempts', SessionKeys::LOGIN_ATTEMPTS);
-		$this->assertEquals('totalcms.downloadAttempts', SessionKeys::DOWNLOAD_ATTEMPTS);
+		$this->assertSame([
+			'AUTH_USER'                 => 'totalcms.auth.user',
+			'AUTH_COLLECTION'           => 'totalcms.auth.collection',
+			'AUTH_PERSISTENT_LOGIN'     => 'totalcms.auth.persistent_login',
+			'IMPERSONATOR'              => 'totalcms.auth.impersonator',
+			'REQUEST_ORIGIN_URL'        => 'totalcms.requestOriginUrl',
+			'REQUEST_REFERER_URL'       => 'totalcms.requestRefererUrl',
+			'LAST_ACTIVITY'             => 'totalcms.lastActivity',
+			'LOGIN_ORIGIN'              => 'totalcms.loginOrigin',
+			'LICENSE_CHECK_DUE'         => 'totalcms.licenseCheckDue',
+			'WEBAUTHN_REGISTER_OPTIONS' => 'totalcms.webauthn.register_options',
+			'WEBAUTHN_AUTH_OPTIONS'     => 'totalcms.webauthn.auth_options',
+		], $this->keys());
 	}
 
-	public function testGetAllKeys(): void
+	public function testEveryKeyIsNamespacedAndUnique(): void
 	{
-		$allKeys = SessionKeys::getAllKeys();
+		$keys = $this->keys();
 
-		$this->assertIsArray($allKeys);
-		$this->assertCount(13, $allKeys);
+		foreach ($keys as $name => $key) {
+			$this->assertTrue(SessionKeys::isTotalCMSKey($key), "{$name} must start with 'totalcms.'");
+			$this->assertMatchesRegularExpression('/^totalcms\.[A-Za-z0-9._]+$/', $key, "{$name} has an unexpected character");
+		}
 
-		// Ensure all expected keys are present
-		$this->assertContains(SessionKeys::AUTH_USER, $allKeys);
-		$this->assertContains(SessionKeys::AUTH_COLLECTION, $allKeys);
-		$this->assertContains(SessionKeys::AUTH_PERSISTENT_LOGIN, $allKeys);
-		$this->assertContains(SessionKeys::IMPERSONATOR, $allKeys);
-		$this->assertContains(SessionKeys::REQUEST_ORIGIN_URL, $allKeys);
-		$this->assertContains(SessionKeys::REQUEST_REFERER_URL, $allKeys);
-		$this->assertContains(SessionKeys::LAST_ACTIVITY, $allKeys);
-		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $allKeys);
-		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $allKeys);
-		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $allKeys);
-		$this->assertContains(SessionKeys::WEBAUTHN_REGISTER_OPTIONS, $allKeys);
-		$this->assertContains(SessionKeys::WEBAUTHN_AUTH_OPTIONS, $allKeys);
+		$this->assertSame(array_values(array_unique($keys)), array_values($keys), 'Two constants share a session key');
 	}
 
 	public function testIsTotalCMSKey(): void
 	{
-		// Test Total CMS keys
-		$this->assertTrue(SessionKeys::isTotalCMSKey('totalcms.auth.user'));
-		$this->assertTrue(SessionKeys::isTotalCMSKey('totalcms.anything'));
-		$this->assertTrue(SessionKeys::isTotalCMSKey(SessionKeys::AUTH_USER));
-
-		// Test external keys
-		$this->assertFalse(SessionKeys::isTotalCMSKey('user'));
-		$this->assertFalse(SessionKeys::isTotalCMSKey('external_session_key'));
-		$this->assertFalse(SessionKeys::isTotalCMSKey('_csrf'));
-		$this->assertFalse(SessionKeys::isTotalCMSKey(''));
-	}
-
-	public function testGetAuthKeys(): void
-	{
-		$authKeys = SessionKeys::getAuthKeys();
-
-		$this->assertIsArray($authKeys);
-		$this->assertCount(4, $authKeys);
-		$this->assertContains(SessionKeys::AUTH_USER, $authKeys);
-		$this->assertContains(SessionKeys::AUTH_COLLECTION, $authKeys);
-		$this->assertContains(SessionKeys::AUTH_PERSISTENT_LOGIN, $authKeys);
-		$this->assertContains(SessionKeys::IMPERSONATOR, $authKeys);
-	}
-
-	public function testGetRequestKeys(): void
-	{
-		$requestKeys = SessionKeys::getRequestKeys();
-
-		$this->assertIsArray($requestKeys);
-		$this->assertCount(2, $requestKeys);
-		$this->assertContains(SessionKeys::REQUEST_ORIGIN_URL, $requestKeys);
-		$this->assertContains(SessionKeys::REQUEST_REFERER_URL, $requestKeys);
-	}
-
-	public function testGetActivityKeys(): void
-	{
-		$activityKeys = SessionKeys::getActivityKeys();
-
-		$this->assertIsArray($activityKeys);
-		$this->assertCount(5, $activityKeys);
-		$this->assertContains(SessionKeys::LAST_ACTIVITY, $activityKeys);
-		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $activityKeys);
-		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $activityKeys);
-		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
-		$this->assertContains(SessionKeys::LICENSE_CHECK_DUE, $activityKeys);
-	}
-
-	public function testAllKeysUseCorrectNamespace(): void
-	{
-		$allKeys = SessionKeys::getAllKeys();
-
-		foreach ($allKeys as $key) {
-			$this->assertStringStartsWith('totalcms.', $key, "Key '$key' should start with 'totalcms.' namespace");
-			$this->assertTrue(SessionKeys::isTotalCMSKey($key), "Key '$key' should be identified as a Total CMS key");
+		foreach (['totalcms.auth.user', 'totalcms.anything', 'totalcms.nested.deep.key'] as $key) {
+			$this->assertTrue(SessionKeys::isTotalCMSKey($key), $key);
 		}
+
+		foreach (['user', 'auth.user', '_csrf', '', 'totalcm.auth.user', 'TOTALCMS.auth.user'] as $key) {
+			$this->assertFalse(SessionKeys::isTotalCMSKey($key), $key);
+		}
+	}
+
+	/** @return array<string,string> */
+	private function keys(): array
+	{
+		/** @var array<string,string> $constants */
+		$constants = (new ReflectionClass(SessionKeys::class))->getConstants();
+
+		return $constants;
 	}
 }

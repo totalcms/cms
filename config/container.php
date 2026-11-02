@@ -710,15 +710,16 @@ return [
 			$container->get($class)->$method($payload);
 		};
 
-		// CollectionMetadataListener (priority -100 = before extensions)
-		$dispatcher->listen('object.created', $lazy(CollectionMetadataListener::class, 'onObjectCreated'), -100);
-		$dispatcher->listen('object.updated', $lazy(CollectionMetadataListener::class, 'onObjectUpdated'), -100);
-		$dispatcher->listen('object.deleted', $lazy(CollectionMetadataListener::class, 'onObjectDeleted'), -100);
+		// CollectionMetadataListener (priority -100 = before extensions). No
+		// object.created: OidAllocator::recordCreate() counts creates, since
+		// only ObjectSaver knows whether its create took an ${oid} number.
+		$dispatcher->listen(CoreEvent::OBJECT_UPDATED, $lazy(CollectionMetadataListener::class, 'onObjectUpdated'), -100);
+		$dispatcher->listen(CoreEvent::OBJECT_DELETED, $lazy(CollectionMetadataListener::class, 'onObjectDeleted'), -100);
 		// Flush the collection count after a batch import. Priority -110 runs it
 		// BEFORE IndexBuildListener's -100 rebuild so it can clear the in-memory
 		// OID bump and write the true count before buildIndex reads the cache
 		// (otherwise the bump leaks to disk and the count double-counts).
-		$dispatcher->listen('import.completed', $lazy(CollectionMetadataListener::class, 'onImportCompleted'), -110);
+		$dispatcher->listen(CoreEvent::IMPORT_COMPLETED, $lazy(CollectionMetadataListener::class, 'onImportCompleted'), -110);
 
 		// McpSessionListener — drops MCP client sessions when the published
 		// tool surface may have changed (per-property mcp.expose, collection

@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
+use TotalCMS\Domain\Auth\Service\AuthThrottle;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\RegistrationCollections;
@@ -87,7 +88,27 @@ readonly class AuthRegisterSubmitAction
 		private Config $config,
 		private RegistrationCollections $registrationCollections,
 		private BotSubmissionGate $botGate,
+		private AuthThrottle $throttle,
 	) {
+	}
+
+	/** @param array<string,mixed> $data */
+	private function verifyRedirect(ServerRequestInterface $request, array $data): string
+	{
+		return SameOriginRedirect::resolve(is_string($data['verifyRedirect'] ?? null) ? $data['verifyRedirect'] : '', $request->getUri()->getHost(), '');
+	}
+
+	/** Per-IP cap on new accounts, so a script cannot mass-create them: a 429 past it. */
+	private function overSignupLimit(ServerRequestInterface $request, ResponseInterface $response): ?ResponseInterface
+	{
+		if ($this->throttle->allowRegister($request)) {
+			return null;
+		}
+
+		return $this->renderer->json($response->withStatus(429), [
+			'success' => false,
+			'message' => 'Too many sign-ups from this address. Please try again later.',
+		])->withHeader('Retry-After', (string)AuthThrottle::REGISTER_WINDOW);
 	}
 
 	/**
@@ -112,11 +133,7 @@ readonly class AuthRegisterSubmitAction
 		// form (`verifyRedirect`). It belongs to the verification token, never
 		// to the user record, so it leaves $data before the save. Off-site
 		// targets are dropped: the link then lands on the login page as before.
-		$verifyRedirect = SameOriginRedirect::resolve(
-			is_string($data['verifyRedirect'] ?? null) ? $data['verifyRedirect'] : '',
-			$request->getUri()->getHost(),
-			'',
-		);
+		$verifyRedirect = $this->verifyRedirect($request, $data);
 		unset($data['verifyRedirect']);
 
 		// Honeypot + time trap. Checked before anything is saved; the two bot
@@ -151,6 +168,11 @@ readonly class AuthRegisterSubmitAction
 
 		if ($botReason !== '') {
 			return $this->botDecoy($response, $collection, $data, $requiresVerification);
+		}
+
+		$refused = $this->overSignupLimit($request, $response);
+		if ($refused instanceof ResponseInterface) {
+			return $refused;
 		}
 
 		// Saved as the system: `active` and `groups` are server values the

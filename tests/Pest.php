@@ -33,6 +33,10 @@ use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Cache\CacheManager;
+use Monolog\Level;
+use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Service\AuthThrottle;
+use TotalCMS\Factory\LogChannel;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -885,6 +889,75 @@ function recursiveCopy(string $src, string $dst): void
 			copy($srcPath, $dstPath);
 		}
 	}
+}
+
+/**
+ * An in-memory CacheManager: storeData/getOperationalData/getData/clearData
+ * against a public `$store` array, so a test can see what was kept.
+ */
+function testMemoryCache(): CacheManager
+{
+	return new class extends CacheManager {
+		/** @var array<string,mixed> */
+		public array $store = [];
+
+		public function __construct()
+		{
+		}
+
+		public function getData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
+		public function getOperationalData(string $key): mixed
+		{
+			return $this->store[$key] ?? null;
+		}
+
+		public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+		{
+			$this->store[$key] = $data;
+
+			return true;
+		}
+
+		public function clearData(string $key): bool
+		{
+			unset($this->store[$key]);
+
+			return true;
+		}
+	};
+}
+
+/** A LoggerFactory whose every channel is a NullLogger. */
+function testNullLoggerFactory(): LoggerFactory
+{
+	return new class extends LoggerFactory {
+		public function __construct()
+		{
+		}
+
+		public function channelLogger(LogChannel $channel, ?Level $level = null): LoggerInterface
+		{
+			return new NullLogger();
+		}
+	};
+}
+
+/**
+ * A real AuthThrottle (it is final) over an in-memory cache. `$auth` sets the
+ * auth config it reads (maxAttempts, deniedTimeout, mailRatePerIp, …).
+ *
+ * @param array<string,mixed> $auth
+ */
+function testAuthThrottle(array $auth = [], ?CacheManager $cache = null): AuthThrottle
+{
+	$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->auth = $auth;
+
+	return new AuthThrottle($cache ?? testMemoryCache(), testClientIpResolver(), $config, testNullLoggerFactory());
 }
 
 /**

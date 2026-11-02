@@ -9,6 +9,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
 use TotalCMS\Domain\Auth\Exception\InvalidCredentialsException;
+use TotalCMS\Domain\Auth\Service\AuthThrottle;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -23,8 +24,6 @@ use TotalCMS\Support\SameOriginRedirect;
  */
 readonly class AuthLoginSubmitAction
 {
-	public const MAX_LOGIN_ATTEMPTS = 10;
-
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
@@ -33,6 +32,7 @@ readonly class AuthLoginSubmitAction
 		private PersistentLoginService $persistentLoginService,
 		private TranslationService $translator,
 		private OAuthLoginCollection $oauthLogin,
+		private AuthThrottle $throttle,
 	) {
 	}
 
@@ -48,16 +48,12 @@ readonly class AuthLoginSubmitAction
 		$flash = $this->session->getFlash();
 		$flash->clear();
 
-		$attempts = $this->session->get(SessionKeys::LOGIN_ATTEMPTS, 0);
-		$this->session->set(SessionKeys::LOGIN_ATTEMPTS, $attempts + 1);
-
-		$maxAttempts = $this->config->auth['maxAttempts'] ?? self::MAX_LOGIN_ATTEMPTS;
-
-		if ($attempts > $maxAttempts) {
+		// Counted per IP on the server (AuthThrottle), not in the session: a bot
+		// that drops its cookie must not get a fresh count on every request.
+		// A locked-out client is not checked against any password at all.
+		if ($this->throttle->loginLockedFor($request) > 0) {
 			$flash->add('error', $this->translator->trans('flash.login_too_many_attempts'));
-		}
-
-		if (!isset($data['email'], $data['password'])) {
+		} elseif (!isset($data['email'], $data['password'])) {
 			// throw new HttpUnauthorizedException($request, 'Email and password are required');
 			$flash->add('error', $this->translator->trans('flash.login_credentials_required'));
 		}
@@ -89,6 +85,9 @@ readonly class AuthLoginSubmitAction
 		// staff from the default collection can sign in too.
 		$fallback = $this->oauthLogin->fallsBackToDefault($collection, (string)$this->session->get(SessionKeys::REQUEST_ORIGIN_URL, ''));
 
+		$account = $collection . '|' . $idOrEmail;
+		$this->throttle->slowDownAccount($account);
+
 		$user = null;
 		try {
 			$user = $this->loginService->authenticate($idOrEmail, $password, $collection, $fallback);
@@ -108,6 +107,8 @@ readonly class AuthLoginSubmitAction
 
 		// Check if authentication failed and redirect back
 		if (!isset($user, $user['id'])) {
+			$this->recordFailure($request, $account);
+
 			if ($this->session->has(SessionKeys::LOGIN_ORIGIN)) {
 				$url = $this->session->get(SessionKeys::LOGIN_ORIGIN);
 			}
@@ -148,7 +149,7 @@ readonly class AuthLoginSubmitAction
 		}
 
 		$this->sessionLogin->establish((string)$user['id'], (string)$sessionCollection, $persistentLogin);
-		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
+		$this->throttle->recordLoginSuccess($request, $account);
 
 		// If persistent login is checked, create persistent token
 		if ($persistentLogin) {
@@ -158,6 +159,14 @@ readonly class AuthLoginSubmitAction
 		$flash->add('success', $this->translator->trans('flash.login_success'));
 
 		return $response->withStatus(302)->withHeader('Location', $url);
+	}
+
+	/** Count a failed login; say so when it started a lockout. */
+	private function recordFailure(ServerRequestInterface $request, string $account): void
+	{
+		if ($this->throttle->recordLoginFailure($request, $account) > 0) {
+			$this->session->getFlash()->add('error', $this->translator->trans('flash.login_too_many_attempts'));
+		}
 	}
 
 	/**

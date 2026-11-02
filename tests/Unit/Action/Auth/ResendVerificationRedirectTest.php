@@ -63,7 +63,7 @@ describe('ResendVerificationSubmitAction', function (): void {
 		$translator = $this->createMock(TranslationService::class);
 		$translator->method('trans')->willReturnArgument(0);
 
-		$action = new ResendVerificationSubmitAction($verification, $this->createMock(AuthMailer::class), $this->config, new PhpSession(), $translator);
+		$action = new ResendVerificationSubmitAction($verification, $this->createMock(AuthMailer::class), $this->config, new PhpSession(), $translator, testAuthThrottle());
 
 		$request = (new ServerRequestFactory())->createServerRequest('POST', 'https://example.test/admin/resend-verification')
 			->withParsedBody($body)

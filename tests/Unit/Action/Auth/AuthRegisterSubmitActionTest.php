@@ -148,6 +148,7 @@ final class AuthRegisterSubmitActionTest extends TestCase
 				$session,
 				$loggerFactory,
 			),
+			\testAuthThrottle(),
 		);
 	}
 

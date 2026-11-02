@@ -6,6 +6,7 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Auth\Service\AuthThrottle;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LoginUrl;
 use TotalCMS\Domain\Event\Data\CoreEvent;
@@ -14,7 +15,6 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Property\Service\PropertyFile;
 use TotalCMS\Domain\Property\Service\PropertyFileResolver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\FileStreamRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -24,12 +24,12 @@ use TotalCMS\Support\Config;
  * Serve a property file as an attachment, behind the file's own protection:
  * group-protected files send a visitor to the login page and a member
  * without access to the denied page; password-protected files show the
- * password form and count attempts. Subclasses only say which file.
+ * password form, and wrong passwords count per IP on the server
+ * (AuthThrottle), so a script cannot guess without limit by dropping its
+ * cookie. Subclasses only say which file.
  */
 abstract class DownloadAction
 {
-	protected const MAX_ATTEMPTS = 25;
-
 	public function __construct(
 		protected PropertyFileResolver $resolver,
 		protected TwigRenderer $twigRenderer,
@@ -40,6 +40,7 @@ abstract class DownloadAction
 		protected FileStreamRenderer $streamRenderer,
 		protected EventDispatcher $events,
 		protected LoginUrl $loginUrl,
+		protected AuthThrottle $throttle,
 	) {
 	}
 
@@ -63,16 +64,6 @@ abstract class DownloadAction
 		$flash = $this->session->getFlash();
 		$flash->clear();
 
-		$attempts = $this->session->get(SessionKeys::DOWNLOAD_ATTEMPTS, 0);
-		$this->session->set(SessionKeys::DOWNLOAD_ATTEMPTS, $attempts + 1);
-
-		$maxAttempts = $this->config->auth['downloadMaxAttempts'] ?? self::MAX_ATTEMPTS;
-		if ($attempts > $maxAttempts) {
-			$flash->add('error', $this->translator->trans('flash.download_too_many'));
-
-			return $this->accessDenied($response);
-		}
-
 		$file->load($this->accessManager);
 
 		if ($this->accessManager->isProtectedByGroups()) {
@@ -90,11 +81,19 @@ abstract class DownloadAction
 			if (is_null($password)) {
 				return $this->loadPasswordForm($response);
 			}
+			// A locked-out client is not checked against the password at all.
+			if ($this->throttle->downloadLockedFor($request) > 0) {
+				$flash->add('error', $this->translator->trans('flash.download_too_many'));
+
+				return $this->accessDenied($response);
+			}
 			if ($this->accessManager->verfiyPassword($password) === false) {
+				$this->throttle->recordDownloadFailure($request);
 				$flash->add('error', $this->translator->trans('flash.download_invalid_password'));
 
 				return $this->loadPasswordForm($response);
 			}
+			$this->throttle->recordDownloadSuccess($request);
 		}
 
 		$record = $file->fetch();
@@ -112,8 +111,6 @@ abstract class DownloadAction
 			(string)$file->subpath,
 			$this->accessManager->isProtectedByGroups() || $this->accessManager->isPasswordProtected(),
 		));
-
-		$this->session->delete('downloadAttempts');
 
 		return $this->streamRenderer->download($response, $record->mime, $record->download, $file->open());
 	}

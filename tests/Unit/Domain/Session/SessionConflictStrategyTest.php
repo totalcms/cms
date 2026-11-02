@@ -119,8 +119,6 @@ class SessionConflictStrategyTest extends TestCase
 			'totalcms.requestOriginUrl',
 			'totalcms.requestRefererUrl',
 			'totalcms.lastActivity',
-			'totalcms.loginAttempts',
-			'totalcms.downloadAttempts',
 		];
 
 		// Ensure no Total CMS keys conflict with common external keys

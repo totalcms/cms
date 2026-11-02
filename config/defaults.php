@@ -393,9 +393,11 @@ $settings['auth'] = [
 	'usePasskeys'             => true,
 	'loginWith'               => 'both',  // 'email', 'id', or 'both'
 	'collection'              => 'auth',
-	'maxAttempts'             => 10,
-	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
-	'deniedTimeout'           => 7,
+	'maxAttempts'             => 10,  // Failed logins per IP (counted on the server) before a lockout
+	'downloadMaxAttempts'     => 25,  // Wrong download passwords per IP (counted on the server) before a lockout
+	'deniedTimeout'           => 7,   // Minutes an IP is locked out after maxAttempts failed logins; doubles per repeat, up to a day
+	'mailRatePerIp'           => 5,   // Forgot-password + resend-verification sends per IP per 15 minutes (0 = no limit)
+	'registerRatePerIp'       => 20,  // Public registrations per IP per hour (0 = no limit)
 	'deniedDefaultRedirect'   => '/',
 	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)

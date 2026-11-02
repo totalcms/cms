@@ -25,11 +25,10 @@ final class SessionKeys
 	public const REQUEST_ORIGIN_URL  = 'totalcms.requestOriginUrl';
 	public const REQUEST_REFERER_URL = 'totalcms.requestRefererUrl';
 
-	// Activity & Attempts Keys
-	public const LAST_ACTIVITY     = 'totalcms.lastActivity';
-	public const LOGIN_ATTEMPTS    = 'totalcms.loginAttempts';
-	public const LOGIN_ORIGIN      = 'totalcms.loginOrigin';
-	public const DOWNLOAD_ATTEMPTS = 'totalcms.downloadAttempts';
+	// Activity Keys (login and download attempts are counted per IP on the
+	// server by AuthThrottle, never in the session)
+	public const LAST_ACTIVITY = 'totalcms.lastActivity';
+	public const LOGIN_ORIGIN  = 'totalcms.loginOrigin';
 
 	// Deferred work flags
 	public const LICENSE_CHECK_DUE = 'totalcms.licenseCheckDue';
@@ -42,30 +41,6 @@ final class SessionKeys
 	// public const CSRF_TOKENS = '_csrf'; // Managed by CSRFTokenManager
 
 	/**
-	 * Get all Total CMS session keys.
-	 *
-	 * @return array<string> List of all session keys used by Total CMS
-	 */
-	public static function getAllKeys(): array
-	{
-		return [
-			self::AUTH_USER,
-			self::AUTH_COLLECTION,
-			self::AUTH_PERSISTENT_LOGIN,
-			self::IMPERSONATOR,
-			self::REQUEST_ORIGIN_URL,
-			self::REQUEST_REFERER_URL,
-			self::LAST_ACTIVITY,
-			self::LOGIN_ATTEMPTS,
-			self::LOGIN_ORIGIN,
-			self::DOWNLOAD_ATTEMPTS,
-			self::WEBAUTHN_REGISTER_OPTIONS,
-			self::WEBAUTHN_AUTH_OPTIONS,
-			self::LICENSE_CHECK_DUE,
-		];
-	}
-
-	/**
 	 * Check if a session key belongs to Total CMS.
 	 *
 	 * @param string $key Session key to check
@@ -75,62 +50,5 @@ final class SessionKeys
 	public static function isTotalCMSKey(string $key): bool
 	{
 		return str_starts_with($key, 'totalcms.');
-	}
-
-	/**
-	 * Get all authentication-related keys.
-	 *
-	 * @return array<string> Authentication session keys
-	 */
-	public static function getAuthKeys(): array
-	{
-		return [
-			self::AUTH_USER,
-			self::AUTH_COLLECTION,
-			self::AUTH_PERSISTENT_LOGIN,
-			self::IMPERSONATOR,
-		];
-	}
-
-	/**
-	 * Get all request tracking keys.
-	 *
-	 * @return array<string> Request tracking session keys
-	 */
-	public static function getRequestKeys(): array
-	{
-		return [
-			self::REQUEST_ORIGIN_URL,
-			self::REQUEST_REFERER_URL,
-		];
-	}
-
-	/**
-	 * Get all activity and attempt tracking keys.
-	 *
-	 * @return array<string> Activity tracking session keys
-	 */
-	public static function getActivityKeys(): array
-	{
-		return [
-			self::LAST_ACTIVITY,
-			self::LOGIN_ATTEMPTS,
-			self::LOGIN_ORIGIN,
-			self::DOWNLOAD_ATTEMPTS,
-			self::LICENSE_CHECK_DUE,
-		];
-	}
-
-	/**
-	 * Get all WebAuthn/passkey-related keys.
-	 *
-	 * @return array<string> WebAuthn session keys
-	 */
-	public static function getWebAuthnKeys(): array
-	{
-		return [
-			self::WEBAUTHN_REGISTER_OPTIONS,
-			self::WEBAUTHN_AUTH_OPTIONS,
-		];
 	}
 }
