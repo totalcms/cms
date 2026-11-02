@@ -858,7 +858,7 @@ tcms imageworks:warm products mydeck/photo --picture
 | `--dry-run` | Count what would be made and make nothing |
 | `--memory, -m` | Memory limit (default: 512M) |
 
-You must give at least one of `--widths`, `--picture`, `--params`, `--preset` or `--url`. The summary lists objects, images, variants made (or would make), already cached, original, uncacheable and failed, then the first five failures. With `--json` it prints the same counts and the full failure list. The command exits **1** when anything failed. Variants that use both an image and a text watermark cannot be warmed and are counted as uncacheable. If a property has a watermark and the command resolves an edition without watermarks, it stops with exit code **1** and warms nothing, `--dry-run` included. Check the license with `tcms check`. Run the command as the web server user; it warns when you are not the owner of the data folder. See [Warming the cache](docs/twig/imageworks#warming-the-cache) for choosing variants.
+You must give at least one of `--widths`, `--picture`, `--params`, `--preset` or `--url`. The summary lists objects, images, variants made (or would make), already cached, original and failed, then the first five failures. With `--json` it prints the same counts and the full failure list. The command exits **1** when anything failed. If a property has a watermark and the command resolves an edition without watermarks, it stops with exit code **1** and warms nothing, `--dry-run` included. Check the license with `tcms check`. Run the command as the web server user; it warns when you are not the owner of the data folder. See [Warming the cache](docs/twig/imageworks#warming-the-cache) for choosing variants.
 
 ### `jobs:process`
 

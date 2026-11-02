@@ -340,6 +340,18 @@ $settings['imageworks'] = [
 	'protect'             => true,
 	'watermarksGallery'   => 'watermarks',
 	'watermarkFontsDepot' => 'watermark-fonts',
+	// Round w and h in public /imageworks/ URLs up to the next multiple of
+	// this many pixels (never past the source), so a visitor cannot force a
+	// new render per pixel. The picture widths and preset sizes below stay
+	// exact. 0 turns rounding off and serves exact sizes; 50 is a good value.
+	'sizeStep'            => 0,
+	// How many renders of uncached images may run at once (0 = two per CPU
+	// core), and how many seconds a request waits for a free slot before it
+	// gets a 503 with Retry-After. Waiting costs no CPU, and the long wait
+	// lets a gallery's first view render every thumbnail instead of failing
+	// the last ones. Cached images never wait.
+	'renderSlots'         => 0,
+	'renderWait'          => 30,
 	'defaults'            => [
 		'fm' => 'jpg',
 		'q'  => 92,

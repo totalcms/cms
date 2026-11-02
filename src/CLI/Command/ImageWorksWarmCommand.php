@@ -110,7 +110,6 @@ class ImageWorksWarmCommand extends BaseCommand
 			$dryRun ? 'Would make' : 'Made' => $dryRun ? ($data['wouldMake'] ?? 0) : ($data['made'] ?? 0),
 			'Already cached' => $data['cached'] ?? 0,
 			'Original'       => $data['original'] ?? 0,
-			'Uncacheable'    => $data['uncacheable'] ?? 0,
 			'Failed'         => $data['failed'] ?? 0,
 		];
 
@@ -138,15 +137,6 @@ class ImageWorksWarmCommand extends BaseCommand
 			if (count($failures) > self::MAX_FAILURES_SHOWN) {
 				$output->writeln(sprintf('  ... and %d more (use --json for the full list)', count($failures) - self::MAX_FAILURES_SHOWN));
 			}
-		}
-
-		$uncacheable = $data['uncacheable'] ?? 0;
-		if (is_int($uncacheable) && $uncacheable > 0) {
-			$output->writeln('');
-			$output->writeln(sprintf(
-				'%d variants use both an image and a text watermark; ImageWorks re-makes those on every request, so they can\'t be warmed.',
-				$uncacheable
-			));
 		}
 	}
 

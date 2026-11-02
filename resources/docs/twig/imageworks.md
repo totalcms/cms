@@ -383,7 +383,7 @@ An image inside a card or deck uses the watermark set on the card or deck, the s
 
 Match what your templates ask for. A file the page never requests is wasted work.
 
-- **A responsive image grid.** `--widths` and `--formats` make every width in every format. It makes only the widths you give. A width wider than the image makes a file at the image's own width, because that is what ImageWorks serves for it. `native` means the image's own format (jpg, png), which is what the `<img>` fallback uses. `--widths` alone uses `native`. `--formats` needs `--widths` or `--picture`.
+- **A responsive image grid.** `--widths` and `--formats` make every width in every format. It makes only the widths you give. A width wider than the image makes a file at the image's own width, because that is what ImageWorks serves for it. When [size rounding](#request-limits) is on, a width rounds up the same way the site does. For example, with a step of 50, `--widths=333` makes the 350px file that a visitor gets. `native` means the image's own format (jpg, png), which is what the `<img>` fallback uses. `--widths` alone uses `native`. `--formats` needs `--widths` or `--picture`.
 - **`cms.render.picture()` with its defaults.** Use `--picture`. It takes the widths and formats from the `imageworks.picture` setting (480, 768, 1024, 1440, 1920 and avif, webp) and adds `native`. Like `picture()`, it also adds the image's own width as the largest size. It only matches templates that call `picture()` without their own `widths` or `formats`. A GIF gets only `gif`, because `picture()` keeps GIFs as they are.
 - **`picture()` with its own options.** Give the same options as a grid. `picture(img, {h: 600, fit: 'crop'})` is matched by `--picture --params="h=600&fit=crop"`. A `w` in `--params` caps the widths. `fm` is not allowed, because the grid sets the format.
 - **`image()` calls.** Use `--params` for one exact variant, such as `--params="w=800&h=600&fit=crop"`. Repeat it for more variants. `--preset=medium` makes a preset. A preset `p` in `--params` with a grid makes one file per width, because the preset sets the format.
@@ -421,8 +421,6 @@ The command exits **1** when any image failed, and **0** otherwise. `--json` pri
 
 ### Limits
 
-An image that has both an image watermark and a text watermark is made in two passes, and ImageWorks re-makes the second pass on every request. Warming cannot help those variants. The command counts them as "uncacheable" and tells you.
-
 A property with a watermark needs an edition that includes watermarks. If the command can't confirm that edition from this machine, it stops and warms nothing. Run `tcms check` to see the license the command reads.
 
 A card or deck image must be named as `parent/child`. Naming only the card or deck is an error, and the error lists the images inside it.
@@ -432,6 +430,30 @@ A card or deck image must be named as `parent/child`. Naming only the card or de
 Transformed images are cached automatically on disk. The cache directory is `.cache` within the image storage directory. When the source image changes, cached versions are regenerated on the next request.
 
 To make the cache ahead of time, see [Warming the cache](#warming-the-cache). To clear the ImageWorks cache, use the emergency cache clear endpoint or clear the `.cache` directories from storage.
+
+## Request limits
+
+Every new size or setting in an ImageWorks URL makes ImageWorks render a new file. To stop a visitor (or a bot) from making thousands of them, the `/imageworks/` URLs have limits. Two are always on, and size rounding is a setting. These limits apply to image URLs, including the ones `cms.render` writes into your pages. An image that Total CMS renders on the server while it builds a page, such as `cms.media.imageDataUri()`, does not have them.
+
+**Bad values get a 400 error.** Each parameter must have a value that ImageWorks can use. For example, `w` must be a whole number from 0 to 10000, `q` must be 0 to 100, and `fm` must be an image format. A request with a bad value gets a `400 Bad Request` and no image work is done. A parameter that ImageWorks does not use, such as `utm_source`, is ignored.
+
+**Sizes can round up (off by default).** Without rounding, a bot can ask for every width from 1 to 2000 pixels and make the server render 2000 files for one image. To stop this, set **Round Image Sizes** on the ImageWorks settings page (or `sizeStep` in `tcms.php`) to a number of pixels, such as 50. A width or height then rounds up to the next multiple of that number. The widths in `imageworks.picture` and the sizes in your presets are not changed. For example, with 50, `w=333` serves a 350px image and `w=768` serves a 768px image. When you give both a width and a height, the height changes by the same amount, so the shape of the image stays the same. A size is never rounded past the size of the original image.
+
+**Renders wait in line.** Only a few new images render at the same time: two for each CPU core. Other requests wait for up to 30 seconds, which is enough for the first view of a large gallery. A waiting request uses no CPU. If a request still can't start after the wait, it gets a `503 Service Unavailable` with a `Retry-After` header. Images that are already in the cache never wait.
+
+You can change these limits in `tcms.php`:
+
+```php
+return [
+    'imageworks' => [
+        'sizeStep'    => 50,   // round sizes up to a multiple of this; 0 = exact sizes (default)
+        'renderSlots' => 0,    // renders at the same time; 0 = two per CPU core
+        'renderWait'  => 30,   // seconds a request waits for a free slot
+    ],
+];
+```
+
+A larger step means fewer files and less work for the server, but the images can be up to that many pixels bigger than you asked for. 50 is a good value for most sites. Leave it at 0 only if your pages use hand-written ImageWorks URLs that need an exact size.
 
 ## API Endpoint
 

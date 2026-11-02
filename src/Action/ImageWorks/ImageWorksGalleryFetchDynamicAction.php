@@ -6,9 +6,12 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 
 readonly class ImageWorksGalleryFetchDynamicAction
 {
+	use ImageWorksResponder;
+
 	public function __construct(private ImageGenerator $imageGenerator)
 	{
 	}
@@ -29,14 +32,9 @@ readonly class ImageWorksGalleryFetchDynamicAction
 		$id          = $args['id'];
 		$property    = $args['property'] ?? 'gallery';
 		$action      = $args['action'];
-		$queryParams = $request->getQueryParams();
 
-		try {
-			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams, $request);
-		} catch (\Exception $e) {
-			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
-		}
-
-		return $image;
+		return $this->respond($request, $response, fn (): ResponseInterface => $this->imageGenerator
+			->forPublicRoute()
+			->generateGalleryImage($collection, $id, $property, $action, ImageParamValidator::validate($request->getQueryParams()), $request));
 	}
 }

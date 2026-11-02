@@ -84,7 +84,7 @@ test('the original format with no params is Original', function (): void {
 		->toBe(CacheState::Original);
 });
 
-test('both watermarks report uncacheable', function (): void {
+test('both watermarks are checked like any other variant', function (): void {
 	$c = $this->app->getContainer();
 
 	$editions = $this->createStub(EditionFeatureService::class);
@@ -103,5 +103,5 @@ test('both watermarks report uncacheable', function (): void {
 	expect(postUpload('/api/collections/marked/m1/photo', testData('test-image.jpg'), 'image/jpeg', 'photo')->getStatusCode())->toBe(200);
 
 	expect($this->app->getContainer()->get(ImageGenerator::class)->cacheState('marked', 'm1', 'photo', null, ['w' => 400, 'fm' => 'webp']))
-		->toBe(CacheState::Uncacheable);
+		->toBe(CacheState::Missing);
 });

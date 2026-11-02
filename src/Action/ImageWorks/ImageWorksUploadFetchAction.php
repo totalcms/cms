@@ -6,11 +6,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 readonly class ImageWorksUploadFetchAction
 {
+	use ImageWorksResponder;
+
 	public function __construct(
 		private ImageGenerator $imageGenerator,
 		private UploadFetcher $uploadFetcher,
@@ -35,14 +38,8 @@ readonly class ImageWorksUploadFetchAction
 			throw new HttpNotFoundException($request, 'Image not found');
 		}
 
-		$query = $request->getQueryParams();
-
-		try {
-			$image = $this->imageGenerator->generateUploadImage($collection, $id, $property, $name, $query, $request, $subpath);
-		} catch (\Exception $e) {
-			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
-		}
-
-		return $image;
+		return $this->respond($request, $response, fn (): ResponseInterface => $this->imageGenerator
+			->forPublicRoute()
+			->generateUploadImage($collection, $id, $property, $name, ImageParamValidator::validate($request->getQueryParams()), $request, $subpath));
 	}
 }

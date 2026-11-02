@@ -225,6 +225,14 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertEquals($presets, $result['presets']);
 	}
 
+	public function testProcessImageWorksCastsSizeStepToAWholeNumber(): void
+	{
+		$this->assertSame(50, $this->validator->processSection('imageworks', ['sizeStep' => '50'])['sizeStep']);
+		$this->assertSame(0, $this->validator->processSection('imageworks', ['sizeStep' => ''])['sizeStep']);
+		$this->assertSame(0, $this->validator->processSection('imageworks', ['sizeStep' => '-20'])['sizeStep']);
+		$this->assertArrayNotHasKey('sizeStep', $this->validator->processSection('imageworks', ['q' => 1]));
+	}
+
 	// ==================== Cache Section ====================
 
 	public function testProcessCacheConvertsBackendTogglesToBooleans(): void

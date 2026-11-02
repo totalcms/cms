@@ -17,6 +17,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Two path traversals closed.** `DELETE /api/cache/images` added a `collection` value from the request body to the data folder path. So `../` deleted cache folders outside the collection, and longer paths reached more of the disk. Schema lookups read any `.json` file on disk into the schema editor through the duplicate-schema form. Both now refuse a name that is not a single path segment
 - **The session cookie is `Secure` on HTTPS.** The session library set its own `secure` option, which replaced `session.cookie_secure`. So on HTTPS sites the session cookie was sent without `Secure`. `cookie_secure` and `cookie_httponly` now go to the session library
 - **Directory listings are off, and public pages send security headers.** No shipped `.htaccess` turned off `Indexes`, so a folder in the docroot without an index file showed a list of its files. Every shipped `.htaccess` now starts with `Options -MultiViews -Indexes`. Site Builder pages, forms and assets now send `X-Frame-Options`, `X-Content-Type-Options: nosniff` and `Referrer-Policy`, so another site can no longer frame a contact or sign-up form. These headers were already on the admin. HSTS is there, commented out
+- **ImageWorks URLs can no longer be used to overload the server.** A bot that sent SQL-injection probes to seven image URLs on totalcms.co kept a 2-core server at full load for a day. Each probe had a new value in `w`, so each one missed the cache and made a full-size render. ImageWorks URLs now have limits. A parameter with a bad value (such as `w=-5905 OR …`, `q=101` or `fm=php`) gets a 400 before any image work. Numbers are made canonical, so `w=0300` and `w=300` share one cache file. Only two renders per CPU core run at the same time. Other requests wait up to 30 seconds for a free slot, then get a 503 with `Retry-After`. Cached images never wait. Change the limits with `imageworks.renderSlots` and `imageworks.renderWait`. Images that a page renders on the server, such as `cms.media.imageDataUri()`, do not have these limits. See [ImageWorks](resources/docs/twig/imageworks.md#request-limits)
 
 ### Added
 
@@ -38,6 +39,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Optional date fields have a clear button.** Safari and Chrome have no way to empty a date input after it is set, so a date such as a user's expiration could not be removed
 - **Extension settings forms support a formgrid.** Headers, dividers and fieldsets in an extension's settings schema now appear in its settings form
 - **A full-endpoint OpenAPI spec.** `resources/api/totalcms-api-full.json` lists every registered route with its security and middleware, for security scanners. The public spec in `totalcms-api.json` stays the reference for people, with two errors fixed
+- **Round Image Sizes setting.** Settings → ImageWorks can round the width and height in ImageWorks URLs up to a multiple of a number of pixels, such as 50 (`imageworks.sizeStep`). This stops a bot from making a new render for every pixel size. The widths that `cms.render.picture()` uses and your preset sizes stay exact. The default is 0, which serves exact sizes. `tcms imageworks:warm` rounds the same way, so it warms the files that visitors get
 
 ### Changed
 
@@ -68,6 +70,7 @@ All notable changes to Total CMS will be documented in this file.
 - **`builder:init` shows the right templates folder** in its next steps on git-managed projects
 - **The server check hides everything under a sensitive key**, such as the URL or list ID in an `automations.secrets` block, not only keys whose names look sensitive
 - **js-beautify's glob and minimatch pinned to patched versions** to fix two moderate advisories
+- **Images with both an image and a text watermark are cached.** The second pass, which adds the text, used a cache name that changed on every request. So each view rendered that pass again and left a new `.cache/temp_*.png/` folder on disk. The finished image is now cached like any other image. A render deletes the old folders for that image, and clearing the ImageWorks cache removes all of them. `tcms imageworks:warm` can now warm these images, and its summary and `--json` output no longer have an "uncacheable" count
 
 ### Documentation
 

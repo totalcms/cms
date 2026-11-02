@@ -6,9 +6,12 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 
 readonly class ImageWorksGalleryFetchAction
 {
+	use ImageWorksResponder;
+
 	public function __construct(private ImageGenerator $imageGenerator)
 	{
 	}
@@ -31,19 +34,16 @@ readonly class ImageWorksGalleryFetchAction
 		// `{path:.+}` may carry multiple segments (deck-nested: `itemId/childKey`).
 		// Falls back to the legacy single-segment `{name}` arg.
 		$path        = $args['path'] ?? $args['name'] ?? '';
-		$queryParams = $request->getQueryParams();
 
-		// Only set fm from URL format if no preset is used (presets may define their own format)
-		if (!isset($queryParams['p'])) {
-			$queryParams['fm'] = $args['format'];
-		}
+		return $this->respond($request, $response, function () use ($request, $collection, $id, $property, $path, $args): ResponseInterface {
+			$queryParams = ImageParamValidator::validate($request->getQueryParams());
 
-		try {
-			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $path, $queryParams, $request);
-		} catch (\Exception $e) {
-			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
-		}
+			// Only set fm from URL format if no preset is used (presets may define their own format)
+			if (!isset($queryParams['p'])) {
+				$queryParams['fm'] = $args['format'];
+			}
 
-		return $image;
+			return $this->imageGenerator->forPublicRoute()->generateGalleryImage($collection, $id, $property, $path, $queryParams, $request);
+		});
 	}
 }

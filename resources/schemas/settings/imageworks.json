@@ -11,6 +11,16 @@
 			"help"    : "Extract GPS coordinates and location metadata (latitude, longitude, altitude, country, state, city, sublocation) from uploaded images. Non-location EXIF data (camera, lens, exposure, author, copyright, date) is always preserved. Disable for GDPR compliance and privacy protection.",
 			"default" : true
 		},
+		"sizeStep": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Round Image Sizes (px)",
+			"help"        : "Round the width and height in ImageWorks URLs up to the next multiple of this many pixels. For example, with 50 a request for 333 pixels serves a 350 pixel image. This stops a bot from making the server render a new image for every pixel size. The widths that <code>cms.render.picture()</code> uses and the sizes in your presets stay exact. Use 0 to serve exact sizes. 50 is a good value.",
+			"placeholder" : "0",
+			"default"     : 0,
+			"min"         : 0,
+			"max"         : 1000
+		},
 		"watermarksGallery": {
 			"type"        : "string",
 			"field"       : "text",

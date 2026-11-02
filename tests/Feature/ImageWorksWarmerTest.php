@@ -233,7 +233,7 @@ test('the report serializes its counts and failures', function (): void {
 
 	expect($report->toArray())->toMatchArray([
 		'objects' => 0, 'images' => 0, 'made' => 0, 'wouldMake' => 0, 'cached' => 0,
-		'original' => 0, 'uncacheable' => 0, 'failed' => 1,
+		'original' => 0, 'failed' => 1,
 	])->and($report->toArray()['failures'][0]['id'])->toBe('nope');
 });
 

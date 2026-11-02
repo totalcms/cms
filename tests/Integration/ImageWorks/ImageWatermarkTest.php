@@ -5,6 +5,7 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
@@ -96,6 +97,18 @@ function watermarkRun(
 	file_put_contents(WATERMARK_REVIEW_DIR . "/{$label}.jpg", $body);
 
 	return ['width' => $info[0], 'height' => $info[1], 'bytes' => strlen($body), 'body' => $body];
+}
+
+/** Every file under a cache folder, sorted, so two listings compare. */
+function watermarkCacheFiles(string $dir): array
+{
+	$files = [];
+	foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+		$files[] = $file->getPathname() . ':' . $file->getMTime();
+	}
+	sort($files);
+
+	return $files;
 }
 
 /**
@@ -252,6 +265,50 @@ describe('ImageWorks image watermarks', function (): void {
 
 		expect($out['width'])->toBe(900);
 		expect($out['height'])->toBe((int)round(900 * WATERMARK_SOURCE_H / WATERMARK_SOURCE_W));
+	});
+
+	it('caches the two-pass result, so a repeat request renders nothing', function (): void {
+		// The text pass used to key its cache on a random temp file name: every
+		// request rendered again and left a `.cache/temp_*.png/` folder behind.
+		$params = [
+			'w'        => 900,
+			'mark'     => 'logo.png', 'markpos' => 'top-left', 'markw' => '160',
+			'marktext' => 'Total CMS', 'marktextsize' => 60, 'marktextpos' => 'bottom-right',
+		];
+		$cache = $this->root . '/blog/post-1/image/.cache';
+
+		$first = watermarkRun($this->root, $params, 'wm-both-first');
+		$files = watermarkCacheFiles($cache);
+
+		$second = watermarkRun($this->root, $params, 'wm-both-second');
+
+		expect(watermarkCacheFiles($cache))->toBe($files)
+			->and($second['body'])->toBe($first['body'])
+			->and(glob($cache . '/temp_*') ?: [])->toBe([])
+			->and(glob($this->root . '/blog/post-1/image/temp_*') ?: [])->toBe([]);
+
+		expect(watermarkGenerator($this->root)->cacheState('blog', 'post-1', 'image', null, $params))->toBe(CacheState::Cached);
+	});
+
+	it('keys different text on the same image separately', function (): void {
+		$base = ['w' => 600, 'mark' => 'logo.png', 'markw' => '120', 'marktextsize' => 40];
+
+		$a = watermarkRun($this->root, $base + ['marktext' => 'Alpha'], 'wm-both-alpha');
+		$b = watermarkRun($this->root, $base + ['marktext' => 'Bravo'], 'wm-both-bravo');
+
+		expect(watermarkPixelDiff($a['body'], $b['body']))->toBeGreaterThan(0.1);
+	});
+
+	it('sweeps the temp folders the old two-pass render leaked', function (): void {
+		$cache = $this->root . '/blog/post-1/image/.cache';
+		mkdir($cache . '/temp_65a1b2c3d4e5f.png', 0700, true);
+		file_put_contents($cache . '/temp_65a1b2c3d4e5f.png/0123abcd', 'stale');
+
+		watermarkRun($this->root, [
+			'w' => 600, 'mark' => 'logo.png', 'marktext' => 'Sweep', 'marktextsize' => 40,
+		], 'wm-both-sweep');
+
+		expect(is_dir($cache . '/temp_65a1b2c3d4e5f.png'))->toBeFalse();
 	});
 });
 

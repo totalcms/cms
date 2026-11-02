@@ -18,7 +18,4 @@ enum CacheState: string
 
 	/** The params resolve to the original file: no Glide work, nothing to cache. */
 	case Original = 'original';
-
-	/** Both an image and a text watermark: the second pass is re-made per request. */
-	case Uncacheable = 'uncacheable';
 }

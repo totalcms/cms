@@ -16,7 +16,6 @@ final class WarmReport
 	public int $wouldMake   = 0;
 	public int $cached      = 0;
 	public int $original    = 0;
-	public int $uncacheable = 0;
 	public int $failed      = 0;
 
 	/** @var list<array{collection: string, id: string, property: string, image: string, params: string, error: string}> */
@@ -45,7 +44,6 @@ final class WarmReport
 			'wouldMake'   => $this->wouldMake,
 			'cached'      => $this->cached,
 			'original'    => $this->original,
-			'uncacheable' => $this->uncacheable,
 			'failed'      => $this->failed,
 			'failures'    => $this->failures,
 		];

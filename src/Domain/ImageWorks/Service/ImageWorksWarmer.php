@@ -43,13 +43,21 @@ final readonly class ImageWorksWarmer
 	/** Child fields a card or deck can hold that the route can serve. */
 	private const CHILD_FIELDS = ['image', 'video'];
 
+	/**
+	 * The generator as the public route uses it, so a warmed width rounds to
+	 * the same SizeLadder rung the route will look up — but without the
+	 * render-slot limit, which is there to turn visitors away, not the CLI.
+	 */
+	private ImageGenerator $generator;
+
 	public function __construct(
-		private ImageGenerator $generator,
+		ImageGenerator $generator,
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $indexReader,
 		private ObjectFetcher $objectFetcher,
 		private EditionFeatureService $editionFeatures,
 	) {
+		$this->generator = $generator->forPublicRoute(limitRenders: false);
 	}
 
 	/**
@@ -406,7 +414,6 @@ final readonly class ImageWorksWarmer
 			match ($state) {
 				CacheState::Cached      => $report->cached++,
 				CacheState::Original    => $report->original++,
-				CacheState::Uncacheable => $report->uncacheable++,
 				CacheState::Missing     => $dryRun ? $report->wouldMake++ : $this->make($report, $collection, $id, $property, $path, $params),
 			};
 		} catch (\Throwable $e) {

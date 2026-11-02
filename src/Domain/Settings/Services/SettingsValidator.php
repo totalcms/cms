@@ -143,6 +143,10 @@ readonly class SettingsValidator
 	 */
 	private function processImageWorks(array $data): array
 	{
+		if (isset($data['sizeStep'])) {
+			$data['sizeStep'] = max(0, (int)$data['sizeStep']);
+		}
+
 		// Parse JSON fields
 		if (isset($data['presets']) && is_string($data['presets'])) {
 			$presets = json_decode($data['presets'], true);

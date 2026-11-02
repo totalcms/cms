@@ -20,6 +20,9 @@ final class ImageWorksImageFetchActionTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->imageGenerator = $this->createMock(ImageGenerator::class);
+		// The public routes render through forPublicRoute(); the clone it
+		// hands back is the generator itself here.
+		$this->imageGenerator->method('forPublicRoute')->willReturnSelf();
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
@@ -41,8 +44,8 @@ final class ImageWorksImageFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateImage')
-			->with('products', 'product-1', 'image', $this->callback(fn ($params): bool => $params['w'] === '300'
-					&& $params['h'] === '200'
+			->with('products', 'product-1', 'image', $this->callback(fn ($params): bool => $params['w'] === 300
+					&& $params['h'] === 200
 					&& $params['fm'] === 'jpg'))
 			->willReturn($imageResponse);
 
@@ -127,10 +130,10 @@ final class ImageWorksImageFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params['w'] === '500'
-					&& $params['h'] === '400'
+			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params['w'] === 500
+					&& $params['h'] === 400
 					&& $params['fit'] === 'crop'
-					&& $params['blur'] === '10'
+					&& $params['blur'] === 10
 					&& $params['fm'] === 'jpg'))
 			->willReturn($imageResponse);
 

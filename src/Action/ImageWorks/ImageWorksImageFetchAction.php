@@ -4,11 +4,13 @@ namespace TotalCMS\Action\ImageWorks;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 
 readonly class ImageWorksImageFetchAction
 {
+	use ImageWorksResponder;
+
 	public function __construct(private ImageGenerator $imageGenerator)
 	{
 	}
@@ -22,19 +24,16 @@ readonly class ImageWorksImageFetchAction
 		$collection  = $args['collection'] ?? 'image';
 		$id          = $args['id'];
 		$property    = $args['property'] ?? 'image';
-		$queryParams = $request->getQueryParams();
 
-		// Only set fm from URL format if no preset is used (presets may define their own format)
-		if (!isset($queryParams['p'])) {
-			$queryParams['fm'] = $args['format'];
-		}
+		return $this->respond($request, $response, function () use ($request, $collection, $id, $property, $args): ResponseInterface {
+			$queryParams = ImageParamValidator::validate($request->getQueryParams());
 
-		try {
-			$image = $this->imageGenerator->generateImage($collection, $id, $property, $queryParams, $request);
-		} catch (\Exception $e) {
-			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
-		}
+			// Only set fm from URL format if no preset is used (presets may define their own format)
+			if (!isset($queryParams['p'])) {
+				$queryParams['fm'] = $args['format'];
+			}
 
-		return $image;
+			return $this->imageGenerator->forPublicRoute()->generateImage($collection, $id, $property, $queryParams, $request);
+		});
 	}
 }

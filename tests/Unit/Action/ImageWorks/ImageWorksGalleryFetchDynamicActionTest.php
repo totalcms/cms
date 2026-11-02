@@ -20,6 +20,9 @@ final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->imageGenerator = $this->createMock(ImageGenerator::class);
+		// The public routes render through forPublicRoute(); the clone it
+		// hands back is the generator itself here.
+		$this->imageGenerator->method('forPublicRoute')->willReturnSelf();
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 		$this->response       = $this->createMock(ResponseInterface::class);
 
@@ -43,7 +46,7 @@ final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateGalleryImage')
-			->with('products', 'product-1', 'photos', 'image-1.jpg', $queryParams)
+			->with('products', 'product-1', 'photos', 'image-1.jpg', ['w' => 500, 'h' => 400])
 			->willReturn($imageResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
@@ -109,7 +112,7 @@ final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateGalleryImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params === $queryParams))
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params === ['w' => 300, 'h' => 200, 'fit' => 'crop', 'blur' => 5]))
 			->willReturn($imageResponse);
 
 		($this->action)($this->request, $this->response, $args);

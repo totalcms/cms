@@ -22,6 +22,12 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
+/**
+ * The one render path behind every ImageWorks URL, the warmer, the favicon
+ * and Twig's data URIs.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity") The public-route gate (size ladder + render slots) tipped it past 100; the gate's own logic lives in SizeLadder and RenderSlots, and splitting the cache-header and watermark passes out of this class is the follow-up.
+ */
 class ImageGenerator
 {
 	private string $collection;
@@ -31,6 +37,10 @@ class ImageGenerator
 	/** @var array<string,mixed> */
 	private array $params;
 	private readonly LoggerInterface $logger;
+	/** Set by forPublicRoute(): rounds sizes to the ladder. */
+	private ?SizeLadder $sizeLadder = null;
+	/** Set by forPublicRoute(): cache misses wait for a render slot. */
+	private bool $limitRenders = false;
 
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
@@ -40,9 +50,26 @@ class ImageGenerator
 		private readonly WatermarkFactory $watermarkFactory,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
+		private ?RenderSlots $renderSlots = null,
 	) {
 		$this->logger = $loggerFactory
 			->channelLogger(LogChannel::ImageGenerator);
+	}
+
+	/**
+	 * The generator as the public `/imageworks/` routes use it: sizes round
+	 * up to the SizeLadder, and, with $limitRenders, a cache miss waits for
+	 * one of the RenderSlots. In-process callers (Twig, the favicon) keep the
+	 * exact sizes they ask for. The warmer takes the ladder without the slot
+	 * limit, so it warms the very files the route will look for.
+	 */
+	public function forPublicRoute(bool $limitRenders = true): self
+	{
+		$route               = clone $this;
+		$route->sizeLadder   = SizeLadder::fromConfig($this->config);
+		$route->limitRenders = $limitRenders;
+
+		return $route;
 	}
 
 	/** @param array<string,mixed> $params */
@@ -80,15 +107,26 @@ class ImageGenerator
 			return CacheState::Original;
 		}
 
-		$render = $this->glideRender($imageData);
-
-		if ($render['marks'] !== null) {
-			return CacheState::Uncacheable;
-		}
-
-		return $render['glide']->cacheFileExists($imageData->name, $render['params'])
+		return $this->isCached($this->glideRender($imageData), $imageData)
 			? CacheState::Cached
 			: CacheState::Missing;
+	}
+
+	/**
+	 * Whether the file a render would serve is already in the cache. With both
+	 * watermarks that file is the text pass's output.
+	 *
+	 * @param array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}} $render
+	 */
+	private function isCached(array $render, ImageData $imageData): bool
+	{
+		if ($render['marks'] === null) {
+			return $render['glide']->cacheFileExists($imageData->name, $render['params']);
+		}
+
+		$pass = $this->textPass($render['glide'], $imageData, $render['marks'][0], $render['marks'][1], $render['params']);
+
+		return $pass['server']->cacheFileExists($pass['name'], $pass['params']);
 	}
 
 	private function fetchImage(string $collection, string $id, string $property): ImageData
@@ -309,6 +347,10 @@ class ImageGenerator
 		// Resolve preset first so dimension constraints apply to preset values too
 		if (isset($params['p'])) {
 			$params = $this->resolvePreset($params);
+		}
+
+		if ($this->sizeLadder instanceof SizeLadder) {
+			$params = $this->sizeLadder->snap($params, $imageData);
 		}
 
 		// Make sure that the requested width and height are not larger than the original image
@@ -547,7 +589,19 @@ class ImageGenerator
 		);
 	}
 
-	/** @param array<string,mixed> $params */
+	/**
+	 * Both watermarks take two Glide passes: the image mark, then the text
+	 * mark over that result. The intermediate file gets a unique temp name so
+	 * two requests at once cannot delete each other's, but the text pass's
+	 * cache key is pinned to a stable name (see textPass()), so the finished
+	 * image is cached like any other and the second request is a cache hit.
+	 *
+	 * The cache key used to come from the temp name, so every request
+	 * rendered again and left a `.cache/temp_*.png/` folder behind. A miss
+	 * here sweeps those leftovers from this image's cache folder.
+	 *
+	 * @param array<string,mixed> $params
+	 */
 	private function handleBothWatermarks(
 		Server $glide,
 		ImageData $imageData,
@@ -555,42 +609,83 @@ class ImageGenerator
 		Watermark $textMark,
 		array $params,
 	): ResponseInterface {
-		// Both image and text watermarks provided, return image with params
-		$imageParams = array_merge($params, $imageMark->toArray());
-		$textParams  = array_merge($params, $textMark->toArray());
+		$pass = $this->textPass($glide, $imageData, $imageMark, $textMark, $params);
 
-		$firstPassResponse = $glide->getImageResponse($imageData->name, $imageParams);
+		if ($pass['server']->cacheFileExists($pass['name'], $pass['params'])) {
+			return $pass['server']->getImageResponse($pass['name'], $pass['params']);
+		}
 
-		// Get the processed image data from first pass
-		// Create a temporary file for the intermediate result
-		$firstPassImageData = (string)$firstPassResponse->getBody();
-		$tempFileName       = 'temp_' . uniqid() . '.png';
-		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName, $this->subpath);
-		$this->filesystem->write($tempPath, $firstPassImageData);
+		$this->removeLegacyTempCaches();
 
-		// Create second pass server specifically for text watermark
-		$secondServer = $this->glideFactory->create(
+		$firstPass    = $glide->getImageResponse($imageData->name, array_merge($params, $imageMark->toArray()));
+		$tempFileName = 'temp_' . bin2hex(random_bytes(8)) . '.png';
+		$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName, $this->subpath);
+		$this->filesystem->write($tempPath, (string)$firstPass->getBody());
+
+		try {
+			return $pass['server']->getImageResponse($tempFileName, $pass['params']);
+		} finally {
+			try {
+				$this->filesystem->delete($tempPath);
+			} catch (\Exception $e) {
+				// Log but don't fail if cleanup fails
+				$this->logger->warning('Failed to clean up temporary watermark file', [
+					'path'      => $tempPath,
+					'error'     => $e->getMessage(),
+					'exception' => $e::class,
+				]);
+			}
+		}
+	}
+
+	/**
+	 * The Glide server for the text pass, with its cache path fixed to a name
+	 * derived from the image pass's own cache key (which already covers the
+	 * source and every image-pass param). Whatever temp file the pass reads,
+	 * the same request lands on the same cache file.
+	 *
+	 * @param array<string,mixed> $params
+	 *
+	 * @return array{server: Server, name: string, params: array<string,mixed>}
+	 */
+	private function textPass(Server $glide, ImageData $imageData, Watermark $imageMark, Watermark $textMark, array $params): array
+	{
+		$name       = 'marks-' . hash('xxh3', $glide->getCachePath($imageData->name, array_merge($params, $imageMark->toArray()))) . '.png';
+		$textParams = array_merge($params, $textMark->toArray());
+
+		$server = $this->glideFactory->create(
 			source        : PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath),
 			imageData     : $imageData,
 			watermarkPath : TextWatermarkFactory::WATERMARK_DIR,
 		);
 
-		// Apply text watermark to the intermediate result
-		$finalResponse = $secondServer->getImageResponse($tempFileName, $textParams);
+		$cachePath = $server->getCachePath($name, $textParams);
+		$server->setCachePathCallable(fn (): string => $cachePath);
 
-		// Clean up temporary file
+		return ['server' => $server, 'name' => $name, 'params' => $textParams];
+	}
+
+	/** Delete the `.cache/temp_*.png/` folders the old two-pass render leaked. */
+	private function removeLegacyTempCaches(): void
+	{
+		$cacheDir = PathUtils::buildPath($this->collection, $this->id, $this->property, null, $this->subpath) . '/' . GlideFactory::CACHEDIR;
+
 		try {
-			$this->filesystem->delete($tempPath);
+			if (!$this->filesystem->directoryExists($cacheDir)) {
+				return;
+			}
+
+			foreach ($this->filesystem->listDirectories($cacheDir) as $dir) {
+				if (preg_match('/^temp_[0-9a-f.]+\.png$/', basename($dir)) === 1) {
+					$this->filesystem->deleteDirectory($dir);
+				}
+			}
 		} catch (\Exception $e) {
-			// Log but don't fail if cleanup fails
-			$this->logger->warning('Failed to clean up temporary watermark file', [
-				'path'      => $tempPath,
-				'error'     => $e->getMessage(),
-				'exception' => $e::class,
+			$this->logger->warning('Failed to remove leftover watermark cache folders', [
+				'path'  => $cacheDir,
+				'error' => $e->getMessage(),
 			]);
 		}
-
-		return $finalResponse;
 	}
 
 	/**
@@ -659,9 +754,14 @@ class ImageGenerator
 
 		$render = $this->glideRender($imageData);
 
-		$response = $render['marks'] !== null
+		$make = fn (): ResponseInterface => $render['marks'] !== null
 			? $this->handleBothWatermarks($render['glide'], $imageData, $render['marks'][0], $render['marks'][1], $render['params'])
 			: $render['glide']->getImageResponse($imageData->name, $render['params']);
+
+		// A cached file costs no render, so it never waits for a slot.
+		$response = $this->limitRenders && !$this->isCached($render, $imageData)
+			? ($this->renderSlots ??= RenderSlots::fromConfig($this->config))->run($make)
+			: $make();
 
 		return $this->addCacheHeaders($response, $cacheHeaders);
 	}
