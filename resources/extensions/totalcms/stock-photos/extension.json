@@ -4,7 +4,7 @@
 	"description"     : "Search free stock photos from Pixabay, or your own library galleries, in the object editor and drag them onto image and gallery fields. The photo is copied into the object with its alt text and credit. Needs a free Pixabay API key, a library gallery, or both.",
 	"icon"            : "icon.png",
 	"requires"        : {
-		"totalcms" : ">=3.6.4",
+		"totalcms" : ">=3.6.5",
 		"php"      : ">=8.2"
 	},
 	"entrypoint"       : "Extension.php",
