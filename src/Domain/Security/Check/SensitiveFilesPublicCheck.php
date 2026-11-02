@@ -99,7 +99,7 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 				case CanaryProbe::EXPOSED:
 					$scan['probed']++;
 					$folder              = CanaryProbe::folderPath($path);
-					$scan['findings'][] = $this->exposed(Severity::Critical, $folder . '/', ServerRuleFix::denyFolder($context, $folder));
+					$scan['findings'][]  = $this->exposed(Severity::Critical, $folder . '/', ServerRuleFix::denyFolder($context, $folder));
 					break;
 			}
 		}
@@ -123,7 +123,7 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 				continue;
 			}
 			$response = $this->probe->get($url);
-			if ($response === null) {
+			if (!$response instanceof HttpResponse) {
 				$scan['unreachable'] = true;
 
 				continue;
@@ -136,7 +136,7 @@ class SensitiveFilesPublicCheck implements SecurityCheck
 			$scan['probed']++;
 			if ($exposedTest($response)) {
 				$path                = (string)parse_url($url, PHP_URL_PATH);
-				$scan['findings'][] = $this->exposed($severity, $path, ServerRuleFix::denyFile($context, $path));
+				$scan['findings'][]  = $this->exposed($severity, $path, ServerRuleFix::denyFile($context, $path));
 			}
 		}
 

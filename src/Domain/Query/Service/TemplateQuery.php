@@ -85,9 +85,9 @@ readonly class TemplateQuery
 	{
 		$filter   = is_array($options['filter'] ?? null) ? array_values(array_filter($options['filter'], is_array(...))) : [];
 		$sort     = $options['sort'] ?? '';
-		$rules    = self::sortRules($sort);
-		$search   = self::searchText($options['search'] ?? '');
-		$priority = self::searchPriority($options['searchPriority'] ?? []);
+		$rules    = $this->sortRules($sort);
+		$search   = $this->searchText($options['search'] ?? '');
+		$priority = $this->searchPriority($options['searchPriority'] ?? []);
 		$limit    = max(0, (int)($options['limit'] ?? 0));
 		$offset   = isset($options['page']) && $limit > 0
 			? (max(1, (int)$options['page']) - 1) * $limit
@@ -105,14 +105,14 @@ readonly class TemplateQuery
 
 		// A shuffle must differ on every request, so only the matches are
 		// cached; the order and the page are made fresh each time.
-		if (self::shuffles($rules)) {
+		if ($this->shuffles($rules)) {
 			$items = $this->cacheManager->getApiResponse($key . ':matches', $match);
 			if (!is_array($items)) {
 				$items = $this->match($load(), $search, $priority, $filter);
 				$this->cacheManager->storeApiResponse($key . ':matches', $match, $items);
 			}
 
-			return self::result(array_values((new CollectionSorter($items))->sortByRules($rules)), $limit, $offset);
+			return $this->result(array_values((new CollectionSorter($items))->sortByRules($rules)), $limit, $offset);
 		}
 
 		$params = $match + ['sort' => $sort, 'limit' => $limit, 'offset' => $offset];
@@ -125,7 +125,7 @@ readonly class TemplateQuery
 		if ($rules !== []) {
 			$items = array_values((new CollectionSorter($items))->sortByRules($rules));
 		}
-		$result = self::result($items, $limit, $offset);
+		$result = $this->result($items, $limit, $offset);
 		$this->cacheManager->storeApiResponse($key, $params, $result);
 
 		return $result;
@@ -155,7 +155,7 @@ readonly class TemplateQuery
 	}
 
 	/** @param array<int,array<string,mixed>> $items */
-	private static function result(array $items, int $limit, int $offset): QueryResult
+	private function result(array $items, int $limit, int $offset): QueryResult
 	{
 		$total = count($items);
 
@@ -168,7 +168,7 @@ readonly class TemplateQuery
 	}
 
 	/** @return array<int,array<string,mixed>> */
-	private static function sortRules(mixed $sort): array
+	private function sortRules(mixed $sort): array
 	{
 		if (is_string($sort)) {
 			return SortRuleParser::parse($sort);
@@ -178,7 +178,7 @@ readonly class TemplateQuery
 	}
 
 	/** @param array<int,array<string,mixed>> $rules */
-	private static function shuffles(array $rules): bool
+	private function shuffles(array $rules): bool
 	{
 		foreach ($rules as $rule) {
 			if (!empty($rule['shuffle'])) {
@@ -195,7 +195,7 @@ readonly class TemplateQuery
 	 * "Pasta " and "pasta" share an entry and a long string cannot make a
 	 * huge key.
 	 */
-	private static function searchText(mixed $search): string
+	private function searchText(mixed $search): string
 	{
 		if (!is_scalar($search)) {
 			return '';
@@ -206,7 +206,7 @@ readonly class TemplateQuery
 	}
 
 	/** @return list<string> */
-	private static function searchPriority(mixed $priority): array
+	private function searchPriority(mixed $priority): array
 	{
 		$fields = is_string($priority) ? explode(',', $priority) : (is_array($priority) ? $priority : []);
 		$fields = array_map(static fn (mixed $field): string => is_scalar($field) ? trim((string)$field) : '', $fields);

@@ -141,7 +141,7 @@ function routeVariants(string $pattern): array
 				continue;
 			}
 			[$name, $regex] = $part;
-			$path          .= '{' . $name . '}';
+			$path .= '{' . $name . '}';
 			$params[]       = ['name' => $name, 'regex' => $regex];
 		}
 		$variants[] = ['path' => $path, 'params' => $params];
@@ -243,8 +243,8 @@ function buildFullOpenApiSpec(App $app, array $publicSpec): array
 					continue; // an earlier route already answers this; the router matches it first
 				}
 
-				$base = ($route['name'] ?? trim((string)preg_replace('/[^a-z0-9]+/i', '-', $variant['path']), '-')) ?: 'root';
-				$id   = $base . (count($route['methods']) > 1 ? '.' . $key : '') . (count($variants) > 1 ? '.' . $index : '');
+				$base     = ($route['name'] ?? trim((string)preg_replace('/[^a-z0-9]+/i', '-', $variant['path']), '-')) ?: 'root';
+				$id       = $base . (count($route['methods']) > 1 ? '.' . $key : '') . (count($variants) > 1 ? '.' . $index : '');
 				$ids[$id] = ($ids[$id] ?? 0) + 1;
 				if ($ids[$id] > 1) {
 					$id .= '.' . $ids[$id];

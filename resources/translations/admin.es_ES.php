@@ -568,7 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Procesador de imágenes por lotes',
 	'image_batcher.desc'             => 'Procese múltiples imágenes con la configuración de ImageWorks de forma masiva.',
-	'image_batcher.cli_hint'        => 'Para colecciones grandes, ejecute <code>tcms imageworks:warm</code> desde la línea de comandos.',
+	'image_batcher.cli_hint'         => 'Para colecciones grandes, ejecute <code>tcms imageworks:warm</code> desde la línea de comandos.',
 	'image_batcher.step1'            => 'Paso 1: Seleccionar Collection',
 	'image_batcher.step1_desc'       => 'Elija la Collection que contiene las imágenes que desea procesar.',
 	'image_batcher.step2'            => 'Paso 2: Seleccionar propiedad',
@@ -811,18 +811,18 @@ return [
 	'pretty_url.invalid_path'       => 'Ruta proporcionada inválida.',
 
 	// ── Security ─────────────────────────────────────────────────────────────
-	'security.title' => 'Seguridad',
-	'security.not_checked' => 'No comprobado',
-	'security.ignored' => 'Ignorado',
+	'security.title'             => 'Seguridad',
+	'security.not_checked'       => 'No comprobado',
+	'security.ignored'           => 'Ignorado',
 	'security.severity.critical' => 'Crítico',
-	'security.severity.warning' => 'Advertencia',
-	'security.severity.info' => 'Info',
-	'security.docs' => 'Documentación',
-	'security.severity' => 'Gravedad',
-	'security.finding' => 'Hallazgo',
-	'security.detail' => 'Detalles',
-	'security.fix' => 'Solución',
-	'security.all_clear' => 'No se encontraron problemas de seguridad.',
+	'security.severity.warning'  => 'Advertencia',
+	'security.severity.info'     => 'Info',
+	'security.docs'              => 'Documentación',
+	'security.severity'          => 'Gravedad',
+	'security.finding'           => 'Hallazgo',
+	'security.detail'            => 'Detalles',
+	'security.fix'               => 'Solución',
+	'security.all_clear'         => 'No se encontraron problemas de seguridad.',
 	'security.all_clear_skipped' => 'No se encontraron problemas, pero {count} comprobaciones no se pudieron ejecutar.',
 
 	// ── Server Checker ──────────────────────────────────────────────────────

@@ -60,9 +60,9 @@ final readonly class TextWatermarkStyle
 		$this->padding = (int)($params['marktextpad'] ?? 10);
 		$this->angle   = (int)($params['marktextangle'] ?? ($this->tiles > 0 ? self::DEFAULT_TILE_ANGLE : 0));
 
-		$this->stroke      = self::percentOfSize($params['marktextstroke'] ?? 0, $this->fontSize);
+		$this->stroke      = $this->percentOfSize($params['marktextstroke'] ?? 0, $this->fontSize);
 		$this->strokeColor = self::parseColor((string)($params['marktextstrokecolor'] ?? '000000'));
-		$this->shadow      = self::percentOfSize($params['marktextshadow'] ?? 0, $this->fontSize);
+		$this->shadow      = $this->percentOfSize($params['marktextshadow'] ?? 0, $this->fontSize);
 		$this->shadowColor = self::parseColor((string)($params['marktextshadowcolor'] ?? '000000'));
 	}
 
@@ -116,7 +116,7 @@ final readonly class TextWatermarkStyle
 		return max(0, min(255, (int)hexdec($hex)));
 	}
 
-	private static function percentOfSize(mixed $percent, int $fontSize): int
+	private function percentOfSize(mixed $percent, int $fontSize): int
 	{
 		$percent = is_numeric($percent) ? min(25.0, max(0.0, (float)$percent)) : 0.0;
 

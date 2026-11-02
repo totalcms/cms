@@ -41,7 +41,7 @@ class ApiKeysBroadCheck implements SecurityCheck
 
 	public function run(SecurityContext $context): array
 	{
-		$keys = $this->keys->getAllKeys();
+		$keys  = $this->keys->getAllKeys();
 		$broad = [];
 		$stale = [];
 

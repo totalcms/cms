@@ -132,7 +132,7 @@ final class RenderSlots
 		}
 
 		// Quiet: open_basedir warns on the is_readable() itself.
-		$cpuinfo = QuietCall::run(fn () => is_readable('/proc/cpuinfo') ? file_get_contents('/proc/cpuinfo') : false);
+		$cpuinfo = QuietCall::run(fn (): string|false => is_readable('/proc/cpuinfo') ? file_get_contents('/proc/cpuinfo') : false);
 		$count   = is_string($cpuinfo) ? preg_match_all('/^processor\s*:/m', $cpuinfo) : 0;
 
 		return self::$cpus = $count > 0 ? $count : self::FALLBACK_CPUS;

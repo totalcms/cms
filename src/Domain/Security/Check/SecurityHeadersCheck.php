@@ -8,6 +8,7 @@ use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\Severity;
 use TotalCMS\Domain\Security\Service\SiteProbe;
+use TotalCMS\Support\HttpResponse;
 
 class SecurityHeadersCheck implements SecurityCheck
 {
@@ -55,7 +56,7 @@ class SecurityHeadersCheck implements SecurityCheck
 		}
 
 		$response = $this->probe->get(rtrim($context->baseUrl, '/') . '/');
-		if ($response === null) {
+		if (!$response instanceof HttpResponse) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::UNREACHABLE)];
 		}
 

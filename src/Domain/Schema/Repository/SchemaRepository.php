@@ -143,7 +143,7 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
-		if (!self::isPlainId($id)) {
+		if (!$this->isPlainId($id)) {
 			return null;
 		}
 
@@ -173,7 +173,7 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
-		if (!self::isPlainId($id)) {
+		if (!$this->isPlainId($id)) {
 			return null;
 		}
 
@@ -195,7 +195,7 @@ class SchemaRepository extends StorageRepository
 	 * Flysystem, which refuses such a path, but by throwing; checked here
 	 * too, so every lookup answers "no such schema" the same way.
 	 */
-	private static function isPlainId(string $id): bool
+	private function isPlainId(string $id): bool
 	{
 		return $id !== '' && $id[0] !== '.' && strpbrk($id, '/\\') === false;
 	}
@@ -232,7 +232,7 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchExtensionSchema(string $id): ?SchemaData
 	{
-		if (!self::isPlainId($id)) {
+		if (!$this->isPlainId($id)) {
 			return null;
 		}
 

@@ -9,6 +9,7 @@ use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\Severity;
 use TotalCMS\Domain\Security\Service\SiteProbe;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpResponse;
 
 class DirectoryListingCheck implements SecurityCheck
 {
@@ -51,7 +52,7 @@ class DirectoryListingCheck implements SecurityCheck
 		}
 
 		$response = $this->probe->get($url . '/');
-		if ($response === null) {
+		if (!$response instanceof HttpResponse) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, SiteProbe::UNREACHABLE)];
 		}
 		if (SiteProbe::isRedirect($response)) {
@@ -63,7 +64,7 @@ class DirectoryListingCheck implements SecurityCheck
 				self::ID,
 				Severity::Warning,
 				self::TITLE,
-				(string)parse_url($url, PHP_URL_PATH) . '/ lists its files to visitors.',
+				parse_url($url, PHP_URL_PATH) . '/ lists its files to visitors.',
 				ServerRuleFix::noListing($context),
 				self::DOCS,
 			)];

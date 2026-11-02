@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
-use InvalidArgumentException;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Data\WarmReport;
 use TotalCMS\Domain\ImageWorks\Data\WarmVariants;
@@ -64,9 +63,9 @@ final readonly class ImageWorksWarmer
 	 * `mydeck/photo` the photo of every deck item. A video child warms its
 	 * poster.
 	 *
-	 * @return array<string,array{root:string,field:string,child:?string,childField:?string}>
+	 * @throws \InvalidArgumentException
 	 *
-	 * @throws InvalidArgumentException
+	 * @return array<string,array{root:string,field:string,child:?string,childField:?string}>
 	 */
 	public function properties(string $collection, ?string $property): array
 	{
@@ -85,7 +84,7 @@ final readonly class ImageWorksWarmer
 		}
 
 		if ($found === []) {
-			throw new InvalidArgumentException("Collection {$collection} has no image or gallery properties.");
+			throw new \InvalidArgumentException("Collection {$collection} has no image or gallery properties.");
 		}
 
 		return $found;
@@ -96,27 +95,27 @@ final readonly class ImageWorksWarmer
 	 *
 	 * @param array<int|string,mixed> $definitions
 	 *
-	 * @return array{root:string,field:string,child:?string,childField:?string}
+	 * @throws \InvalidArgumentException
 	 *
-	 * @throws InvalidArgumentException
+	 * @return array{root:string,field:string,child:?string,childField:?string}
 	 */
 	private function target(string $collection, array $definitions, string $property): array
 	{
 		$parts = explode('/', $property);
 		if (count($parts) > 2 || in_array('', $parts, true)) {
-			throw new InvalidArgumentException("Property {$property} is not a valid name. Use a property, or parent/child for an image in a card or deck.");
+			throw new \InvalidArgumentException("Property {$property} is not a valid name. Use a property, or parent/child for an image in a card or deck.");
 		}
 		[$root, $child] = [$parts[0], $parts[1] ?? null];
 
 		if (!array_key_exists($root, $definitions)) {
-			throw new InvalidArgumentException("Property {$root} is not in collection {$collection}.");
+			throw new \InvalidArgumentException("Property {$root} is not in collection {$collection}.");
 		}
 		$definition = $definitions[$root];
 		$field      = is_array($definition) && is_string($definition['field'] ?? null) ? $definition['field'] : '';
 
 		if ($field === 'video') {
 			if (!in_array($child, [null, 'poster'], true)) {
-				throw new InvalidArgumentException("{$root} is a video. Name it as {$root} or {$root}/poster to warm its poster.");
+				throw new \InvalidArgumentException("{$root} is a video. Name it as {$root} or {$root}/poster to warm its poster.");
 			}
 
 			return ['root' => $root, 'field' => 'video', 'child' => null, 'childField' => null];
@@ -124,7 +123,7 @@ final readonly class ImageWorksWarmer
 
 		if (in_array($field, self::FIELDS, true)) {
 			if ($child !== null) {
-				throw new InvalidArgumentException("{$root} has no fields inside it. Name it alone: {$root}.");
+				throw new \InvalidArgumentException("{$root} has no fields inside it. Name it alone: {$root}.");
 			}
 
 			return ['root' => $root, 'field' => $field, 'child' => null, 'childField' => null];
@@ -136,16 +135,16 @@ final readonly class ImageWorksWarmer
 			if ($child === null) {
 				$names = implode(', ', array_map(static fn (string $c): string => "{$root}/{$c}", array_keys($children)));
 
-				throw new InvalidArgumentException("{$root} is a {$field}. Name the image inside it as parent/child" . ($names === '' ? ', but it has no image or video fields.' : ": {$names}."));
+				throw new \InvalidArgumentException("{$root} is a {$field}. Name the image inside it as parent/child" . ($names === '' ? ', but it has no image or video fields.' : ": {$names}."));
 			}
 			if (!isset($children[$child])) {
-				throw new InvalidArgumentException("{$child} is not an image or video field in {$root}.");
+				throw new \InvalidArgumentException("{$child} is not an image or video field in {$root}.");
 			}
 
 			return ['root' => $root, 'field' => self::CONTAINERS[$field], 'child' => $child, 'childField' => $children[$child]];
 		}
 
-		throw new InvalidArgumentException("Property {$property} in collection {$collection} is not an image, gallery, video, card or deck field.");
+		throw new \InvalidArgumentException("Property {$property} in collection {$collection} is not an image, gallery, video, card or deck field.");
 	}
 
 	/**
@@ -153,9 +152,9 @@ final readonly class ImageWorksWarmer
 	 *
 	 * @param array<string,mixed> $definition
 	 *
-	 * @return array<string,string> name => field
+	 * @throws \InvalidArgumentException
 	 *
-	 * @throws InvalidArgumentException
+	 * @return array<string,string> name => field
 	 */
 	private function imageChildren(string $root, array $definition): array
 	{
@@ -168,7 +167,7 @@ final readonly class ImageWorksWarmer
 		try {
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 		} catch (\Throwable) {
-			throw new InvalidArgumentException("{$root} uses the schema {$schemaId}, which could not be read.");
+			throw new \InvalidArgumentException("{$root} uses the schema {$schemaId}, which could not be read.");
 		}
 
 		$children = [];
@@ -184,7 +183,7 @@ final readonly class ImageWorksWarmer
 
 	/**
 	 * @param list<string>                   $ids     only these objects; [] for the whole collection
-	 * @param null|callable(int, int): void  $onImage called after each image with (done, total)
+	 * @param callable(int, int): void|null  $onImage called after each image with (done, total)
 	 */
 	public function warm(string $collection, ?string $property, WarmVariants $variants, array $ids = [], bool $dryRun = false, ?callable $onImage = null): WarmReport
 	{

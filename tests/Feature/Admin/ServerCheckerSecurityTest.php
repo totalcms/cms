@@ -26,7 +26,7 @@ function stubSecurityAuditor(SecurityReport $report): SecurityAuditor
 
 		public function audit(SecurityContext $context, bool $offlineOnly = false): SecurityReport
 		{
-			++$this->calls;
+			$this->calls++;
 
 			return $this->canned;
 		}

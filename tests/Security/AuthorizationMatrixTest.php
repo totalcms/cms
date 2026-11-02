@@ -28,7 +28,6 @@ use TotalCMS\Support\OperationResult;
  * gets no 2xx, and a refused write leaves tcms-data exactly as it was. Which
  * refusal (302, 401, 403, 404) is the middleware's business.
  */
-
 const MATRIX_COLLECTION = 'matrix-blog';
 const MATRIX_OBJECT     = 'post-1';
 
@@ -153,7 +152,7 @@ function matrixChanged(array $before, array $after): array
 function matrixRequest(App $app, string $method, string $path, array $headers = [], ?array $body = null): ResponseInterface
 {
 	static $client = 0;
-	++$client;
+	$client++;
 
 	$request = (new ServerRequestFactory())->createServerRequest($method, $path, ['REMOTE_ADDR' => sprintf('198.51.%d.%d', intdiv($client, 250) % 250, $client % 250 + 1)]);
 	foreach ($headers as $name => $value) {
@@ -559,8 +558,8 @@ it('will not fan one data-driven recipient out to a list', function (): void {
 describe('clearing the job queue', function (): void {
 	beforeEach(function (): void {
 		// A group whose only right is the Job Queue utility.
-		$file            = cmsDataDir() . '.system/access-groups.json';
-		$groups          = json_decode((string)file_get_contents($file), true);
+		$file               = cmsDataDir() . '.system/access-groups.json';
+		$groups             = json_decode((string)file_get_contents($file), true);
 		$groups['groups'][] = ['id' => 'queue-keeper', 'description' => 'Job queue only', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['jobqueue']]]];
 		file_put_contents($file, (string)json_encode($groups));
 		$this->app->getContainer()->get(ObjectSaver::class)->saveObject('auth', ['id' => 'keeper', 'name' => 'Keeper', 'email' => 'keeper@example.test', 'password' => 'matrix-Password-1', 'groups' => ['queue-keeper'], 'active' => true]);

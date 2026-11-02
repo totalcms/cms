@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Support\GlobalsRequestCreator;
 
 // A header named only with digits reached slim/psr7 as an integer key and
@@ -20,7 +21,7 @@ afterEach(function (): void {
 	$_POST   = $this->post;
 });
 
-function rebuildRequest(array $headers): Psr\Http\Message\ServerRequestInterface
+function rebuildRequest(array $headers): ServerRequestInterface
 {
 	$creator = new GlobalsRequestCreator(static fn (): array => $headers);
 

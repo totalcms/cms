@@ -50,7 +50,7 @@ readonly class IndexQueryService
 		$load = function () use ($collection, $scope): array {
 			$items = $this->indexFilter->fetchFilteredIndex($collection, []);
 
-			return $scope !== null ? $scope->filter($items) : $items;
+			return $scope?->filter($items) ?? $items;
 		};
 
 		// The pipeline caches by prefix + params. The collection's query
@@ -58,7 +58,7 @@ readonly class IndexQueryService
 		// not be served to an unscoped caller (or to a differently scoped
 		// one), so the scope is part of the prefix.
 		$cachePrefix = 'collection-query:' . $collection . '@' . $this->cacheManager->queryVersion('collection:' . $collection);
-		if ($scope !== null) {
+		if ($scope instanceof ReadScope) {
 			$cachePrefix .= ':' . $scope->cacheKey();
 		}
 

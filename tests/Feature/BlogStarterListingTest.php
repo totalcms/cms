@@ -87,6 +87,6 @@ test('the blog starter blog page shows ten posts a page, with links between page
 	$dir  = dirname(__DIR__, 2) . '/resources/builder/starters/blog/pages/';
 	$page = (string)file_get_contents($dir . 'blog/index.twig');
 
-	expect($page)->toContain("limit: 10, page: getData.page|default(1)");
+	expect($page)->toContain('limit: 10, page: getData.page|default(1)');
 	expect(renderBlogStarterPage('blog/index.twig', ['page' => '2']))->toBe('');
 });

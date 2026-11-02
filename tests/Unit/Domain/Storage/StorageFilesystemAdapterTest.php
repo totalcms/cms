@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
-use League\Flysystem\UnableToWriteFile;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\UnableToWriteFile;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 /*

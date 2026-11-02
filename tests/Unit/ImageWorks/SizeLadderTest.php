@@ -24,7 +24,7 @@ function sizeLadder(): SizeLadder
 	$ladder = SizeLadder::fromConfig(sizeLadderConfig([
 		'sizeStep' => 50,
 		'picture'  => ['widths' => [480, 768, 1024, 1440, 1920]],
-		'presets' => ['thumb' => ['w' => 320, 'h' => 180], 'broken' => 'not-an-array'],
+		'presets'  => ['thumb' => ['w' => 320, 'h' => 180], 'broken' => 'not-an-array'],
 	]));
 	expect($ladder)->toBeInstanceOf(SizeLadder::class);
 

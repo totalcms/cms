@@ -58,7 +58,7 @@ class RegistrationGroupCheck implements SecurityCheck
 				continue;
 			}
 			$open      = true;
-			$findings = [...$findings, ...$this->checkCollection($collection)];
+			$findings  = [...$findings, ...$this->checkCollection($collection)];
 		}
 
 		if (!$open) {

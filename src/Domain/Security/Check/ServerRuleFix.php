@@ -46,6 +46,6 @@ final class ServerRuleFix
 			return 'Turn off directory listing by adding "Options -Indexes" to your .htaccess file.';
 		}
 
-		return ".htaccess files are ignored on this server. Turn off directory listing in your Nginx config (autoindex off;) and reload.";
+		return '.htaccess files are ignored on this server. Turn off directory listing in your Nginx config (autoindex off;) and reload.';
 	}
 }

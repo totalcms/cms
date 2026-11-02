@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
-use InvalidArgumentException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -13,7 +12,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use TotalCMS\Domain\ImageWorks\Data\WarmReport;
 use TotalCMS\Domain\ImageWorks\Data\WarmVariants;
 use TotalCMS\Domain\ImageWorks\Service\ImageWorksWarmer;
 
@@ -70,7 +68,7 @@ class ImageWorksWarmCommand extends BaseCommand
 			$bar->setFormat(' %current%/%max% images [%bar%] %percent:3s%% %elapsed:6s%');
 		}
 		$onImage = function (int $done, int $total) use (&$bar): void {
-			if ($bar === null) {
+			if (!$bar instanceof ProgressBar) {
 				return;
 			}
 			if ($bar->getMaxSteps() !== $total) {
@@ -87,7 +85,7 @@ class ImageWorksWarmCommand extends BaseCommand
 			return $this->outputError($input, $output, 'Could not warm collection "' . $collection . '": ' . $e->getMessage());
 		}
 
-		if ($bar !== null) {
+		if ($bar instanceof ProgressBar) {
 			$bar->finish();
 			$output->writeln('');
 		}
@@ -104,12 +102,12 @@ class ImageWorksWarmCommand extends BaseCommand
 	{
 		$dryRun = (bool)($data['dryRun'] ?? false);
 		$rows   = [
-			'Objects'        => $data['objects'] ?? 0,
-			'Images'         => $data['images'] ?? 0,
+			'Objects'                       => $data['objects'] ?? 0,
+			'Images'                        => $data['images'] ?? 0,
 			$dryRun ? 'Would make' : 'Made' => $dryRun ? ($data['wouldMake'] ?? 0) : ($data['made'] ?? 0),
-			'Already cached' => $data['cached'] ?? 0,
-			'Original'       => $data['original'] ?? 0,
-			'Failed'         => $data['failed'] ?? 0,
+			'Already cached'                => $data['cached'] ?? 0,
+			'Original'                      => $data['original'] ?? 0,
+			'Failed'                        => $data['failed'] ?? 0,
 		];
 
 		$output->writeln('');
@@ -159,7 +157,7 @@ class ImageWorksWarmCommand extends BaseCommand
 				$this->stringList($input->getOption('url')),
 				$this->totalcms->config,
 			);
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, 'Could not read collection "' . $collection . '": ' . $e->getMessage());
@@ -218,20 +216,20 @@ class ImageWorksWarmCommand extends BaseCommand
 			return [];
 		}
 
-		return array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $item): bool => $item !== ''));
+		return array_values(array_filter(array_map(trim(...), explode(',', $value)), static fn (string $item): bool => $item !== ''));
 	}
 
 	/**
-	 * @return list<int>
+	 * @throws \InvalidArgumentException when an item is not a positive whole number
 	 *
-	 * @throws InvalidArgumentException when an item is not a positive whole number
+	 * @return list<int>
 	 */
 	private function widths(mixed $value): array
 	{
 		$widths = [];
 		foreach ($this->commaList($value) as $item) {
 			if (!ctype_digit($item) || (int)$item < 1) {
-				throw new InvalidArgumentException("--widths must be positive whole numbers, got \"{$item}\".");
+				throw new \InvalidArgumentException("--widths must be positive whole numbers, got \"{$item}\".");
 			}
 			$widths[] = (int)$item;
 		}

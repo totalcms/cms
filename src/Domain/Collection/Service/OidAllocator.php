@@ -48,6 +48,7 @@ class OidAllocator
 	 * @template T
 	 *
 	 * @param callable(): T $create
+	 *
 	 * @param-out bool      $claimed whether $create used up a number
 	 *
 	 * @return T

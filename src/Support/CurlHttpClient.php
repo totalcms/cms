@@ -114,14 +114,14 @@ class CurlHttpClient implements HttpClientInterface
 		}
 
 		// Collect response headers; a redirect restarts the block at each status line
-		$responseHeaders = [];
+		$responseHeaders                     = [];
 		$curlOptions[CURLOPT_HEADERFUNCTION] = static function (\CurlHandle $handle, string $line) use (&$responseHeaders): int {
 			if (str_starts_with($line, 'HTTP/')) {
 				$responseHeaders = [];
 			} elseif (str_contains($line, ':')) {
-				[$name, $value] = explode(':', $line, 2);
-				$name           = strtolower(trim($name));
-				$value          = trim($value);
+				[$name, $value]         = explode(':', $line, 2);
+				$name                   = strtolower(trim($name));
+				$value                  = trim($value);
 				$responseHeaders[$name] = isset($responseHeaders[$name]) ? $responseHeaders[$name] . ', ' . $value : $value;
 			}
 

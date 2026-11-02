@@ -81,12 +81,12 @@ final class ImageParamValidator
 		'marktexty'    => '/^\d{1,5}(\.\d+)?[wh]?$/',
 		'marktextpad'  => '/^\d{1,5}(\.\d+)?[wh]?$/',
 		// Colors (hex, names, palette-N) and positions; border is "width,color,method"
-		'bg'            => '/^[A-Za-z0-9#,._-]{1,64}$/',
-		'border'        => '/^[A-Za-z0-9#,._-]{1,64}$/',
-		'markpos'       => '/^[A-Za-z0-9#,._-]{1,64}$/',
-		'marktextpos'   => '/^[A-Za-z0-9#,._-]{1,64}$/',
-		'marktextcolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
-		'marktextbg'    => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'bg'                  => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'border'              => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'markpos'             => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'marktextpos'         => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'marktextcolor'       => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'marktextbg'          => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextstrokecolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextshadowcolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		// File names: a watermark image, a font

@@ -43,7 +43,7 @@ class McpAnonymousCheck implements SecurityCheck
 
 	public function run(SecurityContext $context): array
 	{
-		$mcp = (array)$this->config->mcp;
+		$mcp = $this->config->mcp;
 		if (!($mcp['enabled'] ?? true) || !($mcp['publicAccess'] ?? false)) {
 			return [SecurityFinding::ok(self::ID, 'The MCP server is not open to anonymous callers')];
 		}

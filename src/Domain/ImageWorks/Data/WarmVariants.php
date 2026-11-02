@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Data;
 
-use InvalidArgumentException;
 use TotalCMS\Domain\ImageWorks\Service\PictureCandidates;
 use TotalCMS\Support\Config;
 
@@ -43,19 +42,19 @@ final readonly class WarmVariants
 	 * @param list<string> $presets
 	 * @param list<string> $urls
 	 *
-	 * @throws InvalidArgumentException with a message fit to show the operator
+	 * @throws \InvalidArgumentException with a message fit to show the operator
 	 */
 	public static function fromOptions(array $widths, array $formats, bool $picture, array $params, array $presets, array $urls, ?Config $config): self
 	{
 		$grid = $widths !== [] || $picture;
 		if (!$grid && $params === [] && $presets === [] && $urls === []) {
 			if ($formats !== []) {
-				throw new InvalidArgumentException('--formats needs --widths or --picture.');
+				throw new \InvalidArgumentException('--formats needs --widths or --picture.');
 			}
-			throw new InvalidArgumentException('Give at least one of --widths, --picture, --params, --preset or --url. Add --dry-run to see how many files that would make.');
+			throw new \InvalidArgumentException('Give at least one of --widths, --picture, --params, --preset or --url. Add --dry-run to see how many files that would make.');
 		}
 		if ($formats !== [] && !$grid) {
-			throw new InvalidArgumentException('--formats needs --widths or --picture.');
+			throw new \InvalidArgumentException('--formats needs --widths or --picture.');
 		}
 
 		$formats = self::checkedFormats($formats);
@@ -64,7 +63,7 @@ final readonly class WarmVariants
 		foreach ($params as $query) {
 			$parsed = self::parse($query);
 			if ($grid && isset($parsed['fm'])) {
-				throw new InvalidArgumentException("--params \"{$query}\" cannot contain fm when a grid is used; the grid sets the format.");
+				throw new \InvalidArgumentException("--params \"{$query}\" cannot contain fm when a grid is used; the grid sets the format.");
 			}
 			$bases[] = $parsed;
 		}
@@ -97,9 +96,10 @@ final readonly class WarmVariants
 	 * @param list<int> $widths
 	 * @param array<string,mixed> $image
 	 * @param array<string,string|int> $base
+	 *
 	 * @return list<int>
 	 */
-	private static function exactWidths(array $widths, array $image, array $base): array
+	private function exactWidths(array $widths, array $image, array $base): array
 	{
 		$ceiling = isset($base['w']) ? (int)$base['w'] : 0;
 		$source  = (int)($image['width'] ?? 0);
@@ -135,7 +135,7 @@ final readonly class WarmVariants
 			foreach ($this->bases === [] ? [[]] : $this->bases as $base) {
 				$cell = $base;
 				unset($cell['w']);
-				$cellWidths = $this->picture ? PictureCandidates::widths($widths, $image, $base) : self::exactWidths($widths, $image, $base);
+				$cellWidths = $this->picture ? PictureCandidates::widths($widths, $image, $base) : $this->exactWidths($widths, $image, $base);
 				foreach ($cellWidths as $w) {
 					// The route sets `fm` from the extension only without a preset, so a
 					// preset base reaches it as {p, w, ...}; the formats collapse to one.
@@ -161,7 +161,7 @@ final readonly class WarmVariants
 			$sets[] = $url;
 		}
 
-		return self::unique($sets);
+		return $this->unique($sets);
 	}
 
 	/**
@@ -196,7 +196,7 @@ final readonly class WarmVariants
 			$format = strtolower(trim($format));
 			if ($format !== 'native' && !isset(PictureCandidates::MIME[$format])) {
 				$valid = implode(', ', [...array_keys(PictureCandidates::MIME), 'native']);
-				throw new InvalidArgumentException("Unknown format \"{$format}\". Use one of: {$valid}.");
+				throw new \InvalidArgumentException("Unknown format \"{$format}\". Use one of: {$valid}.");
 			}
 			$out[] = $format;
 		}
@@ -231,7 +231,7 @@ final readonly class WarmVariants
 		$parts = parse_url($url);
 		$path  = is_array($parts) ? ($parts['path'] ?? '') : '';
 		if (!is_array($parts) || !str_contains($path, '/imageworks/')) {
-			throw new InvalidArgumentException("--url \"{$url}\" is not an ImageWorks URL; its path must contain /imageworks/.");
+			throw new \InvalidArgumentException("--url \"{$url}\" is not an ImageWorks URL; its path must contain /imageworks/.");
 		}
 
 		$params = self::parse($parts['query'] ?? '');
@@ -241,7 +241,7 @@ final readonly class WarmVariants
 
 		$ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 		if (!isset(PictureCandidates::MIME[$ext])) {
-			throw new InvalidArgumentException("--url \"{$url}\" does not end in an image format (" . implode(', ', array_keys(PictureCandidates::MIME)) . ').');
+			throw new \InvalidArgumentException("--url \"{$url}\" does not end in an image format (" . implode(', ', array_keys(PictureCandidates::MIME)) . ').');
 		}
 
 		// The route overwrites any query `fm` with the extension.
@@ -255,7 +255,7 @@ final readonly class WarmVariants
 	 *
 	 * @return list<array<string,string|int>>
 	 */
-	private static function unique(array $sets): array
+	private function unique(array $sets): array
 	{
 		$seen = [];
 		$out  = [];

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Check;
 
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Data\SecurityFinding;
@@ -70,7 +67,7 @@ class RawRequestDataCheck implements SecurityCheck
 	{
 		$base  = rtrim($dir, '/');
 		$found = [];
-		$iter  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base, FilesystemIterator::SKIP_DOTS));
+		$iter  = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS));
 		foreach ($iter as $file) {
 			if (!$file->isFile() || $file->getExtension() !== 'twig') {
 				continue;

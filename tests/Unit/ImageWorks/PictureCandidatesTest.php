@@ -7,7 +7,7 @@ use TotalCMS\Support\Config;
 
 function pictureCandidatesConfig(array $imageworks): Config
 {
-	$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->imageworks = $imageworks;
 
 	return $config;

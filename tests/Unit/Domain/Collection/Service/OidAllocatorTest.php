@@ -68,4 +68,3 @@ test('a create that throws still ends its claim', function (): void {
 	}))->toThrow(RuntimeException::class);
 	expect($oids->next('posts'))->toBe(5);
 });
-

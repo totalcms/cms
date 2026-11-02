@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\Security\Check\SecurityCheck;
 use TotalCMS\Domain\Security\Data\FindingStatus;
 use TotalCMS\Domain\Security\Data\SecurityContext;
@@ -9,7 +10,6 @@ use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\SecurityReport;
 use TotalCMS\Domain\Security\Data\Severity;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
-use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\Security\Service\SiteProbe;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;

@@ -25,6 +25,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\Data\SecurityContext;
+use TotalCMS\Domain\Security\Data\SecurityReport;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
 use TotalCMS\Domain\Security\Service\SecurityReportStore;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -606,7 +607,7 @@ readonly class DashboardRenderer
 	{
 		try {
 			$stored = $this->securityReports->latest();
-			$report = $stored !== null
+			$report = $stored instanceof SecurityReport
 				? $this->securityAuditor->applyIgnores($stored)
 				: $this->securityAuditor->audit(SecurityContext::fromCli($this->config), offlineOnly: true);
 			$count = $report->criticalCount();

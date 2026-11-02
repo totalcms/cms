@@ -181,7 +181,7 @@ test('an index that cannot be read during the run is a JSON error, not a stack t
 
 test('running as someone other than the data folder owner warns before the run', function (): void {
 	$owner   = (int)fileowner($this->totalcms->config->datadir);
-	$command = new class ($this->totalcms, $owner + 1) extends ImageWorksWarmCommand {
+	$command = new class($this->totalcms, $owner + 1) extends ImageWorksWarmCommand {
 		public function __construct(TotalCMS $totalcms, private readonly int $uid)
 		{
 			parent::__construct($totalcms);

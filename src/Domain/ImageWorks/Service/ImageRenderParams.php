@@ -17,7 +17,6 @@ use TotalCMS\Support\Config;
  */
 final readonly class ImageRenderParams
 {
-
 	public function __construct(
 		private PropertyMetaResolver $metaResolver,
 		private Config $config,

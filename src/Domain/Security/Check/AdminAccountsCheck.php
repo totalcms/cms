@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Check;
 
-use Throwable;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -59,7 +58,7 @@ class AdminAccountsCheck implements SecurityCheck
 			// One missing or broken user file shouldn't hide the rest of the count.
 			try {
 				$user = $this->objects->fetchObject($collection, $id)->toArray();
-			} catch (Throwable) {
+			} catch (\Throwable) {
 				$unreadable++;
 
 				continue;

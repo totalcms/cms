@@ -350,7 +350,7 @@ class IndexBuilder
 		return $this->skipOnFailure($collection, $id, function () use ($collection, $id, $indexProps): ?string {
 			$entry = $this->readEntry($collection, $id, $indexProps);
 
-			return $entry === null ? null : self::encodeEntry($entry);
+			return $entry === null ? null : $this->encodeEntry($entry);
 		});
 	}
 
@@ -388,7 +388,7 @@ class IndexBuilder
 	 *
 	 * @param array<string,mixed> $entry
 	 */
-	private static function encodeEntry(array $entry): string
+	private function encodeEntry(array $entry): string
 	{
 		$json = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		if ($json === false) {

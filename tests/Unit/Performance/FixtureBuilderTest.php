@@ -55,7 +55,7 @@ afterEach(function (): void {
 });
 
 it('builds a fixture with exactly N posts and a matching index', function (): void {
-	$root = perfFixtureRoot('a');
+	$root         = perfFixtureRoot('a');
 	[$code, $out] = runPerfFixtures('--size=25', '--pages=10', '--root=' . $root);
 
 	expect($code)->toBe(0, $out);
@@ -116,7 +116,7 @@ it('will not wipe a folder that is not a fixture, even with force', function ():
 });
 
 it('writes absolute data paths for a relative root', function (): void {
-	$relative = 'tmp/perf-test/' . ($_SERVER['TEST_TOKEN'] ?? '0') . '/rel';
+	$relative     = 'tmp/perf-test/' . ($_SERVER['TEST_TOKEN'] ?? '0') . '/rel';
 	[$code, $out] = runPerfFixtures('--size=3', '--pages=1', '--root=' . $relative);
 
 	expect($code)->toBe(0, $out);

@@ -241,8 +241,8 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$activity       = $overrides['activity'] ?? $this->mockFailedEmails(0);
 
 		// SMTP set up unless a test says otherwise.
-		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->smtp = $overrides['smtp'] ?? ['from' => 'site@example.com'];
+		$config           = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->smtp     = $overrides['smtp'] ?? ['from' => 'site@example.com'];
 		$config->security = ['ignore' => $overrides['securityIgnore'] ?? []];
 
 		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();

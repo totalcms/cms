@@ -20,7 +20,7 @@ function exposureInstall(bool $dataInsideDocroot = true): array
 	mkdir($tmp . '/public', 0777, true);
 	$data = $dataInsideDocroot ? $tmp . '/public/tcms-data' : $tmp . '/tcms-data';
 	mkdir($data . '/.system', 0777, true);
-	$tmp = realpath($tmp);
+	$tmp  = realpath($tmp);
 	$data = $dataInsideDocroot ? $tmp . '/public/tcms-data' : $tmp . '/tcms-data';
 
 	$config                 = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
@@ -320,6 +320,7 @@ describe('SensitiveFilesPublicCheck extras', function (): void {
 	test('an unwritable folder inside the docroot is skipped, not ok', function (): void {
 		if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 		[$tmp, $config] = exposureInstall();
@@ -360,7 +361,7 @@ describe('DirectoryListingCheck', function (): void {
 	});
 
 	test('uses the configured assetsPath and says so when the folder is missing', function (): void {
-		[$tmp, $config] = exposureInstall();
+		[$tmp, $config]  = exposureInstall();
 		$config->builder = ['assetsPath' => 'static'];
 		$client          = exposureClient(static fn (): HttpResponse => new HttpResponse(200, '<title>Index of /static</title>'), $config->docroot);
 		$none            = (new DirectoryListingCheck($config, exposureProbe($client, $config)))->run(exposureContext());
@@ -478,8 +479,8 @@ test('only the data folder fix says a .htaccess ships in the folder', function (
 
 test('the canary file is world-readable even under a strict umask', function (): void {
 	[$tmp, $config] = exposureInstall();
-	$modes  = [];
-	$client = exposureClient(static function (string $url, string $docroot) use (&$modes): HttpResponse {
+	$modes          = [];
+	$client         = exposureClient(static function (string $url, string $docroot) use (&$modes): HttpResponse {
 		$path    = $docroot . rawurldecode((string)parse_url($url, PHP_URL_PATH));
 		$modes[] = fileperms($path) & 0777;
 

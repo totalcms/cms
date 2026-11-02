@@ -178,7 +178,7 @@ function watermarkFootprint(string $a, string $b): array
 			if ($delta > 30) {
 				$minX                                                     = min($minX, $x);
 				$maxX                                                     = max($maxX, $x);
-				$quarters[(int)($x * 2 / $w) . ':' . (int)($y * 2 / $h)] = true;
+				$quarters[(int)($x * 2 / $w) . ':' . (int)($y * 2 / $h)]  = true;
 			}
 		}
 	}

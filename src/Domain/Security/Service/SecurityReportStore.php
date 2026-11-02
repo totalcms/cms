@@ -19,7 +19,7 @@ use TotalCMS\Domain\Storage\CorruptPolicy;
  */
 readonly class SecurityReportStore
 {
-	public const FILE    = '.system/security-report.json';
+	public const FILE     = '.system/security-report.json';
 	private const MAX_AGE = 86400;
 
 	public function __construct(private AtomicJsonStore $store)

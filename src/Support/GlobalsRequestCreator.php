@@ -35,7 +35,7 @@ final readonly class GlobalsRequestCreator implements ServerRequestCreatorInterf
 	/** @param (\Closure(): array<int|string,string>)|null $headers the request headers; getallheaders() when null */
 	public function __construct(?\Closure $headers = null)
 	{
-		$this->headers = $headers ?? static fn (): array => function_exists('getallheaders') ? (getallheaders() ?: []) : [];
+		$this->headers = $headers ?? static fn (): array => function_exists('getallheaders') ? (getallheaders()) : [];
 	}
 
 	public function createServerRequestFromGlobals(): ServerRequestInterface

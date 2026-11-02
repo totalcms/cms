@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -36,8 +37,8 @@ function indexIdsOnDisk(): array
 /** Add an entry to the index file behind the repository's back, leaving its cache stale. */
 function addEntryBehindTheCache(string $id): void
 {
-	$file  = collectionPath('racenotes') . '.index.json';
-	$index = json_decode((string)file_get_contents($file), true);
+	$file               = collectionPath('racenotes') . '.index.json';
+	$index              = json_decode((string)file_get_contents($file), true);
 	$index['objects'][] = ['id' => $id, 'title' => strtoupper($id)];
 	file_put_contents($file, (string)json_encode($index));
 	file_put_contents(collectionPath('racenotes') . "{$id}.json", (string)json_encode(['id' => $id, 'title' => strtoupper($id)]));
@@ -93,7 +94,7 @@ test('remove keeps an entry written since the index was cached', function (): vo
 
 test('append waits for another process that holds the index lock', function (): void {
 	file_put_contents(collectionPath('racenotes') . 'd.json', (string)json_encode(['id' => 'd', 'title' => 'D']));
-	$object = $this->fetcher->fetchObjectFromDisk('racenotes', 'd');
+	$object         = $this->fetcher->fetchObjectFromDisk('racenotes', 'd');
 	[$proc, $pipes] = holdLockInChild(collectionPath('racenotes') . '.index.json.lock', 1.0);
 
 	$start = microtime(true);
@@ -119,8 +120,8 @@ test('a rebuild waits for another process that holds the index lock', function (
 });
 
 test('a metadata change waits for another process that holds the meta lock', function (): void {
-	$saver  = $this->app->getContainer()->get(CollectionSaver::class);
-	$before = json_decode((string)file_get_contents(collectionPath('racenotes') . '.meta.json'), true);
+	$saver          = $this->app->getContainer()->get(CollectionSaver::class);
+	$before         = json_decode((string)file_get_contents(collectionPath('racenotes') . '.meta.json'), true);
 	[$proc, $pipes] = holdLockInChild(collectionPath('racenotes') . '.meta.json.lock', 1.0);
 
 	$start = microtime(true);
@@ -168,7 +169,7 @@ test('a settings save cannot lower the lifetime count', function (): void {
 	// updateCollection() used to write the caller's snapshot, undoing creates
 	// committed since; a lower count reissues an ${oid} already in use.
 	$saver    = $this->app->getContainer()->get(CollectionSaver::class);
-	$snapshot = $this->app->getContainer()->get(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class)->fetchCollection('racenotes');
+	$snapshot = $this->app->getContainer()->get(CollectionRepository::class)->fetchCollection('racenotes');
 	$saver->incrementCount('racenotes', 3);
 	$counted = json_decode((string)file_get_contents(collectionPath('racenotes') . '.meta.json'), true)['count'];
 

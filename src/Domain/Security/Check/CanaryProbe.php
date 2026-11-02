@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Security\Check;
 
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Service\SiteProbe;
+use TotalCMS\Support\HttpResponse;
 
 /**
  * Proves whether a folder is served over HTTP by writing a throwaway file with
@@ -61,7 +62,7 @@ final readonly class CanaryProbe
 			}
 		}
 
-		if ($response === null) {
+		if (!$response instanceof HttpResponse) {
 			return [self::UNREACHABLE, $path, ''];
 		}
 		if (SiteProbe::isRedirect($response)) {

@@ -568,7 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batch Image Processor',
 	'image_batcher.desc'             => 'Process multiple images with ImageWorks settings in bulk.',
-	'image_batcher.cli_hint'        => 'For large collections, run <code>tcms imageworks:warm</code> from the command line instead.',
+	'image_batcher.cli_hint'         => 'For large collections, run <code>tcms imageworks:warm</code> from the command line instead.',
 	'image_batcher.step1'            => 'Step 1: Select Collection',
 	'image_batcher.step1_desc'       => 'Choose the collection containing the images you want to process.',
 	'image_batcher.step2'            => 'Step 2: Select Property',
@@ -811,18 +811,18 @@ return [
 	'pretty_url.invalid_path'       => 'Invalid path provided.',
 
 	// ── Security ─────────────────────────────────────────────────────────────
-	'security.title' => 'Security',
-	'security.not_checked' => 'Not checked',
-	'security.ignored' => 'Ignored',
+	'security.title'             => 'Security',
+	'security.not_checked'       => 'Not checked',
+	'security.ignored'           => 'Ignored',
 	'security.severity.critical' => 'Critical',
-	'security.severity.warning' => 'Warning',
-	'security.severity.info' => 'Info',
-	'security.docs' => 'Docs',
-	'security.severity' => 'Severity',
-	'security.finding' => 'Finding',
-	'security.detail' => 'Details',
-	'security.fix' => 'Fix',
-	'security.all_clear' => 'No security problems were found.',
+	'security.severity.warning'  => 'Warning',
+	'security.severity.info'     => 'Info',
+	'security.docs'              => 'Docs',
+	'security.severity'          => 'Severity',
+	'security.finding'           => 'Finding',
+	'security.detail'            => 'Details',
+	'security.fix'               => 'Fix',
+	'security.all_clear'         => 'No security problems were found.',
 	'security.all_clear_skipped' => 'No problems found, but {count} checks couldn\'t run.',
 
 	// ── Server Checker ──────────────────────────────────────────────────────

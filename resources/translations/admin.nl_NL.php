@@ -568,7 +568,7 @@ return [
 	// ── Image Batcher ───────────────────────────────────────────────────────
 	'image_batcher.title'            => 'Batchafbeeldingsverwerker',
 	'image_batcher.desc'             => 'Verwerk meerdere afbeeldingen in bulk met ImageWorks-instellingen.',
-	'image_batcher.cli_hint'        => 'Voer voor grote collecties in plaats daarvan <code>tcms imageworks:warm</code> uit op de opdrachtregel.',
+	'image_batcher.cli_hint'         => 'Voer voor grote collecties in plaats daarvan <code>tcms imageworks:warm</code> uit op de opdrachtregel.',
 	'image_batcher.step1'            => 'Stap 1: Selecteer Collection',
 	'image_batcher.step1_desc'       => 'Kies de Collection met de afbeeldingen die u wilt verwerken.',
 	'image_batcher.step2'            => 'Stap 2: Selecteer eigenschap',
@@ -811,18 +811,18 @@ return [
 	'pretty_url.invalid_path'       => 'Ongeldig pad opgegeven.',
 
 	// ── Security ─────────────────────────────────────────────────────────────
-	'security.title' => 'Beveiliging',
-	'security.not_checked' => 'Niet gecontroleerd',
-	'security.ignored' => 'Genegeerd',
+	'security.title'             => 'Beveiliging',
+	'security.not_checked'       => 'Niet gecontroleerd',
+	'security.ignored'           => 'Genegeerd',
 	'security.severity.critical' => 'Kritiek',
-	'security.severity.warning' => 'Waarschuwing',
-	'security.severity.info' => 'Info',
-	'security.docs' => 'Documentatie',
-	'security.severity' => 'Ernst',
-	'security.finding' => 'Bevinding',
-	'security.detail' => 'Details',
-	'security.fix' => 'Oplossing',
-	'security.all_clear' => 'Er zijn geen beveiligingsproblemen gevonden.',
+	'security.severity.warning'  => 'Waarschuwing',
+	'security.severity.info'     => 'Info',
+	'security.docs'              => 'Documentatie',
+	'security.severity'          => 'Ernst',
+	'security.finding'           => 'Bevinding',
+	'security.detail'            => 'Details',
+	'security.fix'               => 'Oplossing',
+	'security.all_clear'         => 'Er zijn geen beveiligingsproblemen gevonden.',
 	'security.all_clear_skipped' => 'Geen problemen gevonden, maar {count} controles konden niet worden uitgevoerd.',
 
 	// ── Server Checker ──────────────────────────────────────────────────────

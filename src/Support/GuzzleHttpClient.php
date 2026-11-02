@@ -111,12 +111,12 @@ class GuzzleHttpClient implements HttpClientInterface
 		return new HttpResponse(
 			$response->getStatusCode(),
 			(string)$response->getBody(),
-			self::flattenHeaders($response),
+			$this->flattenHeaders($response),
 		);
 	}
 
 	/** @return array<string,string> */
-	private static function flattenHeaders(ResponseInterface $response): array
+	private function flattenHeaders(ResponseInterface $response): array
 	{
 		$flat = [];
 		foreach ($response->getHeaders() as $name => $values) {

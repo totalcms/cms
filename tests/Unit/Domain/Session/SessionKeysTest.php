@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Session;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
@@ -62,7 +61,7 @@ final class SessionKeysTest extends TestCase
 	private function keys(): array
 	{
 		/** @var array<string,string> $constants */
-		$constants = (new ReflectionClass(SessionKeys::class))->getConstants();
+		$constants = (new \ReflectionClass(SessionKeys::class))->getConstants();
 
 		return $constants;
 	}

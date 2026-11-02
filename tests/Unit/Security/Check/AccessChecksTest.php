@@ -8,11 +8,11 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -109,8 +109,8 @@ function registrationCheck(Config $config, array $collections, array $groups, ar
 }
 
 test('registration into an admin-capable group is critical', function (): void {
-	$members = accessCollection('members', 'auth', true, [], ['staff']);
-	$config  = accessConfig(['auth' => ['publicRegistrationGroup' => 'admin']]);
+	$members  = accessCollection('members', 'auth', true, [], ['staff']);
+	$config   = accessConfig(['auth' => ['publicRegistrationGroup' => 'admin']]);
 	$findings = registrationCheck($config, [$members], [])->run(accessContext());
 
 	expect($findings[0]->status)->toBe(FindingStatus::Found)
@@ -151,8 +151,8 @@ test('registration into a group that can write a collection is a warning', funct
 });
 
 test('registration into a read-only group is ok', function (): void {
-	$members = accessCollection('members', 'auth', true, [], ['readers']);
-	$group   = accessGroup('readers', ['collections' => ['all' => true, 'operations' => ['read']]]);
+	$members  = accessCollection('members', 'auth', true, [], ['readers']);
+	$group    = accessGroup('readers', ['collections' => ['all' => true, 'operations' => ['read']]]);
 	$findings = registrationCheck(accessConfig(['auth' => []]), [$members], ['readers' => $group])->run(accessContext());
 
 	expect($findings[0]->status)->toBe(FindingStatus::Ok);

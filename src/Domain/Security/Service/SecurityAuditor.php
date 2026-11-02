@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Security\Service;
 
 use Psr\Log\LoggerInterface;
-use Throwable;
 use TotalCMS\Domain\Security\Check\AdminAccountsCheck;
 use TotalCMS\Domain\Security\Check\ApiKeysBroadCheck;
 use TotalCMS\Domain\Security\Check\DataFolderPublicCheck;
@@ -70,7 +69,7 @@ class SecurityAuditor
 
 			try {
 				$results = $check->run($context);
-			} catch (Throwable $e) {
+			} catch (\Throwable $e) {
 				// The message can hold paths or other internals, so it goes to the log, not the report.
 				$this->logger?->error(sprintf('Security check "%s" failed to run: %s', $check->id(), $e->getMessage()), ['exception' => $e]);
 				$results = [SecurityFinding::skipped($check->id(), $check->title(), self::CHECK_FAILED)];

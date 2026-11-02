@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Index\Data;
  * How a collection's index, its object files and its object count disagree.
  * Produced by IndexChecker; nothing here is ever repaired.
  */
-final class IndexCheckResult
+final readonly class IndexCheckResult
 {
 	/**
 	 * @param list<string> $unreadable   object files that do not parse
@@ -17,14 +17,14 @@ final class IndexCheckResult
 	 * @param list<string> $notIndexed   object files the index does not list
 	 */
 	public function __construct(
-		public readonly string $collection,
-		public readonly int $objects,
-		public readonly ?int $indexed,
-		public readonly bool $indexReadable,
-		public readonly ?int $recordedCount,
-		public readonly array $unreadable = [],
-		public readonly array $missingFiles = [],
-		public readonly array $notIndexed = [],
+		public string $collection,
+		public int $objects,
+		public ?int $indexed,
+		public bool $indexReadable,
+		public ?int $recordedCount,
+		public array $unreadable = [],
+		public array $missingFiles = [],
+		public array $notIndexed = [],
 	) {
 	}
 

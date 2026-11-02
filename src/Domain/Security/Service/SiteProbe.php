@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Service;
 
-use Throwable;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -69,7 +68,7 @@ class SiteProbe
 			return null;
 		}
 
-		$segments = array_map('rawurlencode', explode('/', str_replace('\\', '/', $relative)));
+		$segments = array_map(rawurlencode(...), explode('/', str_replace('\\', '/', $relative)));
 
 		return rtrim($context->baseUrl, '/') . '/' . implode('/', $segments);
 	}
@@ -91,7 +90,7 @@ class SiteProbe
 				'connect_timeout'  => 3,
 				'follow_redirects' => false,
 			]);
-		} catch (Throwable) {
+		} catch (\Throwable) {
 			$this->unreachable = true;
 
 			return null;

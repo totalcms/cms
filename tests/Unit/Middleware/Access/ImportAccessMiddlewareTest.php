@@ -104,8 +104,8 @@ describe('ImportAccessMiddleware', function (): void {
 
 		$importGroup                 = new AccessGroupData(['id' => 'import-group', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['import']]]]);
 		$otherGroup                  = new AccessGroupData(['id' => 'viewer', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['cache']]]]);
-		$this->grantedAuthority = new UserAuthority(isAdmin: false, groups: [$importGroup]);
-		$this->deniedAuthority  = new UserAuthority(isAdmin: false, groups: [$otherGroup]);
+		$this->grantedAuthority      = new UserAuthority(isAdmin: false, groups: [$importGroup]);
+		$this->deniedAuthority       = new UserAuthority(isAdmin: false, groups: [$otherGroup]);
 	});
 
 	test('session user without the import grant is denied', function (): void {

@@ -173,7 +173,7 @@ test('a rebuild indexes the same entries either way', function (int $size): void
 
 test('a rebuild reads an unchanged object once', function (int $size): void {
 	writeOldRebuildNotes($size);
-	$reads = 0;
+	$reads     = 0;
 	$container = $this->app->getContainer();
 	$builder   = new IndexBuilder(
 		$container->get(IndexRepository::class),

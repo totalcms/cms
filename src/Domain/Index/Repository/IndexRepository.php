@@ -170,7 +170,7 @@ class IndexRepository extends StorageRepository
 	{
 		$times = [];
 		foreach ($this->filesystem->listFileTimes($collection) as $path => $time) {
-			$id = self::objectIdFromFile(basename((string)$path));
+			$id = $this->objectIdFromFile(basename((string)$path));
 			if ($id !== null) {
 				$times[$id] = max($time, $times[$id] ?? 0);
 			}
@@ -278,7 +278,7 @@ class IndexRepository extends StorageRepository
 	{
 		$ids = [];
 		foreach ($this->filesystem->listFiles($collection) as $path) {
-			$id = self::objectIdFromFile(basename($path));
+			$id = $this->objectIdFromFile(basename($path));
 			if ($id !== null) {
 				// Keyed on the id to dedupe a .json/.md pair for the same
 				// id down to one entry. PHP casts a numeric-string key
@@ -295,7 +295,7 @@ class IndexRepository extends StorageRepository
 	 * The object id a file in a collection directory holds, or null when it
 	 * holds none (a dot-file, or neither .json nor .md).
 	 */
-	private static function objectIdFromFile(string $name): ?string
+	private function objectIdFromFile(string $name): ?string
 	{
 		if (str_starts_with($name, '.')) {
 			return null;

@@ -166,7 +166,6 @@ readonly class CollectionSaver
 	 * can fire it after letting go (see mutateMetadata()).
 	 *
 	 * @param array<string,mixed> $data
-	 *
 	 * @param ?CollectionData $onDisk the record as read under the meta lock;
 	 *                                the lifetime count never drops below its count
 	 *

@@ -172,7 +172,7 @@ class CheckCommand extends BaseCommand
 		}
 
 		if ($finding['status'] === FindingStatus::Skipped->value) {
-			$output->writeln("  <comment>?</comment> {$title}{$ignored}  <comment>" . OutputFormatter::escape((string)$finding['detail']) . "</comment>");
+			$output->writeln("  <comment>?</comment> {$title}{$ignored}  <comment>" . OutputFormatter::escape((string)$finding['detail']) . '</comment>');
 
 			return;
 		}

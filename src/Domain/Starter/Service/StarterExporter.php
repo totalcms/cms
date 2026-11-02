@@ -109,7 +109,7 @@ final readonly class StarterExporter
 	{
 		foreach ($this->entries($from) as $name) {
 			$path = $from . '/' . $name;
-			if (in_array($name, self::ALWAYS_SKIP, true) || $path === $datadir || self::isWriteLeftover($name)) {
+			if (in_array($name, self::ALWAYS_SKIP, true) || $path === $datadir || $this->isWriteLeftover($name)) {
 				continue;
 			}
 			if ($from === $projectRoot && in_array($name, self::PROJECT_SKIP, true)) {
@@ -173,7 +173,7 @@ final readonly class StarterExporter
 	{
 		$this->makeDir($to);
 		foreach ($this->entries($from) as $name) {
-			if (str_starts_with($name, '.') && is_file($from . '/' . $name) && $name !== '.meta.json' && $name !== '.index.json' && !self::isWriteLeftover($name)) {
+			if (str_starts_with($name, '.') && is_file($from . '/' . $name) && $name !== '.meta.json' && $name !== '.index.json' && !$this->isWriteLeftover($name)) {
 				copy($from . '/' . $name, $to . '/' . $name);
 			}
 		}
@@ -344,7 +344,7 @@ final readonly class StarterExporter
 	 * (.cake.json.tmp.1a2b3c4d) — runtime leftovers, and a temp can hold a
 	 * user record.
 	 */
-	private static function isWriteLeftover(string $name): bool
+	private function isWriteLeftover(string $name): bool
 	{
 		return str_starts_with($name, '.')
 			&& (str_ends_with($name, '.lock') || preg_match('/\.tmp\.[0-9a-f]{8}$/', $name) === 1);

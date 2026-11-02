@@ -41,7 +41,7 @@ final readonly class ImageSourceResolver
 	 *   - CardData    → `obj[prop][child]`         (path is `child`)
 	 *   - DeckData    → `obj[prop][itemId][child]` (path is `itemId/child`)
 	 *   - VideoData   → `obj[prop][poster]`        (path is always `poster`)
-	 *   - GalleryData → the gallery image named `path` (no subpath)
+	 *   - GalleryData → the gallery image named `path` (no subpath).
 	 *
 	 * @return array{ImageData, ?string}
 	 */

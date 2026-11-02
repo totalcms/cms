@@ -131,7 +131,7 @@ readonly class TextWatermarkFactory
 			$draw($style->shadowColor, self::SHADOW_ALPHA, $x + $style->shadow, $y + $style->shadow);
 		}
 
-		foreach (self::strokeOffsets($style->stroke) as [$dx, $dy]) {
+		foreach ($this->strokeOffsets($style->stroke) as [$dx, $dy]) {
 			$draw($style->strokeColor, 0, $x + $dx, $y + $dy);
 		}
 
@@ -146,7 +146,7 @@ readonly class TextWatermarkFactory
 	 *
 	 * @return list<array{float,float}>
 	 */
-	private static function strokeOffsets(int $stroke): array
+	private function strokeOffsets(int $stroke): array
 	{
 		$offsets = [];
 		for ($radius = $stroke; $radius > 0; $radius -= max(1, intdiv($stroke, 3))) {

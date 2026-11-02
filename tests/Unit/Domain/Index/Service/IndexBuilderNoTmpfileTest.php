@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Hosts harden PHP-FPM with disable_functions, and tmpfile() is on the
 // usual lists (the ServerAvatar load-test box disables it). Shadowing it in
 // the builder's namespace makes it fail here the way it does there.
+
 namespace TotalCMS\Domain\Index\Service {
 	function tmpfile(): false
 	{
@@ -44,7 +45,7 @@ namespace Tests\Unit\Domain\Index\Service {
 			$schemaFetcher = $this->createMock(SchemaFetcher::class);
 			$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-			$objectFetcher = $this->createMock(ObjectFetcher::class);
+			$objectFetcher      = $this->createMock(ObjectFetcher::class);
 			$object             = $this->createMock(ObjectData::class);
 			$object->properties = collect(['title' => new class {
 				public function transform(): string

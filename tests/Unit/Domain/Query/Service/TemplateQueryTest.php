@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\Query\Service\ObjectSearcher;
-use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Query\Service\ObjectSearcher;
 use TotalCMS\Domain\Query\Service\TemplateQuery;
 
 /*

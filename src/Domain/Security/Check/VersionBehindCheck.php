@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Security\Check;
 
-use Throwable;
 use TotalCMS\Domain\Security\Data\SecurityContext;
 use TotalCMS\Domain\Security\Data\SecurityFinding;
 use TotalCMS\Domain\Security\Data\Severity;
@@ -40,7 +39,7 @@ class VersionBehindCheck implements SecurityCheck
 	{
 		try {
 			$info = $this->updates->checkForUpdate(false);
-		} catch (Throwable) {
+		} catch (\Throwable) {
 			return [SecurityFinding::skipped(self::ID, self::TITLE, 'The update check failed, so the version was not compared.')];
 		}
 

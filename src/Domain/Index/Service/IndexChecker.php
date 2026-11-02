@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Index\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexCheckResult;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
@@ -44,7 +45,7 @@ class IndexChecker
 		$indexIds      = null;
 		try {
 			$index = $this->storage->fetchIndexFromDisk($collection);
-			if ($index !== null) {
+			if ($index instanceof IndexData) {
 				$indexIds = array_map(
 					static fn (mixed $entry): string => is_array($entry) ? (string)($entry['id'] ?? '') : '',
 					array_values($index->objects->toArray()),

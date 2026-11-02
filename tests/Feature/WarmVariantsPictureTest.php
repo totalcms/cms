@@ -24,7 +24,7 @@ function renderedPairs(string $html): array
 	foreach ($m[0] as $url) {
 		$query = [];
 		parse_str((string)parse_url(html_entity_decode($url), PHP_URL_QUERY), $query);
-		$ext = pathinfo((string)parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+		$ext                             = pathinfo((string)parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
 		$pairs[$query['w'] . '.' . $ext] = true;
 	}
 
