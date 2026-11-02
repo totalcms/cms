@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use Tests\Fakes\OfflineGuzzle;
 use TotalCMS\Bundled\Pushover\PushoverService;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -40,6 +41,7 @@ final class PushoverServiceTest extends TestCase
 			'',
 			$imageGenerator,
 			$loggerFactory,
+			OfflineGuzzle::client(),
 		);
 	}
 
@@ -316,6 +318,7 @@ final class PushoverServiceTest extends TestCase
 			'',
 			$imageGenerator,
 			$loggerFactory,
+			OfflineGuzzle::client(),
 		);
 	}
 
@@ -334,6 +337,7 @@ final class PushoverServiceTest extends TestCase
 			$groupKey,
 			$imageGenerator,
 			$loggerFactory,
+			OfflineGuzzle::client(),
 		);
 	}
 }

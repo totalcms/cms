@@ -46,6 +46,22 @@ use DI\ContainerBuilder;
  */
 final class ContainerFactory
 {
+	/** @var array<string,mixed> */
+	private static array $overrides = [];
+
+	/**
+	 * Definitions laid over config/container.php in every container built
+	 * after this call. The test suite binds its offline HTTP client here, so
+	 * services resolved while the app boots never reach the network; a swap
+	 * after the build comes too late for them. Production never calls it.
+	 *
+	 * @param array<string,mixed> $definitions
+	 */
+	public static function override(array $definitions): void
+	{
+		self::$overrides = $definitions + self::$overrides;
+	}
+
 	public static function build(): Container
 	{
 		$config = Config::init();
@@ -89,6 +105,9 @@ final class ContainerFactory
 	{
 		$builder = new ContainerBuilder();
 		$builder->addDefinitions(PathResolver::packageRoot() . '/config/container.php');
+		if (self::$overrides !== []) {
+			$builder->addDefinitions(self::$overrides);
+		}
 
 		return $builder;
 	}

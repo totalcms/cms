@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use function DI\autowire;
+use Tests\Fakes\FakeLicenseValidator;
+use Tests\Fakes\OfflineHttpClient;
+use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Support\ContainerFactory;
+use TotalCMS\Support\HttpClientInterface;
+
 // Mark the test environment via real APP_ENV provenance. BundleMiddleware (and
 // anything else gated on appEnv) keys off this; with it set, the bundle
 // integrity check is skipped during tests so the suite no longer needs to
@@ -32,6 +39,16 @@ require_once __DIR__ . '/worker-paths.php';
 $_SERVER['TCMS_TEST_DATADIR']  = tcmsTestDataDir();
 $_SERVER['TCMS_TEST_CACHEDIR'] = tcmsTestCacheDir();
 $_SERVER['TCMS_TEST_TMPDIR']   = tcmsTestTmpDir();
+
+// No test reaches the network. bootstrap() in Pest.php also swaps the client on
+// each app, but services built while the app boots (license validation, the
+// update checker, video oEmbed during seeding) took the real one before that
+// swap: about 100 live requests per run, including to the license server.
+ContainerFactory::override([
+	HttpClientInterface::class => static fn (): HttpClientInterface => new OfflineHttpClient(),
+	// With no network, the real validator falls back to Lite.
+	LicenseValidator::class => autowire(FakeLicenseValidator::class),
+]);
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {

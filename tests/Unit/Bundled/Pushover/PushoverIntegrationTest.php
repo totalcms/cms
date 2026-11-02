@@ -17,7 +17,10 @@ require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/pushover/Push
 
 /**
  * Integration tests that send real Pushover notifications.
- * Requires .env file with PUSHOVER_APP_TOKEN and PUSHOVER_USER_KEY.
+ * Requires .env file with PUSHOVER_APP_TOKEN and PUSHOVER_USER_KEY, and runs
+ * only when asked, since every run sends notifications to a real device:
+ *
+ *     PUSHOVER_LIVE_TESTS=1 bin/runtests.sh PushoverIntegrationTest
  */
 final class PushoverIntegrationTest extends TestCase
 {
@@ -25,6 +28,10 @@ final class PushoverIntegrationTest extends TestCase
 
 	protected function setUp(): void
 	{
+		if (getenv('PUSHOVER_LIVE_TESTS') !== '1') {
+			$this->markTestSkipped('Sends real Pushover notifications; set PUSHOVER_LIVE_TESTS=1 to run');
+		}
+
 		$envFile = dirname(__DIR__, 4) . '/.env';
 		if (!file_exists($envFile)) {
 			$this->markTestSkipped('.env file not found — skipping Pushover integration tests');

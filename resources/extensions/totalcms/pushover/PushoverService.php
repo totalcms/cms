@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Bundled\Pushover;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
@@ -32,6 +33,7 @@ readonly class PushoverService
 		private string $groupKey,
 		private ImageGenerator $imageGenerator,
 		LoggerFactory $loggerFactory,
+		private ClientInterface $client = new Client(['timeout' => 10, 'connect_timeout' => 5]),
 	) {
 		$this->logger = $loggerFactory->addFileHandler('pushover.log')->createLogger('pushover-service');
 	}
@@ -150,7 +152,6 @@ readonly class PushoverService
 	private function sendRequest(array $postData, ?string $attachment = null): OperationResult
 	{
 		try {
-			$client  = new Client(['timeout' => 10, 'connect_timeout' => 5]);
 			$options = [];
 
 			if ($attachment !== null) {
@@ -169,7 +170,7 @@ readonly class PushoverService
 				$options['form_params'] = $postData;
 			}
 
-			$response = $client->post('https://api.pushover.net/1/messages.json', $options);
+			$response = $this->client->request('POST', 'https://api.pushover.net/1/messages.json', $options);
 
 			$body = json_decode($response->getBody()->getContents(), true);
 
