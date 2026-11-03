@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Action\ImageWorks\ImageWorksUploadFetchAction;
+use TotalCMS\Domain\Auth\Service\RawUploadGate;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 
@@ -33,7 +34,7 @@ final class ImageWorksUploadFetchActionTest extends TestCase
 		// Tests that assert the 404-on-missing branch override this in-line.
 		$this->uploadFetcher->method('fileExists')->willReturn(true);
 
-		$this->action = new ImageWorksUploadFetchAction($this->imageGenerator, $this->uploadFetcher);
+		$this->action = new ImageWorksUploadFetchAction($this->imageGenerator, $this->uploadFetcher, $this->createStub(RawUploadGate::class));
 	}
 
 	public function testGeneratesUploadImageSuccessfully(): void

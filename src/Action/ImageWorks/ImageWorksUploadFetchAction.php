@@ -4,7 +4,9 @@ namespace TotalCMS\Action\ImageWorks;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Auth\Service\RawUploadGate;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
@@ -17,6 +19,7 @@ readonly class ImageWorksUploadFetchAction
 	public function __construct(
 		private ImageGenerator $imageGenerator,
 		private UploadFetcher $uploadFetcher,
+		private RawUploadGate $gate,
 	) {
 	}
 
@@ -36,6 +39,13 @@ readonly class ImageWorksUploadFetchAction
 		// surfaces — fileExists() lets us 404 cleanly without that noise.
 		if ($name === '' || !$this->uploadFetcher->fileExists($collection, $id, $property, $name, $subpath)) {
 			throw new HttpNotFoundException($request, 'Image not found');
+		}
+
+		// The same folder can hold a protected file field's or depot's files;
+		// those keep their protection here too (GHSA-4852-hjgf-c7q5).
+		$denial = $this->gate->denialFor($collection, $id, $property, $subpath, null);
+		if ($denial !== null) {
+			throw new HttpForbiddenException($request, $denial);
 		}
 
 		return $this->respond($request, $response, fn (): ResponseInterface => $this->imageGenerator
