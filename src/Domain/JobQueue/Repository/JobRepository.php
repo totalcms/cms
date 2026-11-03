@@ -257,6 +257,35 @@ class JobRepository
 		$stmt->execute($params);
 	}
 
+	/**
+	 * Delete the pending email jobs of one bulk send batch and return how
+	 * many. Jobs already being sent are left alone. The payload is matched in
+	 * PHP rather than with json_extract(), which older SQLite builds lack.
+	 */
+	public function deletePendingEmailBatch(string $batchId): int
+	{
+		$db   = $this->getDb();
+		$stmt = $db->prepare("SELECT id, payload FROM jobqueue WHERE status = 'pending' AND type = :type AND instr(payload, :batchId) > 0");
+		$stmt->execute(['type' => JobData::TYPE_EMAIL, 'batchId' => $batchId]);
+
+		$ids = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$payload = json_decode((string)$row['payload'], true);
+			if (is_array($payload) && ($payload['batchId'] ?? null) === $batchId) {
+				$ids[] = (int)$row['id'];
+			}
+		}
+
+		if ($ids === []) {
+			return 0;
+		}
+
+		$delete = $db->prepare("DELETE FROM jobqueue WHERE status = 'pending' AND id IN (" . implode(',', array_fill(0, count($ids), '?')) . ')');
+		$delete->execute($ids);
+
+		return $delete->rowCount();
+	}
+
 	public function hasPendingJobs(): bool
 	{
 		$stmt = $this->getDb()->prepare("SELECT * FROM jobqueue WHERE status = 'pending' AND (scheduledAt IS NULL OR scheduledAt <= CURRENT_TIMESTAMP) LIMIT 1");

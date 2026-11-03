@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Data\MailerData;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
@@ -553,6 +554,72 @@ final class EmailServiceTest extends TestCase
 			->willReturn(OperationResult::success('Sent'));
 
 		$this->service->sendEmail('test-mailer', ['name' => 'Alice']);
+	}
+
+	// ── sendRendered ──
+
+	private function renderedMessage(): RenderedBulkMessage
+	{
+		return new RenderedBulkMessage('kit:c1', '{{ contact.email }}', '{{ contact.name }}', 'Hi {{ contact.name }}', '<p>Hi</p>', 'Hi', from: 'news@acme.test', fromName: 'Acme', replyTo: 'reply@acme.test');
+	}
+
+	public function testSendRenderedRendersEachPartWithTheVariables(): void
+	{
+		$vars = ['contact' => ['email' => 'ann@example.com', 'name' => 'Ann']];
+		$this->config->mailer = ['whitelist' => []];
+		$this->twigEngine->method('renderString')->willReturnCallback(static function (string $template, array $data) use ($vars): string {
+			self::assertSame($vars, $data);
+
+			return strtr($template, ['{{ contact.email }}' => 'ann@example.com', '{{ contact.name }}' => 'Ann']);
+		});
+		$this->emailSender->expects($this->once())->method('send')
+			->with($this->callback(static fn (array $email): bool => $email['to'] === 'ann@example.com'
+				&& $email['toName'] === 'Ann'
+				&& $email['subject'] === 'Hi Ann'
+				&& $email['bodyText'] === 'Hi'
+				&& $email['from'] === 'news@acme.test'
+				&& $email['fromName'] === 'Acme'
+				&& $email['replyTo'] === 'reply@acme.test'
+				&& $email['headers'] === ['X-Campaign' => 'c1']), 30, false)
+			->willReturn(OperationResult::success('Email sent'));
+
+		$result = $this->service->sendRendered($this->renderedMessage(), $vars, null, ['X-Campaign' => 'c1']);
+
+		$this->assertTrue($result->success);
+	}
+
+	public function testSendRenderedSendsATestCopyToTheOverrideAddress(): void
+	{
+		$this->config->mailer = ['whitelist' => []];
+		$this->twigEngine->method('renderString')->willReturn('ann@example.com');
+		$this->emailSender->expects($this->once())->method('send')
+			->with($this->callback(static fn (array $email): bool => $email['to'] === 'me@example.com'), 30, false)
+			->willReturn(OperationResult::success('Email sent'));
+
+		$this->service->sendRendered($this->renderedMessage(), [], 'me@example.com');
+	}
+
+	public function testSendRenderedFailsRatherThanSendingRawTwig(): void
+	{
+		// A template send falls back to the source on a Twig error; a campaign
+		// must not go out to a contact with {{ contact.name }} in it.
+		$this->config->mailer = ['whitelist' => []];
+		$this->twigEngine->method('renderString')->willThrowException(new \RuntimeException('Unknown filter'));
+		$this->emailSender->expects($this->never())->method('send');
+
+		$result = $this->service->sendRendered($this->renderedMessage(), []);
+
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Unknown filter', (string)$result->error);
+	}
+
+	public function testSendRenderedHonorsTheWhitelist(): void
+	{
+		$this->config->mailer = ['whitelist' => ['@acme.test']];
+		$this->twigEngine->method('renderString')->willReturn('ann@example.com');
+		$this->emailSender->expects($this->never())->method('send');
+
+		$this->assertFalse($this->service->sendRendered($this->renderedMessage(), [])->success);
 	}
 
 	private function createMailerData(

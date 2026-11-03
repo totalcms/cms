@@ -60,3 +60,14 @@ it('labels a test batch with its override address and escapes it', function (): 
 		->toContain('&lt;me&gt;@example.com')
 		->toContain('In progress');
 });
+
+it('marks a batch whose remaining jobs were cancelled', function (): void {
+	$this->repository->recordBatch('b1', 'news', 'members', 3, 0, null, '2030-01-01 09:00:00');
+	$this->repository->log(['batchId' => 'b1', 'mailerId' => 'news', 'collection' => 'members', 'objectId' => 'a', 'status' => 'sent']);
+	$this->repository->recordCancelled('b1', 2);
+
+	expect(bulkHistoryRender($this->repository, 'news'))
+		->toContain('Cancelled')
+		->toContain('2 cancelled')
+		->not->toContain('Scheduled');
+});

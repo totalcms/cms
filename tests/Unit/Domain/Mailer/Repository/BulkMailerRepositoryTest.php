@@ -311,4 +311,38 @@ final class BulkMailerRepositoryTest extends TestCase
 	{
 		$this->assertSame([], $this->repository->fetchMailerBatches('mailer-1'));
 	}
+
+	public function testStoresARenderedMessageOncePerBatch(): void
+	{
+		$this->repository->saveMessage('b1', ['sourceId' => 'kit:c1', 'subjectTemplate' => 'Hi {{ contact.name }}']);
+
+		$this->assertSame(['sourceId' => 'kit:c1', 'subjectTemplate' => 'Hi {{ contact.name }}'], $this->repository->fetchMessage('b1'));
+		$this->assertNull($this->repository->fetchMessage('b2'));
+	}
+
+	public function testCancelledJobsAreNoLongerPending(): void
+	{
+		$this->repository->recordBatch('b1', 'mailer-1', 'subscribers', 5, 0, null, '2030-01-01 00:00:00');
+		$this->logRow(['batchId' => 'b1', 'objectId' => 'obj-1', 'status' => 'sent']);
+
+		$this->repository->recordCancelled('b1', 4);
+
+		$batch = $this->repository->fetchMailerBatches('mailer-1')[0];
+		$this->assertSame(4, $batch->cancelled);
+		$this->assertSame(0, $batch->pending());
+	}
+
+	public function testAddsTheCancelledColumnToAnOlderBatchTable(): void
+	{
+		mkdir($this->tmpDir . '/.system', 0755, true);
+		$pdo = new \PDO('sqlite:' . $this->tmpDir . '/.system/bulkmailer');
+		$pdo->exec("CREATE TABLE bulk_send_log (id INTEGER PRIMARY KEY AUTOINCREMENT, batchId TEXT NOT NULL, mailerId TEXT NOT NULL, collection TEXT NOT NULL, objectId TEXT NOT NULL, sentTo TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'sent', error TEXT DEFAULT NULL, scheduledAt DATETIME DEFAULT NULL, sentAt DATETIME DEFAULT CURRENT_TIMESTAMP)");
+		$pdo->exec("CREATE TABLE bulk_batches (batchId TEXT PRIMARY KEY, mailerId TEXT NOT NULL, collection TEXT NOT NULL, queued INTEGER NOT NULL DEFAULT 0, excluded INTEGER NOT NULL DEFAULT 0, overrideTo TEXT NOT NULL DEFAULT '', scheduledAt DATETIME DEFAULT NULL, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)");
+		$pdo->exec("INSERT INTO bulk_batches (batchId, mailerId, collection, queued) VALUES ('old', 'mailer-1', 'subscribers', 3)");
+		unset($pdo);
+
+		$this->repository->recordCancelled('old', 3);
+
+		$this->assertSame(3, $this->repository->fetchMailerBatches('mailer-1')[0]->cancelled);
+	}
 }

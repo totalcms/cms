@@ -50,6 +50,23 @@ final class MailHeaders
 		return $skipped;
 	}
 
+	/**
+	 * $base with $overrides laid over it. Header names are compared without
+	 * regard to case, so a caller's `list-unsubscribe` replaces Bulk Send's
+	 * `List-Unsubscribe` instead of sending both.
+	 *
+	 * @param array<string,string> $base
+	 * @param array<string,string> $overrides
+	 *
+	 * @return array<string,string>
+	 */
+	public static function merge(array $base, array $overrides): array
+	{
+		$replaced = array_change_key_case($overrides, CASE_LOWER);
+
+		return array_filter($base, static fn (string $name): bool => !isset($replaced[strtolower($name)]), ARRAY_FILTER_USE_KEY) + $overrides;
+	}
+
 	private static function valid(string $name, mixed $value): bool
 	{
 		// Printable ASCII except space and colon (RFC 5322 field-name).

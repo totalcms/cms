@@ -349,4 +349,28 @@ final class JobRepositoryQueueTest extends TestCase
 		$this->assertSame(1, $raw['pendingJobs']);
 		$this->assertSame([JobData::STATUS_PENDING => 1], $raw['allStatuses']);
 	}
+
+	// ── Cancelling a bulk send ───────────────────────────────────────────────
+
+	public function testCancellingAnEmailBatchDeletesOnlyItsPendingJobs(): void
+	{
+		$repo = $this->repository();
+		$repo->queueJob(JobData::TYPE_EMAIL, 'contacts', '{"batchId":"bulk_1","objectId":"a"}', '2030-01-01 00:00:00');
+		$repo->queueJob(JobData::TYPE_EMAIL, 'contacts', '{"batchId":"bulk_1","objectId":"b"}', '2030-01-01 00:00:00');
+		$repo->queueJob(JobData::TYPE_EMAIL, 'contacts', '{"batchId":"bulk_10","objectId":"c"}', '2030-01-01 00:00:00');
+		$repo->queueJob(JobData::TYPE_IMPORT, 'contacts', '{"batchId":"bulk_1"}');
+
+		$this->assertSame(2, $repo->deletePendingEmailBatch('bulk_1'));
+		$this->assertCount(2, $repo->fetchPendingJobs());
+		$this->assertSame(0, $repo->deletePendingEmailBatch('bulk_1'));
+	}
+
+	public function testCancellingAnEmailBatchLeavesAJobThatIsAlreadySending(): void
+	{
+		$repo = $this->repository();
+		$repo->queueJob(JobData::TYPE_EMAIL, 'contacts', '{"batchId":"bulk_1","objectId":"a"}');
+		$repo->fetchNextJob();
+
+		$this->assertSame(0, $repo->deletePendingEmailBatch('bulk_1'));
+	}
 }

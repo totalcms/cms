@@ -6,20 +6,27 @@ namespace TotalCMS\Domain\Mailer\Job;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\BulkUnsubscribe;
 use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Service\MailHeaders;
+use TotalCMS\Domain\Mailer\Service\RenderedBulkHooks;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
- * Sends one queued Bulk Send message. JobRunner checks the hourly and daily
- * send limits before handing the job here.
+ * Sends one queued Bulk Send message: from a mailer template, or from a
+ * rendered send's stored Twig source (`kind: rendered`). JobRunner checks
+ * the hourly and daily send limits before handing the job here.
  */
 class BulkEmailJob
 {
+	public const KIND_RENDERED = 'rendered';
+
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -27,6 +34,7 @@ class BulkEmailJob
 		private readonly BulkMailerRepository $bulkMailerRepository,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly BulkUnsubscribe $unsubscribe,
+		private readonly RenderedBulkHooks $hooks,
 		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -36,77 +44,117 @@ class BulkEmailJob
 	public function run(JobData $job): void
 	{
 		$data = json_decode($job->payload, true);
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$error = 'Invalid JSON payload: ' . json_last_error_msg();
-			$this->logger->error($error, $job->toArray());
+		if (!is_array($data)) {
+			$this->logger->error('Invalid JSON payload: ' . json_last_error_msg(), $job->toArray());
 
 			return;
 		}
 
-		$mailerId   = (string)($data['mailerId'] ?? '');
-		$objectId   = (string)($data['objectId'] ?? '');
-		$collection = (string)($data['collection'] ?? '');
-		$batchId    = (string)($data['batchId'] ?? '');
+		$ids = [
+			'batchId'    => (string)($data['batchId'] ?? ''),
+			'mailerId'   => (string)($data['mailerId'] ?? ''),
+			'collection' => (string)($data['collection'] ?? ''),
+			'objectId'   => (string)($data['objectId'] ?? ''),
+		];
 		$overrideTo = isset($data['overrideTo']) ? (string)$data['overrideTo'] : null;
-		$ids        = ['batchId' => $batchId, 'mailerId' => $mailerId, 'collection' => $collection, 'objectId' => $objectId];
 
-		// Skip if already delivered. Test sends to an override address are
-		// neither deduped nor counted as a delivery, so a batch can be proofed
-		// any number of times before the real send.
-		if ($overrideTo === null && $this->bulkMailerRepository->hasBeenSent($mailerId, $objectId)) {
-			$this->logger->info('Skipping already-sent email', [
-				'mailerId'   => $mailerId,
-				'objectId'   => $objectId,
-				'collection' => $collection,
-			]);
+		$message = null;
+		if (($data['kind'] ?? '') === self::KIND_RENDERED) {
+			$stored = $this->bulkMailerRepository->fetchMessage($ids['batchId']);
+			if ($stored === null) {
+				// A retry cannot bring the message back, so the job ends here.
+				$this->record($ids, ['status' => 'failed', 'error' => 'The message for this batch is missing']);
 
-			$this->record($ids, ['status' => 'skipped']);
+				return;
+			}
+			$message = RenderedBulkMessage::fromArray($stored);
+		}
 
+		$object = $this->recipient($ids, $overrideTo, $message);
+		if ($object === null) {
 			return;
 		}
 
-		// Apply send delay for throttling
-		$sendDelay = intval($this->config->smtp['sendDelay'] ?? 0);
-		if ($sendDelay > 0) {
-			usleep($sendDelay * 1000);
-		}
+		$result = $this->send($ids, $object, $overrideTo, $message);
 
-		// Fetch object data. An object deleted since the send was queued is
-		// logged as failed, so Send History does not show it pending forever.
-		try {
-			$objectData = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
-		} catch (\Throwable $e) {
-			$this->record($ids, ['sentTo' => $overrideTo ?? '', 'status' => 'failed', 'error' => $e->getMessage()]);
-
-			throw $e;
-		}
-
-		// A recipient who unsubscribed after the send was queued. A test copy
-		// goes to the tester, so it is sent regardless.
-		if ($overrideTo === null && $this->unsubscribe->isUnsubscribed($collection, $objectData)) {
-			$this->record($ids, ['status' => 'skipped', 'error' => 'Recipient has unsubscribed']);
-
-			return;
-		}
-
-		[$vars, $headers] = $this->unsubscribeParts($collection, $objectId, $overrideTo);
-
-		// Send email
-		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo, [], false, $vars, $headers);
-
-		// Log result
 		$this->record($ids, ['sentTo' => $overrideTo ?? '', 'status' => $result->success ? 'sent' : 'failed', 'error' => $result->error]);
 
 		if (!$result->success) {
 			throw new \RuntimeException('Email send failed: ' . $result->message);
 		}
 
-		$this->logger->info('Bulk email sent', [
-			'mailerId'   => $mailerId,
-			'objectId'   => $objectId,
-			'collection' => $collection,
-			'batchId'    => $batchId,
-		]);
+		$this->logger->info('Bulk email sent', $ids);
+	}
+
+	/**
+	 * The recipient object, or null when this job sends nothing: the object
+	 * already received the source, unsubscribed, or the caller's filter
+	 * declines it. Test sends to an override address are neither deduped nor
+	 * filtered, so a batch can be proofed any number of times.
+	 *
+	 * @param array<string,string> $ids
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function recipient(array $ids, ?string $overrideTo, ?RenderedBulkMessage $message): ?array
+	{
+		if ($overrideTo === null && $this->bulkMailerRepository->hasBeenSent($ids['mailerId'], $ids['objectId'])) {
+			$this->logger->info('Skipping already-sent email', $ids);
+			$this->record($ids, ['status' => 'skipped']);
+
+			return null;
+		}
+
+		$sendDelay = intval($this->config->smtp['sendDelay'] ?? 0);
+		if ($sendDelay > 0) {
+			usleep($sendDelay * 1000);
+		}
+
+		// An object deleted since the send was queued is logged as failed, so
+		// Send History does not show it pending forever.
+		try {
+			$object = $this->objectFetcher->fetchObject($ids['collection'], $ids['objectId'])->toArray();
+		} catch (\Throwable $e) {
+			$this->record($ids, ['sentTo' => $overrideTo ?? '', 'status' => 'failed', 'error' => $e->getMessage()]);
+
+			throw $e;
+		}
+
+		$declined = match (true) {
+			$overrideTo !== null                                               => null,
+			$this->unsubscribe->isUnsubscribed($ids['collection'], $object)    => 'Recipient has unsubscribed',
+			$message !== null && !$this->hooks->accepts($message, $object)     => 'Recipient filter declined',
+			default                                                            => null,
+		};
+		if ($declined !== null) {
+			$this->record($ids, ['status' => 'skipped', 'error' => $declined]);
+
+			return null;
+		}
+
+		return $object;
+	}
+
+	/**
+	 * @param array<string,string> $ids
+	 * @param array<string,mixed>  $object
+	 */
+	private function send(array $ids, array $object, ?string $overrideTo, ?RenderedBulkMessage $message): OperationResult
+	{
+		[$vars, $headers] = $this->unsubscribeParts($ids['collection'], $ids['objectId'], $overrideTo);
+
+		if ($message === null) {
+			return $this->emailService->sendEmail($ids['mailerId'], $object, $overrideTo, [], false, $vars, $headers);
+		}
+
+		$own = $this->hooks->variables($message, $object);
+
+		return $this->emailService->sendRendered(
+			$message,
+			array_merge(['contact' => $object], $vars, $own['vars']),
+			$overrideTo,
+			MailHeaders::merge($headers, $own['headers']),
+		);
 	}
 
 	/**

@@ -6,8 +6,10 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\Mailer\Job\BulkEmailJob;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Mailer\Service\BulkUnsubscribe;
 use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Service\RenderedBulkHooks;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LoggerFactory;
@@ -24,6 +26,7 @@ beforeEach(function (): void {
 	$this->repo        = $this->createMock(BulkMailerRepository::class);
 	$this->fetcher     = $this->createMock(ObjectFetcher::class);
 	$this->unsubscribe = $this->createMock(BulkUnsubscribe::class);
+	$this->hooks       = $this->createMock(RenderedBulkHooks::class);
 	$this->stored      = ['id' => 'obj-1', 'email' => 'ann@example.com'];
 
 	$object = $this->createMock(ObjectData::class);
@@ -42,7 +45,7 @@ beforeEach(function (): void {
 
 		$this->job->run($job);
 	};
-	$this->job = new BulkEmailJob($this->email, $this->repo, $this->fetcher, $this->unsubscribe, $config, $loggers);
+	$this->job = new BulkEmailJob($this->email, $this->repo, $this->fetcher, $this->unsubscribe, $this->hooks, $config, $loggers);
 });
 
 it('skips a real send to an object that already received it', function (): void {
@@ -110,4 +113,89 @@ it('sends an unsubscribed recipient a test copy, since it goes to the tester', f
 	$this->email->expects($this->once())->method('sendEmail')->willReturn(OperationResult::success());
 
 	($this->run)(['overrideTo' => 'me@example.com']);
+});
+
+describe('a rendered send', function (): void {
+	beforeEach(function (): void {
+		$this->message = new RenderedBulkMessage('kit:campaign:c1', '{{ contact.email }}', '{{ contact.name }}', 'Hi', '<p>Hi {{ contact.name }}</p>', '', recipientFilter: 'Kit\\Filter', variables: 'Kit\\Vars');
+		$this->repo->method('fetchMessage')->with('b1')->willReturnCallback(fn (): ?array => $this->message?->toArray());
+		$this->rendered = fn (array $payload = []) => ($this->run)($payload + ['kind' => 'rendered', 'mailerId' => 'kit:campaign:c1']);
+	});
+
+	it('renders the stored message with the recipient as contact and the provider variables', function (): void {
+		$this->hooks->method('accepts')->willReturn(true);
+		$this->hooks->method('variables')->with($this->anything(), $this->stored)->willReturn(['vars' => ['unsubscribeUrl' => 'https://kit/u/1', 'business' => ['name' => 'Acme']], 'headers' => []]);
+		$this->email->expects($this->never())->method('sendEmail');
+		$this->email->expects($this->once())->method('sendRendered')
+			->with(
+				$this->callback(fn (RenderedBulkMessage $m): bool => $m == $this->message),
+				$this->callback(fn (array $vars): bool => $vars['contact'] === $this->stored && $vars['unsubscribeUrl'] === 'https://kit/u/1' && $vars['business'] === ['name' => 'Acme']),
+				null,
+				[],
+			)
+			->willReturn(OperationResult::success());
+		$this->repo->expects($this->once())->method('log')
+			->with($this->callback(fn (array $row): bool => $row['status'] === 'sent' && $row['mailerId'] === 'kit:campaign:c1'));
+
+		($this->rendered)();
+	});
+
+	it('dedupes on the source key', function (): void {
+		$this->repo->expects($this->once())->method('hasBeenSent')->with('kit:campaign:c1', 'obj-1')->willReturn(true);
+		$this->email->expects($this->never())->method('sendRendered');
+
+		($this->rendered)();
+	});
+
+	it('skips a recipient the filter declines at send time', function (): void {
+		$this->hooks->method('accepts')->willReturn(false);
+		$this->email->expects($this->never())->method('sendRendered');
+		$this->repo->expects($this->once())->method('log')
+			->with($this->callback(fn (array $row): bool => $row['status'] === 'skipped' && $row['error'] !== null));
+
+		($this->rendered)();
+	});
+
+	it('sends a test copy without asking the filter', function (): void {
+		$this->hooks->expects($this->never())->method('accepts');
+		$this->hooks->method('variables')->willReturn(['vars' => [], 'headers' => []]);
+		$this->email->expects($this->once())->method('sendRendered')
+			->with($this->anything(), $this->anything(), 'me@example.com', $this->anything())
+			->willReturn(OperationResult::success());
+
+		($this->rendered)(['overrideTo' => 'me@example.com']);
+	});
+
+	it('lets the caller headers win over Bulk Send headers, whatever their case', function (): void {
+		$this->unsubscribe->method('headers')->willReturn(['List-Unsubscribe' => '<https://site/admin/unsubscribe/t>', 'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click']);
+		$this->unsubscribe->method('url')->willReturn('https://site/admin/unsubscribe/t');
+		$this->hooks->method('accepts')->willReturn(true);
+		$this->hooks->method('variables')->willReturn(['vars' => [], 'headers' => ['list-unsubscribe' => '<https://kit/u/1>', 'X-Campaign' => 'c1']]);
+		$this->email->expects($this->once())->method('sendRendered')
+			->with($this->anything(), $this->anything(), null, [
+				'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+				'list-unsubscribe'      => '<https://kit/u/1>',
+				'X-Campaign'            => 'c1',
+			])
+			->willReturn(OperationResult::success());
+
+		($this->rendered)();
+	});
+
+	it('logs a failure without retrying when the batch has no stored message', function (): void {
+		// A retry cannot bring the message back.
+		$this->message = null;
+		$this->email->expects($this->never())->method('sendRendered');
+		$this->repo->expects($this->once())->method('log')->with($this->callback(fn (array $row): bool => $row['status'] === 'failed'));
+
+		($this->rendered)();
+	});
+
+	it('throws so the job is retried when the send fails', function (): void {
+		$this->hooks->method('accepts')->willReturn(true);
+		$this->hooks->method('variables')->willReturn(['vars' => [], 'headers' => []]);
+		$this->email->method('sendRendered')->willReturn(OperationResult::failure('SMTP down'));
+
+		expect(fn () => ($this->rendered)())->toThrow(RuntimeException::class);
+	});
 });

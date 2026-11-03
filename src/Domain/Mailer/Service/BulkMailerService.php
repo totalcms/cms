@@ -10,6 +10,8 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
+use TotalCMS\Domain\Mailer\Job\BulkEmailJob;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -91,37 +93,109 @@ readonly class BulkMailerService
 			return OperationResult::failure('Invalid schedule date: ' . $scheduledAt);
 		}
 
-		// A template goes to each object once. Leave out the objects that
-		// already have it rather than queueing jobs that will only be skipped,
-		// so the count reported back is the number of emails that will go
-		// out. Test sends to an override address are never deduped.
-		$delivered = $effectiveOverrideTo === null ? $this->bulkMailerRepository->fetchDeliveredObjectIds($mailerId) : [];
+		$result = $this->enqueue($mailerId, $collection, $objects, $scheduledAt, $effectiveOverrideTo);
+		if ($result->success) {
+			$this->activity->bulkQueued($mailerId, $collection, intval($result->data['count'] ?? 0), $effectiveOverrideTo);
+		}
 
-		[$recipients, $excluded, $unsubscribed] = $this->recipients($objects, $collection, $delivered, $effectiveOverrideTo === null);
+		return $result;
+	}
+
+	/**
+	 * Queue a bulk send whose Twig source the caller supplies instead of a
+	 * mailer template (BusinessKit campaigns). The message is stored once
+	 * for the batch and rendered for each recipient when its job runs; see
+	 * RenderedBulkMessage. Dedupe and Send History use its sourceId.
+	 *
+	 * @param list<string> $objectIds the recipients in $collection
+	 * @param string|null  $scheduledAt site-local `Y-m-d H:i` (or any date PHP parses); null sends now
+	 * @param string|null  $overrideTo send every message here instead, as a test
+	 */
+	public function queueRenderedSend(RenderedBulkMessage $message, string $collection, array $objectIds, ?string $scheduledAt = null, ?string $overrideTo = null): OperationResult
+	{
+		if (!$this->editionFeatures->can(EditionFeature::BULK_MAILER)) {
+			return OperationResult::failure('Bulk Mailer requires the Pro edition');
+		}
+
+		$problem = $message->problem();
+		if ($problem !== null) {
+			return OperationResult::failure('Invalid message: ' . $problem);
+		}
+
+		$ids = array_values(array_unique(array_filter(array_map(trim(...), $objectIds), static fn (string $id): bool => $id !== '')));
+		if ($collection === '' || $ids === []) {
+			return OperationResult::failure('A collection and at least one object are required');
+		}
+
+		try {
+			$scheduledAt = $this->scheduleToUtc($scheduledAt);
+		} catch (\Exception) {
+			return OperationResult::failure('Invalid schedule date: ' . $scheduledAt);
+		}
+
+		$objects = array_map(static fn (string $id): array => ['id' => $id], $ids);
+
+		return $this->enqueue($message->sourceId, $collection, $objects, $scheduledAt, ($overrideTo ?? '') !== '' ? $overrideTo : null, $message);
+	}
+
+	/**
+	 * Cancel the jobs of a batch that have not run yet: a scheduled send
+	 * called off, or the rest of one in progress. Emails already sent stay
+	 * sent; Send History shows the batch as cancelled.
+	 */
+	public function cancelBatch(string $batchId): OperationResult
+	{
+		$cancelled = $this->jobQueuer->cancelEmailBatch($batchId);
+		if ($cancelled === 0) {
+			return OperationResult::failure('Nothing to cancel: the batch has no emails waiting to be sent');
+		}
+
+		$this->bulkMailerRepository->recordCancelled($batchId, $cancelled);
+		$this->logger->info('Bulk send cancelled', ['batchId' => $batchId, 'cancelled' => $cancelled]);
+
+		return OperationResult::success(sprintf('Cancelled %d emails', $cancelled), ['batchId' => $batchId, 'cancelled' => $cancelled]);
+	}
+
+	/**
+	 * Queue one job per recipient. Each source (a template id, or a rendered
+	 * send's sourceId) goes to each object once, so objects that already have
+	 * it are left out rather than queued only to be skipped; the count reported
+	 * back is the number of emails that will go out. Test sends to an override
+	 * address are never deduped.
+	 *
+	 * @param array<int,array<string,mixed>> $objects
+	 */
+	private function enqueue(string $sourceId, string $collection, array $objects, ?string $scheduledAt, ?string $overrideTo, ?RenderedBulkMessage $message = null): OperationResult
+	{
+		$delivered = $overrideTo === null ? $this->bulkMailerRepository->fetchDeliveredObjectIds($sourceId) : [];
+
+		[$recipients, $excluded, $unsubscribed] = $this->recipients($objects, $collection, $delivered, $overrideTo === null);
 
 		if ($recipients === []) {
+			$hint = $message === null ? ' A template is sent to each object only once — duplicate it to send again.' : '';
+
 			return OperationResult::failure($unsubscribed === 0
-				? sprintf('Nothing to send: all %d matching objects have already received this email. A template is sent to each object only once — duplicate it to send again.', $excluded)
+				? sprintf('Nothing to send: all %d matching objects have already received this email.', $excluded) . $hint
 				: sprintf('Nothing to send: of %d matching objects, %d have unsubscribed and %d already received this email.', $excluded + $unsubscribed, $unsubscribed, $excluded));
 		}
 
 		$batchId = uniqid('bulk_', true);
+		$payload = ['mailerId' => $sourceId, 'collection' => $collection, 'batchId' => $batchId, 'overrideTo' => $overrideTo];
+		if ($message !== null) {
+			// Stored before the first job is queued, so no job runs without it.
+			$this->bulkMailerRepository->saveMessage($batchId, $message->toArray());
+			$payload['kind'] = BulkEmailJob::KIND_RENDERED;
+		}
+
 		foreach ($recipients as $objectId) {
-			$this->jobQueuer->queueEmail([
-				'mailerId'   => $mailerId,
-				'objectId'   => $objectId,
-				'collection' => $collection,
-				'batchId'    => $batchId,
-				'overrideTo' => $effectiveOverrideTo,
-			], $scheduledAt);
+			$this->jobQueuer->queueEmail(['objectId' => $objectId] + $payload, $scheduledAt);
 		}
 		$count = count($recipients);
 
-		$this->bulkMailerRepository->recordBatch($batchId, $mailerId, $collection, $count, $excluded + $unsubscribed, $effectiveOverrideTo, $scheduledAt);
-		$this->activity->bulkQueued($mailerId, $collection, $count, $effectiveOverrideTo);
+		$this->bulkMailerRepository->recordBatch($batchId, $sourceId, $collection, $count, $excluded + $unsubscribed, $overrideTo, $scheduledAt);
 
 		$this->logger->info('Bulk send queued', [
-			'mailerId'     => $mailerId,
+			'mailerId'     => $sourceId,
 			'batchId'      => $batchId,
 			'count'        => $count,
 			'excluded'     => $excluded,

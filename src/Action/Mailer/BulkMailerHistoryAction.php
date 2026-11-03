@@ -88,6 +88,10 @@ readonly class BulkMailerHistoryAction
 			return '<span class="dash-badge sm muted">In progress</span>';
 		}
 
+		if ($batch->cancelled > 0) {
+			return '<span class="dash-badge sm warning">Cancelled</span><br><small>' . $batch->cancelled . ' cancelled</small>';
+		}
+
 		if ($batch->failed > 0) {
 			return '<span class="dash-badge sm danger">Failures</span>';
 		}

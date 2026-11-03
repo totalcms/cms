@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Activity\Service\MailActivity;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -58,6 +59,46 @@ readonly class EmailService
 	}
 
 	/**
+	 * Send one message of a rendered bulk send: render the message's Twig
+	 * source with $vars (the recipient as `contact`, plus the caller's
+	 * variables) and send it. Unlike a template send, a Twig error fails the
+	 * send instead of mailing the raw source.
+	 *
+	 * @param array<string,mixed>  $vars
+	 * @param array<string,string> $headers extra mail headers (see MailHeaders)
+	 */
+	public function sendRendered(RenderedBulkMessage $message, array $vars, ?string $overrideTo = null, array $headers = []): OperationResult
+	{
+		$refused = $this->editionRefusal($message->sourceId);
+		if ($refused !== null) {
+			return $refused;
+		}
+
+		try {
+			$render = fn (string $template): string => $template === '' ? '' : $this->twigEngine->renderString($template, $vars);
+			$email  = [
+				'to'       => $overrideTo !== null && $overrideTo !== '' ? $overrideTo : trim($render($message->toTemplate)),
+				'toName'   => trim($render($message->toNameTemplate)),
+				'from'     => trim($render($message->from)),
+				'fromName' => trim($render($message->fromName)),
+				'replyTo'  => trim($render($message->replyTo)),
+				'subject'  => trim($render($message->subjectTemplate)),
+				'bodyHtml' => $this->processInky($render($message->bodyHtmlTemplate)),
+				'bodyText' => $render($message->bodyTextTemplate),
+				'cc'       => [],
+				'bcc'      => [],
+				'headers'  => $headers,
+			];
+		} catch (\Throwable $e) {
+			$this->logger->error('Rendered bulk message failed to render', ['sourceId' => $message->sourceId, 'error' => $e->getMessage()]);
+
+			return OperationResult::failure('Template error', $e->getMessage());
+		}
+
+		return $this->transmit($email, $message->sourceId);
+	}
+
+	/**
 	 * Build the email from the template and send it. $email is the message as
 	 * sent, or stays [] when it is refused before it is built.
 	 *
@@ -66,14 +107,9 @@ readonly class EmailService
 	 */
 	private function deliver(string $mailerId, array $input, ?string $overrideTo, array &$email): OperationResult
 	{
-		// Mailer actions require Standard edition or higher
-		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
-			$this->logger->warning('Mailer action blocked by edition', [
-				'mailerId' => $mailerId,
-				'edition'  => $this->editionFeatures->getEdition()->value,
-			]);
-
-			return OperationResult::failure('Mailer actions require the Standard edition or higher');
+		$refused = $this->editionRefusal($mailerId);
+		if ($refused !== null) {
+			return $refused;
 		}
 
 		try {
@@ -114,26 +150,9 @@ readonly class EmailService
 				'headers'   => $input['headers'],
 			];
 
-			// Validate email whitelist if enabled
 			$email = $processedEmail;
 
-			$whitelistResult = $this->validateEmailWhitelist($processedEmail['to']);
-			if (!$whitelistResult->success) {
-				return $whitelistResult;
-			}
-
-			// Send email
-			$result = $this->emailSender->send($processedEmail, recordActivity: false);
-
-			if ($result->success) {
-				$this->logger->info('Email sent successfully', [
-					'mailerId' => $mailerId,
-					'to'       => $processedEmail['to'],
-					'subject'  => $processedEmail['subject'],
-				]);
-			}
-
-			return $result;
+			return $this->transmit($processedEmail, $mailerId);
 		} catch (\Exception $e) {
 			$this->logger->error('Email service error', [
 				'mailerId' => $mailerId,
@@ -143,6 +162,48 @@ readonly class EmailService
 
 			return OperationResult::failure('Email service error', $e->getMessage());
 		}
+	}
+
+	/**
+	 * Mailer sends need the Standard edition or higher.
+	 */
+	private function editionRefusal(string $source): ?OperationResult
+	{
+		if ($this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
+			return null;
+		}
+
+		$this->logger->warning('Mailer action blocked by edition', [
+			'mailerId' => $source,
+			'edition'  => $this->editionFeatures->getEdition()->value,
+		]);
+
+		return OperationResult::failure('Mailer actions require the Standard edition or higher');
+	}
+
+	/**
+	 * Check the whitelist and send a built message.
+	 *
+	 * @param array<string,mixed> $email
+	 */
+	private function transmit(array $email, string $source): OperationResult
+	{
+		$whitelistResult = $this->validateEmailWhitelist((string)$email['to']);
+		if (!$whitelistResult->success) {
+			return $whitelistResult;
+		}
+
+		$result = $this->emailSender->send($email, recordActivity: false);
+
+		if ($result->success) {
+			$this->logger->info('Email sent successfully', [
+				'mailerId' => $source,
+				'to'       => $email['to'],
+				'subject'  => $email['subject'],
+			]);
+		}
+
+		return $result;
 	}
 
 	/**

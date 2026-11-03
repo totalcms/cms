@@ -25,6 +25,7 @@ readonly class BulkBatchSummaryData
 		public int $sent,
 		public int $failed,
 		public int $skipped,
+		public int $cancelled = 0,
 	) {
 	}
 
@@ -49,6 +50,7 @@ readonly class BulkBatchSummaryData
 			sent: intval($log['sent'] ?? 0),
 			failed: intval($log['failed'] ?? 0),
 			skipped: intval($log['skipped'] ?? 0),
+			cancelled: intval($batch['cancelled'] ?? 0),
 		);
 	}
 
@@ -61,7 +63,8 @@ readonly class BulkBatchSummaryData
 	}
 
 	/**
-	 * Jobs queued but not yet processed; null when the queued total is unknown.
+	 * Jobs queued but not yet processed or cancelled; null when the queued
+	 * total is unknown.
 	 */
 	public function pending(): ?int
 	{
@@ -69,6 +72,6 @@ readonly class BulkBatchSummaryData
 			return null;
 		}
 
-		return max(0, $this->queued - $this->sent - $this->failed - $this->skipped);
+		return max(0, $this->queued - $this->cancelled - $this->sent - $this->failed - $this->skipped);
 	}
 }

@@ -26,6 +26,16 @@ readonly class JobQueuer
 		return $this->queueJob(JobData::TYPE_EMAIL, $data['collection'] ?? 'mailer', $data, $scheduledAt);
 	}
 
+	/**
+	 * Cancel a bulk send batch's email jobs that have not run yet.
+	 *
+	 * @return int how many were cancelled
+	 */
+	public function cancelEmailBatch(string $batchId): int
+	{
+		return $this->jobRepository->deletePendingEmailBatch($batchId);
+	}
+
 	/** @param array<mixed> $data */
 	public function queueImport(string $collection, array $data): JobData
 	{

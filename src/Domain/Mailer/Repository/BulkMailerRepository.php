@@ -12,6 +12,10 @@ use TotalCMS\Support\Config;
 
 /**
  * Repository for bulk mailer send tracking using SQLite.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") One SQLite file holds the
+ * send log, the batches and the rendered messages; splitting the repository
+ * would split the connection and the schema setup with it.
  */
 class BulkMailerRepository
 {
@@ -82,9 +86,66 @@ class BulkMailerRepository
 				createdAt   DATETIME DEFAULT CURRENT_TIMESTAMP
 			);
 			CREATE INDEX IF NOT EXISTS idx_batches_mailer ON bulk_batches (mailerId);
+			CREATE TABLE IF NOT EXISTS bulk_messages (
+				batchId   TEXT PRIMARY KEY,
+				message   TEXT NOT NULL,
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
 		SQL);
 
+		// Added in 3.6.x: jobs cancelled before they ran, so they no longer
+		// count as pending.
+		$columns = $this->db->query('PRAGMA table_info(bulk_batches)');
+		$names   = $columns !== false ? array_column($columns->fetchAll(\PDO::FETCH_ASSOC), 'name') : [];
+		if (!in_array('cancelled', $names, true)) {
+			$this->db->exec('ALTER TABLE bulk_batches ADD COLUMN cancelled INTEGER NOT NULL DEFAULT 0');
+		}
+
 		return $this->db;
+	}
+
+	/**
+	 * Store the Twig source of a rendered send, once for its batch.
+	 *
+	 * @param array<string,mixed> $message
+	 */
+	public function saveMessage(string $batchId, array $message): void
+	{
+		$stmt = $this->getDb()->prepare('INSERT OR REPLACE INTO bulk_messages (batchId, message) VALUES (:batchId, :message)');
+		$stmt->bindValue(':batchId', $batchId);
+		$stmt->bindValue(':message', (string)json_encode($message));
+		$stmt->execute();
+	}
+
+	/**
+	 * The stored message of a rendered send's batch, or null when none.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function fetchMessage(string $batchId): ?array
+	{
+		if (!$this->dbExists()) {
+			return null;
+		}
+
+		$stmt = $this->getDb()->prepare('SELECT message FROM bulk_messages WHERE batchId = :batchId');
+		$stmt->bindValue(':batchId', $batchId);
+		$stmt->execute();
+		$json = $stmt->fetchColumn();
+		$data = is_string($json) ? json_decode($json, true) : null;
+
+		return is_array($data) ? $data : null;
+	}
+
+	/**
+	 * Count jobs of a batch that were cancelled before they ran.
+	 */
+	public function recordCancelled(string $batchId, int $count): void
+	{
+		$stmt = $this->getDb()->prepare('UPDATE bulk_batches SET cancelled = cancelled + :count WHERE batchId = :batchId');
+		$stmt->bindValue(':count', $count, \PDO::PARAM_INT);
+		$stmt->bindValue(':batchId', $batchId);
+		$stmt->execute();
 	}
 
 	/**

@@ -64,7 +64,7 @@
 | Auth in Twig, login/logout, member content | `auth/twig.md`, `auth/auth.md` | `cms.auth.userLoggedIn('members')`, `cms.auth.login('members')`, `cms.auth.userHasAccess(group, collection)`. |
 | Access groups | `auth/access-groups.md` | Grantable resources include collections, utils, data views, builder and extensions; the `inlineEdit` boolean decides who may edit values in place from the collection table (with **Settings → Dashboard → Inline Editing** as the site-wide switch). A collection with an `ownerProperty` (`collections/settings.md`) scopes every non-super-admin to their own objects, over REST and MCP alike (MCP `describe_collection` reports it in `ownership`); schema `protected: true` / `protected: {value}` (`schemas/validation.md`) makes a field admin-only or forced. |
 | Passkeys | `auth/twig.md` | Edition-gated; `cms.auth.passkeyManager()` renders the enrolment UI. |
-| Mailer (transactional + bulk) | `notifications/mailer.md` | Bulk mail is edition-gated; templates are Twig rendered with `renderString`. |
+| Mailer (transactional + bulk) | `notifications/mailer.md` | Bulk mail is edition-gated; templates are Twig rendered with `renderString`. A recipient collection with an `unsubscribed` toggle (setting `mailer.unsubscribeProperty`) gets one-click unsubscribe headers and `{{ unsubscribeUrl }}`. Extensions send their own Twig through `BulkMailerService::queueRenderedSend()` and can `cancelBatch()`. |
 
 ## Automation and integration
 
