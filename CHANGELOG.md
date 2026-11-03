@@ -2,13 +2,14 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [Unreleased]
+## [3.6.6] - 2026-11-03
 
 ### Security
 
 - **A critical security issue is fixed.** Update as soon as you can
 - **A number of smaller security fixes.** The behavior changes they bring are listed below
 - **Uploaded HTML and SVG files open in a sandbox.** They still display, but scripts in them don't run. **Behavior change:** an uploaded HTML page that relies on scripts or forms no longer works when opened from its file URL. Images on the ImageWorks upload route are unaffected; other kinds of files there now get a 404, so use their download link
+- **Protected files ask for their protection at every link.** A file with access groups or a download password now asks for them however it is linked. **Behavior change:** if a page links to such a file directly, visitors who aren't signed in to the right group, or don't have the password, no longer get the file
 - **Logout only redirects back to your site.** A redirect to another site goes to `/` instead
 - **Twig `map`, `filter`, `sort`, `reduce` and `find` take arrow functions only.** **Behavior change:** passing a PHP function name, such as `|map('strtoupper')`, is now an error; write `|map(v => v|upper)` instead
 - **`diagnose.php` is switched on by a file.** To use it, create an empty file named `.tcms-support` next to it; the report is then available for 72 hours. **Behavior change:** the old token link no longer works
