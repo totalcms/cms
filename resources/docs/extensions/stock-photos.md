@@ -1,7 +1,7 @@
 ---
 title: "Stock Photos (Bundled Extension)"
 description: "Search free Pixabay photos, or your own library galleries, in the object editor and drag them onto image and gallery fields. Each photo is copied into the object with its alt text and credit."
-since: "3.7.0"
+since: "3.6.5"
 related:
   - fields/image-gallery
   - extensions/bundled
