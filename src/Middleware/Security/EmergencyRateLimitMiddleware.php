@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -27,49 +27,32 @@ use TotalCMS\Renderer\JsonRenderer;
  * stopped by one. A single shared counter (1 call site-wide per 15 minutes)
  * lines up with the real-world workflow and kills the abuse vector outright.
  *
- * Counter routes through `CacheManager` (same pattern as
- * `McpRateLimitMiddleware` and the mailer's `RateLimitMiddleware`) — Redis
- * for accurate cross-worker accounting when available, with graceful
- * fallback through APCu / Memcached / filesystem.
+ * Counting is `RateLimiter`'s, shared with every other rate limit.
  */
 readonly class EmergencyRateLimitMiddleware implements MiddlewareInterface
 {
-	private const CACHE_KEY = 'emergency_rl_global';
 	private const WINDOW    = 900; // 15 minutes
 	private const LIMIT     = 1;
 
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private JsonRenderer $renderer,
 	) {
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		$count = $this->getCount();
+		// One subject for the whole site: the limit is global, not per IP.
+		$result = $this->limiter->attempt('emergency', '', self::LIMIT, self::WINDOW);
 
-		if ($count >= self::LIMIT) {
-			return $this->tooManyRequests();
+		if (!$result->allowed) {
+			return $this->tooManyRequests($result->retryAfter);
 		}
-
-		$this->incrementCount();
 
 		return $handler->handle($request);
 	}
 
-	private function getCount(): int
-	{
-		$count = $this->cache->getData(self::CACHE_KEY);
-
-		return is_int($count) ? $count : 0;
-	}
-
-	private function incrementCount(): void
-	{
-		$this->cache->storeData(self::CACHE_KEY, $this->getCount() + 1, self::WINDOW);
-	}
-
-	private function tooManyRequests(): ResponseInterface
+	private function tooManyRequests(int $retryAfter): ResponseInterface
 	{
 		return $this->renderer->json(
 			(new Response())->withStatus(429),
@@ -79,7 +62,7 @@ readonly class EmergencyRateLimitMiddleware implements MiddlewareInterface
 				'window_s' => self::WINDOW,
 			],
 		)
-			->withHeader('Retry-After', (string)self::WINDOW)
+			->withHeader('Retry-After', (string)$retryAfter)
 			->withHeader('X-RateLimit-Limit', (string)self::LIMIT)
 			->withHeader('X-RateLimit-Window', (string)self::WINDOW);
 	}

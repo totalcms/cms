@@ -67,6 +67,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
 use TotalCMS\Domain\Security\Service\SecurityReportStore;
@@ -957,7 +958,9 @@ function testAuthThrottle(array $auth = [], ?CacheManager $cache = null): AuthTh
 	$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->auth = $auth;
 
-	return new AuthThrottle($cache ?? testMemoryCache(), testClientIpResolver(), $config, testNullLoggerFactory());
+	$cache ??= testMemoryCache();
+
+	return new AuthThrottle($cache, new RateLimiter($cache), testClientIpResolver(), $config, testNullLoggerFactory());
 }
 
 /**
@@ -1283,4 +1286,44 @@ function holdLockInChild(string $lockFile, float $seconds): array
 	expect(trim((string)fgets($pipes[1])))->toBe('locked');
 
 	return [$proc, $pipes];
+}
+
+/**
+ * An in-memory CacheManager for rate-limit tests. `$working = false` acts like
+ * every backend being down: reads return null and writes are dropped. Like dev
+ * mode, getData() never returns anything; counters read getOperationalData().
+ */
+function rateLimitCache(bool $working = true): CacheManager
+{
+	return new class($working) extends CacheManager {
+		/** @var array<string,mixed> */
+		public array $store = [];
+
+		/** @var array<string,int> */
+		public array $ttls = [];
+
+		public function __construct(private bool $working)
+		{
+		}
+
+		public function getData(string $key): mixed
+		{
+			return null;
+		}
+
+		public function getOperationalData(string $key): mixed
+		{
+			return $this->working ? ($this->store[$key] ?? null) : null;
+		}
+
+		public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+		{
+			if ($this->working) {
+				$this->store[$key] = $data;
+				$this->ttls[$key]  = $ttl;
+			}
+
+			return $this->working;
+		}
+	};
 }

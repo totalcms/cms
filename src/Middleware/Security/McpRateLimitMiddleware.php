@@ -10,7 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -24,29 +24,23 @@ use TotalCMS\Support\Config;
  * scraping, exhaustive enumeration of public collections). Per-key rate
  * limits will land in Phase 4 alongside OAuth.
  *
- * **Storage.** Routes through T3's `CacheManager` so the counter goes to
- * whichever backend the site is configured for — Redis is the production
- * default (cross-worker accurate accounting), with graceful fallback to
- * APCu, Memcached, or the filesystem. A multi-worker php-fpm deployment
- * on Redis sees an accurate global counter; on APCu-only the counter is
- * per-worker so the effective limit is `publicIpPerMinute × worker_count`
- * — document that for operators if they're stress-testing.
+ * **Storage.** `RateLimiter` counts through `CacheManager`: accurate across
+ * workers on Redis; on APCu alone the effective limit is
+ * `publicIpPerMinute × worker_count`.
  *
  * **Config:** `mcp.publicIpPerMinute` — requests per IP per 60s window.
  * Default 60 (1 req/sec). When unset or zero, the limiter is effectively
  * disabled (any count below threshold is allowed).
  *
- * **Fail-open posture.** CacheManager itself falls back through backends; if
- * every backend is unreachable the counter reads zero and requests pass
- * through. A misconfigured server doesn't lock out legitimate traffic.
+ * **Fail-open posture.** If every cache backend is unreachable, requests
+ * pass. A misconfigured server doesn't lock out legitimate traffic.
  */
 readonly class McpRateLimitMiddleware implements MiddlewareInterface
 {
-	private const CACHE_PREFIX = 'mcp_rl_';
-	private const WINDOW       = 60;
+	private const WINDOW = 60;
 
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
 		private JsonRenderer $renderer,
 		private Config $config,
@@ -69,40 +63,21 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$ip    = $this->clientIpResolver->resolve($request);
-		$key   = self::CACHE_PREFIX . md5($ip);
-		$count = $this->getCount($key);
+		$result = $this->limiter->attempt('mcp', $this->clientIpResolver->resolve($request), $limit, self::WINDOW);
 
-		if ($count >= $limit) {
-			return $this->tooManyRequests($limit);
+		if (!$result->allowed) {
+			return $this->tooManyRequests($limit, $result->retryAfter);
 		}
-
-		$this->incrementCount($key);
 
 		$response = $handler->handle($request);
 
 		return $response
 			->withHeader('X-RateLimit-Limit', (string)$limit)
-			->withHeader('X-RateLimit-Remaining', (string)max(0, $limit - $count - 1))
+			->withHeader('X-RateLimit-Remaining', (string)$result->remaining)
 			->withHeader('X-RateLimit-Window', (string)self::WINDOW);
 	}
 
-	private function getCount(string $key): int
-	{
-		// CacheManager returns null when the key is absent or every backend
-		// is unreachable — both collapse to "zero" so the limiter fails
-		// open rather than locking out legitimate traffic on a broken cache.
-		$count = $this->cache->getData($key);
-
-		return is_int($count) ? $count : 0;
-	}
-
-	private function incrementCount(string $key): void
-	{
-		$this->cache->storeData($key, $this->getCount($key) + 1, self::WINDOW);
-	}
-
-	private function tooManyRequests(int $limit): ResponseInterface
+	private function tooManyRequests(int $limit, int $retryAfter): ResponseInterface
 	{
 		return $this->renderer->json(
 			(new Response())->withStatus(429),
@@ -114,7 +89,7 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 				],
 			],
 		)
-			->withHeader('Retry-After', (string)self::WINDOW)
+			->withHeader('Retry-After', (string)$retryAfter)
 			->withHeader('X-RateLimit-Limit', (string)$limit)
 			->withHeader('X-RateLimit-Window', (string)self::WINDOW);
 	}

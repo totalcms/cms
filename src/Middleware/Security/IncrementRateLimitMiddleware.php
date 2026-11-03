@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -22,18 +22,16 @@ use TotalCMS\Renderer\JsonRenderer;
  * anonymous callers get a fixed budget per minute. Anyone the auth layer
  * identified — session, API key, OAuth — passes straight through.
  *
- * Same shape as McpRateLimitMiddleware: a cache-backed counter that fails
- * open when the cache is unreachable.
+ * Counting is `RateLimiter`'s, which fails open when the cache is unreachable.
  */
 readonly class IncrementRateLimitMiddleware implements MiddlewareInterface
 {
 	public const LIMIT_PER_MINUTE = 60;
 
-	private const CACHE_PREFIX = 'inc_rl_';
-	private const WINDOW       = 60;
+	private const WINDOW = 60;
 
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private JsonRenderer $renderer,
 		private ClientIpResolver $clientIpResolver,
 	) {
@@ -47,30 +45,20 @@ readonly class IncrementRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$key   = self::CACHE_PREFIX . md5($this->clientIpResolver->resolve($request));
-		$count = $this->getCount($key);
+		$result = $this->limiter->attempt('increment', $this->clientIpResolver->resolve($request), self::LIMIT_PER_MINUTE, self::WINDOW);
 
-		if ($count >= self::LIMIT_PER_MINUTE) {
+		if (!$result->allowed) {
 			return $this->renderer->json(
-				(new Response())->withStatus(429)->withHeader('Retry-After', (string)self::WINDOW),
+				(new Response())->withStatus(429)->withHeader('Retry-After', (string)$result->retryAfter),
 				['error' => ['message' => 'Too many anonymous counter updates from this IP. Slow down.']],
 			);
 		}
-
-		$this->cache->storeData($key, $count + 1, self::WINDOW);
 
 		$response = $handler->handle($request);
 
 		return $response
 			->withHeader('X-RateLimit-Limit', (string)self::LIMIT_PER_MINUTE)
-			->withHeader('X-RateLimit-Remaining', (string)max(0, self::LIMIT_PER_MINUTE - $count - 1))
+			->withHeader('X-RateLimit-Remaining', (string)$result->remaining)
 			->withHeader('X-RateLimit-Window', (string)self::WINDOW);
-	}
-
-	private function getCount(string $key): int
-	{
-		$count = $this->cache->getData($key);
-
-		return is_int($count) ? $count : 0;
 	}
 }

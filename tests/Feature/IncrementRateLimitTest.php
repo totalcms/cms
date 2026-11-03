@@ -39,5 +39,6 @@ it('returns 429 once the per-minute budget is spent', function (): void {
 	$response = post('/api/collections/number/likes/number/increment');
 
 	expect($response->getStatusCode())->toBe(429);
-	expect($response->getHeaderLine('Retry-After'))->toBe('60');
+	// Seconds left in the window that opened with the first request.
+	expect((int)$response->getHeaderLine('Retry-After'))->toBeGreaterThanOrEqual(1)->toBeLessThanOrEqual(60);
 });

@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -32,9 +33,11 @@ use TotalCMS\Support\Config;
  * - Protected downloads: `auth.downloadMaxAttempts` wrong passwords lock the
  *   IP out of download passwords, with the same doubling lockout as login.
  *
- * Counters use the same cache as the other rate limiters, so a cache clear
- * resets them, and with only APCu each PHP worker counts on its own. When the
- * cache is unreachable the counts read zero and requests go through.
+ * The mail and registration limits are plain rate limits and use the shared
+ * `RateLimiter`; the login and download lockouts count failures here. Both
+ * live in the cache, so a cache clear resets them, and with only APCu each
+ * PHP worker counts on its own. When the cache is unreachable the counts read
+ * zero and requests go through.
  */
 final readonly class AuthThrottle
 {
@@ -55,6 +58,7 @@ final readonly class AuthThrottle
 
 	public function __construct(
 		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private ClientIpResolver $clientIpResolver,
 		private Config $config,
 		LoggerFactory $loggerFactory,
@@ -133,23 +137,14 @@ final readonly class AuthThrottle
 
 	private function allow(string $action, ServerRequestInterface $request, int $limit, int $window): bool
 	{
-		if ($limit <= 0) {
+		$ip = $this->clientIpResolver->resolve($request);
+		if ($this->limiter->attempt('auth-' . $action, $ip, $limit, $window)->allowed) {
 			return true;
 		}
 
-		$key = $this->ipKey($action, $request);
-		if ($this->read($key) >= $limit) {
-			$this->logger->warning('Auth form rate limited', [
-				'form' => $action,
-				'ip'   => $this->clientIpResolver->resolve($request),
-			]);
+		$this->logger->warning('Auth form rate limited', ['form' => $action, 'ip' => $ip]);
 
-			return false;
-		}
-
-		$this->increment($key, $window);
-
-		return true;
+		return false;
 	}
 
 	private function lockedFor(string $scope, ServerRequestInterface $request): int

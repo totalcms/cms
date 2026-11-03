@@ -208,6 +208,23 @@ return [
 
 Also log authentication events for monitoring, and regularly review user accounts and remove inactive ones.
 
+### Rate Limits
+
+Public endpoints have per-address rate limits on top of the form limits above: anonymous MCP requests, the OAuth token and registration endpoints, XML-RPC, the mailer action, anonymous counter updates, and the emergency cache clear (once per 15 minutes for the whole site). Each has its own setting, listed with its feature.
+
+A limit's window opens with an address's first request and lasts a fixed time; later requests don't extend it. A refused request answers 429 with `Retry-After` set to the seconds left in the window. The limits keep counting in dev mode. When every cache backend is down they let requests through rather than lock everyone out.
+
+Newer public features use named limits, which you can retune or switch off in `rateLimits`. Each feature's page gives its name and default:
+
+```php
+return [
+	'rateLimits' => [
+		'ratings' => ['max' => 10, 'window' => 3600], // 10 per address per hour
+		'comments' => ['max' => 0],                   // off
+	],
+];
+```
+
 ## Content Security
 
 ### HTML Sanitization

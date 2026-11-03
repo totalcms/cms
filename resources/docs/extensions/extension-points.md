@@ -224,6 +224,27 @@ The routes above are accessible at:
 
 A `HEAD` request is answered by the matching `GET` route unless you register a `HEAD` route of your own. This holds for public, API and admin routes, so link checkers and podcast validators get the same status and headers as a `GET`.
 
+#### Rate limiting public routes
+
+Public routes take no middleware, so a handler that anyone can call should limit itself with `PublicRateLimiter`. `hit()` counts the request against a named per-address limit and returns `true` when the caller is over it:
+
+```php
+use TotalCMS\Domain\Security\RateLimit\PublicRateLimiter;
+
+$context->addPublicRoutes(function (RouteCollector $group) use ($context): void {
+    $group->post('/send', function ($request, $response) use ($context) {
+        // Resolve at request time: $context->get() is not allowed in register().
+        if ($context->get(PublicRateLimiter::class)->hit('acme-chat', $request, 30, 3600)) { // 30 per hour
+            return $response->withStatus(429)->withHeader('Retry-After', '3600');
+        }
+        // ...
+        return $response;
+    });
+});
+```
+
+Prefix the name with your vendor so it can't collide with another extension. The site owner can override your default in `$settings['rateLimits']['acme-chat']`, or turn it off with `'max' => 0`; document the name. `attempt()` takes the same arguments and returns the full result (`allowed`, `limit`, `remaining`, `window`, `retryAfter`) when you want accurate `Retry-After` and `X-RateLimit-*` headers.
+
 ### Route placeholders
 
 API, public, and admin routes all support Slim-style `{placeholder}` segments. A captured value is passed to the handler in its `$args` array, keyed by the placeholder name:

@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcResponseWriter;
 use TotalCMS\Middleware\Security\XmlRpcRateLimitMiddleware;
 use TotalCMS\Renderer\RawRenderer;
@@ -43,7 +44,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 	/**
 	 * An in-memory `CacheManager` double. `CacheManager` is not `readonly`
 	 * and not `final`, so a constructorless anonymous subclass overriding
-	 * `getData()`/`storeData()` is enough — no real cache backend touched.
+	 * `getOperationalData()`/`storeData()` is enough — no real cache backend touched.
 	 */
 	private function workingCache(): CacheManager
 	{
@@ -55,7 +56,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 			{
 			}
 
-			public function getData(string $key): mixed
+			public function getOperationalData(string $key): mixed
 			{
 				return $this->store[$key] ?? null;
 			}
@@ -70,7 +71,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 	}
 
 	/**
-	 * Simulates every cache backend being unreachable: `getData()` always
+	 * Simulates every cache backend being unreachable: `getOperationalData()` always
 	 * returns null (CacheManager's own real behaviour when every backend is
 	 * down) and `storeData()` never actually persists anything, so a counter
 	 * built on top of it can never climb — proving the limiter fails open
@@ -83,7 +84,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 			{
 			}
 
-			public function getData(string $key): mixed
+			public function getOperationalData(string $key): mixed
 			{
 				return null;
 			}
@@ -98,7 +99,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 	private function middleware(CacheManager $cache, int $ratePerIp): XmlRpcRateLimitMiddleware
 	{
 		return new XmlRpcRateLimitMiddleware(
-			$cache,
+			new RateLimiter($cache, static fn (): int => 1_000_000),
 			$this->config($ratePerIp),
 			new XmlRpcResponseWriter(),
 			new RawRenderer(),

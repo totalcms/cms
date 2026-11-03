@@ -82,6 +82,8 @@ class Config
 	public array $automations = [];
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
+	/** @var array<string,mixed> Named public-route rate limits — see PublicRateLimiter. */
+	public array $rateLimits = [];
 	/** @var array<string,mixed> Security check settings (`ignore` list of check ids) — see SecurityAuditor. */
 	public array $security = [];
 	/** @var array<string,mixed> Object snapshot history — see BackupStore. */
@@ -175,12 +177,21 @@ class Config
 		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->rateLimits         = is_array($this->rawSettings['rateLimits'] ?? null) ? $this->rawSettings['rateLimits'] : [];
 		$this->isHttps            = (bool)($this->rawSettings['is_https'] ?? false);
 		$this->security           = is_array($this->rawSettings['security'] ?? null) ? $this->rawSettings['security'] : [];
 		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
 		$this->activity           = is_array($this->rawSettings['activity'] ?? null) ? $this->rawSettings['activity'] : [];
 		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];
 
+		$this->loadSiteOverlay();
+
+		date_default_timezone_set($this->timezone);
+	}
+
+	/** The per-site settings overlay: siteId, the keys it owns, and presets. */
+	private function loadSiteOverlay(): void
+	{
 		$siteId         = (string)($this->rawSettings['siteId'] ?? '');
 		$this->siteId   = preg_match('/^[a-z0-9-]+$/', $siteId) === 1 ? $siteId : '';
 
@@ -193,8 +204,6 @@ class Config
 
 		$presets               = $this->rawSettings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];
-
-		date_default_timezone_set($this->timezone);
 	}
 
 	/** @return array<string,mixed> */

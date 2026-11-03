@@ -618,6 +618,12 @@ $settings['xmlrpc'] = [
 	'ratePerIp' => 60,
 ];
 
+// Per-IP limits on public routes, by name. Each route or extension that uses
+// one supplies its own default; an entry here overrides it, and `max` 0 turns
+// that limit off. Example:
+//   $settings['rateLimits']['ratings'] = ['max' => 10, 'window' => 3600];
+$settings['rateLimits'] = [];
+
 // Security check (`tcms check`, admin dashboard). `ignore` lists check ids the
 // operator has accepted; an ignored finding still shows, marked ignored, but
 // does not count toward the exit code or the dashboard alert.

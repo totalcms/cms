@@ -14,7 +14,7 @@ beforeEach(function (): void {
 	// EmergencyRateLimitMiddleware caps each IP at 1 call per 15 min via
 	// CacheManager. Clear just the rate-limit counter (not all caches —
 	// some tests store data they expect to survive the test setup).
-	$this->app->getContainer()->get(CacheManager::class)->clearByPatternAllBackends('emergency_rl_*');
+	$this->app->getContainer()->get(CacheManager::class)->clearByPatternAllBackends('rl_emergency_*');
 });
 
 describe('Emergency Cache Clear Endpoint', function (): void {

@@ -9,7 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
+use TotalCMS\Domain\Security\RateLimit\RateLimitResult;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -17,19 +18,13 @@ use TotalCMS\Support\Config;
 /**
  * Rate limiting middleware for mailer endpoints — per-IP + per-template caps.
  *
- * Routes counters through T3's `CacheManager`, so a production install on
- * Redis gets accurate cross-worker accounting and APCu-only fallbacks pay
- * the standard "per-worker" caveat (effective limit = `ratePerIp × workers`).
- * Fail-open posture: when every cache backend is unreachable, the counter
- * reads zero and requests pass through rather than locking out legitimate
- * traffic on a broken cache.
+ * Counting is `RateLimiter`'s: fixed windows, cross-worker accurate on
+ * Redis, fail-open when every cache backend is unreachable.
  */
 readonly class RateLimitMiddleware implements MiddlewareInterface
 {
-	private const CACHE_PREFIX = 'rate_limit_';
-
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private JsonRenderer $renderer,
 		private Config $config,
 		private ClientIpResolver $clientIpResolver,
@@ -44,33 +39,19 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 		$perTemplateLimit = (int)($mailerConfig['ratePerTemplate'] ?? 50);
 		$window           = (int)($mailerConfig['rateWindow'] ?? 300); // 5 minutes
 
-		// Get identifier (IP address)
-		$ip    = $this->clientIpResolver->resolve($request);
-		$ipKey = self::CACHE_PREFIX . 'ip_' . md5($ip);
+		$ip = $this->limiter->attempt('mailer-ip', $this->clientIpResolver->resolve($request), $perIpLimit, $window);
+		if (!$ip->allowed) {
+			return $this->createRateLimitResponse($ip, 'IP');
+		}
 
 		// Get template ID from request body
-		$data        = (array)$request->getParsedBody();
-		$mailerId    = $data['mailerId'] ?? '';
-		$templateKey = $mailerId !== '' ? self::CACHE_PREFIX . 'template_' . md5((string)$mailerId) : '';
-
-		// Check IP rate limit
-		$ipCount = $this->getCount($ipKey);
-		if ($ipCount >= $perIpLimit) {
-			return $this->createRateLimitResponse($perIpLimit, $window, 'IP');
-		}
-
-		// Check template rate limit if we have a template ID
-		if ($templateKey !== '') {
-			$templateCount = $this->getCount($templateKey);
-			if ($templateCount >= $perTemplateLimit) {
-				return $this->createRateLimitResponse($perTemplateLimit, $window, 'Template');
+		$data     = (array)$request->getParsedBody();
+		$mailerId = (string)($data['mailerId'] ?? '');
+		if ($mailerId !== '') {
+			$template = $this->limiter->attempt('mailer-template', $mailerId, $perTemplateLimit, $window);
+			if (!$template->allowed) {
+				return $this->createRateLimitResponse($template, 'Template');
 			}
-		}
-
-		// Increment counters
-		$this->incrementCount($ipKey, $window);
-		if ($templateKey !== '') {
-			$this->incrementCount($templateKey, $window);
 		}
 
 		// Add rate limit headers
@@ -78,42 +59,25 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 
 		return $response
 			->withHeader('X-RateLimit-IP-Limit', (string)$perIpLimit)
-			->withHeader('X-RateLimit-IP-Remaining', (string)max(0, $perIpLimit - $ipCount - 1))
-			->withHeader('X-RateLimit-Window', (string)$window);
+			->withHeader('X-RateLimit-IP-Remaining', (string)$ip->remaining)
+			->withHeader('X-RateLimit-Window', (string)$ip->window);
 	}
 
-	private function getCount(string $key): int
+	private function createRateLimitResponse(RateLimitResult $result, string $type): ResponseInterface
 	{
-		// getData() returns null when the key is absent or every backend is
-		// unreachable — both collapse to zero so the limiter fails open
-		// rather than blocking traffic on a broken cache.
-		$count = $this->cache->getData($key);
-
-		return is_int($count) ? $count : 0;
-	}
-
-	private function incrementCount(string $key, int $ttl): void
-	{
-		$this->cache->storeData($key, $this->getCount($key) + 1, $ttl);
-	}
-
-	private function createRateLimitResponse(int $limit, int $window, string $type): ResponseInterface
-	{
-		$retryAfter = $window;
-
 		return $this->renderer->json(
 			(new Response())->withStatus(429),
 			[
 				'success'     => false,
 				'message'     => 'Rate limit exceeded',
 				'error'       => "Too many requests from this {$type}. Please try again later.",
-				'retry_after' => $retryAfter,
-				'limit'       => $limit,
-				'window'      => $window,
+				'retry_after' => $result->retryAfter,
+				'limit'       => $result->limit,
+				'window'      => $result->window,
 			]
 		)
-		->withHeader('Retry-After', (string)$retryAfter)
-		->withHeader('X-RateLimit-Limit', (string)$limit)
-		->withHeader('X-RateLimit-Window', (string)$window);
+		->withHeader('Retry-After', (string)$result->retryAfter)
+		->withHeader('X-RateLimit-Limit', (string)$result->limit)
+		->withHeader('X-RateLimit-Window', (string)$result->window);
 	}
 }

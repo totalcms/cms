@@ -9,8 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -29,20 +29,16 @@ use TotalCMS\Support\Config;
  * backend IPs and re-register on every connect attempt — at 10/hour a
  * few retries locked a customer's Claude connector out for the hour.
  *
- * Storage routes through CacheManager — APCu→Redis→Memcached→filesystem.
- * Multi-worker accurate only on shared backends (Redis); APCu-only
- * deployments see per-worker counters (effective limit × worker_count).
+ * Counting is `RateLimiter`'s: multi-worker accurate only on shared backends
+ * (Redis); APCu-only deployments see per-worker counters.
  *
  * Applied uniformly to all callers — admin requests aren't exempt
  * because admins shouldn't pummel the token endpoint either.
  */
 readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 {
-	private const PREFIX_TOKEN    = 'oauth_rl_token_';
-	private const PREFIX_REGISTER = 'oauth_rl_register_';
-
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private JsonRenderer $renderer,
 		private Config $config,
 		private OAuthActivityLogger $activityLogger,
@@ -57,11 +53,11 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 		if (str_ends_with($path, '/oauth/token')) {
 			$limit  = (int)($this->config->oauth['tokenEndpointLimit'] ?? 60);
 			$window = (int)($this->config->oauth['tokenEndpointWindow'] ?? 60);
-			$prefix = self::PREFIX_TOKEN;
+			$name   = 'oauth-token';
 		} elseif (str_ends_with($path, '/oauth/register')) {
 			$limit  = (int)($this->config->oauth['dynamicRegistrationLimit'] ?? 60);
 			$window = (int)($this->config->oauth['dynamicRegistrationWindow'] ?? 3600);
-			$prefix = self::PREFIX_REGISTER;
+			$name   = 'oauth-register';
 		} else {
 			return $handler->handle($request);
 		}
@@ -71,42 +67,24 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$ip    = $this->clientIpResolver->resolve($request);
-		$key   = $prefix . md5($ip);
-		$count = $this->getCount($key);
+		$ip     = $this->clientIpResolver->resolve($request);
+		$result = $this->limiter->attempt($name, $ip, $limit, $window);
 
-		if ($count >= $limit) {
+		if (!$result->allowed) {
 			$this->activityLogger->rateLimitHit($path, $ip);
 
-			return $this->tooManyRequests($limit, $window);
+			return $this->tooManyRequests($limit, $window, $result->retryAfter);
 		}
-
-		$this->incrementCount($key, $window);
 
 		$response = $handler->handle($request);
 
 		return $response
 			->withHeader('X-RateLimit-Limit', (string)$limit)
-			->withHeader('X-RateLimit-Remaining', (string)max(0, $limit - $count - 1))
+			->withHeader('X-RateLimit-Remaining', (string)$result->remaining)
 			->withHeader('X-RateLimit-Window', (string)$window);
 	}
 
-	private function getCount(string $key): int
-	{
-		// CacheManager returns null when the key is absent or every backend
-		// is unreachable — both collapse to "zero" so the limiter fails
-		// open rather than locking out legitimate traffic on a broken cache.
-		$count = $this->cache->getData($key);
-
-		return is_int($count) ? $count : 0;
-	}
-
-	private function incrementCount(string $key, int $window): void
-	{
-		$this->cache->storeData($key, $this->getCount($key) + 1, $window);
-	}
-
-	private function tooManyRequests(int $limit, int $window): ResponseInterface
+	private function tooManyRequests(int $limit, int $window, int $retryAfter): ResponseInterface
 	{
 		return $this->renderer->json(
 			(new Response())->withStatus(429),
@@ -117,7 +95,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 				'window_s'          => $window,
 			],
 		)
-			->withHeader('Retry-After', (string)$window)
+			->withHeader('Retry-After', (string)$retryAfter)
 			->withHeader('X-RateLimit-Limit', (string)$limit)
 			->withHeader('X-RateLimit-Window', (string)$window);
 	}

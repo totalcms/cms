@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcResponseWriter;
 use TotalCMS\Renderer\RawRenderer;
@@ -21,16 +21,15 @@ use TotalCMS\Support\Config;
  * The endpoint sits at a path bots probe unprompted, and the XML parser runs
  * before any credential check, so this bounds how much pre-auth work an
  * anonymous caller can force. Rejections are XML-RPC faults rather than JSON:
- * the caller is a writing app that only parses XML. Fail-open when the cache is
- * unreachable, matching RateLimitMiddleware.
+ * the caller is a writing app that only parses XML. Counting is `RateLimiter`'s,
+ * which fails open when the cache is unreachable.
  */
 readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 {
-	private const CACHE_PREFIX = 'xmlrpc_rate_';
-	private const WINDOW       = 60;
+	private const WINDOW = 60;
 
 	public function __construct(
-		private CacheManager $cache,
+		private RateLimiter $limiter,
 		private Config $config,
 		private XmlRpcResponseWriter $writer,
 		private RawRenderer $renderer,
@@ -47,13 +46,12 @@ readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$key   = self::CACHE_PREFIX . md5($this->clientIpResolver->resolve($request));
-		$count = $this->getCount($key);
+		$result = $this->limiter->attempt('xmlrpc', $this->clientIpResolver->resolve($request), $limit, self::WINDOW);
 
-		if ($count >= $limit) {
+		if (!$result->allowed) {
 			$response = $this->responseFactory->createResponse(429)
 				->withHeader('Content-Type', 'text/xml; charset=UTF-8')
-				->withHeader('Retry-After', (string)self::WINDOW);
+				->withHeader('Retry-After', (string)$result->retryAfter);
 
 			return $this->renderer->render(
 				$response,
@@ -61,23 +59,6 @@ readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 			);
 		}
 
-		$this->incrementCount($key, self::WINDOW);
-
 		return $handler->handle($request);
-	}
-
-	private function getCount(string $key): int
-	{
-		// getData() returns null when the key is absent or every backend is
-		// unreachable — both collapse to zero so the limiter fails open rather
-		// than blocking traffic on a broken cache.
-		$count = $this->cache->getData($key);
-
-		return is_int($count) ? $count : 0;
-	}
-
-	private function incrementCount(string $key, int $ttl): void
-	{
-		$this->cache->storeData($key, $this->getCount($key) + 1, $ttl);
 	}
 }

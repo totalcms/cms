@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\RateLimit\RateLimiter;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -59,7 +60,7 @@ final class RateLimitMiddlewareTest extends TestCase
 			{
 			}
 
-			public function getData(string $key): mixed
+			public function getOperationalData(string $key): mixed
 			{
 				return $this->store[$key] ?? null;
 			}
@@ -75,7 +76,7 @@ final class RateLimitMiddlewareTest extends TestCase
 	}
 
 	/**
-	 * Every cache backend unreachable: `getData()` returns null (CacheManager's
+	 * Every cache backend unreachable: `getOperationalData()` returns null (CacheManager's
 	 * real behaviour when all backends are down) and `storeData()` persists
 	 * nothing, so the counter can never climb.
 	 */
@@ -86,7 +87,7 @@ final class RateLimitMiddlewareTest extends TestCase
 			{
 			}
 
-			public function getData(string $key): mixed
+			public function getOperationalData(string $key): mixed
 			{
 				return null;
 			}
@@ -105,7 +106,7 @@ final class RateLimitMiddlewareTest extends TestCase
 		string $trustProxyHeaders = ClientIpResolver::TRUST_AUTO,
 	): RateLimitMiddleware {
 		return new RateLimitMiddleware(
-			$cache,
+			new RateLimiter($cache, static fn (): int => 1_000_000),
 			new JsonRenderer(),
 			$this->config($mailer),
 			\testClientIpResolver($trustProxyHeaders),
