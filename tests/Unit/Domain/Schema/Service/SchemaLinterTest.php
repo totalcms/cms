@@ -224,6 +224,38 @@ it('accepts both protected shapes', function (): void {
 	expect($result['errors'])->toBeEmpty();
 });
 
+it('accepts a boolean serverOnly flag', function (): void {
+	$schema = makeSchema('orders', [
+		'id'    => idProperty(),
+		'total' => ['type' => 'integer', 'field' => 'number', 'help' => 'Set by checkout', 'serverOnly' => true],
+		'note'  => ['type' => 'string', 'field' => 'text', 'help' => 'Free text', 'serverOnly' => false],
+	], ['id'], ['id']);
+
+	expect(makeLinter(['orders' => $schema])->lint('orders')['errors'])->toBeEmpty();
+});
+
+it('errors on a serverOnly value that is not a boolean', function (): void {
+	$schema = makeSchema('orders', [
+		'id'    => idProperty(),
+		'total' => ['type' => 'integer', 'field' => 'number', 'help' => 'Set by checkout', 'serverOnly' => 'yes'],
+	], ['id'], ['id']);
+
+	expect(makeLinter(['orders' => $schema])->lint('orders')['errors'])
+		->toContain("Property 'total' has an invalid serverOnly value. Use true or false.");
+});
+
+it('errors on a required serverOnly property', function (): void {
+	// Anyone but the system has the value dropped before validation, so a
+	// required one fails every save they make.
+	$schema = makeSchema('orders', [
+		'id'    => idProperty(),
+		'total' => ['type' => 'integer', 'field' => 'number', 'help' => 'Set by checkout', 'serverOnly' => true],
+	], ['id', 'total'], ['id']);
+
+	expect(makeLinter(['orders' => $schema])->lint('orders')['errors'])
+		->toContain("Property 'total' is serverOnly and required. Only the site writes it, so every other save would fail validation — remove it from required.");
+});
+
 it('errors on a protected value that is neither true nor an object with value', function (): void {
 	$schema = makeSchema('typo', [
 		'id'     => idProperty(),

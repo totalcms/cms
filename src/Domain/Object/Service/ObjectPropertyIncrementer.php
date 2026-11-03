@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -100,6 +102,13 @@ readonly class ObjectPropertyIncrementer
 			if (is_array($propertyDef)) {
 				$min = $propertyDef['min'] ?? null;
 				$max = $propertyDef['max'] ?? null;
+
+				// The tick below is written as the system, which would step
+				// around a server-only field's guard. Only the site's own code,
+				// already running as the system, may move one.
+				if (($propertyDef['serverOnly'] ?? false) === true && $this->actors->current()->kind !== ActorKind::System) {
+					throw new AccessDeniedException("Property '{$property}' is set by the site and cannot be changed here.");
+				}
 			}
 		}
 

@@ -47,6 +47,25 @@ describe('PropertyMetaResolver', function (): void {
 		expect($result['help'])->toBe('Enter a title');
 	});
 
+	test('a server-only property resolves as readonly, whatever a collection overrides', function (): void {
+		// The admin form and the inline cell editor both read settings.readonly,
+		// so neither offers an edit the server would revert.
+		$this->schemaData->properties = [
+			'total' => ['field' => 'number', 'serverOnly' => true],
+			'note'  => ['field' => 'text'],
+		];
+		$this->collectionData->properties = [
+			'total' => ['serverOnly' => false, 'settings' => ['readonly' => false]],
+		];
+
+		$resolver = createResolver($this);
+		$total    = $resolver->resolve('test-collection', 'total');
+
+		expect($total['serverOnly'])->toBeTrue();
+		expect($total['settings']['readonly'])->toBeTrue();
+		expect($resolver->resolve('test-collection', 'note')['settings'])->not->toHaveKey('readonly');
+	});
+
 	test('collection properties override schema properties', function (): void {
 		$this->schemaData->properties = [
 			'title' => ['field' => 'text', 'label' => 'Title', 'help' => 'Schema help'],

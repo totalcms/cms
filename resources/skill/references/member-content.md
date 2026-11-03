@@ -62,10 +62,14 @@ Make the moderation flags protected in the schema (`schemas/validation.md`):
 | `"protected": {"value": true}` | Every member save goes back to draft. Review every change. |
 | `"protected": {"value": false}` | Nothing is reviewed. |
 
-Also protect what only the admin decides: `featured`, `approved`, dates, and
-any counts an automation keeps. A protected field in a member's form is not
-an error: the rest of the save goes through and the protected value just
-does not change.
+Also protect what only the admin decides: `featured`, `approved` and dates. A
+protected field in a member's form is not an error: the rest of the save goes
+through and the protected value just does not change.
+
+Counts and totals that an automation or extension computes take
+`"serverOnly": true` instead. Not even an admin can set them, the admin form
+shows them read-only, and the code that keeps them writes as the system. A
+server-only property cannot be `required`.
 
 ## 4. The account page: forms with `cms.form.builder`
 

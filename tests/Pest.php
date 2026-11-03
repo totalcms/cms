@@ -224,7 +224,7 @@ function systemActors(): ActorContext
  */
 function systemWriteGate(?ActorContext $actors = null): ObjectWriteGate
 {
-	return new ObjectWriteGate($actors ?? systemActors(), (new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(), (new ReflectionClass(AccessDenials::class))->newInstanceWithoutConstructor());
+	return new ObjectWriteGate($actors ?? systemActors(), new EventDispatcher(new NullLogger()), (new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(), (new ReflectionClass(AccessDenials::class))->newInstanceWithoutConstructor());
 }
 
 /**

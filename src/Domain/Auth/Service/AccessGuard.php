@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Data\ReadScope;
@@ -47,6 +48,11 @@ use TotalCMS\Support\Config;
  * Trusted actors (system, API keys, admins) pass every layer. With
  * authentication switched off for the install there is no actor to trust or
  * distrust, so every layer stands down, as the access middleware does.
+ *
+ * One rule sits outside the layers: a property flagged `"serverOnly": true`
+ * is written by the site alone, as the system actor ({@see ActorContext::runAs()}).
+ * Every other actor, admins and API keys included, and every write with
+ * authentication off, keeps the stored value ({@see serverOnlyFieldsFor()}).
  *
  * The storage layer applies layers 2 and 3 on every write through
  * {@see ObjectWriteGate}; entry points ask the
@@ -98,7 +104,7 @@ final class AccessGuard
 	 * Per-request memo of {@see rulesFor()}, keyed by collection. Cleared by
 	 * {@see forgetRules()} at the start of every request.
 	 *
-	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}>
+	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}>
 	 */
 	private array $rules = [];
 
@@ -292,7 +298,7 @@ final class AccessGuard
 	{
 		$rules = $this->rulesFor($collection);
 
-		$fields = array_merge($rules['plain'], array_keys($rules['forced']));
+		$fields = array_merge($rules['plain'], array_keys($rules['forced']), $rules['serverOnly']);
 		if ($rules['owner'] !== '') {
 			$fields[] = $rules['owner'];
 		}
@@ -307,6 +313,10 @@ final class AccessGuard
 	 */
 	public function canWriteProperty(Actor $actor, string $collection, string $property): bool
 	{
+		if (!$this->isSystem($actor) && in_array($property, $this->rulesFor($collection)['serverOnly'], true)) {
+			return false;
+		}
+
 		if ($actor->isTrusted() || $this->authDisabled()) {
 			return true;
 		}
@@ -329,11 +339,14 @@ final class AccessGuard
 	 */
 	public function applyWrite(Actor $actor, string $collection, string $objectId, array $incoming): array
 	{
+		$rules = $this->rulesFor($collection);
+
+		$incoming = $this->keepServerOnly($actor, $collection, $objectId, $rules['serverOnly'], $incoming);
+
 		if ($actor->isTrusted() || $this->authDisabled()) {
 			return $incoming;
 		}
 
-		$rules = $this->rulesFor($collection);
 		if ($this->enforcementSkipped($rules, $actor)) {
 			return $incoming;
 		}
@@ -381,6 +394,17 @@ final class AccessGuard
 	}
 
 	/**
+	 * The properties of $collection flagged `"serverOnly": true`, which only
+	 * the system actor writes.
+	 *
+	 * @return list<string>
+	 */
+	public function serverOnlyFieldsFor(string $collection): array
+	{
+		return $this->rulesFor($collection)['serverOnly'];
+	}
+
+	/**
 	 * Remove every protected field from a payload, no actor context. Used by
 	 * public registration, which must also positively assign its own defaults
 	 * afterwards.
@@ -421,7 +445,7 @@ final class AccessGuard
 	 * `owner`  — the collection's owner property, or ''.
 	 * `ownerIsList` — whether the owner property is a list of strings.
 	 *
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}
 	 */
 	private function rulesFor(string $collection): array
 	{
@@ -429,11 +453,11 @@ final class AccessGuard
 	}
 
 	/**
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}
 	 */
 	private function buildRules(string $collection): array
 	{
-		$none = ['plain' => [], 'forced' => [], 'owner' => '', 'ownerIsList' => false];
+		$none = ['plain' => [], 'forced' => [], 'owner' => '', 'ownerIsList' => false, 'serverOnly' => []];
 
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -451,8 +475,18 @@ final class AccessGuard
 			$plain = array_values(array_intersect(self::PRIVILEGED_FIELDS, array_keys($schema->properties)));
 		}
 
+		$serverOnly = [];
+
 		foreach ($schema->properties as $name => $definition) {
-			if (!is_array($definition) || !array_key_exists('protected', $definition)) {
+			if (!is_array($definition)) {
+				continue;
+			}
+
+			if (($definition['serverOnly'] ?? false) === true) {
+				$serverOnly[] = (string)$name;
+			}
+
+			if (!array_key_exists('protected', $definition)) {
 				continue;
 			}
 
@@ -473,7 +507,38 @@ final class AccessGuard
 			'forced'      => $forced,
 			'owner'       => $owner,
 			'ownerIsList' => $this->isListProperty($schema, $owner),
+			'serverOnly'  => $serverOnly,
 		];
+	}
+
+	/**
+	 * Hold every server-only field at its stored value (update) or drop it
+	 * (create), for any actor but the system.
+	 *
+	 * @param list<string>        $fields
+	 * @param array<string,mixed> $incoming
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function keepServerOnly(Actor $actor, string $collection, string $objectId, array $fields, array $incoming): array
+	{
+		if ($fields === [] || $this->isSystem($actor)) {
+			return $incoming;
+		}
+
+		$existing = $objectId !== '' && $this->objectFetcher->existsObject($collection, $objectId)
+			? $this->objectFetcher->fetchObject($collection, $objectId)->toArray()
+			: [];
+
+		[$incoming, $reverted, $stripped] = $this->revertPlain($fields, $incoming, $existing);
+		$this->logNeutralized($actor, $collection, $objectId, $reverted, $stripped);
+
+		return $incoming;
+	}
+
+	private function isSystem(Actor $actor): bool
+	{
+		return $actor->kind === ActorKind::System;
 	}
 
 	/**
@@ -506,7 +571,7 @@ final class AccessGuard
 	 * Whether enforcement does nothing for this write: auth is off, the
 	 * collection has no rules, or the actor is trusted.
 	 *
-	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool} $rules
+	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>} $rules
 	 */
 	private function enforcementSkipped(array $rules, Actor $actor): bool
 	{

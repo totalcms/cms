@@ -512,6 +512,29 @@ With this, a member's submission is a draft until an admin approves it, and any 
 - The fields `groups`, `active`, `expiration`, `maxLoginCount`, `passkeys`, `loginCount`, `lastlogin` and `created` are always protected on auth schemas; no flag is needed.
 - A collection's [`ownerProperty`](docs/collections/settings#ownerproperty) is protected by being named on the collection.
 
+### serverOnly
+
+Make a property writable by the site only. Use it for values the site computes, such as an order total, a payment status or a rating average. Admins and API keys cannot set it either, because a wrong total is wrong whoever typed it.
+
+```json
+"total": {
+	"type": "integer",
+	"field": "number",
+	"help": "Set at checkout",
+	"serverOnly": true
+}
+```
+
+- Every writer except the site's own code is filtered: anonymous visitors, members, admins, API keys and MCP clients. This also applies when authentication is switched off. On update the stored value is kept, on create the field is dropped, and the attempt is written to the access log. The rest of the save goes through.
+- Code changes the field by writing as the system. In an extension, wrap the write in `ActorContext::runAs(Actor::system(), fn () => ...)`.
+- Imports keep the values they carry. A JumpStart import, `tcms push`, or a CSV or JSON import by an admin or API key writes server-only fields as given.
+- The admin form shows the field as read-only, and the collection table does not offer an inline edit.
+- Property routes for the field (`PUT .../{id}/total`, deletes, uploads, increments and decrements) are refused with `403` for everyone, admins included.
+- Over MCP, `describe_collection` lists the field among those the site sets itself, for every caller.
+- Like `protected`, it counts as a field the site sets: registration strips it, and a non-admin cannot clone or import into the collection.
+- A server-only property cannot be `required`. Other writers have the value dropped before validation, so each of their saves would fail. `tcms schema:lint` reports this, and reports a `serverOnly` value that is not `true` or `false`.
+- `serverOnly` is honored on top-level properties only.
+
 ## Disabling Automatic Required Validation
 
 If you want to allow empty values for a required field, explicitly set:

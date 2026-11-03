@@ -96,6 +96,7 @@ readonly class SchemaLinter
 			}
 			array_push($errors, ...$this->lintSchemaRef($name, $property));
 			array_push($errors, ...$this->lintProtected($name, $property));
+			array_push($errors, ...$this->lintServerOnly((string)$name, $property, $raw->required));
 			array_push($warnings, ...$this->lintFieldType($name, $property));
 			if (trim((string)($property['help'] ?? '')) === '') {
 				$warnings[] = "Property '{$name}' has no help text — help feeds the MCP tool catalog AI agents read.";
@@ -212,6 +213,33 @@ readonly class SchemaLinter
 		}
 
 		return ["Property '{$name}' has an invalid protected value. Use true, or an object with a value key."];
+	}
+
+	/**
+	 * `serverOnly` is a boolean, and a server-only property cannot be
+	 * required: everyone but the system has the value dropped before
+	 * validation, so each of their saves would fail.
+	 *
+	 * @param array<string,mixed> $property
+	 * @param array<string>       $required
+	 *
+	 * @return list<string>
+	 */
+	private function lintServerOnly(string $name, array $property, array $required): array
+	{
+		if (!array_key_exists('serverOnly', $property)) {
+			return [];
+		}
+
+		if (!is_bool($property['serverOnly'])) {
+			return ["Property '{$name}' has an invalid serverOnly value. Use true or false."];
+		}
+
+		if ($property['serverOnly'] && in_array($name, $required, true)) {
+			return ["Property '{$name}' is serverOnly and required. Only the site writes it, so every other save would fail validation — remove it from required."];
+		}
+
+		return [];
 	}
 
 	/**

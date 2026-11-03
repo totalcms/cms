@@ -35,11 +35,12 @@ beforeEach(function (): void {
 		'owner'    => [],
 		'featured' => ['protected' => true],
 		'draft'    => ['protected' => ['value' => true]],
+		'total'    => ['serverOnly' => true],
 	];
 	$schemaFetcher = $this->createMock(SchemaFetcher::class);
 	$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
-	$stored = ['id' => 'site-1', 'title' => 'Old', 'owner' => 'alex', 'featured' => true, 'draft' => false];
+	$stored = ['id' => 'site-1', 'title' => 'Old', 'owner' => 'alex', 'featured' => true, 'draft' => false, 'total' => 10];
 	$object = $this->createMock(ObjectData::class);
 	$object->method('toArray')->willReturn($stored);
 	$objectFetcher = $this->createMock(ObjectFetcher::class);
@@ -55,7 +56,7 @@ beforeEach(function (): void {
 
 	$this->actors = new ActorContext();
 	$this->events = new EventDispatcher(new NullLogger(), $this->actors);
-	$this->gate   = new ObjectWriteGate($this->actors, new AccessGuard($schemaFetcher, $objectFetcher, $owners, $config, $this->createMock(LoggerFactory::class)), new AccessDenials($this->createMock(LoggerFactory::class), new OAuthActivityLogger(new NullLogger()), $this->events));
+	$this->gate   = new ObjectWriteGate($this->actors, $this->events, new AccessGuard($schemaFetcher, $objectFetcher, $owners, $config, $this->createMock(LoggerFactory::class)), new AccessDenials($this->createMock(LoggerFactory::class), new OAuthActivityLogger(new NullLogger()), $this->events));
 });
 
 test('a member creating is stamped as the owner, protected fields stripped, forced fields set', function (): void {
@@ -91,7 +92,7 @@ test('anonymous may not update an owned object: the default actor fails closed',
 });
 
 test('the system actor writes anything as sent', function (): void {
-	$data = ['id' => 'site-1', 'title' => 'X', 'owner' => 'sam', 'featured' => false, 'draft' => false];
+	$data = ['id' => 'site-1', 'title' => 'X', 'owner' => 'sam', 'featured' => false, 'draft' => false, 'total' => 99];
 
 	$out = $this->actors->runAs(Actor::system(), fn (): array => $this->gate->beforeUpdate('showcase', 'site-1', $data));
 
@@ -130,4 +131,38 @@ test('an API key without limits of its own writes anywhere: REST checks its path
 	$this->actors->set(Actor::apiKey('k1'));
 
 	expect($this->gate->beforeCreate('showcase', ['id' => 'new', 'title' => 'X', 'owner' => 'sam']))->toBe(['id' => 'new', 'title' => 'X', 'owner' => 'sam']);
+});
+
+test('an admin import keeps the server-only values it brings', function (): void {
+	// JumpStart, sync push and CSV imports carry computed values from another
+	// site; dropping them would lose data. Only trusted actors get this, and
+	// only while the collection is being imported.
+	$this->actors->set(new Actor(ActorKind::Admin, 'ann', 'auth'));
+	$this->events->suspendForImport('showcase');
+
+	$created = $this->gate->beforeCreate('showcase', ['id' => 'site-2', 'title' => 'New', 'total' => 42]);
+	$updated = $this->gate->beforeUpdate('showcase', 'site-1', ['id' => 'site-1', 'title' => 'Old', 'total' => 77]);
+
+	expect($created['total'])->toBe(42)
+		->and($updated['total'])->toBe(77);
+});
+
+test('an admin outside an import cannot set server-only values', function (): void {
+	$this->actors->set(new Actor(ActorKind::Admin, 'ann', 'auth'));
+
+	expect($this->gate->beforeUpdate('showcase', 'site-1', ['id' => 'site-1', 'total' => 77])['total'])->toBe(10);
+});
+
+test('a member import still cannot set server-only values', function (): void {
+	$this->actors->set(new Actor(ActorKind::Member, 'alex', 'auth'));
+	$this->events->suspendForImport('showcase');
+
+	expect($this->gate->beforeUpdate('showcase', 'site-1', ['id' => 'site-1', 'total' => 77])['total'])->toBe(10);
+});
+
+test('an import elevates only the collection being imported', function (): void {
+	$this->actors->set(new Actor(ActorKind::Admin, 'ann', 'auth'));
+	$this->events->suspendForImport('other');
+
+	expect($this->gate->beforeUpdate('showcase', 'site-1', ['id' => 'site-1', 'total' => 77])['total'])->toBe(10);
 });

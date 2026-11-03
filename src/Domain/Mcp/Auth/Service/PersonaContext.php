@@ -304,15 +304,16 @@ class PersonaContext
 
 	/**
 	 * The fields of $collection the current caller cannot set: the protected,
-	 * forced-value and owner fields the site fills in itself. Empty for ADMIN
-	 * and trusted actors, who may set them.
+	 * forced-value and owner fields the site fills in itself. ADMIN and
+	 * trusted actors may set those, so they are told only about the
+	 * server-only fields, which nobody but the site writes.
 	 *
 	 * @return list<string>
 	 */
 	public function fieldsSetBySite(string $collection): array
 	{
 		if (($this->isResolved() && $this->current() === McpPersona::ADMIN) || $this->actors->current()->isTrusted()) {
-			return [];
+			return $this->guard->serverOnlyFieldsFor($collection);
 		}
 
 		return $this->guard->protectedFieldsFor($collection);

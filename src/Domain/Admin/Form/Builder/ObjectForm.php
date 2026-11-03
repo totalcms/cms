@@ -249,6 +249,13 @@ class ObjectForm extends TotalForm
 	{
 		$defaults = $this->services->metaResolver->resolve($this->collection, $property, $this->id);
 
+		// Only the site writes a server-only property; the server would revert
+		// any edit, so the form shows the value without offering one.
+		if (($defaults['serverOnly'] ?? false) === true) {
+			$defaults['readonly'] = true;
+		}
+		unset($defaults['serverOnly']);
+
 		// Handle schema reference for deck/card fields — move to settings after resolve
 		// This is a form-specific concern, not part of general resolution.
 		// Accept both the canonical `schemaref` and the legacy `deckref` alias.

@@ -54,6 +54,14 @@ readonly class PropertyMetaResolver
 			$merged['field'] ?? '',
 		);
 
+		// Only the site writes a server-only property (AccessGuard), so every
+		// editor shows it read-only. The schema decides; a collection or object
+		// override cannot switch it back on.
+		if (($schemaProp['serverOnly'] ?? false) === true) {
+			$merged['serverOnly']           = true;
+			$merged['settings']['readonly'] = true;
+		}
+
 		return $merged;
 	}
 

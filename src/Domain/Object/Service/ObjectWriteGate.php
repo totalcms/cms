@@ -11,6 +11,7 @@ use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * The access rules at the point of storage. ObjectSaver, ObjectUpdater and
@@ -30,6 +31,7 @@ final readonly class ObjectWriteGate
 {
 	public function __construct(
 		private ActorContext $actors,
+		private EventDispatcher $events,
 		private AccessGuard $guard,
 		private AccessDenials $denials,
 	) {
@@ -47,7 +49,7 @@ final readonly class ObjectWriteGate
 	{
 		$this->requireReach($collection, (string)($data['id'] ?? ''), Operation::Create);
 
-		return $this->guard->applyWrite($this->actors->current(), $collection, (string)($data['id'] ?? ''), $data);
+		return $this->guard->applyWrite($this->fieldActor($collection), $collection, (string)($data['id'] ?? ''), $data);
 	}
 
 	/**
@@ -63,7 +65,7 @@ final readonly class ObjectWriteGate
 		$this->requireReach($collection, $id, Operation::Update);
 		$this->requireOwner($collection, $id, Operation::Update);
 
-		return $this->guard->applyWrite($this->actors->current(), $collection, $id, $data);
+		return $this->guard->applyWrite($this->fieldActor($collection), $collection, $id, $data);
 	}
 
 	/**
@@ -73,6 +75,25 @@ final readonly class ObjectWriteGate
 	{
 		$this->requireReach($collection, $id, Operation::Delete);
 		$this->requireOwner($collection, $id, Operation::Delete);
+	}
+
+	/**
+	 * The actor whose field rules apply to this write. While a trusted actor
+	 * (an admin, an API key) imports the collection — JumpStart, sync push, a
+	 * CSV or JSON import, each of which marks it with
+	 * {@see EventDispatcher::suspendForImport()} — the fields are written as
+	 * the system, so server-only values travel with the data instead of being
+	 * dropped. Trusted actors already pass every other field rule, so this
+	 * grants nothing else; reach and ownership are still checked as the real
+	 * actor.
+	 */
+	private function fieldActor(string $collection): Actor
+	{
+		$actor = $this->actors->current();
+
+		return $actor->isTrusted() && $this->events->isImportSuspended($collection)
+			? Actor::system()->startedBy($actor)
+			: $actor;
 	}
 
 	/**
