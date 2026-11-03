@@ -100,3 +100,6 @@ graphify-out/
 .phpmd-tests.cache.php
 .vitest/
 /.schemathesis
+
+# diagnose.php switch (see public/diagnose.php)
+/public/.tcms-support

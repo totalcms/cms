@@ -6,6 +6,9 @@ use DI\ContainerBuilder;
  * Total CMS Diagnostic Script.
  *
  * USAGE:
+ * Normally reached through public/diagnose.php, which serves it only while
+ * a fresh `public/.tcms-support` file exists (see that file).
+ * Standalone, on an install without public/diagnose.php:
  * 1. Upload this file to the customer's public/ directory
  * 2. Access via browser: https://site.com/diagnose.php
  * 3. Review the output to identify issues
@@ -391,5 +394,8 @@ echo 'disable_functions: ' . (ini_get('disable_functions') ?: '(none)') . "\n";
 
 echo "\n== Additional Actions ==\n";
 echo "Clear OPcache: Add ?clear_opcache=1 to the URL\n";
+if (defined('DIAGNOSE_EXPIRES_AT')) {
+	echo 'Support access ends: ' . gmdate('Y-m-d H:i', DIAGNOSE_EXPIRES_AT) . " UTC (delete public/.tcms-support to end it now)\n";
+}
 
 echo "\n== End of Diagnostic Report ==\n";
