@@ -4,6 +4,15 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [Unreleased]
 
+### Security
+
+- **A critical security issue is fixed.** Update as soon as you can
+- **A number of smaller security fixes.** The behavior changes they bring are listed below
+- **Uploaded HTML and SVG files open in a sandbox.** They still display, but scripts in them don't run. **Behavior change:** an uploaded HTML page that relies on scripts or forms no longer works when opened from its file URL. Images on the ImageWorks upload route are unaffected; other kinds of files there now get a 404, so use their download link
+- **Logout only redirects back to your site.** A redirect to another site goes to `/` instead
+- **Twig `map`, `filter`, `sort`, `reduce` and `find` take arrow functions only.** **Behavior change:** passing a PHP function name, such as `|map('strtoupper')`, is now an error; write `|map(v => v|upper)` instead
+- **`diagnose.php` is switched on by a file.** To use it, create an empty file named `.tcms-support` next to it; the report is then available for 72 hours. **Behavior change:** the old token link no longer works
+
 ### Added
 
 - **Unsubscribe links for Bulk Send.** Give the recipient collection's schema a toggle named `unsubscribed` (or the name in `mailer.unsubscribeProperty`). Every bulk email to it then carries one-click `List-Unsubscribe` headers (RFC 8058), which Gmail and Yahoo require from bulk senders, and templates get an `{{ unsubscribeUrl }}` variable for a link in the body. The link opens a confirm page, so mail scanners that open links change nothing. Unsubscribed objects are left out when a send is queued, and skipped if they unsubscribe after it. Test sends to an override address carry no headers, and their link changes nothing. Collections without the property send as before. See [Mailer](resources/docs/notifications/mailer.md#unsubscribe-links)
