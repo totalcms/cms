@@ -47,8 +47,8 @@ it('refuses an expired token', function (): void {
 });
 
 it('refuses a token with one changed byte', function (): void {
-	$t     = signedToken();
-	$token = $t->sign('x', ['a' => 'hello']);
+	$t            = signedToken();
+	$token        = $t->sign('x', ['a' => 'hello']);
 	[$body, $sig] = explode('.', $token);
 
 	$flip = static fn (string $s): string => substr($s, 0, 3) . ($s[3] === 'A' ? 'B' : 'A') . substr($s, 4);
@@ -60,7 +60,7 @@ it('refuses a token with one changed byte', function (): void {
 it('refuses garbage, an empty string and an oversize token', function (): void {
 	$t = signedToken();
 
-	foreach (['', 'garbage', 'a.b', '..', '.', 'a.b.c', str_repeat('A', 5000) . '.' . 'B'] as $bad) {
+	foreach (['', 'garbage', 'a.b', '..', '.', 'a.b.c', str_repeat('A', 5000) . '.B'] as $bad) {
 		expect($t->verify('x', $bad))->toBeNull();
 	}
 });

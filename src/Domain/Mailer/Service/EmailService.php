@@ -70,7 +70,7 @@ readonly class EmailService
 	public function sendRendered(RenderedBulkMessage $message, array $vars, ?string $overrideTo = null, array $headers = []): OperationResult
 	{
 		$refused = $this->editionRefusal($message->sourceId);
-		if ($refused !== null) {
+		if ($refused instanceof OperationResult) {
 			return $refused;
 		}
 
@@ -108,7 +108,7 @@ readonly class EmailService
 	private function deliver(string $mailerId, array $input, ?string $overrideTo, array &$email): OperationResult
 	{
 		$refused = $this->editionRefusal($mailerId);
-		if ($refused !== null) {
+		if ($refused instanceof OperationResult) {
 			return $refused;
 		}
 

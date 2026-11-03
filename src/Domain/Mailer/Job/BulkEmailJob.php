@@ -27,7 +27,7 @@ class BulkEmailJob
 {
 	public const KIND_RENDERED = 'rendered';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
 	public function __construct(
 		private readonly EmailService $emailService,
@@ -121,10 +121,10 @@ class BulkEmailJob
 		}
 
 		$declined = match (true) {
-			$overrideTo !== null                                               => null,
-			$this->unsubscribe->isUnsubscribed($ids['collection'], $object)    => 'Recipient has unsubscribed',
-			$message !== null && !$this->hooks->accepts($message, $object)     => 'Recipient filter declined',
-			default                                                            => null,
+			$overrideTo !== null                                                                     => null,
+			$this->unsubscribe->isUnsubscribed($ids['collection'], $object)                          => 'Recipient has unsubscribed',
+			$message instanceof RenderedBulkMessage && !$this->hooks->accepts($message, $object)     => 'Recipient filter declined',
+			default                                                                                  => null,
 		};
 		if ($declined !== null) {
 			$this->record($ids, ['status' => 'skipped', 'error' => $declined]);
@@ -143,7 +143,7 @@ class BulkEmailJob
 	{
 		[$vars, $headers] = $this->unsubscribeParts($ids['collection'], $ids['objectId'], $overrideTo);
 
-		if ($message === null) {
+		if (!$message instanceof RenderedBulkMessage) {
 			return $this->emailService->sendEmail($ids['mailerId'], $object, $overrideTo, [], false, $vars, $headers);
 		}
 

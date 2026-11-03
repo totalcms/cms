@@ -82,11 +82,11 @@ final readonly class RenderedBulkMessage
 			}
 		}
 
-		return self::hookProblem('recipientFilter', $this->recipientFilter, BulkRecipientFilter::class)
-			?? self::hookProblem('variables', $this->variables, BulkVariableProvider::class);
+		return $this->hookProblem('recipientFilter', $this->recipientFilter, BulkRecipientFilter::class)
+			?? $this->hookProblem('variables', $this->variables, BulkVariableProvider::class);
 	}
 
-	private static function hookProblem(string $key, ?string $class, string $interface): ?string
+	private function hookProblem(string $key, ?string $class, string $interface): ?string
 	{
 		if ($class === null || is_a($class, $interface, true)) {
 			return null;

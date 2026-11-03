@@ -559,7 +559,7 @@ abstract class Util
 		if ($p === 1) {
 			// Avoid [[a], [b], [c], ...]]:
 			return \array_map(
-				callback : fn ($v): float|int => \is_array($v) ? $v[0] : $v,
+				callback : fn (float|int|array $v): float|int => \is_array($v) ? $v[0] : $v,
 				array    : $product,
 			);
 		}

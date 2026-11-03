@@ -179,7 +179,7 @@ readonly class BulkMailerService
 		[$recipients, $excluded, $unsubscribed] = $this->recipients($objects, $collection, $delivered, $overrideTo === null);
 
 		if ($recipients === []) {
-			$hint = $message === null ? ' A template is sent to each object only once — duplicate it to send again.' : '';
+			$hint = $message instanceof RenderedBulkMessage ? '' : ' A template is sent to each object only once — duplicate it to send again.';
 
 			return OperationResult::failure($unsubscribed === 0
 				? sprintf('Nothing to send: all %d matching objects have already received this email.', $excluded) . $hint
@@ -188,7 +188,7 @@ readonly class BulkMailerService
 
 		$batchId = uniqid('bulk_', true);
 		$payload = ['mailerId' => $sourceId, 'collection' => $collection, 'batchId' => $batchId, 'overrideTo' => $overrideTo];
-		if ($message !== null) {
+		if ($message instanceof RenderedBulkMessage) {
 			// Stored before the first job is queued, so no job runs without it.
 			$this->bulkMailerRepository->saveMessage($batchId, $message->toArray());
 			$payload['kind'] = BulkEmailJob::KIND_RENDERED;
@@ -212,7 +212,7 @@ readonly class BulkMailerService
 		]);
 
 		return OperationResult::success(
-			self::queuedMessage($count, $excluded, $unsubscribed),
+			$this->queuedMessage($count, $excluded, $unsubscribed),
 			['batchId' => $batchId, 'count' => $count, 'excluded' => $excluded, 'unsubscribed' => $unsubscribed],
 		);
 	}
@@ -252,7 +252,7 @@ readonly class BulkMailerService
 		return [$ids, $excluded, $unsubscribed];
 	}
 
-	private static function queuedMessage(int $count, int $excluded, int $unsubscribed): string
+	private function queuedMessage(int $count, int $excluded, int $unsubscribed): string
 	{
 		$message = sprintf('Queued %d emails for sending', $count);
 		if ($excluded > 0) {

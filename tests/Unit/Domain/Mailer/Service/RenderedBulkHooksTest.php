@@ -19,7 +19,7 @@ function hooksMessage(?string $filter = null, ?string $variables = null): Render
 
 function hooksWith(array $services): RenderedBulkHooks
 {
-	$container = new class ($services) implements ContainerInterface {
+	$container = new class($services) implements ContainerInterface {
 		public function __construct(private array $services)
 		{
 		}

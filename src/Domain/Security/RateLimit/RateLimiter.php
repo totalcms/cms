@@ -25,7 +25,7 @@ class RateLimiter
 	private const CACHE_PREFIX = 'rl_';
 
 	/** @var \Closure(): int */
-	private \Closure $clock;
+	private readonly \Closure $clock;
 
 	/**
 	 * @param (\Closure(): int)|null $clock current Unix time, for tests
@@ -51,10 +51,10 @@ class RateLimiter
 			return new RateLimitResult(true, 0, 0, $window, 0);
 		}
 
-		$now      = ($this->clock)();
-		$cacheKey = self::CACHE_PREFIX . $name . '_' . md5($subject);
+		$now             = ($this->clock)();
+		$cacheKey        = self::CACHE_PREFIX . $name . '_' . md5($subject);
 		[$count, $start] = $this->read($cacheKey, $now, $window);
-		$retryAfter = max(1, $start + $window - $now);
+		$retryAfter      = max(1, $start + $window - $now);
 
 		if ($count >= $max) {
 			return new RateLimitResult(false, $max, 0, $window, $retryAfter);

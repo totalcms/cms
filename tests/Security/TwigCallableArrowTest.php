@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\ContainerFactory;
+use Twig\Error\RuntimeError;
 
 /**
  * GHSA-95hr-9gqg-c9jw: Twig 3 accepts any PHP callable as the arrow of
@@ -21,7 +22,7 @@ function arrowTwig(): TwigEngine
 
 it('refuses a PHP function name as the callable', function (string $template): void {
 	expect(fn () => arrowTwig()->renderString($template))
-		->toThrow(\Twig\Error\RuntimeError::class, 'must be a Closure');
+		->toThrow(RuntimeError::class, 'must be a Closure');
 })->with([
 	'map'    => ["{{ ['tcms-arrow-probe']|map('strtoupper')|join }}"],
 	'filter' => ["{{ ['tcms-arrow-probe']|filter('strlen')|join }}"],
@@ -34,10 +35,10 @@ it('refuses a PHP function name as the callable', function (string $template): v
 it('still runs Twig arrow functions', function (string $template, string $expected): void {
 	expect(arrowTwig()->renderString($template))->toBe($expected);
 })->with([
-	'map'    => ['{{ ["a", "b"]|map(v => v|upper)|join(",") }}', 'A,B'],
-	'filter' => ['{{ [1, 2, 3]|filter(v => v > 1)|join(",") }}', '2,3'],
-	'sort'   => ['{{ [3, 1, 2]|sort((a, b) => a <=> b)|join(",") }}', '1,2,3'],
+	'map'            => ['{{ ["a", "b"]|map(v => v|upper)|join(",") }}', 'A,B'],
+	'filter'         => ['{{ [1, 2, 3]|filter(v => v > 1)|join(",") }}', '2,3'],
+	'sort'           => ['{{ [3, 1, 2]|sort((a, b) => a <=> b)|join(",") }}', '1,2,3'],
 	'sort, no arrow' => ['{{ [3, 1, 2]|sort|join(",") }}', '1,2,3'],
-	'reduce' => ['{{ [1, 2, 3]|reduce((c, v) => c + v, 10) }}', '16'],
-	'find'   => ['{{ [1, 5, 9]|find(v => v > 4) }}', '5'],
+	'reduce'         => ['{{ [1, 2, 3]|reduce((c, v) => c + v, 10) }}', '16'],
+	'find'           => ['{{ [1, 5, 9]|find(v => v > 4) }}', '5'],
 ]);
