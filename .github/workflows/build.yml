@@ -68,6 +68,13 @@ jobs:
       - name: Install dependencies
         run: composer build
 
+      # Dependabot cannot see PHP dependencies (composer.lock is not
+      # committed), so check what CI just installed against the advisory
+      # database. A known vulnerability fails the build; an abandoned package
+      # (doctrine/annotations, pulled in by a dependency) is only reported.
+      - name: Audit PHP dependencies
+        run: composer audit --abandoned=report
+
       - name: Run test suite
         run: composer test:build
         env:
