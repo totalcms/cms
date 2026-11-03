@@ -14,6 +14,7 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerPreprocessor;
 use TotalCMS\Domain\Twig\Designer\TemplateDesignerSync;
+use TotalCMS\Domain\Twig\Extension\ClosureArrowExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
@@ -84,6 +85,7 @@ readonly class TwigEngine
 
 		$this->twig->getExtension(CoreExtension::class)->setTimezone($config->timezone);
 
+		$this->twig->addExtension(new ClosureArrowExtension());
 		$this->twig->addExtension($extension);
 		$this->twig->addExtension(new StringExtension());
 		$this->twig->addExtension(new StringLoaderExtension());
