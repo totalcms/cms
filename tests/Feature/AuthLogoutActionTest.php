@@ -168,3 +168,27 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 		expect($body)->toBe('');
 	});
 });
+
+// GHSA-3wpr-fj3p-fgr2 finding 5: logout forwarded `?redirect=` and the
+// Referer anywhere, so a logout link on another site could bounce the
+// visitor to a look-alike login page.
+describe('AuthLogoutAction redirect target', function (): void {
+	it('refuses a redirect to another site', function (string $target): void {
+		$response = get('/admin/logout?redirect=' . rawurlencode($target));
+
+		expect($response->getStatusCode())->toBe(302)
+			->and($response->getHeaderLine('Location'))->toBe('/');
+	})->with(['https://evil.example/login', '//evil.example/login', '/\\evil.example', 'javascript:alert(1)']);
+
+	it('does not bounce back to a referring site', function (): void {
+		$response = get('/admin/logout', ['Referer' => 'https://evil.example/fake-login']);
+
+		expect($response->getHeaderLine('Location'))->toBe('/');
+	});
+
+	it('still follows a same-site redirect', function (): void {
+		$response = get('/admin/logout?redirect=' . rawurlencode('/members?bye=1'));
+
+		expect($response->getHeaderLine('Location'))->toBe('/members?bye=1');
+	});
+});

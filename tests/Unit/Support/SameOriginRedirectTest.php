@@ -64,4 +64,12 @@ describe('SameOriginRedirect::resolve', function (): void {
 	test('a path with query and fragment passes through', function (): void {
 		expect(SameOriginRedirect::resolve('/login?x=1#y', 'example.com', '/fallback'))->toBe('/login?x=1#y');
 	});
+
+	test('a relative reference stays on the site', function (string $candidate): void {
+		expect(SameOriginRedirect::resolve($candidate, 'example.com', '/fallback'))->toBe($candidate);
+	})->with(['admin', 'members.php?tab=1', '../account', 'evil.example/phish']);
+
+	test('a scheme without a host is refused', function (string $candidate): void {
+		expect(SameOriginRedirect::resolve($candidate, 'example.com', '/fallback'))->toBe('/fallback');
+	})->with(['javascript:alert(1)', 'JavaScript:alert(1)', 'data:text/html,<script>alert(1)</script>', 'http:evil.example', 'https:/evil.example']);
 });

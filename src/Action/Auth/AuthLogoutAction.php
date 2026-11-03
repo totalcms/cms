@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Auth;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Support\SameOriginRedirect;
 
 readonly class AuthLogoutAction
 {
@@ -26,7 +27,13 @@ readonly class AuthLogoutAction
 		}
 
 		$queryParams = $request->getQueryParams();
-		$redirect    = $queryParams['redirect'] ?? ($referer !== '' ? $referer : '/');
+		$candidate   = is_string($queryParams['redirect'] ?? null) ? $queryParams['redirect'] : $referer;
+
+		// Same-origin only: `?redirect=` is in a link anyone can craft, and
+		// the Referer names whatever page sent the visitor here — a logout
+		// link on another site bounced them back to it (security advisory
+		// GHSA-3wpr-fj3p-fgr2, finding 5).
+		$redirect = SameOriginRedirect::resolve($candidate, $request->getUri()->getHost(), '/');
 
 		return $response->withStatus(302)->withHeader('Location', $redirect);
 	}
