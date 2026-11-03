@@ -36,10 +36,33 @@ class PathUtils
 			$path = sprintf('%s/%s', $path, self::sanitizeSubpath($subpath));
 		}
 		if ($filename !== null && $filename !== '') {
-			return sprintf('%s/%s', $path, $filename);
+			return sprintf('%s/%s', $path, self::assertSegment($filename));
 		}
 
 		return $path;
+	}
+
+	/**
+	 * A filename must be one path segment. Callers decode it from a URL, so a
+	 * `%2f` or `%2e%2e` that slipped past {@see self::sanitizeSubpath()} as
+	 * literal text would otherwise walk out of the property's folder — up to
+	 * `.system/` (security advisory GHSA-7p83-8x29-j3j3, 2026-11-03).
+	 *
+	 * @throws UnsafePathException
+	 */
+	public static function assertSegment(string $filename): string
+	{
+		if (
+			$filename === '.'
+			|| $filename === '..'
+			|| str_contains($filename, '/')
+			|| str_contains($filename, '\\')
+			|| str_contains($filename, "\0")
+		) {
+			throw new UnsafePathException('Invalid filename');
+		}
+
+		return $filename;
 	}
 
 	/**
@@ -70,6 +93,9 @@ class PathUtils
 	 * sanitized first via {@see self::sanitizeSubpath()}, and the filename is
 	 * URL-decoded (covers `+` → space, which path segments do *not* decode
 	 * automatically — needed for filenames originally encoded by depot URLs).
+	 * The decoded filename must still be a single segment.
+	 *
+	 * @throws UnsafePathException when the decoded filename is not one segment
 	 *
 	 * @return array{0:string, 1:?string}
 	 */
@@ -81,11 +107,11 @@ class PathUtils
 		}
 		$pos = strrpos($path, '/');
 		if ($pos === false) {
-			return [self::decodeFilename($path), null];
+			return [self::assertSegment(self::decodeFilename($path)), null];
 		}
 
 		return [
-			self::decodeFilename(substr($path, $pos + 1)),
+			self::assertSegment(self::decodeFilename(substr($path, $pos + 1))),
 			substr($path, 0, $pos),
 		];
 	}

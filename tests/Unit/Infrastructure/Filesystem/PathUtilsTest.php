@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Infrastructure\Filesystem;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\UnsafePathException;
 
 final class PathUtilsTest extends TestCase
 {
@@ -181,6 +183,51 @@ final class PathUtilsTest extends TestCase
 	public function testSplitPathDecodesPercentEncodedFilename(): void
 	{
 		$this->assertSame(['my file.pdf', null], PathUtils::splitPath('my%20file.pdf'));
+	}
+
+	/**
+	 * GHSA-7p83-8x29-j3j3: the filename is decoded after `..` is stripped, so
+	 * an encoded traversal (what Slim hands over for `%252e%252e%252f`) must be
+	 * refused once decoded.
+	 *
+	 * @return array<string, array{string}>
+	 */
+	public static function encodedTraversalProvider(): array
+	{
+		return [
+			'encoded dot-dot-slash'       => ['%2e%2e%2f%2e%2e%2f%2e%2e%2f.system%2fsecret.json'],
+			'encoded slash in subpath'    => ['docs/%2e%2e%2f%2e%2e%2f.system%2fapikeys.json'],
+			'encoded backslash'           => ['..%5c..%5c.system%5csite.key'],
+			'encoded dot-dot only'        => ['%2e%2e'],
+			'encoded dot only'            => ['docs/%2e'],
+			'encoded NUL'                 => ['photo.jpg%00.txt'],
+		];
+	}
+
+	#[DataProvider('encodedTraversalProvider')]
+	public function testSplitPathRefusesEncodedTraversal(string $path): void
+	{
+		$this->expectException(UnsafePathException::class);
+		PathUtils::splitPath($path);
+	}
+
+	public function testBuildPathRefusesMultiSegmentFilename(): void
+	{
+		$this->expectException(UnsafePathException::class);
+		PathUtils::buildPath('x', 'y', 'z', '../../../.system/secret.json');
+	}
+
+	public function testBuildPathRefusesDotDotFilename(): void
+	{
+		$this->expectException(UnsafePathException::class);
+		PathUtils::buildPath('x', 'y', 'z', '..');
+	}
+
+	public function testBuildPathKeepsDottedFilenames(): void
+	{
+		// Only whole `.`/`..` segments are refused: dots inside a name are fine.
+		$this->assertSame('x/y/z/a..b.tar.gz', PathUtils::buildPath('x', 'y', 'z', 'a..b.tar.gz'));
+		$this->assertSame('x/y/z/.cache', PathUtils::buildPath('x', 'y', 'z', '.cache'));
 	}
 
 	// ──────────────────────────────────────────────────────────────────────

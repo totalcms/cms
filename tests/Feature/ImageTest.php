@@ -86,7 +86,9 @@ describe('Image Operations', function (): void {
 	it('can delete an image from gallery', function (): void {
 		// Test gallery image deletion
 		$response = delete('/api/collections/image-test/test-image-object/gallery/test-property/test-image.jpg');
-		expect($response->getStatusCode())->toBeIn([200, 404, 405]); // Gallery delete endpoint exists
+		// A gallery image name is one path segment; `test-property/test-image.jpg`
+		// is refused as an unsafe filename (400) before it reaches the disk.
+		expect($response->getStatusCode())->toBeIn([200, 400, 404, 405]); // Gallery delete endpoint exists
 	});
 
 	it('can update info for an image from gallery', function (): void {
