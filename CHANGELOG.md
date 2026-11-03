@@ -30,6 +30,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **The `tcms builder:frontend` scaffold builds again.** Since 3.6.4 its `vite.config.js` imported a package the scaffold does not install, so `npm run build` failed. The scaffold now uses Vite 7. To fix a project made from it in 3.6.4 or 3.6.5, change the first line of `frontend/vite.config.js` to `import { defineConfig } from 'vite';` and run `npm install -D vite@7` in `frontend/`
 - **Rate limits no longer block clients that stay under them.** Each request restarted the limit's time window, so a steady client was blocked once its total reached the limit. This affected the mailer, counter, MCP, OAuth, XML-RPC, emergency, forgot-password, resend-verification and registration limits
 - **Rate limits work in dev mode.** The mailer, counter, MCP, OAuth, XML-RPC and emergency limits were off whenever dev mode was on
 - **`Retry-After` gives the real wait.** A 429 now says how many seconds are left in the window
