@@ -117,8 +117,10 @@ class CollectionSorter
 				$aValue = $this->propertyCache[$property][$aId] ?? null;
 				$bValue = $this->propertyCache[$property][$bId] ?? null;
 
-				$aExists = $aValue !== null;
-				$bExists = $bValue !== null;
+				// An item with no value sorts last in either direction, so a
+				// descending list never leads with the unrated or undated ones.
+				$aExists = $aValue !== null && $aValue !== '';
+				$bExists = $bValue !== null && $bValue !== '';
 
 				if ($aExists && $bExists) {
 					$comparison = $natsort ? strnatcasecmp((string)$aValue, (string)$bValue) : $aValue <=> $bValue;
@@ -126,9 +128,9 @@ class CollectionSorter
 						return $reverse ? -$comparison : $comparison;
 					}
 				} elseif ($aExists) {
-					return $reverse ? 1 : -1;
+					return -1;
 				} elseif ($bExists) {
-					return $reverse ? -1 : 1;
+					return 1;
 				}
 			}
 

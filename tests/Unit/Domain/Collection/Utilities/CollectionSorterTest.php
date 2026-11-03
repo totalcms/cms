@@ -163,6 +163,44 @@ final class CollectionSorterTest extends TestCase
 		$this->assertCount(3, $result);
 	}
 
+	public function testItemsWithoutAValueSortLastInBothDirections(): void
+	{
+		// A "top rated" or "newest first" list must not lead with the items
+		// that have no rating or no date. Descending used to put them first.
+		$collection = [
+			['id' => 'none'],
+			['id' => 'low', 'score' => 1],
+			['id' => 'blank', 'score' => ''],
+			['id' => 'high', 'score' => 9],
+		];
+
+		$ascending  = (new CollectionSorter($collection))->sortByRules([['property' => 'score']]);
+		$descending = (new CollectionSorter($collection))->sortByRules([['property' => 'score', 'reverse' => true]]);
+
+		$this->assertSame(['low', 'high', 'none', 'blank'], array_column($ascending, 'id'));
+		$this->assertSame(['high', 'low', 'none', 'blank'], array_column($descending, 'id'));
+	}
+
+	public function testItemsWithoutAValueFallThroughToTheNextRule(): void
+	{
+		$collection = [
+			['id' => 'b', 'title' => 'B'],
+			['id' => 'a', 'title' => 'A'],
+			['id' => 'dated', 'title' => 'Z', 'date' => '2026-01-01'],
+		];
+
+		$result = (new CollectionSorter($collection))->sortByRules([['property' => 'date', 'reverse' => true], ['property' => 'title']]);
+
+		$this->assertSame(['dated', 'a', 'b'], array_column($result, 'id'));
+	}
+
+	public function testSortByPropertyKeepsItemsWithoutAValueLast(): void
+	{
+		$items = [['id' => 'none'], ['id' => 'old', 'date' => '2025-01-01'], ['id' => 'new', 'date' => '2026-01-01']];
+
+		$this->assertSame(['new', 'old', 'none'], array_column(CollectionSorter::sortByProperty($items, '-date'), 'id'));
+	}
+
 	public function testSortByRulesWithNumericValues(): void
 	{
 		$collection = [

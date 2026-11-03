@@ -515,6 +515,8 @@ The `sortCollection` filter sorts arrays based on one or more properties.
 ]) %}
 ```
 
+Objects with no value for the sort property (missing or empty) always come last, in either direction, and are then ordered by the next rule. A "newest first" list never starts with the undated posts.
+
 ### Multi-Property Sort
 
 Sorts are applied in order - first sort is primary, subsequent sorts break ties:
