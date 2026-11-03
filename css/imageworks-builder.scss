@@ -111,6 +111,21 @@ pre#twig-macro, pre#twig-render-macro {
 		gap        : 3rem;
 		grid-template-columns : 1fr 1fr;
 	}
+
+	// Outline and shadow: a full-width row under both columns, so the four
+	// fields line up as a 2x2 block whatever the columns above hold
+	.text-effects {
+		grid-column           : 1 / -1;
+		display               : grid;
+		gap                   : 3rem;
+		grid-template-columns : 1fr 1fr;
+
+		> div {
+			display       : grid;
+			gap           : 1rem;
+			align-content : start;
+		}
+	}
 }
 
 #fit-modal .close {

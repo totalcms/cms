@@ -15,6 +15,7 @@
 				{% if args.max %}max="{{args.max}}"{% endif %}
 				{% if args.step %}step="{{args.step}}"{% endif %}
 				{% if args.list %}list="{{args.list}}"{% endif %}
+				{% if args.placeholder %}placeholder="{{args.placeholder}}"{% endif %}
 			>
             <div class="form-group-icon"></div>
         </div>
@@ -99,22 +100,32 @@
 			marktext      : "The text to display as a watermark on the image. Add line breaks using \\n.",
 			marktextfont  : "Select a custom font for the text watermark from the configured watermark-fonts depot. " ~
 							"The depot supports both TTF and OTF font files.",
-			marktextsize  : "Sets the size of the text watermark in pixels. Use values between 10 and 500.",
+			marktextsize  : "Sets the font size of the text watermark in pixels. Use values between 1 and 1000. " ~
+							"Set it without a width to draw the text at a fixed size on every image.",
 			marktextcolor : "Sets the color of the text. Accepts hex values (without hashtag) like 'ffffff' for white.",
 			marktextbg    : "Sets the background color behind the text. Accepts hex values (without hashtag) or leave empty for transparent.",
 			marktextpad   : "Sets the padding around the text in pixels. Use values between 0 and 100. " ~
 							"WARNING: Cannot be used with marktextx/marktexty as it overrides those values.",
 			marktextpos   : "Sets the position of the text watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
-						  	"top, bottom, left, right, center.",
+						  	"top, bottom, left, right, center, or tile to repeat the text over the whole image.",
 			marktextx     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
 							"Cannot be used with marktextpad (padding overrides this).",
 			marktexty     : "Offset from marktextpos anchor point in pixels. Use positive/negative values for fine-tuned positioning. " ~
 							"Cannot be used with marktextpad (padding overrides this).",
-			marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
-			marktextw     : "Sets the maximum width of the text area in pixels or using relative dimensions. " ~
+			marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees. Tiled text runs at 30 degrees unless set.",
+			marktextw     : "Sets the width of the text in pixels or using relative dimensions. " ~
 						    "For relative dimensions, 50w represents 50% of the width of the image. " ~
-						    "Leave empty to automatically scale only when text is wider than the image (ensures consistent text height while preventing overflow).",
-			marktextalpha : "Sets the transparency of the text watermark. Use values between 0 (transparent) and 100 (opaque).",
+						    "Defaults to 40w when no text size is set, so the mark has the same weight on any image size. " ~
+						    "Does not apply to tiled text.",
+			marktextalpha : "Sets the opacity of the text watermark. Use values between 0 (transparent) and 100 (opaque). " ~
+							"Defaults to 100, or 30 when tiled.",
+			marktextstroke      : "Adds an outline around the text, as a percentage of the font size. Use values between 0 and 25. " ~
+								  "Needs a TTF or OTF font.",
+			marktextstrokecolor : "Sets the outline color. Accepts hex values (without hashtag). Defaults to 000000.",
+			marktextshadow      : "Adds a drop shadow behind the text, offset by a percentage of the font size. Use values between 0 and 25. " ~
+								  "Needs a TTF or OTF font.",
+			marktextshadowcolor : "Sets the shadow color. Accepts hex values (without hashtag). Defaults to 000000.",
+			marktextrepeat      : "Tiled position only: how many marks run across the image. Use values between 1 and 12. Defaults to 4.",
 		}
 	%}
 
@@ -303,11 +314,11 @@
 						{{ _self.input("marktext", "text", t('imageworks.text'), "icon-text", help.marktext, values.marktext) }}
 						{{ _self.select("marktextfont", t('imageworks.font'), "icon-font", help.marktextfont, values.marktextfont, watermarkFonts) }}
 						{{ _self.input("marktextsize", "number", t('imageworks.text_size'), "icon-height", help.marktextsize, values.marktextsize) }}
+						{{ _self.input("marktextw", "text", t('imageworks.width'), "icon-width", help.marktextw, values.marktextw, { placeholder:"40w" }) }}
 						{{ _self.input("marktextcolor", "text", t('imageworks.text_color'), "icon-paint-brush", help.marktextcolor, values.marktextcolor) }}
 						{{ _self.input("marktextbg", "text", t('imageworks.text_bg_color'), "icon-paint-roller", help.marktextbg, values.marktextbg) }}
 					</section>
 					<section>
-						{{ _self.input("marktextpad", "text", t('imageworks.padding'), "icon-padding", help.marktextpad, values.marktextpad) }}
 						{{ _self.select("marktextpos", t('imageworks.position'), "icon-position", help.marktextpos, values.marktextpos, [
 							{ value: "top-left", label: t('imageworks.pos_top_left') },
 							{ value: "top-right", label: t('imageworks.pos_top_right') },
@@ -318,10 +329,22 @@
 							{ value: "left", label: t('imageworks.pos_left_center') },
 							{ value: "right", label: t('imageworks.pos_right_center') },
 							{ value: "center", label: t('imageworks.pos_center') },
+							{ value: "tile", label: t('imageworks.pos_tile') },
 						]) }}
+						{{ _self.input("marktextrepeat", "number", t('imageworks.text_repeat'), "icon-pixels", help.marktextrepeat, values.marktextrepeat, { min:1, max:12, placeholder:4 }) }}
+						{{ _self.input("marktextpad", "text", t('imageworks.padding'), "icon-padding", help.marktextpad, values.marktextpad) }}
 						{{ _self.input("marktextangle", "number", t('imageworks.angle'), "icon-angle", help.marktextangle, values.marktextangle) }}
-						{{ _self.input("marktextw", "text", t('imageworks.width'), "icon-width", help.marktextw, values.marktextw) }}
 						{{ _self.input("marktextalpha", "number", t('imageworks.alpha'), "icon-eye", help.marktextalpha, values.marktextalpha, { min:0, max:100 }) }}
+					</section>
+					<section class="text-effects">
+						<div>
+							{{ _self.input("marktextstroke", "number", t('imageworks.text_stroke'), "icon-paint-brush", help.marktextstroke, values.marktextstroke, { min:0, max:25 }) }}
+							{{ _self.input("marktextstrokecolor", "text", t('imageworks.text_stroke_color'), "icon-paint-brush", help.marktextstrokecolor, values.marktextstrokecolor, { placeholder:"000000" }) }}
+						</div>
+						<div>
+							{{ _self.input("marktextshadow", "number", t('imageworks.text_shadow'), "icon-contrast", help.marktextshadow, values.marktextshadow, { min:0, max:25 }) }}
+							{{ _self.input("marktextshadowcolor", "text", t('imageworks.text_shadow_color'), "icon-paint-roller", help.marktextshadowcolor, values.marktextshadowcolor, { placeholder:"000000" }) }}
+						</div>
 					</section>
 				</div>
 			</details>
