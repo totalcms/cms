@@ -52,9 +52,16 @@ beforeEach(function (): void {
 	$views->method('getViewData')->willReturnCallback(function (string $viewId): array {
 		$this->viewLoads++;
 
-		return $viewId === 'top-posts'
-			? [['id' => 'x', 'title' => 'Xray', 'score' => 3], ['id' => 'y', 'title' => 'Yankee', 'score' => 9], ['id' => 'z', 'title' => 'Zulu', 'score' => 5]]
-			: ['posts' => 12, 'pages' => 3];
+		return match ($viewId) {
+			'top-posts' => [['id' => 'x', 'title' => 'Xray', 'score' => 3], ['id' => 'y', 'title' => 'Yankee', 'score' => 9], ['id' => 'z', 'title' => 'Zulu', 'score' => 5]],
+			'rated'     => [
+				['id' => 'p1', 'rating' => ['average' => 4.5, 'total' => 12]],
+				['id' => 'p2', 'rating' => ['average' => 3.9, 'total' => 40]],
+				['id' => 'p3', 'rating' => ['average' => 10, 'total' => 2]],
+				['id' => 'p4'],
+			],
+			default => ['posts' => 12, 'pages' => 3],
+		};
 	});
 
 	$this->query = new TemplateQuery($reader, new IndexSearcher($reader, new ObjectSearcher()), $views, $cache);
@@ -222,4 +229,14 @@ test('a shuffle is fresh on every call; only the matches are cached', function (
 	expect(count(array_unique($orders)))->toBeGreaterThan(1);
 	expect($this->indexReads)->toBe(1);
 	expect($this->query->collection('posts', ['sort' => [['shuffle' => true]], 'filter' => [['property' => 'category', 'value' => 'news']]])->total)->toBe(3);
+});
+
+test('sort and filter reach into an object property with a dotted path', function (): void {
+	// Ratings store {average, total} on the object and list by both.
+	$sorted = $this->query->view('rated', ['filter' => [['property' => 'rating.average', 'operator' => 'isnotempty']], 'sort' => 'rating.average:desc']);
+	expect(array_column($sorted->items, 'id'))->toBe(['p3', 'p1', 'p2'], '10 > 4.5 > 3.9: numeric, not string order');
+
+	$popular = $this->query->view('rated', ['filter' => [['property' => 'rating.total', 'operator' => 'gt', 'value' => 10]], 'sort' => 'rating.total:desc']);
+	expect(array_column($popular->items, 'id'))->toBe(['p2', 'p1']);
+	expect($popular->total)->toBe(2);
 });
