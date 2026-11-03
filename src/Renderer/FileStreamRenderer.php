@@ -32,7 +32,7 @@ final readonly class FileStreamRenderer
 	{
 		$this->releaseBeforeStreaming();
 
-		return $response
+		return ActiveContentHeaders::apply($response, $mime)
 			->withHeader('Content-Type', $mime)
 			->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\"")
 			->withHeader('X-Accel-Buffering', 'no')
@@ -50,7 +50,9 @@ final readonly class FileStreamRenderer
 	{
 		$this->releaseBeforeStreaming();
 
-		$response = $response
+		// Inline is what a media player needs, and what lets an editor's HTML
+		// upload run on this origin — ActiveContentHeaders sandboxes that.
+		$response = ActiveContentHeaders::apply($response, $mime)
 			->withHeader('Content-Type', $mime)
 			->withHeader('Content-Disposition', "inline; filename=\"{$filename}\"")
 			->withHeader('Accept-Ranges', 'bytes')

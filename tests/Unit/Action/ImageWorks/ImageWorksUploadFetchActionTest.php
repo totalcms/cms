@@ -33,6 +33,8 @@ final class ImageWorksUploadFetchActionTest extends TestCase
 		// Default: pretend the file exists so generateUploadImage gets called.
 		// Tests that assert the 404-on-missing branch override this in-line.
 		$this->uploadFetcher->method('fileExists')->willReturn(true);
+		// ImageWorks serves images only; the stored file is one.
+		$this->uploadFetcher->method('mimeType')->willReturn('image/jpeg');
 
 		$this->action = new ImageWorksUploadFetchAction($this->imageGenerator, $this->uploadFetcher, $this->createStub(RawUploadGate::class));
 	}

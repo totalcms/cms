@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Renderer\ActiveContentHeaders;
 
 /**
  * The HTTP side of an ImageWorks response: the original file served as is,
@@ -31,9 +32,12 @@ final readonly class ImageResponder
 			return $this->notModified($cacheHeaders);
 		}
 
+		$mime = $response['mimeType'] ?: 'image/jpeg';
+
+		// An SVG original can carry script; sandbox it when opened directly.
 		return $this->withCacheHeaders(
-			(new Response())
-				->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+			ActiveContentHeaders::apply(new Response(), $mime)
+				->withHeader('Content-Type', $mime)
 				->withHeader('Content-Length', (string)$this->filesystem->fileSize($imagePath)),
 			$cacheHeaders,
 		)->withBody($response['stream']);

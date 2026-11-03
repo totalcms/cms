@@ -48,6 +48,13 @@ readonly class ImageWorksUploadFetchAction
 			throw new HttpForbiddenException($request, $denial);
 		}
 
+		// ImageWorks serves images. Anything else in the folder (an `.html`
+		// an editor uploaded, say) went out inline as itself, on this origin
+		// (GHSA-f354-xm96-5p3w); `/download/upload/…` is its URL.
+		if (!str_starts_with($this->uploadFetcher->mimeType($collection, $id, $property, $name, $subpath), 'image/')) {
+			throw new HttpNotFoundException($request, 'Image not found');
+		}
+
 		return $this->respond($request, $response, fn (): ResponseInterface => $this->imageGenerator
 			->forPublicRoute()
 			->generateUploadImage($collection, $id, $property, $name, ImageParamValidator::validate($request->getQueryParams()), $request, $subpath));
