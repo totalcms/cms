@@ -43,7 +43,7 @@ test('requests inside a window do not stretch it', function (): void {
 	$this->limiter->attempt('t', 'k', 1, 60);
 	$this->now += 59;
 	$blocked = $this->limiter->attempt('t', 'k', 1, 60);
-	$this->now += 1;
+	$this->now++;
 
 	expect($blocked->allowed)->toBeFalse()
 		->and($blocked->retryAfter)->toBe(1)

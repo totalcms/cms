@@ -24,7 +24,7 @@ use TotalCMS\Domain\Security\Encryption\SiteKey;
  * Remote signatures (license, marketplace) are RS256 through the license
  * keyring, not this class.
  */
-final class SignedToken
+final readonly class SignedToken
 {
 	/** Longer tokens are refused before any decoding. */
 	public const MAX_LENGTH = 4096;
@@ -64,9 +64,9 @@ final class SignedToken
 		}
 		$envelope['d'] = $payload;
 
-		$body = self::encode(json_encode($envelope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$body = $this->encode(json_encode($envelope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
-		return $body . '.' . self::encode(hash_hmac('sha256', $body, $key, true));
+		return $body . '.' . $this->encode(hash_hmac('sha256', $body, $key, true));
 	}
 
 	/**
@@ -83,11 +83,11 @@ final class SignedToken
 		}
 
 		[$body, $signature] = explode('.', $token);
-		if ($body === '' || !hash_equals(self::encode(hash_hmac('sha256', $body, $key, true)), $signature)) {
+		if ($body === '' || !hash_equals($this->encode(hash_hmac('sha256', $body, $key, true)), $signature)) {
 			return null;
 		}
 
-		$envelope = json_decode((string)self::decode($body), true);
+		$envelope = json_decode((string)$this->decode($body), true);
 		if (!is_array($envelope) || ($envelope['pur'] ?? null) !== $purpose || !is_array($envelope['d'] ?? null)) {
 			return null;
 		}
@@ -96,7 +96,6 @@ final class SignedToken
 			return null;
 		}
 
-		/** @var array<string,mixed> */
 		return $envelope['d'];
 	}
 
@@ -107,12 +106,12 @@ final class SignedToken
 		return $siteKey === null || $siteKey === '' ? null : hash_hmac('sha256', 'signed-token', $siteKey, true);
 	}
 
-	private static function encode(string $bytes): string
+	private function encode(string $bytes): string
 	{
 		return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
 	}
 
-	private static function decode(string $text): string|false
+	private function decode(string $text): string|false
 	{
 		return base64_decode(strtr($text, '-_', '+/'), true);
 	}

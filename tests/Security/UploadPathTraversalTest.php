@@ -32,17 +32,17 @@ afterEach(function (): void {
 });
 
 dataset('traversal paths', [
-	'plain'          => ['../../../.system/traversal-secret.json'],
-	'single-encoded' => ['%2e%2e%2f%2e%2e%2f%2e%2e%2f.system%2ftraversal-secret.json'],
-	'double-encoded' => ['%252e%252e%252f%252e%252e%252f%252e%252e%252f.system%252ftraversal-secret.json'],
+	'plain'                       => ['../../../.system/traversal-secret.json'],
+	'single-encoded'              => ['%2e%2e%2f%2e%2e%2f%2e%2e%2f.system%2ftraversal-secret.json'],
+	'double-encoded'              => ['%252e%252e%252f%252e%252e%252f%252e%252e%252f.system%252ftraversal-secret.json'],
 	'double-encoded in subfolder' => ['docs/%252e%252e%252f%252e%252e%252f%252e%252e%252f%252e%252e%252f.system%252ftraversal-secret.json'],
 	'double-encoded backslash'    => ['%252e%252e%255c%252e%252e%255c%252e%252e%255c.system%255ctraversal-secret.json'],
 ]);
 
 dataset('public upload routes', [
-	'download' => ['/download/upload/x/y/z/'],
-	'stream'   => ['/stream/upload/x/y/z/'],
-	'imageworks' => ['/imageworks/upload/x/y/z/'],
+	'download'       => ['/download/upload/x/y/z/'],
+	'stream'         => ['/stream/upload/x/y/z/'],
+	'imageworks'     => ['/imageworks/upload/x/y/z/'],
 	'depot download' => ['/download/x/y/z/'],
 	'depot stream'   => ['/stream/x/y/z/'],
 ]);

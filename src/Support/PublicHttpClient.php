@@ -132,7 +132,7 @@ final readonly class PublicHttpClient
 	{
 		$v4 = gethostbynamel($host) ?: [];
 		$v6 = [];
-		foreach (QuietCall::run(static fn () => dns_get_record($host, DNS_AAAA)) ?: [] as $record) {
+		foreach (QuietCall::run(static fn (): array|false => dns_get_record($host, DNS_AAAA)) ?: [] as $record) {
 			if (isset($record['ipv6'])) {
 				$v6[] = (string)$record['ipv6'];
 			}

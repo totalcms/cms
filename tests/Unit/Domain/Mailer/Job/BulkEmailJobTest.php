@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Mailer\Job\BulkEmailJob;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
-use TotalCMS\Domain\Mailer\Data\RenderedBulkMessage;
 use TotalCMS\Domain\Mailer\Service\BulkUnsubscribe;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\RenderedBulkHooks;

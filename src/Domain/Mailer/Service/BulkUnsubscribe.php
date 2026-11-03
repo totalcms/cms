@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mailer\Service;
 
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -136,7 +137,7 @@ readonly class BulkUnsubscribe
 
 		// The site's own write: the recipient has no account to act as, and
 		// the property may be protected or server-only.
-		$this->actors->runAs(Actor::system(), fn () => $this->patcher->patchObject($collection, $objectId, [$property => true]));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->patcher->patchObject($collection, $objectId, [$property => true]));
 
 		return true;
 	}

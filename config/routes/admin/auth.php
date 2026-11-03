@@ -7,8 +7,8 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
 use TotalCMS\Action\Mailer\BulkUnsubscribeAction;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
-use TotalCMS\Middleware\Security\UnsubscribeRateLimitMiddleware;
 use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
+use TotalCMS\Middleware\Security\UnsubscribeRateLimitMiddleware;
 
 return function (App $app): void {
 	// Auth routes intentionally skip CSRFProtectionMiddleware. The threat model

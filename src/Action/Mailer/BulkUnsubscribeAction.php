@@ -36,10 +36,10 @@ readonly class BulkUnsubscribeAction
 		$valid = $post ? $this->unsubscribe->unsubscribe($token) : $this->unsubscribe->isValid($token);
 
 		$state = match (true) {
-			!$valid                         => 'invalid',
+			!$valid                             => 'invalid',
 			$token === BulkUnsubscribe::PREVIEW => 'preview',
-			$post                           => 'done',
-			default                         => 'confirm',
+			$post                               => 'done',
+			default                             => 'confirm',
 		};
 
 		return $this->twigRenderer->template($response, 'admin/unsubscribe.twig', ['state' => $state, 'token' => $token])

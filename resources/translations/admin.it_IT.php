@@ -167,10 +167,10 @@ return [
 	'denied.message'      => 'Non hai i permessi per accedere a questa pagina.',
 	'denied.go_back'      => 'Torna alla pagina precedente',
 
-	'unsubscribe.title' => 'Annulla iscrizione',
+	'unsubscribe.title'   => 'Annulla iscrizione',
 	'unsubscribe.confirm' => 'Non vuoi più ricevere queste email?',
-	'unsubscribe.button' => 'Annulla iscrizione',
-	'unsubscribe.done' => 'La tua iscrizione è stata annullata. Non riceverai più queste email.',
+	'unsubscribe.button'  => 'Annulla iscrizione',
+	'unsubscribe.done'    => 'La tua iscrizione è stata annullata. Non riceverai più queste email.',
 	'unsubscribe.invalid' => 'Questo link per annullare l\'iscrizione non è valido. Potrebbe essere stato copiato in modo incompleto.',
 	'unsubscribe.preview' => 'Questa è un\'email di prova. Nell\'email reale, questo link annulla l\'iscrizione del destinatario.',
 

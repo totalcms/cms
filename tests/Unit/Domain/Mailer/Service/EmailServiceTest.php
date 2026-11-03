@@ -565,7 +565,7 @@ final class EmailServiceTest extends TestCase
 
 	public function testSendRenderedRendersEachPartWithTheVariables(): void
 	{
-		$vars = ['contact' => ['email' => 'ann@example.com', 'name' => 'Ann']];
+		$vars                 = ['contact' => ['email' => 'ann@example.com', 'name' => 'Ann']];
 		$this->config->mailer = ['whitelist' => []];
 		$this->twigEngine->method('renderString')->willReturnCallback(static function (string $template, array $data) use ($vars): string {
 			self::assertSame($vars, $data);
