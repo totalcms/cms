@@ -222,6 +222,8 @@ The routes above are accessible at:
 - `/ext/acme/seo-pro/webhook`
 - `/ext/acme/seo-pro/embed/{id}`
 
+A `HEAD` request is answered by the matching `GET` route unless you register a `HEAD` route of your own. This holds for public, API and admin routes, so link checkers and podcast validators get the same status and headers as a `GET`.
+
 ### Route placeholders
 
 API, public, and admin routes all support Slim-style `{placeholder}` segments. A captured value is passed to the handler in its `$args` array, keyed by the placeholder name:

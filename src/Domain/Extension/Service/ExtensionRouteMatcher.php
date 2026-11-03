@@ -8,7 +8,8 @@ namespace TotalCMS\Domain\Extension\Service;
  * Matches a request against an extension's registered routes with
  * Slim-style `{placeholder}` segments. An exact static match wins over a
  * placeholder pattern (FastRoute precedence), so a literal `/embed/list` is
- * never shadowed by `/embed/{id}` regardless of registration order.
+ * never shadowed by `/embed/{id}` regardless of registration order. A HEAD
+ * request with no HEAD route falls back to the GET route.
  */
 final class ExtensionRouteMatcher
 {
@@ -34,6 +35,12 @@ final class ExtensionRouteMatcher
 			if ($params !== null) {
 				return ['route' => $route, 'params' => $params];
 			}
+		}
+
+		// HEAD is GET without a body (RFC 9110), so an extension that only
+		// registered GET still answers it. The web server drops the body.
+		if ($method === 'HEAD') {
+			return self::resolve($routes, 'GET', $path);
 		}
 
 		return null;

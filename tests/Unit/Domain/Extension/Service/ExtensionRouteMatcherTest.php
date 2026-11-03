@@ -29,3 +29,21 @@ test('placeholders capture one segment, honor regex constraints, and quote liter
 		->and(ExtensionRouteMatcher::matchPath('/a.b/{x}/{y}', '/a.b/1/2'))->toBe(['x' => '1', 'y' => '2'])
 		->and(ExtensionRouteMatcher::matchPath('/a.b/{x}', '/aXb/1'))->toBeNull('the dot is literal, not any-char');
 });
+
+test('a HEAD request falls back to the matching GET route', function (): void {
+	$routes = [extRoute('GET', '/feed'), extRoute('GET', '/files/{id}')];
+
+	expect(ExtensionRouteMatcher::resolve($routes, 'HEAD', '/feed')['route']['path'])->toBe('/feed')
+		->and(ExtensionRouteMatcher::resolve($routes, 'HEAD', '/files/7'))->toBe(['route' => $routes[1], 'params' => ['id' => '7']])
+		->and(ExtensionRouteMatcher::resolve($routes, 'HEAD', '/missing'))->toBeNull();
+});
+
+test('a registered HEAD route wins over the GET fallback', function (): void {
+	$routes = [extRoute('GET', '/feed'), extRoute('HEAD', '/feed')];
+
+	expect(ExtensionRouteMatcher::resolve($routes, 'HEAD', '/feed')['route'])->toBe($routes[1]);
+});
+
+test('only HEAD falls back to GET', function (): void {
+	expect(ExtensionRouteMatcher::resolve([extRoute('GET', '/feed')], 'OPTIONS', '/feed'))->toBeNull();
+});
