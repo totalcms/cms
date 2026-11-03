@@ -131,3 +131,19 @@ it('reports a batch with nothing left to cancel', function (): void {
 
 	expect($this->service->cancelBatch('bulk_1')->success)->toBeFalse();
 });
+
+it('cancels a batch only from the mailer it belongs to', function (): void {
+	$this->repo->method('fetchBatchMailerId')->willReturn('newsletter');
+	$this->queuer->expects($this->never())->method('cancelEmailBatch');
+
+	$result = $this->service->cancelBatch('bulk_1', 'welcome');
+
+	expect($result->success)->toBeFalse()->and($result->message)->toContain('not found');
+});
+
+it('cancels a batch from its own mailer', function (): void {
+	$this->repo->method('fetchBatchMailerId')->willReturn('newsletter');
+	$this->queuer->method('cancelEmailBatch')->willReturn(2);
+
+	expect($this->service->cancelBatch('bulk_1', 'newsletter')->success)->toBeTrue();
+});

@@ -68,6 +68,7 @@ readonly class OperationDetector
 		'admin-playground-post',
 		'admin-mail-post',
 		'action-bulk-mailer',
+		'action-bulk-mailer-cancel', // part of sending: whoever may send may call a send off
 		'collection-save',
 		'import-factory',
 		'import-csv',

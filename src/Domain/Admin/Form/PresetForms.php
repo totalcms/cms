@@ -242,11 +242,12 @@ final readonly class PresetForms
 			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
 
 			// Send History accordion: loads with the page and reloads after
-			// every queue (BulkMailerAction sends the bulk-send-queued trigger)
+			// every queue or cancel (BulkMailerAction sends bulk-send-queued,
+			// BulkMailerCancelAction bulk-send-cancelled)
 			$historyUrl     = $this->api . '/action/mailer/bulk/history?' . http_build_query(['mailerId' => $id]);
 			$historyOutput  = HTMLUtils::element('div', '', array_merge(
 				HTMLUtils::htmxAttributes($historyUrl, 'get', [
-					'trigger' => 'load, bulk-send-queued from:body',
+					'trigger' => 'load, bulk-send-queued from:body, bulk-send-cancelled from:body',
 					'swap'    => 'innerHTML',
 				]),
 				['id' => 'bulk-history-output', 'class' => 'bulk-history-output']

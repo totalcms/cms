@@ -5354,6 +5354,57 @@
                 ]
             }
         },
+        "/api/action/mailer/bulk/cancel": {
+            "post": {
+                "operationId": "action-bulk-mailer-cancel",
+                "tags": [
+                    "action"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/api/action/mailer/bulk/cancel",
+                "x-tcms-action": "BulkMailerCancelAction",
+                "x-tcms-middleware": [
+                    "OAuthRestScopeMiddleware",
+                    "OAuthBearerMiddleware",
+                    "BulkMailerEditionMiddleware",
+                    "MailerAccessMiddleware",
+                    "DualAuthMiddleware"
+                ]
+            }
+        },
         "/api/action/mailer/bulk/history": {
             "get": {
                 "operationId": "action-bulk-mailer-history",

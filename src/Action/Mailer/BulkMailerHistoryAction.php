@@ -9,10 +9,12 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Mailer\Data\BulkBatchSummaryData;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Renderer\RawRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * BulkMailerHistoryAction renders a mailer's recent bulk send batches with
  * their sent / failed / skipped / pending counts, for the Send History panel.
+ * A batch with emails still waiting gets a Cancel button (BulkMailerCancelAction).
  */
 readonly class BulkMailerHistoryAction
 {
@@ -21,6 +23,7 @@ readonly class BulkMailerHistoryAction
 	public function __construct(
 		private BulkMailerRepository $bulkMailerRepository,
 		private RawRenderer $renderer,
+		private Config $config,
 	) {
 	}
 
@@ -41,7 +44,7 @@ readonly class BulkMailerHistoryAction
 
 		$rows = '';
 		foreach ($batches as $batch) {
-			$rows .= $this->row($batch);
+			$rows .= $this->row($batch, $mailerId);
 		}
 
 		$html = '<table class="admin-table bulk-history-table"><thead><tr>' .
@@ -52,7 +55,7 @@ readonly class BulkMailerHistoryAction
 		return $this->htmlResponse($response, $html);
 	}
 
-	private function row(BulkBatchSummaryData $batch): string
+	private function row(BulkBatchSummaryData $batch, string $mailerId): string
 	{
 		$audience = '<strong>' . htmlspecialchars($batch->collection) . '</strong>';
 		if ($batch->isTest()) {
@@ -67,7 +70,7 @@ readonly class BulkMailerHistoryAction
 		return '<tr title="Batch ' . htmlspecialchars($batch->batchId) . '">' .
 			'<td>' . htmlspecialchars($this->formatUtc($batch->startedAt)) . '</td>' .
 			'<td>' . $audience . '</td>' .
-			'<td>' . $this->status($batch) . '</td>' .
+			'<td>' . $this->status($batch) . $this->cancelButton($batch->batchId, $mailerId, $pending) . '</td>' .
 			'<td>' . $batch->sent . '</td>' .
 			'<td>' . $batch->failed . '</td>' .
 			'<td>' . $batch->skipped . '</td>' .
@@ -101,6 +104,34 @@ readonly class BulkMailerHistoryAction
 		}
 
 		return '<span class="dash-badge sm success">Complete</span>';
+	}
+
+	/**
+	 * Calls off the emails not sent yet. The cell shows an error in place;
+	 * on success the whole panel reloads (bulk-send-cancelled).
+	 */
+	private function cancelButton(string $batchId, string $mailerId, ?int $pending): string
+	{
+		if ($pending === null || $pending <= 0) {
+			return '';
+		}
+
+		$attrs = [
+			'type'       => 'button',
+			'class'      => 'dash-button sm bulk-history-cancel',
+			'hx-post'    => $this->config->api . '/api/action/mailer/bulk/cancel',
+			'hx-vals'    => (string)json_encode(['batchId' => $batchId, 'mailerId' => $mailerId]),
+			'hx-confirm' => sprintf('Cancel the %d %s not sent yet? Emails already sent stay sent.', $pending, $pending === 1 ? 'email' : 'emails'),
+			'hx-target'  => 'closest td',
+			'hx-swap'    => 'innerHTML',
+		];
+
+		$html = '';
+		foreach ($attrs as $name => $value) {
+			$html .= ' ' . $name . '="' . htmlspecialchars($value) . '"';
+		}
+
+		return '<br><button' . $html . '>Cancel</button>';
 	}
 
 	/**

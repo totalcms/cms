@@ -345,4 +345,14 @@ final class BulkMailerRepositoryTest extends TestCase
 
 		$this->assertSame(3, $this->repository->fetchMailerBatches('mailer-1')[0]->cancelled);
 	}
+
+	public function testFetchesTheMailerABatchBelongsTo(): void
+	{
+		$this->assertNull($this->repository->fetchBatchMailerId('b1'));
+
+		$this->repository->recordBatch('b1', 'mailer-1', 'subscribers', 2, 0, null, null);
+
+		$this->assertSame('mailer-1', $this->repository->fetchBatchMailerId('b1'));
+		$this->assertNull($this->repository->fetchBatchMailerId('b2'));
+	}
 }

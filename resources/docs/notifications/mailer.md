@@ -329,7 +329,9 @@ The override replaces **To** only. If the template has **CC** or **BCC** address
 | Sent / Failed / Skipped | Emails processed so far, counting each object once |
 | Pending | Queued emails not yet sent, failed, skipped, or cancelled |
 
-The panel shows the 10 most recent batches and refreshes after each queue; click **Refresh** to update it while a batch is sending. *Skipped* counts objects that received the email from another batch after this one was queued — two overlapping sends of the same template, for example. A failed email is one that couldn't be sent, or whose object was deleted after the send was queued; `email.log` in your logs folder has the reason.
+The panel shows the 10 most recent batches and refreshes after each queue; click **Refresh** to update it while a batch is sending.
+
+A batch with emails still waiting (*Scheduled* or *In progress*) has a **Cancel** button under its status. It asks first, then removes the emails not sent yet from the queue. Emails already sent stay sent, and the batch shows as *Cancelled* with how many were called off. To send to the same audience later, queue the send again: objects that never got the email are still eligible. *Skipped* counts objects that received the email from another batch after this one was queued — two overlapping sends of the same template, for example. A failed email is one that couldn't be sent, or whose object was deleted after the send was queued; `email.log` in your logs folder has the reason.
 
 The history is stored in `tcms-data/.system/bulkmailer`, a SQLite database. Deleting that file erases the send history and resets the hourly and daily counts — and **every object becomes eligible to receive every template again**.
 
@@ -345,6 +347,7 @@ The admin page uses these endpoints. They need the Pro edition and either a sign
 | `POST /api/action/mailer/bulk/preview` | Render one object's email: `mailerId`, `bulkPreviewObjectId`, `bulkCollection` |
 | `GET /api/action/mailer/bulk/objects` | List a collection's objects for the picker: `bulkCollection`, `bulkInclude`, `bulkExclude` |
 | `GET /api/action/mailer/bulk/history` | Recent batches for `mailerId` |
+| `POST /api/action/mailer/bulk/cancel` | Cancel the emails of batch `batchId` not sent yet. `mailerId` must be the template the batch was queued from |
 
 These return HTML fragments for the admin UI (except `objects`, which returns JSON), not a stable API. Errors from the endpoint itself also come back as HTML with status 200; only a refused sign-in or permission returns a 401 or 403.
 

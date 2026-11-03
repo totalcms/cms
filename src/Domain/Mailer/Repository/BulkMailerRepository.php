@@ -138,6 +138,24 @@ class BulkMailerRepository
 	}
 
 	/**
+	 * The mailer (or rendered send's sourceId) a batch was queued for, or
+	 * null when no batch has that id.
+	 */
+	public function fetchBatchMailerId(string $batchId): ?string
+	{
+		if (!$this->dbExists()) {
+			return null;
+		}
+
+		$stmt = $this->getDb()->prepare('SELECT mailerId FROM bulk_batches WHERE batchId = :batchId');
+		$stmt->bindValue(':batchId', $batchId);
+		$stmt->execute();
+		$mailerId = $stmt->fetchColumn();
+
+		return is_string($mailerId) ? $mailerId : null;
+	}
+
+	/**
 	 * Count jobs of a batch that were cancelled before they ran.
 	 */
 	public function recordCancelled(string $batchId, int $count): void

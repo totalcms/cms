@@ -142,9 +142,16 @@ readonly class BulkMailerService
 	 * Cancel the jobs of a batch that have not run yet: a scheduled send
 	 * called off, or the rest of one in progress. Emails already sent stay
 	 * sent; Send History shows the batch as cancelled.
+	 *
+	 * Give $mailerId when the request names the mailer it came from (the
+	 * Send History button): a batch of any other mailer is then refused.
 	 */
-	public function cancelBatch(string $batchId): OperationResult
+	public function cancelBatch(string $batchId, ?string $mailerId = null): OperationResult
 	{
+		if ($mailerId !== null && $this->bulkMailerRepository->fetchBatchMailerId($batchId) !== $mailerId) {
+			return OperationResult::failure('Batch not found for this email');
+		}
+
 		$cancelled = $this->jobQueuer->cancelEmailBatch($batchId);
 		if ($cancelled === 0) {
 			return OperationResult::failure('Nothing to cancel: the batch has no emails waiting to be sent');

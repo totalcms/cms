@@ -16,7 +16,9 @@ function bulkHistoryRender(BulkMailerRepository $repository, string $mailerId): 
 {
 	$request  = (new ServerRequestFactory())->createServerRequest('GET', '/api/action/mailer/bulk/history')
 		->withQueryParams(['mailerId' => $mailerId]);
-	$response = (new BulkMailerHistoryAction($repository, new RawRenderer()))($request, (new ResponseFactory())->createResponse());
+	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->api = '/tcms';
+	$response    = (new BulkMailerHistoryAction($repository, new RawRenderer(), $config))($request, (new ResponseFactory())->createResponse());
 
 	return (string)$response->getBody();
 }
@@ -70,4 +72,21 @@ it('marks a batch whose remaining jobs were cancelled', function (): void {
 		->toContain('Cancelled')
 		->toContain('2 cancelled')
 		->not->toContain('Scheduled');
+});
+
+it('offers to cancel a batch with emails still waiting', function (): void {
+	$this->repository->recordBatch('b1', 'news', 'members', 3, 0, null, '2030-01-01 09:00:00');
+
+	expect(bulkHistoryRender($this->repository, 'news'))
+		->toContain('hx-post="/tcms/api/action/mailer/bulk/cancel"')
+		->toContain('hx-confirm="Cancel the 3 emails not sent yet?')
+		->toContain('&quot;batchId&quot;:&quot;b1&quot;')
+		->toContain('&quot;mailerId&quot;:&quot;news&quot;');
+});
+
+it('offers no cancel once a batch has nothing waiting', function (): void {
+	$this->repository->recordBatch('b1', 'news', 'members', 1, 0, null, null);
+	$this->repository->log(['batchId' => 'b1', 'mailerId' => 'news', 'collection' => 'members', 'objectId' => 'a', 'status' => 'sent']);
+
+	expect(bulkHistoryRender($this->repository, 'news'))->not->toContain('bulk/cancel');
 });

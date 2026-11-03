@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Mailer\BulkMailerAction;
+use TotalCMS\Action\Mailer\BulkMailerCancelAction;
 use TotalCMS\Action\Mailer\BulkMailerHistoryAction;
 use TotalCMS\Action\Mailer\BulkMailerPreviewAction;
 use TotalCMS\Action\Mailer\BulkObjectOptionsAction;
@@ -27,6 +28,7 @@ return function (RouteCollectorProxyInterface $app): void {
 			$bulk->post('/preview', BulkMailerPreviewAction::class)->setName('action-bulk-mailer-preview');
 			$bulk->get('/objects', BulkObjectOptionsAction::class)->setName('action-bulk-mailer-objects');
 			$bulk->get('/history', BulkMailerHistoryAction::class)->setName('action-bulk-mailer-history');
+			$bulk->post('/cancel', BulkMailerCancelAction::class)->setName('action-bulk-mailer-cancel');
 		})
 			->add(BulkMailerEditionMiddleware::class)
 			->add(MailerAccessMiddleware::class)
