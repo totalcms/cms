@@ -2,6 +2,29 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Unsubscribe links for Bulk Send.** Give the recipient collection's schema a toggle named `unsubscribed` (or the name in `mailer.unsubscribeProperty`). Every bulk email to it then carries one-click `List-Unsubscribe` headers (RFC 8058), which Gmail and Yahoo require from bulk senders, and templates get an `{{ unsubscribeUrl }}` variable for a link in the body. The link opens a confirm page, so mail scanners that open links change nothing. Unsubscribed objects are left out when a send is queued, and skipped if they unsubscribe after it. Test sends to an override address carry no headers, and their link changes nothing. Collections without the property send as before. See [Mailer](resources/docs/notifications/mailer.md#unsubscribe-links)
+- **Cancel a bulk send.** A batch in Send History that is scheduled or still sending has a Cancel button. It removes the emails not sent yet from the queue; emails already sent stay sent, and the batch shows as *Cancelled*
+- **Bulk sends from an extension.** `BulkMailerService::queueRenderedSend()` sends an extension's own Twig through Bulk Send, without a mailer template, with the same queue, schedule, send limits, retries and Send History. The message is rendered for each recipient as their email goes out. An optional recipient filter is checked at that moment, and an optional provider adds variables and headers for each recipient. Each object receives a given source once. `cancelBatch()` cancels a batch's unsent emails. Pro edition. See [Mailer](resources/docs/notifications/mailer.md#bulk-sends-from-an-extension)
+- **Extra headers on an email.** `EmailSender::send()` takes a `headers` list, as does the last argument of `sendEmail()`. Headers the mailer writes itself, invalid names and values with line breaks are dropped and logged
+- **Server-only schema fields.** A property marked `"serverOnly": true` can be written only by the site itself: your PHP, automations and extensions. A value sent by anyone else is dropped, admins and API keys included, and with authentication off. The admin form and the inline cell editor show the field read-only, and the counter routes cannot change it. Use it for values such as an order total or a payment status. See [Validation](resources/docs/schemas/validation.md#serveronly)
+- **Rate limits for extension routes.** `PublicRateLimiter` gives an extension's public routes a named per-IP limit, through `hit()` in a handler or `middleware()` on the route. Site owners can change each limit in `$settings['rateLimits']`. See [Extension Points](resources/docs/extensions/extension-points.md#rate-limiting-public-routes)
+- **The image builder has tiled text watermarks, outlines and shadows.** The ImageWorks image builder now offers the 3.6.5 text-watermark options: a Tile position with its count, and outline and shadow with their colors
+
+### Changed
+
+- **Objects with no value sort last, in both directions.** A descending sort listed objects missing the property first, so a newest-first or top-rated list began with the undated or unrated ones. **Behavior change:** they now come last whichever way you sort
+- **Extension routes answer `HEAD`.** A `HEAD` request gets the matching `GET` route unless the extension registers its own, so link checkers and podcast validators see the same status and headers
+
+### Fixed
+
+- **Rate limits no longer block clients that stay under them.** Each request restarted the limit's time window, so a steady client was blocked once its total reached the limit. This affected the mailer, counter, MCP, OAuth, XML-RPC, emergency, forgot-password, resend-verification and registration limits
+- **Rate limits work in dev mode.** The mailer, counter, MCP, OAuth, XML-RPC and emergency limits were off whenever dev mode was on
+- **`Retry-After` gives the real wait.** A 429 now says how many seconds are left in the window
+
 ## [3.6.5] - 2026-11-02
 
 ### Security
