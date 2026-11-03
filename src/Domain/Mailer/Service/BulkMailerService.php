@@ -33,6 +33,7 @@ readonly class BulkMailerService
 		private TwigEngine $twigEngine,
 		private BulkMailerRepository $bulkMailerRepository,
 		private MailActivity $activity,
+		private BulkUnsubscribe $unsubscribe,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::BulkMailer);
@@ -96,9 +97,61 @@ readonly class BulkMailerService
 		// out. Test sends to an override address are never deduped.
 		$delivered = $effectiveOverrideTo === null ? $this->bulkMailerRepository->fetchDeliveredObjectIds($mailerId) : [];
 
-		$batchId  = uniqid('bulk_', true);
-		$count    = 0;
-		$excluded = 0;
+		[$recipients, $excluded, $unsubscribed] = $this->recipients($objects, $collection, $delivered, $effectiveOverrideTo === null);
+
+		if ($recipients === []) {
+			return OperationResult::failure($unsubscribed === 0
+				? sprintf('Nothing to send: all %d matching objects have already received this email. A template is sent to each object only once — duplicate it to send again.', $excluded)
+				: sprintf('Nothing to send: of %d matching objects, %d have unsubscribed and %d already received this email.', $excluded + $unsubscribed, $unsubscribed, $excluded));
+		}
+
+		$batchId = uniqid('bulk_', true);
+		foreach ($recipients as $objectId) {
+			$this->jobQueuer->queueEmail([
+				'mailerId'   => $mailerId,
+				'objectId'   => $objectId,
+				'collection' => $collection,
+				'batchId'    => $batchId,
+				'overrideTo' => $effectiveOverrideTo,
+			], $scheduledAt);
+		}
+		$count = count($recipients);
+
+		$this->bulkMailerRepository->recordBatch($batchId, $mailerId, $collection, $count, $excluded + $unsubscribed, $effectiveOverrideTo, $scheduledAt);
+		$this->activity->bulkQueued($mailerId, $collection, $count, $effectiveOverrideTo);
+
+		$this->logger->info('Bulk send queued', [
+			'mailerId'     => $mailerId,
+			'batchId'      => $batchId,
+			'count'        => $count,
+			'excluded'     => $excluded,
+			'unsubscribed' => $unsubscribed,
+			'collection'   => $collection,
+			'scheduled'    => $scheduledAt,
+		]);
+
+		return OperationResult::success(
+			self::queuedMessage($count, $excluded, $unsubscribed),
+			['batchId' => $batchId, 'count' => $count, 'excluded' => $excluded, 'unsubscribed' => $unsubscribed],
+		);
+	}
+
+	/**
+	 * The object ids to queue, leaving out the ones already delivered and,
+	 * for a real send, the ones that unsubscribed. The unsubscribe check sees
+	 * the property only when the index carries it; the job checks the stored
+	 * object again at send time either way.
+	 *
+	 * @param array<int,array<string,mixed>> $objects
+	 * @param array<string,mixed>           $delivered object ids already sent, as keys
+	 *
+	 * @return array{list<string>, int, int} ids, already delivered, unsubscribed
+	 */
+	private function recipients(array $objects, string $collection, array $delivered, bool $realSend): array
+	{
+		$ids          = [];
+		$excluded     = 0;
+		$unsubscribed = 0;
 
 		foreach ($objects as $object) {
 			$objectId = (string)($object['id'] ?? '');
@@ -108,50 +161,27 @@ readonly class BulkMailerService
 
 			if (isset($delivered[$objectId])) {
 				$excluded++;
-
-				continue;
+			} elseif ($realSend && $this->unsubscribe->isUnsubscribed($collection, $object)) {
+				$unsubscribed++;
+			} else {
+				$ids[] = $objectId;
 			}
-
-			$jobData = [
-				'mailerId'   => $mailerId,
-				'objectId'   => $objectId,
-				'collection' => $collection,
-				'batchId'    => $batchId,
-				'overrideTo' => $effectiveOverrideTo,
-			];
-
-			$this->jobQueuer->queueEmail($jobData, $scheduledAt);
-			$count++;
 		}
 
-		if ($count === 0 && $excluded > 0) {
-			return OperationResult::failure(sprintf(
-				'Nothing to send: all %d matching objects have already received this email. A template is sent to each object only once — duplicate it to send again.',
-				$excluded,
-			));
-		}
+		return [$ids, $excluded, $unsubscribed];
+	}
 
-		$this->bulkMailerRepository->recordBatch($batchId, $mailerId, $collection, $count, $excluded, $effectiveOverrideTo, $scheduledAt);
-		$this->activity->bulkQueued($mailerId, $collection, $count, $effectiveOverrideTo);
-
-		$this->logger->info('Bulk send queued', [
-			'mailerId'   => $mailerId,
-			'batchId'    => $batchId,
-			'count'      => $count,
-			'excluded'   => $excluded,
-			'collection' => $collection,
-			'scheduled'  => $scheduledAt,
-		]);
-
+	private static function queuedMessage(int $count, int $excluded, int $unsubscribed): string
+	{
 		$message = sprintf('Queued %d emails for sending', $count);
 		if ($excluded > 0) {
 			$message .= sprintf(' (%d left out: already received this email)', $excluded);
 		}
+		if ($unsubscribed > 0) {
+			$message .= sprintf(' (%d unsubscribed)', $unsubscribed);
+		}
 
-		return OperationResult::success(
-			$message,
-			['batchId' => $batchId, 'count' => $count, 'excluded' => $excluded],
-		);
+		return $message;
 	}
 
 	/**
@@ -186,6 +216,9 @@ readonly class BulkMailerService
 		try {
 			$object   = $this->objectFetcher->fetchObject($collection, $objectId);
 			$twigData = ['data' => $object->properties->all()];
+			if ($this->unsubscribe->property($collection) !== null) {
+				$twigData['unsubscribeUrl'] = $this->unsubscribe->previewUrl();
+			}
 
 			$html    = $this->twigEngine->renderString($mailer->bodyHtml, $twigData);
 			$subject = $this->twigEngine->renderString($mailer->subject, $twigData);

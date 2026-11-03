@@ -67,6 +67,7 @@ Most transactional providers (Postmark, Mailgun, Amazon SES, SendGrid, Fastmail,
 | Rate Limit per IP | `ratePerIp` | `10` | Requests one IP address can make to `POST /api/action/mailer` per window (1–1000) |
 | Rate Limit per Template | `ratePerTemplate` | `50` | Requests for any one template through that endpoint per window (1–10000) |
 | Rate Limit Window (seconds) | `rateWindow` | `300` | The window length (60–3600) |
+| Unsubscribe Property | `unsubscribeProperty` | `unsubscribed` | The toggle property that records a [Bulk Send unsubscribe](#unsubscribe-links). Empty turns unsubscribe links off |
 
 These can also be set in `tcms.php` under `$settings['mailer']`.
 
@@ -267,8 +268,9 @@ Each email job:
 
 1. Checks the hourly and daily limits (**Max Emails Per Hour** and **Max Emails Per Day** in SMTP settings). If a limit is reached, the job goes back in the queue for a later run — it isn't failed, and it doesn't use up an attempt. The rest of that run stops too, so other queued jobs, including non-email ones, wait with it.
 2. Checks the once-per-object rule below.
-3. Waits **Send Delay** milliseconds, if set, to spread emails out.
-4. Sends the email. A failed send gets three attempts in all. Failed jobs are retried only by `tcms jobs:process`; the `/cron/jobs` URL doesn't retry them.
+3. Skips the object if it has [unsubscribed](#unsubscribe-links) since the send was queued.
+4. Waits **Send Delay** milliseconds, if set, to spread emails out.
+5. Sends the email. A failed send gets three attempts in all. Failed jobs are retried only by `tcms jobs:process`; the `/cron/jobs` URL doesn't retry them.
 
 The limits count every bulk email sent, test sends included. Check your email provider's sending limits and set yours below them. Most providers throttle or suspend accounts that exceed their limits.
 
@@ -279,6 +281,33 @@ The limits count every bulk email sent, test sends included. Check your email pr
 This makes a bulk send safe to repeat. If a send stopped partway, or new subscribers joined since, queuing it again reaches only the objects that were missed.
 
 It also means **a recurring email needs a new template each time.** For a monthly newsletter, **Duplicate** last month's template (from the template's actions menu), edit it, and send the copy. The copy gets a new ID, so everyone receives it (unless **Keep ID on Duplicate Object?** is turned on in Settings → Dashboard — then change the ID yourself).
+
+### Unsubscribe links
+
+Give the recipient collection's schema a toggle named `unsubscribed` (or the name set in **Unsubscribe Property**) and every bulk email to it carries a one-click unsubscribe link:
+
+```json
+"unsubscribed": {
+	"type": "boolean",
+	"field": "toggle",
+	"help": "Opted out of bulk email"
+}
+```
+
+- Each email gets `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers ([RFC 8058](https://www.rfc-editor.org/rfc/rfc8058)). Gmail and Yahoo require these from bulk senders, and mail apps show them as an **Unsubscribe** button.
+- Templates also get an `{{ unsubscribeUrl }}` variable to put a visible link in the body, which most email laws require:
+
+```twig
+<p><a href="{{ unsubscribeUrl }}">Unsubscribe</a> from these emails.</p>
+```
+
+- The link opens a page at `/admin/unsubscribe/{token}` that asks the recipient to confirm. Mail scanners open links to check them, so opening the link changes nothing. Confirming, or using the mail app's button, sets the property to `true`.
+- Objects with the property set are left out when you queue a send, and the result tells you how many: *"Queued 12 emails for sending (3 unsubscribed)"*. If someone unsubscribes after the send was queued, their email is skipped when its turn comes.
+- To subscribe someone again, turn the toggle off in the admin.
+- The links are signed with the site key and never expire. They keep working after updates and after `tcms push`/`pull`, which copy the key.
+- Test sends to an **Override To** address carry no headers, and their link opens a page that changes nothing, so proofing cannot unsubscribe your recipients. Test sends still go out to recipients who have unsubscribed, because the email goes to you.
+- A collection without the property sends as before, with no headers and no `unsubscribeUrl`.
+- The page allows 30 requests per IP address per hour (`$settings['rateLimits']['unsubscribe']`; see [Rate Limits](docs/operations/security#rate-limits)).
 
 ### Proofing with Override To
 

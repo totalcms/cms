@@ -15,9 +15,8 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\Mailer\Exception\EmailRateLimitException;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
-use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Job\BulkEmailJob;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowJob;
@@ -43,9 +42,8 @@ readonly class JobRunner
 		private CollectionRepository $collectionRepository,
 		private CollectionSaver $collectionSaver,
 		private DataViewBuilder $viewBuilder,
-		private EmailService $emailService,
+		private BulkEmailJob $bulkEmailJob,
 		private BulkMailerRepository $bulkMailerRepository,
-		private ObjectFetcher $objectFetcher,
 		private ReindexJob $searchReindexJob,
 		private IndexNowJob $indexNowJob,
 		private Config $config,
@@ -314,90 +312,7 @@ readonly class JobRunner
 	private function processEmailJob(JobData $job): void
 	{
 		$this->checkEmailRateLimit();
-
-		$data = json_decode($job->payload, true);
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$error = 'Invalid JSON payload: ' . json_last_error_msg();
-			$this->logger->error($error, $job->toArray());
-
-			return;
-		}
-
-		$mailerId   = (string)($data['mailerId'] ?? '');
-		$objectId   = (string)($data['objectId'] ?? '');
-		$collection = (string)($data['collection'] ?? '');
-		$batchId    = (string)($data['batchId'] ?? '');
-		$overrideTo = isset($data['overrideTo']) ? (string)$data['overrideTo'] : null;
-
-		// Skip if already delivered. Test sends to an override address are
-		// neither deduped nor counted as a delivery, so a batch can be proofed
-		// any number of times before the real send.
-		if ($overrideTo === null && $this->bulkMailerRepository->hasBeenSent($mailerId, $objectId)) {
-			$this->logger->info('Skipping already-sent email', [
-				'mailerId'   => $mailerId,
-				'objectId'   => $objectId,
-				'collection' => $collection,
-			]);
-
-			$this->bulkMailerRepository->log([
-				'batchId'    => $batchId,
-				'mailerId'   => $mailerId,
-				'collection' => $collection,
-				'objectId'   => $objectId,
-				'status'     => 'skipped',
-			]);
-
-			return;
-		}
-
-		// Apply send delay for throttling
-		$sendDelay = intval($this->config->smtp['sendDelay'] ?? 0);
-		if ($sendDelay > 0) {
-			usleep($sendDelay * 1000);
-		}
-
-		// Fetch object data. An object deleted since the send was queued is
-		// logged as failed, so Send History does not show it pending forever.
-		try {
-			$objectData = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
-		} catch (\Throwable $e) {
-			$this->bulkMailerRepository->log([
-				'batchId'    => $batchId,
-				'mailerId'   => $mailerId,
-				'collection' => $collection,
-				'objectId'   => $objectId,
-				'sentTo'     => $overrideTo ?? '',
-				'status'     => 'failed',
-				'error'      => $e->getMessage(),
-			]);
-
-			throw $e;
-		}
-
-		// Send email
-		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo, recordActivity: false);
-
-		// Log result
-		$this->bulkMailerRepository->log([
-			'batchId'    => $batchId,
-			'mailerId'   => $mailerId,
-			'collection' => $collection,
-			'objectId'   => $objectId,
-			'sentTo'     => $overrideTo ?? '',
-			'status'     => $result->success ? 'sent' : 'failed',
-			'error'      => $result->error,
-		]);
-
-		if (!$result->success) {
-			throw new \RuntimeException('Email send failed: ' . $result->message);
-		}
-
-		$this->logger->info('Bulk email sent', [
-			'mailerId'   => $mailerId,
-			'objectId'   => $objectId,
-			'collection' => $collection,
-			'batchId'    => $batchId,
-		]);
+		$this->bulkEmailJob->run($job);
 	}
 
 	private function processSearchReindexJob(JobData $job): void

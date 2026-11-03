@@ -37,6 +37,13 @@
 			"default"     : 300,
 			"min"         : 60,
 			"max"         : 3600
+		},
+		"unsubscribeProperty": {
+			"type"        : "string",
+			"label"       : "Unsubscribe Property",
+			"help"        : "A toggle property on recipient objects that records an unsubscribe. When the recipient collection has it, Bulk Send adds one-click unsubscribe headers and an {{ unsubscribeUrl }} variable, and skips recipients who unsubscribed. Leave empty to turn it off.",
+			"placeholder" : "unsubscribed",
+			"default"     : "unsubscribed"
 		}
 	}
 }

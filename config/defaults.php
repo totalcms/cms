@@ -329,6 +329,11 @@ $settings['mailer'] = [
 	'ratePerIp'       => 10,   // Max emails per IP per window
 	'ratePerTemplate' => 50,   // Max emails per template per hour
 	'rateWindow'      => 300,  // Time window in seconds (5 minutes)
+	// Bulk Send one-click unsubscribe: a boolean property on recipient
+	// objects. Collections whose schema has it get List-Unsubscribe headers,
+	// an {{ unsubscribeUrl }} variable, and recipients with it set are
+	// skipped. '' turns it off.
+	'unsubscribeProperty' => 'unsubscribed',
 ];
 
 $settings['imageworks'] = [

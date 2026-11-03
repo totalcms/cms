@@ -167,6 +167,13 @@ return [
 	'denied.message'      => 'No tiene permiso para acceder a esta página.',
 	'denied.go_back'      => 'Volver a la página anterior',
 
+	'unsubscribe.title' => 'Cancelar suscripción',
+	'unsubscribe.confirm' => '¿Dejar de recibir estos correos?',
+	'unsubscribe.button' => 'Cancelar suscripción',
+	'unsubscribe.done' => 'Se ha cancelado tu suscripción. Ya no recibirás estos correos.',
+	'unsubscribe.invalid' => 'Este enlace para cancelar la suscripción no es válido. Puede que se haya copiado incompleto.',
+	'unsubscribe.preview' => 'Este es un correo de prueba. En el correo real, este enlace cancela la suscripción del destinatario.',
+
 	// ── 404 ─────────────────────────────────────────────────────────────────
 	'404.title'           => 'Página no encontrada',
 	'404.message'         => 'La página de administración que busca no existe.',

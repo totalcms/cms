@@ -214,7 +214,7 @@ Public endpoints have per-address rate limits on top of the form limits above: a
 
 A limit's window opens with an address's first request and lasts a fixed time; later requests don't extend it. A refused request answers 429 with `Retry-After` set to the seconds left in the window. The limits keep counting in dev mode. When every cache backend is down they let requests through rather than lock everyone out.
 
-Newer public features use named limits, which you can retune or switch off in `rateLimits`. Each feature's page gives its name and default:
+Newer public features use named limits, which you can retune or switch off in `rateLimits`. Each feature's page gives its name and default; the Bulk Send [unsubscribe page](docs/notifications/mailer#unsubscribe-links), for example, is `unsubscribe`, 30 per address per hour:
 
 ```php
 return [

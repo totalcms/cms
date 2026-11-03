@@ -188,6 +188,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'upload-post-nested',
 		'uploads-image-fetch',
 		'verify-email',
+		'unsubscribe', // Bulk Send link: the signed token is the authorization
 		'watermark-cache-delete',
 		// XML-RPC routes handle auth in the handler via XmlRpcAuth; no middleware-level authorization.
 		'xmlrpc',

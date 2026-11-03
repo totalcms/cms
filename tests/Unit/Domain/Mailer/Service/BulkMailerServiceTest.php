@@ -16,6 +16,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\BulkMailerService;
+use TotalCMS\Domain\Mailer\Service\BulkUnsubscribe;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -34,6 +35,7 @@ final class BulkMailerServiceTest extends TestCase
 	private MockObject $logger;
 	private MockObject $bulkMailerRepository;
 	private MockObject $activity;
+	private MockObject $unsubscribe;
 
 	protected function setUp(): void
 	{
@@ -47,6 +49,7 @@ final class BulkMailerServiceTest extends TestCase
 
 		$this->bulkMailerRepository = $this->createMock(BulkMailerRepository::class);
 		$this->activity             = $this->createMock(MailActivity::class);
+		$this->unsubscribe          = $this->createMock(BulkUnsubscribe::class);
 
 		// By default, allow bulk mailer actions
 		$this->editionFeatures->method('can')->willReturn(true);
@@ -64,6 +67,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->twigEngine,
 			$this->bulkMailerRepository,
 			$this->activity,
+			$this->unsubscribe,
 			$loggerFactory,
 		);
 	}
@@ -90,6 +94,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->twigEngine,
 			$this->bulkMailerRepository,
 			$this->createMock(MailActivity::class),
+			$this->createMock(BulkUnsubscribe::class),
 			$loggerFactory,
 		);
 
@@ -323,6 +328,52 @@ final class BulkMailerServiceTest extends TestCase
 
 		$this->assertFalse($result->success);
 		$this->assertStringContainsString('already received', $result->message);
+	}
+
+	public function testLeavesOutRecipientsWhoUnsubscribed(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1'], ['id' => 'obj-2', 'unsubscribed' => true]]);
+		$this->unsubscribe->method('isUnsubscribed')->willReturnCallback(static fn (string $c, array $row): bool => ($row['unsubscribed'] ?? false) === true);
+
+		$queued = [];
+		$this->jobQueuer->method('queueEmail')
+			->willReturnCallback(function (array $data) use (&$queued): JobData {
+				$queued[] = $data['objectId'];
+
+				return $this->createMock(JobData::class);
+			});
+		$this->bulkMailerRepository->expects($this->once())->method('recordBatch')
+			->with($this->anything(), 'test-mailer', 'subscribers', 1, 1, null, null);
+
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
+
+		$this->assertSame(['obj-1'], $queued);
+		$this->assertSame(1, $result->data['unsubscribed']);
+		$this->assertStringContainsString('1 unsubscribed', $result->message);
+	}
+
+	public function testFailsWhenEveryRecipientUnsubscribed(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1', 'unsubscribed' => true]]);
+		$this->unsubscribe->method('isUnsubscribed')->willReturn(true);
+		$this->jobQueuer->expects($this->never())->method('queueEmail');
+
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
+
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('unsubscribed', $result->message);
+	}
+
+	public function testATestSendIgnoresUnsubscribes(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1', 'unsubscribed' => true]]);
+		$this->unsubscribe->expects($this->never())->method('isUnsubscribed');
+		$this->jobQueuer->expects($this->once())->method('queueEmail')->willReturn($this->createMock(JobData::class));
+
+		$this->assertTrue($this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, 'me@example.com')->success);
 	}
 
 	public function testOverrideSendsIgnorePriorDeliveries(): void

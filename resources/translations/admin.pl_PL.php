@@ -167,6 +167,13 @@ return [
 	'denied.message'      => 'Nie masz uprawnień do wyświetlenia tej strony.',
 	'denied.go_back'      => 'Wróć do poprzedniej strony',
 
+	'unsubscribe.title' => 'Wypisz się',
+	'unsubscribe.confirm' => 'Nie chcesz już otrzymywać tych e-maili?',
+	'unsubscribe.button' => 'Wypisz się',
+	'unsubscribe.done' => 'Zostałeś wypisany. Nie będziesz już otrzymywać tych e-maili.',
+	'unsubscribe.invalid' => 'Ten link do wypisania się jest nieprawidłowy. Mógł zostać skopiowany niekompletnie.',
+	'unsubscribe.preview' => 'To jest testowy e-mail. W prawdziwym e-mailu ten link wypisuje odbiorcę.',
+
 	// ── 404 ─────────────────────────────────────────────────────────────────
 	'404.title'           => 'Nie znaleziono strony',
 	'404.message'         => 'Strona administracyjna, której szukasz, nie istnieje.',

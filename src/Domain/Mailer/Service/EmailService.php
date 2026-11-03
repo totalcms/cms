@@ -43,11 +43,13 @@ readonly class EmailService
 	 * @param string|null $overrideTo Override recipient email address (for bulk testing)
 	 * @param array<string,mixed> $user Current user data for Twig processing ({{ user.field }})
 	 * @param bool $recordActivity false for a bulk send, whose Send History records each email
+	 * @param array<string,mixed> $vars extra Twig variables beside data and user (Bulk Send's unsubscribeUrl)
+	 * @param array<string,string> $headers extra mail headers (see MailHeaders)
 	 */
-	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = [], bool $recordActivity = true): OperationResult
+	public function sendEmail(string $mailerId, array $data = [], ?string $overrideTo = null, array $user = [], bool $recordActivity = true, array $vars = [], array $headers = []): OperationResult
 	{
 		$email  = [];
-		$result = $this->deliver($mailerId, $data, $overrideTo, $user, $email);
+		$result = $this->deliver($mailerId, ['data' => $data, 'user' => $user, 'vars' => $vars, 'headers' => $headers], $overrideTo, $email);
 		if ($recordActivity) {
 			$this->activity->sent($email, $result, $mailerId);
 		}
@@ -59,11 +61,10 @@ readonly class EmailService
 	 * Build the email from the template and send it. $email is the message as
 	 * sent, or stays [] when it is refused before it is built.
 	 *
-	 * @param array<string,mixed> $data
-	 * @param array<string,mixed> $user
+	 * @param array{data: array<string,mixed>, user: array<string,mixed>, vars: array<string,mixed>, headers: array<string,string>} $input
 	 * @param array<string,mixed> $email
 	 */
-	private function deliver(string $mailerId, array $data, ?string $overrideTo, array $user, array &$email): OperationResult
+	private function deliver(string $mailerId, array $input, ?string $overrideTo, array &$email): OperationResult
 	{
 		// Mailer actions require Standard edition or higher
 		if (!$this->editionFeatures->can(EditionFeature::MAILER_ACTIONS)) {
@@ -89,7 +90,8 @@ readonly class EmailService
 			}
 
 			// Process all Twig fields
-			$twigData = ['data' => $data, 'user' => $user];
+			// Extra variables (Bulk Send's unsubscribeUrl) never replace data or user.
+			$twigData = array_merge($input['vars'], ['data' => $input['data'], 'user' => $input['user']]);
 
 			$processedTo = $overrideTo !== null && $overrideTo !== ''
 				? $overrideTo
@@ -109,6 +111,7 @@ readonly class EmailService
 				'bodyText'  => $mailer->bodyText !== '' ? $this->processTwig($mailer->bodyText, $twigData) : '',
 				'cc'        => $this->processEmailList($mailer->cc, $twigData),
 				'bcc'       => $this->processEmailList($mailer->bcc, $twigData),
+				'headers'   => $input['headers'],
 			];
 
 			// Validate email whitelist if enabled

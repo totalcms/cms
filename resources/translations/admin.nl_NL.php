@@ -167,6 +167,13 @@ return [
 	'denied.message'      => 'U heeft geen toestemming om deze pagina te bekijken.',
 	'denied.go_back'      => 'Terug naar de vorige pagina',
 
+	'unsubscribe.title' => 'Afmelden',
+	'unsubscribe.confirm' => 'Wilt u deze e-mails niet meer ontvangen?',
+	'unsubscribe.button' => 'Afmelden',
+	'unsubscribe.done' => 'U bent afgemeld. U ontvangt deze e-mails niet meer.',
+	'unsubscribe.invalid' => 'Deze afmeldlink is ongeldig. Mogelijk is hij onvolledig gekopieerd.',
+	'unsubscribe.preview' => 'Dit is een test-e-mail. In de echte e-mail meldt deze link de ontvanger af.',
+
 	// ── 404 ─────────────────────────────────────────────────────────────────
 	'404.title'           => 'Pagina niet gevonden',
 	'404.message'         => 'De beheerpagina die u zoekt bestaat niet.',

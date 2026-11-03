@@ -37,6 +37,10 @@ readonly class EmailSender
 	 * itself (EmailService, which knows the mailer template) or not at all
 	 * (bulk sends, which have their own Send History).
 	 *
+	 * `$emailData` keys: to, toName, from, fromName, replyTo, cc, bcc,
+	 * subject, bodyHtml, bodyText, and `headers` (array<string,string> of
+	 * extra headers; see MailHeaders for the ones that are dropped).
+	 *
 	 * @param array<string,mixed> $emailData
 	 * @param int $timeout SMTP connection timeout in seconds (default: 30)
 	 */
@@ -139,6 +143,13 @@ readonly class EmailSender
 			} elseif (isset($emailData['bodyText']) && $emailData['bodyText'] !== '') {
 				$mail->isHTML(false);
 				$mail->Body = $emailData['bodyText'];
+			}
+
+			// Extra headers (List-Unsubscribe, campaign ids). Unsafe ones are
+			// dropped rather than failing the send.
+			$skipped = MailHeaders::apply($mail, $emailData['headers'] ?? null);
+			if ($skipped !== []) {
+				$this->logger->warning('Dropped mail headers that cannot be set', ['to' => $emailData['to'] ?? 'unknown', 'headers' => $skipped]);
 			}
 
 			// Send

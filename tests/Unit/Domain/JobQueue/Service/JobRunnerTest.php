@@ -14,16 +14,13 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
-use TotalCMS\Domain\Mailer\Service\EmailService;
-use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Mailer\Job\BulkEmailJob;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowJob;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\OperationResult;
 
 // JobRunner is where imports, index rebuilds, exports, data-view updates, bulk
 // email and search reindexing all actually execute — usually from cron, with
@@ -62,9 +59,8 @@ function jobRunnerMocks(): array
 		'collectionRepository' => test()->createMock(CollectionRepository::class),
 		'collectionSaver'      => test()->createMock(CollectionSaver::class),
 		'viewBuilder'          => test()->createMock(DataViewBuilder::class),
-		'emailService'         => test()->createMock(EmailService::class),
+		'bulkEmailJob'         => test()->createMock(BulkEmailJob::class),
 		'bulkMailerRepository' => test()->createMock(BulkMailerRepository::class),
-		'objectFetcher'        => test()->createMock(ObjectFetcher::class),
 		'searchReindexJob'     => test()->createMock(ReindexJob::class),
 		'indexNowJob'          => test()->createMock(IndexNowJob::class),
 	];
@@ -90,9 +86,8 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 		$m['collectionRepository'],
 		$m['collectionSaver'],
 		$m['viewBuilder'],
-		$m['emailService'],
+		$m['bulkEmailJob'],
 		$m['bulkMailerRepository'],
-		$m['objectFetcher'],
 		$m['searchReindexJob'],
 		$m['indexNowJob'],
 		$config,
@@ -600,53 +595,14 @@ describe('JobRunner export job', function (): void {
 	});
 });
 
-describe('JobRunner bulk email dedupe', function (): void {
-	/** @param array<string,mixed> $m */
-	$runEmail = function (array $m, array $payload): void {
-		$job = jobRunnerJob(JobData::TYPE_EMAIL, payload: (string)json_encode($payload));
-		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
-		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
-		$object = test()->createMock(ObjectData::class);
-		$object->method('toArray')->willReturn(['id' => 'obj-1']);
-		$m['objectFetcher']->method('fetchObject')->willReturn($object);
-		jobRunnerFrom($m)->processNextJobWithDetails();
-	};
-
-	it('skips a real send to an object that already received it', function () use ($runEmail): void {
-		$m = jobRunnerMocks();
-		$m['bulkMailerRepository']->method('hasBeenSent')->willReturn(true);
-		$m['emailService']->expects(test()->never())->method('sendEmail');
-		$m['bulkMailerRepository']->expects(test()->once())->method('log')
-			->with(test()->callback(fn (array $row): bool => $row['status'] === 'skipped'));
-
-		$runEmail($m, ['mailerId' => 'news', 'objectId' => 'obj-1', 'collection' => 'members', 'batchId' => 'b1']);
-	});
-
-	it('logs a failure when the object was deleted after queueing', function (): void {
-		// Otherwise the batch shows the object as pending forever
-		$job = jobRunnerJob(JobData::TYPE_EMAIL, payload: (string)json_encode(['mailerId' => 'news', 'objectId' => 'gone', 'collection' => 'members', 'batchId' => 'b1']));
+describe('JobRunner bulk email', function (): void {
+	it('hands an email job to the bulk email job', function (): void {
+		$job = jobRunnerJob(JobData::TYPE_EMAIL, payload: '{}');
 		$m   = jobRunnerMocks();
 		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
-		$m['objectFetcher']->method('fetchObject')->willThrowException(new RuntimeException('Object not found'));
-		$m['emailService']->expects(test()->never())->method('sendEmail');
-		$m['bulkMailerRepository']->expects(test()->once())->method('log')
-			->with(test()->callback(fn (array $row): bool => $row['status'] === 'failed' && $row['objectId'] === 'gone'));
-		$m['jobRepository']->expects(test()->once())->method('markFailed');
+		$m['bulkEmailJob']->expects(test()->once())->method('run')->with($job);
 
 		jobRunnerFrom($m)->processNextJobWithDetails();
-	});
-
-	it('always sends an override test copy, even after a real delivery', function () use ($runEmail): void {
-		// Proofing a batch to yourself must never be deduped away.
-		$m = jobRunnerMocks();
-		$m['bulkMailerRepository']->expects(test()->never())->method('hasBeenSent');
-		$m['emailService']->expects(test()->once())->method('sendEmail')
-			->with('news', test()->anything(), 'me@example.com')
-			->willReturn(OperationResult::success());
-		$m['bulkMailerRepository']->expects(test()->once())->method('log')
-			->with(test()->callback(fn (array $row): bool => $row['status'] === 'sent' && $row['sentTo'] === 'me@example.com'));
-
-		$runEmail($m, ['mailerId' => 'news', 'objectId' => 'obj-1', 'collection' => 'members', 'batchId' => 'b1', 'overrideTo' => 'me@example.com']);
 	});
 });

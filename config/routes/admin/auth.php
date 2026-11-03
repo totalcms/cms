@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
+use TotalCMS\Action\Mailer\BulkUnsubscribeAction;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\UnsubscribeRateLimitMiddleware;
 use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
 
 return function (App $app): void {
@@ -28,6 +30,10 @@ return function (App $app): void {
 		$group->get('/verify-email/{token}', Auth\AuthVerifyEmailAction::class)->setName('verify-email');
 		$group->get('/resend-verification[/{collection}]', Auth\ResendVerificationAction::class)->setName('resend-verification');
 		$group->post('/resend-verification[/{collection}]', Auth\ResendVerificationSubmitAction::class);
+
+		// Bulk Send's unsubscribe link: the signed token is the authorization.
+		$group->get('/unsubscribe/{token}', BulkUnsubscribeAction::class)->setName('unsubscribe')->add(UnsubscribeRateLimitMiddleware::class);
+		$group->post('/unsubscribe/{token}', BulkUnsubscribeAction::class)->add(UnsubscribeRateLimitMiddleware::class);
 	})->add(NoCacheMiddleware::class)
 		->add(SecurityHeadersMiddleware::class);
 };

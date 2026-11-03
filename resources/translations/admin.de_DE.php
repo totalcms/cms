@@ -167,6 +167,13 @@ return [
 	'denied.message'      => 'Sie haben keine Berechtigung, auf diese Seite zuzugreifen.',
 	'denied.go_back'      => 'Zur vorherigen Seite zurückkehren',
 
+	'unsubscribe.title' => 'Abmelden',
+	'unsubscribe.confirm' => 'Möchten Sie diese E-Mails nicht mehr erhalten?',
+	'unsubscribe.button' => 'Abmelden',
+	'unsubscribe.done' => 'Sie wurden abgemeldet. Sie erhalten diese E-Mails nicht mehr.',
+	'unsubscribe.invalid' => 'Dieser Abmeldelink ist ungültig. Möglicherweise wurde er unvollständig kopiert.',
+	'unsubscribe.preview' => 'Dies ist eine Test-E-Mail. In der echten E-Mail meldet dieser Link den Empfänger ab.',
+
 	// ── 404 ─────────────────────────────────────────────────────────────────
 	'404.title'           => 'Seite nicht gefunden',
 	'404.message'         => 'Die gesuchte Admin-Seite existiert nicht.',

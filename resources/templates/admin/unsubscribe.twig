@@ -1,0 +1,25 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('unsubscribe.title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="login-form">
+		<h1>{{ t('unsubscribe.title') }}</h1>
+
+		{% if state == 'confirm' %}
+			<p>{{ t('unsubscribe.confirm') }}</p>
+			<form class="totalform" method="post" action="{{ cms.dashboard ~ '/unsubscribe/' ~ token }}">
+				<input type="hidden" name="List-Unsubscribe" value="One-Click">
+				<button type="submit" class="submit-button">{{ t('unsubscribe.button') }}</button>
+			</form>
+		{% elseif state == 'done' %}
+			<p role="status">{{ t('unsubscribe.done') }}</p>
+		{% elseif state == 'preview' %}
+			<p>{{ t('unsubscribe.preview') }}</p>
+		{% else %}
+			<p role="alert">{{ t('unsubscribe.invalid') }}</p>
+		{% endif %}
+	</section>
+</main>
+{% endblock %}

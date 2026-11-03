@@ -4083,6 +4083,83 @@
                 ]
             }
         },
+        "/admin/unsubscribe/{token}": {
+            "get": {
+                "operationId": "unsubscribe",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/admin/unsubscribe/{token}",
+                "x-tcms-action": "BulkUnsubscribeAction",
+                "x-tcms-middleware": [
+                    "UnsubscribeRateLimitMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware"
+                ]
+            },
+            "post": {
+                "operationId": "admin-unsubscribe-token",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/admin/unsubscribe/{token}",
+                "x-tcms-action": "BulkUnsubscribeAction",
+                "x-tcms-middleware": [
+                    "UnsubscribeRateLimitMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware"
+                ]
+            }
+        },
         "/admin/utils": {
             "get": {
                 "operationId": "admin-utils.0",

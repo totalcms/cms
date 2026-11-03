@@ -167,6 +167,13 @@ return [
 	'denied.message'      => 'You do not have permission to access this page.',
 	'denied.go_back'      => 'Return to the previous page',
 
+	'unsubscribe.title' => 'Unsubscribe',
+	'unsubscribe.confirm' => 'Stop receiving these emails?',
+	'unsubscribe.button' => 'Unsubscribe',
+	'unsubscribe.done' => 'You have been unsubscribed. You will not receive these emails any more.',
+	'unsubscribe.invalid' => 'This unsubscribe link is not valid. It may have been copied incompletely.',
+	'unsubscribe.preview' => 'This is a test email. In the real email, this link unsubscribes the recipient.',
+
 	// ── 404 ─────────────────────────────────────────────────────────────────
 	'404.title'           => 'Page Not Found',
 	'404.message'         => 'The admin page you\'re looking for doesn\'t exist.',
