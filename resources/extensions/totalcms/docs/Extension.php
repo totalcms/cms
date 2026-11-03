@@ -627,7 +627,7 @@ class Extension implements ExtensionInterface
 
 		return in_array($kind, self::KEYED_KINDS, true)
 			? $this->lookupKeyed($section, $kind, $name)
-			: $this->lookupListed($section, $kind, $name);
+			: $this->lookupListed(array_values(array_filter($section, is_array(...))), $kind, $name);
 	}
 
 	/**
@@ -641,7 +641,7 @@ class Extension implements ExtensionInterface
 	private function lookupListed(array $entries, string $kind, string $name): array
 	{
 		if (trim($name) === '') {
-			$names = array_values(array_map(fn (array $e): string => $this->identityFor($kind, $e), $entries));
+			$names = array_map(fn (array $e): string => $this->identityFor($kind, $e), $entries);
 			sort($names);
 
 			return ['kind' => $kind, 'names' => $names, 'total' => count($names)];

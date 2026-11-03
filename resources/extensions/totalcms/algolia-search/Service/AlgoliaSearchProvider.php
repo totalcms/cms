@@ -119,14 +119,10 @@ final class AlgoliaSearchProvider implements SearchProvider
 
 	private function getClient(): SearchClient
 	{
-		if ($this->client === null) {
-			// Use the admin key for write operations. A future enhancement
-			// could keep two clients (admin + search-only) and route queries
-			// to the search-only key — for now keep one client for simplicity.
-			$this->client = SearchClient::create($this->appId, $this->adminApiKey);
-		}
-
-		return $this->client;
+		// Use the admin key for write operations. A future enhancement
+		// could keep two clients (admin + search-only) and route queries
+		// to the search-only key — for now keep one client for simplicity.
+		return $this->client ??= SearchClient::create($this->appId, $this->adminApiKey);
 	}
 
 	private function escapeFilterValue(string $value): string
