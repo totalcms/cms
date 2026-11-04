@@ -109,7 +109,7 @@ Prefer looking things up over guessing; training data is often stale on exact si
    the router serves and flags conflicts. `vendor/bin/tcms builder:routes --json` to script.
 2. **If Site Builder isn't set up yet,** scaffold a starter:
    `vendor/bin/tcms builder:init <starter>` where `<starter>` is `business`, `blog`,
-   `portfolio`, or `minimal`. Add `--frontend` to also install the Vite pipeline.
+   `portfolio`, or `minimal`. Add `--frontend` to also install and build the Vite pipeline.
    This copies templates, ensures the `builder-pages` collection, and seeds demo pages.
 3. **Edit templates** on the filesystem under
    `builder/{layouts,pages,partials,macros}/*.twig` when a project-root `builder/`

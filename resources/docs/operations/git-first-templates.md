@@ -15,7 +15,7 @@ Total CMS supports this with **zero configuration**. If a `builder/` folder exis
 
 ## Turning it on
 
-Move your builder templates to the project root (alongside `public/`, `config/`, `frontend/`):
+Move your builder templates to the project root (alongside `public/` and `config/`):
 
 ```bash
 mv tcms-data/builder ./builder

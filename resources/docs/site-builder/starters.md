@@ -41,8 +41,8 @@ tcms-data/builder/
   pages/readme.twig
   partials/nav.twig
   partials/footer.twig
-public/assets/
-  style.css                  ← edit me
+public/assets/css/
+  style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
 **Best for:** Starting from scratch with maximum flexibility.
@@ -66,8 +66,8 @@ tcms-data/builder/
   pages/readme.twig
   partials/nav.twig
   partials/footer.twig
-public/assets/
-  style.css                  ← edit me
+public/assets/css/
+  style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
 **Features:**
@@ -98,8 +98,8 @@ tcms-data/builder/
   partials/nav.twig
   partials/footer.twig
   partials/post-card.twig
-public/assets/
-  style.css                  ← edit me
+public/assets/css/
+  style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
 **Features:**
@@ -131,8 +131,8 @@ tcms-data/builder/
   pages/readme.twig
   partials/nav.twig
   partials/footer.twig
-public/assets/
-  style.css                  ← edit me
+public/assets/css/
+  style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
 **Features:**
@@ -175,21 +175,22 @@ See [Navigation](docs/site-builder/overview#navigation) for `subnav()` and `navT
 
 A simple footer with dynamic copyright year via `{{ 'now' | date('Y') }}`, the domain name, and a "Powered by Total CMS" link from [`cms.badge.text()`](docs/twig/badges). Swap it for another badge or remove it.
 
-### Stylesheet (`public/assets/style.css`)
+### Stylesheet (`css/style.css`)
 
-Each starter ships a real CSS file at `public/assets/style.css` rather than dumping styles inline in the layout. The layout references it with the `cms.builder.css()` Twig helper:
+Each starter ships a real CSS file rather than dumping styles inline in the layout. With the Vite pipeline it lands at `css/style.css` in the project root. Without it, it lands at `public/assets/css/style.css`. The layout loads it the same way in both cases, with the `cms.builder.css()` Twig helper:
 
 ```twig
-{{ cms.builder.css('style.css') }}
-{# → <link rel="stylesheet" href="/assets/style.css?v=1714607400"> #}
+{{ cms.builder.css('css/style.css') }}
+{# With Vite → <link rel="stylesheet" href="/assets/style-a1b2c3d4.css"> #}
+{# Without   → <link rel="stylesheet" href="/assets/css/style.css?v=1714607400"> #}
 ```
 
 The helper resolves the path against your configured assets directory and appends an mtime cache-buster automatically — so when you edit the file, browsers pick up the new version on next load without manual versioning.
 
-This setup is intentional: it works immediately without any build step *and* shows you exactly the pattern you'd use for any other CSS, JS, font, or image asset. When you outgrow plain CSS, swap it for one of:
+Without a build, this works immediately *and* shows you exactly the pattern you'd use for any other CSS, JS, font, or image asset. When you outgrow plain CSS, swap it for one of:
 
 - Sass/SCSS compiled by your build tool
-- [Vite](docs/site-builder/frontend) (run `tcms builder:frontend` to scaffold it)
+- [Vite](docs/site-builder/frontend) (run `tcms builder:frontend` to install it)
 - Tailwind CSS
 - Any other pipeline that emits CSS files
 
@@ -214,25 +215,26 @@ tcms jumpstart:import resources/builder/starters/blog/jumpstart.json
 
 ## Frontend Pipeline (`--frontend`)
 
-Every starter ships with inline `<style>` tags so it works without any build step. When you're ready for a proper asset pipeline, add it with one flag during init:
+Every starter's stylesheet works without any build step. To build it with Vite instead, add one flag during init:
 
 ```bash
 tcms builder:init business --frontend
 ```
 
-Or after the fact (idempotent):
+Or add it after the fact. Move the stylesheet out of `public/assets/` first, because the first build wipes that folder:
 
 ```bash
+mkdir css && mv public/assets/css/style.css css/style.css
 tcms builder:frontend
 ```
 
-Both install the same Vite scaffold to `<projectRoot>/frontend/`. See [`builder:frontend`](docs/site-builder/cli#builder-frontend) for the full reference.
+Both install the same Vite pipeline at the project root, and the layout doesn't change. See [`builder:frontend`](docs/site-builder/cli#builder-frontend) for the full reference.
 
 ## Customizing After Scaffolding
 
 After running `builder:init`, you own all the template files. Common next steps:
 
-1. **Edit the stylesheet** — open `public/assets/style.css` and tweak as needed. The layout already loads it via `{{ cms.builder.css('style.css') }}`.
+1. **Edit the stylesheet** — open `css/style.css` and run `npm run build`, or edit `public/assets/css/style.css` if you don't use the Vite pipeline. The layout already loads it via `{{ cms.builder.css('css/style.css') }}`.
 2. **Edit page templates** — replace placeholder content with `cms.*` calls to your collections
 3. **Add more pages** — create new page objects in the admin under **Site Builder**
 4. **Reorder pages** — use the admin's drag-drop reorder mode to set the navigation order (see [Reordering Pages](docs/site-builder/admin#reordering-pages))

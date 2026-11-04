@@ -7,8 +7,8 @@
 	{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
 	{# Core CSS for the {% cmsgrid %} grid on Work and any project galleries, plus pagination — this is what makes the work grid and image galleries look right without touching a line of CSS. Comes before style.css so your design choices win. #}
 	{{ cms.assetsHead() }}
-	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
-	{{ cms.builder.css('style.css') }}
+	{# Site stylesheet. With the Vite pipeline, edit css/style.css and run npm run build. Without it, edit public/assets/css/style.css directly. #}
+	{{ cms.builder.css('css/style.css') }}
 	{% block head %}{% endblock %}
 </head>
 <body>

@@ -7,8 +7,8 @@
 	{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
 	{# Core CSS: icons, {% cmsgrid %}, galleries, pagination. Goes first so style.css below (and anything in {% block head %}) can override it. #}
 	{{ cms.assetsHead() }}
-	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
-	{{ cms.builder.css('style.css') }}
+	{# Site stylesheet. With the Vite pipeline, edit css/style.css and run npm run build. Without it, edit public/assets/css/style.css directly. #}
+	{{ cms.builder.css('css/style.css') }}
 	{% block head %}{% endblock %}
 </head>
 <body>

@@ -66,8 +66,12 @@ readonly class StarterService
 	 * files, ensures the pages collection exists, then imports the starter's
 	 * `jumpstart.json` to seed pages and any demo content. Starters that don't
 	 * ship a jumpstart.json install templates only.
+	 *
+	 * With `$frontend`, the starter's assets are source for the Vite pipeline
+	 * and go to the project root, not the docroot: the first build wipes
+	 * public/assets/. Layouts name them the same way either way.
 	 */
-	public function scaffold(string $starterName, bool $force = false): OperationResult
+	public function scaffold(string $starterName, bool $force = false, bool $frontend = false): OperationResult
 	{
 		$manifest = $this->loadManifest($starterName);
 		if (!$manifest instanceof StarterManifest) {
@@ -88,10 +92,9 @@ readonly class StarterService
 		// Copy template files
 		$copied = $this->copyTemplateFiles($manifest->directory, $force);
 
-		// Copy starter assets (CSS, JS, images) into the docroot's assets dir.
-		// Done separately from template copy because the destination is the
-		// public docroot, not tcms-data/builder/.
-		$assetsCopied = $this->copyAssetFiles($manifest->directory, $force);
+		// Copy starter assets (CSS, JS, images). Done separately from template
+		// copy because the destination is not tcms-data/builder/.
+		$assetsCopied = $this->copyAssetFiles($manifest->directory, $force, $frontend);
 
 		// Create builder-pages collection if it doesn't exist. Must run before
 		// the jumpstart import so the page objects have a collection to land in.
@@ -231,29 +234,29 @@ readonly class StarterService
 	}
 
 	/**
-	 * Copy a starter's `assets/` directory (CSS, JS, images, fonts) into
-	 * the docroot's assets directory. Mirrors the layout `cms.builder.css()`
-	 * and friends use to reference these files at render time.
+	 * Copy a starter's `assets/` directory (CSS, JS, images, fonts) into the
+	 * docroot's assets directory, or the project root when the frontend
+	 * pipeline will build them. Mirrors the layout `cms.builder.css()` and
+	 * friends use to reference these files at render time.
 	 *
 	 * Skips when the starter doesn't ship any assets, or when the docroot
 	 * isn't configured. Existing files are skipped unless `$force` is set so
 	 * a re-run doesn't clobber user customizations.
 	 */
-	private function copyAssetFiles(string $starterDir, bool $force): int
+	private function copyAssetFiles(string $starterDir, bool $force, bool $frontend): int
 	{
 		$source = $starterDir . '/assets';
 		if (!is_dir($source)) {
 			return 0;
 		}
 
-		$docroot = $this->builderConfig->getDocroot();
-		if ($docroot === '') {
+		$target = $frontend ? PathResolver::projectRoot() : $this->docrootAssetsDir();
+		if ($target === null) {
 			$this->logger->warning('Skipping starter asset copy — docroot not configured');
 
 			return 0;
 		}
 
-		$target = rtrim($docroot, '/') . '/' . trim($this->builderConfig->getAssetsPath(), '/');
 		if (!FileUtils::ensureDirectory($target)) {
 			$this->logger->warning('Could not create assets directory', ['path' => $target]);
 
@@ -266,6 +269,13 @@ readonly class StarterService
 		}
 
 		return count($result['copied']);
+	}
+
+	private function docrootAssetsDir(): ?string
+	{
+		$docroot = $this->builderConfig->getDocroot();
+
+		return $docroot === '' ? null : rtrim($docroot, '/') . '/' . trim($this->builderConfig->getAssetsPath(), '/');
 	}
 
 	/**

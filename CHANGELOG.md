@@ -2,6 +2,25 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.7] - Unreleased
+
+### Added
+
+- **`tcms builder:frontend` builds the site as well as installing the pipeline.** It runs `npm install` and the build, adds the stylesheet to your default layout, and updates `.gitignore` and `AGENTS.md`. `--no-build` skips npm and `--dry-run` shows what would change. `tcms builder:init --frontend` takes `--no-build` too
+- **The install wizard sets up the Vite pipeline by default.** Answer no, or set `TCMS_FRONTEND=0`, to skip it. Without Node 20.19+ or 22.12+ the files are installed and you can build later
+
+### Changed
+
+- **The Vite pipeline installs at the project root.** `tcms builder:frontend` now puts `package.json`, `vite.config.js`, `css/`, `js/` and `FRONTEND.md` in the project root, with plain Vite 8 as the only package. **Behavior change:** sites with a `frontend/` folder keep working and keep deploying, and the command won't run on them. "Moving from frontend/" in the Site Builder docs covers the move
+- **`tcms builder:frontend` only installs into a project with no `package.json`.** **Behavior change:** it stops and changes nothing if it finds one, including on a second run, and `--force` is gone. "Adding Vite to an Existing Project" in the Site Builder docs covers adding Vite by hand
+- **Starter stylesheets moved to `css/style.css`.** With the pipeline the file is at the project root. Without it, the file is at `public/assets/css/style.css`. Layouts load it with `{{ cms.builder.css('css/style.css') }}` in both cases
+- **`tcms builder:init --frontend` checks first.** If the project can't take the pipeline, it stops before writing the starter. It exits 1 if the frontend step fails
+
+### Fixed
+
+- **`cms.builder.css('style.css')` finds Vite builds.** The short name never matched the hashed file, so the page linked a file that didn't exist
+- **The Composer package ships the whole frontend scaffold.** `.gitattributes` also left out the scaffold's `package.json`, so a Composer install had an incomplete scaffold
+
 ## [3.6.6] - 2026-11-03
 
 ### Security

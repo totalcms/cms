@@ -304,6 +304,28 @@ final class StarterServiceTest extends TestCase
 		$this->assertSame('body { color: red; }', file_get_contents($this->tmpRoot . '/public/assets/style.css'));
 	}
 
+	public function testFrontendInstallPutsAssetsAtTheProjectRootNotTheDocroot(): void
+	{
+		$prop     = new \ReflectionProperty(PathResolver::class, 'projectRoot');
+		$original = $prop->getValue();
+		$prop->setValue(null, $this->tmpRoot . '/project');
+
+		try {
+			$this->writeManifest('blog', []);
+			$this->writeAsset('blog', 'css/style.css', 'body { color: red; }');
+			$this->templateMigration->method('importDirectory')->willReturn(0);
+
+			$result = $this->service->scaffold('blog', false, true);
+
+			$this->assertSame(1, $result->data['assetsCopied'] ?? null);
+			$this->assertFileExists($this->tmpRoot . '/project/css/style.css');
+			// The first build would delete anything left in public/assets/.
+			$this->assertDirectoryDoesNotExist($this->tmpRoot . '/public/assets');
+		} finally {
+			$prop->setValue(null, $original);
+		}
+	}
+
 	public function testStarterWithoutAssetsDirIsHandledCleanly(): void
 	{
 		$this->writeManifest('blog', []);

@@ -12,22 +12,19 @@ This guide covers the recommended setup using **Vite**, with notes on alternativ
 
 ## Quick Start
 
-The fastest path is the bundled scaffold — `tcms builder:frontend` drops a pre-configured `frontend/` directory (with `package.json`, `vite.config.js`, and a starter `css/` + `js/`) into your project. From your project root (same level as `tcms-data/`):
+`tcms builder:frontend` installs a Vite pipeline at your project root and builds it. Run it from your project root, the folder that holds `public/`:
 
 ```bash
 tcms builder:frontend
-cd frontend
-npm install
-npm run build
 ```
 
-That installs Vite, builds the starter assets to `public/assets/`, and writes the manifest T3's asset helpers consume. From there you edit `frontend/css/style.css` and `frontend/js/app.js`, and re-run `npm run build` (or `npm run watch` for continuous rebuild).
+That installs `package.json`, `vite.config.js`, `css/`, `js/` and `FRONTEND.md`, adds the stylesheet to your default layout, then runs `npm install` and the build. From there, edit `css/style.css` and `js/app.js`, and run `npm run build`, or `npm run watch` to rebuild on every change.
 
-If you'd rather build the scaffold yourself instead of using the bundled one, the rest of this guide walks through what `tcms builder:frontend` actually does — `vite.config.js`, package scripts, and the layout conventions T3's helpers expect.
+The build needs Node 20.19+ or 22.12+. Without it, the files are still installed and the site works without them. Build on any machine with Node, then upload `public/assets/`.
+
+If you want to set up the pipeline yourself, the rest of this guide shows what the scaffold does and why.
 
 ## Directory Structure
-
-A typical T3 builder project looks like this:
 
 ```
 project/
@@ -37,50 +34,53 @@ project/
 │       ├── pages/
 │       └── partials/
 ├── public/              ← docroot (web server serves this)
-│   ├── assets/          ← compiled output (Vite writes here)
-│   │   ├── style.css
-│   │   ├── app.js
+│   ├── assets/          ← build output (Vite writes here)
+│   │   ├── style-a1b2c3d4.css
+│   │   ├── app-e5f6a7b8.js
 │   │   └── manifest.json
 │   └── index.php        ← T3 entry point
-└── frontend/            ← source files (not public)
-    ├── css/
-    │   └── style.css
-    ├── js/
-    │   └── app.js
-    ├── vite.config.js
-    └── package.json
+├── css/                 ← source files (not public)
+│   └── style.css
+├── js/
+│   └── app.js
+├── vite.config.js
+├── package.json
+└── FRONTEND.md
 ```
 
-Source files live outside the docroot in `frontend/`. Vite compiles them to `public/assets/` where the web server serves them directly.
+Source files live outside the docroot. Vite compiles them to `public/assets/`, where the web server serves them directly.
+
+> `public/assets/` is build output, and **every build wipes it**. Don't edit files there or add your own. `builder:frontend` refuses to run if it finds files there that a build didn't make, and lists them, so that nothing is lost.
 
 ## Vite Configuration
 
+This is the scaffold's `vite.config.js`:
+
 ```js
-// frontend/vite.config.js
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
+
+const NOT_SOURCE = ['vendor', 'cache', 'tmp', 'logs', 'tcms-data', 'builder', 'extensions', 'public']
 
 export default defineConfig({
+    base: './',
+    publicDir: false,
+
+    server: {
+        watch: {
+            ignored: NOT_SOURCE.map((dir) => `${import.meta.dirname}/${dir}/**`),
+        },
+    },
+
     build: {
-        // Output to the public assets directory
-        outDir: resolve(__dirname, '../public/assets'),
+        cssTarget: 'esnext',
+        outDir: 'public/assets',
         emptyOutDir: true,
-
-        // Flatten output: hashed files go directly into outDir, not into a
-        // nested `assets/` subdirectory (Vite's default `assetsDir: 'assets'`).
-        // Otherwise paths would double up as `/assets/assets/style-<hash>.css`.
         assetsDir: '',
-
-        // Vite 5+ writes the manifest to `<outDir>/.vite/manifest.json` by
-        // default. Pin it at `<outDir>/manifest.json` so T3 finds it without
-        // any extra config. (T3 falls back to `.vite/manifest.json` for BYO
-        // projects that don't override this, but it's cleaner to be explicit.)
         manifest: 'manifest.json',
-
         rollupOptions: {
             input: {
-                style: resolve(__dirname, 'css/style.css'),
-                app: resolve(__dirname, 'js/app.js'),
+                style: 'css/style.css',
+                app: 'js/app.js',
             },
         },
     },
@@ -89,10 +89,14 @@ export default defineConfig({
 
 ### What This Does
 
+- **`base: './'`** — gives built CSS relative URLs, so it can find its fonts and images
+- **`publicDir: false`** — keep this off. Vite's default static folder is `public/`, which is your web root, so Vite would copy `index.php` and `.htaccess` into the build
+- **`cssTarget: 'esnext'`** — leaves modern CSS as written. Otherwise Vite rewrites features such as `light-dark()` for older browsers
 - **`outDir`** — writes compiled files to `public/assets/`
-- **`assetsDir: ''`** — flattens the output (no `assets/assets/` double-prefix)
-- **`manifest: 'manifest.json'`** — places the manifest where T3 looks first
-- **`rollupOptions.input`** — defines your entry points (add as many as needed)
+- **`assetsDir: ''`** — flattens the output, so paths aren't `/assets/assets/style-<hash>.css`
+- **`manifest: 'manifest.json'`** — places the manifest where T3 looks first. T3 also checks `.vite/manifest.json`, Vite's default location
+- **`rollupOptions.input`** — defines your entry points. Add as many as you need
+- **`server.watch.ignored`** — the project root holds far more than source files, so the dev server doesn't watch all of it. Keep these paths tied to the project root. Vite matches them against the full path, so `'**/builder/**'` would also match a site stored inside a folder named `builder`, and nothing would be watched
 
 ## Package Scripts
 
@@ -101,6 +105,7 @@ export default defineConfig({
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "watch": "vite build --watch",
         "preview": "vite preview"
     }
 }
@@ -110,19 +115,18 @@ export default defineConfig({
 
 ### Without Vite Dev Server
 
-The simplest approach — run `npm run build` after making changes:
+The simplest approach is to build after making changes:
 
 ```bash
-cd frontend
 npm run build
 ```
 
-Vite compiles your source files to `public/assets/`. T3's asset functions pick them up automatically via mtime cache busting.
+Vite compiles your source files to `public/assets/`, and T3's asset functions read the new filenames from the manifest.
 
-For faster iteration, use Vite's watch mode:
+To rebuild on every change:
 
 ```bash
-npm run build -- --watch
+npm run watch
 ```
 
 ### With Vite Dev Server
@@ -134,15 +138,14 @@ For hot module replacement (HMR) during development, run the Vite dev server and
 {% if cms.env == 'development' %}
     <script type="module" src="http://localhost:5173/js/app.js"></script>
 {% else %}
-    {{ cms.builder.css('style.css') }}
-    {{ cms.builder.js('app.js', {module: true}) }}
+    {{ cms.builder.css('css/style.css') }}
+    {{ cms.builder.js('js/app.js', {module: true}) }}
 {% endif %}
 ```
 
 Start the dev server:
 
 ```bash
-cd frontend
 npm run dev
 ```
 
@@ -151,7 +154,6 @@ The Vite dev server handles CSS injection via JavaScript in dev mode, so you onl
 ## Production Build
 
 ```bash
-cd frontend
 npm run build
 ```
 
@@ -159,8 +161,8 @@ This generates hashed filenames and a `manifest.json`:
 
 ```
 public/assets/
-├── style.a1b2c3d4.css
-├── app.e5f6a7b8.js
+├── style-a1b2c3d4.css
+├── app-e5f6a7b8.js
 └── manifest.json
 ```
 
@@ -168,77 +170,174 @@ T3's asset functions read the manifest and output the correct filenames:
 
 ```twig
 {{ cms.builder.css('css/style.css') }}
-{# Output: <link rel="stylesheet" href="/assets/style.a1b2c3d4.css"> #}
+{# Output: <link rel="stylesheet" href="/assets/style-a1b2c3d4.css"> #}
 
 {{ cms.builder.js('js/app.js', {module: true}) }}
-{# Output: <script type="module" src="/assets/app.e5f6a7b8.js"></script> #}
+{# Output: <script type="module" src="/assets/app-e5f6a7b8.js"></script> #}
 ```
 
 The path you pass to `css()` and `js()` is the **manifest key** (the input path from your Vite config), not the output filename.
+
+Commit `package-lock.json`, so that deploys install the same versions. `bin/deploy.sh` builds the site on the server, so the server needs Node. If yours doesn't have it, build locally and upload `public/assets/`.
+
+## Adding a CSS Framework or Package
+
+Install the package, then import it at the top of `css/style.css`:
+
+```bash
+npm install some-package
+```
+
+```css
+@import "some-package";
+```
+
+## Fonts and Images
+
+Keep them in their own folder, such as `fonts/`, and use them from your CSS. Vite finds each `url()` and copies the file into the build with a hashed name, so there's nothing to configure:
+
+```css
+@font-face {
+    font-family: "Inter";
+    src: url('../fonts/inter.woff2');
+}
+```
+
+Files under 4 KB are embedded in the CSS instead, so they don't appear in `public/assets/`.
+
+Files that CSS doesn't reference are not copied. For those, such as images used in templates, set `publicDir` to a folder such as `'static'`. Vite copies that folder into the build as it is, without hashing the filenames. Never set it to `'public'`.
 
 ## Using Tailwind CSS
 
 Tailwind works naturally with this setup:
 
 ```bash
-cd frontend
 npm install -D tailwindcss @tailwindcss/vite
 ```
 
+Add the plugin to `vite.config.js`, and keep everything else:
+
 ```js
-// frontend/vite.config.js
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
     plugins: [tailwindcss()],
-    build: {
-        outDir: resolve(__dirname, '../public/assets'),
-        emptyOutDir: true,
-        assetsDir: '',
-        manifest: 'manifest.json',
-        rollupOptions: {
-            input: {
-                style: resolve(__dirname, 'css/style.css'),
-                app: resolve(__dirname, 'js/app.js'),
-            },
-        },
-    },
+    // ...the rest of the scaffold's config
 })
-```
-
-```css
-/* frontend/css/style.css */
-@import "tailwindcss";
 ```
 
 Point Tailwind at your templates so it can scan for classes:
 
 ```css
-/* frontend/css/style.css */
+/* css/style.css */
 @import "tailwindcss";
-@source "../../tcms-data/builder/**/*.twig";
+@source "../tcms-data/builder/**/*.twig";
 ```
+
+For git-managed templates, use `@source "../builder/**/*.twig";`.
+
+Tailwind only sees a template edit when it rebuilds your CSS, and neither Vite mode does that on its own:
+
+- **`npm run dev`** — templates aren't watched, so the browser doesn't update. Refresh the page and the new classes are there.
+- **`npm run watch`** — a template edit doesn't trigger a rebuild. Run `npm run build` to pick it up.
 
 ## Using Sass/SCSS
 
 ```bash
-cd frontend
 npm install -D sass
 ```
 
-Vite handles `.scss` files automatically — just change your entry point:
+Vite handles `.scss` files automatically. Change your entry point:
 
 ```js
 // vite.config.js
 rollupOptions: {
     input: {
-        style: resolve(__dirname, 'css/style.scss'),
-        app: resolve(__dirname, 'js/app.js'),
+        style: 'css/style.scss',
+        app: 'js/app.js',
     },
 },
 ```
+
+The manifest key changes too, so load it with `{{ cms.builder.css('css/style.scss') }}`.
+
+## Adding Vite to an Existing Project
+
+`tcms builder:frontend` only installs into a project with no `package.json`, so it never edits a setup you already have. If you have your own `package.json`, add Vite by hand:
+
+1. Install Vite and copy the scaffold's config. If your `package.json` isn't `"type": "module"`, name the copy `vite.config.mjs`.
+
+   ```bash
+   npm install -D vite
+   cp vendor/totalcms/cms/resources/builder/frontend/vite.config.js .
+   ```
+
+2. Add a `build` script to `package.json`: `"build": "vite build"`.
+3. Create `css/style.css` and `js/app.js`, or change `rollupOptions.input` to match your files.
+4. Add `/node_modules/` and `/public/assets/` to `.gitignore`.
+5. Move any files out of `public/assets/`, because the first build wipes that folder.
+6. Add `{{ cms.builder.css('css/style.css') }}` to your layout, then run `npm run build`.
+
+## Using Vite+
+
+The scaffold uses plain Vite. To use [Vite+](https://viteplus.dev) instead, replace the package:
+
+```bash
+npm uninstall vite
+npm install -D vite-plus
+```
+
+In `vite.config.js`, import from `'vite-plus'` instead of `'vite'`, and keep the rest of the config. In `package.json`, change the scripts to use `vp`:
+
+```json
+{
+    "scripts": {
+        "dev": "vp dev",
+        "build": "vp build",
+        "watch": "vp build --watch",
+        "preview": "vp preview"
+    }
+}
+```
+
+The build output and the manifest are the same, so your layouts don't change, and `bin/deploy.sh` still works. Check which Node version Vite+ needs, because it can be newer than the version Vite needs. Your server needs it too.
+
+## Moving from frontend/
+
+Older sites keep the pipeline in a `frontend/` folder. That still works, and it still deploys, so you only need to move if you want the new layout. `tcms builder:frontend` won't run on a project that has a `frontend/` pipeline. Move it by hand, from your project root:
+
+1. Move your source and package files to the root, including any other folders you added, such as `fonts/`:
+
+   ```bash
+   mv frontend/css frontend/js frontend/package.json frontend/package-lock.json .
+   ```
+
+2. Copy the new config and guide. If your `package.json` isn't `"type": "module"`, name the config `vite.config.mjs`.
+
+   ```bash
+   cp vendor/totalcms/cms/resources/builder/frontend/vite.config.js .
+   cp vendor/totalcms/cms/resources/builder/frontend/FRONTEND.md .
+   ```
+
+3. Add any changes you made in `frontend/vite.config.js` to the new config, such as plugins or extra entry points, then delete the old folder:
+
+   ```bash
+   rm -rf frontend
+   ```
+
+4. Install and build:
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+5. In `.gitignore`, replace `/frontend/node_modules/` with `/node_modules/`, and check that `/public/assets/` is listed.
+
+6. Update `bin/deploy.sh`. A copy made before this change only builds `frontend/`, so replace its `if [ -d frontend ]` block with one that runs `npm ci` and `npm run build` from the project root.
+
+Your layouts don't change. They name the same source paths, such as `css/style.css`.
 
 ## Core Total CMS Assets
 
@@ -311,23 +410,27 @@ A complete layout using all asset functions:
 
 ## Without a Build Tool
 
-If you don't need a build pipeline, just place plain CSS and JS files directly in `public/assets/`:
+If you don't need a build pipeline, just place plain CSS and JS files directly in `public/assets/`, and commit them:
 
 ```
 public/assets/
-├── style.css
-└── app.js
+├── css/
+│   └── style.css
+└── js/
+    └── app.js
 ```
 
 ```twig
 {{ cms.assetsHead() }}
-{{ cms.builder.css('style.css') }}
+{{ cms.builder.css('css/style.css') }}
 
 {{ cms.assetsBody() }}
-{{ cms.builder.js('app.js') }}
+{{ cms.builder.js('js/app.js') }}
 ```
 
 T3 adds `?v={mtime}` query strings for cache busting. No manifest, no build step — just files. The core asset helpers are still required with or without a build tool.
+
+These are the same paths the Vite pipeline uses, so a layout doesn't change if you add it later. Move the files to `css/` and `js/` at the project root first, because the first build wipes `public/assets/`.
 
 ## Alternatives to Vite
 
@@ -339,7 +442,7 @@ const esbuild = require('esbuild')
 
 esbuild.build({
     entryPoints: ['css/style.css', 'js/app.js'],
-    outdir: '../public/assets',
+    outdir: 'public/assets',
     bundle: true,
     minify: true,
 })

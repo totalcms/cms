@@ -5,7 +5,7 @@
 > MCP server if connected).
 
 Site Builder templates are server-rendered Twig and need **no** build step. The
-frontend pipeline is **optional** — add it only when you want bundled CSS/JS/assets.
+frontend pipeline is optional, but the install wizard turns it on by default.
 
 ## Install
 
@@ -13,14 +13,21 @@ frontend pipeline is **optional** — add it only when you want bundled CSS/JS/a
 vendor/bin/tcms builder:frontend     # or: builder:init <starter> --frontend
 ```
 
-This drops a customer-editable `frontend/` directory containing a Vite project
-(`vite.config.js`, source CSS/JS). It is your code — edit it freely.
+This installs a Vite project at the project root (`package.json`,
+`vite.config.js`, `css/`, `js/`, `FRONTEND.md`), adds the stylesheet to the
+default layout, and builds. It is your code — edit it freely. `--no-build` skips
+npm, and `--dry-run` shows what would change.
+
+It refuses, and changes nothing, when the project already has a `package.json`
+(including a second run), when `public/assets/` holds files a build didn't make
+(the build would delete them), or when the project has an older `frontend/`
+pipeline. `site-builder/frontend.md` covers each: "Adding Vite to an Existing
+Project", "Moving from frontend/", and "Using Vite+" for switching to `vp`.
 
 ## Build
 
 ```bash
-cd frontend
-npm install
+npm install          # first time, and after changing package.json
 npm run build        # compiles into public/assets/ (git-ignored build output)
 ```
 
@@ -45,6 +52,12 @@ modules, so the script tag needs `{module: true}`.
 
 ## Notes
 
-- `frontend/` is present only if installed; absence is normal for template-only sites.
-- Build output in `public/assets/` is git-ignored — commit `frontend/` source, not output.
+- `vite.config.js` is present only if installed; absence is normal for template-only sites.
+- With Vite, `public/assets/` is git-ignored build output, wiped on every build. Commit
+  `css/`, `js/` and `package-lock.json`. Never add files to `public/assets/` by hand.
+- Without Vite, `public/assets/` holds your own files, so commit them. Layouts use the
+  same `css/style.css` path either way.
+- Keep `publicDir: false`, `base: './'` and `cssTarget: 'esnext'` in `vite.config.js`.
+  With `publicDir` on, Vite copies the web root into the build.
+- Sites on an older `frontend/` folder keep working: build from there, not the root.
 - For deeper config see `vendor/totalcms/cms/resources/docs/site-builder/frontend.md`.

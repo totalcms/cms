@@ -87,10 +87,11 @@ class BuilderAssetRenderer
 			return $basePath . '/' . $manifest[$path]['file'];
 		}
 
-		// Shorthand key without directory prefix (e.g., 'style.css' vs 'css/style.css')
+		// Shorthand without the directory (e.g., 'style.css' for 'css/style.css').
+		// Compare with the source name: the built file's name carries a hash.
 		if ($manifest !== null && !str_contains($path, '/')) {
-			foreach ($manifest as $entry) {
-				if (basename($entry['file']) === basename($path)) {
+			foreach ($manifest as $source => $entry) {
+				if (basename($source) === $path || basename($entry['file']) === $path) {
 					return $basePath . '/' . $entry['file'];
 				}
 			}

@@ -153,16 +153,16 @@
 		},
 		{
 			"collection": "blog",
-			"id": "styling-without-a-build",
+			"id": "styling-your-site",
 			"data": {
-				"title": "Styling Your Site Without a Build Step",
+				"title": "Styling Your Site",
 				"date": "2026-03-02T08:45:00+00:00",
 				"author": "Joe Workman",
-				"summary": "You don't need npm, Vite, or webpack to ship a beautiful site. Here's how the inline-styles approach holds up.",
-				"content": "<p>The starter ships with inline <code>&lt;style&gt;</code> tags in the layout — and that's deliberate. Plain CSS still works fine, modern browsers ship excellent layout primitives, and one HTTP round-trip beats a build pipeline for many sites.</p><p>When you do want a frontend pipeline, run <code>tcms builder:frontend</code> and you'll get a Vite scaffold ready to go. Until then: edit the <code>&lt;style&gt;</code> block in <code>layouts/default.twig</code>.</p>",
+				"summary": "Your site's CSS is one file. Edit it, build it, and you're done.",
+				"content": "<p>Your site's stylesheet is <code>css/style.css</code>, and the layout loads it with <code>{{ cms.builder.css('css/style.css') }}</code>. Edit the file, then run <code>npm run build</code>. Vite compiles it into <code>public/assets/</code>.</p><p>If you skipped the Vite pipeline during install, the file is at <code>public/assets/css/style.css</code>. Edit it there, with no build step. Plain CSS still works fine, and modern browsers ship excellent layout primitives.</p>",
 				"image": "imageBlur",
 				"categories": "design",
-				"tags": "css,design,no-build",
+				"tags": "css,design,vite",
 				"draft": false,
 				"featured": false
 			}

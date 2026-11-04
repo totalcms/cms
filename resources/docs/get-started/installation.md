@@ -50,9 +50,9 @@ Pick `none` if you want a fully empty install. You can run `tcms builder:init <s
 
 #### 3. Frontend pipeline *(root layout only)*
 
-A Vite-based bundle for compiling your site's CSS and JS, drops a `frontend/` directory at the project root that you can `npm install` into. Builder layouts can reference compiled assets via `{{ cms.builder.css(...) }}`.
+Installs Vite at the project root to compile your site's CSS and JS into `public/assets/`. Builder layouts load the compiled files with `{{ cms.builder.css(...) }}`. It builds during the install if Node 20.19+ or 22.12+ is present. Without Node, the files are installed and you can build later.
 
-Default: **no**. You can add it later with `tcms builder:frontend`.
+Default: **yes**. Answer no if you bring your own tooling. You can add it later with `tcms builder:frontend`.
 
 ### After the install
 
@@ -71,7 +71,7 @@ For CI or scripted installs, set environment variables and the prompts use those
 |---|---|---|
 | `TCMS_LAYOUT` | root &#124; subpath | `root` |
 | `TCMS_STARTER` | none &#124; minimal &#124; blog &#124; business &#124; portfolio | `none` |
-| `TCMS_FRONTEND` | 0 &#124; 1 | `0` |
+| `TCMS_FRONTEND` | 0 &#124; 1 | `1` |
 
 ```bash
 TCMS_LAYOUT=root TCMS_STARTER=blog TCMS_FRONTEND=1 \

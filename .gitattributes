@@ -30,7 +30,7 @@ legacy/* linguist-generated
 glama.json           export-ignore
 .env                 export-ignore
 .eslintrc.json       export-ignore
-.gitignore           export-ignore
+/.gitignore           export-ignore
 .gitattributes       export-ignore
 .gitignore-dist      export-ignore
 .gitmodules          export-ignore
@@ -40,7 +40,7 @@ checksums.txt        export-ignore
 code-report.txt      export-ignore
 CLAUDE.md            export-ignore
 esbuild.config.js    export-ignore
-package.json         export-ignore
+/package.json         export-ignore
 phpcbf.xml           export-ignore
 phpcs.xml            export-ignore
 phpdoc.xml           export-ignore

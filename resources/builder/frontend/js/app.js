@@ -1,7 +1,2 @@
-/* Your site's JavaScript entry point.
- *
- * Compiled to ../public/assets/app.<hash>.js by Vite.
- * Reference in your Twig layout with: {{ cms.builder.js('js/app.js', {module: true}) }}
- */
-
-console.log('Total CMS site loaded');
+/* Your site's JavaScript. To load it, add this to your layout:
+   {{ cms.builder.js('js/app.js', {module: true}) }} */

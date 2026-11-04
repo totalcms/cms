@@ -5472,7 +5472,11 @@
                 },
                 {
                     "name": "--frontend",
-                    "description": "Also install the Vite frontend scaffold (equivalent to running `tcms builder:frontend`)"
+                    "description": "Also install and build the Vite pipeline (equivalent to running `tcms builder:frontend`)"
+                },
+                {
+                    "name": "--no-build",
+                    "description": "With `--frontend`: install the files, but skip `npm install` and the build"
                 },
                 {
                     "name": "--json",
@@ -5488,12 +5492,16 @@
         },
         {
             "name": "builder:frontend",
-            "description": "Install a Vite-based frontend asset pipeline scaffold into your project. Idempotent \u2014 safe to re-run, won't overwrite customizations unless you pass `--force`.",
+            "description": "Install the Vite asset pipeline at your project root, then build it. It's for projects with no `package.json`, and it stops if it finds one, so it never edits a setup you already have.",
             "arguments": [],
             "options": [
                 {
-                    "name": "--force, -f",
-                    "description": "Overwrite existing files in `frontend/` (use with care \u2014 any customizations are lost)"
+                    "name": "--no-build",
+                    "description": "Install the files, but skip `npm install` and the build"
+                },
+                {
+                    "name": "--dry-run",
+                    "description": "Show what would change, and change nothing"
                 },
                 {
                     "name": "--json",
@@ -5501,7 +5509,7 @@
                 }
             ],
             "examples": [
-                "tcms builder:frontend\ntcms builder:frontend --force\ntcms builder:frontend --json"
+                "tcms builder:frontend\ntcms builder:frontend --no-build\ntcms builder:frontend --dry-run\ntcms builder:frontend --json"
             ],
             "url": "https://docs.totalcms.co/site-builder/cli/",
             "since": "3.5.0"

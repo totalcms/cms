@@ -7,8 +7,8 @@
 	{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
 	{# Total CMS core styles: {% cmsgrid %} grids (e.g. Services), galleries, and pagination controls. Placed ahead of the site stylesheet so your branding always takes precedence over the defaults. #}
 	{{ cms.assetsHead() }}
-	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
-	{{ cms.builder.css('style.css') }}
+	{# Site stylesheet. With the Vite pipeline, edit css/style.css and run npm run build. Without it, edit public/assets/css/style.css directly. #}
+	{{ cms.builder.css('css/style.css') }}
 	{% block head %}{% endblock %}
 </head>
 <body>

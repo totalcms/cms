@@ -781,6 +781,34 @@ final class BuilderTwigAdapterTest extends TestCase
 		@unlink($dir . '/manifest.json');
 	}
 
+	public function testShortNameResolvesToTheHashedBuildOfItsSource(): void
+	{
+		$dir = sys_get_temp_dir() . '/assets';
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+		// What Vite writes: the key is the source path, the file carries a hash
+		// and has no css/ folder. Starters used to load 'style.css', which
+		// never matched this, so a built site's stylesheet link was a 404.
+		file_put_contents($dir . '/manifest.json', json_encode([
+			'js/app.js'     => ['file' => 'app-d4e5f6.js'],
+			'css/style.css' => ['file' => 'style-a1b2c3.css'],
+		]));
+
+		$adapter = buildBuilderTwigAdapter(
+			$this->builderConfig,
+			$this->indexReader,
+			$this->orderService,
+			$this->config,
+			$this->router,
+		);
+
+		$this->assertSame('/assets/style-a1b2c3.css', $adapter->asset('style.css'));
+		$this->assertSame('/assets/nope.css', $adapter->asset('nope.css'));
+
+		@unlink($dir . '/manifest.json');
+	}
+
 	// ---- page(): the current page for templates the router did not render ----
 
 	public function testPageReturnsTheBuilderPageRecordThatRoutesThePath(): void

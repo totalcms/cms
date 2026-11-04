@@ -11,7 +11,7 @@ The Site Builder provides five CLI commands: scaffolding from starters, installi
 | Command | Purpose |
 |---------|---------|
 | [`builder:init`](#builder-init) | Scaffold a new site from a starter template |
-| [`builder:frontend`](#builder-frontend) | Install a Vite-based frontend asset pipeline |
+| [`builder:frontend`](#builder-frontend) | Install and build the Vite asset pipeline at the project root |
 | [`builder:routes`](#builder-routes) | List every route the page router would serve, with conflicts flagged |
 | [`builder:history`](#builder-history) | List, view, or restore template snapshot versions |
 | [`starter:export`](#starter-export) | Write a clean copy of the site as a Composer starter project |
@@ -34,7 +34,7 @@ tcms builder:init --json
 1. Copies template files (layouts, pages, partials) from the starter into `tcms-data/builder/`
 2. Creates the `builder-pages` collection with the `builder-page` schema (if it doesn't exist)
 3. Imports the starter's `jumpstart.json` — pages, plus any supporting schemas, collections, and sample objects
-4. (with `--frontend`) installs the Vite frontend scaffold — same as running `tcms builder:frontend`
+4. (with `--frontend`) installs and builds the Vite pipeline — same as running `tcms builder:frontend`
 
 ### Arguments
 
@@ -48,7 +48,8 @@ tcms builder:init --json
 |--------|-------------|
 | `--list, -l` | List available starters and exit |
 | `--force, -f` | Overwrite existing template files (existing page records in the collection are left alone — JumpStart skips objects that already exist) |
-| `--frontend` | Also install the Vite frontend scaffold (equivalent to running `tcms builder:frontend`) |
+| `--frontend` | Also install and build the Vite pipeline (equivalent to running `tcms builder:frontend`) |
+| `--no-build` | With `--frontend`: install the files, but skip `npm install` and the build |
 | `--json` | Output result as JSON |
 
 ### Starter Data
@@ -59,7 +60,9 @@ If the import fails (e.g., schema validation), the scaffold itself still succeed
 
 ### `--frontend` Behavior
 
-Convenience flag for the greenfield happy path. Runs `tcms builder:frontend` immediately after the scaffold completes, installing the Vite scaffold into `<projectRoot>/frontend/`. If you don't pass `--frontend`, you can always add the pipeline later — see [`builder:frontend`](#builder-frontend).
+Convenience flag for the greenfield happy path. It puts the starter's stylesheet in `css/style.css` at the project root, then runs `tcms builder:frontend`, which keeps it and builds it. If the project can't take the pipeline, the command stops before it scaffolds anything.
+
+Without `--frontend`, the stylesheet goes to `public/assets/css/style.css`, and the same layout line loads it. You can add the pipeline later — see [`builder:frontend`](#builder-frontend). Move the stylesheet to `css/style.css` first, because the first build would delete it.
 
 ### `--force` Behavior
 
@@ -97,37 +100,59 @@ Since the Site Builder uses middleware-based routing, pages are routed dynamical
 
 ## `builder:frontend`
 
-Install a Vite-based frontend asset pipeline scaffold into your project. Idempotent — safe to re-run, won't overwrite customizations unless you pass `--force`.
+Install the Vite asset pipeline at your project root, then build it. It's for projects with no `package.json`, and it stops if it finds one, so it never edits a setup you already have.
 
 ```bash
 tcms builder:frontend
-tcms builder:frontend --force
+tcms builder:frontend --no-build
+tcms builder:frontend --dry-run
 tcms builder:frontend --json
 ```
 
 ### What It Does
 
-Copies the contents of `resources/builder/frontend/` into `<projectRoot>/frontend/`:
+Installs the contents of `resources/builder/frontend/` at the project root:
 
-- `vite.config.js` — emits hashed assets to `../public/assets/` with manifest
-- `package.json` — `dev` / `build` / `watch` scripts; Vite as the only dependency
+- `package.json` — `dev` / `build` / `watch` / `preview` scripts, with Vite as the only package
+- `vite.config.js` — builds `css/` and `js/` into `public/assets/` with a manifest
 - `css/style.css` — minimal starter stylesheet
 - `js/app.js` — minimal entry point
-- `README.md` — quick reference for the install/build workflow
-- `.gitignore` — excludes `node_modules/`, `dist/`, etc.
+- `FRONTEND.md` — quick reference for the install and build workflow
 
-After running, `cd frontend && npm install && npm run build` produces compiled assets at `public/assets/` that T3's `cms.builder.css()` and `cms.builder.js()` Twig helpers automatically resolve via the manifest.
+It then:
+
+1. Adds `/node_modules/` and `/public/assets/` to `.gitignore`.
+2. Adds the stylesheet to `layouts/default.twig`, unless the layout already loads one.
+3. Keeps a marked block about the pipeline in `AGENTS.md`, if the project has one.
+4. Runs `npm install` and the build, then clears the cache.
+
+T3's `cms.builder.css()` and `cms.builder.js()` Twig helpers resolve the built files through the manifest.
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--force, -f` | Overwrite existing files in `frontend/` (use with care — any customizations are lost) |
+| `--no-build` | Install the files, but skip `npm install` and the build |
+| `--dry-run` | Show what would change, and change nothing |
 | `--json` | Output result as JSON |
 
-### Idempotency
+### When It Refuses
 
-The default behavior is **skip files that already exist**, so re-running `builder:frontend` is safe — it only adds missing files. The result tells you what was skipped and reminds you to re-run with `--force` if you want a hard reset.
+All checks run before the first write, so a refused run changes nothing. The command refuses when:
+
+- `public/assets/` holds files with no `manifest.json`, because the first build would delete them. It lists the files
+- The project has a `frontend/` pipeline. See [Moving from frontend/](docs/site-builder/frontend#moving-from-frontend)
+- Total CMS isn't at `public/index.php`. A subpath install leaves `public/` for your own frontend
+- The project already has a `package.json`. That includes running the command a second time. See [Adding Vite to an Existing Project](docs/site-builder/frontend#adding-vite-to-an-existing-project)
+
+### Existing Files
+
+- **`vite.config.js`** — kept, with a warning if it doesn't set `publicDir` or `manifest`
+- **`css/`, `js/` and `FRONTEND.md`** — kept
+
+### Without Node
+
+The build needs Node 20.19+ or 22.12+. Without a supported version, the command installs the files, explains, and exits 0. Build on any machine with Node and upload `public/assets/`. A build that fails exits 1, and the files stay in place.
 
 ### When to Use This vs. `--frontend` on `builder:init`
 
@@ -135,8 +160,7 @@ The default behavior is **skip files that already exist**, so re-running `builde
 |----------|-----|
 | Greenfield project, scaffolding for the first time | `tcms builder:init <starter> --frontend` |
 | Existing project, adding a frontend pipeline now | `tcms builder:frontend` |
-| Pull missing files after the scaffold was edited | `tcms builder:frontend` (skips existing) |
-| Reset the scaffold to upstream defaults | `tcms builder:frontend --force` |
+| Project already has a `package.json` | Add Vite by hand. See [Adding Vite to an Existing Project](docs/site-builder/frontend#adding-vite-to-an-existing-project) |
 
 See [Frontend Assets](docs/site-builder/frontend) for the full asset-pipeline reference (Sass, Tailwind, etc.).
 

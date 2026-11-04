@@ -98,8 +98,8 @@ Every save keeps the version it replaced; every delete keeps the final state
   another schema inherits it. A copy goes to `.system/backups/schemas/`
 
 ### Site Builder
-- `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`); `--frontend`, `--force`, `--list`
-- `builder:frontend` — install the Vite frontend pipeline
+- `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`); `--frontend`, `--no-build`, `--force`, `--list`
+- `builder:frontend` — install and build the Vite pipeline at the project root; `--no-build`, `--dry-run`; stops if `package.json` exists
 - `builder:routes` — list every route the page router serves; flags conflicts
 - `builder:history` — list/restore snapshot versions of a builder template
 - `starter:export <dir> --name=vendor/starter-x` — write a clean copy of this site as a Composer starter (users, credentials, secrets and runtime state left out; `--structure-only` drops content)
