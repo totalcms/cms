@@ -65,6 +65,12 @@
         <severity>0</severity>
     </rule>
 
+    <!-- Pest files have no namespace, so helper classes declared in one have none
+         either. phpcbf can't fix this, so it exits 2 and stops `composer clean`. -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
     <!-- Exclude multiple classes per file for test utility classes -->
     <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
         <exclude-pattern>*/tests/</exclude-pattern>
