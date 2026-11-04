@@ -22,6 +22,8 @@ All notable changes to Total CMS will be documented in this file.
 - **`cms.builder.css('style.css')` finds Vite builds.** The short name never matched the hashed file, so the page linked a file that didn't exist
 - **The Composer package ships the whole frontend scaffold.** `.gitattributes` left out the scaffold's `package.json`, so a Composer install had an incomplete scaffold
 - **The blog starter's demo post is up to date.** It told you to edit a `<style>` block that the layout no longer has
+- **Invalid JSON in the schema editor no longer breaks change tracking.** Editing a property while its JSON was invalid threw an error, so the form didn't register the edit. It now counts as unsaved, and saving names the field to fix
+- **Clearing the cache no longer warns when two processes clash.** If another process deleted a cache file first, PHP logged a warning
 
 ## [3.6.6] - 2026-11-03
 

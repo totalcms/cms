@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\EventHint;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Infrastructure\Filesystem\UnsafePathException;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
 
@@ -111,6 +112,19 @@ final class SentryMiddlewareTest extends TestCase
 		$exception = new \UnexpectedValueException('Writing to the log file failed: Write of 4326 bytes failed with errno=122 Disk quota exceeded');
 
 		$this->assertNull($this->filter($exception));
+	}
+
+	public function testDropsAJobQueueWriteThatHitAFullDisk(): void
+	{
+		$error = new \PDOException('SQLSTATE[HY000]: General error: 13 database or disk is full');
+
+		$this->assertNull($this->filter($error));
+	}
+
+	public function testIgnoresARefusedPathInBothContexts(): void
+	{
+		$this->assertContains(UnsafePathException::class, SentryMiddleware::ignoredExceptions(cli: false));
+		$this->assertContains(UnsafePathException::class, SentryMiddleware::ignoredExceptions(cli: true));
 	}
 
 	public function testReportsOtherRuntimeExceptions(): void

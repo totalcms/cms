@@ -29,6 +29,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Infrastructure\Filesystem\UnsafePathException;
 use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
@@ -65,6 +66,9 @@ class SentryMiddleware implements MiddlewareInterface
 			// Flysystem refused a `..` path — a probe with a crafted ID was blocked
 			// as designed (the guard working, not a bug).
 			PathTraversalDetected::class,
+			// The same guard in T3's own path checks: an ID that can't be a
+			// filename was refused, often one typed at the CLI.
+			UnsafePathException::class,
 			BadRouteException::class, // Duplicate route registration - user configuration issue
 			InvalidKeywordException::class, // Invalid schema definition - user error
 			UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
@@ -139,6 +143,8 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
+			// SQLite's wording for the same thing, from the job queue.
+			'database or disk is full',
 			// The hosting account's disk quota is full (EDQUOT) — usually first
 			// seen as Monolog failing to write a log line. Same story as above.
 			'Disk quota exceeded',

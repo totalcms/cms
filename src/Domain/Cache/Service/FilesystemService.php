@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Cache\Service;
 
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\QuietCall;
 
 /**
  * Filesystem cache service.
@@ -242,15 +243,10 @@ readonly class FilesystemService implements CacheInterface
 	private function deleteEntry(string $key): bool
 	{
 		$filePath = $this->getFilePath($key);
-		if (!file_exists($filePath)) {
-			return true;
-		}
 
-		try {
-			return unlink($filePath);
-		} catch (\Exception) {
-			return false;
-		}
+		// Another process may delete the file first, which is the result we
+		// wanted. Checking beforehand can't rule that out, so check afterwards.
+		return QuietCall::run(static fn (): bool => unlink($filePath)) || !file_exists($filePath);
 	}
 
 	public function clear(): bool

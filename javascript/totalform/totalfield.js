@@ -402,7 +402,15 @@ export default class TotalField {
 		// a fresh object/array from getValue() every call, so a reference check is
 		// always false and would re-mark them unsaved on any stray change event
 		// (e.g. a field's native `change` firing on blur after a successful save).
-		const current = this.getValue();
+		let current;
+		try {
+			current = this.getValue();
+		} catch {
+			// The value can't be read yet, such as JSON that's still being typed.
+			// It's still an edit, and save() reports the problem by field name.
+			this.markUnsaved();
+			return;
+		}
 		if (this.valuesEqual(this.storedValue, current)) return;
 
 		// A setSavedValue() in progress: the value is already persisted, so
@@ -414,6 +422,10 @@ export default class TotalField {
 
 		// Value changed - update stored value and dispatch event
 		this.storedValue = current;
+		this.markUnsaved();
+    }
+
+	markUnsaved() {
 		this.container.classList.add("unsaved");
 
 		// Always dispatch field-change when value changes
@@ -423,7 +435,7 @@ export default class TotalField {
 			return;
 		}
 		this.dispatcher.dispatchEvent("field-change", { field: this });
-    }
+	}
 
 	// Value-equality for dirty tracking. Primitives use a fast strict compare;
 	// objects/arrays (composite field values) compare structurally so a freshly

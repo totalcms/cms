@@ -36,6 +36,25 @@ final class FilesystemServiceShardTest extends TestCase
 		exec('rm -rf ' . escapeshellarg($this->root));
 	}
 
+	public function testDeletingAFileAnotherProcessRemovedRaisesNoWarning(): void
+	{
+		$warnings = [];
+		set_error_handler(static function (int $level, string $message) use (&$warnings): bool {
+			$warnings[] = $message;
+
+			return true;
+		});
+
+		try {
+			$deleted = $this->service->delete('ns:api:never-written');
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertTrue($deleted);
+		$this->assertSame([], $warnings);
+	}
+
 	public function testEntriesOfOneTypeShareADirectoryOtherTypesDoNot(): void
 	{
 		$this->service->set('ns:api:one', 1);

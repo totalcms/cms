@@ -49,6 +49,17 @@ describe('TotalField dirty state', () => {
 		expect(f.container.classList.contains('unsaved')).toBe(true);
 	});
 
+	test('changed() marks an unreadable value as an edit instead of throwing', () => {
+		const f = makeField({ value: 'one' });
+		f.getValue = () => {
+			throw new Error('options: Expected ]');
+		};
+
+		expect(() => f.changed()).not.toThrow();
+		expect(f.container.classList.contains('unsaved')).toBe(true);
+		expect(f.storedValue).toBe('one');
+	});
+
 	test('changed() dispatches field-change for a top-level field (debounced)', () => {
 		vi.useFakeTimers();
 		const f = makeField({ value: 'one' });
