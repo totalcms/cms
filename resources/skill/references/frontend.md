@@ -60,4 +60,8 @@ modules, so the script tag needs `{module: true}`.
 - Keep `publicDir: false`, `base: './'` and `cssTarget: 'esnext'` in `vite.config.js`.
   With `publicDir` on, Vite copies the web root into the build.
 - Sites on an older `frontend/` folder keep working: build from there, not the root.
+- Before adding the root pipeline to an existing site, check `bin/deploy.sh`. Older copies
+  only build `frontend/`, and `public/assets/` is git-ignored, so a deploy publishes the
+  site with no CSS. Replace the `if [ -d frontend ]` block with one that runs `npm ci` and
+  `npm run build` from the project root.
 - For deeper config see `vendor/totalcms/cms/resources/docs/site-builder/frontend.md`.
