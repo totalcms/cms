@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.6.7] - Unreleased
+## [3.6.7] - 2026-11-03
 
 ### Added
 
@@ -15,11 +15,13 @@ All notable changes to Total CMS will be documented in this file.
 - **`tcms builder:frontend` only installs into a project with no `package.json`.** **Behavior change:** it stops and changes nothing if it finds one, including on a second run, and `--force` is gone. "Adding Vite to an Existing Project" in the Site Builder docs covers adding Vite by hand
 - **Starter stylesheets moved to `css/style.css`.** With the pipeline the file is at the project root. Without it, the file is at `public/assets/css/style.css`. Layouts load it with `{{ cms.builder.css('css/style.css') }}` in both cases
 - **`tcms builder:init --frontend` checks first.** If the project can't take the pipeline, it stops before writing the starter. It exits 1 if the frontend step fails
+- **Update `bin/deploy.sh` before you add the pipeline to an existing site.** **Behavior change:** copies from older installs only build `frontend/`, and `public/assets/` is ignored by git, so a deploy would publish the site with no CSS. Replace its `if [ -d frontend ]` block with one that runs `npm ci` and `npm run build` from the project root
 
 ### Fixed
 
 - **`cms.builder.css('style.css')` finds Vite builds.** The short name never matched the hashed file, so the page linked a file that didn't exist
-- **The Composer package ships the whole frontend scaffold.** `.gitattributes` also left out the scaffold's `package.json`, so a Composer install had an incomplete scaffold
+- **The Composer package ships the whole frontend scaffold.** `.gitattributes` left out the scaffold's `package.json`, so a Composer install had an incomplete scaffold
+- **The blog starter's demo post is up to date.** It told you to edit a `<style>` block that the layout no longer has
 
 ## [3.6.6] - 2026-11-03
 
