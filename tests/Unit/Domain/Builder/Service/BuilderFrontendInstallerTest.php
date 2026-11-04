@@ -11,6 +11,7 @@ use TotalCMS\Domain\Builder\Service\BuilderFrontendInstaller;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
 
 /** Answers shell commands from a script, so no test runs npm. */
@@ -431,7 +432,7 @@ final class BuilderFrontendInstallerTest extends TestCase
 		$this->assertFileExists($this->project . '/package.json');
 	}
 
-	private function install(bool $dryRun = false, bool $build = true): \TotalCMS\Support\OperationResult
+	private function install(bool $dryRun = false, bool $build = true): OperationResult
 	{
 		return $this->installer->install(new FrontendInstallOptions($dryRun, $build));
 	}

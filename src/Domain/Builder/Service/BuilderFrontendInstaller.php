@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use TotalCMS\Domain\Builder\Data\FrontendInstallOptions;
 use TotalCMS\Domain\Builder\Data\FrontendInstallRun;
 use TotalCMS\Support\OperationResult;
@@ -124,7 +121,7 @@ readonly class BuilderFrontendInstaller
 		}
 
 		$found = [];
-		$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($assets, FilesystemIterator::SKIP_DOTS));
+		$files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($assets, \FilesystemIterator::SKIP_DOTS));
 		foreach ($files as $file) {
 			if ($file->isFile() && $file->getFilename() !== '.DS_Store') {
 				$found[] = substr($file->getPathname(), strlen($root) + 1);
@@ -194,7 +191,7 @@ readonly class BuilderFrontendInstaller
 	{
 		$path     = $run->root . '/.gitignore';
 		$existing = is_file($path) ? (string)file_get_contents($path) : '';
-		$lines    = array_map('trim', preg_split('/\R/', $existing) ?: []);
+		$lines    = array_map(trim(...), preg_split('/\R/', $existing) ?: []);
 		$addition = '';
 
 		foreach (self::IGNORES as $entry => $block) {

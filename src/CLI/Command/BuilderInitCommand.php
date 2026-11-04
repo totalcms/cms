@@ -136,7 +136,7 @@ class BuilderInitCommand extends BaseCommand
 		$output->writeln('  1. Edit your templates in ' . $this->relativeToProject($templateDir) . '/');
 		$output->writeln('  2. Add or edit pages in the admin under Site Builder');
 		$output->writeln('  3. Visit your site — pages are served dynamically (no build step needed)');
-		if ($frontendResult === null) {
+		if (!$frontendResult instanceof OperationResult) {
 			$output->writeln('  4. (optional) Add a frontend pipeline: <comment>tcms builder:frontend</comment>');
 		} elseif (empty($frontendResult->data['built'])) {
 			$output->writeln('  4. Build your CSS and JS: <comment>npm install && npm run build</comment>');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
-use Closure;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\OperationResult;
 
@@ -28,8 +27,8 @@ class BuilderFrontendBuild
 	) {
 	}
 
-	/** @param (Closure(string):void)|null $onStep */
-	public function run(string $root, ?Closure $onStep = null): OperationResult
+	/** @param (\Closure(string):void)|null $onStep */
+	public function run(string $root, ?\Closure $onStep = null): OperationResult
 	{
 		$version = $this->nodeVersion($root);
 		if ($version === null) {
@@ -48,7 +47,7 @@ class BuilderFrontendBuild
 		}
 
 		foreach ([self::INSTALL, self::BUILD] as $command) {
-			if ($onStep instanceof Closure) {
+			if ($onStep instanceof \Closure) {
 				$onStep($command);
 			}
 

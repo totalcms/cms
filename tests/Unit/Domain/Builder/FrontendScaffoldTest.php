@@ -51,7 +51,7 @@ it('ships package.json without a frontend framework', function (): void {
 
 it('keeps the settings that stop a root-level Vite project breaking the site', function (string $setting): void {
 	expect((string)file_get_contents(scaffoldDir() . '/vite.config.js'))->toContain($setting);
-})->with(["publicDir: false", "base: './'", "cssTarget: 'esnext'", "outDir: 'public/assets'", "manifest: 'manifest.json'"]);
+})->with(['publicDir: false', "base: './'", "cssTarget: 'esnext'", "outDir: 'public/assets'", "manifest: 'manifest.json'"]);
 
 it('keeps the scaffold in Composer dist archives', function (): void {
 	// Unanchored, these rules also strip the scaffold's own files, and a real

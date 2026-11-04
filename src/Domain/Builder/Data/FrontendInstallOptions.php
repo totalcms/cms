@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Data;
 
-use Closure;
-
 /**
  * How `tcms builder:frontend` should run.
  *
@@ -19,7 +17,7 @@ final readonly class FrontendInstallOptions
 	public function __construct(
 		public bool $dryRun = false,
 		public bool $build = true,
-		public ?Closure $onStep = null,
+		public ?\Closure $onStep = null,
 	) {
 	}
 }
