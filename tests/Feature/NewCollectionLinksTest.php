@@ -43,3 +43,11 @@ test('the welcome panel leaves out the first collection card for a user who may 
 
 	expect(($this->welcomePanel)())->not->toContain('href="collections/new"')->toContain('href="docs"');
 });
+
+test('the new object shortcut is Control+N on a Mac and Alt+N elsewhere, leaving Cmd+N to the browser', function (): void {
+	$html = (string)get('/admin/collections/auth')->getBody();
+
+	expect($html)->toContain('const newObjectKey = navigator.platform.startsWith("Mac") ? event.ctrlKey : event.altKey && !event.ctrlKey;');
+	expect($html)->toContain('if (newObjectKey && event.key.toLowerCase() === "n")');
+	expect($html)->not->toContain('(event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n"');
+});
