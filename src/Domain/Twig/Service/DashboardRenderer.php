@@ -574,15 +574,15 @@ readonly class DashboardRenderer
 	}
 
 	/**
-	 * Without a From address every email fails, the password reset email
-	 * included, so an admin who forgets their password is locked out. A host
-	 * left at its default is not flagged: a local mail server may answer it.
+	 * An empty SMTP username means email was never set up, and the password
+	 * reset email goes with it, so an admin who forgets their password is
+	 * locked out.
 	 *
 	 * @return array{level: string, message: string, link: string, linkText: string, critical: bool}|null
 	 */
 	private function smtpAlert(): ?array
 	{
-		if (trim((string)($this->config->smtp['from'] ?? '')) !== '') {
+		if (trim((string)($this->config->smtp['username'] ?? '')) !== '') {
 			return null;
 		}
 

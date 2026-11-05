@@ -35,7 +35,7 @@ Admins see alerts on the home whenever something needs them. Each one links to w
 | Alert | What to do |
 |---|---|
 | The license is invalid or expired | Open the License Manager |
-| **Email is not set up** | No **From** address is set under [Settings → SMTP](docs/notifications/mailer#setting-up-smtp), so no email can be sent — including the password reset email, which would leave a forgotten admin password with no way back in. |
+| **Email is not set up** | No **Username** is set under [Settings → SMTP](docs/notifications/mailer#setting-up-smtp), so email hasn't been set up and can't be sent — including the password reset email, which would leave a forgotten admin password with no way back in. |
 | The job queue is stalled | Schedule `tcms jobs:process`, or the [`/cron/jobs` URL](docs/operations/cron-urls) |
 | An extension failed to load | Open Extensions |
 | PHP's upload limits are below one upload chunk | Raise `post_max_size` and `upload_max_filesize` to at least 6 MB |
