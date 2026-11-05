@@ -105,7 +105,7 @@ Impersonating <strong style="margin-left:4px;">{$label}</strong>
 </span>
 <form method="post" action="{$stopUrl}" style="display:flex;margin:0;padding:0;">
 {$tokenField}
-<button type="submit" aria-label="Return to your account" title="Return to your account" style="background:oklch(var(--totalform-background, 100% 0 0));color:oklch(var(--totalform-text-color, 17% 0 0));border:none;border-radius:50%;width:24px;height:24px;padding:0;font-size:16px;line-height:1;font-weight:600;cursor:pointer;">&times;</button>
+<button type="submit" aria-label="Return to your account" title="Return to your account" style="background:oklch(var(--totalform-background, 100% 0 0));color:oklch(var(--totalform-text-color, 17% 0 0));border:none;border-radius:50%;width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="12" height="12" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true"><line x1="27" y1="5" x2="5" y2="27"/><line x1="27" y1="27" x2="5" y2="5"/></svg></button>
 </form>
 </div>
 HTML;

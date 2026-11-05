@@ -215,7 +215,9 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 	{
 		$body = $this->bannerFor('alice-1', []);
 
-		$this->assertMatchesRegularExpression('~<button[^>]*aria-label="Return to your account"[^>]*title="Return to your account"[^>]*>&times;</button>~', $body);
+		$this->assertMatchesRegularExpression('~<button[^>]*aria-label="Return to your account"[^>]*title="Return to your account"[^>]*><svg[^>]*aria-hidden="true">.*</svg></button>~', $body);
+		$this->assertStringContainsString('align-items:center;justify-content:center', $body);
+		$this->assertStringNotContainsString('&times;', $body);
 	}
 
 	/** @param array<string,mixed> $user */
