@@ -55,7 +55,7 @@ function addCopyButtons() {
 
 			if (!navigator.clipboard?.writeText) return;
 			navigator.clipboard.writeText(text).then(() => {
-				button.textContent = 'Copied!';
+				button.textContent = '✔';
 				button.classList.add('copied');
 
 				setTimeout(() => {

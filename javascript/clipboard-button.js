@@ -13,7 +13,7 @@ export default class ClipButton {
         const selector = button.dataset.clip;
         this.source = document.querySelector(selector);
 
-        this.copiedText = options.copiedText || "Copied!";
+        this.copiedText = options.copiedText || "✔";
 
         button.addEventListener('click', this.onClick.bind(this));
     }
