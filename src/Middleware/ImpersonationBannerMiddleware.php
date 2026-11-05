@@ -12,12 +12,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
- * Injects a fixed-position "Return to your account" banner into HTML responses
+ * Injects a fixed-position impersonation badge into HTML responses
  * while a super-admin is impersonating another user.
  *
  * The banner is inline-styled so it renders correctly on both the admin
@@ -34,6 +35,7 @@ final readonly class ImpersonationBannerMiddleware implements MiddlewareInterfac
 		private ImpersonationServiceInterface $impersonation,
 		private SessionInterface $session,
 		private CSRFTokenManager $csrfTokenManager,
+		private AccessManager $accessManager,
 		private App $app,
 	) {
 	}
@@ -64,8 +66,7 @@ final readonly class ImpersonationBannerMiddleware implements MiddlewareInterfac
 			return $response;
 		}
 
-		$userId   = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$injected = $this->inject($body, $this->buildBanner($userId));
+		$injected = $this->inject($body, $this->buildBanner($this->userLabel()));
 
 		return $response->withBody((new Psr17Factory())->createStream($injected));
 	}
@@ -81,12 +82,20 @@ final readonly class ImpersonationBannerMiddleware implements MiddlewareInterfac
 		return substr($body, 0, $pos) . $banner . substr($body, $pos);
 	}
 
-	private function buildBanner(string $userId): string
+	/** The user's name, or their ID when they have no name or their record is gone. */
+	private function userLabel(): string
+	{
+		$name = trim((string)($this->accessManager->publicUserData()['name'] ?? ''));
+
+		return $name !== '' ? $name : (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+	}
+
+	private function buildBanner(string $user): string
 	{
 		$basePath   = $this->app->getBasePath();
 		$stopUrl    = $basePath . '/admin/impersonate/stop';
 		$tokenField = $this->csrfTokenManager->getTokenField();
-		$label      = $userId !== '' ? htmlspecialchars($userId, ENT_QUOTES, 'UTF-8') : 'another user';
+		$label      = $user !== '' ? htmlspecialchars($user, ENT_QUOTES, 'UTF-8') : 'another user';
 
 		return <<<HTML
 <div class="impersonation-banner" style="position:fixed;bottom:0;right:0;max-width:100%;z-index:99999;background:oklch(var(--totalform-text-color, 17% 0 0));color:oklch(var(--totalform-background, 100% 0 0));font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 8px rgba(0,0,0,0.4);border-radius:50px;margin:0.75rem">
@@ -94,9 +103,9 @@ final readonly class ImpersonationBannerMiddleware implements MiddlewareInterfac
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 Impersonating <strong style="margin-left:4px;">{$label}</strong>
 </span>
-<form method="post" action="{$stopUrl}" style="margin:0;padding:0;">
+<form method="post" action="{$stopUrl}" style="display:flex;margin:0;padding:0;">
 {$tokenField}
-<button type="submit" style="background:oklch(var(--totalform-background, 100% 0 0));color:oklch(var(--totalform-text-color, 17% 0 0));border:none;border-radius:4px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Return to your account</button>
+<button type="submit" aria-label="Return to your account" title="Return to your account" style="background:oklch(var(--totalform-background, 100% 0 0));color:oklch(var(--totalform-text-color, 17% 0 0));border:none;border-radius:50%;width:24px;height:24px;padding:0;font-size:16px;line-height:1;font-weight:600;cursor:pointer;">&times;</button>
 </form>
 </div>
 HTML;

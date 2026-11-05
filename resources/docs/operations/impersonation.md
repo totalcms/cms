@@ -12,7 +12,7 @@ Super-admins can temporarily act as any other user — operator or front-end mem
 
 Impersonation is a full session swap. While active, every request — reads **and writes** — executes as the target user. If you save, delete, or modify content while impersonating, those changes are attributed to the target, not to you. Use this feature carefully.
 
-A fixed banner appears at the top of every page (admin and front-end) while impersonation is active. Click **Return to your account** in that banner to end the session immediately and return to your own account.
+A fixed badge showing the user's name appears at the bottom of every page (admin and front-end) while impersonation is active. Click the **×** on the badge to end the session immediately and return to your own account.
 
 ## Starting Impersonation
 
@@ -35,7 +35,7 @@ Total CMS redirects you automatically based on the target's type:
 
 ## Ending Impersonation
 
-Click **Return to your account** in the fixed banner. This works from any page — admin or front-end — and is the only way to end the session. The banner's return action is CSRF-protected.
+Click the **×** on the fixed badge. This works from any page — admin or front-end — and is the only way to end the session. The banner's return action is CSRF-protected.
 
 ## Audit Trail
 

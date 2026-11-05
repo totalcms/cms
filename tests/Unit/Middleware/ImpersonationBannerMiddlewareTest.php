@@ -12,6 +12,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -23,6 +24,7 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 	private MockObject $session;
 	private MockObject $csrf;
 	private MockObject $app;
+	private MockObject $accessManager;
 
 	protected function setUp(): void
 	{
@@ -30,6 +32,7 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 		$this->session       = $this->createMock(SessionInterface::class);
 		$this->csrf          = $this->createMock(CSRFTokenManager::class);
 		$this->app           = $this->createMock(App::class);
+		$this->accessManager = $this->createMock(AccessManager::class);
 
 		$this->csrf->method('getTokenField')
 			->willReturn('<input type="hidden" name="csrf_token" value="testtoken" />');
@@ -46,6 +49,7 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 			$this->impersonation,
 			$this->session,
 			$this->csrf,
+			$this->accessManager,
 			$app,
 		);
 	}
@@ -183,5 +187,45 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 		$result  = $mw->process($this->makeRequest(), $handler);
 
 		$this->assertStringContainsString('another user', (string)$result->getBody());
+	}
+
+	public function testShowsTheUsersNameInsteadOfTheirId(): void
+	{
+		$body = $this->bannerFor('alice-1', ['id' => 'alice-1', 'name' => 'Alice Moore']);
+
+		$this->assertStringContainsString('Alice Moore', $body);
+		$this->assertStringNotContainsString('alice-1', $body);
+	}
+
+	public function testFallsBackToTheIdWhenTheUserHasNoName(): void
+	{
+		$this->assertStringContainsString('alice-1', $this->bannerFor('alice-1', ['id' => 'alice-1', 'name' => ' ']));
+		$this->assertStringContainsString('gone-user', $this->bannerFor('gone-user', []));
+	}
+
+	public function testEscapesTheName(): void
+	{
+		$body = $this->bannerFor('alice-1', ['name' => '<script>x</script>']);
+
+		$this->assertStringNotContainsString('<script>x', $body);
+		$this->assertStringContainsString('&lt;script&gt;x', $body);
+	}
+
+	public function testStopButtonIsACloseIconWithAnAccessibleLabel(): void
+	{
+		$body = $this->bannerFor('alice-1', []);
+
+		$this->assertMatchesRegularExpression('~<button[^>]*aria-label="Return to your account"[^>]*title="Return to your account"[^>]*>&times;</button>~', $body);
+	}
+
+	/** @param array<string,mixed> $user */
+	private function bannerFor(string $userId, array $user): string
+	{
+		$this->setUp();
+		$this->impersonation->method('isImpersonating')->willReturn(true);
+		$this->session->method('get')->willReturn($userId);
+		$this->accessManager->method('publicUserData')->willReturn($user);
+
+		return (string)$this->makeMiddleware()->process($this->makeRequest(), $this->makeHandler('<html><body>hi</body></html>'))->getBody();
 	}
 }
