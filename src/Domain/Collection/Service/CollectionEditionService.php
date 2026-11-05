@@ -18,6 +18,9 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  */
 readonly class CollectionEditionService
 {
+	/** Schemas that need the blog edition feature. */
+	private const BLOG_SCHEMAS = ['blog', 'blog-legacy', 'blogdown'];
+
 	public function __construct(
 		private EditionFeatureService $editionFeatures,
 		private SchemaFetcher $schemaFetcher,
@@ -52,7 +55,7 @@ readonly class CollectionEditionService
 	public function isSchemaAccessible(string $schemaId): bool
 	{
 		// Check blog schemas (Standard+)
-		if ($schemaId === 'blog' || $schemaId === 'blog-legacy') {
+		if (in_array($schemaId, self::BLOG_SCHEMAS, true)) {
 			return $this->editionFeatures->can(EditionFeature::BLOG_SCHEMA);
 		}
 
@@ -105,11 +108,10 @@ readonly class CollectionEditionService
 		$inaccessible = [];
 
 		// Check blog schemas
-		if (!$this->isSchemaAccessible('blog')) {
-			$inaccessible[] = 'blog';
-		}
-		if (!$this->isSchemaAccessible('blog-legacy')) {
-			$inaccessible[] = 'blog-legacy';
+		foreach (self::BLOG_SCHEMAS as $schemaId) {
+			if (!$this->isSchemaAccessible($schemaId)) {
+				$inaccessible[] = $schemaId;
+			}
 		}
 
 		// Check depot schema
@@ -143,7 +145,7 @@ readonly class CollectionEditionService
 	public function getRequiredEditionForSchema(string $schemaId): ?Edition
 	{
 		// Blog schemas require Standard
-		if ($schemaId === 'blog' || $schemaId === 'blog-legacy') {
+		if (in_array($schemaId, self::BLOG_SCHEMAS, true)) {
 			return Edition::STANDARD;
 		}
 

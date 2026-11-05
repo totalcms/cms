@@ -1,0 +1,40 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/blogdown.json",
+	"id": "blogdown",
+	"type": "object",
+	"description": "A Total CMS Blog object with its content stored as Markdown",
+	"inheritFrom": [
+		"blog"
+	],
+	"formgrid": "id id\ntitle title\ndraft featured\ndate author\nimage image\ncategories categories\ntags tags\nsummary summary\ncontent content\nmedia media\ngallery gallery\nextra extra\nupdated created",
+	"properties": {
+		"summary": {
+			"type": "string",
+			"label": "Summary",
+			"help": "Blog Post summary",
+			"field": "styledmarkdown",
+			"mcp": {
+				"description": "Short summary or excerpt of the post, shown in listings and meta descriptions, as Markdown source."
+			}
+		},
+		"content": {
+			"type": "string",
+			"label": "Content",
+			"help": "Main blog post content",
+			"field": "styledmarkdown",
+			"mcp": {
+				"description": "Main body content of the post, as Markdown source."
+			}
+		},
+		"extra": {
+			"type": "string",
+			"label": "Extra Content",
+			"help": "Extra content area for this post",
+			"field": "styledmarkdown",
+			"mcp": {
+				"description": "Secondary content area for sidebars, footnotes, or supplementary material, as Markdown source. Often empty."
+			}
+		}
+	}
+}

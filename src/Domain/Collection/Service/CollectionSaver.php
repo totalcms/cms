@@ -535,6 +535,7 @@ readonly class CollectionSaver
 		$schemaToFeature = [
 			'blog'        => EditionFeature::BLOG_SCHEMA,
 			'blog-legacy' => EditionFeature::BLOG_SCHEMA,
+			'blogdown'    => EditionFeature::BLOG_SCHEMA,
 			'depot'       => EditionFeature::DEPOT_SCHEMA,
 		];
 

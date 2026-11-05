@@ -260,6 +260,7 @@ class CollectionData
 			'auth'         => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
 			'automations'  => ['labelPlural' => 'Automations', 'labelSingular' => 'Automation'],
 			'blog'         => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'blogdown'     => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
 			'code'         => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'playground'   => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'mailer'       => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],

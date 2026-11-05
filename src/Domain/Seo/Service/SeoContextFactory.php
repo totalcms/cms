@@ -52,6 +52,7 @@ readonly class SeoContextFactory
 	private const SCHEMA_BLOCKS = [
 		'blog'            => self::BLOG_BLOCK,
 		'blog-legacy'     => self::BLOG_BLOCK,
+		'blogdown'        => self::BLOG_BLOCK,
 		'feed'            => ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${content}', 'socialDescription' => '', 'image' => 'image'],
 	];
 

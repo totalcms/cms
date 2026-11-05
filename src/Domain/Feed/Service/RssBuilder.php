@@ -36,7 +36,7 @@ class RssBuilder
 	];
 
 	/** Schemas whose collections publish a feed without being asked: created that way, and enabled by the upgrade migration. */
-	public const FEED_SCHEMAS = ['blog', 'blog-legacy', 'feed'];
+	public const FEED_SCHEMAS = ['blog', 'blog-legacy', 'blogdown', 'feed'];
 
 	/**
 	 * What a request may override on a collection that publishes its feed: a

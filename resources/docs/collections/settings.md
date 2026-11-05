@@ -86,6 +86,7 @@ The schema that objects in this collection conform to. Determines available fiel
 
 **Built-in schemas:**
 - `blog` - Blog posts with title, content, date, author
+- `blogdown` - The `blog` schema with `content`, `summary` and `extra` stored as Markdown. Print them with the `|markdown` filter. Needs the Standard edition, like `blog`
 - `image` - Single images with metadata
 - `gallery` - Image galleries
 - `file` - File uploads

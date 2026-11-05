@@ -99,6 +99,12 @@ HTML inside a code block or inline code is not affected. It is kept as written i
 
 The visual editor also writes HTML entities as plain characters when you edit: `&amp;` becomes `&`, and `&#169;` becomes `©`.
 
+## A blog in Markdown
+
+The reserved `blogdown` schema is the `blog` schema with `content`, `summary` and `extra` as `styledmarkdown` fields. Choose it when you create a collection. It needs the Standard edition, the same as `blog`.
+
+Moving a collection from `blog` to `blogdown` doesn't convert posts that already exist, and templates need the `|markdown` filter on all three fields, `summary` included. RSS feeds convert the Markdown for you.
+
 ## Images and files
 
 Image and file uploads work as they do in Styled Text. An uploaded image is inserted as `![alt text](url)`. Image width and float options are not offered, because Markdown cannot store them.

@@ -38,6 +38,7 @@ final class DefaultCollectionsTest extends TestCase
 		'seo-collection'     => 'embedded in collection via schemaref',
 		'sitemap-meta'       => 'embedded in collection via schemaref',
 		'blog-legacy'        => 'deprecated, superseded by blog',
+		'blogdown'           => 'optional Markdown twin of blog, created on request',
 		'builder-page'       => 'provisioned by BuilderInstaller as builder-pages',
 		'totalcms'           => 'reference schema, can never back a collection',
 		'totalcms-item'      => 'reference schema, can never back a collection',

@@ -242,7 +242,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 
 		// SMTP set up unless a test says otherwise.
 		$config           = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->smtp     = $overrides['smtp'] ?? ['from' => 'site@example.com'];
+		$config->smtp     = $overrides['smtp'] ?? ['username' => 'site@example.com'];
 		$config->security = ['ignore' => $overrides['securityIgnore'] ?? []];
 
 		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
@@ -380,9 +380,9 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	// dashboardAlerts() — email
 	// -------------------------------------------------------------------------
 
-	public function testNoFromAddressWarnsThatEmailIsNotSetUp(): void
+	public function testNoUsernameWarnsThatEmailIsNotSetUp(): void
 	{
-		$alerts = $this->makeAlertsAdapter(['smtp' => ['host' => '127.0.0.1', 'from' => ' ']])->dashboardAlerts();
+		$alerts = $this->makeAlertsAdapter(['smtp' => ['host' => '127.0.0.1', 'username' => ' ', 'from' => 'site@example.com']])->dashboardAlerts();
 
 		$this->assertCount(1, $alerts);
 		$this->assertSame('settings/smtp', $alerts[0]['link']);

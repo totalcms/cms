@@ -26,6 +26,7 @@ class SchemaData
 		'automations',
 		'blog-legacy',
 		'blog',
+		'blogdown',
 		'code',
 		'color',
 		'date',

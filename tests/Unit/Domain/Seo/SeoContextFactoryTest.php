@@ -397,4 +397,16 @@ final class SeoContextFactoryTest extends TestCase
 
 		$this->assertSame('object', $ctx->kind);
 	}
+
+	public function testBlogdownGetsTheBlogDefaults(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('notes', 'blogdown'));
+
+		$this->urlBuilder->method('buildUrl')->willReturn('/notes/hello');
+
+		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'notes']);
+
+		$this->assertSame('blogposting', $ctx->seoBlock['type']);
+		$this->assertSame('${summary}', $ctx->seoBlock['description']);
+	}
 }

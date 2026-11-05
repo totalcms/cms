@@ -17,7 +17,7 @@ A collection can publish its objects as an RSS feed at:
 
 The feed is **off by default**. A collection publishes one only when **Publish RSS Feed** is turned on in its settings. For every other collection the URL returns 404, the same as for a collection that does not exist.
 
-Collections created from the `blog` and `feed` schemas are the exception: they are created with the feed already on.
+Collections created from the `blog`, `blogdown` and `feed` schemas are the exception: they are created with the feed already on.
 
 ## Configuring a Collection
 

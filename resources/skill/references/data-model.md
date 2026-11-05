@@ -7,7 +7,7 @@
 
 Three concepts:
 - **Schema** — the shape: which fields an object has and their types. JSON under
-  `tcms-data` / managed via `schema:*`. The reserved schemas (blog, image, gallery,
+  `tcms-data` / managed via `schema:*`. The reserved schemas (blog, blogdown, image, gallery,
   builder-page, seo-site, automations, …) plus your own custom schemas.
 - **Collection** — a named bucket of objects bound to a schema (e.g. `blog` uses the
   `blog` schema). Managed via `collection:*`. Carries its own settings: URL, sort,
