@@ -25,6 +25,7 @@ This keeps core lean for sites that don't need a particular feature, while still
 |-----------|-------------|------|
 | `totalcms/ab-split` | Render an alternate page template at the same URL for a percentage of visitors (A/B testing). | [A/B Split →](docs/extensions/ab-split) |
 | `totalcms/algolia-search` | Pluggable search provider backed by Algolia. Routes MCP search tools through Algolia's hosted keyword + neural search. Pro edition. | [Algolia Search →](docs/extensions/algolia-search) |
+| `totalcms/client-help` | Write how-tos and notes for your client and show them only inside their admin, in a help area that matches the built-in docs. Standard edition. | [Client Help →](docs/extensions/client-help) |
 | `totalcms/docs` | Exposes this install's own documentation to AI agents as `docs_search`, `docs_get`, and `docs_lookup` MCP tools. Enabled by default (see below); tools stay `authenticated`-only unless you opt in to public exposure. | [Documentation Tools →](docs/mcp/docs-tools) |
 | `totalcms/geo-redirect` | Redirect visitors based on their country. Reads from CDN-injected headers (Cloudflare, Vercel, generic). Useful for compliance redirects and regional landing pages. | [Geo Redirect →](docs/extensions/geo-redirect) |
 | `totalcms/maintenance` | Per-page 503 maintenance mode. Take individual pages offline with a custom message while the rest of the site stays up. Admins bypass automatically. | [Maintenance →](docs/extensions/maintenance) |

@@ -9,6 +9,14 @@ use TotalCMS\Domain\Docs\Service\DocsMarkdownRenderer;
 
 final class DocsMarkdownRendererTest extends TestCase
 {
+	public function testHeadingAnchorsWorkOnHtmlFromAnotherRenderer(): void
+	{
+		[$html, $toc] = (new DocsMarkdownRenderer())->withHeadingAnchors('<h2>Add a special</h2>');
+
+		$this->assertStringContainsString('id="add-a-special"', $html);
+		$this->assertSame([['level' => 2, 'id' => 'add-a-special', 'text' => 'Add a special']], $toc);
+	}
+
 	public function testFrontMatterBodyAndTocComeBackTogether(): void
 	{
 		$page = (new DocsMarkdownRenderer())->render("---\ntitle: Hello\n---\n\n## First Step\n\ntext\n\n### Deeper\n\n## First Step\n");

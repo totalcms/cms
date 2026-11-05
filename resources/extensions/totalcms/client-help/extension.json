@@ -1,0 +1,24 @@
+{
+    "id": "totalcms/client-help",
+    "name": "Client Help",
+    "description": "Write how-tos and notes for your client, shown only inside their admin. Adds a help area with featured articles and a sidebar organized by category, using the built-in docs layout.",
+    "icon": "icon.png",
+    "requires": {
+        "totalcms": ">=3.6.0",
+        "php": ">=8.2"
+    },
+    "min_edition": "standard",
+    "entrypoint": "Extension.php",
+    "settings_schema": "settings.json",
+    "author": {
+        "name": "Total CMS",
+        "url": "https://totalcms.co"
+    },
+    "license": "proprietary",
+    "links": [
+        {
+            "label": "Documentation",
+            "url": "docs/extensions/client-help"
+        }
+    ]
+}

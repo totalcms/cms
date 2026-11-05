@@ -1,0 +1,56 @@
+{# One help article: every blog field, each left out when empty. Body, summary and extra
+   are sanitized by HelpLibrary; everything else is escaped here. #}
+<nav class="doc-breadcrumb" aria-label="Breadcrumb">
+	<a href="ext/totalcms/client-help/home">{{ label|e }}</a>
+	<span class="doc-breadcrumb-sep">›</span>
+	<span>{{ article.category|e }}</span>
+	<span class="doc-breadcrumb-sep">›</span>
+	<span class="doc-breadcrumb-current">{{ article.post.title|e }}</span>
+</nav>
+
+<h1>{{ article.post.title|e }}</h1>
+
+{% set post = article.post %}
+{% set author = post.author|default('') %}
+{% if author or article.date %}
+	<p class="help-byline">{{ author|e }}{% if author and article.date %} · {% endif %}{{ article.date|e }}</p>
+{% endif %}
+
+{% if post.image.name|default('') %}
+	<img class="help-hero" src="{{ cms.media.imagePath(post, {w: 1200}, {collection: 'client-help'})|e }}" alt="{{ post.image.alt|default('')|e }}">
+{% endif %}
+
+{% if article.summary %}<div class="help-summary">{{ article.summary }}</div>{% endif %}
+
+{{ article.html }}
+
+{% if article.media %}
+	<div class="help-media">{{ article.media }}</div>
+{% elseif article.mediaUrl %}
+	<p class="help-media"><a href="{{ article.mediaUrl|e }}" target="_blank" rel="noopener">{{ article.mediaUrl|e }}</a></p>
+{% endif %}
+
+{% if post.gallery|default([]) is not empty %}
+	<div class="help-gallery">
+		{% for image in post.gallery %}
+			{% set options = {collection: 'client-help', property: 'gallery'} %}
+			<a href="{{ cms.media.galleryPath(post, image.name, {w: 1600}, options)|e }}" target="_blank" rel="noopener">
+				<img src="{{ cms.media.galleryPath(post, image.name, {w: 480}, options)|e }}" alt="{{ image.alt|default('')|e }}" loading="lazy">
+			</a>
+		{% endfor %}
+	</div>
+{% endif %}
+
+{{ article.extra }}
+
+{% if article.tags %}
+	<p class="help-tags dash-badge-group">
+		{% for tag in article.tags %}<span class="dash-badge accent">{{ tag|e }}</span> {% endfor %}
+	</p>
+{% endif %}
+
+{% if article.updated %}
+<footer class="doc-footer">
+	<span class="doc-updated">Last updated: {{ article.updated|e }}</span>
+</footer>
+{% endif %}

@@ -1,0 +1,42 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block head %}
+<style>
+	.help-note {
+		background    : oklch(var(--totalform-accent) / 0.1);
+		border-left   : 3px solid oklch(var(--totalform-accent));
+		border-radius : var(--totalform-radius);
+		margin-bottom : 1.5rem;
+		padding       : 0.75rem 1rem;
+	}
+	.help-card { padding: 0; overflow: hidden; }
+	.help-card a { color: inherit; display: block; text-decoration: none; }
+	.help-card img { aspect-ratio: 16 / 9; display: block; object-fit: cover; width: 100%; }
+	.help-card span, .help-card strong, .help-card small { display: block; padding: 0 1rem; }
+	.help-card small { color: oklch(var(--totalform-darkgray)); margin-bottom: 0.75rem; margin-top: -0.5rem; }
+	.help-byline { color: oklch(var(--totalform-darkgray)); font-size: 0.9em; }
+	.help-hero { border-radius: var(--totalform-radius); display: block; margin-block: 1rem; max-width: 100%; }
+	.help-summary { font-size: 1.1em; }
+	.help-media { margin-block: 1.5rem; max-width: 65ch; }
+	.help-media iframe, .help-media video { aspect-ratio: 16 / 9; height: auto; max-width: 100%; width: 100%; }
+	.help-gallery { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-block: 1.5rem; max-width: 65ch; }
+	.help-gallery img { aspect-ratio: 1; border-radius: var(--totalform-radius); display: block; object-fit: cover; width: 100%; }
+	.help-card span { color: oklch(var(--totalform-accent)); font-size: 0.8em; margin-top: 0.75rem; }
+	.help-card strong { margin-bottom: 0.75rem; }
+</style>
+{% if customCss %}<style>{{ customCss }}</style>{% endif %}
+{% endblock %}
+
+{% block dashcontent %}
+
+{% include "@totalcms-client-help/client-help-sidebar.twig" %}
+
+<main class="dash-main-content doc-content">
+	{% include article ? "@totalcms-client-help/client-help-article.twig" : "@totalcms-client-help/client-help-home.twig" %}
+
+	{{ customHtml }}
+</main>
+
+{% include "@totalcms-client-help/client-help-toc.twig" %}
+
+{% endblock %}

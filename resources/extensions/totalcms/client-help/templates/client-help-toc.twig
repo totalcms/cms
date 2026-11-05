@@ -1,0 +1,14 @@
+{% if article and article.toc|length > 1 %}
+<aside class="doc-toc" aria-label="On this page">
+	<div class="doc-toc-inner">
+		<h4>On this page</h4>
+		<ul>
+			{% for h in article.toc %}
+			<li class="doc-toc-h{{ h.level }}">
+				<a href="#{{ h.id|e('html_attr') }}" data-toc-target="{{ h.id|e('html_attr') }}">{{ h.text|e }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+</aside>
+{% endif %}

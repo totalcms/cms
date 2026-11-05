@@ -1,0 +1,30 @@
+{# Sidebar for the Client Help pages. Titles and categories are written in the
+   collection, so they are escaped: autoescape is off in admin templates. #}
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter help…" />
+	</header>
+
+	<nav class="links docs">
+		<ul>
+			<li><a {% if not article %}class="active"{% endif %} href="ext/totalcms/client-help/home">{{ label|e }} home</a></li>
+		</ul>
+		{% for group in groups %}
+			{% set groupOpen = article and article.post.id in group.posts|column('id') %}
+			<details id="help-{{ group.title|slug }}" data-server-open="{{ groupOpen ? 'true' : 'false' }}" open>
+				<summary>{{ group.title|e }}</summary>
+				<ul>
+					{% for post in group.posts %}
+					<li><a {% if article and article.post.id == post.id %}class="active"{% endif %}
+							href="ext/totalcms/client-help/post/{{ post.id|url_encode }}"
+						>{{ post.title|e }}</a></li>
+					{% endfor %}
+				</ul>
+			</details>
+		{% endfor %}
+	</nav>
+
+	<footer>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}

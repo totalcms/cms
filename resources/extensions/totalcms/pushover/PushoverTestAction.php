@@ -51,6 +51,6 @@ readonly class PushoverTestAction
 			];
 		}
 
-		return $this->twigRenderer->template($response, 'admin/pushover-test.twig', $data);
+		return $this->twigRenderer->template($response, '@totalcms-pushover/pushover-test.twig', $data);
 	}
 }

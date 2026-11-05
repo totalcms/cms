@@ -1,0 +1,29 @@
+{# The help home: the freelancer's note, then the featured posts. #}
+<h1>{{ label|e }}</h1>
+
+{% if note.html %}<div class="help-note">{{ note.html }}</div>{% endif %}
+{% if note.error %}<p class="cms-error help-note-error" role="alert">Your home page note has an error: {{ note.error|e }}</p>{% endif %}
+
+{% if postCount == 0 %}
+	{% if isAdmin %}
+		<p>No help articles yet. <a href="collections/client-help">Add the first one</a>.</p>
+	{% else %}
+		<p>Nothing here yet.</p>
+	{% endif %}
+{% elseif featured %}
+	<div class="dash-card-grid">
+		{% for post in featured %}
+		<article class="help-card dash-card">
+			<a href="ext/totalcms/client-help/post/{{ post.id|url_encode }}">
+				{% if post.image.name|default('') %}
+					<img src="{{ cms.media.imagePath(post, {w: 640}, {collection: 'client-help'})|e }}" alt="">
+				{% endif %}
+				{% set category = post.categories|default([])|first %}
+				{% if category %}<span>{{ category|e }}</span>{% endif %}
+				<strong>{{ post.title|e }}</strong>
+				{% if post.excerpt %}<small>{{ post.excerpt|e }}</small>{% endif %}
+			</a>
+		</article>
+		{% endfor %}
+	</div>
+{% endif %}

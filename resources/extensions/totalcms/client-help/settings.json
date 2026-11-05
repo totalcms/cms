@@ -1,0 +1,37 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Client Help",
+	"description": "How the help area looks to your client. Write the articles in the Client Help collection.",
+	"type": "object",
+	"properties": {
+		"navLabel": {
+			"type": "string",
+			"field": "text",
+			"label": "Nav Label",
+			"help": "The name of the help area in the admin menu.",
+			"placeholder": "Help",
+			"default": "Help"
+		},
+		"note": {
+			"type": "string",
+			"field": "code",
+			"label": "Home Page Note",
+			"help": "Shown at the top of the help home page. Twig runs here, so you can use anything in <code>cms</code>. Only admins can edit this.",
+			"settings": { "mode": "twig", "rows": 6 }
+		},
+		"customCss": {
+			"type": "string",
+			"field": "code",
+			"label": "Custom CSS",
+			"help": "Added to the help pages only.",
+			"settings": { "mode": "css", "rows": 8 }
+		},
+		"customHtml": {
+			"type": "string",
+			"field": "code",
+			"label": "Custom HTML",
+			"help": "Added to the end of the help pages only.",
+			"settings": { "mode": "html", "rows": 8 }
+		}
+	}
+}

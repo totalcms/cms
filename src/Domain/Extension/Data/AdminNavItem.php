@@ -10,6 +10,9 @@ namespace TotalCMS\Domain\Extension\Data;
  * Pass raw SVG markup as the icon — it will be URL-encoded in the template:
  *   new AdminNavItem(label: 'My Ext', icon: '<svg viewBox="0 0 32 32">...</svg>')
  *
+ * Or name a stock admin icon by its CSS variable:
+ *   new AdminNavItem(label: 'My Ext', icon: 'var(--icon-help)')
+ *
  * Leave empty to use the default puzzle piece icon.
  */
 final readonly class AdminNavItem

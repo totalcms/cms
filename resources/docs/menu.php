@@ -267,6 +267,7 @@ $menu = [
 					['title' => 'Bundled Overview', 'path' => 'extensions/bundled', 'pinned' => true],
 					['title' => 'A/B Split',        'path' => 'extensions/ab-split'],
 					['title' => 'Algolia Search',   'path' => 'extensions/algolia-search'],
+					['title' => 'Client Help',      'path' => 'extensions/client-help'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 					['title' => 'Maintenance',      'path' => 'extensions/maintenance'],
 					['title' => 'Podcast',          'path' => 'extensions/podcast'],

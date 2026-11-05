@@ -280,6 +280,8 @@ public function register(ExtensionContext $context): void
 
 **Capability:** `admin:nav`
 
+The `icon` field takes raw SVG markup, or a stock admin icon by its CSS variable, such as `var(--icon-help)`.
+
 The `priority` field controls ordering (lower numbers appear first). The `permission` field controls visibility (`admin` = admin users only).
 
 ## Dashboard Widgets

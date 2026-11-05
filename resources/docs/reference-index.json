@@ -6268,6 +6268,13 @@
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
                 {
+                    "id": "totalcms/client-help",
+                    "name": "Client Help",
+                    "description": "Write how-tos and notes for your client, shown only inside their admin. Adds a help area with featured articles and a sidebar organized by category, using the built-in docs layout.",
+                    "version": "",
+                    "url": "https://docs.totalcms.co/extensions/client-help/"
+                },
+                {
                     "id": "totalcms/docs",
                     "name": "Total CMS Docs",
                     "description": "Serves the Total CMS documentation through this site's MCP server: docs_search, docs_get, and docs_lookup tools for AI agents.",
@@ -6370,6 +6377,10 @@
                 {
                     "label": "Algolia Search (beta)",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
+                },
+                {
+                    "label": "Client Help",
+                    "url": "https://docs.totalcms.co/extensions/client-help/"
                 },
                 {
                     "label": "Total CMS Docs",

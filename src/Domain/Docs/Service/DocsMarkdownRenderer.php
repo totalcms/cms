@@ -26,7 +26,7 @@ class DocsMarkdownRenderer
 
 		$html         = (new \ParsedownExtra())->text($document->getContent());
 		$html         = $this->unescapeTablePipes($html);
-		[$html, $toc] = $this->injectHeadingAnchors($html);
+		[$html, $toc] = $this->withHeadingAnchors($html);
 
 		/** @var array<string,mixed> $data */
 		$data = $document->getData();
@@ -76,7 +76,7 @@ class DocsMarkdownRenderer
 	 *
 	 * @return array{0:string,1:list<array{level:int,id:string,text:string}>}
 	 */
-	private function injectHeadingAnchors(string $html): array
+	public function withHeadingAnchors(string $html): array
 	{
 		$toc     = [];
 		$usedIds = [];
