@@ -97,7 +97,7 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.auth.isAdmin() %}
+	{% if cms.auth.canAccessCollectionsMetaOperation('create') %}
 	<footer>
 		<a class="dash-button full transparent" href="collections/new" title="{{ t('collection.new') }}">{{ t('collection.new') }}</a>
 	</footer>

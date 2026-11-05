@@ -9,8 +9,10 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -27,6 +29,15 @@ beforeEach(function (): void {
 	$this->c        = $this->app->getContainer();
 	$this->config   = $this->c->get(Config::class);
 	$this->registry = $this->c->get(AdminNavRegistry::class);
+	$this->registryFor = fn (AuthTwigAdapter $auth): AdminNavRegistry => new AdminNavRegistry(
+		$auth,
+		$this->c->get(EditionTwigAdapter::class),
+		$this->c->get(TranslationService::class),
+		$this->config,
+		$this->c->get(ExtensionManager::class),
+		$this->c->get(CollectionLister::class),
+		$this->c->get(CollectionEditionService::class),
+	);
 });
 
 /** @return list<string> */
@@ -110,6 +121,27 @@ test('a collection New action is hidden from a user who cannot create objects in
 	$actions = new QuickActions($this->registry, $this->c->get(TranslationService::class), $this->config, $auth, $this->c->get(CollectionLister::class), $this->c->get(CollectionEditionService::class));
 
 	expect(array_map(fn (NavEntry $entry): string => $entry->id, $actions->visible()))->toBe(['docs']);
+});
+
+test('New Collection needs the permission to create collections, not objects', function (): void {
+	$auth = $this->createMock(AuthTwigAdapter::class);
+	$auth->method('canAccessCollectionsOperation')->willReturn(true);
+	$auth->method('canAccessCollectionsMetaOperation')->willReturnCallback(fn (string $operation): bool => $operation !== 'create');
+
+	$registry = ($this->registryFor)($auth);
+
+	expect(array_column($registry->quickActions()->quickNavItems(), 'path'))->not->toContain('collections/new');
+	expect(quickActionIds($registry))->not->toContain('new-collection');
+});
+
+test('New Collection shows for a user who may create collections but not objects', function (): void {
+	$auth = $this->createMock(AuthTwigAdapter::class);
+	$auth->method('canAccessCollectionsOperation')->willReturn(false);
+	$auth->method('canAccessCollectionsMetaOperation')->willReturn(true);
+
+	$registry = ($this->registryFor)($auth);
+
+	expect(quickActionIds($registry))->toContain('new-collection');
 });
 
 test('Quick Navigation lists the New actions, one per collection under its name, but none for collections with their own editor', function (): void {

@@ -443,12 +443,14 @@
 			<span class="card-action">{{ t('dashboard.get_started') }} →</span>
 		</a>
 
+		{% if cms.auth.canAccessCollectionsMetaOperation('create') %}
 		<a href="collections/new" class="getting-started-card">
 			<div class="card-icon icon-collections"></div>
 			<h3>{{ t('dashboard.create_first') }}</h3>
 			<p>{{ t('dashboard.create_first_desc') }}</p>
 			<span class="card-action">{{ t('dashboard.create_collection') }} →</span>
 		</a>
+		{% endif %}
 
 		<a href="docs" class="getting-started-card">
 			<div class="card-icon icon-docs"></div>

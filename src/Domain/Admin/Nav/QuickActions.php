@@ -61,7 +61,7 @@ final readonly class QuickActions
 		$t = fn (string $key): string => $this->translator->trans($key);
 
 		return [
-			new NavEntry('new-collection', $t('dashboard.new_collection'), 'collections/new', 'collections:create', null, 'var(--icon-collections)'),
+			new NavEntry('new-collection', $t('dashboard.new_collection'), 'collections/new', 'collectionsMeta:create', null, 'var(--icon-collections)'),
 			new NavEntry('new-schema', $t('dashboard.new_schema'), 'schemas/new', 'schemas:create', 'custom_schemas', 'var(--icon-schema)'),
 			new NavEntry('new-page', $t('dashboard.new_page'), 'builder/page/add', 'builder', null, 'var(--icon-file)'),
 			new NavEntry('new-template', $t('dashboard.new_template'), 'builder/new', 'builder', null, 'var(--icon-templates)'),

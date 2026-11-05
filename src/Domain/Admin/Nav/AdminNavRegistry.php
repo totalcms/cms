@@ -208,19 +208,19 @@ readonly class AdminNavRegistry
 		}
 
 		return match ($entry->permission) {
-			'collections:read'   => $this->auth->canAccessCollectionsOperation('read'),
-			'collections:create' => $this->auth->canAccessCollectionsOperation('create'),
-			'schemas:read'       => $this->auth->canAccessSchemasOperation('read'),
-			'schemas:create'     => $this->auth->canAccessSchemasOperation('create'),
-			'dataviews'          => $this->auth->canAccessDataViews(),
-			'builder'            => $this->auth->canAccessBuilder(),
-			'mailer'             => $this->auth->canAccessMailer(),
-			'playground'         => $this->auth->canAccessPlayground(),
-			'utils'              => $this->auth->canAccessUtils(),
-			'docs'               => $this->auth->canAccessDocs(),
-			'admin'              => $this->auth->isAdmin(),
-			'extension'          => $this->auth->canAccessExtension($entry->extensionId),
-			default              => false,
+			'collections:read'       => $this->auth->canAccessCollectionsOperation('read'),
+			'collectionsMeta:create' => $this->auth->canAccessCollectionsMetaOperation('create'),
+			'schemas:read'           => $this->auth->canAccessSchemasOperation('read'),
+			'schemas:create'         => $this->auth->canAccessSchemasOperation('create'),
+			'dataviews'              => $this->auth->canAccessDataViews(),
+			'builder'                => $this->auth->canAccessBuilder(),
+			'mailer'                 => $this->auth->canAccessMailer(),
+			'playground'             => $this->auth->canAccessPlayground(),
+			'utils'                  => $this->auth->canAccessUtils(),
+			'docs'                   => $this->auth->canAccessDocs(),
+			'admin'                  => $this->auth->isAdmin(),
+			'extension'              => $this->auth->canAccessExtension($entry->extensionId),
+			default                  => false,
 		};
 	}
 }
