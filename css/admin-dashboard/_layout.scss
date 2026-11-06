@@ -1037,6 +1037,11 @@ pre {
 		background-color : oklch(var(--totalform-info));
 		mask-image       : var(--icon-help);
 	}
+
+	strong,
+	a {
+		color : oklch(var(--totalform-info));
+	}
 }
 
 // License Status Sidebar Icon
