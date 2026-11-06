@@ -109,3 +109,83 @@ describe('Identifier.changed', () => {
 		expect(setIdCalls).toEqual([]);
 	});
 });
+
+//-----------------------------------------------
+// A deck item needs an id, and a beginner should not have to type one or write
+// an autogen rule. The real constructor runs here: a new item's id field fills
+// itself in, in the shape DeckData accepts.
+//-----------------------------------------------
+describe('Identifier in a deck item', () => {
+	const NEW_ITEM_ID = /^item_[a-z0-9]+$/;
+
+	function field({ container = 'deck-item', name = 'id', value = '', settings = {} } = {}) {
+		const wrapper = document.createElement('div');
+		wrapper.className = container;
+		wrapper.innerHTML = `<div class="form-field id-field" data-type="id"><input type="text" name="${name}" value="${value}"></div>`;
+		document.body.appendChild(wrapper);
+		const form = { id: '', form: document.createElement('form'), isTemplateForm: () => false, setId: () => {}, unsaved: () => {} };
+		return new Identifier(wrapper.querySelector('.form-field'), { form, ...settings });
+	}
+
+	test('fills in an item id when the schema has no autogen rule', () => {
+		expect(field().getValue()).toMatch(NEW_ITEM_ID);
+	});
+
+	test('does the same in a table-layout deck', () => {
+		expect(field({ container: 'deck-table-row' }).getValue()).toMatch(NEW_ITEM_ID);
+	});
+
+	test('keeps the schema autogen rule', () => {
+		expect(field({ settings: { autogen: 'entry_${uid}' } }).getValue()).toMatch(/^entry_[a-z0-9]+$/);
+	});
+
+	function type(id, value) {
+		id.input.value = value;
+		id.input.dispatchEvent(new Event('input'));
+		id.input.dispatchEvent(new Event('change'));
+	}
+
+	test('keeps an id typed over the default', () => {
+		const id = field();
+		type(id, 'myitem');
+		expect(id.getValue()).toBe('myitem');
+	});
+
+	test('keeps an id typed over a schema rule, even when the rule\'s field changes later', () => {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'deck-item';
+		wrapper.innerHTML = `
+			<div class="form-field text-field" data-type="text"><input type="text" name="title" value="First"></div>
+			<div class="form-field id-field" data-type="id"><input type="text" name="id" value=""></div>`;
+		document.body.appendChild(wrapper);
+		const form = { id: '', form: document.createElement('form'), isTemplateForm: () => false, setId: () => {}, unsaved: () => {} };
+		const id = new Identifier(wrapper.querySelector('.id-field'), { form, autogen: '${title}' });
+		const title = wrapper.querySelector('.text-field');
+		const editTitle = value => {
+			title.querySelector('input').value = value;
+			title.dispatchEvent(new CustomEvent('field-change'));
+		};
+
+		// The rule is live until someone types an id.
+		editTitle('Second');
+		expect(id.getValue()).toBe('second');
+
+		type(id, 'myitem');
+		editTitle('Third');
+		expect(id.getValue()).toBe('myitem');
+	});
+
+	test('keeps the id of a saved item', () => {
+		const id = field({ value: 'first_item' });
+		expect(id.getValue()).toBe('first_item');
+		expect(id.isLocked()).toBe(true);
+	});
+
+	test('leaves another id-type property in the item blank', () => {
+		expect(field({ name: 'sku' }).getValue()).toBe('');
+	});
+
+	test('leaves an id field outside a deck blank', () => {
+		expect(field({ container: 'not-a-deck' }).getValue()).toBe('');
+	});
+});

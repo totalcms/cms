@@ -15,7 +15,7 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     class      : 'custom-form',    # CSS classes for form (string, default: '')
     buildError : 'Save failed',    # Error message to display (string, default: '')
     helpStyle  : 'popup',          # Help text style : 'popup', etc. (string, default: '')
-    save       : 'Save Product',   # Save button label (string, default: '')
+    save       : 'Save Product',   # Save button label (string). Default: a Save button on a one-line form, none when you add fields yourself
     delete     : 'Delete Product', # Delete button label (string, default: '')
     formType   : 'object',         # Form type : 'collection', 'schema', 'object' (string, default: '')
     schema     : 'product',        # Schema name to use (string, default: '')

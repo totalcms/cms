@@ -16,7 +16,7 @@ Work through the ones that match the symptom. Each has caught real "bugs".
 | An object is missing from admin tables, queries or the sitemap | JSON written straight into `tcms-data/` (no index entry) | `vendor/bin/tcms repair:index <collection> --check` to see the drift, then `repair:index <collection>`; write through the CLI from now on |
 | A whole collection errors or shows nothing | Invalid JSON in a hand-edited file | `vendor/bin/tcms repair:index <collection> --check` names the unreadable files; fix them, then `repair:index` |
 | Imports fail with `The required properties (id) are missing` | The schema lacks an `id` property | Add it; `vendor/bin/tcms schema:lint <id> --strict` |
-| Deck import rejected | Deck sent as an array, or a key with a hyphen | Decks are dictionaries keyed by item `id`, letters/numbers/underscores only |
+| Deck import rejected | Deck sent as an array, or a key with a hyphen | Decks are dictionaries keyed by item `id`, letters/numbers/underscores only. New items in the admin and deck API posts with no `id` get `item_${uid}` unless the item schema sets its own autogen rule |
 | Every save fails with 400 "installation has been corrupted" | Files inside the CMS were modified | `vendor/bin/tcms check` (Integrity). Undo the edit; never change CMS files |
 | Builder page 404s on the dev server | `php -S` started without the router script | `php -S localhost:8080 -t public public/index.php` |
 | Links and rewrite rules disagree on pretty URLs | Collection URL set to a `.php` page, not the folder | Set the collection URL to the folder (`/blog/`) |

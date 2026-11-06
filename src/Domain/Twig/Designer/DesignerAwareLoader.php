@@ -14,6 +14,7 @@ class DesignerAwareLoader implements LoaderInterface
 	public function __construct(
 		private readonly LoaderInterface $inner,
 		private readonly TemplateDesignerPreprocessor $preprocessor,
+		private readonly bool $syncOnEveryRender = false,
 	) {
 	}
 
@@ -36,9 +37,10 @@ class DesignerAwareLoader implements LoaderInterface
 	{
 		$fresh = $this->inner->isFresh($name, $time);
 
-		// When cache is warm but registry needs populating (dev mode with auto_reload),
-		// run the preprocessor to ensure the registry has block data for sync
-		if ($fresh) {
+		// In development there is no compiled cache to warm, so run the preprocessor
+		// to give the registry its block data for sync. With the cache on, Twig asks
+		// this on every request too, and a warm template has nothing to sync.
+		if ($fresh && $this->syncOnEveryRender) {
 			$source = $this->inner->getSourceContext($name);
 			$this->preprocessor->preprocess($source->getCode(), $name);
 		}

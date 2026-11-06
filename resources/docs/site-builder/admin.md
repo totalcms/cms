@@ -270,7 +270,7 @@ Asset rebuilds (CSS, JS) do not trigger a reload — Vite already handles that f
 
 ### Why Dev Mode is the gate
 
-Twig caches its rendered output by default. Without Dev Mode, reloading the browser would just show the same stale page — the feature only does useful work when caching is bypassed. Tying it to Dev Mode also means there's a single switch (`Admin > Cache > Dev Mode`) for "I'm actively developing right now" instead of two overlapping toggles.
+A saved template reaches the next request with or without Dev Mode, so reloading the browser by hand always shows your change. Tying live reload to Dev Mode means there's a single switch (`Admin > Cache > Dev Mode`) for "I'm actively developing right now" instead of two overlapping toggles.
 
 With Dev Mode off, the script is not injected, the SSE endpoint returns 403, and the feature is fully dormant.
 

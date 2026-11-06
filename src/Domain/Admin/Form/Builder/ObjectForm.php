@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -78,6 +80,12 @@ class ObjectForm extends TotalForm
 
 	public function build(string $content = '', string $contentAfter = ''): string
 	{
+		// `{{ cms.form.builder('contact') }}` on its own is a whole form. A
+		// template that added fields, or passed its own markup, chose them.
+		if ($this->fields === [] && trim($content) === '' && !$this->refused) {
+			$this->addWritableFieldsFromSchema();
+		}
+
 		// A registration form that names where the verification link should
 		// land posts it as a hidden field; the register endpoint moves it onto
 		// the verification token. A field, not a bare input: the form script
@@ -91,6 +99,43 @@ class ObjectForm extends TotalForm
 		}
 
 		return parent::build($content, $contentAfter);
+	}
+
+	/**
+	 * Every field the visitor may set, with a save button unless the template
+	 * turned it off. Fields the server would throw away are left out: a groups
+	 * picker on a public page would list the site's groups for nothing. The
+	 * register endpoint strips the protected fields for everyone, so a register
+	 * form leaves them out for everyone too, an admin looking at the page included.
+	 */
+	private function addWritableFieldsFromSchema(): void
+	{
+		$this->addAllFields();
+
+		foreach (array_keys($this->fields) as $name) {
+			if (!$this->mayWrite($name)) {
+				unset($this->fields[$name]);
+			}
+		}
+
+		if ($this->fields !== [] && $this->save === '' && !$this->autosave) {
+			$this->save = $this->defaultSave;
+		}
+	}
+
+	private function mayWrite(string $property): bool
+	{
+		$guard  = $this->services->guard;
+		$actors = $this->services->actors;
+		if (!$guard instanceof AccessGuard || !$actors instanceof ActorContext) {
+			return true;
+		}
+
+		if ($this->register) {
+			return !in_array($property, $guard->protectedFieldsFor($this->collection), true);
+		}
+
+		return $guard->canWriteProperty($actors->current(), $this->collection, $property);
 	}
 
 	/**

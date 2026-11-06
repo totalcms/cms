@@ -56,7 +56,7 @@
 
 | Feature | Doc | The one thing to know |
 |---|---|---|
-| Form builder (`cms.form.builder()` and per-field helpers) | `forms/overview.md`, `forms/builder.md`, `forms/patterns.md` | Forms post to the same API the admin uses; `publicOperations` on the collection decides what anonymous visitors may do. |
+| Form builder (`cms.form.builder()` and per-field helpers) | `forms/overview.md`, `forms/builder.md`, `forms/patterns.md` | `{{ cms.form.builder('contact', {addOnly: true}) }}` alone builds every field and a save button; with `addField()` the form has only those fields, and a button only if you set `save`. Forms post to the same API the admin uses; `publicOperations` on the collection decides what anonymous visitors may do. |
 | What happens after a save (redirect, refresh, webhook, mailer) | `collections/form-settings.md` | The collection's `formSettings` holds `newActions` / `editActions` / `deleteActions`; `continue: true` keeps a failed action from failing the save. Set it with `collection:update`. |
 | Password reset | `auth/password-reset.md` | Built in: `/forgot-password[/{collection}]` and `/reset-password/{token}`, single-use tokens, no user enumeration; `auth.forgotPasswordMailerId` swaps the email. Link to it from a member login page rather than building one. |
 | Bot protection for public forms | `forms/options.md` | `botProtection: true` on a register or public create form adds a honeypot and a signed time trap (no CAPTCHA); a bot gets a success-shaped reply with nothing saved. **Require Bot Protection** on the collection (or a Mailer template) refuses anonymous posts without the fields. Put it on every public register/create form. |

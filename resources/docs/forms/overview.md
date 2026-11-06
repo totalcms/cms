@@ -15,7 +15,7 @@ All form functionality in Total CMS is accessed through the `cms.form` object:
 {# Access form methods through cms.form #}
 {{ cms.form.blog() }}
 {{ cms.form.text('my-text-id') }}
-{{ cms.form.builder('mycollection').build() }}
+{{ cms.form.builder('mycollection') }}
 ```
 
 **Note:** The old method of importing form macros (`{% import "totalform.twig" as form %}`) is deprecated. Always use `cms.form` for accessing form functionality.

@@ -15,6 +15,9 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  */
 readonly class DeckItemFactory
 {
+	/** The id of a deck item whose schema has no autogen rule. Mirrored in identifier.js. */
+	public const DEFAULT_ID_AUTOGEN = 'item_${uid}';
+
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private AutogenIdService $autogenIdService,
@@ -38,7 +41,9 @@ readonly class DeckItemFactory
 	}
 
 	/**
-	 * Generate an item ID using autogen settings from the deck schema.
+	 * Generate an item ID from the deck schema's autogen rule, or the default
+	 * rule when it has none. A schema with no `id` property gets no ID, so the
+	 * caller reports that rather than saving an item the schema can't describe.
 	 *
 	 * Note: ${oid} is not supported for deck items — use ${uuid} or ${uid} instead.
 	 *
@@ -52,15 +57,19 @@ readonly class DeckItemFactory
 				return '';
 			}
 
-			$idProperty     = $deckSchema->properties['id'] ?? [];
-			$autogenPattern = $idProperty['settings']['autogen'] ?? null;
-
-			if (!empty($autogenPattern)) {
-				$id = $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
-
-				// Deck item IDs use underscores instead of hyphens for Twig dot notation compatibility
-				return str_replace('-', '_', $id);
+			if (!isset($deckSchema->properties['id'])) {
+				return '';
 			}
+
+			$autogenPattern = $deckSchema->properties['id']['settings']['autogen'] ?? null;
+			if (empty($autogenPattern)) {
+				$autogenPattern = self::DEFAULT_ID_AUTOGEN;
+			}
+
+			$id = $this->autogenIdService->generateId($autogenPattern, $collection, $itemData);
+
+			// Deck item IDs use underscores instead of hyphens for Twig dot notation compatibility
+			return str_replace('-', '_', $id);
 		} catch (\Exception) {
 			// If anything fails, return empty and let the caller handle it
 		}

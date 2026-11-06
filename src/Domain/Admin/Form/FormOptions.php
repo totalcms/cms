@@ -40,6 +40,10 @@ final readonly class FormOptions
 		public string $buildError = '',
 		public string $helpStyle = '',
 		public string $save = '',
+		// The save label a form built from its schema falls back on when the
+		// template did not mention `save`. TotalFormFactory supplies it, so
+		// `save: false` still means no button.
+		public string $defaultSave = '',
 		public string $delete = '',
 		public string $formType = '',
 		public string $schema = '',

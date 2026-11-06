@@ -58,6 +58,8 @@ final class DeckItemCreateActionTest extends TestCase
 
 		$objectData = $this->createMock(ObjectData::class);
 
+		$this->deckItemFactory->expects($this->never())->method('generateIdIfNeeded');
+
 		$this->deckItemSaver->expects($this->once())
 			->method('saveDeckItem')
 			->with('products', 'product-1', 'features', 'feature-1', $data)

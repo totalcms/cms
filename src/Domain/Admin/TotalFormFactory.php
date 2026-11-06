@@ -210,6 +210,7 @@ readonly class TotalFormFactory
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'api'                      => $this->api,
+			'defaultSave'              => array_key_exists('save', $options) ? '' : $this->translationService->trans('btn.save'),
 		]);
 
 		return new ObjectForm($this->services, FormOptions::fromArray($options));

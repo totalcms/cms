@@ -12,14 +12,29 @@ related:
 
 The form builder provides the most flexibility for creating custom forms.
 
+## One-Line Forms
+
+Print the builder on its own and it builds the whole form from the collection's schema, with a save button:
+
+```twig
+{{ cms.form.builder('contact', {addOnly: true, botProtection: true}) }}
+```
+
+- Every field in the schema appears, in the schema's layout. Add `save: 'Send it'` to change the button label, or `save: false` to remove the button. An `autosave` form has no button.
+- Fields a visitor can't set are left out. A `register: true` form leaves out protected fields such as `groups` and `active`.
+- `.build()` does the same thing, so `{{ cms.form.builder('contact').build() }}` is the same form.
+
+To choose the fields yourself, add them with `addField()`, as shown next.
+
 ## Basic Usage
 
 > A form on a public page needs the admin asset helpers in the layout for its script and styles — see [What a public form needs](docs/forms/overview#what-a-public-form-needs).
 
+When you add fields yourself, or pass your own markup to `build()`, the form shows only what you gave it. It has a save button only if you set `save`:
 
 ```twig
 {# Create a form builder instance #}
-{% set form = cms.form.builder('mycollection') %}
+{% set form = cms.form.builder('mycollection', {save: 'Save'}) %}
 
 {# Add fields to the form #}
 {% do form.addField('title') %}

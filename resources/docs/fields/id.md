@@ -136,7 +136,7 @@ Generates: `my-title-01`, `another-title-02`, etc.
 
 The OID counter automatically increments each time a new object is created in the collection, ensuring unique sequential IDs.
 
-> **Note:** `${oid}` is only supported for collection object IDs. It is not available for deck item IDs. Use `${uuid}` or `${uid}` for auto-generated deck item IDs instead.
+> **Note:** `${oid}` is only supported for collection object IDs. It is not available for deck item IDs. Use `${uuid}` or `${uid}` for auto-generated deck item IDs instead. A deck item schema with no autogen rule uses `item_${uid}`.
 
 ## Date-Based ID Examples
 

@@ -5,6 +5,8 @@ description: "The deck field holds repeatable groups of fields. Covers its on-di
 
 ## How a Deck Is Stored
 
+Every item needs an ID. You don't have to type one: a new item in the admin gets an ID like `item_a1b2c3d`, and so does an item sent to the deck API without an `id`. To choose the format, give the item schema's `id` property an [autogen rule](docs/fields/id). IDs of items you've already saved never change. The generated ID also becomes the item's label, so set a [`deckItemLabel`](#deck-item-label) to show something more useful.
+
 Read this first if you are writing deck data by hand — in a JumpStart file, through
 the API, or from a script. The admin handles all of this for you; these rules only
 surface when you author the JSON yourself.

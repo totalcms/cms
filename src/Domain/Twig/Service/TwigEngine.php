@@ -18,6 +18,7 @@ use TotalCMS\Domain\Twig\Extension\ClosureArrowExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
+use Twig\Cache\FilesystemCache;
 use Twig\Environment as TwigEnvironment;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
@@ -71,12 +72,17 @@ readonly class TwigEngine
 		$devModeActive  = $devModeManager->isDevModeActive();
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== '';
 
+		// Always check a compiled template against its source. Saves, restores,
+		// imports and git deploys all reach the next request this way, whichever
+		// route wrote the file, and a page sees a changed layout or partial
+		// because each is compiled and checked on its own. The bytecode flag keeps
+		// OPcache from serving the old compiled file for a few more seconds.
 		$this->filesystemLoader = new TwigFilesystemLoader($paths);
-		$loader                 = new DesignerAwareLoader($this->filesystemLoader, $this->designerPreprocessor);
+		$loader                 = new DesignerAwareLoader($this->filesystemLoader, $this->designerPreprocessor, $config->debug || $devModeActive);
 		$this->twig             = new TwigEnvironment($loader, [
-			'cache'            => $cacheEnabled ? new TwigTemplateCache($cacheDir) : false, // prunes string templates
+			'cache'            => $cacheEnabled ? new TwigTemplateCache($cacheDir, FilesystemCache::FORCE_BYTECODE_INVALIDATION) : false, // prunes string templates
 			'debug'            => $config->debug || $devModeActive,
-			'auto_reload'      => $config->debug || $devModeActive,   // Auto-reload in dev or devmode
+			'auto_reload'      => true,
 			'autoescape'       => false,
 			'optimizations'    => -1,               // Enable all optimizations
 			'strict_variables' => false,

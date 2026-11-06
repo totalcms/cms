@@ -46,10 +46,23 @@ describe('DeckItemFactory', function (): void {
 
 	// --- generateIdIfNeeded ---
 
-	test('generateIdIfNeeded returns empty when the deck schema has no id autogen', function (): void {
+	test('generateIdIfNeeded falls back to the default item id when the deck schema has no id autogen', function (): void {
 		$this->schemaFetcher->method('fetchSchema')->willReturn(makeDeckSchema([
 			'id' => ['field' => 'id'],
 		]));
+		$this->autogenIdService->expects($this->once())
+			->method('generateId')
+			->with(DeckItemFactory::DEFAULT_ID_AUTOGEN, 'blog', ['body' => 'x'])
+			->willReturn('item_abc1234');
+
+		expect($this->factory->generateIdIfNeeded('blog', 'comments', ['body' => 'x']))->toBe('item_abc1234');
+	});
+
+	test('generateIdIfNeeded returns empty when the deck schema has no id property', function (): void {
+		$this->schemaFetcher->method('fetchSchema')->willReturn(makeDeckSchema([
+			'body' => ['field' => 'text'],
+		]));
+		$this->autogenIdService->expects($this->never())->method('generateId');
 
 		expect($this->factory->generateIdIfNeeded('blog', 'comments', ['body' => 'x']))->toBe('');
 	});

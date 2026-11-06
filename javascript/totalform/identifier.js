@@ -2,6 +2,10 @@ import TotalField from './totalfield';
 import Autogen from './autogen';
 const slugify = require('slugify')
 
+// A deck item's id when its schema has no autogen rule. Mirrors
+// DeckItemFactory::DEFAULT_ID_AUTOGEN (PHP).
+const DEFAULT_DECK_ITEM_AUTOGEN = 'item_${uid}';
+
 //-----------------------------------------------
 // Total CMS ID Field Automation
 //-----------------------------------------------
@@ -17,6 +21,10 @@ export default class Identifier extends TotalField {
 		super(container, settings);
 
 		this.valid = false;
+
+		if (!this.settings.autogen && this.isInDeck && this.property === "id") {
+			this.settings.autogen = DEFAULT_DECK_ITEM_AUTOGEN;
+		}
 
 		if (this.settings.autogen) {
 			this.autogen = new Autogen(this);

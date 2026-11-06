@@ -96,5 +96,6 @@ Each tag has an internal version counter. A fragment's storage key embeds the cu
 
 - Fragments are stored in the normal Total CMS cache (APCu → Redis → Memcached → filesystem) and are wiped by any global cache clear (devmode, `/api/emergency/cache/clear`).
 - Caching is skipped automatically in **devmode** so you always see fresh output while editing.
+- Saving a template does not clear its `{% cache %}` blocks. With Development Mode off, a cached block keeps showing its old output until its `ttl` runs out, or until you clear the cache.
 - Set `cache.fragments` to `false` in config to disable the tag globally; `cache.fragmentTtl` sets the default lifetime.
 - If a cache backend errors, the block falls back to a live render — it never breaks the page.

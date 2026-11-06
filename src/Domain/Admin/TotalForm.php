@@ -340,6 +340,7 @@ class TotalForm implements \Stringable
 	protected string $buildError;
 	protected string $helpStyle;
 	protected string $save;
+	protected string $defaultSave;
 	protected string $delete;
 	protected string $formType;
 	protected string $schema;
@@ -393,6 +394,7 @@ class TotalForm implements \Stringable
 		$this->buildError         = $options->buildError;
 		$this->helpStyle          = $options->helpStyle;
 		$this->save               = $options->save;
+		$this->defaultSave        = $options->defaultSave;
 		$this->delete             = $options->delete;
 		$this->formType           = $options->formType;
 		$this->schema             = $options->schema;
@@ -558,6 +560,12 @@ class TotalForm implements \Stringable
 		$this->addFieldsFromSchema();
 
 		return $this->build($content);
+	}
+
+	/** Add every schema field, as autoBuild() does, for a subclass that builds on its own. */
+	protected function addAllFields(): void
+	{
+		$this->addFieldsFromSchema();
 	}
 
 	/** @var array<string,array<string,mixed>> */
