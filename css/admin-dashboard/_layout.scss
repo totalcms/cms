@@ -1027,6 +1027,18 @@ pre {
 	}
 }
 
+// Standard info box - use for neutral notes that need no action
+.info-box {
+	@extend .warning-box;
+	background : oklch(var(--totalform-info) / 0.15);
+	border     : 1px solid oklch(var(--totalform-info) / 0.3);
+
+	&::before {
+		background-color : oklch(var(--totalform-info));
+		mask-image       : var(--icon-help);
+	}
+}
+
 // License Status Sidebar Icon
 @keyframes license-attention {
 	0% {
