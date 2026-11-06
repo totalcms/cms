@@ -50,7 +50,7 @@
 | Feature | Doc | The one thing to know |
 |---|---|---|
 | Pages, routing, starters, frontend pipeline | `site-builder/overview.md`, `site-builder/twig.md`, `site-builder/starters.md` | Templated routes (`/blog/{id}`) are implicitly pretty; `builder:routes` shows conflicts. See `references/site-builder.md`. |
-| Git-managed templates | `operations/git-first-templates.md` | A project-root `builder/` directory wins over `tcms-data/builder/` and makes the admin editor read-only. |
+| Git-managed templates | `operations/git-first-templates.md` | A project-root `builder/` directory wins over `tcms-data/builder/` and makes the admin editor read-only unless `env` is `dev`. |
 
 ## Forms and users
 

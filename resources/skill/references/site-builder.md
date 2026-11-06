@@ -20,7 +20,8 @@ Add `--frontend` to also scaffold the Vite pipeline (see `frontend.md`).
 ## Template directories
 
 Live on the filesystem under a project-root `builder/` directory when one
-exists (git-managed: it wins, and the admin's template editor is read-only),
+exists (git-managed: it wins, and the admin's template editor is read-only
+unless `env` is `dev`),
 otherwise under `tcms-data/builder/`:
 - `layouts/` — page shells (`<html>`, head, nav, footer)
 - `pages/` — per-page templates (referenced by a page's `template` field)

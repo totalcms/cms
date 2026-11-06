@@ -348,6 +348,15 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Whether builder templates are git-managed, locked or not. Lets the editor
+	 * say where a save lands on a dev install.
+	 */
+	public function templatesGitManaged(): bool
+	{
+		return $this->builderTemplates->templatesGitManaged();
+	}
+
+	/**
 	 * Group templates by folder for display in admin sidebar.
 	 *
 	 * @return array<string,array<array<string,string>>>

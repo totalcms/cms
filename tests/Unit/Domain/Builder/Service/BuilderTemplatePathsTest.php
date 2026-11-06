@@ -42,9 +42,10 @@ final class BuilderTemplatePathsTest extends TestCase
 		$this->removeDir($this->tmpRoot);
 	}
 
-	private function makePaths(): BuilderTemplatePaths
+	private function makePaths(string $env = 'prod'): BuilderTemplatePaths
 	{
 		$config          = $this->createMock(Config::class);
+		$config->env     = $env;
 		$config->root    = $this->projectRoot;
 		$config->datadir = $this->tmpRoot . '/tcms-data';
 		$config->builder = [];
@@ -101,19 +102,35 @@ final class BuilderTemplatePathsTest extends TestCase
 		$this->assertTrue($this->makePaths()->isProjectManaged());
 	}
 
-	// --- locked == isProjectManaged (no env, no setting) ---
+	// --- locked: git-managed everywhere except an explicit dev install ---
 
 	public function testLockedFalseForAdminFirstProject(): void
 	{
 		$this->assertFalse($this->makePaths()->locked());
 	}
 
-	public function testLockedTrueWheneverGitManaged(): void
+	public function testLockedTrueWhenGitManagedInProd(): void
 	{
-		mkdir($this->projectBuilder, 0o777, true);
+		mkdir($this->projectRoot . '/builder', 0o777, true);
 
-		// Locked everywhere once git-managed — environment is irrelevant.
-		$this->assertTrue($this->makePaths()->locked());
+		$this->assertTrue($this->makePaths('prod')->locked());
+	}
+
+	public function testLockedFalseWhenGitManagedInDev(): void
+	{
+		mkdir($this->projectRoot . '/builder', 0o777, true);
+
+		$this->assertFalse($this->makePaths('dev')->locked());
+	}
+
+	public function testLockedTrueWhenGitManagedInAnyOtherEnv(): void
+	{
+		mkdir($this->projectRoot . '/builder', 0o777, true);
+
+		// Only `dev` unlocks: staging or preview servers deploy by git too.
+		foreach (['test', 'preview', 'staging', 'DEV', ''] as $env) {
+			$this->assertTrue($this->makePaths($env)->locked(), 'env: ' . $env);
+		}
 	}
 
 	// --- writeTarget ---

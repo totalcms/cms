@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Usa le cartelle per organizzare i tuoi template. Crea sottocartelle includendo una barra in avanti (/) nel nome del template alla creazione.',
 	'template.locked.title'        => 'Modifica disabilitata',
 	'template.locked.banner'       => 'I template sono gestiti tramite git in questo ambiente. Modificali nel repository del progetto e distribuisci.',
+	'template.gitDev.title'        => 'Template gestiti con git',
+	'template.gitDev.banner'       => 'Le modifiche vengono salvate nella cartella builder del progetto. Esegui il commit per distribuirle.',
 	'template.source.project'      => 'Progetto',
 	'template.source.project_help' => 'Sotto controllo di versione nel repository del progetto (project-root/builder).',
 	'template.source.builtin'      => 'Integrato',

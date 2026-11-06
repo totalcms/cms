@@ -4,6 +4,8 @@ namespace TotalCMS\Action\Designer;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -16,6 +18,7 @@ readonly class DesignerTemplateUpdateAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private TemplateSaver $saver,
+		private BuilderTemplatePaths $paths,
 	) {
 	}
 
@@ -24,6 +27,12 @@ readonly class DesignerTemplateUpdateAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
+		// Git-managed templates never travel by this public route, even on a
+		// dev install where the dashboard may edit them.
+		if ($this->paths->isProjectManaged()) {
+			throw new TemplatesLockedException();
+		}
+
 		/** @var string|null $folder */
 		$folder = $request->getAttribute('designerFolder');
 		$name   = (string)$request->getAttribute('designerTemplate', '');

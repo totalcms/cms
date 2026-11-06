@@ -39,7 +39,7 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
  * **Why the responses carry `git_managed` / `layer`.** A template can resolve
  * from any of three read layers (project-root → tcms-data → shipped defaults),
  * and when the project is git-managed `BuilderTemplatePaths::locked()` makes
- * templates read-only everywhere — the repo is the only write path. Stating
+ * templates read-only outside `dev` — the repo is the write path. Stating
  * that in the read response means an agent learns the shape from a successful
  * call instead of inferring it from a missing tool. An agent that has to guess
  * why it can't write invents workarounds; one that is told goes and edits the
@@ -176,11 +176,15 @@ readonly class TemplateTools
 	{
 		$gitManaged = $this->paths->isProjectManaged();
 
+		$editVia = match (true) {
+			!$gitManaged           => 'the Site Builder admin UI — templates are not writable via MCP',
+			$this->paths->locked() => 'git — templates are source-controlled in the project builder/ directory and are read-only to the admin UI and MCP alike',
+			default                => 'git — templates are source-controlled in the project builder/ directory; on this dev install the admin UI can also edit them, but they are not writable via MCP',
+		};
+
 		return [
 			'git_managed' => $gitManaged,
-			'edit_via'    => $gitManaged
-				? 'git — templates are source-controlled in the project builder/ directory and are read-only to the admin UI and MCP alike'
-				: 'the Site Builder admin UI — templates are not writable via MCP',
+			'edit_via'    => $editVia,
 		];
 	}
 

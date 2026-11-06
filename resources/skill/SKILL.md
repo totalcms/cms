@@ -114,7 +114,7 @@ Prefer looking things up over guessing; training data is often stale on exact si
 3. **Edit templates** on the filesystem under
    `builder/{layouts,pages,partials,macros}/*.twig` when a project-root `builder/`
    directory exists (git-managed mode: it wins over `tcms-data/`, and the admin's
-   template editor is read-only), otherwise `tcms-data/builder/`. Twig global is `cms`;
+   template editor is read-only unless `env` is `dev`), otherwise `tcms-data/builder/`. Twig global is `cms`;
    builder helpers are `cms.builder.nav()`, `cms.builder.url(id, params)`,
    `cms.builder.css/js/asset()`. The layout's `<head>` carries
    `{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}` — it emits

@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Verwenden Sie Ordner, um Ihre Vorlagen zu organisieren. Erstellen Sie Unterordner, indem Sie beim Erstellen einen Schrägstrich (/) im Vorlagennamen verwenden.',
 	'template.locked.title'        => 'Bearbeitung deaktiviert',
 	'template.locked.banner'       => 'Vorlagen werden in dieser Umgebung über Git verwaltet. Bearbeiten Sie sie im Projekt-Repository und stellen Sie sie bereit.',
+	'template.gitDev.title'        => 'Git-verwaltete Vorlagen',
+	'template.gitDev.banner'       => 'Änderungen werden im Ordner „builder“ Ihres Projekts gespeichert. Committen Sie sie, um sie bereitzustellen.',
 	'template.source.project'      => 'Projekt',
 	'template.source.project_help' => 'Versioniert im Projekt-Repository (project-root/builder).',
 	'template.source.builtin'      => 'Integriert',

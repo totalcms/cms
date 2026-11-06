@@ -29,6 +29,13 @@
 		<p>{{ t('template.locked.banner') }}</p>
 	</div>
 </div>
+{% elseif cms.admin.templatesGitManaged() %}
+<div class="warning-box" role="status">
+	<div>
+		<strong>{{ t('template.gitDev.title') }}</strong>
+		<p>{{ t('template.gitDev.banner') }}</p>
+	</div>
+</div>
 {% endif %}
 
 {{ cms.form.template({

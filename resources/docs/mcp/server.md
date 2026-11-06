@@ -327,7 +327,7 @@ Paths are builder-relative and carry no `.twig` extension, exactly as `list_temp
 Every response reports where templates are actually edited on this install:
 
 - `git_managed: false` — templates live in `tcms-data/builder/` and are edited in the Site Builder admin UI.
-- `git_managed: true` — the project has a `builder/` directory, so templates are source-controlled and read-only to the admin UI *and* MCP alike. The git repository is the only write path. See [Site Builder](docs/site-builder/overview).
+- `git_managed: true` — the project has a `builder/` directory, so templates are source-controlled and read-only to the admin UI *and* MCP alike, except that the admin UI can edit them when `env` is `dev`. MCP never can. See [Site Builder](docs/site-builder/overview).
 
 `get_template` additionally reports the `layer` the file resolved from — `project` (git-managed source of truth), `data` (admin-edited, in `tcms-data`), or `built-in` (shipped default) — so an agent knows which file it just read.
 

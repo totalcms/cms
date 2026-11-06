@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Use carpetas para organizar sus plantillas. Cree subcarpetas incluyendo una barra diagonal (/) en el nombre de la plantilla al crearla.',
 	'template.locked.title'        => 'Edición deshabilitada',
 	'template.locked.banner'       => 'Las plantillas se gestionan mediante git en este entorno. Edítelas en el repositorio de su proyecto y despliegue.',
+	'template.gitDev.title'        => 'Plantillas gestionadas con git',
+	'template.gitDev.banner'       => 'Los cambios se guardan en la carpeta builder de su proyecto. Confírmelos con un commit para desplegarlos.',
 	'template.source.project'      => 'Proyecto',
 	'template.source.project_help' => 'Controlada por versiones en el repositorio del proyecto (project-root/builder).',
 	'template.source.builtin'      => 'Integrada',

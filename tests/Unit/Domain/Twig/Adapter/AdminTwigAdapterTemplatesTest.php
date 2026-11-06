@@ -59,6 +59,18 @@ final class AdminTwigAdapterTemplatesTest extends TestCase
 		return $adapter;
 	}
 
+	public function testTemplatesGitManagedReflectsResolver(): void
+	{
+		$lister = $this->createMock(TemplateLister::class);
+
+		$adminFirst = $this->makeAdapter($this->makePaths(), $lister);
+		$this->assertFalse($adminFirst->templatesGitManaged());
+
+		mkdir($this->tmpRoot . '/project/builder', 0o777, true);
+		$gitManaged = $this->makeAdapter($this->makePaths(), $lister);
+		$this->assertTrue($gitManaged->templatesGitManaged());
+	}
+
 	public function testTemplatesLockedReflectsResolver(): void
 	{
 		$lister = $this->createMock(TemplateLister::class);

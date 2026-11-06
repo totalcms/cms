@@ -27,6 +27,8 @@ final class TemplateToolsTest extends TestCase
 	// willReturn on the same method doesn't work).
 	private bool $projectManaged = false;
 
+	private bool $locked = true;
+
 	protected function setUp(): void
 	{
 		$this->lister  = $this->createMock(TemplateLister::class);
@@ -34,6 +36,8 @@ final class TemplateToolsTest extends TestCase
 		$this->paths   = $this->createMock(BuilderTemplatePaths::class);
 		$this->paths->method('isProjectManaged')
 			->willReturnCallback(fn (): bool => $this->projectManaged);
+		$this->paths->method('locked')
+			->willReturnCallback(fn (): bool => $this->projectManaged && $this->locked);
 
 		$this->tool = new TemplateTools($this->lister, $this->fetcher, $this->paths);
 	}
@@ -158,6 +162,21 @@ final class TemplateToolsTest extends TestCase
 
 		$this->assertTrue($result['git_managed']);
 		$this->assertStringContainsString('git', $result['edit_via']);
+		$this->assertStringContainsString('read-only to the admin UI', $result['edit_via']);
+	}
+
+	public function testListReportsGitManagedDevInstall(): void
+	{
+		$this->projectManaged = true;
+		$this->locked         = false;
+		$this->lister->method('listBuilderTemplates')->willReturn([]);
+
+		$result = $this->tool->listHandler();
+
+		$this->assertTrue($result['git_managed']);
+		$this->assertStringNotContainsString('read-only to the admin UI', $result['edit_via']);
+		$this->assertStringContainsString('admin UI', $result['edit_via']);
+		$this->assertStringContainsString('not writable via MCP', $result['edit_via']);
 	}
 
 	public function testListRejectsTraversalInFolder(): void

@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Use folders to organise your templates. Create subfolders by including a forward slash (/) in the template name when creating it.',
 	'template.locked.title'        => 'Editing Disabled',
 	'template.locked.banner'       => 'Templates are managed via git on this environment. Edit them in your project repository and deploy.',
+	'template.gitDev.title'        => 'Git-Managed Templates',
+	'template.gitDev.banner'       => 'Changes save to the builder folder in your project. Commit them to deploy.',
 	'template.source.project'      => 'Project',
 	'template.source.project_help' => 'Source-controlled in your project repository (project-root/builder).',
 	'template.source.builtin'      => 'Built-in',

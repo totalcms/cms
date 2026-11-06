@@ -657,6 +657,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.templatesGitManaged",
+            "signature": "templatesGitManaged(): bool",
+            "description": "Whether builder templates are git-managed, locked or not. Lets the editor say where a save lands on a dev install.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.templatesLocked",
             "signature": "templatesLocked(): bool",
             "description": "Whether builder template editing is locked because templates are git-managed on this environment. Admin views use this to show a read-only banner and hide the save/delete controls.",

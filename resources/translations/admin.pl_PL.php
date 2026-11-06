@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Używaj folderów do organizowania szablonów. Podfoldery utworzysz, dodając ukośnik (/) w nazwie szablonu podczas jego tworzenia.',
 	'template.locked.title'        => 'Edycja wyłączona',
 	'template.locked.banner'       => 'W tym środowisku szablony są zarządzane przez git. Edytuj je w repozytorium projektu i wdróż.',
+	'template.gitDev.title'        => 'Szablony zarządzane przez git',
+	'template.gitDev.banner'       => 'Zmiany są zapisywane w folderze builder projektu. Zatwierdź je w commicie, aby je wdrożyć.',
 	'template.source.project'      => 'Projekt',
 	'template.source.project_help' => 'Wersjonowane w repozytorium projektu (project-root/builder).',
 	'template.source.builtin'      => 'Wbudowany',

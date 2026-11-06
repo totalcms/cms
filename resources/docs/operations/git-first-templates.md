@@ -31,7 +31,7 @@ Now commit `./builder` — there's nothing special to ignore. `tcms-data/` stays
 |---|---|---|
 | Templates live in | `tcms-data/builder/` | `./builder/` (committed) |
 | Editing | In the dashboard | In your IDE → commit → deploy |
-| Dashboard editor | Editable | **Read-only** ("Editing Disabled") in every environment |
+| Dashboard editor | Editable | **Read-only** ("Editing Disabled"), except when `env` is `dev` |
 | Template sync | Via the Sync Manager | **Disabled** — templates travel by git |
 
 ### Read hierarchy
@@ -46,11 +46,19 @@ So your committed templates always win, and you can extend the shipped `layouts/
 
 ### The dashboard goes read-only
 
-Once `./builder` exists, the template and builder editors show an **"Editing Disabled"** notice and hide Save/Delete — in *every* environment, including local dev. This is deliberate: the repo is the single source of truth, so there's never a second, conflicting way to change a template. Edit the files in your editor and reload to preview.
+Once `./builder` exists, the template and builder editors show an **"Editing Disabled"** notice and hide Save/Delete. This keeps a server's files clean, so a deploy's `git pull` can't conflict with an edit made on the server.
+
+### Editing in the dashboard during development
+
+When `env` is `dev` (`$settings['env'] = 'dev';`), the dashboard editor stays editable. A save writes to `./builder`, the same file your code editor would change, so it appears in `git status` as an uncommitted change. Commit it to deploy it.
+
+Only `dev` unlocks the editor. Production, staging and any site that hasn't set `env` stay read-only, so make sure `env` isn't `dev` on a server you deploy to. Sync and the Template Designer still skip git-managed templates in `dev`.
+
+The lock also covers other template writes. In `dev`, a JumpStart import and `tcms builder:history` restores write to `./builder` too. Check `git status` after running them.
 
 ## Deploying
 
-Because templates are committed and the dashboard can't write them, your production working tree stays clean — a deploy webhook's `git pull` never hits an uncommitted-changes conflict:
+Because templates are committed and the dashboard can't write them on a server, your production working tree stays clean — a deploy webhook's `git pull` never hits an uncommitted-changes conflict:
 
 ```bash
 cd /var/www/your-site

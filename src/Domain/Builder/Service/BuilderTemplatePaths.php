@@ -25,9 +25,10 @@ use TotalCMS\Support\PathResolver;
  *   3. <package>/resources/builder/defaults — shipped fallback (the floor)
  *
  * When git-managed, `<project-root>/builder` is both the top read layer and the
- * write target, and admin editing is locked (read-only) in every environment —
- * templates travel by git, not the dashboard. Absent, it's byte-for-byte the
- * historical admin-first behavior.
+ * write target. Admin editing is locked (read-only) on every environment except
+ * `dev`, where a dashboard save changes the same working tree an IDE would.
+ * Templates still travel by git, never by the dashboard. Absent, it's
+ * byte-for-byte the historical admin-first behavior.
  *
  * See docs/planning/builder-git-workflow.md.
  */
@@ -168,12 +169,13 @@ readonly class BuilderTemplatePaths
 
 	/**
 	 * Whether admin/runtime template editing is locked. Git-managed projects
-	 * are locked in every environment — templates are source-controlled, so the
-	 * dashboard is read-only and the repo is the only write path. Admin-first
-	 * projects are never locked.
+	 * are locked unless `env` is exactly `dev`: a server's working tree has to
+	 * stay clean so a deploy's `git pull` can't conflict, while a dev save is
+	 * just an uncommitted change. Unset env defaults to `prod`, so an install
+	 * has to opt out of the lock. Admin-first projects are never locked.
 	 */
 	public function locked(): bool
 	{
-		return $this->isProjectManaged();
+		return $this->isProjectManaged() && $this->config->env !== 'dev';
 	}
 }

@@ -447,6 +447,8 @@ return [
 	'template.organization_desc'   => 'Gebruik mappen om uw sjablonen te organiseren. Maak submappen aan door een schuine streep (/) op te nemen in de sjabloonnaam bij het aanmaken.',
 	'template.locked.title'        => 'Bewerken uitgeschakeld',
 	'template.locked.banner'       => 'Sjablonen worden in deze omgeving via git beheerd. Bewerk ze in uw projectrepository en deploy.',
+	'template.gitDev.title'        => 'Sjablonen beheerd via git',
+	'template.gitDev.banner'       => 'Wijzigingen worden opgeslagen in de map builder van uw project. Commit ze om ze te deployen.',
 	'template.source.project'      => 'Project',
 	'template.source.project_help' => 'Onder versiebeheer in uw projectrepository (project-root/builder).',
 	'template.source.builtin'      => 'Ingebouwd',
