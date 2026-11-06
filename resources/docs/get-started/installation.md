@@ -140,9 +140,13 @@ Choose where Total CMS stores your content. This directory is **separate from th
 
 | Option | Path | When to choose |
 |---|---|---|
-| Document Root | `<docroot>/tcms-data` | Simplest. Works on every host |
-| Above Document Root | `<parent>/tcms-data` | Recommended for production — keeps content outside the web tree |
+| Above Document Root | `<parent>/tcms-data` | Recommended. Keeps content outside the web tree |
+| Document Root | `<docroot>/tcms-data` | Works on every host, for when the folder above is blocked |
 | Custom Path | Any absolute path | When the defaults don't fit your hosting setup |
+
+The wizard tests whether it can write above the document root. If it can, that option is preselected. If not, it preselects Document Root, so accepting the default always works.
+
+> **Several sites side by side:** when sites sit next to each other, such as `/home/you/one.com` and `/home/you/two.com`, the folder above each document root is the same, `/home/you/tcms-data`. A second site finds the first site's data and uses it, including its users, settings and templates, and it skips this wizard. To keep sites separate, set a different [`datadir`](docs/operations/configuration) in each site's `tcms.php` before opening the second site.
 
 If the data directory ends up inside your docroot, T3 drops an `.htaccess` in it that blocks direct web access.
 

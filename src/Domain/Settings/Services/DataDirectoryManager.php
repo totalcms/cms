@@ -105,6 +105,50 @@ HTACCESS;
 	}
 
 	/**
+	 * The wizard's preselected data location. Above the docroot is the better
+	 * home because the content sits outside the web tree, so it wins whenever
+	 * this host allows it. Many people accept the wizard's defaults, and the
+	 * failures here are permissions, so a real write decides rather than a
+	 * guess about the host. The docroot is the fallback that always works.
+	 *
+	 * @return 'default'|'docroot'
+	 */
+	public function defaultLocation(string $docroot): string
+	{
+		if ($docroot === '') {
+			return 'docroot';
+		}
+
+		$above = $this->resolveDataPath('default', $docroot);
+		if (file_exists($above) && !is_dir($above)) {
+			return 'docroot';
+		}
+
+		return $this->canWriteIn(is_dir($above) ? $above : dirname($above)) ? 'default' : 'docroot';
+	}
+
+	/**
+	 * Create a folder and a file in $directory, read it back, and clean up.
+	 * is_writable() isn't enough: it can pass where open_basedir or a host's
+	 * own limits stop the write.
+	 */
+	private function canWriteIn(string $directory): bool
+	{
+		$probe = $directory . '/.tcms-write-test-' . bin2hex(random_bytes(4));
+		if (!@mkdir($probe)) {
+			return false;
+		}
+
+		$file   = $probe . '/test';
+		$worked = @file_put_contents($file, 'ok') === 2 && @file_get_contents($file) === 'ok';
+
+		@unlink($file);
+		@rmdir($probe);
+
+		return $worked;
+	}
+
+	/**
 	 * Migrate an auto-created tcms-data directory to the user's chosen
 	 * location. Preserves any bootstrap state that was written during the
 	 * wizard flow (extension discovery, etc.) — preferable to deleting it

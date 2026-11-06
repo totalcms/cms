@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Data Path Configuration',
 	'wizard.datapath_desc'          => "Let's configure where Total CMS should store its data.",
 	'wizard.datapath_label'         => 'Where should Total CMS store data?',
-	'wizard.datapath_docroot'       => 'Document Root (Default)',
+	'wizard.datapath_docroot'       => 'Document Root',
 	'wizard.datapath_above'         => 'Above Document Root (Recommended)',
 	'wizard.datapath_custom'        => 'Custom Path',
 	'wizard.datapath_custom_help'   => 'Enter the full path where the data folder should be created',

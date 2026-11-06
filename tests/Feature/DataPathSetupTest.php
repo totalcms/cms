@@ -56,6 +56,56 @@ describe('Data Path Setup Feature', function (): void {
 		expect($body)->toMatch('/\/[^\/]+.*tcms-data/');
 	});
 
+	$renderWizardAt = function (bool $aboveWritable): string {
+		$root = sys_get_temp_dir() . '/tcms-wizard-' . uniqid();
+		mkdir($root . '/public', 0755, true);
+		if (!$aboveWritable) {
+			chmod($root, 0555);
+		}
+		$original                 = $_SERVER['DOCUMENT_ROOT'] ?? null;
+		$_SERVER['DOCUMENT_ROOT'] = $root . '/public';
+
+		try {
+			return (string)get('/setup/data-path')->getBody();
+		} finally {
+			if ($original === null) {
+				unset($_SERVER['DOCUMENT_ROOT']);
+			} else {
+				$_SERVER['DOCUMENT_ROOT'] = $original;
+			}
+			chmod($root, 0755);
+			rmdir($root . '/public');
+			rmdir($root);
+		}
+	};
+
+	it('preselects Above Document Root when PHP can write there', function () use ($renderWizardAt): void {
+		$body = $renderWizardAt(true);
+
+		expect($body)->toMatch('/<input[^>]*value="default"[^>]*checked/');
+		expect($body)->not->toMatch('/<input[^>]*value="docroot"[^>]*checked/');
+	});
+
+	it('preselects Document Root when PHP cannot write above it', function () use ($renderWizardAt): void {
+		$body = $renderWizardAt(false);
+
+		expect($body)->toMatch('/<input[^>]*value="docroot"[^>]*checked/');
+		expect($body)->not->toMatch('/<input[^>]*value="default"[^>]*checked/');
+	});
+
+	it('lists Above Document Root first', function (): void {
+		$body = (string)get('/setup/data-path')->getBody();
+
+		expect(strpos($body, 'value="default"'))->toBeLessThan(strpos($body, 'value="docroot"'));
+	});
+
+	it('no longer labels Document Root as the default', function (): void {
+		$body = (string)get('/setup/data-path')->getBody();
+
+		expect($body)->not->toContain('Document Root (Default)');
+		expect($body)->toContain('Above Document Root (Recommended)');
+	});
+
 	it('shows custom path input field', function (): void {
 		$response = get('/setup/data-path');
 

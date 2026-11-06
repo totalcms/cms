@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Konfiguracja ścieżki danych',
 	'wizard.datapath_desc'          => 'Skonfigurujmy, gdzie Total CMS ma przechowywać dane.',
 	'wizard.datapath_label'         => 'Gdzie Total CMS ma przechowywać dane?',
-	'wizard.datapath_docroot'       => 'Katalog główny dokumentów (domyślnie)',
+	'wizard.datapath_docroot'       => 'Katalog główny dokumentów',
 	'wizard.datapath_above'         => 'Powyżej katalogu głównego (zalecane)',
 	'wizard.datapath_custom'        => 'Własna ścieżka',
 	'wizard.datapath_custom_help'   => 'Wprowadź pełną ścieżkę, w której ma zostać utworzony folder danych',

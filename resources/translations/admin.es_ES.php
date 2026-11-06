@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Ruta de Datos',
 	'wizard.datapath_desc'          => 'Configuremos dónde Total CMS almacenará sus datos.',
 	'wizard.datapath_label'         => '¿Dónde debe Total CMS almacenar los datos?',
-	'wizard.datapath_docroot'       => 'Raíz del Documento (Predeterminado)',
+	'wizard.datapath_docroot'       => 'Raíz del Documento',
 	'wizard.datapath_above'         => 'Encima de la Raíz del Documento (Recomendado)',
 	'wizard.datapath_custom'        => 'Ruta Personalizada',
 	'wizard.datapath_custom_help'   => 'Ingrese la ruta completa donde se debe crear la carpeta de datos',

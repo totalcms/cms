@@ -26,10 +26,10 @@
 		{{ cms.form.field("radio", "location", {
 			label    : t('wizard.datapath_label'),
 			required : true,
-			value    : "docroot",
+			value    : defaultLocation,
 			options  : [
-				{value: "docroot", label: t('wizard.datapath_docroot') ~ " <span class='path-preview'>" ~ docrootPath ~ "</span>"},
 				{value: "default", label: t('wizard.datapath_above') ~ " <span class='path-preview'>" ~ defaultPath ~ "</span>"},
+				{value: "docroot", label: t('wizard.datapath_docroot') ~ " <span class='path-preview'>" ~ docrootPath ~ "</span>"},
 				{value: "custom", label: t('wizard.datapath_custom')}
 			]
 		}) }}

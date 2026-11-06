@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Setup;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -14,6 +15,7 @@ readonly class DataPathSetupAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private DataDirectoryManager $directoryManager,
 	) {
 	}
 
@@ -32,9 +34,10 @@ readonly class DataPathSetupAction
 				'path' => $request->getUri()->getPath(),
 				'page' => 'setup',
 			],
-			'defaultPath'  => $defaultPath,
-			'docrootPath'  => $docrootPath,
-			'customPath'   => $defaultPath, // Pre-fill custom with default
+			'defaultPath'     => $defaultPath,
+			'docrootPath'     => $docrootPath,
+			'customPath'      => $defaultPath, // Pre-fill custom with default
+			'defaultLocation' => $this->directoryManager->defaultLocation($docroot),
 		];
 
 		return $this->twigRenderer->template($response, 'setup/data-path.twig', $templateData);

@@ -52,6 +52,73 @@ describe('DataDirectoryManager', function (): void {
 		expect($result)->toBe('');
 	});
 
+	it('chooses above the docroot when PHP can create a folder there', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+
+		expect($this->manager->defaultLocation($docroot))->toBe('default');
+	});
+
+	it('chooses above the docroot when tcms-data is already there and writable', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+		mkdir($root . '/tcms-data');
+
+		expect($this->manager->defaultLocation($docroot))->toBe('default');
+	});
+
+	it('leaves nothing behind after testing the location', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+		mkdir($root . '/tcms-data');
+
+		$this->manager->defaultLocation($docroot);
+
+		expect(array_values(array_diff((array)scandir($root), ['.', '..'])))->toBe(['public', 'tcms-data']);
+		expect(array_values(array_diff((array)scandir($root . '/tcms-data'), ['.', '..'])))->toBe([]);
+	});
+
+	it('falls back to the docroot when the folder above it is not writable', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+		chmod($root, 0555);
+
+		$location = $this->manager->defaultLocation($docroot);
+		chmod($root, 0755);
+
+		expect($location)->toBe('docroot');
+	});
+
+	it('falls back to the docroot when tcms-data above it is not writable', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+		mkdir($root . '/tcms-data');
+		chmod($root . '/tcms-data', 0555);
+
+		$location = $this->manager->defaultLocation($docroot);
+		chmod($root . '/tcms-data', 0755);
+
+		expect($location)->toBe('docroot');
+	});
+
+	it('falls back to the docroot when a file has that name above it', function (): void {
+		$root    = $this->testDir . '/site';
+		$docroot = $root . '/public';
+		mkdir($docroot, 0755, true);
+		touch($root . '/tcms-data');
+
+		expect($this->manager->defaultLocation($docroot))->toBe('docroot');
+	});
+
+	it('falls back to the docroot when the docroot is unknown', function (): void {
+		expect($this->manager->defaultLocation(''))->toBe('docroot');
+	});
+
 	it('validates absolute path successfully', function (): void {
 		expect(fn () => $this->manager->validateAbsolutePath('/absolute/path'))
 			->not->toThrow(InvalidArgumentException::class);

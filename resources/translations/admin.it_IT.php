@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Configurazione percorso dati',
 	'wizard.datapath_desc'          => 'Configuriamo dove Total CMS deve memorizzare i suoi dati.',
 	'wizard.datapath_label'         => 'Dove deve memorizzare i dati Total CMS?',
-	'wizard.datapath_docroot'       => 'Document root (predefinito)',
+	'wizard.datapath_docroot'       => 'Document root',
 	'wizard.datapath_above'         => 'Sopra la document root (consigliato)',
 	'wizard.datapath_custom'        => 'Percorso personalizzato',
 	'wizard.datapath_custom_help'   => 'Inserisci il percorso completo dove creare la cartella dati',

@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Datenpfad-Konfiguration',
 	'wizard.datapath_desc'          => 'Konfigurieren wir, wo Total CMS seine Daten speichern soll.',
 	'wizard.datapath_label'         => 'Wo soll Total CMS Daten speichern?',
-	'wizard.datapath_docroot'       => 'Document Root (Standard)',
+	'wizard.datapath_docroot'       => 'Document Root',
 	'wizard.datapath_above'         => 'Oberhalb des Document Root (Empfohlen)',
 	'wizard.datapath_custom'        => 'Benutzerdefinierter Pfad',
 	'wizard.datapath_custom_help'   => 'Geben Sie den vollständigen Pfad ein, in dem der Datenordner erstellt werden soll',

@@ -1327,7 +1327,7 @@ return [
 	'wizard.datapath_title'         => 'Gegevenspad Configuratie',
 	'wizard.datapath_desc'          => 'Laten we configureren waar Total CMS zijn gegevens moet opslaan.',
 	'wizard.datapath_label'         => 'Waar moet Total CMS gegevens opslaan?',
-	'wizard.datapath_docroot'       => 'Document Root (Standaard)',
+	'wizard.datapath_docroot'       => 'Document Root',
 	'wizard.datapath_above'         => 'Boven de Document Root (Aanbevolen)',
 	'wizard.datapath_custom'        => 'Aangepast Pad',
 	'wizard.datapath_custom_help'   => 'Voer het volledige pad in waar de gegevensmap moet worden aangemaakt',
