@@ -554,6 +554,34 @@ if [ -f "$PROJECT_SKEL_PATH/composer.json" ]; then
     fi
 fi
 
+# Plugin skill drift check
+#
+# totalcms-plugins carries a copy of resources/skill for the Claude, OpenAI and
+# Cursor listings. Composer projects get their own matching skill and the MCP
+# server reads live docs, so only this copy goes stale, and a resync means
+# resubmitting to all three directories. Small changes wait for the next
+# resync; a large gap gets a warning.
+#
+# Like the skeleton check, this never touches the other repo.
+PLUGINS_PATH="${TOTALCMS_PLUGINS_PATH:-$HOME/Developer/totalcms-plugins}"
+SKILL_DRIFT_WARN_LINES=100
+if [ -d "$PLUGINS_PATH/package/skills/totalcms" ]; then
+    SKILL_DRIFT=$(diff -r "$PLUGINS_PATH/package/skills/totalcms" resources/skill | grep -cE '^[<>]' || true)
+    if [ "$SKILL_DRIFT" -ge "$SKILL_DRIFT_WARN_LINES" ]; then
+        echo
+        print_warning "The plugin's skill is $SKILL_DRIFT lines behind core. Consider a plugin update."
+        print_info "After this release is tagged, bump the plugin version, then build from the tag:"
+        echo "  SKILL_SRC=\$(mktemp -d)"
+        echo "  git archive $NEW_VERSION resources/skill | tar -x -C \"\$SKILL_SRC\""
+        echo "  cd \"$PLUGINS_PATH\" && TOTALCMS_CORE=\"\$SKILL_SRC\" bin/build.sh"
+        echo
+        print_info "Then commit, tag, push and resubmit. See the release sections in its README."
+        echo
+    else
+        print_info "Plugin skill differs from core by $SKILL_DRIFT lines, under the $SKILL_DRIFT_WARN_LINES-line resync threshold."
+    fi
+fi
+
 # Tag + push are handled by `git flow release finish`, not this script.
 # This script runs on the release branch BEFORE finish, so all artifacts
 # (version.json, dist zip, Sentry release, license API registration) are
