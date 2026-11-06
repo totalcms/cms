@@ -45,6 +45,25 @@ it('warns admins on every admin page about an extension disabled after an update
 		->and($html)->toContain('href="extensions/acme/shots/settings"');
 });
 
+it('groups the warnings in one strip outside the page columns', function (): void {
+	attentionUpdateDisabled($this->states);
+	signInAs($this->app, 'admin-user-test-com', 'auth');
+
+	// .dash-content lays its children out as columns: sidebar, main, table of
+	// contents. A warning sitting directly in that grid takes a column and
+	// shoves the sidebar and page sideways, so it has to stay in the strip.
+	expect((string)get('/admin/utils')->getBody())
+		->toMatch('~<section class="dash-content">\s*<div class="dash-notices">\s*<div class="warning-box extension-attention"~');
+});
+
+it('leaves the strip out when nothing needs attention', function (): void {
+	signInAs($this->app, 'admin-user-test-com', 'auth');
+
+	// The layout switches to its two-row form on the strip's presence, so an
+	// empty one would give every page a blank row.
+	expect((string)get('/admin/utils')->getBody())->not->toContain('dash-notices');
+});
+
 it('warns about a quarantined extension', function (): void {
 	$this->states->saveState('acme/crashy', new ExtensionState(
 		enabled: false,

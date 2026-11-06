@@ -166,13 +166,21 @@
 			{# Extensions the system turned off by itself (an update added risky
 			   code, or repeated crashes) happen on a request nobody watches, so
 			   every admin page says so until someone re-enables or disables it.
-			   The extension pages show their own banners. #}
+			   The extension pages show their own banners.
+			   They stay in one strip because .dash-content is the page's column
+			   grid: a loose box here takes a column. Render the strip only when
+			   there is a notice, since the layout goes two-row on its presence. #}
 			{% if cms.auth.isAdmin() and url.page|default('') != 'extensions' %}
-				{% for notice in cms.admin.extensionsNeedingAttention() %}
-				<div class="warning-box extension-attention" role="alert">
-					<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
+				{% set attentionNotices = cms.admin.extensionsNeedingAttention() %}
+				{% if attentionNotices is not empty %}
+				<div class="dash-notices">
+					{% for notice in attentionNotices %}
+					<div class="warning-box extension-attention" role="alert">
+						<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
+					</div>
+					{% endfor %}
 				</div>
-				{% endfor %}
+				{% endif %}
 			{% endif %}
 
         	{% block dashcontent %}{% endblock %}

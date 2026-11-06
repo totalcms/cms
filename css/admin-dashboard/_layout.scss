@@ -216,6 +216,37 @@ body {
 	&:has(.dash-content-sidebar):has(.doc-toc) {
 		grid-template-columns : max-content 1fr max-content;
 	}
+
+	// With notices showing, the columns move down a row. The panes below are
+	// 100vh inside the shell's overflow:hidden, so left alone their bottoms
+	// would be cut off by the strip's height. 100% is the row here, and it is
+	// still the viewport for the sidebar, which is position:fixed on mobile.
+	&:has(> .dash-notices) {
+		height             : 100vh;
+		grid-template-rows : auto minmax(0, 1fr);
+
+		> .dash-content-sidebar,
+		> .dash-main-content,
+		> .doc-toc {
+			height : 100%;
+		}
+	}
+}
+
+// A row above every column, so a notice never takes a column from the page.
+// The sidebar column is max-content, and a spanning item still counts toward
+// that size, so without the containment a long notice widens the sidebar.
+.dash-notices {
+	grid-column   : 1 / -1;
+	contain       : inline-size;
+	display       : grid;
+	gap           : 0.5rem;
+	padding       : 1rem 2rem;
+	border-bottom : 1px solid oklch(var(--totalform-lightgray));
+
+	.warning-box {
+		margin-bottom : 0;
+	}
 }
 
 
@@ -1258,6 +1289,10 @@ pre {
 
 	.mobile-menu-toggle {
 		display : block;
+	}
+
+	.dash-notices {
+		padding : 1rem;
 	}
 
 	.dash-main-content {

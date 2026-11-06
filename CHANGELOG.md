@@ -16,6 +16,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **The disabled-extension warning no longer breaks admin pages.** It took a column of the page layout, which pushed the sidebar and content sideways. Warnings now sit in their own row across the top of the page
 - **A saved template reaches the next request with Development Mode off.** Saved pages, layouts and partials used to stay stale until the cache was cleared. **Behavior change:** files changed on disk, including by a git deploy, now show up without clearing the cache. A `{% cache %}` block still keeps its output until its `ttl` runs out
 
 ## [3.6.7] - 2026-11-03
