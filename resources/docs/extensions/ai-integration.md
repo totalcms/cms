@@ -42,7 +42,7 @@ Add to `~/.claude/mcp.json`:
 
 ### Cursor
 
-Add to your Cursor MCP settings (Settings > MCP Servers):
+Add to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` to use it in all projects:
 
 ```json
 {
