@@ -1216,7 +1216,7 @@ Only an extension in `tcms-data/extensions/` can be removed this way. A bundled 
 
 ### `skill:install`
 
-Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code and other coding agents pick up the conventions that ship with your version of the CMS.
+Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code, Cursor and other coding agents pick up the conventions that ship with your version of the CMS.
 
 ```bash
 tcms skill:install

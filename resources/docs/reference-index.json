@@ -5447,7 +5447,7 @@
         },
         {
             "name": "skill:install",
-            "description": "Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code and other coding agents pick up the conventions that ship with your version of the CMS.",
+            "description": "Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code, Cursor and other coding agents pick up the conventions that ship with your version of the CMS.",
             "arguments": [],
             "options": [],
             "examples": [

@@ -9,6 +9,10 @@ All notable changes to Total CMS will be documented in this file.
 - **`cms.form.builder()` printed on its own is a working form.** `{{ cms.form.builder('contact', {addOnly: true}) }}` now builds the schema's fields and a save button, and `.build()` does the same. Before, it rendered an empty form. A `register: true` form leaves out protected fields such as `groups`. Forms that use `addField()` or pass their own markup don't change
 - **Deck items get an ID on their own.** When the item schema has no autogen rule, a new item in the admin and a deck API post with no `id` get an ID like `item_a1b2c3d`. Existing autogen rules and saved IDs don't change
 
+### Removed
+
+- **The Cursor rules file.** Cursor now reads the agent skill that `tcms skill:install` adds to your project, so `resources/cursor/totalcms.mdc` is gone
+
 ### Fixed
 
 - **A saved template reaches the next request with Development Mode off.** Saved pages, layouts and partials used to stay stale until the cache was cleared. **Behavior change:** files changed on disk, including by a git deploy, now show up without clearing the cache. A `{% cache %}` block still keeps its output until its `ttl` runs out
