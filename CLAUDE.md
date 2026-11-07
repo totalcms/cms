@@ -15,6 +15,15 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 - **Official Docs Connector**: `https://totalcms.co/mcp` — the marketing site's own MCP server serves the T3 documentation to AI agents (`docs_search`, `docs_get`, `docs_lookup`) via a private extension. Successor to the retired standalone mcp.totalcms.co app.
 - **Project Repo** ([totalcms/totalcms-project](https://github.com/totalcms/totalcms-project)): Composer project template for installing T3 via `composer create-project`
 
+### Planning, Audit, and Release Docs
+Specs, plans, audits, and release write-ups live outside this repo, in the Obsidian `Total CMS` folder: `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/KnowledgeBase/Total CMS/`. Read and write them there, and do not recreate these folders under `docs/`.
+
+- **`planning/`**: specs and plans, one folder per target release (`3.6/`, `3.7/`, `3.8/`), plus `future/` (no release assigned) and `done/` (shipped). `planning/README.md` is the index.
+- **`audits/`**: security and performance audits.
+- **`releases/`**: release notes, blog posts, community posts, and newsletters for each version.
+
+Older code comments cite `docs/planning/...`; those paths now mean the `planning/` folder above.
+
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
