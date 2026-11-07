@@ -162,7 +162,7 @@ export default class DepotField extends TotalField {
 	}
 
     updateNewFileMeta(file, data) {
-        file.previewElement.querySelector(".file").textContent = data.name;
+        file.previewElement.querySelector(".file").textContent = data.download || data.name;
         file.previewElement.querySelector(".size").textContent = this.bytesToString(data.size);
 
         for (const key in data) {
@@ -880,7 +880,9 @@ export default class DepotField extends TotalField {
         const tags     = this.getFileAttribute(file, "tags");
         const ext      = name.split(".").pop();
 
-        this.filePreview.querySelector(".file-name").textContent     = name;
+        // `download` is the visitor's own filename on a public upload; `name`
+        // carries a random prefix. textContent, since it is visitor text.
+        this.filePreview.querySelector(".file-name").textContent     = download || name;
         this.filePreview.querySelector(".file-comments").textContent = comments;
         this.filePreview.querySelector(".file-download").textContent = download;
         this.filePreview.querySelector(".file-count").textContent    = count;

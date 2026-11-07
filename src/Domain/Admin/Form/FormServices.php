@@ -21,6 +21,7 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -74,6 +75,7 @@ final readonly class FormServices
 		public ?AccessGuard $guard = null,
 		public ?ActorContext $actors = null,
 		public ?MailerFetcher $mailers = null,
+		public ?PublicUploadPolicy $uploads = null,
 	) {
 		$this->logger = $logger ?? new NullLogger();
 	}

@@ -108,7 +108,12 @@ class DepotField extends UploadField
 		$ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 		$size = FileUtils::fileSizeString($file['size'] ?? 0);
 
-		$fileName = HTMLUtils::element('div', $name, ['class' => "file file-icon icon-$ext"]);
+		// A public upload is stored under a random prefix; `download` keeps the
+		// name the visitor sent, so that is the label. It is visitor text and
+		// this renderer does not escape, so escape it here.
+		$download = is_string($file['download'] ?? null) ? trim($file['download']) : '';
+		$label    = htmlspecialchars($download !== '' ? $download : $name, ENT_QUOTES, 'UTF-8');
+		$fileName = HTMLUtils::element('div', $label, ['class' => "file file-icon icon-$ext"]);
 		$size     = HTMLUtils::element('div', $size, ['class' => 'size']);
 
 		$linkDialog = $this->linkDialog($name, $path);

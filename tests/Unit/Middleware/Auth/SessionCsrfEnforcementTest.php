@@ -16,6 +16,7 @@ use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
@@ -24,6 +25,7 @@ use TotalCMS\Domain\Auth\Service\SessionActivityTracker;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -147,6 +149,8 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 			csrfTestConfig(),
 			csrfTestLoggerFactory(),
 		),
+		test()->createMock(PublicUploadPolicy::class),
+		(new ReflectionClass(ActorResolver::class))->newInstanceWithoutConstructor(),
 		csrfTestLoggerFactory(),
 	);
 }

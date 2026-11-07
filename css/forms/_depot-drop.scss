@@ -16,8 +16,83 @@
 		}
 	}
 
+	// Always marked as a drop target; the accent shows it is live
 	.depot-drop-zone {
-		position : relative;
+		position      : relative;
+		padding       : 0.75rem;
+		border        : 2px dashed oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+		transition    : border-color 200ms ease-in-out;
+		cursor        : pointer;
+	}
+
+	&:hover .depot-drop-zone {
+		border-color : oklch(var(--totalform-accent));
+	}
+
+	// Under the overlay icon while the zone is empty. Centered by position, not
+	// by filling the zone: a site's `p { max-width }` would leave it off to the left.
+	.depot-drop-hint {
+		position       : absolute;
+		top            : calc(50% + 1.5rem);
+		left           : 50%;
+		translate      : -50% 0;
+		width          : max-content;
+		max-width      : calc(100% - 1.5rem);
+		margin         : 0;
+		color          : oklch(var(--totalform-help-color));
+		font-size      : 0.9rem;
+		text-align     : center;
+		pointer-events : none;
+		z-index        : 1;
+	}
+
+	&:has(.depot-drop-card) .depot-drop-hint {
+		display : none;
+	}
+
+	// Bot-protection honeypot and token: off-screen, not display:none, so a bot
+	// that skips fields it can tell are hidden still fills it in.
+	.depot-drop-bot {
+		position : absolute;
+		left     : -10000px;
+		top      : auto;
+		width    : 1px;
+		height   : 1px;
+		overflow : hidden;
+	}
+
+	// Comment box and Send button, below the drop zone
+	.depot-drop-comment {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.5rem;
+		margin-top     : 1rem;
+
+		label {
+			font-weight : 600;
+		}
+
+		.help {
+			margin    : 0;
+			color     : oklch(var(--totalform-help-color));
+			font-size : 0.8rem;
+		}
+
+		.depot-drop-send {
+			align-self : flex-start;
+		}
+	}
+
+	// "Your files were sent." after a batch goes through
+	.depot-drop-status {
+		margin      : 0.5rem 0 0;
+		color       : oklch(var(--totalform-success));
+		font-weight : 600;
+
+		&:empty {
+			display : none;
+		}
 	}
 
 	// Upload overlay icon - centered when empty
@@ -39,6 +114,11 @@
 		z-index          : 1;
 	}
 
+	// Makes room for the hint when the field has no help text of its own
+	.dz-overlay:has(+ .depot-drop-hint) {
+		top : calc(50% - 1rem);
+	}
+
 	// Hover state
 	&:hover .dz-overlay {
 		opacity : 0.6;
@@ -48,8 +128,7 @@
 	// Drag hover state
 	&.dz-drag-hover {
 		.depot-drop-zone {
-			outline        : 2px dashed oklch(var(--totalform-accent));
-			outline-offset : -2px;
+			border-color : oklch(var(--totalform-accent));
 		}
 		.dz-overlay {
 			opacity : 0.9;
@@ -66,15 +145,18 @@
 		opacity : 0;
 	}
 
-	// Floating upload button (like gallery)
+	// Floating upload button (like gallery). A fixed size, so that a site's
+	// box-sizing or button rules cannot squash the circle.
 	.depot-drop-upload {
 		display          : none;
 		position         : absolute;
 		bottom           : 10px;
 		right            : 10px;
+		box-sizing       : border-box;
+		width            : 3.5rem;
+		height           : 3.5rem;
+		padding          : 0;
 		background-color : oklch(var(--totalform-purewhite));
-		padding          : 1rem;
-		aspect-ratio     : 1;
 		border-radius    : 50%;
 		z-index          : 99;
 		transition       : scale 300ms ease-in-out, opacity 300ms linear;
@@ -85,13 +167,17 @@
 			appearance       : none;
 			border           : none;
 			display          : block;
+			flex             : none;
 			padding          : 0;
 			margin           : 0;
 			cursor           : pointer;
 			background-color : oklch(var(--totalform-help-color));
 			width            : 1.5rem;
-			aspect-ratio     : 1;
+			height           : 1.5rem;
 			mask-image       : var(--icon-upload-alt);
+			mask-size        : contain;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
 		}
 
 		&:hover {
@@ -106,7 +192,8 @@
 			opacity : 0;
 		}
 		.depot-drop-upload {
-			display : block;
+			display     : grid;
+			place-items : center;
 		}
 	}
 
@@ -125,13 +212,50 @@
 		display               : grid;
 		grid-template-columns : repeat(auto-fill, minmax(200px, 1fr));
 		gap                   : 0.75rem;
-		min-height            : 130px;
+		min-height            : 150px;
 		align-content         : start;
 	}
 
 	// Upload cards - styled like file field
 	.depot-drop-card {
 		position : relative;
+
+		// Takes a waiting or refused file out of the batch
+		.depot-drop-remove {
+			appearance       : none;
+			position         : absolute;
+			top              : 4px;
+			right            : 4px;
+			z-index          : 11;
+			box-sizing       : border-box;
+			display          : grid;
+			place-items      : center;
+			width            : 1.75rem;
+			height           : 1.75rem;
+			padding          : 0;
+			margin           : 0;
+			border           : none;
+			border-radius    : 50%;
+			background-color : oklch(var(--totalform-purewhite));
+			box-shadow       : 0 0 4px 0 oklch(var(--totalform-shadow));
+			cursor           : pointer;
+
+			&::before {
+				content          : "";
+				width            : 0.8rem;
+				height           : 0.8rem;
+				background-color : oklch(var(--totalform-darkgray));
+				mask-image       : var(--icon-close);
+				mask-size        : contain;
+				mask-repeat      : no-repeat;
+				mask-position    : center;
+			}
+
+			&:hover::before,
+			&:focus-visible::before {
+				background-color : oklch(var(--totalform-error));
+			}
+		}
 
 		.dz-preview {
 			min-width        : 100%;
@@ -162,6 +286,21 @@
 			overflow      : hidden;
 			text-overflow : ellipsis;
 			white-space   : nowrap;
+		}
+
+		// The reason a file was refused, under the filename. Room for the status
+		// bar only when there is one: a file refused in the browser never gets it.
+		.dz-preview:has(.dz-progress) .dz-error-message {
+			margin-bottom : 2.25rem;
+		}
+
+		.dz-error-message {
+			margin      : 0.25rem 0.5rem 0;
+			color       : oklch(var(--totalform-error));
+			font-size   : 0.75rem;
+			line-height : 1.3;
+			text-align  : center;
+			overflow-wrap : anywhere;
 		}
 
 		// Progress bar - matches file field / droplet.scss
@@ -210,6 +349,12 @@
 		&.dz-processing .dz-progress {
 			opacity    : 1;
 			transition : all 0.2s linear;
+		}
+
+		// Finished cards keep their status mark (check or cross) on show
+		&.dz-success .dz-progress,
+		&.dz-error .dz-progress {
+			opacity : 1;
 		}
 
 		// Success state

@@ -22,7 +22,8 @@ use TotalCMS\Factory\LoggerFactory;
 /**
  * Applies {@see BotProtection} to an anonymous write: the public registration
  * endpoint (`register`), public-submission object creates and clones
- * (`create`), and the mail a form's mailer action sends ({@see self::screenMail()}).
+ * (`create`), anonymous depot uploads (`upload`, {@see self::screenUpload()}),
+ * and the mail a form's mailer action sends ({@see self::screenMail()}).
  *
  * The check runs only when the body carries either bot field or the
  * collection has **Require Bot Protection** on, so a form built before the
@@ -66,10 +67,23 @@ final readonly class BotSubmissionGate
 	}
 
 	/**
+	 * The same check for an anonymous depot upload. Unlike a form, it is always
+	 * required: an upload opens a write no collection setting asked for.
+	 *
+	 * @param array<string,mixed> $body
+	 *
+	 * @return array{0: array<string,mixed>, 1: string} the body without the bot fields, and '' when it passes or the reason it failed
+	 */
+	public function screenUpload(ServerRequestInterface $request, array $body, string $collection): array
+	{
+		return $this->verdict($request, $body, $collection, ['upload'], true, ['form' => 'upload']);
+	}
+
+	/**
 	 * The same check for a form's mailer action, which the browser sends to
 	 * `/api/action/mailer` after the save. The mail data is the form's data,
 	 * so it carries the form's bot fields; `$collection` is the form's
-	 * collection, and the token may be a create or a register token.
+	 * collection, and the token may be a create, register or upload token.
 	 * `$required` is the template's own Require Bot Protection setting.
 	 *
 	 * @param array<string,mixed> $data
@@ -78,7 +92,7 @@ final readonly class BotSubmissionGate
 	 */
 	public function screenMail(ServerRequestInterface $request, array $data, string $collection, string $mailerId, bool $required): array
 	{
-		return $this->verdict($request, $data, $collection, ['create', 'register'], $required, ['mailer' => $mailerId]);
+		return $this->verdict($request, $data, $collection, ['create', 'register', 'upload'], $required, ['mailer' => $mailerId]);
 	}
 
 	/**

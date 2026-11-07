@@ -111,6 +111,7 @@ Total CMS provides ready-to-use forms for standard collection types:
 {{ cms.form.url(id, formSettings = {}, fieldSettings = {}) }}
 {{ cms.form.file(id, formSettings = {}, fieldSettings = {}) }}
 {{ cms.form.depot(id, formSettings = {}, fieldSettings = {}) }}
+{{ cms.form.depotDrop(id, formSettings = {}, fieldSettings = {}) }}
 {{ cms.form.gallery(id, formSettings = {}, fieldSettings = {}) }}
 
 {# Feed form #}

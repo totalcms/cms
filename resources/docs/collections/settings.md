@@ -407,6 +407,7 @@ Operations that unauthenticated users can perform on this collection via the API
 - `create` without authentication can lead to spam; [`requireBotProtection`](#requirebotprotection) turns naive bots away
 - `update` and `delete` are rarely appropriate for public access
 - Consider rate limiting for public endpoints
+- A public file drop is not a collection operation either: set `publicUpload` on the depot property instead, so visitors can add files and do nothing else. See [Public Uploads](docs/forms/public-uploads)
 - Public counters (likes, "was this helpful") are not a collection operation: set `publicIncrement: true` on the number field instead — see [Number and Range Fields](docs/fields/number-range)
 
 **Common patterns:**

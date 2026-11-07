@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FormField\DepotField;
+use TotalCMS\Domain\Admin\FormField\TextareaField;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -170,5 +171,69 @@ describe('DepotField chrome', function (): void {
 		foreach ($keys as $key) {
 			expect($catalog)->toHaveKey($key);
 		}
+	});
+});
+
+describe('DepotField file labels', function (): void {
+	function renderDepotFiles(array $files): string
+	{
+		return (new DepotField(form: depotFormForLocale(null), name: 'mydepot', value: ['files' => $files]))->buildFormField();
+	}
+
+	test('labels a public upload with its download name, not the prefixed stored name', function (): void {
+		$html = renderDepotFiles([['name' => 'a1b2c3d4e5f60718-report.pdf', 'download' => 'report.pdf', 'mime' => 'application/pdf', 'size' => 10]]);
+
+		expect($html)->toContain('icon-pdf">report.pdf</div>');
+		expect($html)->not->toContain('icon-pdf">a1b2c3d4e5f60718-report.pdf</div>');
+	});
+
+	test('falls back to the stored name when there is no download name', function (): void {
+		$html = renderDepotFiles([['name' => 'plain.pdf', 'download' => '', 'mime' => 'application/pdf', 'size' => 10]]);
+
+		expect($html)->toContain('icon-pdf">plain.pdf</div>');
+	});
+
+	test('escapes a download name, since the visitor wrote it', function (): void {
+		$html = renderDepotFiles([['name' => 'a1b2c3d4e5f60718-x.pdf', 'download' => '<img src=x onerror=alert(1)>.pdf', 'mime' => 'application/pdf', 'size' => 10]]);
+
+		expect($html)->not->toContain('<img src=x');
+		expect($html)->toContain('&lt;img src=x onerror=alert(1)&gt;.pdf</div>');
+	});
+});
+
+describe('DepotField comments dialog', function (): void {
+	function renderDepotWithComment(string $comment): string
+	{
+		$form             = test()->createMock(TotalForm::class);
+		$form->id         = '';
+		$form->collection = 'test-collection';
+		$form->api        = '/api';
+		$form->method('isEditMode')->willReturn(false);
+		$form->method('field')->willReturn('');
+		$form->method('t')->willReturnCallback(static fn (string $key, string $default = ''): string => $default !== '' ? $default : $key);
+		$form->method('subField')->willReturnCallback(
+			static fn (string $name, array $options = []): string => ($options['field'] ?? '') === 'textarea'
+				? (new TextareaField(form: $form, name: $name, value: $options['value'] ?? ''))->buildFormField()
+				: '',
+		);
+		$file = ['name' => 'a1b2c3d4e5f60718-x.pdf', 'download' => 'x.pdf', 'mime' => 'application/pdf', 'size' => 10, 'comments' => $comment];
+
+		return (new DepotField(form: $form, name: 'mydepot', value: ['files' => [$file]]))->buildFormField();
+	}
+
+	test('a visitor comment that closes the textarea stays text', function (): void {
+		$payload = '</textarea><img src=x onerror=alert(1)>';
+		$html    = renderDepotWithComment($payload);
+
+		expect($html)->not->toContain('<img src=x')
+			->and(html_entity_decode($html))->toContain($payload);
+		// One textarea in the file row and one in the (empty) template: each closes once.
+		expect(substr_count($html, '</textarea>'))->toBe(substr_count($html, '<textarea'));
+	});
+
+	test('a comment is encoded once, so the editor shows what was stored', function (): void {
+		$html = renderDepotWithComment('Tom & Jerry &amp; co');
+
+		expect($html)->toContain('Tom &amp; Jerry &amp;amp; co');
 	});
 });

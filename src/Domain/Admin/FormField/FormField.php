@@ -250,8 +250,10 @@ class FormField
 		];
 
 		// `attributes` went onto the control itself; the browser-side field
-		// reads the rest of the settings from this attribute.
-		$settings = array_diff_key($this->settings, ['attributes' => true]);
+		// reads the rest of the settings from this attribute. `publicUpload` is
+		// a depot's grant for anonymous visitors (folder, total cap); the page
+		// is public, so no field type may print it.
+		$settings = array_diff_key($this->settings, ['attributes' => true, 'publicUpload' => true]);
 		if ($settings !== []) {
 			$json = json_encode($settings);
 			if ($json) {

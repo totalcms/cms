@@ -31,6 +31,12 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Wird verarbeitet...',
+	'depot.files_sent'               => 'Ihre Dateien wurden gesendet.',
+	'depot.file_too_big'            => 'Diese Datei ist zu groß ({{filesize}} MB). Das Limit beträgt {{maxFilesize}} MB.',
+	'depot.invalid_file_type'       => 'Dieser Dateityp wird nicht akzeptiert.',
+	'depot.upload_failed'           => 'Der Upload hat nicht geklappt. Bitte versuchen Sie es erneut.',
+	'depot.upload_expired'          => 'Dieses Formular ist abgelaufen. Laden Sie die Seite neu und versuchen Sie es erneut.',
+	'depot.remove_file'             => 'Entfernen',
 
 	// ── Markdown Field ──────────────────────────────────────────────────────
 	'markdown.visual_title'        => 'In den visuellen Editor wechseln?',

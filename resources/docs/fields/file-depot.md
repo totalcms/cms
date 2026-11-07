@@ -142,6 +142,10 @@ For depot (multiple file) fields, the setting works the same way:
 }
 ```
 
+### Public Uploads
+
+To let visitors without an account send files to a depot from a public page, add a `publicUpload` setting to the depot property and use `cms.form.depotDrop`. See [Public Uploads](docs/forms/public-uploads).
+
 ### Important Notes
 
 - **Existing Files:** This setting only affects the default for new uploads. Existing files retain their current `protected` value.

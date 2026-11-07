@@ -6,6 +6,7 @@ namespace Tests\Unit\Renderer;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Renderer\FileStreamRenderer;
 
@@ -92,5 +93,37 @@ final class FileStreamRendererTest extends TestCase
 		$this->assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
 		$this->assertSame('no', $response->getHeaderLine('X-Accel-Buffering'));
 		$this->assertSame('PDF-BYTES', (string)$response->getBody());
+	}
+
+	/** @return array<string,array{0:string,1:string}> */
+	public static function dispositionNames(): array
+	{
+		return [
+			'plain'      => ['report.pdf', 'filename="report.pdf"'],
+			'quote'      => ['a"b.pdf', 'filename="a\\"b.pdf"'],
+			'backslash'  => ['a\\b.pdf', 'filename="a\\\\b.pdf"'],
+			'injection'  => ['r.pdf"; filename*=UTF-8\'\'evil.exe; x=".pdf', 'filename="r.pdf\\"; filename*=UTF-8\'\'evil.exe; x=\\".pdf"'],
+			'control'    => ["a\r\nX-Evil: 1.pdf", 'filename="aX-Evil: 1.pdf"'],
+			'non-ascii'  => ['résumé 1.pdf', 'filename="r_sum_ 1.pdf"; filename*=UTF-8\'\'r%C3%A9sum%C3%A9%201.pdf'],
+			'bad utf-8'  => ["a\xFFb.pdf", 'filename="a?b.pdf"'],
+		];
+	}
+
+	#[DataProvider('dispositionNames')]
+	public function testADownloadEncodesItsFilename(string $name, string $expected): void
+	{
+		$factory  = new Psr17Factory();
+		$response = (new FileStreamRenderer(new PhpSession()))->download($factory->createResponse(), 'application/pdf', $name, 'x');
+
+		$this->assertSame('attachment; ' . $expected, $response->getHeaderLine('Content-Disposition'));
+	}
+
+	#[DataProvider('dispositionNames')]
+	public function testAStreamEncodesItsFilename(string $name, string $expected): void
+	{
+		$factory  = new Psr17Factory();
+		$response = (new FileStreamRenderer(new PhpSession()))->stream($factory->createServerRequest('GET', '/x'), $factory->createResponse(), 'video/mp4', $name, 3, $this->open('abc'));
+
+		$this->assertSame('inline; ' . $expected, $response->getHeaderLine('Content-Disposition'));
 	}
 }

@@ -119,6 +119,11 @@ abstract class UploadField extends FormField
 		return HTMLUtils::element('section', $button);
 	}
 
+	private static function escapeForTextarea(mixed $value): string
+	{
+		return htmlspecialchars(is_scalar($value) ? (string)$value : '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+
 	/** @param array<string,mixed> $data */
 	protected function infoFields(array $data): string
 	{
@@ -132,7 +137,10 @@ abstract class UploadField extends FormField
 			'field' => 'textarea',
 			'label' => $this->t('upload.comments', 'Comments'),
 			'help'  => $this->t('upload.comments_help', 'Comments about this file'),
-			'value' => $data['comments'] ?? '',
+			// Escaped here, not in TextareaField: the comment can come from an
+			// anonymous visitor, and a value holding `</textarea>` would close
+			// the element and run what follows when an admin opens this dialog.
+			'value' => self::escapeForTextarea($data['comments'] ?? ''),
 		]);
 		$content .= $this->form->subField('tags', $this->tagFieldSettings($data));
 

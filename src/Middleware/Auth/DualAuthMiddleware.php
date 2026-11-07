@@ -14,6 +14,8 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
@@ -24,6 +26,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Factory\LogChannel;
@@ -66,6 +69,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private SessionActivityTracker $activity,
 		private LoginRedirector $redirector,
 		private AccessGuard $guard,
+		private PublicUploadPolicy $uploadPolicy,
+		private ActorResolver $actorResolver,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -248,6 +253,41 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		return ($meta['settings']['publicIncrement'] ?? false) === true;
 	}
 
+	private function propertyHasPublicUpload(string $collectionId, string $property): bool
+	{
+		if ($property === '') {
+			return false;
+		}
+
+		try {
+			return $this->uploadPolicy->grantFor($collectionId, $property) !== null;
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
+	/**
+	 * Whether a caller on a granted depot should be authenticated rather than
+	 * treated as a visitor: anyone sending an API key, and a signed-in user who
+	 * may update the collection. They go through CSRF and the access check and
+	 * are stamped with `authMethod`, which is what spares them the upload
+	 * guard. A signed-in member with no such right stays a visitor and is held
+	 * to the grant's limits; the one thing their session spares them is the
+	 * bot check, which BotSubmissionGate skips for a signed-in caller.
+	 */
+	private function uploadsWithOwnRights(ServerRequestInterface $request, string $collectionId, string $objectId): bool
+	{
+		if ($this->authenticator->hasApiKeyHeader($request)) {
+			return true;
+		}
+
+		if (!$this->accessManager->sessionHasUser() && !$this->persistentLoginService->restoreFromPersistentToken()) {
+			return false;
+		}
+
+		return $this->guard->groupAllows($this->actorResolver->fromSession(), $collectionId, Operation::Update->value, $objectId);
+	}
+
 	private function isPublicCollectionRequest(ServerRequestInterface $request): bool
 	{
 		// Must have collection in route - get from route arguments, not request attributes
@@ -282,6 +322,17 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// decremented anonymously, and nothing else about the object opens up.
 		if ($operation === 'increment') {
 			return $this->propertyAllowsPublicIncrement($collectionId, (string)$route->getArgument('property'));
+		}
+
+		// A depot may take anonymous uploads when its `publicUpload` setting
+		// names the extensions allowed. Only the plain upload route opens: the
+		// nested route (card and deck children) and every other file route
+		// stay closed, so a grant cannot read, replace, move or delete. This
+		// answers for a grant before public `update` can: a caller the grant
+		// does not cover authenticates normally, and PublicUploadGuardMiddleware
+		// holds everyone else to the grant, public `update` or not.
+		if ((string)$route->getName() === 'property-file-save' && $this->propertyHasPublicUpload($collectionId, (string)$route->getArgument('property'))) {
+			return !$this->uploadsWithOwnRights($request, $collectionId, (string)$route->getArgument('id'));
 		}
 
 		// Clone counts as `create`, but it is not one: it copies an EXISTING

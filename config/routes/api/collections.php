@@ -17,6 +17,7 @@ use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
 use TotalCMS\Middleware\Security\IncrementRateLimitMiddleware;
+use TotalCMS\Middleware\Security\PublicUploadGuardMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -89,7 +90,9 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->delete('/{collection}/{id}/{property}/deck/{itemId}', Property\Deck\DeckItemDeleteAction::class)->setName('deck-item-delete');
 
 		// Property File
-		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
+		// A depot with a `publicUpload` grant takes anonymous uploads here, and
+		// only here: the guard holds them to what the grant allows.
+		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save')->add(PublicUploadGuardMiddleware::class);
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->put('/{collection}/{id}/{property}/folder/rename', Property\File\FolderRenameAction::class)->setName('property-folder-rename');
 		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');

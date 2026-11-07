@@ -13,6 +13,9 @@ class DepotSaver extends FileSaver
 {
 	public string $type = 'depot';
 
+	/** The name the last saved file was stored under, which can differ from the uploaded name. */
+	public string $savedName = '';
+
 	public function rebuildFromStorage(string $collection, string $id, string $property, ?string $subpath = null): ?PropertyData
 	{
 		// Walk the on-disk folder tree (listPropertyFiles is non-recursive and
@@ -66,6 +69,24 @@ class DepotSaver extends FileSaver
 		string $filePath,
 		?string $subpath = null,
 	): ObjectData {
+		return $this->saveDescribed($collection, $objectID, $property, $filePath, [], $subpath);
+	}
+
+	/**
+	 * Save a file with its descriptive meta in the one write, so a listener on
+	 * `object.updated` sees it whole. The keys are the ones the depot's edit
+	 * dialog may set; {@see MediaMetaPolicy} ignores any other.
+	 *
+	 * @param array<string,mixed> $meta
+	 */
+	public function saveDescribed(
+		string $collection,
+		string $objectID,
+		string $property,
+		string $filePath,
+		array $meta,
+		?string $subpath = null,
+	): ObjectData {
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);
@@ -76,14 +97,15 @@ class DepotSaver extends FileSaver
 			throw new \RuntimeException('Expected instance of DepotData');
 		}
 
-		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
+		$fileinfo        = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
+		$this->savedName = (string)$fileinfo['name'];
 
 		// Keep the downlaod name as the original file name in case the file was renamed
 		$fileinfo['download'] = basename($filePath);
 
 		// Directly find or create the folder in the specified path and add the file
 		$depotManager = new DepotPropertyManager($depot);
-		$depotManager->addFile(new FileData($fileinfo), $subpath);
+		$depotManager->addFile(new FileData(MediaMetaPolicy::merge($this->type, $fileinfo, $meta)), $subpath);
 
 		return $this->updateObject($collection, $objectID, $property, $depot);
 	}

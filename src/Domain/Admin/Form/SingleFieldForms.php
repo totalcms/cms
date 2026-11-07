@@ -89,6 +89,17 @@ final readonly class SingleFieldForms
 		// firing both ran every edit action twice per drop-and-save).
 		$formSettings['class'] = trim(($formSettings['class'] ?? 'custom-layout') . ' depot-drop-form');
 
+		// These belong to the field, but a page needs only one options array. The
+		// builder passes a field only its known keys, so they go under `settings`.
+		// The third argument wins when both are set.
+		foreach (['tags', 'comments', 'tagLabel', 'commentLabel'] as $key) {
+			$value = $fieldSettings[$key] ?? $formSettings[$key] ?? null;
+			unset($fieldSettings[$key], $formSettings[$key]);
+			if ($value !== null) {
+				$fieldSettings['settings'][$key] ??= $value;
+			}
+		}
+
 		return $this->build($id, $formSettings['collection'], $property, 'depotDrop', $formSettings, $fieldSettings);
 	}
 

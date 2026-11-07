@@ -7198,6 +7198,7 @@
                 "x-tcms-route": "/api/collections/{collection}/{id}/{property}",
                 "x-tcms-action": "FileSaveAction",
                 "x-tcms-middleware": [
+                    "PublicUploadGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",

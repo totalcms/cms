@@ -8,6 +8,8 @@ use TotalCMS\Domain\Media\Data\StoredFile;
 use TotalCMS\Domain\Media\Exception\UploadRejectedException;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Property\Service\DepotSaver;
+use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
@@ -83,8 +85,14 @@ final readonly class PropertyFileStore
 	 * Store a local file on the field. An image or file field is replaced, a
 	 * gallery gains one image at the end, and a depot gains the file at
 	 * `$subpath` (a folder), exactly as an upload in the admin does.
+	 *
+	 * `$depotMeta` is written with a depot's new file rather than after it, so
+	 * the file lands whole in one write and one `object.updated`. Other field
+	 * types ignore it; {@see self::describe()} covers them.
+	 *
+	 * @param array<string,mixed> $depotMeta
 	 */
-	public function store(string $collection, string $id, string $property, string $localPath, ?string $subpath = null): StoredFile
+	public function store(string $collection, string $id, string $property, string $localPath, ?string $subpath = null, array $depotMeta = []): StoredFile
 	{
 		// HEIC becomes JPEG where it can; a failed conversion keeps the original, to retry later.
 		if ($this->heicConverter->isHeicFile($localPath)) {
@@ -95,13 +103,15 @@ final readonly class PropertyFileStore
 		}
 
 		$saver  = $this->factory->generateSaverService($collection, $property, $id, $subpath);
-		$object = $saver->save($collection, $id, $property, $localPath, $subpath);
+		$object = $saver instanceof DepotSaver
+			? $saver->saveDescribed($collection, $id, $property, $localPath, $depotMeta, $subpath)
+			: $saver->save($collection, $id, $property, $localPath, $subpath);
 		$type   = $saver->type;
 
 		return new StoredFile(
 			object: $object,
 			type: $type,
-			name: $this->storedName($object, $property, $type, $localPath, $subpath),
+			name: $this->storedName($object, $property, $type, $saver, $localPath, $subpath),
 			preview: UploadPreviewUrl::build($type, $this->config->api, $collection, $id, $property, $subpath, $object),
 		);
 	}
@@ -159,16 +169,18 @@ final readonly class PropertyFileStore
 
 	/**
 	 * The name the file was stored under: the field's own for an image or a
-	 * file (in a card or deck item too), the last gallery image's, and the local name for a depot (which
-	 * keeps it).
+	 * file (in a card or deck item too), the last gallery image's, and for a
+	 * depot the name it was saved under, which differs from the uploaded name
+	 * when the name was cleaned or already taken.
 	 */
-	private function storedName(ObjectData $object, string $property, string $type, string $localPath, ?string $subpath = null): string
+	private function storedName(ObjectData $object, string $property, string $type, FileSaver $saver, string $localPath, ?string $subpath = null): string
 	{
 		$value = $this->fileValue($object, $property, $type, $subpath);
 
 		return match (true) {
 			$type === 'gallery' && is_array($value) && array_is_list($value) && $value !== [] => (string)(end($value)['name'] ?? ''),
 			in_array($type, ['image', 'file'], true) && is_array($value)                      => (string)($value['name'] ?? ''),
+			$saver instanceof DepotSaver                                                      => $saver->savedName,
 			default                                                                           => basename($localPath),
 		};
 	}

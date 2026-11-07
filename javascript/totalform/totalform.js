@@ -1140,6 +1140,8 @@ export default class TotalForm {
 		this.fields.forEach(field => {
 			if (field.isSubField()) return; // skip subfields
 			data[field.property] = field.getValue();
+			// A field may add payload of its own (the depot drop's bot token).
+			if (typeof field.extraData === "function") Object.assign(data, field.extraData());
 		});
         return data;
     }

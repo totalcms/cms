@@ -17,8 +17,8 @@ use TotalCMS\Domain\Security\Encryption\SiteKey;
  * anything, when the token is missing or forged, when it arrives sooner than
  * a person could fill the form, or when the token is a day old.
  *
- * The signature covers the collection and the form type (`register` or
- * `create`), so a token issued for one form is useless on another.
+ * The signature covers the collection and the form type (`register`,
+ * `create` or `upload`), so a token issued for one form is useless on another.
  *
  * The key is derived from the same per-site secret {@see Cipher::encrypt()} uses, falling
  * back to Cipher::SALT only before the data directory exists — when there is

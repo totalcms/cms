@@ -172,6 +172,7 @@ use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\OAuth\Service\OAuthTtl;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -626,6 +627,7 @@ return [
 		guard                   : $container->get(AccessGuard::class),
 		actors                  : $container->get(ActorContext::class),
 		mailers                 : $container->get(MailerFetcher::class),
+		uploads                 : $container->get(PublicUploadPolicy::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

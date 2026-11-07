@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Media\Service;
 
 use Psr\Http\Message\UploadedFileInterface;
+use TotalCMS\Domain\Media\Exception\UploadRejectedException;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
 
@@ -15,6 +16,9 @@ use TotalCMS\Support\Config;
  */
 readonly class ChunkedUploadAssembler
 {
+	private const PREFIX      = 'upload-';
+	private const STALE_AFTER = 86400;
+
 	private const UPLOAD_ERRORS = [
 		UPLOAD_ERR_INI_SIZE   => 'File exceeds upload_max_filesize in php.ini',
 		UPLOAD_ERR_FORM_SIZE  => 'File exceeds MAX_FILE_SIZE in HTML form',
@@ -35,7 +39,8 @@ readonly class ChunkedUploadAssembler
 	 *
 	 * @param array<string,mixed> $body The request body carrying the chunk counters
 	 *
-	 * @throws \RuntimeException On a PHP upload error or an unwritable temp file
+	 * @throws UploadRejectedException When the last part lands and an earlier one never did
+	 * @throws \RuntimeException       On a PHP upload error or an unwritable temp file
 	 */
 	public function receive(UploadedFileInterface $file, array $body): ?string
 	{
@@ -46,29 +51,95 @@ readonly class ChunkedUploadAssembler
 
 		$chunkIndex  = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
 		$totalChunks = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
-		$filename    = $file->getClientFilename() ?? 'unknown_file';
+		$filename    = basename($file->getClientFilename() ?? 'unknown_file');
+		$filename    = $filename === '' ? 'unknown_file' : $filename;
 
 		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
+		$this->sweepStale();
 
-		$file->moveTo($this->chunkPath($filename, $chunkIndex));
+		// The client's dzuuid is untrusted: only its hash reaches a path.
+		// Legacy clients chunk without a dzuuid: key a multi-chunk upload on its
+		// filename so the parts still meet; a single chunk gets a random id.
+		$uuid = $body['dzuuid'] ?? null;
+		if (is_string($uuid) && $uuid !== '') {
+			$id = hash('sha256', $uuid);
+		} elseif ($totalChunks > 1) {
+			$id = hash('sha256', $filename);
+		} else {
+			$id = bin2hex(random_bytes(16));
+		}
+		$dir  = $this->config->tmpdir . '/' . self::PREFIX . $id;
+		FileUtils::ensureDirectory($dir, 0700);
+
+		$file->moveTo($this->chunkPath($dir, $filename, $chunkIndex));
 
 		if ($chunkIndex !== $totalChunks - 1) {
 			return null;
 		}
 
-		return $this->assemble($filename, $totalChunks);
+		return $this->assemble($dir, $filename, $totalChunks);
 	}
 
-	private function assemble(string $filename, int $totalChunks): string
+	/**
+	 * Remove the upload folder holding an assembled file. Safe when the file
+	 * was already moved away, and a no-op for any path that is not directly
+	 * inside an `upload-*` folder of the temp directory.
+	 */
+	public function cleanup(string $assembledPath): void
 	{
-		$finalPath = $this->config->tmpdir . '/' . $filename;
+		$dir  = dirname($assembledPath);
+		$root = realpath($this->config->tmpdir);
+		if ($root === false || realpath(dirname($dir)) !== $root) {
+			return;
+		}
+		if (!str_starts_with(basename($dir), self::PREFIX) || !is_dir($dir) || is_link($dir)) {
+			return;
+		}
+
+		$this->removeDir($dir);
+	}
+
+	/** Drop upload folders nobody has touched for a day (abandoned chunked uploads). */
+	private function sweepStale(): void
+	{
+		$cutoff = time() - self::STALE_AFTER;
+		foreach (glob($this->config->tmpdir . '/' . self::PREFIX . '*', GLOB_ONLYDIR) ?: [] as $dir) {
+			if (!is_link($dir) && (int)filemtime($dir) < $cutoff) {
+				$this->removeDir($dir);
+			}
+		}
+	}
+
+	private function removeDir(string $dir): void
+	{
+		foreach (scandir($dir) ?: [] as $entry) {
+			if ($entry !== '.' && $entry !== '..') {
+				@unlink($dir . '/' . $entry);
+			}
+		}
+		@rmdir($dir);
+	}
+
+	private function assemble(string $dir, string $filename, int $totalChunks): string
+	{
+		// A last part with no earlier ones can come from a client that lost
+		// them, or one sending a single part to look like the end of an upload.
+		for ($i = 0; $i < $totalChunks; $i++) {
+			if (!is_file($this->chunkPath($dir, $filename, $i))) {
+				$this->removeDir($dir);
+
+				throw new UploadRejectedException(['The upload is incomplete.']);
+			}
+		}
+
+		$finalPath = $dir . '/' . $filename;
 		$final     = fopen($finalPath, 'wb');
 		if ($final === false) {
 			throw new \RuntimeException('Unable to open final file for writing:' . $finalPath);
 		}
 
 		for ($i = 0; $i < $totalChunks; $i++) {
-			$chunkPath = $this->chunkPath($filename, $i);
+			$chunkPath = $this->chunkPath($dir, $filename, $i);
 			$chunk     = fopen($chunkPath, 'rb');
 			if ($chunk === false) {
 				throw new \RuntimeException('Unable to open chunk file');
@@ -85,8 +156,8 @@ readonly class ChunkedUploadAssembler
 		return $finalPath;
 	}
 
-	private function chunkPath(string $filename, int $chunkIndex): string
+	private function chunkPath(string $dir, string $filename, int $chunkIndex): string
 	{
-		return $this->config->tmpdir . '/' . $filename . '.part' . $chunkIndex;
+		return $dir . '/' . $filename . '.part' . $chunkIndex;
 	}
 }

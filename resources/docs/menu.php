@@ -185,6 +185,7 @@ $menu = [
 			['title' => 'Field Settings',      'path' => 'forms/fields'],
 			['title' => 'Form Options',        'path' => 'forms/options'],
 			['title' => 'Validation Patterns', 'path' => 'forms/patterns'],
+			['title' => 'Public Uploads',      'path' => 'forms/public-uploads'],
 			['title' => 'Report Form',         'path' => 'forms/report'],
 			['title' => 'Specialized Forms',   'path' => 'forms/specialized'],
 		],

@@ -34,7 +34,7 @@ final readonly class FileStreamRenderer
 
 		return ActiveContentHeaders::apply($response, $mime)
 			->withHeader('Content-Type', $mime)
-			->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\"")
+			->withHeader('Content-Disposition', $this->disposition('attachment', $filename))
 			->withHeader('X-Accel-Buffering', 'no')
 			->withBody(Stream::create($body));
 	}
@@ -54,7 +54,7 @@ final readonly class FileStreamRenderer
 		// upload run on this origin — ActiveContentHeaders sandboxes that.
 		$response = ActiveContentHeaders::apply($response, $mime)
 			->withHeader('Content-Type', $mime)
-			->withHeader('Content-Disposition', "inline; filename=\"{$filename}\"")
+			->withHeader('Content-Disposition', $this->disposition('inline', $filename))
 			->withHeader('Accept-Ranges', 'bytes')
 			->withHeader('Cache-Control', 'no-cache');
 
@@ -100,6 +100,21 @@ final readonly class FileStreamRenderer
 			->withHeader('X-Accel-Buffering', 'no')
 			->withHeader('Content-Length', (string)$size)
 			->withBody(Stream::create($open()));
+	}
+
+	/**
+	 * Content-Disposition per RFC 6266. The name may be a visitor's, so it is
+	 * only ever one value: quotes and backslashes are escaped inside the quoted
+	 * `filename`, control characters are dropped, and a non-ASCII name gets an
+	 * ASCII `filename` plus the real one in a percent-encoded `filename*`.
+	 */
+	private function disposition(string $type, string $filename): string
+	{
+		$name   = (string)preg_replace('/[\x00-\x1F\x7F]/', '', mb_scrub($filename, 'UTF-8'));
+		$ascii  = (string)preg_replace('/[^\x20-\x7E]/u', '_', $name);
+		$header = $type . '; filename="' . addcslashes($ascii, '"\\') . '"';
+
+		return $ascii === $name ? $header : $header . "; filename*=UTF-8''" . rawurlencode($name);
 	}
 
 	private function releaseBeforeStreaming(): void

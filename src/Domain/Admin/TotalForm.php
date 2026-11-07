@@ -20,11 +20,14 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\Media\Data\PublicUploadGrant;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Security\BotSubmissionGate;
 
 /**
  * Total Form Builder.
@@ -478,6 +481,21 @@ class TotalForm implements \Stringable
 	public function getMetaResolver(): PropertyMetaResolver
 	{
 		return $this->services->metaResolver;
+	}
+
+	/**
+	 * What an anonymous visitor may drop into this form's collection property,
+	 * or null: the property grants nothing, or someone is signed in (a signed-in
+	 * visitor uploads as themselves, under the usual rules, and gets no bot check).
+	 */
+	public function publicUploadGrant(string $property): ?PublicUploadGrant
+	{
+		$policy = $this->services->uploads;
+		if (!$policy instanceof PublicUploadPolicy || BotSubmissionGate::sessionSignedIn($this->services->session)) {
+			return null;
+		}
+
+		return $policy->grantFor($this->collection, $property);
 	}
 
 	/** The TotalForm log channel; a NullLogger when nothing was injected. */

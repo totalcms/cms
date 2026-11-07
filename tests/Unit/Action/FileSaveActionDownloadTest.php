@@ -6,6 +6,8 @@ use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Media\Service\PropertyFileStore;
+use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
@@ -34,7 +36,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 
 	$store = new PropertyFileStore($factory, $config, $heicConverter, new RemoteFileDownloader($config, stubPublicHttp($httpClient)), new FileUploadValidator(), test()->createMock(ObjectPatcher::class));
 
-	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config));
+	return new FileSaveAction($renderer, $store, new ChunkedUploadAssembler($config), $config, test()->createMock(PublicUploadPolicy::class), test()->createMock(ObjectFetcher::class));
 }
 
 /** The URL fetch FileSaveAction hands to PropertyFileStore, with the same downloader. */

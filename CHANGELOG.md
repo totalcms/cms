@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [3.6.8] - Unreleased
 
+### Added
+
+- **Visitors can send files to a depot without an account.** Add a `publicUpload` setting to a depot property and put `{{ cms.form.depotDrop('inbox', {collection: 'dropbox'}) }}` on a public page. You choose the file types, the size limits and the folder, and visitors can add files and nothing else. A visitor can also leave a comment and pick a tag from a list you set in the template, both saved on each file. Uploads are limited per address, and a hidden check keeps bots out without a CAPTCHA. Uploads are not virus scanned. See Public Uploads in the Forms docs
+
 ### Changed
 
 - **`cms.form.builder()` printed on its own is a working form.** `{{ cms.form.builder('contact', {addOnly: true}) }}` now builds the schema's fields and a save button, and `.build()` does the same. Before, it rendered an empty form. A `register: true` form leaves out protected fields such as `groups`. Forms that use `addField()` or pass their own markup don't change
@@ -16,6 +20,11 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **Every depot list in the admin shows the original or custom download name.** The list used to show the name on disk. Files sent through a public upload carry a random prefix there, and it no longer shows
+- **Same-name uploads no longer mix.** Two uploads of a file with the same name at the same time could get each other's chunks
+- **Parallel uploads to a depot keep every file.** A file could drop off the depot's list while it stayed on disk
+- **A comment sent with an upload lands on the right file.** When a file was renamed on save, the comment could go to another file or nowhere
+- **File download names are encoded properly.** Names with quotes, accents or other unusual characters now download under the right name
 - **The disabled-extension warning no longer breaks admin pages.** It took a column of the page layout, which pushed the sidebar and content sideways. Warnings now sit in their own row across the top of the page
 - **A saved template reaches the next request with Development Mode off.** Saved pages, layouts and partials used to stay stale until the cache was cleared. **Behavior change:** files changed on disk, including by a git deploy, now show up without clearing the cache. A `{% cache %}` block still keeps its output until its `ttl` runs out
 
