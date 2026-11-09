@@ -32,8 +32,37 @@ export default class DepotDropField extends TotalField {
         this.batchTag     = "";
         this.hadSuccess   = false;
 
+        // The server drops, as a bot, an upload that comes sooner than
+        // `botWait` seconds after it built the page, and still answers ok. So
+        // a quick drop waits in the browser until then. Counted from here,
+        // which is always after the page was built.
+        this.readyAt = Date.now() + (Number(this.settings.botWait) || 0) * 1000;
+
         this.setupDropzone();
         this.setupCommentBox();
+        if (!this.holdQueue && this.waitLeft() > 0) {
+            this.whenReady(() => this.startQueue());
+        }
+    }
+
+    /** Milliseconds until an upload can pass the bot check. */
+    waitLeft() {
+        return Math.max(0, this.readyAt - Date.now());
+    }
+
+    whenReady(fn) {
+        const wait = this.waitLeft();
+        if (wait > 0) {
+            setTimeout(fn, wait);
+        } else {
+            fn();
+        }
+    }
+
+    /** Upload whatever is queued, and anything dropped from now on. */
+    startQueue() {
+        this.dropzone.options.autoProcessQueue = true;
+        this.dropzone.processQueue();
     }
 
     setupCommentBox() {
@@ -54,8 +83,7 @@ export default class DepotDropField extends TotalField {
         if (this.tagSelect) this.tagSelect.disabled = true;
         if (this.sendButton) this.sendButton.disabled = true;
 
-        this.dropzone.options.autoProcessQueue = true;
-        this.dropzone.processQueue();
+        this.whenReady(() => this.startQueue());
     }
 
     /**
@@ -157,7 +185,7 @@ export default class DepotDropField extends TotalField {
             headers           : Object.assign({}, csrfHeaders(), this.form.api.headers),
             parallelUploads   : 3,
             paramName         : this.property,
-            autoProcessQueue  : !this.holdQueue,
+            autoProcessQueue  : !this.holdQueue && this.waitLeft() === 0,
             thumbnailWidth    : null,
             thumbnailHeight   : null,
             previewsContainer : this.preview,

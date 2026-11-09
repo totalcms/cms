@@ -458,3 +458,52 @@ describe('DepotDrop visual feedback', () => {
 		expect(el.querySelector('.depot-drop-zone + .depot-drop-status').textContent).toBe('Your files were sent.');
 	});
 });
+
+describe('DepotDrop bot wait', () => {
+	beforeEach(() => vi.useFakeTimers());
+	afterEach(() => vi.useRealTimers());
+
+	test('a drop right after the page loads waits until the bot check would pass', () => {
+		const { dz } = build({ settings: { botWait: 3 }, bot: true });
+
+		expect(dz.options.autoProcessQueue).toBe(false);
+		vi.advanceTimersByTime(2999);
+		expect(dz.processed).toBe(0);
+
+		vi.advanceTimersByTime(1);
+		expect(dz.processed).toBe(1);
+		expect(dz.options.autoProcessQueue).toBe(true);
+	});
+
+	test('send right after the page loads waits too, with the comment fixed at the click', () => {
+		const { field, el, dz } = build({ settings: { botWait: 3, comments: true }, comments: true, bot: true });
+		dz.queued = [{ name: 'a.pdf' }];
+		const text = el.querySelector('.depot-drop-comment-text');
+		text.value = 'first';
+
+		field.send();
+		text.value = 'changed';
+		expect(dz.processed).toBe(0);
+		expect(el.querySelector('.depot-drop-send').disabled).toBe(true);
+
+		vi.advanceTimersByTime(3000);
+		expect(dz.processed).toBe(1);
+		expect(JSON.parse(dz.request().get('meta')).comments).toBe('first');
+	});
+
+	test('send after the wait starts at once', () => {
+		const { field, dz } = build({ settings: { botWait: 3, comments: true }, comments: true, bot: true });
+		dz.queued = [{ name: 'a.pdf' }];
+		vi.advanceTimersByTime(3000);
+
+		field.send();
+
+		expect(dz.processed).toBe(1);
+	});
+
+	test('a drop with no bot check does not wait', () => {
+		const { dz } = build();
+
+		expect(dz.options.autoProcessQueue).toBe(true);
+	});
+});

@@ -1029,6 +1029,7 @@ test('the drop form for an anonymous visitor carries the bot fields and an accep
 	expect($html)->toContain('name="' . BotProtection::HONEYPOT_FIELD . '"')
 		->and($html)->toContain('name="' . BotProtection::TIMESTAMP_FIELD . '"')
 		->and($html)->toContain('.txt')
+		->and($html)->toContain('&quot;botWait&quot;:' . BotProtection::MIN_SECONDS)
 		->and($html)->not->toContain($this->seeded['drops/inbox']);
 });
 
@@ -1036,7 +1037,8 @@ test('the drop form on a depot with no grant carries no bot fields', function ()
 	$html = $this->app->getContainer()->get(TotalFormFactory::class)->depotDrop('safe', ['collection' => 'vault']);
 
 	expect($html)->not->toContain(BotProtection::HONEYPOT_FIELD)
-		->and($html)->not->toContain(BotProtection::TIMESTAMP_FIELD);
+		->and($html)->not->toContain(BotProtection::TIMESTAMP_FIELD)
+		->and($html)->not->toContain('botWait');
 });
 
 test('the drop form for a signed-in user carries no bot fields', function (): void {
@@ -1064,4 +1066,85 @@ test('no field type prints the grant: an auto-built form for the granted collect
 		->and($html)->not->toContain('publicUpload')
 		->and($html)->not->toContain('incoming')
 		->and($html)->not->toContain('maxTotalMb');
+});
+
+/**
+ * The depot as an admin page loaded now would send it back on Save: every
+ * stored file and folder, with the form's fields.
+ */
+function adminDepotCopy(string $collection = 'drops'): array
+{
+	return dropState($collection, 'inbox')['object']['depot'];
+}
+
+test('an admin save from a page loaded before a visitor upload keeps the visitor file', function (): void {
+	restoreFixtures();
+	$stale = adminDepotCopy();
+
+	dropUpload('late.txt')->assertOk();
+	$visitor = lastDrop()['name'];
+
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/drops/inbox', ['id' => 'inbox', 'depot' => $stale])->assertOk();
+
+	expect(array_column(dropFiles(), 'name'))->toContain($visitor, $this->seeded['drops/inbox']);
+});
+
+test('an admin save keeps the edits the page made to a listed file', function (): void {
+	restoreFixtures();
+	$stale = adminDepotCopy();
+	$stale['files'][0]['comments'] = 'Signed contract';
+	$stale['files'][0]['count']    = 99;
+	$stale['protected']            = false;
+
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/drops/inbox', ['id' => 'inbox', 'depot' => $stale])->assertOk();
+
+	$file = dropFiles()[0];
+	expect($file['comments'])->toBe('Signed contract')
+		->and($file['count'])->toBe(0)
+		->and(dropState('drops', 'inbox')['object']['depot']['protected'])->toBeFalse();
+});
+
+test('an admin save does not bring back a file deleted since the page loaded', function (): void {
+	restoreFixtures();
+	$stale = adminDepotCopy();
+	$stale['files'][] = ['name' => 'gone.txt', 'mime' => 'text/plain', 'size' => 5];
+
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/drops/inbox', ['id' => 'inbox', 'depot' => $stale])->assertOk();
+
+	expect(array_column(dropFiles(), 'name'))->toBe([$this->seeded['drops/inbox']]);
+});
+
+test('an admin save that leaves the depot out keeps its files', function (): void {
+	restoreFixtures();
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/drops/inbox', ['id' => 'inbox'])->assertOk();
+
+	expectSeeded('drops', 'inbox');
+});
+
+test('a visitor file in the grant folder survives an admin save that lists the folder empty', function (): void {
+	restoreFixtures();
+	grantedDepot('foldered', ['extensions' => ['txt'], 'folder' => 'incoming']);
+	dropUpload('first.txt', collection: 'foldered')->assertOk();
+	$stale = adminDepotCopy('foldered');
+
+	dropUpload('second.txt', collection: 'foldered')->assertOk();
+
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/foldered/inbox', ['id' => 'inbox', 'depot' => $stale])->assertOk();
+
+	$folder = dropFiles('foldered')[0];
+	expect($folder['mime'])->toBe('folder')
+		->and($folder['files'])->toHaveCount(2);
+});
+
+test('an admin save on a depot with no grant still replaces the list', function (): void {
+	restoreFixtures();
+	signInAs($this->app, 'admin-user-test-com');
+	putJson('/api/collections/vault/safe', ['id' => 'safe', 'depot' => ['files' => []]])->assertOk();
+
+	expect(dropFiles('vault', 'safe'))->toBe([]);
 });

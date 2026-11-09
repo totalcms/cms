@@ -37,6 +37,8 @@ class DepotDropField extends FormField
 			$this->settings['maxFilesize']   = $this->grant->maxFileBytes / self::BYTES_PER_MB;
 			// A template can hide the box, never add one the grant does not take.
 			$this->settings['comments']      = $this->grant->comments && ($this->settings['comments'] ?? true) !== false;
+			// The browser holds an upload until the bot check would let it through.
+			$this->settings['botWait']       = BotProtection::MIN_SECONDS;
 			// A public page has no JS translation catalog, so the visitor's
 			// messages are rendered here, in the page's locale.
 			$this->settings['messages']      = [
