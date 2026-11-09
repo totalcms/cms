@@ -26,12 +26,12 @@
 				</header>
 
 				<div class="dash-card-details">
-					<div class="dash-card-detail" style="grid-template-columns:120px 1fr;">
+					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.key_label') }}</strong>
 						<code>{{ apiKey.getMaskedKey() }}</code>
 					</div>
 
-					<div class="dash-card-detail" style="grid-template-columns:120px 1fr;">
+					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.http_methods') }}</strong>
 						<div class="dash-badge-group">
 							{% for method in apiKey.scopes.methods %}
@@ -40,7 +40,7 @@
 						</div>
 					</div>
 
-					<div class="dash-card-detail" style="grid-template-columns:120px 1fr;">
+					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.endpoints') }}</strong>
 						<span>
 							{% if '*' in apiKey.scopes.paths %}
@@ -48,19 +48,19 @@
 							{% else %}
 								<div style="display:flex; flex-direction:column; gap:0.5rem;">
 									{% for path in apiKey.scopes.paths %}
-										<code>{{ path }}</code>
+										<code class="dash-truncate" title="{{ path }}">{{ path }}</code>
 									{% endfor %}
 								</div>
 							{% endif %}
 						</span>
 					</div>
 
-					<div class="dash-card-detail" style="grid-template-columns:120px 1fr;">
+					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.created') }}</strong>
 						<span>{{ apiKey.created|date('Y-m-d H:i') }}</span>
 					</div>
 
-					<div class="dash-card-detail" style="grid-template-columns:120px 1fr;">
+					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.last_used') }}</strong>
 						<span>
 							{% if apiKey.lastUsed %}

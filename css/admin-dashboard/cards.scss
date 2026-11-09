@@ -84,7 +84,10 @@
 
 .dash-card-detail {
 	display               : grid;
-	grid-template-columns : 140px 1fr;
+	// minmax(0, …) rather than 1fr: a 1fr track never shrinks below its
+	// longest unbreakable value, so a long endpoint path or collection name
+	// pushed the column past the card's right edge.
+	grid-template-columns : 140px minmax(0, 1fr);
 	gap                   : 1rem;
 	align-items           : start;
 
@@ -97,6 +100,17 @@
 	code {
 		font-size : 0.9rem;
 	}
+}
+
+// One value that would run past its column ends in an ellipsis instead.
+// Pair it with a title attribute so the full value shows on hover.
+.dash-truncate {
+	display        : inline-block;
+	max-width      : 100%;
+	overflow       : hidden;
+	text-overflow  : ellipsis;
+	white-space    : nowrap;
+	vertical-align : bottom;
 }
 
 // Description block inside cards

@@ -57,7 +57,7 @@
 									{% endfor %}
 								</div>
 							{% elseif group.permissions.collections.allowed|length > 0 %}
-								{{ group.permissions.collections.allowed|join(', ') }}
+								{% for name in group.permissions.collections.allowed %}<span class="dash-truncate" title="{{ name }}">{{ name }}</span>{{ not loop.last ? ', ' }}{% endfor %}
 								<div class="dash-badge-group">
 									{% for operation in group.permissions.collections.operations %}
 										<span class="dash-badge accent sm">{{ operation | upper }}</span>
@@ -80,7 +80,7 @@
 									{% endfor %}
 								</div>
 							{% elseif group.permissions.collectionsMeta.allowed|length > 0 %}
-								{{ group.permissions.collectionsMeta.allowed|join(', ') }}
+								{% for name in group.permissions.collectionsMeta.allowed %}<span class="dash-truncate" title="{{ name }}">{{ name }}</span>{{ not loop.last ? ', ' }}{% endfor %}
 								<div class="dash-badge-group">
 									{% for operation in group.permissions.collectionsMeta.operations %}
 										<span class="dash-badge accent sm">{{ operation | upper }}</span>
@@ -103,7 +103,7 @@
 									{% endfor %}
 								</div>
 							{% elseif group.permissions.schemas.allowed|length > 0 %}
-								{{ group.permissions.schemas.allowed|join(', ') }}
+								{% for name in group.permissions.schemas.allowed %}<span class="dash-truncate" title="{{ name }}">{{ name }}</span>{{ not loop.last ? ', ' }}{% endfor %}
 								<div class="dash-badge-group">
 									{% for operation in group.permissions.schemas.operations %}
 										<span class="dash-badge accent sm">{{ operation | upper }}</span>

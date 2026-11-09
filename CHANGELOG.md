@@ -25,6 +25,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Same-name uploads no longer mix.** Two uploads of a file with the same name at the same time could get each other's chunks
 - **Parallel uploads to a depot keep every file.** A file could drop off the depot's list while it stayed on disk
 - **A comment sent with an upload lands on the right file.** When a file was renamed on save, the comment could go to another file or nowhere
+- **Long values stay inside their cards on the API Keys and Access Groups pages.** A long endpoint path or collection name used to run past the right edge of the card. It now ends in an ellipsis, and the full value shows when you hover over it
 - **File download names are encoded properly.** Names with quotes, accents or other unusual characters now download under the right name
 - **The disabled-extension warning no longer breaks admin pages.** It took a column of the page layout, which pushed the sidebar and content sideways. Warnings now sit in their own row across the top of the page
 - **A saved template reaches the next request with Development Mode off.** Saved pages, layouts and partials used to stay stale until the cache was cleared. **Behavior change:** files changed on disk, including by a git deploy, now show up without clearing the cache. A `{% cache %}` block still keeps its output until its `ttl` runs out
