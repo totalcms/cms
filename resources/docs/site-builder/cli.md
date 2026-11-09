@@ -318,6 +318,17 @@ Without `--yes` or `--structure-only`, the command lists the collections that ho
 
 - The project, minus `vendor/`, `cache/`, `tmp/`, `logs/`, `composer.lock`, `.git/`, `node_modules/` and `.cache/` image folders.
 - `tcms-data/` at the project root, with every collection, schema, page and object.
+
+To leave out more, such as design notes, seed files or backups of the site, list them in a `.starterignore` file at the project root. Each line names a path from the project root, and `*` matches within one folder. Lines starting with `#` are comments:
+
+```text
+# Kept for building the site, not part of the starter
+snapshots/
+seed/
+bin/video-*.sh
+```
+
+The `.starterignore` file itself is never copied.
 - From `tcms-data/.system/`, only the settings, extension state and settings, access groups and the migration record. Everything else there is runtime state or a credential: the site key, API keys, OAuth keys and clients, sessions, logs, backups, the job queue and the setup state.
 
 ### What Is Changed

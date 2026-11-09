@@ -5595,7 +5595,8 @@
                 }
             ],
             "examples": [
-                "tcms starter:export ~/Developer/starter-restaurant --name=totalcms/starter-restaurant\ntcms starter:export ../starter --structure-only"
+                "tcms starter:export ~/Developer/starter-restaurant --name=totalcms/starter-restaurant\ntcms starter:export ../starter --structure-only",
+                "# Kept for building the site, not part of the starter\nsnapshots/\nseed/\nbin/video-*.sh"
             ],
             "url": "https://docs.totalcms.co/site-builder/cli/",
             "since": "3.5.0"

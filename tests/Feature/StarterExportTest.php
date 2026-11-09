@@ -104,6 +104,31 @@ it('copies the site and leaves out what Composer and the runtime regenerate', fu
 	}
 });
 
+it('copies the data folder\'s own files, such as its .htaccess', function (): void {
+	file_put_contents($this->src . '/tcms-data/.htaccess', 'Require all denied');
+
+	($this->export)();
+
+	expect((string)file_get_contents($this->dest . '/tcms-data/.htaccess'))->toBe('Require all denied');
+});
+
+it('leaves out what .starterignore lists', function (): void {
+	file_put_contents($this->src . '/.starterignore', "# scratch the author keeps\nsnapshots/\n/seed\nbin/video-*.sh\n\n");
+	foreach (['snapshots/clean/site.key', 'seed/images/a.jpg', 'bin/video-reset.sh', 'bin/deploy.sh', 'builder/seed/keep.twig'] as $path) {
+		@mkdir(dirname($this->src . '/' . $path), 0o755, true);
+		file_put_contents($this->src . '/' . $path, 'x');
+	}
+
+	$result = ($this->export)();
+
+	expect($result->passed())->toBeTrue()
+		->and($this->dest . '/bin/deploy.sh')->toBeFile()
+		->and($this->dest . '/builder/seed/keep.twig')->toBeFile('a pattern names a path from the project root, not a name at any depth');
+	foreach (['snapshots', 'seed', 'bin/video-reset.sh', '.starterignore'] as $gone) {
+		expect(file_exists($this->dest . '/' . $gone))->toBeFalse("{$gone} should not be copied");
+	}
+});
+
 it('copies .system by allowlist, so credentials and setup state stay behind', function (): void {
 	($this->export)();
 

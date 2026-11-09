@@ -103,7 +103,7 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `builder:frontend` — install and build the Vite pipeline at the project root; `--no-build`, `--dry-run`; stops if `package.json` exists
 - `builder:routes` — list every route the page router serves; flags conflicts
 - `builder:history` — list/restore snapshot versions of a builder template
-- `starter:export <dir> --name=vendor/starter-x` — write a clean copy of this site as a Composer starter (users, credentials, secrets and runtime state left out; `--structure-only` drops content)
+- `starter:export <dir> --name=vendor/starter-x` — write a clean copy of this site as a Composer starter (users, credentials, secrets and runtime state left out; `--structure-only` drops content; a `.starterignore` at the project root lists more paths to leave out)
 
 ### Bulk data
 - `jumpstart:export` / `jumpstart:import` — full-site data import/export

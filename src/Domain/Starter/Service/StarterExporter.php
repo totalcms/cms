@@ -22,7 +22,14 @@ use TotalCMS\Domain\Starter\Data\StarterExportResult;
 final readonly class StarterExporter
 {
 	/** Top-level project entries never copied. tcms-data is copied on its own. */
-	private const PROJECT_SKIP = ['vendor', 'cache', 'tmp', 'logs', 'composer.lock', '.git', 'tcms-data'];
+	private const PROJECT_SKIP = ['vendor', 'cache', 'tmp', 'logs', 'composer.lock', '.git', 'tcms-data', self::IGNORE_FILE];
+
+	/**
+	 * Paths the author leaves out, one per line from the project root, with
+	 * `*` wildcards that stay inside a folder: `snapshots/`, `bin/video-*.sh`.
+	 * Lines starting with `#` are comments.
+	 */
+	private const IGNORE_FILE = '.starterignore';
 
 	/** Names skipped at any depth. */
 	private const ALWAYS_SKIP = ['.DS_Store', '__MACOSX', 'node_modules', '.cache'];
@@ -48,7 +55,7 @@ final readonly class StarterExporter
 		$dest        = $this->prepareDestination($options, $projectRoot);
 		$result      = new StarterExportResult($dest);
 
-		$this->copyTree($projectRoot, $dest, $projectRoot, $datadir);
+		$this->copyTree($projectRoot, $dest, $projectRoot, $datadir, $this->ignorePatterns($projectRoot));
 		$this->copyData($datadir, $dest . '/tcms-data', $projectRoot, $options, $result);
 		$this->projectWriter->write($options, $projectRoot, $dest, $result);
 
@@ -104,8 +111,49 @@ final readonly class StarterExporter
 		return $real;
 	}
 
-	/** Copy the project, leaving out what PROJECT_SKIP and ALWAYS_SKIP name and the data folder. */
-	private function copyTree(string $from, string $to, string $projectRoot, string $datadir): void
+	/**
+	 * The project's .starterignore patterns, without comments, blank lines
+	 * or the slashes that only mark a folder.
+	 *
+	 * @return list<string>
+	 */
+	private function ignorePatterns(string $projectRoot): array
+	{
+		$file = $projectRoot . '/' . self::IGNORE_FILE;
+		if (!is_file($file)) {
+			return [];
+		}
+
+		$patterns = [];
+		foreach (file($file, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+			$pattern = trim(trim($line), '/');
+			if ($pattern !== '' && !str_starts_with($pattern, '#')) {
+				$patterns[] = $pattern;
+			}
+		}
+
+		return $patterns;
+	}
+
+	/** @param list<string> $ignore */
+	private function isIgnored(string $relative, array $ignore): bool
+	{
+		foreach ($ignore as $pattern) {
+			if (fnmatch($pattern, $relative, FNM_PATHNAME | FNM_PERIOD)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Copy the project, leaving out what PROJECT_SKIP, ALWAYS_SKIP and the
+	 * project's .starterignore name, and the data folder.
+	 *
+	 * @param list<string> $ignore
+	 */
+	private function copyTree(string $from, string $to, string $projectRoot, string $datadir, array $ignore = []): void
 	{
 		foreach ($this->entries($from) as $name) {
 			$path = $from . '/' . $name;
@@ -115,17 +163,23 @@ final readonly class StarterExporter
 			if ($from === $projectRoot && in_array($name, self::PROJECT_SKIP, true)) {
 				continue;
 			}
+			if ($projectRoot !== '' && $this->isIgnored(substr($path, strlen($projectRoot) + 1), $ignore)) {
+				continue;
+			}
 			// Installed from the totalcms/cms package on every composer install.
 			if ($path === $projectRoot . '/.claude/skills/totalcms') {
 				continue;
 			}
 
-			$this->copyEntry($path, $to . '/' . $name, fn (string $f, string $t) => $this->copyTree($f, $t, $projectRoot, $datadir));
+			$this->copyEntry($path, $to . '/' . $name, fn (string $f, string $t) => $this->copyTree($f, $t, $projectRoot, $datadir, $ignore));
 		}
 	}
 
 	private function copyData(string $datadir, string $to, string $projectRoot, StarterExportOptions $options, StarterExportResult $result): void
 	{
+		// Made first: the data folder's own files (its .htaccess) sort ahead
+		// of every folder that would otherwise create it.
+		$this->makeDir($to);
 		foreach ($this->entries($datadir) as $name) {
 			$path = $datadir . '/' . $name;
 			if (in_array($name, self::ALWAYS_SKIP, true)) {
