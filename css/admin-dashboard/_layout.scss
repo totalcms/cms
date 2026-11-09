@@ -660,6 +660,13 @@ body {
 		}
 	}
 
+	// reset.scss zeroes the start padding on top-level lists, which hangs
+	// the bullets and numbers out past the text column. In prose that reads
+	// as an outdent, so give article lists their indent back.
+	ul, ol {
+		padding-inline-start: 1.5rem;
+	}
+
 	h2 {
 		margin-block-start: 3em;
 	}

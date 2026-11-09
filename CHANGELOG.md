@@ -12,6 +12,7 @@ All notable changes to Total CMS will be documented in this file.
 
 - **`cms.form.builder()` printed on its own is a working form.** `{{ cms.form.builder('contact', {addOnly: true}) }}` now builds the schema's fields and a save button, and `.build()` does the same. Before, it rendered an empty form. A `register: true` form leaves out protected fields such as `groups`. Forms that use `addField()` or pass their own markup don't change
 - **Deck items get an ID on their own.** When the item schema has no autogen rule, a new item in the admin and a deck API post with no `id` get an ID like `item_a1b2c3d`. Existing autogen rules and saved IDs don't change
+- **Lists in the docs and Client Help are indented.** Bullets and numbers used to hang out past the left edge of the text. They now sit inside it, like the rest of the page
 - **The setup wizard now defaults to Above Document Root.** It tests whether it can write there, and preselects Document Root only when it can't. Above Document Root is also listed first, and Document Root is no longer labeled the default. **Behavior change:** sites that sit side by side, such as `/home/you/one.com` and `/home/you/two.com`, share one `tcms-data` folder unless each sets its own `datadir`, and the second site skips the wizard
 
 ### Removed
