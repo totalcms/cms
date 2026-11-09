@@ -6,6 +6,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Added
 
+- **`tcms setup:admin` creates the first admin from the command line.** It also marks setup finished, so a site made by a script or by Total CMS Studio opens ready to sign in instead of in the setup wizard. The password comes in on stdin, never as an option. See `setup:admin` in the CLI docs
 - **Visitors can send files to a depot without an account.** Add a `publicUpload` setting to a depot property and put `{{ cms.form.depotDrop('inbox', {collection: 'dropbox'}) }}` on a public page. You choose the file types, the size limits and the folder, and visitors can add files and nothing else. A visitor can also leave a comment and pick a tag from a list you set in the template, both saved on each file. Uploads are limited per address, and a hidden check keeps bots out without a CAPTCHA. Uploads are not virus scanned. See Public Uploads in the Forms docs
 
 ### Changed

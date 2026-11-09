@@ -4278,6 +4278,17 @@
             "since": "3.5.0"
         },
         {
+            "name": "setup:admin",
+            "description": "Create the first admin account and mark setup finished, so the site opens ready to sign in instead of in the setup wizard. Use it when a script or a tool creates sites, such as Total CMS Studio.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "printf '%s\\n' \"$PASSWORD\" | tcms setup:admin --email=you@example.com --name=\"Your Name\" --password-stdin"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "schema:list",
             "description": "List all schemas.",
             "arguments": [],

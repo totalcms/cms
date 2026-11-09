@@ -352,6 +352,27 @@ final class SetupStateManagerTest extends TestCase
 			recursiveRmdir($tmpDir);
 		}
 	}
+
+	public function testCompleteAllFinishesSetupWithoutTheSession(): void
+	{
+		$datadir = sys_get_temp_dir() . '/setup-complete-all-' . bin2hex(random_bytes(4));
+		mkdir($datadir . '/.system', 0o777, true);
+		$config  = createTestConfig(['datadir' => $datadir, 'auth' => ['collection' => 'auth']]);
+		$session = new MemorySession();
+		$manager = $this->makeManager($session, $config);
+
+		try {
+			$manager->completeAll();
+
+			// A fresh manager (a new request, no session) sees it as done.
+			$fresh = $this->makeManager(new MemorySession(), $config);
+			expect($fresh->isSetupComplete())->toBeTrue();
+			expect($fresh->getCurrentStep())->toBe('setup-complete');
+			expect($session->get('setup_state'))->toBeNull();
+		} finally {
+			recursiveRmdir($datadir);
+		}
+	}
 }
 
 /**

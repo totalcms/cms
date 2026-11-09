@@ -82,6 +82,18 @@ The checks run in the command line's PHP, which is not the one serving pages: th
 
 ---
 
+### `setup:admin`
+
+Create the first admin account and mark setup finished, so the site opens ready to sign in instead of in the setup wizard. Use it when a script or a tool creates sites, such as Total CMS Studio.
+
+```bash
+printf '%s\n' "$PASSWORD" | tcms setup:admin --email=you@example.com --name="Your Name" --password-stdin
+```
+
+The password is read from the first line of stdin and is never an option, so it stays out of the process list and your shell history. It needs at least 8 characters. `--name` defaults to `Admin`.
+
+The command only makes the *first* admin. When the site already has one, it changes nothing and exits **1** with "This site already has an admin account." It also exits 1 for an invalid email or a short password. With `--json` it prints `{"created": true, "email": "…", "name": "…"}` on success and `{"error": "…"}` otherwise.
+
 ## Schema Commands
 
 ### `schema:list`

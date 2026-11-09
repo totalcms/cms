@@ -87,6 +87,23 @@ class SetupStateManager
 	}
 
 	/**
+	 * Mark every step done and the install finished, in one write.
+	 *
+	 * For `tcms setup:admin`, which sets an install up from the command line:
+	 * it writes the durable state file only and never touches the session,
+	 * which the CLI does not have.
+	 */
+	public function completeAll(): void
+	{
+		$state = SetupState::empty();
+		foreach (self::STEPS as $step) {
+			$state = $state->withStep($step);
+		}
+
+		$this->stateRepository->write($state->markComplete());
+	}
+
+	/**
 	 * Get the route name for the first incomplete step.
 	 */
 	public function getCurrentStep(): string
