@@ -23,6 +23,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **A starter's `.gitignore` leaves out `node_modules/`.** It still named the old `frontend/` folder, so a site made from a starter with a frontend showed every installed package as a new file in git
 - **Starter exports keep the data folder's `.htaccess`.** `tcms starter:export` left it out, so a starter's `tcms-data/` lost the rule that keeps it private on Apache
 - **Every depot list in the admin shows the original or custom download name.** The list used to show the name on disk. Files sent through a public upload carry a random prefix there, and it no longer shows
 - **Same-name uploads no longer mix.** Two uploads of a file with the same name at the same time could get each other's chunks

@@ -199,6 +199,7 @@ it('writes the starter project files', function (): void {
 		->and($result->configKeys)->toBe(['debug', 'datadir'])
 		->and((string)file_get_contents($this->dest . '/bin/post-install.php'))->toContain('totalcms/starter-restaurant')
 		->and((string)file_get_contents($this->dest . '/.gitignore'))->toContain('!/tcms-data/.system/settings.json')
+		->and((string)file_get_contents($this->dest . '/.gitignore'))->toMatch('~^/node_modules/$~m', 'the frontend sits at the project root since 3.6.7')
 		->and((string)file_get_contents($this->dest . '/README.md'))->toContain('composer create-project totalcms/starter-restaurant')
 		->and($this->dest . '/CREDITS.md')->toBeFile();
 });

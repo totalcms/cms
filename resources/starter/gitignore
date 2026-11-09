@@ -3,6 +3,7 @@
 /cache/
 /tmp/
 /logs/
+/node_modules/
 /frontend/node_modules/
 composer.lock
 .DS_Store
