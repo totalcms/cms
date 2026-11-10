@@ -326,6 +326,29 @@ class PropertyRepositoryTest extends TestCase
 		$this->propertyRepository->saveFile('test-collection', 'test-object', 'test-property', '/tmp/test-file.jpg');
 	}
 
+	public function testRenameFolderMovesTheDirectory(): void
+	{
+		$this->mockFilesystem->method('directoryExists')->with('c/o/depot/parent/Old')->willReturn(true);
+		$this->mockFilesystem
+			->expects($this->once())
+			->method('move')
+			->with('c/o/depot/parent/Old', 'c/o/depot/parent/New')
+			->willReturn(true);
+
+		$this->assertTrue($this->propertyRepository->renameFolder('c', 'o', 'depot', 'parent/Old', 'New'));
+	}
+
+	// A folder made in the admin is only a record in the depot until a file goes
+	// into it, so an empty one has no directory to move. Moving it anyway failed
+	// the rename with a 500 "Unable to move file".
+	public function testRenameFolderWithNoDirectoryYetMovesNothing(): void
+	{
+		$this->mockFilesystem->method('directoryExists')->willReturn(false);
+		$this->mockFilesystem->expects($this->never())->method('move');
+
+		$this->assertTrue($this->propertyRepository->renameFolder('c', 'o', 'depot', 'My Folder', 'My Folder Rename'));
+	}
+
 	public function testMoveFile(): void
 	{
 		$this->mockFilesystem

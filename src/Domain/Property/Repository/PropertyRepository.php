@@ -109,6 +109,13 @@ class PropertyRepository extends StorageRepository
 		$oldDir = PathUtils::buildPath($collection, $objectID, $property, end($parts), $parentPath);
 		$newDir = PathUtils::buildPath($collection, $objectID, $property, $newName, $parentPath);
 
+		// A folder made in the admin is only a record in the depot until a file
+		// goes into it, so an empty one has no directory to move. The caller
+		// renames the record either way.
+		if (!$this->filesystem->directoryExists($oldDir)) {
+			return true;
+		}
+
 		return $this->filesystem->move($oldDir, $newDir);
 	}
 
