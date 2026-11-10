@@ -494,7 +494,10 @@ class FormField
 		$extra = $this->settings['attributes'] ?? [];
 		if (is_array($extra)) {
 			foreach (TotalForm::extraAttributes($extra) as $name => $value) {
-				if (!array_key_exists($name, $attributes)) {
+				// Core's own attributes win, except autocomplete: core turns
+				// autofill off for the admin, and a public form needs real
+				// tokens (name, tel, email) so a visitor's browser can fill it.
+				if (!array_key_exists($name, $attributes) || $name === 'autocomplete') {
 					$attributes[$name] = $value;
 				}
 			}

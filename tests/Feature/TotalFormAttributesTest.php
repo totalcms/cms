@@ -108,3 +108,20 @@ it('applies per-property options to an auto-built form', function (): void {
 		->and($author[0] ?? '')->toContain('toolparamdescription="Who wrote it"')
 		->and(substr_count($html, 'toolparamdescription='))->toBe(2);
 });
+
+it('lets a field set its own autocomplete hint, so a public form can be autofilled', function (): void {
+	// Core turns browser autofill off ("nofill") so the admin never fills a
+	// record with the editor's own details. A visitor-facing form wants the
+	// opposite: real tokens such as name, tel and email.
+	$form = $this->factory->builder('blog');
+	$form->addField('title', ['settings' => ['attributes' => ['autocomplete' => 'name']]]);
+	$form->addField('author');
+
+	$html = $form->build();
+	preg_match('/<input[^>]*name="title"[^>]*>/', $html, $title);
+	preg_match('/<input[^>]*name="author"[^>]*>/', $html, $author);
+
+	expect($title[0] ?? '')->toContain('autocomplete="name"')
+		->and($title[0] ?? '')->not->toContain('nofill')
+		->and($author[0] ?? '')->toContain('autocomplete="nofill"');
+});

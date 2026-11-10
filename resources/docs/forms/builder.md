@@ -45,6 +45,19 @@ When you add fields yourself, or pass your own markup to `build()`, the form sho
 {{ form.build() }}
 ```
 
+### Autofill on a Public Form
+
+Fields turn the browser's autofill off by default, so the admin never fills a record with the editor's own name and address. On a form for visitors, give each field the hint its browser needs with the `autocomplete` attribute:
+
+```twig
+{% do form.addField('name', {settings: {attributes: {autocomplete: 'name'}}}) %}
+{% do form.addField('phone', {settings: {attributes: {autocomplete: 'tel'}}}) %}
+{% do form.addField('email', {settings: {attributes: {autocomplete: 'email'}}}) %}
+{% do form.addField('address', {field: 'textarea', settings: {attributes: {autocomplete: 'street-address'}}}) %}
+```
+
+Any token from the HTML standard works, such as `postal-code` or `organization`. Other attributes in `settings.attributes` are added to the field, but they never replace what Total CMS sets itself, such as its name and type. `autocomplete` is the one exception.
+
 ## Advanced Example
 
 ```twig
