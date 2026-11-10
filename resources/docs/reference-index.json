@@ -496,6 +496,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.demoMode",
+            "signature": "demoMode(): bool",
+            "description": "Whether the site is a read-only demo, for the banner on every admin page. Usage in Twig: {% if cms.admin.demoMode() %}",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.devModeStatus",
             "signature": "devModeStatus(): array",
             "description": "Get development mode status.",

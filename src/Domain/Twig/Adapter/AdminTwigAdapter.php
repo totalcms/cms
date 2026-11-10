@@ -189,6 +189,16 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Whether the site is a read-only demo, for the banner on every admin page.
+	 *
+	 * Usage in Twig: {% if cms.admin.demoMode() %}
+	 */
+	public function demoMode(): bool
+	{
+		return $this->config->demoEnabled();
+	}
+
+	/**
 	 * Extensions the system disabled on its own (risky update, quarantine),
 	 * for the warning every admin page shows.
 	 *

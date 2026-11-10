@@ -82,6 +82,8 @@ class Config
 	public array $automations = [];
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
+	/** @var array<string,mixed> Demo mode (`enable`) — see demoEnabled(). */
+	public array $demo = [];
 	/** @var array<string,mixed> Named public-route rate limits — see PublicRateLimiter. */
 	public array $rateLimits = [];
 	/** @var array<string,mixed> Security check settings (`ignore` list of check ids) — see SecurityAuditor. */
@@ -177,6 +179,7 @@ class Config
 		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->demo               = is_array($this->rawSettings['demo'] ?? null) ? $this->rawSettings['demo'] : [];
 		$this->rateLimits         = is_array($this->rawSettings['rateLimits'] ?? null) ? $this->rawSettings['rateLimits'] : [];
 		$this->isHttps            = (bool)($this->rawSettings['is_https'] ?? false);
 		$this->security           = is_array($this->rawSettings['security'] ?? null) ? $this->rawSettings['security'] : [];
@@ -238,10 +241,27 @@ class Config
 	 *
 	 * Absent means enabled, matching the shipped default. Only an explicit
 	 * `false` disables, as before — a truthy string or 0 does not.
+	 *
+	 * Demo mode turns it off too: a demo is browsed without signing in, and
+	 * nothing on it can be changed (DemoModeMiddleware).
 	 */
 	public function authEnabled(): bool
 	{
+		if ($this->demoEnabled()) {
+			return false;
+		}
+
 		return ($this->auth['enable'] ?? true) !== false;
+	}
+
+	/**
+	 * Whether the site is a read-only public demo: `$settings['demo']['enable']`
+	 * set to true in tcms.php. It is never set from the admin, so nobody
+	 * browsing the demo can switch it off. Only an explicit `true` turns it on.
+	 */
+	public function demoEnabled(): bool
+	{
+		return ($this->demo['enable'] ?? false) === true;
 	}
 
 	public function systemDir(): string

@@ -252,6 +252,8 @@ tcms starter:export ~/Developer/starter-restaurant --name=yourname/starter-resta
 
 Commit the output to its own repository and publish it on Packagist. Anyone can then install it with `composer create-project yourname/starter-restaurant mysite`, and the setup wizard creates their admin account on first visit.
 
+To let people look around the finished site before they install it, put a copy online in [demo mode](docs/operations/demo-mode): anyone can open its admin without signing in, and nothing they change is saved.
+
 ## Creating Custom Starters
 
 Starters live in `resources/builder/starters/{name}/`. Each starter needs:

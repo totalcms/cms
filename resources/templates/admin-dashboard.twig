@@ -170,17 +170,24 @@
 			   They stay in one strip because .dash-content is the page's column
 			   grid: a loose box here takes a column. Render the strip only when
 			   there is a notice, since the layout goes two-row on its presence. #}
-			{% if cms.auth.isAdmin() and url.page|default('') != 'extensions' %}
-				{% set attentionNotices = cms.admin.extensionsNeedingAttention() %}
-				{% if attentionNotices is not empty %}
-				<div class="dash-notices">
-					{% for notice in attentionNotices %}
-					<div class="warning-box extension-attention" role="alert">
-						<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
-					</div>
-					{% endfor %}
+			{# A demo site says so on every page: it is read-only, and a visitor
+			   should know before typing that nothing will be kept. #}
+			{% set demoMode = cms.admin.demoMode() %}
+			{% set attentionNotices = cms.auth.isAdmin() and url.page|default('') != 'extensions'
+				? cms.admin.extensionsNeedingAttention() : [] %}
+			{% if demoMode or attentionNotices is not empty %}
+			<div class="dash-notices">
+				{% if demoMode %}
+				<div class="info-box demo-banner" role="status">
+					<p>{{ t('demo.banner') }}</p>
 				</div>
 				{% endif %}
+				{% for notice in attentionNotices %}
+				<div class="warning-box extension-attention" role="alert">
+					<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
+				</div>
+				{% endfor %}
+			</div>
 			{% endif %}
 
         	{% block dashcontent %}{% endblock %}

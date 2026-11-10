@@ -290,6 +290,7 @@ $menu = [
 			['title' => 'Nginx',             'path' => 'operations/nginx'],
 			['title' => 'Security',          'path' => 'operations/security'],
 			['title' => 'Sharing Sessions',  'path' => 'operations/sharing-sessions'],
+			['title' => 'Demo Mode',         'path' => 'operations/demo-mode'],
 			['title' => 'Impersonation',     'path' => 'operations/impersonation'],
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],

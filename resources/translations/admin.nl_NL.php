@@ -28,6 +28,10 @@ return [
 	'user.logout'        => 'Uitloggen',
 	'user.dev_user'      => 'Ontwikkelaar',
 
+	// ── Demo Mode ───────────────────────────────────────────────────────────
+	'demo.banner'        => 'Deze site is een demo. Kijk gerust rond; wijzigingen worden niet opgeslagen.',
+	'demo.refused'       => 'Deze site staat in demomodus, dus opslaan is uitgeschakeld.',
+
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Opslaan',
 	'btn.delete'          => 'Verwijderen',

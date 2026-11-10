@@ -78,4 +78,26 @@ final class ConfigAuthEnabledTest extends TestCase
 			'null'          => [null],
 		];
 	}
+
+	public function testDemoModeTurnsSignInOff(): void
+	{
+		// A demo is browsed without signing in; DemoModeMiddleware keeps it read-only.
+		$config       = $this->config(['enable' => true]);
+		$config->demo = ['enable' => true];
+
+		$this->assertTrue($config->demoEnabled());
+		$this->assertFalse($config->authEnabled());
+	}
+
+	public function testOnlyAnExplicitTrueTurnsDemoModeOn(): void
+	{
+		$config = $this->config(['enable' => true]);
+		$this->assertFalse($config->demoEnabled());
+
+		foreach ([1, '1', 'true', 'yes'] as $value) {
+			$config->demo = ['enable' => $value];
+			$this->assertFalse($config->demoEnabled(), var_export($value, true) . ' must not turn demo mode on');
+			$this->assertTrue($config->authEnabled());
+		}
+	}
 }

@@ -17,6 +17,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Session\SessionUser;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Middleware\DemoModeMiddleware;
 use TotalCMS\Support\Config;
 
 /**
@@ -210,6 +211,12 @@ readonly class AuthTwigAdapter
 
 	public function canAccessUtil(string $page): bool
 	{
+		// Demo mode hides the log pages, which list visitors' IP addresses.
+		// DemoModeMiddleware refuses their routes; this keeps them out of the menus.
+		if ($this->config->demoEnabled() && DemoModeMiddleware::hidesUtil($page)) {
+			return false;
+		}
+
 		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessUtils($userId, $page));
 	}
 

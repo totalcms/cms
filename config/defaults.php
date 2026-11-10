@@ -623,6 +623,16 @@ $settings['xmlrpc'] = [
 	'ratePerIp' => 60,
 ];
 
+// Demo mode: a public, read-only showroom of the admin, such as an online copy
+// of a starter. Sign-in is off, every admin page opens, and every request that
+// would change something (anything but GET, HEAD or OPTIONS) is refused with a
+// message saying so. The Log Analyzer is hidden, since the logs hold visitors'
+// IP addresses. Set it here in tcms.php, never in the admin, so nobody browsing
+// the demo can switch it off.
+$settings['demo'] = [
+	'enable' => false,
+];
+
 // Per-IP limits on public routes, by name. Each route or extension that uses
 // one supplies its own default; an entry here overrides it, and `max` 0 turns
 // that limit off. Example:

@@ -9,6 +9,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\BasePathMiddleware;
 use TotalCMS\Middleware\CacheInvalidationMiddleware;
+use TotalCMS\Middleware\DemoModeMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\ExtensionProfileFlushMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
@@ -38,6 +39,10 @@ return function (App $app): void {
 	$app->add(LicenseValidationMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
 	$app->add(NoCacheErrorMiddleware::class);
+	// Demo mode's read-only rule. Inside the routing layer, so it judges the
+	// method MethodOverrideMiddleware (outside) has already settled on, and it
+	// runs before any route's own middleware or action can write anything.
+	$app->add(DemoModeMiddleware::class);
 	$app->addRoutingMiddleware();
 	// SetupCheckMiddleware sits OUTSIDE RoutingMiddleware so it can intercept
 	// requests for unrouted paths (e.g. `/`) — otherwise Slim would throw a

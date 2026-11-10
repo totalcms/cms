@@ -28,6 +28,10 @@ return [
 	'user.logout'        => 'Wyloguj się',
 	'user.dev_user'      => 'Użytkownik deweloperski',
 
+	// ── Demo Mode ───────────────────────────────────────────────────────────
+	'demo.banner'        => 'Ta witryna jest wersją demonstracyjną. Rozglądaj się do woli; zmiany nie są zapisywane.',
+	'demo.refused'       => 'Ta witryna działa w trybie demonstracyjnym, więc zapisywanie jest wyłączone.',
+
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Zapisz',
 	'btn.delete'          => 'Usuń',

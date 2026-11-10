@@ -28,6 +28,10 @@ return [
 	'user.logout'        => 'Cerrar sesión',
 	'user.dev_user'      => 'Usuario desarrollador',
 
+	// ── Demo Mode ───────────────────────────────────────────────────────────
+	'demo.banner'        => 'Este sitio es una demostración. Explórelo cuanto quiera; los cambios no se guardan.',
+	'demo.refused'       => 'Este sitio está en modo de demostración, por lo que no se puede guardar.',
+
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Guardar',
 	'btn.delete'          => 'Eliminar',

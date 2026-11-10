@@ -28,6 +28,10 @@ return [
 	'user.logout'        => 'Logout',
 	'user.dev_user'      => 'Dev User',
 
+	// ── Demo Mode ───────────────────────────────────────────────────────────
+	'demo.banner'        => 'This site is a demo. Look around as much as you like; changes are not saved.',
+	'demo.refused'       => 'This site is in demo mode, so saving is disabled.',
+
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Save',
 	'btn.delete'          => 'Delete',

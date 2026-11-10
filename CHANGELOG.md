@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [3.6.9] - Unreleased
 
+### Added
+
+- **Demo mode puts a site online as a read-only showroom.** Set `'demo' => ['enable' => true]` in `config/tcms.php` and anyone can open the admin without signing in and look at everything, with a banner on every page. Save, Delete, uploads, imports and every other change answer "This site is in demo mode, so saving is disabled", and the site's own forms and the MCP server are refused the same way. The Log Analyzer is hidden, since the logs hold visitors' IP addresses. Use it to show a starter before people install it. See [Demo Mode](https://docs.totalcms.co/operations/demo-mode)
+
 ### Changed
 
 - **IndexNow gets a new key each time it's turned on.** A site copied from another, such as one built from a starter, no longer submits under the other site's key. The new key shows as soon as you flip the switch, and every other save keeps the stored key

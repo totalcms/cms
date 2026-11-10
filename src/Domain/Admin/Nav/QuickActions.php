@@ -185,6 +185,12 @@ final readonly class QuickActions
 	private function allows(NavEntry $entry): bool
 	{
 		if (!str_starts_with($entry->id, self::NEW_OBJECT)) {
+			// A Utilities page also answers to the page's own check, which is
+			// how demo mode keeps the Log Analyzer off the dashboard.
+			if (str_starts_with($entry->url, 'utils/') && !$this->auth->canAccessUtil(substr($entry->url, strlen('utils/')))) {
+				return false;
+			}
+
 			return $this->nav->allows($entry);
 		}
 

@@ -28,6 +28,10 @@ return [
 	'user.logout'        => 'Abmelden',
 	'user.dev_user'      => 'Entwickler-Benutzer',
 
+	// ── Demo Mode ───────────────────────────────────────────────────────────
+	'demo.banner'        => 'Diese Website ist eine Demo. Sehen Sie sich in Ruhe um; Änderungen werden nicht gespeichert.',
+	'demo.refused'       => 'Diese Website läuft im Demo-Modus, daher ist das Speichern deaktiviert.',
+
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Speichern',
 	'btn.delete'          => 'Löschen',
