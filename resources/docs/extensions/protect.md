@@ -1,12 +1,12 @@
 ---
 title: "Protect (Bundled Extension)"
-description: "Gate a page behind a numeric passcode that unlocks it for the session. Useful for client previews, soft launches, and draft staging URLs."
+description: "Gate a page behind a passcode that unlocks it for the session. Useful for client previews, soft launches, and draft staging URLs."
 since: "3.5.0"
 ---
 
 # Protect
 
-`totalcms/protect` — bundled with Total CMS. Adds a `protect` [page feature](docs/site-builder/overview#page-features-middleware) that gates a page behind a **numeric passcode**. Visitors see a simple code-entry form; once they enter the correct passcode, a cookie remembers them for 7 days. No login required, no accounts — just a shareable code.
+`totalcms/protect` — bundled with Total CMS. Adds a `protect` [page feature](docs/site-builder/overview#page-features-middleware) that gates a page behind a **passcode**, usually a short number. Visitors see a simple code-entry form; once they enter the correct passcode, a cookie remembers them for 7 days. No login required, no accounts — just a shareable code.
 
 ## Use cases
 
@@ -43,12 +43,13 @@ A page built in Stacks has no Site Builder record to tick `protect` on, and Apac
 {{ protect_page({passcode: "8675", promptTitle: "Client Preview", protectScope: "client-preview"}) }}
 ```
 
-This is the same gate as the page feature. Called with no options it uses the extension's Default Passcode, and the options are the [Page Data keys](#per-page-configuration) below. Each page is locked on its own, keyed by its URL, unless it shares a `protectScope`. Site-wide mode (`globalScope`) applies here too.
+This is the same gate as the page feature. Called with no options it uses the Default Passcode you saved in the extension's settings, and the options are the [Page Data keys](#per-page-configuration) below. Each page is locked on its own, keyed by its URL, unless it shares a `protectScope`. Site-wide mode (`globalScope`) applies here too.
 
 - **Enable the extension first.** Twig can't find `protect_page()` otherwise, so the page shows an error rather than its content.
 - **Enabled Protect before 3.6.8?** New extension permissions start switched off on an update, so `protect_page()` stays unavailable until you turn on **Twig Functions** under **Admin → Extensions → Protect**.
 - **The page must be a `.php` page with the CMS Core stack on it.** A plain `.html` page never reaches T3.
 - **Stacks preview skips the gate**, so you can keep designing. Check the prompt on the published page.
+- **Logged in to the admin? You won't see the prompt.** Operators skip it here too, so check the page in a private window.
 - **Files aren't covered.** Images and downloads on the page stay reachable by their direct URL.
 - **A Twig error on the page shows the error alone.** A page with `protect_page()` on it never falls back to printing its source the way other Stacks pages do, because the gate didn't get to finish. If the gate itself can't run, the page answers 500 instead of rendering.
 - **Keep the page's Twig unflushed.** Sending the page head early (the optional time-to-first-byte lines in the Stacks page template, or [Reducing Time to First Byte](docs/apis/php-api#reducing-time-to-first-byte) on a hand-built page) means the prompt can't replace the page or set its cookie.
@@ -61,7 +62,7 @@ Set in **Admin → Extensions → Protect**. These apply to every page with `pro
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `passcode` | string | `1234` | **Required.** The numeric passcode visitors enter. Change it from the shipped default before going live. |
+| `passcode` | string | none | **Required.** The passcode visitors enter, usually digits. Nothing is in effect until you save one, so a page with no passcode of its own stays operators-only until then. |
 | `promptTitle` | string | `"Enter passcode to view"` | Heading shown on the passcode form. |
 | `cookieHours` | number | `168` | How long a visitor stays unlocked after entering the passcode, in hours (168 = 7 days). Set to `0` for a session cookie that clears when the browser closes. |
 | `globalScope` | toggle | `false` | **Site-wide passcode.** Lock the whole site behind one shared passcode and a single unlock cookie instead of per-page locking. When on, every protected page uses the Default Passcode and per-page passcodes/`protectScope` groups are ignored — enter the code once and the whole site unlocks. |
@@ -72,7 +73,7 @@ Optionally override the defaults inside the page's **Page Data** JSON field. Bot
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `passcode` | string | extension default | The numeric passcode for this page. Empty/missing → falls back to the extension default; if that's also empty the page is operators-only (fails closed). |
+| `passcode` | string | extension default | The passcode for this page, usually digits. Empty/missing → falls back to the extension default; if that's also empty the page is operators-only (fails closed). |
 | `promptTitle` | string | extension default | Heading shown on the passcode form. Customize per page for context ("Client Preview", "Early Access", etc.). |
 | `protectScope` | string | (page id) | Shared unlock group. Pages with the same `protectScope` **and** the same passcode share one cookie — enter the code on any of them and the whole group unlocks. Leave it unset to gate each page independently. |
 
@@ -96,7 +97,7 @@ To gate the **entire site** behind one code without tagging each page, turn on t
 4. **GET with valid cookie** → middleware returns null, page renders normally.
 5. **POST with wrong passcode** → re-renders the form with an "Incorrect passcode" error.
 
-The form uses `inputmode="numeric"` so mobile devices show a number pad.
+For an all-digit passcode the form uses `inputmode="numeric"`, so phones show a number pad. A passcode with letters or symbols works too; the form then takes any text.
 
 ## Cookie details
 

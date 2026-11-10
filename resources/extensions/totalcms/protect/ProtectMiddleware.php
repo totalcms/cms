@@ -274,6 +274,13 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		$rawTitle = $this->stringConfig($page, 'promptTitle') ?: $this->defaultPromptTitle;
 		$title    = htmlspecialchars($rawTitle, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 		$message  = $error ? '<p class="tcms-protect-error">Incorrect passcode.</p>' : '';
+		// Settings, Page Data and Twig all accept any text, so the field follows
+		// the code it checks: a number pad and digit-only pattern for a numeric
+		// code, a plain text field otherwise. An unset code keeps the number pad.
+		$passcode = $this->passcode($page);
+		$numeric  = $passcode === '' || ctype_digit($passcode);
+		$keypad   = $numeric ? ' inputmode="numeric" pattern="[0-9]*"' : '';
+		$hint     = $numeric ? '0000' : 'Passcode';
 
 		$html = <<<HTML
 		<!DOCTYPE html>
@@ -301,7 +308,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		<h1>{$title}</h1>
 		{$message}
 		<form method="post">
-		<input type="text" name="passcode" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="0000" required autofocus>
+		<input type="text" name="passcode"{$keypad} autocomplete="off" placeholder="{$hint}" required autofocus>
 		<button type="submit">Submit</button>
 		</form>
 		</div>

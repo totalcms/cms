@@ -609,6 +609,31 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->assertSame(302, $response->getStatusCode());
 	}
 
+	public function testPromptShowsANumberPadForANumericPasscode(): void
+	{
+		$response = $this->gated($this->get('/clients/'), ['passcode' => '8675']);
+
+		$this->assertNotNull($response);
+		$html = (string)$response->getBody();
+		$this->assertStringContainsString('inputmode="numeric"', $html);
+		$this->assertStringContainsString('pattern="[0-9]*"', $html);
+	}
+
+	public function testPromptTakesAnyTextForAPasscodeWithLetters(): void
+	{
+		$prompt = $this->gated($this->get('/clients/'), ['passcode' => 'preview-2026']);
+
+		$this->assertNotNull($prompt);
+		$html = (string)$prompt->getBody();
+		$this->assertStringNotContainsString('inputmode="numeric"', $html);
+		$this->assertStringNotContainsString('pattern=', $html);
+		$this->assertStringNotContainsString('preview-2026', $html);
+
+		$unlocked = $this->gated($this->post('/clients/', ['passcode' => 'preview-2026']), ['passcode' => 'preview-2026']);
+		$this->assertNotNull($unlocked);
+		$this->assertSame(302, $unlocked->getStatusCode());
+	}
+
 	public function testGateFallsBackToTheExtensionDefaultForEmptyStackFields(): void
 	{
 		$middleware = new ProtectMiddleware(self::TEST_SECRET, '1234');

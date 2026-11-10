@@ -27,6 +27,8 @@ All notable changes to Total CMS will be documented in this file.
 - **A starter's `.gitignore` leaves out `node_modules/`.** It still named the old `frontend/` folder, so a site made from a starter with a frontend showed every installed package as a new file in git
 - **Starter exports keep the data folder's `.htaccess`.** `tcms starter:export` left it out, so a starter's `tcms-data/` lost the rule that keeps it private on Apache
 - **The passcode form keeps the query string.** After a correct passcode, Protect used to send the visitor back to the page without it.
+- **Protect's settings no longer show a passcode that isn't in effect.** The Default Passcode field started at 1234, but nothing was stored until the settings were saved, so a page relying on it accepted no code at all. The field now starts empty: save a passcode to use one. Sites that already saved their settings are unchanged.
+- **A passcode with letters can be entered.** The settings and Page Data took any text, but the passcode form only accepted digits, so a code like `preview` could never be typed. The form now shows a number pad only when the passcode is all digits.
 - **Every depot list in the admin shows the original or custom download name.** The list used to show the name on disk. Files sent through a public upload carry a random prefix there, and it no longer shows
 - **Same-name uploads no longer mix.** Two uploads of a file with the same name at the same time could get each other's chunks
 - **Parallel uploads to a depot keep every file.** A file could drop off the depot's list while it stayed on disk

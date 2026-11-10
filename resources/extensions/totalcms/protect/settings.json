@@ -8,10 +8,9 @@
 			"type": "string",
 			"field": "text",
 			"label": "Default Passcode",
-			"help": "Numeric passcode visitors enter to unlock protected pages. Change it from the default before going live. Individual pages can override it in their Page Data. A page with Protect attached but no passcode is operators-only — logged-in admins can preview it, the public cannot.",
+			"help": "Passcode visitors enter to unlock protected pages. Digits give visitors a number pad on phones; letters work too. Nothing is in effect until you save one here. Individual pages can override it in their Page Data. A page with Protect attached but no passcode is operators-only — logged-in admins can preview it, the public cannot.",
 			"placeholder": "0000",
-			"required": true,
-			"default": "1234"
+			"required": true
 		},
 		"promptTitle": {
 			"type": "string",
