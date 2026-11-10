@@ -1,6 +1,25 @@
 /* Business starter — your site's stylesheet.
  * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ *
+ * Change the colors here and the whole site follows. The service pictures
+ * live on each service (admin → Collections → Services): upload your own there.
  */
+
+:root {
+	--navy    : #0f1b3d;
+	--navy-2  : #1a2a5c;
+	--blue    : #3b5bdb;
+	--mint    : #3dd6a0;
+	--ice     : #e8edff;
+	--paper   : #ffffff;
+	--wash    : #f5f7fc;
+	--ink     : #0f1b3d;
+	--muted   : #56607a;
+	--line    : #dde3f0;
+
+	--font    : -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif;
+	--radius  : 14px;
+}
 
 *, *::before, *::after {
 	box-sizing : border-box;
@@ -9,56 +28,424 @@
 }
 
 body {
-	font-family : system-ui, -apple-system, sans-serif;
-	line-height : 1.6;
-	color       : #333;
+	background     : var(--paper);
+	color          : var(--ink);
+	font-family    : var(--font);
+	font-size      : 1.0625rem;
+	line-height    : 1.6;
+	min-height     : 100vh;
+	display        : flex;
+	flex-direction : column;
 }
 
-.container {
-	max-width : 1080px;
-	margin    : 0 auto;
-	padding   : 0 1.5rem;
+main {
+	flex : 1;
 }
 
 h1, h2, h3 {
-	line-height : 1.2;
-}
-
-h1 {
-	font-size     : 2.5rem;
-	margin-bottom : 1rem;
-}
-
-h2 {
-	font-size     : 1.75rem;
-	margin-bottom : 0.75rem;
-}
-
-p {
-	margin-bottom : 1rem;
+	line-height    : 1.15;
+	letter-spacing : -0.02em;
+	text-wrap      : balance;
 }
 
 a {
-	color : #2563eb;
+	color                 : var(--blue);
+	text-underline-offset : 0.2em;
 }
 
-.section {
-	padding : 4rem 0;
+a:focus-visible,
+button:focus-visible,
+.button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+	outline        : 3px solid var(--mint);
+	outline-offset : 2px;
 }
 
-.section-alt {
-	background : #f8f9fa;
+code {
+	font-size     : 0.88em;
+	background    : var(--ice);
+	padding       : 0.1em 0.35em;
+	border-radius : 4px;
 }
 
-.grid-2 {
+.container {
+	width  : min(1160px, 100% - 3rem);
+	margin : 0 auto;
+}
+
+.button {
+	display         : inline-block;
+	background      : var(--mint);
+	color           : var(--navy);
+	font            : inherit;
+	font-weight     : 700;
+	text-decoration : none;
+	padding         : 0.85rem 1.5rem;
+	border          : 0;
+	border-radius   : 10px;
+	cursor          : pointer;
+}
+
+.button:hover {
+	background : #6be3b8;
+}
+
+.button-ghost {
+	background : transparent;
+	color      : #fff;
+	box-shadow : inset 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+
+.button-ghost:hover {
+	background : rgb(255 255 255 / 0.08);
+}
+
+/* Nav */
+.site-nav {
+	background : var(--navy);
+	color      : #fff;
+	padding    : 1.25rem 0;
+}
+
+.site-nav .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	align-items     : center;
+	gap             : 1rem 2rem;
+}
+
+.site-name {
+	color           : #fff;
+	font-weight     : 800;
+	font-size       : 1.2rem;
+	letter-spacing  : -0.02em;
+	text-decoration : none;
+}
+
+.site-nav ul {
+	list-style : none;
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : 0.5rem 2rem;
+}
+
+.site-nav ul a {
+	color           : #c7d0ea;
+	text-decoration : none;
+	font-weight     : 500;
+}
+
+.site-nav ul a:hover,
+.site-nav ul a[aria-current="page"] {
+	color : #fff;
+}
+
+/* Page headers: the navy band at the top of every page */
+.masthead {
+	background : var(--navy);
+	color      : #fff;
+	padding    : clamp(3rem, 7vw, 5.5rem) 0 clamp(3rem, 6vw, 4.5rem);
+}
+
+.masthead h1 {
+	font-size     : clamp(2.2rem, 5vw, 3.4rem);
+	font-weight   : 800;
+	max-width     : 22ch;
+	margin-bottom : 1rem;
+}
+
+.masthead p {
+	color     : #c7d0ea;
+	font-size : 1.2rem;
+	max-width : 46ch;
+}
+
+/* Home hero: taller, and the service cards rise into it */
+.hero {
+	padding-bottom : clamp(8rem, 14vw, 11rem);
+}
+
+.hero h1 {
+	font-size   : clamp(2.6rem, 6.4vw, 4.75rem);
+	line-height : 1.02;
+	max-width   : 16ch;
+}
+
+.hero-actions {
+	display     : flex;
+	flex-wrap   : wrap;
+	align-items : center;
+	gap         : 1rem;
+	margin-top  : 2.25rem;
+}
+
+.hero .guide-link {
+	display    : block;
+	margin-top : 1.5rem;
+	color      : #9fb0e0;
+	font-size  : 0.95rem;
+}
+
+/* Service cards (home) */
+.service-cards {
 	display               : grid;
-	grid-template-columns : repeat(auto-fit, minmax(280px, 1fr));
-	gap                   : 2rem;
+	grid-template-columns : repeat(4, minmax(0, 1fr));
+	gap                   : 1.25rem;
+	margin-top            : clamp(-7rem, -10vw, -5rem);
+	position              : relative;
 }
 
-.card {
-	background    : #fff;
-	border        : 1px solid #e5e7eb;
-	border-radius : 8px;
-	padding       : 1.5rem;
+.service-card {
+	display         : flex;
+	flex-direction  : column;
+	background      : var(--paper);
+	border-radius   : var(--radius);
+	overflow        : hidden;
+	box-shadow      : 0 1px 0 var(--line), 0 18px 40px -24px rgb(15 27 61 / 0.45);
+	color           : inherit;
+	text-decoration : none;
+}
+
+.service-card img,
+.service-card .no-image {
+	display      : block;
+	width        : 100%;
+	height       : auto;
+	aspect-ratio : 16 / 9;
+	object-fit   : cover;
+	background   : var(--ice);
+}
+
+.service-card .body {
+	padding : 1.25rem 1.25rem 1.5rem;
+}
+
+.service-card h3 {
+	font-size     : 1.15rem;
+	margin-bottom : 0.4rem;
+}
+
+.service-card p {
+	color     : var(--muted);
+	font-size : 0.98rem;
+}
+
+.service-card:hover h3 {
+	color : var(--blue);
+}
+
+.icon {
+	display         : inline-grid;
+	place-items     : center;
+	width           : 2.25rem;
+	height          : 2.25rem;
+	margin-bottom   : 0.75rem;
+	border-radius   : 10px;
+	background      : var(--ice);
+	font-size       : 1.15rem;
+}
+
+/* Closing band */
+.cta {
+	background : var(--blue);
+	color      : #fff;
+	margin-top : clamp(4rem, 8vw, 6rem);
+	padding    : clamp(3rem, 6vw, 4.5rem) 0;
+}
+
+.cta .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	align-items     : center;
+	gap             : 1.5rem 3rem;
+}
+
+.cta h2 {
+	font-size   : clamp(1.6rem, 3.5vw, 2.3rem);
+	font-weight : 800;
+	max-width   : 24ch;
+}
+
+.cta p {
+	color      : #dfe5ff;
+	margin-top : 0.5rem;
+}
+
+/* Services page: one row per service, image and text alternating */
+.service-list {
+	padding : clamp(3rem, 7vw, 5.5rem) 0 0;
+}
+
+.service-row {
+	display               : grid;
+	grid-template-columns : minmax(0, 1fr) minmax(0, 1fr);
+	align-items           : center;
+	gap                   : clamp(2rem, 5vw, 4.5rem);
+	scroll-margin-top     : 2rem;
+}
+
+.service-row + .service-row {
+	margin-top : clamp(3.5rem, 8vw, 6rem);
+}
+
+.service-row:nth-child(even) .service-art {
+	order : 2;
+}
+
+.service-art {
+	display       : block;
+	width         : 100%;
+	height        : auto;
+	aspect-ratio  : 16 / 10;
+	object-fit    : cover;
+	border-radius : var(--radius);
+	background    : var(--ice);
+}
+
+.service-row h2 {
+	font-size     : clamp(1.6rem, 3vw, 2.1rem);
+	font-weight   : 800;
+	margin-bottom : 0.5rem;
+}
+
+.service-row .summary {
+	color         : var(--muted);
+	font-size     : 1.15rem;
+	margin-bottom : 1rem;
+}
+
+.service-row .description p + p {
+	margin-top : 0.85rem;
+}
+
+/* Reading pages (About, Getting Started) */
+.prose {
+	max-width : 42rem;
+	padding   : clamp(3rem, 6vw, 4.5rem) 0 1rem;
+}
+
+.prose h2 {
+	font-size     : 1.4rem;
+	margin        : 2.5rem 0 0.75rem;
+}
+
+.prose h2:first-child {
+	margin-top : 0;
+}
+
+.prose p + p {
+	margin-top : 1rem;
+}
+
+.prose ul,
+.prose ol {
+	padding-left : 1.25rem;
+	line-height  : 1.9;
+}
+
+.prose li::marker {
+	color : var(--blue);
+}
+
+/* Contact form */
+.contact-form {
+	display               : grid;
+	gap                   : 1.25rem;
+	max-width             : 38rem;
+	padding               : clamp(3rem, 6vw, 4.5rem) 0 1rem;
+}
+
+.contact-form label span {
+	display       : block;
+	font-weight   : 600;
+	margin-bottom : 0.35rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+	width         : 100%;
+	font          : inherit;
+	color         : inherit;
+	padding       : 0.75rem 0.9rem;
+	border        : 1px solid var(--line);
+	border-radius : 10px;
+	background    : var(--wash);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+	background   : var(--paper);
+	border-color : var(--blue);
+}
+
+.contact-form .button {
+	justify-self : start;
+}
+
+/* 404 */
+.not-found .button {
+	margin-top : 2rem;
+}
+
+/* Footer */
+.site-footer {
+	background : var(--navy);
+	color      : #9fb0e0;
+	font-size  : 0.92rem;
+	padding    : 2.5rem 0;
+	margin-top : clamp(4rem, 8vw, 6rem);
+}
+
+.cta + .site-footer,
+main:has(> .cta:last-child) + .site-footer {
+	margin-top : 0;
+}
+
+.site-footer .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	align-items     : center;
+	gap             : 1rem 2rem;
+}
+
+.site-footer ul {
+	list-style : none;
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : 0.5rem 1.5rem;
+}
+
+.site-footer a {
+	color           : #c7d0ea;
+	text-decoration : none;
+}
+
+.site-footer a:hover {
+	color : #fff;
+}
+
+@media (max-width: 960px) {
+	.service-cards {
+		grid-template-columns : repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 720px) {
+	.service-row {
+		grid-template-columns : minmax(0, 1fr);
+	}
+
+	.service-row:nth-child(even) .service-art {
+		order : 0;
+	}
+}
+
+@media (max-width: 520px) {
+	.service-cards {
+		grid-template-columns : minmax(0, 1fr);
+	}
 }

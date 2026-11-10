@@ -10,8 +10,15 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Changed
 
+- **The built-in starters have a look of their own.** Minimal is warm and soft, Blog reads like a magazine, Business is navy with bright accents, and Portfolio is a dark gallery. Each one installs with pictures: photos on the blog posts and the portfolio projects, and shapes in the starter's colors on Minimal and Business. Portfolio's projects now live in a `projects` collection, and Business's home page and Services page read from its `services` collection, so you edit them in the admin instead of the templates. The colors are CSS variables at the top of each starter's `style.css`. Sites already built from a starter don't change
+- **`imageShapes` draws in your colors.** Give the background color as a palette, colors joined with `|`, such as `imageShapes(1280,720,f3e7dc|e07a5f|3d405b)`: the first color fills the background and the shapes use the rest. A single color still draws gray shapes. See [Factory](https://docs.totalcms.co/twig/factory)
 - **IndexNow gets a new key each time it's turned on.** A site copied from another, such as one built from a starter, no longer submits under the other site's key. The new key shows as soon as you flip the switch, and every other save keeps the stored key
 - **`tcms starter:export` turns IndexNow off and leaves out its key.** A site built from the starter makes its own key when its owner turns IndexNow on
+
+### Fixed
+
+- **A starter's pages appear in the nav in the order the starter lists them.** The Business starter's nav came out as Services, Contact, About, Home
+- **A quick share link no longer becomes the site's address for the CLI.** One visit through a Total CMS Studio share link on `trycloudflare.com` made `tcms` run as that address, which stops working when sharing stops. Quick-link addresses are now ignored, and a custom share domain is remembered as before
 
 ## [3.6.8] - Unreleased
 

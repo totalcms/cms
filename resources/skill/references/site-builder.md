@@ -12,8 +12,8 @@ time by the page router. **No build/generate step** — add a page, it's live.
 `vendor/bin/tcms builder:init <starter>` (`--list` to enumerate, `--force` to overwrite):
 - `minimal` — bare layout + one page
 - `blog` — blog index + post pages (uses the `blog` collection)
-- `business` — multi-page marketing site
-- `portfolio` — project gallery site
+- `business` — multi-page marketing site (services in a `services` collection)
+- `portfolio` — project gallery site (projects in a `projects` collection)
 
 Add `--frontend` to also scaffold the Vite pipeline (see `frontend.md`).
 

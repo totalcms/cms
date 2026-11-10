@@ -36,6 +36,15 @@ imageText($width = 640, $height = 480, $textSize = 200, $bgColor = 'f8f8f8', $te
 imageShapes($width = 640, $height = 480, $bgColor = 'f8f8f8'): string
 ```
 
+`imageShapes` draws gray shapes on the background color. Give it a palette
+instead, colors joined with `|`, to draw in color: the first color is the
+background and the shapes take the rest. Use `|` because commas separate the
+rule's arguments. Write the colors without quotes or `#`.
+
+```
+imageShapes(1280,720,f3e7dc|e07a5f|3d405b|f2cc8f)
+```
+
 ## Gallery
 
 ```

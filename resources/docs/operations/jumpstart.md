@@ -122,7 +122,7 @@ When you export your current CMS data to JumpStart format:
 - **Binary Uploads**: Image files, gallery images, uploaded files, and depot files are **not included** in JumpStart exports. Image, file, depot, and gallery field values are normalized/referenced but not embedded. If you need to preserve all files and binary data, use the **Export to Zip** option in each collection instead.
 
 ### 🔧 **What Supports Factory Generation**
-- **Images**: Can use `"image": "imageBlur"` factory rules
+- **Images**: Can use factory rules such as `"image": "imageBlur"`, or `"image": "imageShapes(1280,720,f3e7dc|e07a5f|3d405b)"` for shapes in your own colors (see [Factory](docs/twig/factory))
 - **Galleries**: Can use factory rules to generate sample gallery items
 
 > **Note**: Schema-level `factory` definitions apply only to entries in the

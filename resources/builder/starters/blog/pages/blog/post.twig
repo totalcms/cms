@@ -8,29 +8,34 @@
 {% block seo %}{{ post ? cms.seo.head(post, {collection: 'blog'}) : cms.seo.head(page|default(null)) }}{% endblock %}
 
 {% block content %}
-<section class="section">
-	{% if post %}
-		<article>
-			<header style="margin-bottom: 2rem;">
-				<h1>{{ post.title }}</h1>
-				<p class="post-meta">
-					{{ post.date | date('F j, Y') }}
-					{% if post.author %} &middot; {{ post.author }}{% endif %}
-				</p>
-			</header>
+{% if post %}
+	<article>
+		<header class="post-header narrow">
+			<p class="post-meta">
+				{{ post.date | date('F j, Y') }}
+				{% if post.author %} &middot; {{ post.author }}{% endif %}
+			</p>
+			<h1>{{ post.title }}</h1>
+			{% if post.summary %}<p class="dek">{{ post.summary | raw }}</p>{% endif %}
+		</header>
 
-			{% if post.content %}
-				<div>{{ post.content | raw }}</div>
-			{% endif %}
+		<div class="container">
+			{{ cms.render.image(post, {w: 2160, h: 1215, fit: 'crop'}, {collection: 'blog', class: 'post-image', loading: 'eager'}) }}
+		</div>
 
-			<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-				<a href="/blog">&larr; Back to all posts</a>
-			</footer>
-		</article>
-	{% else %}
+		{% if post.content %}
+			<div class="post-body narrow">{{ post.content | raw }}</div>
+		{% endif %}
+
+		<footer class="post-footer narrow">
+			<a href="/blog">&larr; Back to all posts</a>
+		</footer>
+	</article>
+{% else %}
+	<section class="prose narrow">
 		<h1>Post Not Found</h1>
 		<p>The blog post <code>{{ params.id }}</code> could not be found.</p>
 		<p><a href="/blog">&larr; Back to all posts</a></p>
-	{% endif %}
-</section>
+	</section>
+{% endif %}
 {% endblock %}

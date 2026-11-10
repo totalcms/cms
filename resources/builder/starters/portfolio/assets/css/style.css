@@ -1,6 +1,21 @@
 /* Portfolio starter — your site's stylesheet.
  * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ *
+ * Change the colors here and the whole site follows. The projects live in the
+ * Projects collection (admin → Collections → Projects): upload your own
+ * pictures there, and tick Featured to show a project on the home page.
  */
+
+:root {
+	--bg     : #131315;
+	--raised : #1d1d20;
+	--line   : #2e2e33;
+	--text   : #ececec;
+	--muted  : #9a9aa2;
+	--accent : #ff6b4a;
+
+	--font   : "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+}
 
 *, *::before, *::after {
 	box-sizing : border-box;
@@ -9,70 +24,336 @@
 }
 
 body {
-	font-family : system-ui, -apple-system, sans-serif;
-	line-height : 1.6;
-	color       : #222;
-	background  : #fafafa;
+	background     : var(--bg);
+	color          : var(--text);
+	font-family    : var(--font);
+	font-size      : 1.0625rem;
+	line-height    : 1.6;
+	min-height     : 100vh;
+	display        : flex;
+	flex-direction : column;
 }
 
-.container {
-	max-width : 1080px;
-	margin    : 0 auto;
-	padding   : 0 1.5rem;
+main {
+	flex : 1;
 }
 
 h1, h2, h3 {
-	line-height : 1.2;
-}
-
-h1 {
-	font-size      : 3rem;
-	margin-bottom  : 1rem;
-	letter-spacing : -0.02em;
-}
-
-h2 {
-	font-size     : 1.75rem;
-	margin-bottom : 0.75rem;
-}
-
-p {
-	margin-bottom : 1rem;
-	color         : #555;
+	line-height : 1.1;
+	text-wrap   : balance;
 }
 
 a {
-	color : #111;
+	color                 : var(--text);
+	text-underline-offset : 0.2em;
 }
 
-.section {
-	padding : 4rem 0;
+a:hover {
+	color : var(--accent);
 }
 
-.grid-3 {
-	display               : grid;
-	grid-template-columns : repeat(auto-fill, minmax(300px, 1fr));
-	gap                   : 1.5rem;
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+	outline        : 2px solid var(--accent);
+	outline-offset : 3px;
 }
 
-.project-card {
-	background    : #fff;
-	border-radius : 8px;
-	overflow      : hidden;
-	box-shadow    : 0 1px 3px rgba(0, 0, 0, 0.08);
-	transition    : transform 0.2s;
+img {
+	display    : block;
+	max-width  : 100%;
+	height     : auto;
+	background : var(--raised);
 }
 
-.project-card:hover {
-	transform : translateY(-2px);
+code {
+	font-size     : 0.88em;
+	background    : var(--raised);
+	padding       : 0.1em 0.35em;
+	border-radius : 3px;
 }
 
-.project-card-body {
-	padding : 1.25rem;
+.container {
+	width  : min(1240px, 100% - 3rem);
+	margin : 0 auto;
 }
 
-.project-card-image {
+/* Nav */
+.site-nav {
+	padding : 1.75rem 0;
+}
+
+.site-nav .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	align-items     : baseline;
+	gap             : 1rem 2rem;
+}
+
+.site-name,
+.site-nav ul {
+	font-size      : 0.8rem;
+	letter-spacing : 0.16em;
+	text-transform : uppercase;
+}
+
+.site-name {
+	font-weight     : 700;
+	text-decoration : none;
+}
+
+.site-nav ul {
+	list-style : none;
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : 0.5rem 2.25rem;
+}
+
+.site-nav ul a {
+	color           : var(--muted);
+	text-decoration : none;
+}
+
+.site-nav ul a:hover,
+.site-nav ul a[aria-current="page"] {
+	color : var(--text);
+}
+
+/* Big statement at the top of each page */
+.intro {
+	padding : clamp(3rem, 9vw, 7.5rem) 0 clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.intro h1 {
+	font-size      : clamp(2.8rem, 8vw, 6.5rem);
+	font-weight    : 300;
+	letter-spacing : -0.035em;
+	line-height    : 0.98;
+	max-width      : 13ch;
+}
+
+.intro p {
+	color      : var(--muted);
+	font-size  : 1.2rem;
+	max-width  : 38ch;
+	margin-top : 1.75rem;
+}
+
+.guide-link {
+	display    : inline-block;
+	margin-top : 1.25rem;
+	color      : var(--muted);
+	font-size  : 0.95rem;
+}
+
+/* Projects */
+.project {
+	display         : block;
+	text-decoration : none;
+}
+
+.project img,
+.project .no-image {
 	width        : 100%;
-	aspect-ratio : 16/10;
-	background   : #e5e7eb;
+	aspect-ratio : 4 / 3;
+	object-fit   : cover;
+}
+
+.project figcaption {
+	padding : 0.9rem 0 0;
+}
+
+.project h2,
+.project h3 {
+	font-size   : 1rem;
+	font-weight : 600;
+}
+
+.project p {
+	color     : var(--muted);
+	font-size : 0.95rem;
+}
+
+.project:hover h2,
+.project:hover h3 {
+	color : var(--accent);
+}
+
+/* Home: the first featured project large, the next two beside it */
+.featured {
+	display               : grid;
+	grid-template-columns : minmax(0, 2fr) minmax(0, 1fr);
+	gap                   : 1.25rem;
+}
+
+.featured .project:first-child {
+	grid-row : span 2;
+}
+
+.project .no-image {
+	background : var(--raised);
+}
+
+.featured .project:first-child img,
+.featured .project:first-child .no-image {
+	aspect-ratio : auto;
+	flex         : 1;
+	height       : 0;
+	min-height   : 320px;
+}
+
+.featured .project:first-child {
+	display        : flex;
+	flex-direction : column;
+}
+
+.more-work {
+	display        : inline-block;
+	margin-top     : 2.5rem;
+	font-size      : 0.8rem;
+	letter-spacing : 0.16em;
+	text-transform : uppercase;
+}
+
+/* Work page: every project, two across */
+.work-grid {
+	display               : grid;
+	grid-template-columns : repeat(2, minmax(0, 1fr));
+	gap                   : 3rem 1.25rem;
+}
+
+/* Reading pages (About, Getting Started) */
+.prose {
+	max-width : 42rem;
+}
+
+.prose h2 {
+	font-size      : 0.8rem;
+	font-weight    : 600;
+	letter-spacing : 0.16em;
+	text-transform : uppercase;
+	color          : var(--muted);
+	margin         : 3rem 0 0.9rem;
+}
+
+.prose p + p {
+	margin-top : 1rem;
+}
+
+.prose ul,
+.prose ol {
+	padding-left : 1.25rem;
+	line-height  : 1.9;
+}
+
+.prose li::marker {
+	color : var(--accent);
+}
+
+.prose a {
+	color : var(--accent);
+}
+
+.skills {
+	list-style : none;
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : 0.6rem;
+	padding    : 0 !important;
+}
+
+.skills li {
+	border        : 1px solid var(--line);
+	border-radius : 999px;
+	padding       : 0.3rem 0.95rem;
+	font-size     : 0.92rem;
+	line-height   : 1.6;
+}
+
+/* Contact form */
+.contact-form {
+	display   : grid;
+	gap       : 1.5rem;
+	max-width : 40rem;
+}
+
+.contact-form label span {
+	display        : block;
+	font-size      : 0.8rem;
+	letter-spacing : 0.16em;
+	text-transform : uppercase;
+	color          : var(--muted);
+	margin-bottom  : 0.5rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+	width         : 100%;
+	font          : inherit;
+	color         : inherit;
+	background    : transparent;
+	border        : 0;
+	border-bottom : 1px solid var(--line);
+	padding       : 0.5rem 0;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+	border-color : var(--accent);
+	outline      : none;
+}
+
+.button {
+	justify-self    : start;
+	display         : inline-block;
+	background      : var(--accent);
+	color           : #131315;
+	font            : inherit;
+	font-weight     : 600;
+	text-decoration : none;
+	padding         : 0.85rem 1.75rem;
+	border          : 0;
+	border-radius   : 999px;
+	cursor          : pointer;
+}
+
+.button:hover {
+	background : #ff8b70;
+	color      : #131315;
+}
+
+/* Footer */
+.site-footer {
+	margin-top : clamp(4rem, 9vw, 7rem);
+	padding    : 2rem 0 2.5rem;
+	border-top : 1px solid var(--line);
+	color      : var(--muted);
+	font-size  : 0.9rem;
+}
+
+.site-footer .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	gap             : 0.5rem 2rem;
+}
+
+@media (max-width: 820px) {
+	.featured,
+	.work-grid {
+		grid-template-columns : minmax(0, 1fr);
+	}
+
+	.featured .project:first-child {
+		grid-row : auto;
+	}
+
+	.featured .project:first-child img,
+	.featured .project:first-child .no-image {
+		aspect-ratio : 4 / 3;
+		height       : auto;
+		min-height   : 0;
+	}
 }

@@ -10,6 +10,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -28,6 +29,7 @@ final class StarterServiceTest extends TestCase
 	private TemplateLister&MockObject $templateLister;
 	private TemplateMigrationService&MockObject $templateMigration;
 	private JumpStartImporter&MockObject $jumpStart;
+	private BuilderOrderService&MockObject $pageOrder;
 	private StarterService $service;
 
 	protected function setUp(): void
@@ -46,6 +48,7 @@ final class StarterServiceTest extends TestCase
 		$this->templateLister    = $this->createMock(TemplateLister::class);
 		$this->templateMigration = $this->createMock(TemplateMigrationService::class);
 		$this->jumpStart         = $this->createMock(JumpStartImporter::class);
+		$this->pageOrder         = $this->createMock(BuilderOrderService::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
@@ -64,6 +67,7 @@ final class StarterServiceTest extends TestCase
 			$this->templateLister,
 			$this->templateMigration,
 			$this->jumpStart,
+			$this->pageOrder,
 			$loggerFactory,
 		);
 	}
@@ -179,6 +183,7 @@ final class StarterServiceTest extends TestCase
 			$lister,
 			$this->templateMigration,
 			$this->jumpStart,
+			$this->pageOrder,
 			$loggerFactory,
 		);
 
@@ -231,6 +236,51 @@ final class StarterServiceTest extends TestCase
 		$this->assertTrue($result->success);
 		$this->assertSame(['ok' => true], $result->data['jumpStart'] ?? null);
 		$this->assertStringContainsString('jumpstart imported', $result->message);
+	}
+
+	public function testPagesAreOrderedAsTheJumpStartListsThem(): void
+	{
+		$this->writeManifest('business', []);
+		$this->writeJumpstart('business', ['objects' => [
+			['collection' => 'builder-pages', 'id' => 'home', 'data' => []],
+			['collection' => 'services', 'id' => 'design', 'data' => []],
+			['collection' => 'builder-pages', 'id' => 'about', 'data' => []],
+			['collection' => 'builder-pages', 'id' => 'contact', 'data' => []],
+		]]);
+
+		$this->config->method('getPagesCollectionId')->willReturn('builder-pages');
+		$this->jumpStart->method('importFromFile')->willReturn(OperationResult::success('Imported'));
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+
+		// The index came back scrambled, and the site already had a page of its own.
+		$this->pageOrder->method('read')->with('builder-pages')->willReturn([
+			['id' => 'contact', 'children' => []],
+			['id' => 'mine', 'children' => [['id' => 'mine-child', 'children' => []]]],
+			['id' => 'about', 'children' => []],
+			['id' => 'home', 'children' => []],
+		]);
+		$this->pageOrder->expects($this->once())->method('write')->with('builder-pages', [
+			['id' => 'home', 'children' => []],
+			['id' => 'about', 'children' => []],
+			['id' => 'contact', 'children' => []],
+			['id' => 'mine', 'children' => [['id' => 'mine-child', 'children' => []]]],
+		]);
+
+		$this->assertTrue($this->service->scaffold('business')->success);
+	}
+
+	public function testPageOrderLeftAloneWhenTheImportFails(): void
+	{
+		$this->writeManifest('business', []);
+		$this->writeJumpstart('business', ['objects' => [
+			['collection' => 'builder-pages', 'id' => 'home', 'data' => []],
+		]]);
+
+		$this->jumpStart->method('importFromFile')->willReturn(OperationResult::failure('Nope'));
+		$this->templateMigration->method('importDirectory')->willReturn(0);
+		$this->pageOrder->expects($this->never())->method('write');
+
+		$this->service->scaffold('business');
 	}
 
 	public function testJumpStartSkippedWhenFileMissing(): void
@@ -387,6 +437,7 @@ final class StarterServiceTest extends TestCase
 			$this->templateLister,
 			$this->templateMigration,
 			$this->jumpStart,
+			$this->pageOrder,
 			$loggerFactory,
 		);
 

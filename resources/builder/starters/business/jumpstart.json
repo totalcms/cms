@@ -59,9 +59,9 @@
 				"image": {
 					"$ref": "https://www.totalcms.co/schemas/properties/image.json",
 					"label": "Hero Image",
-					"help": "Optional image used on the service detail view.",
+					"help": "Picture shown on the service card and the Services page.",
 					"field": "image",
-					"factory": "imageShapes(1280,720)"
+					"factory": "imageShapes(1280,720,e8edff|3b5bdb|3dd6a0|0f1b3d|91a7ff)"
 				},
 				"updated": {
 					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
@@ -201,7 +201,8 @@
 				"icon": "🎯",
 				"order": 1,
 				"summary": "We work with you to define clear goals and a roadmap to get there.",
-				"description": "<p>Every project starts with strategy. We sit down with you to map your business goals to concrete, measurable outcomes — then build the roadmap that gets you there. No vague deliverables, no jargon.</p><p>Engagements typically run 2–4 weeks and produce a written strategy document plus weekly check-ins.</p>"
+				"description": "<p>Every project starts with strategy. We sit down with you to map your business goals to concrete, measurable outcomes — then build the roadmap that gets you there. No vague deliverables, no jargon.</p><p>Engagements typically run 2–4 weeks and produce a written strategy document plus weekly check-ins.</p>",
+				"image": "imageShapes(1280,720,e8edff|3b5bdb|3dd6a0|0f1b3d|91a7ff)"
 			}
 		},
 		{
@@ -212,7 +213,8 @@
 				"icon": "🎨",
 				"order": 2,
 				"summary": "Beautiful, functional designs that reflect your brand and engage your audience.",
-				"description": "<p>Visual design that speaks to your customers and reflects who you are as a business. We work in Figma, hand off production-ready assets, and iterate based on real user feedback.</p><p>Includes brand identity, web design, and component systems for ongoing growth.</p>"
+				"description": "<p>Visual design that speaks to your customers and reflects who you are as a business. We work in Figma, hand off production-ready assets, and iterate based on real user feedback.</p><p>Includes brand identity, web design, and component systems for ongoing growth.</p>",
+				"image": "imageShapes(1280,720,dff7ee|3dd6a0|0f1b3d|3b5bdb|9be8cb)"
 			}
 		},
 		{
@@ -223,7 +225,8 @@
 				"icon": "🛠️",
 				"order": 3,
 				"summary": "Custom-built solutions using modern technologies for performance and reliability.",
-				"description": "<p>Web apps, internal tools, and integrations built to last. We favor proven, boring technology choices that you can maintain in-house — and we document everything we build.</p><p>Stack: PHP 8.4, Twig, modern JS, PostgreSQL or flat-file storage depending on the use case.</p>"
+				"description": "<p>Web apps, internal tools, and integrations built to last. We favor proven, boring technology choices that you can maintain in-house — and we document everything we build.</p><p>Stack: PHP 8.4, Twig, modern JS, PostgreSQL or flat-file storage depending on the use case.</p>",
+				"image": "imageShapes(1280,720,0f1b3d|3dd6a0|3b5bdb|91a7ff|e8edff)"
 			}
 		},
 		{
@@ -234,7 +237,8 @@
 				"icon": "💬",
 				"order": 4,
 				"summary": "Monthly retainers for security updates, content help, and feature work.",
-				"description": "<p>Once your site is live, we stay on as your technical partner. Monthly retainers cover security patches, dependency updates, content additions, and small feature work.</p><p>Tiered packages from a few hours per month for maintenance up to half-time embedded engineering.</p>"
+				"description": "<p>Once your site is live, we stay on as your technical partner. Monthly retainers cover security patches, dependency updates, content additions, and small feature work.</p><p>Tiered packages from a few hours per month for maintenance up to half-time embedded engineering.</p>",
+				"image": "imageShapes(1280,720,3b5bdb|0f1b3d|3dd6a0|e8edff|91a7ff)"
 			}
 		}
 	]

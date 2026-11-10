@@ -1,7 +1,109 @@
 {
 	"name": "Portfolio Starter",
-	"description": "Pages for the portfolio starter — Home, Work, About, Contact, and a Getting Started reference page.",
+	"description": "Pages for the portfolio starter — Home, Work, About, Contact, and a Getting Started reference page — plus six sample projects.",
 	"version": "1.0.0",
+	"schemas": [
+		{
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"$id": "https://www.totalcms.co/schemas/project.json",
+			"id": "project",
+			"type": "object",
+			"description": "A project in the portfolio starter's Work gallery",
+			"formgrid": "id title\norder featured\nsummary summary\nimage image\nupdated created",
+			"properties": {
+				"id": {
+					"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+					"label": "Project ID",
+					"help": "Unique identifier for the project.",
+					"field": "id",
+					"factory": "slug",
+					"settings": {
+						"autogen": "${title}"
+					}
+				},
+				"title": {
+					"type": "string",
+					"label": "Title",
+					"help": "Project name as it appears under its picture.",
+					"field": "text",
+					"factory": "catchPhrase"
+				},
+				"order": {
+					"type": "number",
+					"label": "Display Order",
+					"help": "Lower numbers appear first, on the Work page and the home page.",
+					"field": "number",
+					"default": 0
+				},
+				"featured": {
+					"type": "boolean",
+					"label": "Featured",
+					"help": "Show this project on the home page.",
+					"field": "checkbox",
+					"factory": "boolean"
+				},
+				"summary": {
+					"type": "string",
+					"label": "Summary",
+					"help": "One sentence about the project, shown under its picture.",
+					"field": "textarea",
+					"factory": "sentence"
+				},
+				"image": {
+					"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+					"label": "Image",
+					"help": "The project's picture. Landscape works best.",
+					"field": "image",
+					"factory": "image(1600,1200)"
+				},
+				"updated": {
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Updated",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onUpdate": true,
+						"readonly": true
+					}
+				},
+				"created": {
+					"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+					"label": "Created",
+					"field": "datetime",
+					"factory": "iso8601",
+					"settings": {
+						"onCreate": true,
+						"readonly": true
+					}
+				}
+			},
+			"required": [
+				"id",
+				"title",
+				"updated",
+				"created"
+			],
+			"index": [
+				"id",
+				"title",
+				"order",
+				"featured",
+				"summary",
+				"updated",
+				"created"
+			]
+		}
+	],
+	"collections": {
+		"custom": [
+			{
+				"id": "projects",
+				"schema": "project",
+				"name": "Projects",
+				"sortBy": "order"
+			}
+		]
+	},
 	"objects": [
 		{
 			"collection": "builder-pages",
@@ -80,6 +182,72 @@
 				"draft": false,
 				"nav": false,
 				"data": {}
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-one",
+			"data": {
+				"title": "Project One",
+				"order": 1,
+				"featured": true,
+				"summary": "Brand identity and web design for a tech startup.",
+				"image": "image(1600,1200)"
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-two",
+			"data": {
+				"title": "Project Two",
+				"order": 2,
+				"featured": true,
+				"summary": "E-commerce platform redesign and optimization.",
+				"image": "image(1600,1200)"
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-three",
+			"data": {
+				"title": "Project Three",
+				"order": 3,
+				"featured": true,
+				"summary": "Mobile app design for a health and wellness brand.",
+				"image": "image(1600,1200)"
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-four",
+			"data": {
+				"title": "Project Four",
+				"order": 4,
+				"featured": false,
+				"summary": "Dashboard UI for a SaaS analytics product.",
+				"image": "image(1600,1200)"
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-five",
+			"data": {
+				"title": "Project Five",
+				"order": 5,
+				"featured": false,
+				"summary": "Marketing site for a non-profit organization.",
+				"image": "image(1600,1200)"
+			}
+		},
+		{
+			"collection": "projects",
+			"id": "project-six",
+			"data": {
+				"title": "Project Six",
+				"order": 6,
+				"featured": false,
+				"summary": "Content platform for a media company.",
+				"image": "image(1600,1200)"
 			}
 		}
 	]

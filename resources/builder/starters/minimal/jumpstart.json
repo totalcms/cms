@@ -1,7 +1,14 @@
 {
 	"name": "Minimal Starter",
-	"description": "Pages for the minimal starter — Home plus a Getting Started reference page.",
+	"description": "Pages for the minimal starter — Home plus a Getting Started reference page, and the picture on the home page.",
 	"version": "1.0.0",
+	"collections": {
+		"reserved": [
+			{
+				"id": "image"
+			}
+		]
+	},
 	"objects": [
 		{
 			"collection": "builder-pages",
@@ -41,6 +48,14 @@
 				"draft": false,
 				"nav": false,
 				"data": {}
+			}
+		},
+		{
+			"collection": "image",
+			"id": "hero",
+			"data": {
+				"id": "hero",
+				"image": "imageShapes(1200,900,f0e2d3|e07a5f|3d405b|f2cc8f|81b29a)"
 			}
 		}
 	]

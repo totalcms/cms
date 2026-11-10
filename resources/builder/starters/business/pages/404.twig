@@ -1,14 +1,11 @@
 {% extends 'layouts/default.twig' %}
 
 {% block content %}
-<section class="section" style="text-align: center; padding: 6rem 0;">
+<section class="masthead not-found">
 	<div class="container">
-		<p style="font-size: 4rem; font-weight: 700; margin: 0; color: #666;">404</p>
 		<h1>Page not found</h1>
-		<p style="font-size: 1.25rem; color: #666; max-width: 600px; margin: 0 auto;">
-			The page you're looking for doesn't exist or has been moved.
-		</p>
-		<p style="margin-top: 2rem;"><a href="/">&larr; Back to home</a></p>
+		<p>The page you're looking for doesn't exist or has been moved.</p>
+		<a class="button" href="/">Go to the home page</a>
 	</div>
 </section>
 {% endblock %}

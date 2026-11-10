@@ -4,7 +4,10 @@
 	"version": "1.0.0",
 	"collections": {
 		"reserved": [
-			{ "id": "blog", "url": "/blog/{id}" }
+			{
+				"id": "blog",
+				"url": "/blog/{id}"
+			}
 		]
 	},
 	"objects": [
@@ -96,7 +99,7 @@
 				"author": "Joe Workman",
 				"summary": "A quick tour of what makes Total CMS different — flat-file storage, dynamic routing, and the Site Builder.",
 				"content": "<p>Welcome! This is your first sample post — feel free to edit, delete, or duplicate it as you build out your blog. Posts are stored as JSON objects in the <code>blog</code> collection, and the Site Builder's page router handles all the URL routing for you.</p><p>To add your own post, head to <a href=\"/admin/collections/blog\">Collections → Blog</a> and click <em>+ New Object</em>. Your post will be available at <code>/blog/{id}</code> immediately — no rebuild step.</p>",
-				"image": "imageBlur",
+				"image": "image(1600,900)",
 				"categories": "tutorials",
 				"tags": "getting-started,welcome",
 				"draft": false,
@@ -112,7 +115,7 @@
 				"author": "Joe Workman",
 				"summary": "How to use Twig in your page templates — variables, filters, includes, and the cms global.",
 				"content": "<p>Total CMS uses <a href=\"https://twig.symfony.com\">Twig</a> for templating. Inside any builder template, you have access to the <code>cms</code> global — your gateway to collections, configuration, and dynamic content.</p><h3>Common patterns</h3><ul><li><code>cms.collection.query('blog', {sort: 'date:desc', limit: 10})</code> — fetch a page of blog posts</li><li><code>cms.data.raw('blog', params.id)</code> — fetch a single post</li><li><code>cms.config('domain')</code> — read a config value</li></ul><p>The <a href=\"/admin/playground\">Twig Playground</a> lets you experiment with templates without committing changes.</p>",
-				"image": "imageBlur",
+				"image": "image(1600,900)",
 				"categories": "tutorials",
 				"tags": "twig,templates,tutorial",
 				"draft": false,
@@ -128,7 +131,7 @@
 				"author": "Joe Workman",
 				"summary": "Drafts, publish toggles, scheduled posts — the patterns I use to keep a blog organized.",
 				"content": "<p>Every blog post in Total CMS has a <code>draft</code> toggle. Draft posts won't appear in your listing or be reachable at their URL. Flip it off when you're ready to publish.</p><p>For scheduled publishing, set a future <code>date</code> field and filter by date in your listing template:</p><pre><code>{% verbatim %}{% set posts = cms.collection.query('blog', {\n    filter: [\n        {property: 'draft', operator: 'isfalse'},\n        {property: 'date', operator: 'past'}\n    ],\n    sort: 'date:desc'\n}).objects %}{% endverbatim %}</code></pre><p>That's it — no plugins needed.</p>",
-				"image": "imageBlur",
+				"image": "image(1600,900)",
 				"categories": "workflow",
 				"tags": "publishing,drafts",
 				"draft": false,
@@ -144,7 +147,7 @@
 				"author": "Joe Workman",
 				"summary": "Meta descriptions, og:image, sitemaps, and the small details that make a difference.",
 				"content": "<p>The <code>builder-page</code> schema includes everything you need for solid SEO out of the box: <code>title</code>, <code>description</code>, <code>image</code> (used as <code>og:image</code>), and a <code>sitemap</code> toggle.</p><p>Total CMS auto-generates <code>/sitemap.xml</code> from your pages and any indexed collections. Visit <a href=\"/sitemap.xml\">/sitemap.xml</a> to see it. To exclude a page, toggle off <em>Include in Sitemap</em> in the page form.</p>",
-				"image": "imageBlur",
+				"image": "image(1600,900)",
 				"categories": "seo",
 				"tags": "seo,meta,sitemap",
 				"draft": false,
@@ -160,7 +163,7 @@
 				"author": "Joe Workman",
 				"summary": "Your site's CSS is one file. Edit it, build it, and you're done.",
 				"content": "<p>Your site's stylesheet is <code>css/style.css</code>, and the layout loads it with <code>{{ cms.builder.css('css/style.css') }}</code>. Edit the file, then run <code>npm run build</code>. Vite compiles it into <code>public/assets/</code>.</p><p>If you skipped the Vite pipeline during install, the file is at <code>public/assets/css/style.css</code>. Edit it there, with no build step. Plain CSS still works fine, and modern browsers ship excellent layout primitives.</p>",
-				"image": "imageBlur",
+				"image": "image(1600,900)",
 				"categories": "design",
 				"tags": "css,design,vite",
 				"draft": false,

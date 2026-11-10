@@ -135,6 +135,15 @@ class FakerImageGD extends Base
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 */
+	/**
+	 * Random shapes on a plain background, saved as a PNG.
+	 *
+	 * $bgColor is one hex color, which draws the shapes in random grays, or a
+	 * palette of colors joined with `|` (`f3e7dc|e07a5f|3d405b|f2cc8f`): the
+	 * first is the background and the shapes take the rest, so a starter can
+	 * have placeholder art in its own colors. `|` because commas already
+	 * separate a factory rule's arguments.
+	 */
 	public static function imageShapes(?string $dir = null, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
@@ -145,42 +154,24 @@ class FakerImageGD extends Base
 			throw new \InvalidArgumentException(sprintf('Cannot write to directory "%s"', $dir));
 		}
 
+		$palette = array_values(array_filter(array_map(trim(...), explode('|', $bgColor)), fn (string $hex): bool => $hex !== ''));
+		$bgColor = $palette === [] ? 'f8f8f8' : array_shift($palette);
+
 		// Generate a random filename.
 		$filename = uniqid('imageShape-', true) . '.png';
 		$filepath = $dir . DIRECTORY_SEPARATOR . $filename;
 
-		$image = self::canvas($width, $height, $bgColor);
-
-		$rectCount = random_int(0, 1);
-		for ($i = 0; $i < $rectCount; $i++) {
-			// Draw a random rectangle with random color
-			$grayscale = random_int(0, 255);
-			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$x1        = random_int(0, intval($width / 2));                               // Random start x
-			$y1        = random_int(0, intval($height / 2));                              // Random start y
-			$x2        = $x1 + random_int(intval($width / 5), intval($width / 3));        // Random end x
-			$y2        = $y1 + random_int(intval($height / 5), intval($height / 3));      // Random end y
-
-			if ($color === false) {
-				$color = 1;
-			}
-			imagefilledrectangle($image, $x1, $y1, $x2, $y2, $color);
-		}
-
-		$circleCount = random_int(1, 3);
-		for ($i = 0; $i < $circleCount; $i++) {
-			// Draw a random rectangle with random color
-			$grayscale = random_int(0, 255);
-			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$cr        = random_int(intval($width / 15), intval($width / 5));             // Radius
-			$cx        = random_int(0, $width);                                           // Center x
-			$cy        = random_int(0, $height);                                          // Center y
-			// $cx          = rand($width / 4, 3 * $width / 4); // Center x
-			// $cy          = rand($height / 4, 3 * $height / 4); // Center y
-			if ($color === false) {
-				$color = 1;
-			}
-			imagefilledellipse($image, $cx, $cy, 2 * $cr, 2 * $cr, $color);
+		if ($palette === []) {
+			$image = self::canvas($width, $height, $bgColor);
+			self::drawGrayShapes($image, $width, $height);
+		} else {
+			// GD can't anti-alias filled shapes, so draw at twice the size and
+			// scale down: the resample smooths the curves.
+			$large = self::canvas($width * 2, $height * 2, $bgColor);
+			self::drawPaletteShapes($large, $width * 2, $height * 2, $palette);
+			$image = self::canvas($width, $height, $bgColor);
+			imagecopyresampled($image, $large, 0, 0, 0, 0, $width, $height, $width * 2, $height * 2);
+			unset($large);
 		}
 
 		imagepng($image, $filepath);
@@ -191,5 +182,66 @@ class FakerImageGD extends Base
 		}
 
 		return $filepath;
+	}
+
+	/** The original look: up to one rectangle and a few circles in random grays. */
+	private static function drawGrayShapes(\GdImage $image, int $width, int $height): void
+	{
+		$rectCount = random_int(0, 1);
+		for ($i = 0; $i < $rectCount; $i++) {
+			$grayscale = random_int(0, 255);
+			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
+			$x1        = random_int(0, intval($width / 2));                               // Random start x
+			$y1        = random_int(0, intval($height / 2));                              // Random start y
+			$x2        = $x1 + random_int(intval($width / 5), intval($width / 3));        // Random end x
+			$y2        = $y1 + random_int(intval($height / 5), intval($height / 3));      // Random end y
+			imagefilledrectangle($image, $x1, $y1, $x2, $y2, $color === false ? 1 : $color);
+		}
+
+		$circleCount = random_int(1, 3);
+		for ($i = 0; $i < $circleCount; $i++) {
+			$grayscale = random_int(0, 255);
+			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
+			$cr        = random_int(intval($width / 15), intval($width / 5));             // Radius
+			imagefilledellipse($image, random_int(0, $width), random_int(0, $height), 2 * $cr, 2 * $cr, $color === false ? 1 : $color);
+		}
+	}
+
+	/**
+	 * A composition in the palette's colors: a large circle running off one
+	 * edge, a block, and two smaller circles, each in a different color while
+	 * the palette lasts, so the result reads as deliberate rather than noise.
+	 *
+	 * @param list<string> $palette
+	 */
+	private static function drawPaletteShapes(\GdImage $image, int $width, int $height, array $palette): void
+	{
+		shuffle($palette);
+		$colors = array_map(function (string $hex) use ($image): int {
+			$color = imagecolorallocate($image, ...self::hex2rgb($hex));
+
+			return $color === false ? 1 : $color;
+		}, $palette);
+		$pick  = static fn (int $i): int => $colors[$i % count($colors)];
+		$short = min($width, $height);
+
+		// A large circle centred near a corner, so most of it falls off the edge.
+		$big = random_int(intval($short * 0.45), intval($short * 0.7));
+		$cx  = random_int(0, 1) === 1 ? $width - random_int(0, intval($width / 6)) : random_int(0, intval($width / 6));
+		$cy  = random_int(0, 1) === 1 ? $height - random_int(0, intval($height / 6)) : random_int(0, intval($height / 6));
+		imagefilledellipse($image, $cx, $cy, 2 * $big, 2 * $big, $pick(0));
+
+		// A block somewhere in the middle third.
+		$bw = random_int(intval($width / 5), intval($width / 3));
+		$bh = random_int(intval($height / 5), intval($height / 3));
+		$bx = random_int(intval($width / 4), intval($width / 2));
+		$by = random_int(intval($height / 4), intval($height / 2));
+		imagefilledrectangle($image, $bx, $by, $bx + $bw, $by + $bh, $pick(1));
+
+		// Two smaller circles.
+		for ($i = 2; $i < 4; $i++) {
+			$r = random_int(intval($short / 14), intval($short / 7));
+			imagefilledellipse($image, random_int($r, $width - $r), random_int($r, $height - $r), 2 * $r, 2 * $r, $pick($i));
+		}
 	}
 }

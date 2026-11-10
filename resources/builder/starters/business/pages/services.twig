@@ -1,29 +1,36 @@
 {% extends 'layouts/default.twig' %}
 
 {% block content %}
-<section class="section">
+<section class="masthead">
 	<div class="container">
 		<h1>Our Services</h1>
-		<p>We offer a range of services to help your business grow.</p>
+		<p>We offer a range of services to help your business grow. Pick one, or let us put a plan together for you.</p>
+	</div>
+</section>
 
-		<div class="grid-2" style="margin-top: 2rem;">
-			<div class="card">
-				<h3>Consulting</h3>
-				<p>Expert guidance to help you make the right decisions for your business.</p>
+{# One row per service from the Services collection. Edit them under Collections → Services. #}
+<section class="service-list container">
+	{% for entry in cms.collection.query('services', {sort: 'order:asc'}).objects %}
+		{% set service = cms.collection.object('services', entry.id) %}
+		<article class="service-row" id="{{ service.id }}">
+			{{ cms.render.image(service, {w: 1120, h: 700, fit: 'crop'}, {collection: 'services', alt: '', class: 'service-art'}) }}
+			<div>
+				{% if service.icon %}<span class="icon" aria-hidden="true">{{ service.icon }}</span>{% endif %}
+				<h2>{{ service.title }}</h2>
+				<p class="summary">{{ service.summary }}</p>
+				<div class="description">{{ service.description|raw }}</div>
 			</div>
-			<div class="card">
-				<h3>Web Design</h3>
-				<p>Modern, responsive websites that look great on every device.</p>
-			</div>
-			<div class="card">
-				<h3>Development</h3>
-				<p>Custom applications built to solve your specific challenges.</p>
-			</div>
-			<div class="card">
-				<h3>Support</h3>
-				<p>Ongoing maintenance and support to keep everything running smoothly.</p>
-			</div>
+		</article>
+	{% endfor %}
+</section>
+
+<section class="cta">
+	<div class="container">
+		<div>
+			<h2>Not sure which one you need?</h2>
+			<p>Tell us about your business and we'll suggest where to start.</p>
 		</div>
+		<a class="button" href="/contact">Contact us</a>
 	</div>
 </section>
 {% endblock %}

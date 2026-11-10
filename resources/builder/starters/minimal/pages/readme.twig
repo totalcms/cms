@@ -1,35 +1,35 @@
 {% extends 'layouts/default.twig' %}
 
 {% block content %}
-<section class="section">
-	<div class="container" style="max-width: 720px;">
+<section class="container">
+	<div class="prose">
 		<h1>You're up and running</h1>
-		<p style="font-size: 1.15rem; color: #666;">
+		<p class="lead">
 			This is the <strong>minimal</strong> starter — a single homepage and a clean layout.
 			Edit, extend, or replace anything you want.
 		</p>
 
-		<h2 style="margin-top: 2.5rem;">What you have</h2>
-		<ul style="line-height: 1.8;">
+		<h2>What you have</h2>
+		<ul>
 			<li>One page (Home) at <code>/</code></li>
 			<li>One layout at <code>tcms-data/builder/layouts/default.twig</code></li>
 			<li>Nav and footer partials</li>
 			<li>This guide at <code>/readme</code></li>
 		</ul>
 
-		<h2 style="margin-top: 2.5rem;">Next steps</h2>
-		<ol style="line-height: 1.8;">
+		<h2>Next steps</h2>
+		<ol>
 			<li><strong>Edit your homepage</strong> — open <code>pages/index.twig</code> in <a target="_blank" rel="noopener" href="/admin/builder">Site Builder</a></li>
 			<li><strong>Add pages</strong> — click <em>+ New Page</em> in the Site Builder sidebar</li>
 			<li><strong>Add a frontend pipeline</strong> (optional) — run <code>tcms builder:frontend</code> to install Vite</li>
 			<li><strong>Delete this guide</strong> when you're ready — remove the <code>readme</code> page record and <code>pages/readme.twig</code></li>
 		</ol>
 
-		<h2 style="margin-top: 2.5rem;">Learn more</h2>
-		<ul style="line-height: 1.8;">
-			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/overview">Site Builder overview</a></li>
-			<li><a target="_blank" rel="noopener" href="/admin/docs/builder/admin">Admin UI guide</a></li>
-			<li><a target="_blank" rel="noopener" href="/admin/docs/twig/builder">Twig functions reference</a></li>
+		<h2>Learn more</h2>
+		<ul>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/site-builder/overview">Site Builder overview</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/site-builder/admin">Admin UI guide</a></li>
+			<li><a target="_blank" rel="noopener" href="/admin/docs/site-builder/twig">Twig functions reference</a></li>
 		</ul>
 	</div>
 </section>

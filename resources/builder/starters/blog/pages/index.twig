@@ -3,19 +3,30 @@
 {% block content %}
 {% set readmeUrl = cms.builder.url('readme') %}
 {% if readmeUrl %}
-<aside style="background: #eef6ff; border-left: 4px solid #3b82f6; padding: 0.85rem 1.25rem; margin: 1rem 0; font-size: 0.95em;">
-	New here? Check out the <a href="{{ readmeUrl }}" style="font-weight: 600;">Getting Started guide</a> to learn how this starter works.
-</aside>
+	<p class="guide-note">New here? Read the <a href="{{ readmeUrl }}">Getting Started guide</a> to learn how this starter works.</p>
 {% endif %}
 
-<section class="section">
-	<h1>Latest Posts</h1>
-
+<div class="container">
 	{% set posts = cms.collection.query('blog', {sort: 'date:desc', limit: 5}).objects %}
-	{% for post in posts %}
-		{% include 'partials/post-card.twig' with {post: post} %}
+
+	{# The newest post leads, with a large picture. #}
+	{% for post in posts|slice(0, 1) %}
+		{% include 'partials/post-lead.twig' with {post: post} %}
 	{% else %}
-		<p>No posts yet. Create a blog collection with the blog schema to get started.</p>
+		<section class="prose narrow">
+			<h1>No posts yet</h1>
+			<p>Add your first post under Collections → Blog in the admin.</p>
+		</section>
 	{% endfor %}
-</section>
+
+	{% if posts|length > 1 %}
+		<h2 class="section-title">More stories</h2>
+		<div class="post-grid">
+			{% for post in posts|slice(1) %}
+				{% include 'partials/post-card.twig' with {post: post} %}
+			{% endfor %}
+		</div>
+		<a class="all-posts" href="/blog">All posts</a>
+	{% endif %}
+</div>
 {% endblock %}

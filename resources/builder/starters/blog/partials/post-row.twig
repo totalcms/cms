@@ -1,0 +1,11 @@
+{# One post on the Blog page: a picture beside its date, title and summary. #}
+{% set url = cms.collection.objectUrl('blog', post) %}
+{% set picture = cms.render.image(post.id, {w: 560, h: 374, fit: 'crop'}, {collection: 'blog', alt: ''}) %}
+<article class="post-row{{ picture ? '' : ' no-image' }}">
+	{% if picture %}<a href="{{ url }}" tabindex="-1" aria-hidden="true">{{ picture }}</a>{% endif %}
+	<div>
+		<p class="post-meta">{{ post.date | date('F j, Y') }}{% if post.author %} &middot; {{ post.author }}{% endif %}</p>
+		<h2><a href="{{ url }}">{{ post.title }}</a></h2>
+		{% if post.summary %}<p>{{ post.summary | raw }}</p>{% endif %}
+	</div>
+</article>

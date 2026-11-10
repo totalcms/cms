@@ -25,6 +25,7 @@ readonly class StarterService
 		private TemplateLister $templateLister,
 		private TemplateMigrationService $templateMigration,
 		private JumpStartImporter $jumpStartImporter,
+		private BuilderOrderService $pageOrder,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Builder);
@@ -100,11 +101,13 @@ readonly class StarterService
 		// the jumpstart import so the page objects have a collection to land in.
 		$this->builderInstaller->ensurePagesCollection();
 
-		// Import the starter's jumpstart.json — pages + any demo content. Page
-		// order in the admin sidebar follows the order objects appear in the
-		// jumpstart file: BuilderOrderService's auto-migration reads the
-		// collection index in insertion order on first access.
+		// Import the starter's jumpstart.json — pages + any demo content — then
+		// put the pages in the order the file lists them. The nav and the
+		// admin sidebar both follow that order.
 		$jumpStart = $this->importJumpStart($manifest);
+		if ($jumpStart !== null && $jumpStart['ok']) {
+			$this->applyPageOrder($manifest);
+		}
 
 		$this->logger->info('Starter scaffolded', [
 			'starter'    => $starterName,
@@ -319,6 +322,57 @@ readonly class StarterService
 		return $result->success
 			? ['ok' => true]
 			: ['ok' => false, 'error' => $result->message];
+	}
+
+	/**
+	 * Move the starter's pages to the front of the page order, in the order
+	 * its jumpstart.json lists them. Pages the site already had keep their
+	 * place after them.
+	 *
+	 * Without this the order is built from the collection index the first
+	 * time it is read, and the import does not leave the index in file
+	 * order: the Business starter's nav came out as Services, Contact,
+	 * About, Home.
+	 */
+	private function applyPageOrder(StarterManifest $manifest): void
+	{
+		$data = json_decode((string)file_get_contents($manifest->directory . '/jumpstart.json'), true);
+		if (!is_array($data) || !is_array($data['objects'] ?? null)) {
+			return;
+		}
+
+		$collection = $this->builderConfig->getPagesCollectionId();
+		$starterIds = [];
+		foreach ($data['objects'] as $object) {
+			if (is_array($object) && ($object['collection'] ?? null) === $collection && is_string($object['id'] ?? null)) {
+				$starterIds[] = $object['id'];
+			}
+		}
+		if ($starterIds === []) {
+			return;
+		}
+
+		try {
+			$byId = [];
+			foreach ($this->pageOrder->read($collection) as $node) {
+				$byId[$node['id']] = $node;
+			}
+
+			$tree = [];
+			foreach (array_unique($starterIds) as $id) {
+				if (isset($byId[$id])) {
+					$tree[] = $byId[$id];
+					unset($byId[$id]);
+				}
+			}
+
+			$this->pageOrder->write($collection, [...$tree, ...array_values($byId)]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Starter page order not applied', [
+				'starter' => $manifest->name,
+				'error'   => $e->getMessage(),
+			]);
+		}
 	}
 
 	private function startersDir(): string

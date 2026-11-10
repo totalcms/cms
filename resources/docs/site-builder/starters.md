@@ -29,7 +29,7 @@ After scaffolding, every starter ships with a `/readme` page (hidden from naviga
 
 ### Minimal
 
-The simplest starting point — a single homepage with a clean layout.
+The simplest starting point — a single homepage with a warm, soft look: cream paper, rounded corners and a picture of colored shapes.
 
 **Pages:** Home
 
@@ -45,13 +45,17 @@ public/assets/css/
   style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
+**Features:**
+- A hero picture of colored shapes, stored as the `hero` object in the Images collection. Upload your own picture there.
+- Colors kept as CSS variables at the top of `style.css`
+
 **Best for:** Starting from scratch with maximum flexibility.
 
 ---
 
 ### Business
 
-A professional business website with multiple pages and a card-based layout.
+A professional business website in navy, blue and mint, with its services in a collection.
 
 **Pages:** Home, About, Services, Contact
 
@@ -71,8 +75,9 @@ public/assets/css/
 ```
 
 **Features:**
-- Hero section on homepage
-- Service cards in a responsive grid
+- A navy hero on the homepage, with the service cards rising into it
+- Service cards and a Services page, both read from the `services` collection in the order set on each service
+- A picture of colored shapes on each service
 - Contact form template
 - Professional navigation with dynamic page links
 
@@ -98,17 +103,20 @@ tcms-data/builder/
   partials/nav.twig
   partials/footer.twig
   partials/post-card.twig
+  partials/post-lead.twig
+  partials/post-row.twig
 public/assets/css/
   style.css                  ← edit me (css/style.css with the Vite pipeline)
 ```
 
 **Features:**
-- Homepage shows latest 5 posts from a `blog` collection
-- Blog index lists all posts
+- Homepage leads with the newest post and its picture, then shows the next few as cards
+- Blog index lists all posts with their pictures, ten to a page
+- Post pages with a large picture and a drop cap on the first paragraph
 - Reusable post card partial
 - Serif typography for readability
 
-**Note:** The blog starter expects a `blog` collection with the `blog` schema to exist. Create one in the admin to see posts rendered in the templates. The templates gracefully handle the case where no blog collection exists yet.
+The starter installs the `blog` collection with five sample posts, each with a photo. The templates still work, without pictures, for posts that have none.
 
 **Best for:** Personal blogs, content-focused sites, writing platforms.
 
@@ -116,7 +124,7 @@ public/assets/css/
 
 ### Portfolio
 
-A portfolio site for showcasing projects with a visual grid layout.
+A dark gallery site for showcasing projects, with the projects in a collection.
 
 **Pages:** Home, Work, About, Contact
 
@@ -136,11 +144,10 @@ public/assets/css/
 ```
 
 **Features:**
-- Featured work grid on homepage
-- Full project gallery on work page
+- The projects ticked Featured on the homepage, the first one large
+- Every project on the Work page, from the `projects` collection in display order
 - Skills tags on about page
 - Contact form
-- Subtle hover animations on project cards
 
 **Best for:** Designers, developers, agencies, creatives.
 
@@ -202,10 +209,14 @@ Every starter ships a `jumpstart.json` alongside its `manifest.json`. It is the 
 
 | Starter | What jumpstart.json installs |
 |---------|------------------------------|
-| `minimal` | 2 pages (Home + Getting Started) |
-| `portfolio` | 5 pages (Home, Work, About, Contact, Getting Started) |
-| `blog` | 5 pages + the reserved `blog` collection + 5 sample posts (featured + categories + tags populated) |
-| `business` | 5 pages + a `service` schema + a `services` collection + 4 sample services (Strategy, Design, Development, Ongoing Support) |
+| `minimal` | 3 pages (Home, Getting Started, 404) + the `image` collection with the home page's `hero` picture |
+| `portfolio` | 6 pages (Home, Work, About, Contact, Getting Started, 404) + a `project` schema + a `projects` collection + 6 sample projects with photos |
+| `blog` | 6 pages + the reserved `blog` collection + 5 sample posts with photos (featured + categories + tags populated) |
+| `business` | 6 pages + a `service` schema + a `services` collection + 4 sample services with pictures (Strategy, Design, Development, Ongoing Support) |
+
+The pictures are made during the import with [factory rules](docs/twig/factory): `image(1600,900)` downloads a photo from picsum.photos, and `imageShapes(1280,720,e8edff|3b5bdb|3dd6a0)` draws shapes in the starter's colors. A photo that can't be downloaded, on a server without internet access, is left out, and the pages show the post or project without it.
+
+The pages appear in the nav and the admin sidebar in the order `jumpstart.json` lists them.
 
 The import runs automatically as part of `tcms builder:init`. If it fails for any reason — schema conflict, disk error, etc. — the scaffold itself still succeeds (templates have already been copied) and you can re-run manually:
 

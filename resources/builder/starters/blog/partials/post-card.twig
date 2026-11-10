@@ -1,7 +1,11 @@
+{# One post as a card: picture, date and author, title, summary. #}
+{% set url = cms.collection.objectUrl('blog', post) %}
 <article class="post-card">
-	<h2><a href="{{ cms.collection.objectUrl('blog', post) }}" style="text-decoration: none; color: #111;">{{ post.title }}</a></h2>
+	{% set picture = cms.render.image(post.id, {w: 720, h: 480, fit: 'crop'}, {collection: 'blog', alt: ''}) %}
+	{% if picture %}<a href="{{ url }}" tabindex="-1" aria-hidden="true">{{ picture }}</a>{% endif %}
 	<p class="post-meta">{{ post.date | date('F j, Y') }}{% if post.author is defined and post.author %} &middot; {{ post.author }}{% endif %}</p>
+	<h2><a href="{{ url }}">{{ post.title }}</a></h2>
 	{% if post.summary is defined and post.summary %}
-		<div>{{ post.summary | raw }}</div>
+		<p>{{ post.summary | raw }}</p>
 	{% endif %}
 </article>

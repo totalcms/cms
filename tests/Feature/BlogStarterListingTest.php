@@ -24,6 +24,8 @@ function renderBlogStarterPage(string $page, array $getData = []): string
 		'page'                     => (string)file_get_contents($dir . $page),
 		'layouts/default.twig'     => '{% block content %}{% endblock %}',
 		'partials/post-card.twig'  => '[{{ post.id }}]',
+		'partials/post-lead.twig'  => '[{{ post.id }}]',
+		'partials/post-row.twig'   => '[{{ post.id }}]',
 	]));
 	$twig->addFilter(new TwigFilter('sortCollection', TotalCMSTwigFilters::sortCollection(...)));
 	$twig->addFilter(new TwigFilter('sortCollectionByString', TotalCMSTwigFilters::sortCollectionByString(...)));

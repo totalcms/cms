@@ -1,6 +1,23 @@
 /* Minimal starter — your site's stylesheet.
  * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ *
+ * Change the colors here and the whole site follows. The picture on the home
+ * page lives in the Images collection (admin → Collections → Images → hero):
+ * upload your own there.
  */
+
+:root {
+	--paper  : #f8f2ea;
+	--sand   : #f0e2d3;
+	--ink    : #3d405b;
+	--muted  : #6e6c7a;
+	--accent : #c4553a;
+	--sun    : #f2cc8f;
+	--sage   : #81b29a;
+
+	--font   : "Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+	--radius : 28px;
+}
 
 *, *::before, *::after {
 	box-sizing : border-box;
@@ -9,13 +26,214 @@
 }
 
 body {
-	font-family : system-ui, -apple-system, sans-serif;
-	line-height : 1.6;
-	color       : #333;
+	background  : var(--paper);
+	color       : var(--ink);
+	font-family : var(--font);
+	font-size   : 1.0625rem;
+	line-height : 1.65;
+	min-height  : 100vh;
+	display     : flex;
+	flex-direction : column;
+}
+
+main {
+	flex : 1;
+}
+
+a {
+	color                 : var(--accent);
+	text-underline-offset : 0.2em;
+}
+
+a:focus-visible,
+.button:focus-visible {
+	outline        : 3px solid var(--ink);
+	outline-offset : 3px;
+	border-radius  : 4px;
+}
+
+code {
+	font-size     : 0.9em;
+	background    : var(--sand);
+	padding       : 0.1em 0.35em;
+	border-radius : 5px;
 }
 
 .container {
-	max-width : 960px;
+	width     : min(1120px, 100% - 3rem);
 	margin    : 0 auto;
-	padding   : 0 1rem;
+}
+
+/* Nav */
+.site-nav {
+	padding : 1.75rem 0;
+}
+
+.site-nav .container {
+	display         : flex;
+	justify-content : space-between;
+	align-items     : center;
+	gap             : 1.5rem;
+}
+
+.site-name {
+	color           : var(--ink);
+	font-weight     : 700;
+	font-size       : 1.125rem;
+	text-decoration : none;
+}
+
+.site-nav ul {
+	list-style : none;
+	display    : flex;
+	gap        : 1.75rem;
+}
+
+.site-nav ul a {
+	color           : var(--muted);
+	text-decoration : none;
+	font-weight     : 500;
+}
+
+.site-nav ul a:hover {
+	color : var(--ink);
+}
+
+/* Home */
+.hero {
+	display               : grid;
+	grid-template-columns : minmax(0, 1fr) minmax(0, 1.1fr);
+	align-items           : center;
+	gap                   : clamp(2rem, 5vw, 5rem);
+	padding               : clamp(2rem, 6vw, 5rem) 0 clamp(3rem, 8vw, 7rem);
+}
+
+.hero h1 {
+	font-size      : clamp(2.6rem, 6vw, 4.6rem);
+	line-height    : 1.02;
+	letter-spacing : -0.03em;
+	font-weight    : 700;
+	margin-bottom  : 1.5rem;
+	text-wrap      : balance;
+}
+
+.hero p {
+	font-size     : 1.2rem;
+	color         : var(--muted);
+	max-width     : 32ch;
+	margin-bottom : 2.25rem;
+}
+
+.hero-actions {
+	display     : flex;
+	flex-wrap   : wrap;
+	align-items : center;
+	gap         : 1rem 1.75rem;
+}
+
+.button {
+	display         : inline-block;
+	background      : var(--ink);
+	color           : var(--paper);
+	font-weight     : 600;
+	text-decoration : none;
+	padding         : 0.85rem 1.5rem;
+	border-radius   : 999px;
+}
+
+.button:hover {
+	background : var(--accent);
+}
+
+.hero-art {
+	display       : block;
+	width         : 100%;
+	height        : auto;
+	aspect-ratio  : 4 / 3;
+	object-fit    : cover;
+	border-radius : var(--radius);
+	background    : var(--sand);
+}
+
+/* Reading pages (Getting Started) */
+.prose {
+	max-width : 40rem;
+	padding   : 2rem 0 5rem;
+}
+
+.prose h1 {
+	font-size      : clamp(2.2rem, 5vw, 3.2rem);
+	line-height    : 1.05;
+	letter-spacing : -0.025em;
+	margin-bottom  : 1rem;
+}
+
+.prose .lead {
+	font-size : 1.2rem;
+	color     : var(--muted);
+}
+
+.prose h2 {
+	font-size     : 1.35rem;
+	margin        : 2.75rem 0 0.75rem;
+}
+
+.prose ul,
+.prose ol {
+	padding-left : 1.25rem;
+	line-height  : 1.9;
+}
+
+.prose li::marker {
+	color : var(--accent);
+}
+
+/* 404 */
+.not-found {
+	text-align : center;
+	padding    : 6rem 0;
+}
+
+.not-found .code {
+	font-size      : clamp(5rem, 16vw, 9rem);
+	font-weight    : 700;
+	line-height    : 1;
+	letter-spacing : -0.05em;
+	color          : var(--sun);
+}
+
+.not-found h1 {
+	font-size     : 1.75rem;
+	margin        : 0.5rem 0;
+}
+
+.not-found p {
+	color         : var(--muted);
+	margin-bottom : 1.75rem;
+}
+
+/* Footer */
+.site-footer {
+	padding    : 2.5rem 0 3rem;
+	color      : var(--muted);
+	font-size  : 0.9rem;
+}
+
+.site-footer .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	gap             : 0.5rem 2rem;
+	border-top      : 1px solid var(--sand);
+	padding-top     : 1.75rem;
+}
+
+@media (max-width: 760px) {
+	.hero {
+		grid-template-columns : minmax(0, 1fr);
+	}
+
+	.hero-art {
+		order : -1;
+	}
 }
