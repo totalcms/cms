@@ -6,10 +6,13 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Added
 
-- **Protect works on Stacks pages.** Add the new Protect stack to a page, or call `{{ protect_page() }}`, to put it behind a passcode the way the `protect` feature does on a Site Builder page. It takes the same passcode, prompt title and scope options, and uses the extension's Default Passcode without them. A page from another website builder, or one written by hand, works the same way as long as it renders through the PHP API.
+- **Protect works on Stacks pages.** Add the new Protect stack to a page, or call `{{ protect_page() }}`, to put it behind a passcode the way the `protect` feature does on a Site Builder page. It takes the same passcode, prompt title and scope options, and uses the extension's Default Passcode without them. A page from another website builder, or one written by hand, works the same way as long as it renders through the PHP API. **Upgrade note:** if Protect was already enabled, turn on its **Twig Functions** permission under Admin → Extensions → Protect. New permissions start off on an update, and until then a page with the stack shows a Twig error instead of its content. See [Protect](https://docs.totalcms.co/extensions/protect)
 - **A `.starterignore` file leaves paths out of `tcms starter:export`.** List design notes, seed files or site backups in it, one path per line from the project root, and the starter won't carry them. See What Is Copied under `starter:export` in the Site Builder CLI docs
 - **`tcms setup:admin` creates the first admin from the command line.** It also marks setup finished, so a site made by a script or by Total CMS Studio opens ready to sign in instead of in the setup wizard. The password comes in on stdin, never as an option. See `setup:admin` in the CLI docs
 - **Visitors can send files to a depot without an account.** Add a `publicUpload` setting to a depot property and put `{{ cms.form.depotDrop('inbox', {collection: 'dropbox'}) }}` on a public page. You choose the file types, the size limits and the folder, and visitors can add files and nothing else. A visitor can also leave a comment and pick a tag from a list you set in the template, both saved on each file. Uploads are limited per address, and a hidden check keeps bots out without a CAPTCHA. Uploads are not virus scanned. See Public Uploads in the Forms docs
+- **Client Help, a bundled extension for admin-only how-tos.** Write posts in a private `client-help` collection and your client reads them in the admin: a home page with a note and featured articles, a sidebar by category, and articles in the same layout as the built-in docs. Clients need the extension's permission, not access to the collection, and drafts never show. See [Client Help](https://docs.totalcms.co/extensions/client-help)
+- **A `blogdown` schema for blogs written in Markdown.** It is the `blog` schema with `content`, `summary` and `extra` stored as Markdown, with the same RSS feed and SEO defaults. Pick it when you create a collection, and print those fields with the `|markdown` filter. Needs the Standard edition, like `blog`. See [Styled Markdown](https://docs.totalcms.co/fields/styled-markdown)
+- **Extension menu items can use a stock admin icon.** An admin nav item's `icon` takes raw SVG or a built-in icon by its CSS variable, such as `var(--icon-help)`
 
 ### Changed
 
@@ -17,6 +20,10 @@ All notable changes to Total CMS will be documented in this file.
 - **Deck items get an ID on their own.** When the item schema has no autogen rule, a new item in the admin and a deck API post with no `id` get an ID like `item_a1b2c3d`. Existing autogen rules and saved IDs don't change
 - **Lists in the docs and Client Help are indented.** Bullets and numbers used to hang out past the left edge of the text. They now sit inside it, like the rest of the page
 - **The setup wizard now defaults to Above Document Root.** It tests whether it can write there, and preselects Document Root only when it can't. Above Document Root is also listed first, and Document Root is no longer labeled the default. **Behavior change:** sites that sit side by side, such as `/home/you/one.com` and `/home/you/two.com`, share one `tcms-data` folder unless each sets its own `datadir`, and the second site skips the wizard
+- **The New Object shortcut is Control+N on a Mac and Alt+N elsewhere.** Cmd+N opened a new browser window instead, and browsers keep Ctrl+N on Windows and Linux for themselves
+- **Git-managed templates can be edited from the dashboard on a dev install.** With `env` set to `dev`, a save writes to the same working tree your editor uses, and the editor shows where it landed. Every other environment stays read-only, so a deploy's `git pull` never conflicts, and the Template Designer API still refuses git-managed templates. See [Git-First Templates](https://docs.totalcms.co/operations/git-first-templates)
+- **The impersonation badge shows the user's name.** It showed their ID, and falls back to it when there is no name. The return button is now a close icon, with its label kept as a tooltip and for screen readers
+- **Copy buttons show a check mark when they copy.** They used to say "Copied!"
 
 ### Removed
 
@@ -38,6 +45,9 @@ All notable changes to Total CMS will be documented in this file.
 - **File download names are encoded properly.** Names with quotes, accents or other unusual characters now download under the right name
 - **The disabled-extension warning no longer breaks admin pages.** It took a column of the page layout, which pushed the sidebar and content sideways. Warnings now sit in their own row across the top of the page
 - **A saved template reaches the next request with Development Mode off.** Saved pages, layouts and partials used to stay stale until the cache was cleared. **Behavior change:** files changed on disk, including by a git deploy, now show up without clearing the cache. A `{% cache %}` block still keeps its output until its `ttl` runs out
+- **New Collection links show only to users who can create collections.** Quick Nav and the dashboard's Quick Actions checked the wrong permission, so an editor saw a link the page then refused. The collections sidebar button was admin-only, hiding it from other users allowed to create collections, and the welcome panel's card had no check at all
+- **The dashboard's "Email is not set up" alert checks the SMTP username.** It checked the From address, which isn't what makes email work
+- **Extension menu items stay inside the admin.** An item whose URL started with a slash ignored the admin's base address and linked outside it
 
 ## [3.6.7] - 2026-11-03
 
