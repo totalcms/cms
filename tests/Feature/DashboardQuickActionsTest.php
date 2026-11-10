@@ -26,9 +26,9 @@ beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
 	$this->setUpApp(bootstrap());
-	$this->c        = $this->app->getContainer();
-	$this->config   = $this->c->get(Config::class);
-	$this->registry = $this->c->get(AdminNavRegistry::class);
+	$this->c           = $this->app->getContainer();
+	$this->config      = $this->c->get(Config::class);
+	$this->registry    = $this->c->get(AdminNavRegistry::class);
 	$this->registryFor = fn (AuthTwigAdapter $auth): AdminNavRegistry => new AdminNavRegistry(
 		$auth,
 		$this->c->get(EditionTwigAdapter::class),

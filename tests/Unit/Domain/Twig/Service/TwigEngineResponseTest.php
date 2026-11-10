@@ -42,7 +42,7 @@ test('a response is findable through renderString()', function (): void {
 	try {
 		responseTwig()->renderString('BEFORE {{ answer_with_prompt() }} AFTER');
 		$this->fail('renderString() returned a page');
-	} catch (\Throwable $thrown) {
+	} catch (Throwable $thrown) {
 		expect(PageResponseException::find($thrown))->toBeInstanceOf(PageResponseException::class);
 	}
 });

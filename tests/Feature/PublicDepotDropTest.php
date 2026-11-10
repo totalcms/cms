@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\UploadedFile;
 use TotalCMS\Action\Property\File\FileSaveAction;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -56,7 +56,7 @@ beforeEach(function (): void {
 
 	$this->drops   = $container;
 	$this->fetcher = $container->get(ObjectFetcher::class);
-	$saver        = $container->get(ObjectSaver::class);
+	$saver         = $container->get(ObjectSaver::class);
 	$saver->saveObject('drops', ['id' => 'inbox']);
 	$saver->saveObject('vault', ['id' => 'safe']);
 
@@ -74,7 +74,7 @@ beforeEach(function (): void {
 	foreach (['drops/inbox', 'vault/safe'] as $key) {
 		[$collection, $id] = explode('/', $key);
 		$container->get(PropertyFileStore::class)->store($collection, $id, 'depot', dropFixture());
-		$files = $this->fetcher->fetchObjectFromDisk($collection, $id)->toArray()['depot']['files'] ?? [];
+		$files              = $this->fetcher->fetchObjectFromDisk($collection, $id)->toArray()['depot']['files'] ?? [];
 		$this->seeded[$key] = $files[0]['name'];
 	}
 
@@ -647,10 +647,10 @@ test('a chunked upload is put together, stored once, and answers the same small 
 });
 
 test('a lone high-index chunk is counted and cannot pass the size limit', function (): void {
-	$before = dropState('drops', 'inbox');
-	$config = $this->app->getContainer()->get(Config::class);
+	$before             = dropState('drops', 'inbox');
+	$config             = $this->app->getContainer()->get(Config::class);
 	$config->rateLimits = ['public-upload' => ['max' => 1, 'window' => 3600]];
-	$lone   = ['dzuuid' => 'u1', 'dzchunkindex' => '2', 'dztotalchunkcount' => '3'];
+	$lone               = ['dzuuid' => 'u1', 'dzchunkindex' => '2', 'dztotalchunkcount' => '3'];
 
 	$first = dropUpload(data: $lone);
 	expect($first->getStatusCode())->toBe(400)
@@ -1056,7 +1056,7 @@ test('the drop form for a signed-in user carries no bot fields', function (): vo
 test('no field type prints the grant: an auto-built form for the granted collection leaks nothing', function (): void {
 	$container = $this->app->getContainer();
 	$container->get(CollectionSaver::class)->saveCollection([
-		'id' => 'dropbox', 'name' => 'Dropbox', 'schema' => 'depot',
+		'id'         => 'dropbox', 'name' => 'Dropbox', 'schema' => 'depot',
 		'properties' => ['depot' => ['field' => 'depot', 'settings' => ['publicUpload' => ['extensions' => ['txt'], 'folder' => 'incoming', 'maxTotalMb' => 777, 'comments' => true]]]],
 	]);
 
@@ -1092,7 +1092,7 @@ test('an admin save from a page loaded before a visitor upload keeps the visitor
 
 test('an admin save keeps the edits the page made to a listed file', function (): void {
 	restoreFixtures();
-	$stale = adminDepotCopy();
+	$stale                         = adminDepotCopy();
 	$stale['files'][0]['comments'] = 'Signed contract';
 	$stale['files'][0]['count']    = 99;
 	$stale['protected']            = false;
@@ -1108,7 +1108,7 @@ test('an admin save keeps the edits the page made to a listed file', function ()
 
 test('an admin save does not bring back a file deleted since the page loaded', function (): void {
 	restoreFixtures();
-	$stale = adminDepotCopy();
+	$stale            = adminDepotCopy();
 	$stale['files'][] = ['name' => 'gone.txt', 'mime' => 'text/plain', 'size' => 5];
 
 	signInAs($this->app, 'admin-user-test-com');

@@ -47,7 +47,7 @@ test('losing the race to create the collection is logged, not thrown', function 
 	$fetcher->method('collectionExists')->willReturn(false);
 	$saver = $this->createStub(CollectionSaver::class);
 	$saver->method('saveCollection')->willThrowException(new RuntimeException('already exists'));
-	$logger = new class () extends AbstractLogger {
+	$logger = new class extends AbstractLogger {
 		/** @var list<string> */
 		public array $messages = [];
 

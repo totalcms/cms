@@ -101,7 +101,7 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->put('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
 		$group->patch('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
 
-		$group->delete('/{collection}/{id}/{property}/cache',Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
+		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
 		// `{path:.+}/cache` covers both cases that look identical at the URL level:
 		// (1) gallery file cache (path is a filename — clears `prop/.cache/{name}/`)
 		// (2) nested property cache (card child or deck-item child — clears `prop/{key}/.cache/`)

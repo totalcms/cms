@@ -70,7 +70,7 @@ readonly class FileSaveAction
 		}
 
 		$isUpload = false;
-		$file = $files[$paramName] ?? $files[$args['property']] ?? null;
+		$file     = $files[$paramName] ?? $files[$args['property']] ?? null;
 
 		if ($file === null) {
 			$bodyKey = isset($body[$paramName]) ? $paramName : $args['property'];
@@ -186,7 +186,7 @@ readonly class FileSaveAction
 			throw new UploadRejectedException(['The upload could not be stored.']);
 		}
 
-		$depot = $this->objects->fetchObjectFromDisk($collection, $id)->toArray()[$property] ?? [];
+		$depot    = $this->objects->fetchObjectFromDisk($collection, $id)->toArray()[$property] ?? [];
 		$prefixed = $this->policy->prefixedName(basename($assembled));
 
 		// Last look at the name, in the form it will be stored under.
@@ -195,7 +195,7 @@ readonly class FileSaveAction
 		}
 
 		$named = dirname($assembled) . '/' . $prefixed;
-		if (!QuietCall::run(fn () => rename($assembled, $named))) {
+		if (!QuietCall::run(fn (): bool => rename($assembled, $named))) {
 			throw new UploadRejectedException(['The upload could not be stored.']);
 		}
 

@@ -15,9 +15,9 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Data\Operation;
-use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
@@ -26,6 +26,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Media\Data\PublicUploadGrant;
 use TotalCMS\Domain\Media\Service\PublicUploadPolicy;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
@@ -260,7 +261,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		}
 
 		try {
-			return $this->uploadPolicy->grantFor($collectionId, $property) !== null;
+			return $this->uploadPolicy->grantFor($collectionId, $property) instanceof PublicUploadGrant;
 		} catch (\Throwable) {
 			return false;
 		}

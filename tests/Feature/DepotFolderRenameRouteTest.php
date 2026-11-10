@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Container\ContainerInterface;
 use Slim\App;
 use Slim\Routing\RoutingResults;
 
@@ -21,7 +22,7 @@ beforeEach(function (): void {
 /**
  * The name of the route a request would dispatch to, or null when none matches.
  *
- * @param App<\Psr\Container\ContainerInterface|null> $app
+ * @param App<ContainerInterface|null> $app
  */
 function depotRouteName(App $app, string $method, string $path): ?string
 {

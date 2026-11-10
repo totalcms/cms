@@ -31,13 +31,13 @@ return [
 	'error.testing_view'           => 'Fout bij het testen van de weergave: {message}',
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
-	'depot.processing'             => 'Verwerken...',
+	'depot.processing'               => 'Verwerken...',
 	'depot.files_sent'               => 'Uw bestanden zijn verzonden.',
-	'depot.file_too_big'            => 'Dit bestand is te groot ({{filesize}} MB). De limiet is {{maxFilesize}} MB.',
-	'depot.invalid_file_type'       => 'Dit type bestand wordt niet geaccepteerd.',
-	'depot.upload_failed'           => 'Het uploaden is niet gelukt. Probeer het opnieuw.',
-	'depot.upload_expired'          => 'Dit formulier is verlopen. Laad de pagina opnieuw en probeer het nogmaals.',
-	'depot.remove_file'             => 'Verwijderen',
+	'depot.file_too_big'             => 'Dit bestand is te groot ({{filesize}} MB). De limiet is {{maxFilesize}} MB.',
+	'depot.invalid_file_type'        => 'Dit type bestand wordt niet geaccepteerd.',
+	'depot.upload_failed'            => 'Het uploaden is niet gelukt. Probeer het opnieuw.',
+	'depot.upload_expired'           => 'Dit formulier is verlopen. Laad de pagina opnieuw en probeer het nogmaals.',
+	'depot.remove_file'              => 'Verwijderen',
 
 	// ── Markdown Field ──────────────────────────────────────────────────────
 	'markdown.visual_title'        => 'Overschakelen naar de visuele editor?',

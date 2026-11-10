@@ -44,8 +44,8 @@ beforeEach(function (): void {
 		]);
 		signInAs($this->app, 'client-user', 'auth');
 	};
-	$this->admin = fn () => signInAs($this->app, 'admin-user-test-com');
-	$this->html  = fn (string $path = '/home'): string => (string)get(CLIENT_HELP_URL . $path)->getBody();
+	$this->admin   = fn () => signInAs($this->app, 'admin-user-test-com');
+	$this->html    = fn (string $path = '/home'): string => (string)get(CLIENT_HELP_URL . $path)->getBody();
 	$this->setting = fn (array $settings) => $c->get(ExtensionSettingsManager::class)->saveSettings('totalcms/client-help', $settings);
 });
 

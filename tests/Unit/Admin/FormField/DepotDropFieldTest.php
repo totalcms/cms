@@ -222,14 +222,14 @@ describe('DepotDropField', function (): void {
 
 	test('DepotDropField → the grant never reaches the page, for a visitor or a signed-in user', function (): void {
 		$this->form->collection = 'docs';
-		$publicUpload = ['extensions' => ['pdf'], 'folder' => 'incoming', 'maxTotalMb' => 777, 'comments' => true];
+		$publicUpload           = ['extensions' => ['pdf'], 'folder' => 'incoming', 'maxTotalMb' => 777, 'comments' => true];
 
 		// Anonymous: a grant with a folder, and the property settings carrying it.
 		$this->form->method('publicUploadGrant')->willReturn(new PublicUploadGrant(['pdf'], 1048576, 777 * 1048576, 'incoming', true));
 		$anonymous = (new DepotDropField($this->form, 'files', settings: ['publicUpload' => $publicUpload]))->build();
 
 		// Signed in: no grant, but the same property settings.
-		$form = $this->createMock(TotalForm::class);
+		$form     = $this->createMock(TotalForm::class);
 		$form->id = 'test-id';
 		$form->method('t')->willReturnCallback(static fn (string $key, string $default = ''): string => $default !== '' ? $default : $key);
 		$signedIn = (new DepotDropField($form, 'files', settings: ['publicUpload' => $publicUpload, 'comments' => true]))->build();
@@ -241,5 +241,4 @@ describe('DepotDropField', function (): void {
 				->and($html)->not->toContain('777');
 		}
 	});
-
 });

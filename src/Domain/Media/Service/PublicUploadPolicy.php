@@ -18,15 +18,15 @@ use TotalCMS\Support\QuietCall;
  */
 readonly class PublicUploadPolicy
 {
-	private const DEFAULT_FILE_MB   = 25;
-	private const DEFAULT_TOTAL_MB  = 500;
-	private const MAX_COMMENT_CHARS = 1000;
-	private const MAX_TAG_CHARS     = 60;
+	private const DEFAULT_FILE_MB    = 25;
+	private const DEFAULT_TOTAL_MB   = 500;
+	private const MAX_COMMENT_CHARS  = 1000;
+	private const MAX_TAG_CHARS      = 60;
 	private const MAX_DOWNLOAD_CHARS = 200;
 	private const MAX_FILENAME_BYTES = 255;
 	/** A visitor's name, leaving room for the 17-byte stored prefix. `.partN` on a chunk fits in the same room: parts carry no prefix. */
 	private const MAX_VISITOR_NAME_BYTES = self::MAX_FILENAME_BYTES - 17;
-	private const BYTES_PER_MB      = 1024 * 1024;
+	private const BYTES_PER_MB           = 1024 * 1024;
 
 	/** Blocked on top of FileUploadValidator's dangerous list: pages, and the PHP handlers it misses. */
 	private const BLOCKED_EXTENSIONS = [
@@ -161,7 +161,7 @@ readonly class PublicUploadPolicy
 	 */
 	public function assertAssembled(PublicUploadGrant $grant, string $path, int $depotBytes): void
 	{
-		$size = QuietCall::run(fn () => filesize($path));
+		$size = QuietCall::run(fn (): int|false => filesize($path));
 		if ($size === false) {
 			throw new UploadRejectedException(['The file could not be read.']);
 		}
@@ -172,7 +172,7 @@ readonly class PublicUploadPolicy
 			throw new UploadRejectedException(['There is no room left for this file.']);
 		}
 
-		$type = QuietCall::run(fn () => (new \finfo(FILEINFO_MIME_TYPE))->file($path));
+		$type = QuietCall::run(fn (): string|false => (new \finfo(FILEINFO_MIME_TYPE))->file($path));
 		if ($type === false) {
 			throw new UploadRejectedException(['The file could not be read.']);
 		}

@@ -31,13 +31,13 @@ return [
 	'error.testing_view'           => 'Error testing view: {message}',
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
-	'depot.processing'             => 'Processing...',
+	'depot.processing'               => 'Processing...',
 	'depot.files_sent'               => 'Your files were sent.',
-	'depot.file_too_big'            => 'This file is too big ({{filesize}}MB). The limit is {{maxFilesize}}MB.',
-	'depot.invalid_file_type'       => 'This type of file is not accepted.',
-	'depot.upload_failed'           => 'The upload did not go through. Please try again.',
-	'depot.upload_expired'          => 'This form has expired. Reload the page and try again.',
-	'depot.remove_file'             => 'Remove',
+	'depot.file_too_big'             => 'This file is too big ({{filesize}}MB). The limit is {{maxFilesize}}MB.',
+	'depot.invalid_file_type'        => 'This type of file is not accepted.',
+	'depot.upload_failed'            => 'The upload did not go through. Please try again.',
+	'depot.upload_expired'           => 'This form has expired. Reload the page and try again.',
+	'depot.remove_file'              => 'Remove',
 
 	// ── Markdown Field ──────────────────────────────────────────────────────
 	'markdown.visual_title'        => 'Switch to the visual editor?',

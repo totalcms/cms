@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Media\Service;
 
+use TotalCMS\Domain\Media\Data\PublicUploadGrant;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 
@@ -37,7 +38,7 @@ readonly class GrantedDepotMerger
 	public function keepStoredFiles(string $collection, ObjectData $stored, array $data): array
 	{
 		foreach ($stored->properties as $name => $property) {
-			if (!$property instanceof DepotData || $this->policy->grantFor($collection, (string)$name) === null) {
+			if (!$property instanceof DepotData || !$this->policy->grantFor($collection, (string)$name) instanceof PublicUploadGrant) {
 				continue;
 			}
 

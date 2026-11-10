@@ -23,7 +23,7 @@ final class BlockingFileLock
 	{
 		$dir = dirname($path);
 		if (!is_dir($dir)) {
-			QuietCall::run(fn () => mkdir($dir, 0700, true));
+			QuietCall::run(fn (): bool => mkdir($dir, 0700, true));
 		}
 
 		$handle = QuietCall::run(fn () => fopen($path, 'c'));

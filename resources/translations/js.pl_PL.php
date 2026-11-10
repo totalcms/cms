@@ -31,13 +31,13 @@ return [
 	'error.testing_view'           => 'Błąd podczas testowania widoku: {message}',
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
-	'depot.processing'             => 'Przetwarzanie...',
+	'depot.processing'               => 'Przetwarzanie...',
 	'depot.files_sent'               => 'Twoje pliki zostały wysłane.',
-	'depot.file_too_big'            => 'Ten plik jest zbyt duży ({{filesize}} MB). Limit wynosi {{maxFilesize}} MB.',
-	'depot.invalid_file_type'       => 'Ten typ pliku nie jest akceptowany.',
-	'depot.upload_failed'           => 'Przesyłanie się nie powiodło. Spróbuj ponownie.',
-	'depot.upload_expired'          => 'Ten formularz wygasł. Odśwież stronę i spróbuj ponownie.',
-	'depot.remove_file'             => 'Usuń',
+	'depot.file_too_big'             => 'Ten plik jest zbyt duży ({{filesize}} MB). Limit wynosi {{maxFilesize}} MB.',
+	'depot.invalid_file_type'        => 'Ten typ pliku nie jest akceptowany.',
+	'depot.upload_failed'            => 'Przesyłanie się nie powiodło. Spróbuj ponownie.',
+	'depot.upload_expired'           => 'Ten formularz wygasł. Odśwież stronę i spróbuj ponownie.',
+	'depot.remove_file'              => 'Usuń',
 
 	// ── Markdown Field ──────────────────────────────────────────────────────
 	'markdown.visual_title'        => 'Przełączyć na edytor wizualny?',
