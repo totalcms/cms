@@ -31,6 +31,30 @@ since: "3.5.0"
 
 > **Operators-only mode.** If `protect` is attached but no passcode is configured anywhere (no extension default *and* no page override), the page **fails closed**: logged-in operators still see it, but the public gets the prompt with no valid code to enter. Set a passcode to let the public in.
 
+## Stacks and other site builders
+
+A page built in Stacks has no Site Builder record to tick `protect` on, and Apache serves it without going through the T3 routes. Drop the **Protect** stack onto the page instead, or call the Twig function yourself.
+
+> **Not using Stacks?** Nothing here is specific to Stacks. Any PHP page that renders its Twig through the [PHP API](docs/apis/php-api), whether another website builder made it or you wrote it by hand, can call `protect_page()` the same way. Where these notes mention the CMS Core stack, read the `new TotalCMS\TotalCMS()` line at the top of the page and the `processBufferMacros()` call at the end.
+
+```twig
+{{ protect_page() }}
+
+{{ protect_page({passcode: "8675", promptTitle: "Client Preview", protectScope: "client-preview"}) }}
+```
+
+This is the same gate as the page feature. Called with no options it uses the extension's Default Passcode, and the options are the [Page Data keys](#per-page-configuration) below. Each page is locked on its own, keyed by its URL, unless it shares a `protectScope`. Site-wide mode (`globalScope`) applies here too.
+
+- **Enable the extension first.** Twig can't find `protect_page()` otherwise, so the page shows an error rather than its content.
+- **Enabled Protect before 3.6.8?** New extension permissions start switched off on an update, so `protect_page()` stays unavailable until you turn on **Twig Functions** under **Admin → Extensions → Protect**.
+- **The page must be a `.php` page with the CMS Core stack on it.** A plain `.html` page never reaches T3.
+- **Stacks preview skips the gate**, so you can keep designing. Check the prompt on the published page.
+- **Files aren't covered.** Images and downloads on the page stay reachable by their direct URL.
+- **A Twig error on the page shows the error alone.** A page with `protect_page()` on it never falls back to printing its source the way other Stacks pages do, because the gate didn't get to finish. If the gate itself can't run, the page answers 500 instead of rendering.
+- **Keep the page's Twig unflushed.** Sending the page head early (the optional time-to-first-byte lines in the Stacks page template, or [Reducing Time to First Byte](docs/apis/php-api#reducing-time-to-first-byte) on a hand-built page) means the prompt can't replace the page or set its cookie.
+
+The function also works in a Site Builder template, for when the decision to gate depends on the data.
+
 ## Extension settings (defaults)
 
 Set in **Admin → Extensions → Protect**. These apply to every page with `protect` attached, unless the page overrides them in its Page Data.
@@ -132,6 +156,8 @@ When disabled, `protect` disappears from the page-features picker. Pages that al
 ## Implementation notes
 
 The middleware lives at `resources/extensions/totalcms/protect/ProtectMiddleware.php`. It reads page data and request cookies/body and renders a self-contained HTML form. Its one runtime dependency is an injected `isAdmin` closure (wired in `Extension.php` to `AccessManager::userLoggedIn`) so logged-in operators bypass the gate.
+
+`protect_page()` calls the same class through `gate()`, and answers by throwing a `PageResponseException` that carries the prompt. `PageRouterMiddleware` returns that response on a Site Builder page, and `TotalCMS::processBufferMacros()` sends it in place of a Stacks page.
 
 Source: `resources/extensions/totalcms/protect/`
 

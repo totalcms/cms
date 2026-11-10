@@ -7,6 +7,7 @@ use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Exception\PageRedirectException;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -162,6 +163,12 @@ readonly class TwigEngine
 			$redirect = PageRedirectException::find($e);
 			if ($redirect instanceof PageRedirectException) {
 				throw $redirect;
+			}
+
+			// Nor is a template answering with its own response (`protect_page()`).
+			$answer = PageResponseException::find($e);
+			if ($answer instanceof PageResponseException) {
+				throw $answer;
 			}
 
 			return sprintf(

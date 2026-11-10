@@ -6,9 +6,11 @@ namespace Tests\Unit\Bundled\Protect;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Bundled\Protect\ProtectMiddleware;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 
 require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/protect/ProtectMiddleware.php';
 
@@ -553,6 +555,99 @@ final class ProtectMiddlewareTest extends TestCase
 	private function page(string $id, array $data): PageData
 	{
 		return new PageData(['id' => $id, 'data' => $data]);
+	}
+
+	// --- gate(): the same check for a page with no builder-pages record ---
+
+	public function testGateAnswersWithThePromptBeforeTheCodeIsEntered(): void
+	{
+		$response = $this->gated($this->get('/clients/'), ['passcode' => '8675']);
+
+		$this->assertNotNull($response);
+		$this->assertSame(403, $response->getStatusCode());
+		$this->assertStringContainsString('name="passcode"', (string)$response->getBody());
+	}
+
+	public function testGateSetsTheCookieAndKeepsTheQueryString(): void
+	{
+		$request = $this->post('/clients/?id=acme', ['passcode' => '8675']);
+
+		$response = $this->gated($request, ['passcode' => '8675']);
+
+		$this->assertNotNull($response);
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/clients/?id=acme', $response->getHeaderLine('Location'));
+		$this->assertStringContainsString('tcms_protect_clients=', $response->getHeaderLine('Set-Cookie'));
+	}
+
+	public function testGateLetsTheCookieThroughOnTheOtherSpellingOfTheUrl(): void
+	{
+		$unlocked = $this->gated($this->post('/clients/', ['passcode' => '8675']), ['passcode' => '8675']);
+		$this->assertNotNull($unlocked);
+
+		preg_match('/^(tcms_protect_[^=]+)=([^;]+)/', $unlocked->getHeaderLine('Set-Cookie'), $cookie);
+
+		$this->assertNull($this->gated($this->get('/clients/index.php', [$cookie[1] => $cookie[2]]), ['passcode' => '8675']));
+	}
+
+	public function testGateSharesACookieAcrossAProtectScope(): void
+	{
+		$options  = ['passcode' => '8675', 'protectScope' => 'preview'];
+		$unlocked = $this->gated($this->post('/about/', ['passcode' => '8675']), $options);
+		$this->assertNotNull($unlocked);
+
+		preg_match('/^(tcms_protect_preview)=([^;]+)/', $unlocked->getHeaderLine('Set-Cookie'), $cookie);
+
+		$this->assertNull($this->gated($this->get('/pricing/', [$cookie[1] => $cookie[2]]), $options));
+	}
+
+	public function testGateAcceptsANumericPasscode(): void
+	{
+		$response = $this->gated($this->post('/clients/', ['passcode' => '8675']), ['passcode' => 8675]);
+
+		$this->assertNotNull($response);
+		$this->assertSame(302, $response->getStatusCode());
+	}
+
+	public function testGateFallsBackToTheExtensionDefaultForEmptyStackFields(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, '1234');
+
+		$response = $this->gated(
+			$this->post('/clients/', ['passcode' => '1234']),
+			['passcode' => '', 'promptTitle' => '', 'protectScope' => ''],
+			$middleware,
+		);
+
+		$this->assertNotNull($response);
+		$this->assertSame(302, $response->getStatusCode());
+	}
+
+	public function testGateStandsAsideInStacksPreview(): void
+	{
+		$environment        = $_SERVER['APP_ENV'] ?? null;
+		$_SERVER['APP_ENV'] = 'preview';
+
+		try {
+			$this->assertNull($this->gated($this->get('/clients/'), ['passcode' => '8675']));
+		} finally {
+			$_SERVER['APP_ENV'] = $environment;
+		}
+	}
+
+	/** @param array<string,mixed> $options */
+	private function gated(
+		ServerRequestInterface $request,
+		array $options,
+		?ProtectMiddleware $middleware = null,
+	): ?ResponseInterface {
+		try {
+			($middleware ?? $this->middleware)->gate($request, $options);
+		} catch (PageResponseException $answer) {
+			return $answer->response;
+		}
+
+		return null;
 	}
 
 	/** @param array<string,string> $cookies */

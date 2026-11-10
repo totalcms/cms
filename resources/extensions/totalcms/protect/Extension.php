@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace TotalCMS\Bundled\Protect;
 
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\ExtensionStorage;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\GlobalsRequestCreator;
+use Twig\TwigFunction;
 
 require_once __DIR__ . '/ProtectMiddleware.php';
 
@@ -52,10 +57,43 @@ class Extension implements ExtensionInterface
 		);
 
 		$context->addPageMiddleware('protect', ProtectMiddleware::class);
+
+		// The same gate for a page with no builder-pages record to tick the feature
+		// on: Stacks pages, which Apache serves without the Slim pipeline.
+		$context->addTwigFunction(new TwigFunction(
+			'protect_page',
+			static function (array $options = []) use ($context): string {
+				try {
+					$context->get(ProtectMiddleware::class)->gate(
+						(new GlobalsRequestCreator())->createServerRequestFromGlobals(),
+						$options,
+					);
+				} catch (PageResponseException $answer) {
+					throw $answer;
+				} catch (\Throwable $e) {
+					// ExtensionGuard turns anything else into an empty string, and the
+					// page would render. A gate that cannot decide stays shut.
+					$context->logger()->error('Protect failed, page withheld: ' . $e->getMessage(), ['exception' => $e]);
+
+					throw new PageResponseException(self::withheld());
+				}
+
+				return '';
+			},
+		));
 	}
 
 	public function boot(ExtensionContext $context): void
 	{
+	}
+
+	private static function withheld(): ResponseInterface
+	{
+		$factory = new Psr17Factory();
+
+		return $factory->createResponse(500)
+			->withHeader('Content-Type', 'text/plain; charset=utf-8')
+			->withBody($factory->createStream('This page is unavailable right now.'));
 	}
 
 	/**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -17,6 +18,10 @@ use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
  * the caller's fallback is returned. Failures are counted in a rolling cache
  * window (de-duplicated to one per extension per request). When the count reaches
  * the threshold on a true production request the extension is auto-quarantined.
+ *
+ * PageResponseException passes through: it is a hook answering the request on
+ * purpose, not a crash. Caught here, a Twig function gating a page would render
+ * the page anyway and count as a failure each time.
  */
 final class ExtensionGuard
 {
@@ -48,6 +53,8 @@ final class ExtensionGuard
 	{
 		try {
 			return $this->profiler->time($extensionId, $callable);
+		} catch (PageResponseException $answer) {
+			throw $answer;
 		} catch (\Throwable $e) {
 			$this->recordFailure($extensionId, $hookType, $e);
 

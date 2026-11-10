@@ -15,6 +15,7 @@ use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Exception\PageRedirectException;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -176,6 +177,12 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 				$this->logger->info(sprintf('%d: %s %s → %s', $redirect->status, $method, $path, $redirect->url));
 
 				return (new Response())->withStatus($redirect->status)->withHeader('Location', $redirect->url);
+			}
+
+			// The template answered with its own response (`protect_page()`).
+			$answer = PageResponseException::find($throwable);
+			if ($answer instanceof PageResponseException) {
+				return $answer->response;
 			}
 
 			// The template declined to render the URL (`cms.notFound()`: a

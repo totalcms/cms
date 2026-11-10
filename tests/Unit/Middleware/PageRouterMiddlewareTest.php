@@ -12,6 +12,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Exception\PageRedirectException;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -341,6 +342,28 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertSame(404, $response->getStatusCode());
 		$this->assertFalse($response->hasHeader('Location'));
 		$this->assertStringContainsString('Custom 404', (string)$response->getBody());
+	}
+
+	public function testTemplateResponseAnswersTheRequest(): void
+	{
+		// protect_page() in a template: its prompt replaces the page, status and all.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/preview');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/preview.twig',
+			pageData: ['id' => 'preview'],
+		));
+		$this->pageRouter->expects($this->never())->method('fallback404');
+
+		$answer = new Response(403);
+		$answer->getBody()->write('<form>prompt</form>');
+		$this->twigEngine->method('render')->willThrowException(new PageResponseException($answer));
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(403, $response->getStatusCode());
+		$this->assertStringContainsString('prompt', (string)$response->getBody());
 	}
 
 	public function testTemplateRedirectAnswersWithLocation(): void

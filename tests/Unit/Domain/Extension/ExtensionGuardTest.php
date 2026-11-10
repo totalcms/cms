@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -123,6 +125,16 @@ describe('ExtensionGuard', function (): void {
 		$result = $guard->run('acme/widget', 'twig:fn', fn () => throw new RuntimeException('boom'), fallback: 'safe');
 
 		expect($result)->toBe('safe');
+	});
+
+	test('lets a page response through without counting it as a failure', function (): void {
+		$store  = [];
+		$guard  = new ExtensionGuard(guardEnv('prod'), guardCache($store), guardStateRepo(), new NullLogger(), guardProfiler('prod'));
+		$answer = new PageResponseException((new Psr17Factory())->createResponse(403));
+
+		expect(fn () => $guard->run('totalcms/protect', 'twig:protect_page', fn () => throw $answer, fallback: ''))
+			->toThrow(PageResponseException::class);
+		expect($store)->not->toHaveKey('extguard:fail:totalcms/protect');
 	});
 
 	test('counts at most one failure per extension per request', function (): void {

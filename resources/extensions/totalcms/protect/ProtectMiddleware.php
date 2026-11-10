@@ -8,7 +8,9 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+use TotalCMS\TotalCMS;
 
 /**
  * Gate a page behind a numeric passcode. Visitors who enter the correct
@@ -100,6 +102,65 @@ class ProtectMiddleware implements PageMiddlewareInterface
 	}
 
 	/**
+	 * Gate a page with no builder-pages record, which is what the `protect_page()`
+	 * Twig function runs on a Stacks page. The options are the Page Data keys
+	 * (`passcode`, `promptTitle`, `protectScope`) and the page's id comes from its
+	 * URL, so this is the same gate as ticking the feature on a page.
+	 *
+	 * The prompt comes back as a PageResponseException, which replaces the page
+	 * being rendered. Returning means the visitor is through. Stacks preview has
+	 * no session to log in to, so it shows the page.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @throws PageResponseException when the visitor gets the prompt or the redirect
+	 */
+	public function gate(ServerRequestInterface $request, array $options = []): void
+	{
+		if (TotalCMS::isPreview()) {
+			return;
+		}
+
+		$this->preventCaching();
+
+		// `{passcode: 8675}` in Twig is a number; stringConfig() would drop it and
+		// quietly fall back to the default passcode.
+		if (is_int($options['passcode'] ?? null)) {
+			$options['passcode'] = (string)$options['passcode'];
+		}
+
+		$page     = new PageData(['id' => $this->pathKey($request), 'data' => $options]);
+		$response = $this->handle($request, $page);
+
+		if ($response instanceof ResponseInterface) {
+			throw new PageResponseException($response);
+		}
+	}
+
+	/**
+	 * A shared cache must not hand an unlocked page, or the prompt, to the next
+	 * visitor. The cookie decides who sees what, and caches don't vary on it.
+	 */
+	private function preventCaching(): void
+	{
+		if (!headers_sent()) {
+			header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+		}
+	}
+
+	/**
+	 * A cookie-safe page id from the URL. `/clients/index.php` and `/clients/` are
+	 * one page, so they share a key.
+	 */
+	private function pathKey(ServerRequestInterface $request): string
+	{
+		$path = (string)preg_replace('#/index\.[a-z0-9]+$#i', '/', $request->getUri()->getPath());
+		$key  = trim((string)preg_replace('/[^A-Za-z0-9_-]+/', '-', $path), '-');
+
+		return $key !== '' ? $key : 'home';
+	}
+
+	/**
 	 * The effective passcode. Site-wide mode always uses the extension default
 	 * (one code for the whole site); otherwise a page's own passcode wins, falling
 	 * back to the default.
@@ -151,9 +212,11 @@ class ProtectMiddleware implements PageMiddlewareInterface
 
 		if ($input === $passcode) {
 			$cookie = $this->cookie($request, $key, $passcode);
+			$uri    = $request->getUri();
+			$query  = $uri->getQuery();
 
 			return (new Psr17Factory())->createResponse(302)
-				->withHeader('Location', $request->getUri()->getPath())
+				->withHeader('Location', $uri->getPath() . ($query !== '' ? '?' . $query : ''))
 				->withHeader('Set-Cookie', $cookie);
 		}
 

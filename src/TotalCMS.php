@@ -8,10 +8,12 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Slim\ResponseEmitter;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Backup\Service\BackupStore;
 use TotalCMS\Domain\Backup\Service\ObjectRestorer;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Builder\Exception\PageResponseException;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -75,6 +77,9 @@ use TotalCMS\Support\ContainerFactory;
  */
 class TotalCMS
 {
+	/** Matches a Stacks page gated by the Protect extension's Twig function. */
+	private const PAGE_GATE = '/\{\{-?\s*protect_page\s*\(/';
+
 	private BufferController $buffer;
 	private readonly Container $container;
 	private TwigEngine $twigEngine;
@@ -636,6 +641,11 @@ class TotalCMS
 		try {
 			return $this->twigEngine->renderString($content, $data);
 		} catch (\Throwable $th) {
+			$answer = PageResponseException::find($th);
+			if ($answer instanceof PageResponseException) {
+				$this->sendResponse($answer->response);
+			}
+
 			$scriptName  = $_SERVER['SCRIPT_NAME'] ?? '';
 			$debuggerUrl = $this->config->api . '/admin/utils/twig-debugger?filepath=' . $scriptName;
 			$error       = sprintf('Twig Error: %s <a href="%s">Check in Debugger</a>', $th->getMessage(), $debuggerUrl);
@@ -643,10 +653,35 @@ class TotalCMS
 
 			$this->logger->error(sprintf('%s: %s', $error, $th->getTraceAsString()));
 
+			// The fallback below prints the page's source, which is the content a
+			// gate is hiding and may hold the passcode. The gate never finished,
+			// so a gated page shows the error alone.
+			if (preg_match(self::PAGE_GATE, $content) === 1) {
+				if (!headers_sent()) {
+					http_response_code(500);
+				}
+
+				return $error;
+			}
+
 			$content = str_contains($content, '<body>') ? str_replace('<body>', '<body>' . $error, $content) : $error . $content;
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Send a response in place of the buffered page. Nothing has reached the
+	 * browser yet: the page is held in the buffer until its Twig has rendered.
+	 *
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 */
+	private function sendResponse(ResponseInterface $response): never
+	{
+		$this->buffer->end();
+		(new ResponseEmitter())->emit($response);
+
+		exit(0);
 	}
 
 	/** @param array<mixed> $data */

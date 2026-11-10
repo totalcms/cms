@@ -6,6 +6,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Added
 
+- **Protect works on Stacks pages.** Add the new Protect stack to a page, or call `{{ protect_page() }}`, to put it behind a passcode the way the `protect` feature does on a Site Builder page. It takes the same passcode, prompt title and scope options, and uses the extension's Default Passcode without them. A page from another website builder, or one written by hand, works the same way as long as it renders through the PHP API.
 - **A `.starterignore` file leaves paths out of `tcms starter:export`.** List design notes, seed files or site backups in it, one path per line from the project root, and the starter won't carry them. See What Is Copied under `starter:export` in the Site Builder CLI docs
 - **`tcms setup:admin` creates the first admin from the command line.** It also marks setup finished, so a site made by a script or by Total CMS Studio opens ready to sign in instead of in the setup wizard. The password comes in on stdin, never as an option. See `setup:admin` in the CLI docs
 - **Visitors can send files to a depot without an account.** Add a `publicUpload` setting to a depot property and put `{{ cms.form.depotDrop('inbox', {collection: 'dropbox'}) }}` on a public page. You choose the file types, the size limits and the folder, and visitors can add files and nothing else. A visitor can also leave a comment and pick a tag from a list you set in the template, both saved on each file. Uploads are limited per address, and a hidden check keeps bots out without a CAPTCHA. Uploads are not virus scanned. See Public Uploads in the Forms docs
@@ -25,6 +26,7 @@ All notable changes to Total CMS will be documented in this file.
 
 - **A starter's `.gitignore` leaves out `node_modules/`.** It still named the old `frontend/` folder, so a site made from a starter with a frontend showed every installed package as a new file in git
 - **Starter exports keep the data folder's `.htaccess`.** `tcms starter:export` left it out, so a starter's `tcms-data/` lost the rule that keeps it private on Apache
+- **The passcode form keeps the query string.** After a correct passcode, Protect used to send the visitor back to the page without it.
 - **Every depot list in the admin shows the original or custom download name.** The list used to show the name on disk. Files sent through a public upload carry a random prefix there, and it no longer shows
 - **Same-name uploads no longer mix.** Two uploads of a file with the same name at the same time could get each other's chunks
 - **Parallel uploads to a depot keep every file.** A file could drop off the depot's list while it stayed on disk
