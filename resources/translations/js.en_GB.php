@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'Failed to clear cache. A network or timeout error occurred. Please try again.',
 	'error.delete_image'           => 'Failed to delete image. A network or timeout error occurred. Please try again.',
 	'error.delete_file'            => 'Failed to delete file. A network or timeout error occurred. Please try again.',
+	'error.rename_folder'          => 'Failed to rename the folder. A network or timeout error occurred. Please try again.',
 	'error.delete_label'           => 'Failed to delete {label}',
 	'error.no_processed_images'    => 'No processed images to download',
 	'error.enter_definition'       => 'Please enter a Twig definition first',

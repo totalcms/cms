@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'No se pudo limpiar la caché. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.delete_image'           => 'No se pudo eliminar la imagen. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.delete_file'            => 'No se pudo eliminar el archivo. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
+	'error.rename_folder'          => 'No se pudo cambiar el nombre de la carpeta. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.delete_label'           => 'No se pudo eliminar {label}',
 	'error.no_processed_images'    => 'No hay imágenes procesadas para descargar',
 	'error.enter_definition'       => 'Por favor, introduzca primero una definición de Twig',

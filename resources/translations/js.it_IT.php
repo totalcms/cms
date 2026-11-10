@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'Cancellazione della cache non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.delete_image'           => "Eliminazione dell'immagine non riuscita. Si è verificato un errore di rete o di timeout. Riprova.",
 	'error.delete_file'            => 'Eliminazione del file non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
+	'error.rename_folder'          => 'Rinomina della cartella non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.delete_label'           => 'Eliminazione di {label} non riuscita',
 	'error.no_processed_images'    => 'Nessuna immagine elaborata da scaricare',
 	'error.enter_definition'       => 'Inserisci prima una definizione Twig',

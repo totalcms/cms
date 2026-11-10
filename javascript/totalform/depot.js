@@ -3,6 +3,7 @@ import Dialog from "./dialog";
 import TotalField from "./totalfield";
 import DepotDroplet from "./droplet-depot";
 import tcmsConfirm from "../confirm-dialog";
+import { apiErrorMessage } from "../api-error";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -273,24 +274,33 @@ export default class DepotField extends TotalField {
     }
 
     renameFolder(folder, newName) {
+        const oldName = folder.textContent;
         const oldPath = folder.dataset.path;
         const parts   = oldPath.split("/");
         parts[parts.length - 1] = newName;
         const newPath = parts.join("/");
 
-        // Update DOM: folder name text and data-path
-        folder.textContent  = newName;
-        folder.dataset.path = newPath;
-
-        // Update data-path on all nested folders
-        this.browser.querySelectorAll(`[data-path^="${oldPath}/"]`).forEach(el => {
-            el.dataset.path = newPath + el.dataset.path.slice(oldPath.length);
-        });
+        this.relabelFolder(folder, oldPath, newPath, newName);
 
         if (this.form.isEditMode()) {
-            const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder/rename?path=${oldPath}`;
-            this.form.api.postAPI(api, { name: newName }, "PUT").then(() => this.saved());
+            const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder/rename?path=${encodeURIComponent(oldPath)}`;
+            this.form.api.postAPI(api, { name: newName }, "PUT").then(() => this.saved()).catch(error => {
+                // The folder kept its old name on the server: show that again
+                // rather than a name the next save would not find.
+                this.relabelFolder(folder, newPath, oldPath, oldName);
+                alert(apiErrorMessage(error, "error.rename_folder"));
+            });
         }
+    }
+
+    // Show a folder under a new name, and move the paths of the folders inside it.
+    relabelFolder(folder, fromPath, toPath, name) {
+        folder.textContent  = name;
+        folder.dataset.path = toPath;
+
+        this.browser.querySelectorAll(`[data-path^="${fromPath}/"]`).forEach(el => {
+            el.dataset.path = toPath + el.dataset.path.slice(fromPath.length);
+        });
     }
 
     initEditDialog(node, file = null) {

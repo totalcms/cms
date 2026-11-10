@@ -78,11 +78,6 @@ return function (RouteCollectorProxyInterface $app): void {
 		// catch-all would otherwise capture `{name}/move` as `path` and 404.
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
 
-		// Object Property Meta — `{path:.+}` covers both gallery item meta and
-		// card-nested property updates. The action dispatches on filesystem state.
-		$group->put('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
-		$group->patch('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
-
 		// Deck Items (for deck properties)
 		$group->post('/{collection}/{id}/{property}/deck', Property\Deck\DeckItemCreateAction::class)->setName('deck-item-create');
 		$group->get('/{collection}/{id}/{property}/deck/{itemId}', Property\Deck\DeckItemFetchAction::class)->setName('deck-item-fetch');
@@ -95,7 +90,18 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save')->add(PublicUploadGuardMiddleware::class);
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->put('/{collection}/{id}/{property}/folder/rename', Property\File\FolderRenameAction::class)->setName('property-folder-rename');
-		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
+
+		// Object Property Meta — `{path:.+}` covers both gallery item meta and
+		// card-nested property updates. The action dispatches on filesystem state.
+		// MUST register after every literal PUT/PATCH under `{property}/` above
+		// (`deck/{itemId}`, `folder/rename`): FastRoute takes the first match in
+		// registration order, and the greedy pattern swallowed both, answering a
+		// folder rename and a deck item update with 404 (TOTALCMS-DASHBOARD-5K).
+		// DepotFolderRenameRouteTest pins the order.
+		$group->put('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
+		$group->patch('/{collection}/{id}/{property}/{path:.+}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
+
+		$group->delete('/{collection}/{id}/{property}/cache',Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
 		// `{path:.+}/cache` covers both cases that look identical at the URL level:
 		// (1) gallery file cache (path is a filename — clears `prop/.cache/{name}/`)
 		// (2) nested property cache (card child or deck-item child — clears `prop/{key}/.cache/`)

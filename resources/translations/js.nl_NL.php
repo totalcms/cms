@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'De cache kon niet worden gewist. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.delete_image'           => 'De afbeelding kon niet worden verwijderd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.delete_file'            => 'Het bestand kon niet worden verwijderd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
+	'error.rename_folder'          => 'De map kon niet worden hernoemd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.delete_label'           => '{label} kon niet worden verwijderd',
 	'error.no_processed_images'    => 'Geen verwerkte afbeeldingen beschikbaar om te downloaden',
 	'error.enter_definition'       => 'Voer eerst een Twig-definitie in',

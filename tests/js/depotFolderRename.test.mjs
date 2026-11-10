@@ -71,3 +71,58 @@ describe('DepotField.actionEditFolder', () => {
 		expect(depot.renameFolder).not.toHaveBeenCalled();
 	});
 });
+
+//-----------------------------------------------
+// renameFolder() shows the new name before the server answers. When the PUT
+// failed (TOTALCMS-DASHBOARD-5K: a 404 from a route the catch-all swallowed),
+// the rejection went unhandled, the operator saw no error, and the folder kept
+// the new name on screen while it had the old one on disk.
+//-----------------------------------------------
+
+function buildRenamableDepot(postAPI) {
+	const browser = document.createElement('ul');
+	browser.innerHTML = `
+		<li><details><summary class="folder" data-path="docs/old">old</summary>
+			<ul><li><details><summary class="folder" data-path="docs/old/inner">inner</summary></details></li></ul>
+		</details></li>`;
+	document.body.appendChild(browser);
+
+	const depot = Object.create(DepotField.prototype);
+	depot.browser  = browser;
+	depot.property = 'depot';
+	depot.saved    = vi.fn();
+	depot.form     = { collection: 'files', id: 'store', isEditMode: () => true, api: { postAPI } };
+
+	return { depot, outer: browser.querySelector('[data-path="docs/old"]'), inner: browser.querySelector('[data-path="docs/old/inner"]') };
+}
+
+describe('DepotField.renameFolder', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	test('a failed rename puts the old name and paths back and says why', async () => {
+		const failure = Object.assign(new Error('Folder not found'), { data: {}, status: 404 });
+		const postAPI = vi.fn(() => Promise.reject(failure));
+		const alert   = vi.spyOn(window, 'alert').mockImplementation(() => {});
+		const { depot, outer, inner } = buildRenamableDepot(postAPI);
+
+		depot.renameFolder(outer, 'new');
+		expect(outer.textContent).toBe('new');
+		expect(inner.dataset.path).toBe('docs/new/inner');
+
+		await vi.waitFor(() => expect(alert).toHaveBeenCalledWith('Folder not found'));
+		expect(outer.textContent).toBe('old');
+		expect(outer.dataset.path).toBe('docs/old');
+		expect(inner.dataset.path).toBe('docs/old/inner');
+		expect(depot.saved).not.toHaveBeenCalled();
+	});
+
+	test('sends the old path encoded, so a folder name with & or # reaches the server whole', () => {
+		const postAPI = vi.fn(() => Promise.resolve({}));
+		const { depot, outer } = buildRenamableDepot(postAPI);
+		outer.dataset.path = 'docs/R&D #2';
+
+		depot.renameFolder(outer, 'Research');
+
+		expect(postAPI.mock.calls[0][0]).toBe('/collections/files/store/depot/folder/rename?path=docs%2FR%26D%20%232');
+	});
+});

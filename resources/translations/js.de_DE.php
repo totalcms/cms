@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'Der Cache konnte nicht geleert werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.delete_image'           => 'Das Bild konnte nicht gelöscht werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.delete_file'            => 'Die Datei konnte nicht gelöscht werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+	'error.rename_folder'          => 'Der Ordner konnte nicht umbenannt werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.delete_label'           => '{label} konnte nicht gelöscht werden',
 	'error.no_processed_images'    => 'Keine verarbeiteten Bilder zum Herunterladen vorhanden',
 	'error.enter_definition'       => 'Bitte geben Sie zuerst eine Twig-Definition ein',

@@ -24,6 +24,7 @@ return [
 	'error.cache_clear'            => 'Nie udało się wyczyścić cache. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.delete_image'           => 'Nie udało się usunąć obrazu. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.delete_file'            => 'Nie udało się usunąć pliku. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
+	'error.rename_folder'          => 'Nie udało się zmienić nazwy folderu. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.delete_label'           => 'Nie udało się usunąć: {label}',
 	'error.no_processed_images'    => 'Brak przetworzonych obrazów do pobrania',
 	'error.enter_definition'       => 'Najpierw wprowadź definicję Twig',
