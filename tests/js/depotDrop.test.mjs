@@ -47,6 +47,12 @@ vi.mock('@deltablot/dropzone', () => {
 const DepotDrop = (await import('../../javascript/totalform/depot-drop.js')).default;
 const TotalForm = (await import('../../javascript/totalform/totalform.js')).default;
 
+// Every field built, so afterEach can fire the change events its dispatcher is
+// still holding (300ms, on a real timer) while jsdom is up. Left alone, a timer
+// outlived the file and fired into a torn-down environment: "Failed to execute
+// 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'".
+const built = [];
+
 const CARD = '<li class="depot-drop-card"><div class="dz-preview"><div class="file-icon"></div><p class="filename"></p></div></li>';
 
 function build({ settings = null, comments = false, bot = false, tags = false } = {}) {
@@ -64,6 +70,7 @@ function build({ settings = null, comments = false, bot = false, tags = false } 
 	document.body.appendChild(el);
 	const form = { collection: 'docs', id: 'inbox', api: { headers: {}, buildApiQuery: (a) => `/api${a}` }, form: document.createElement('form'), runEditActions: vi.fn() };
 	const field = new DepotDrop(el, { form });
+	built.push(field);
 	return { field, el, dz: made[made.length - 1] };
 }
 
@@ -76,6 +83,11 @@ function addFile(field, name = 'a.pdf') {
 beforeEach(() => {
 	made.length = 0;
 	document.body.innerHTML = '';
+});
+
+afterEach(() => {
+	built.forEach(field => field.dispatcher?.flush());
+	built.length = 0;
 });
 
 describe('DepotDrop remove button', () => {
