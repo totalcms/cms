@@ -50,3 +50,20 @@ it('ignores a file it cannot parse', function (): void {
 
 	expect(SiteOrigin::recall($this->file))->toBeNull();
 });
+
+it('ignores quick tunnel hosts, which change on every start', function (): void {
+	SiteOrigin::remember($this->file, 'quiet-river-1234.trycloudflare.com', true);
+	expect(file_exists($this->file))->toBeFalse();
+
+	SiteOrigin::remember($this->file, 'real.example.org', true);
+	SiteOrigin::remember($this->file, 'quiet-river-1234.trycloudflare.com', true);
+	SiteOrigin::remember($this->file, 'Other-Name.TryCloudflare.com:443', true);
+
+	expect(SiteOrigin::recall($this->file)['domain'])->toBe('real.example.org');
+});
+
+it('still remembers a custom tunnel domain, which is a real domain', function (): void {
+	SiteOrigin::remember($this->file, 'demo.myagency.com', true);
+
+	expect(SiteOrigin::recall($this->file)['domain'])->toBe('demo.myagency.com');
+});

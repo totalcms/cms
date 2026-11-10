@@ -20,7 +20,7 @@ final class SiteOrigin
 {
 	public static function remember(string $file, string $domain, bool $https): void
 	{
-		if ($domain === '' || $domain === 'unknown' || Config::isNonRoutableHost($domain)) {
+		if ($domain === '' || $domain === 'unknown' || Config::isNonRoutableHost($domain) || self::isQuickTunnel($domain)) {
 			return;
 		}
 
@@ -33,6 +33,17 @@ final class SiteOrigin
 		}
 
 		@file_put_contents($file, $origin);
+	}
+
+	/**
+	 * A Cloudflare quick tunnel (a Total CMS Studio share link) gets a new
+	 * random host on every start, so it can't be where the CLI points.
+	 */
+	private static function isQuickTunnel(string $domain): bool
+	{
+		$host = strtolower((string)preg_replace('/:\d+$/', '', $domain));
+
+		return str_ends_with($host, '.trycloudflare.com');
 	}
 
 	/**
