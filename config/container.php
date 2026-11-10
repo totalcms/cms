@@ -192,6 +192,7 @@ use TotalCMS\Domain\Security\Check\SecurityCheck;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Service\SecurityAuditor;
 use TotalCMS\Domain\Security\Service\SiteProbe;
+use TotalCMS\Domain\Seo\IndexNow\IndexNowKeyListener;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowListener;
 use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
@@ -824,6 +825,15 @@ return [
 		$dispatcher->listen('import.created', $lazy(IndexNowListener::class, 'onImportSaved'), -40);
 		$dispatcher->listen('import.updated', $lazy(IndexNowListener::class, 'onImportSaved'), -40);
 		$dispatcher->listen('import.completed', $lazy(IndexNowListener::class, 'onImportCompleted'), -40);
+
+		// IndexNowKeyListener — a new IndexNow key whenever Site SEO turns
+		// IndexNow on, and the stored key kept on every other save. It writes
+		// the record a second time, so it runs last: every other listener is
+		// done with the first write before the second one starts.
+		$dispatcher->listen('object.created', $lazy(IndexNowKeyListener::class, 'onObjectSaved'), -200);
+		$dispatcher->listen('object.updated', $lazy(IndexNowKeyListener::class, 'onObjectSaved'), -200);
+		$dispatcher->listen('import.created', $lazy(IndexNowKeyListener::class, 'onImportSaved'), -200);
+		$dispatcher->listen('import.updated', $lazy(IndexNowKeyListener::class, 'onImportSaved'), -200);
 
 		// PromptChangeListener — invalidates the PromptDiscoveryService in-memory
 		// cache whenever an mcp-prompt object changes so prompt edits go live

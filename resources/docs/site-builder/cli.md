@@ -335,6 +335,7 @@ The `.starterignore` file itself is never copied.
 
 - **Users are left out.** Collections using the `auth` schema are copied empty, so the setup wizard runs for whoever installs the starter and creates their admin account.
 - **Secrets are blanked.** Every settings value whose field type is `password` or `secret` (SMTP password, sync key, extension keys) is emptied, and so is any value holding this project's path.
+- **IndexNow is turned off and its key left out** of the Site SEO record, so sites built from the starter don't share one. A site makes its own key when IndexNow is turned on.
 - **`config/tcms.php` is replaced** with a blank one, because it can hold credentials and machine-specific paths. The command lists the keys your file set, so you can move what the starter needs into the admin's Settings.
 - **`composer.json`** gets the new name and description, the `totalcms-starter` keyword, `totalcms/cms` pinned to the running minor version (`^3.6`), and a post-install script that prints next steps.
 - **`.gitignore`** tracks `tcms-data/` (the plain skeleton ignores it) but leaves out runtime files.

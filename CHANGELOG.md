@@ -2,6 +2,13 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.9] - Unreleased
+
+### Changed
+
+- **IndexNow gets a new key each time it's turned on.** A site copied from another, such as one built from a starter, no longer submits under the other site's key. The new key shows as soon as you flip the switch, and every other save keeps the stored key
+- **`tcms starter:export` turns IndexNow off and leaves out its key.** A site built from the starter makes its own key when its owner turns IndexNow on
+
 ## [3.6.8] - Unreleased
 
 ### Added

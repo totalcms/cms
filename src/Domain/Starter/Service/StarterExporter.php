@@ -42,6 +42,9 @@ final readonly class StarterExporter
 
 	private const LARGEST_FILES = 5;
 
+	/** The Site SEO record, whose IndexNow key must not travel. */
+	private const SEO_SITE_SCHEMA = 'seo-site';
+
 	public function __construct(
 		private StarterSecretScrubber $scrubber,
 		private StarterProjectWriter $projectWriter,
@@ -199,6 +202,32 @@ final readonly class StarterExporter
 			}
 
 			$this->copyEntry($path, $to . '/' . $name, fn (string $f, string $t) => $this->copyTree($f, $t, '', ''));
+
+			if (($meta['schema'] ?? '') === self::SEO_SITE_SCHEMA) {
+				$this->resetIndexNow($to . '/' . $name, $result);
+			}
+		}
+	}
+
+	/**
+	 * IndexNow off, and no key, in the copied Site SEO record. Every site
+	 * built from the starter would otherwise share the source site's key,
+	 * and one with IndexNow left on would submit its URLs the moment it
+	 * saved a page. Turning it on later makes the site its own key.
+	 */
+	private function resetIndexNow(string $collectionDir, StarterExportResult $result): void
+	{
+		foreach ($this->objectEntries($collectionDir) as $name) {
+			$path   = $collectionDir . '/' . $name;
+			$record = $this->readJson($path);
+			if (($record['indexNowKey'] ?? '') === '' && !($record['indexNowEnabled'] ?? false)) {
+				continue;
+			}
+
+			$record['indexNowEnabled'] = false;
+			$record['indexNowKey']     = '';
+			$this->writeJson($path, $record);
+			$result->scrubbedSettings[] = basename($collectionDir) . '/' . $name . ': indexNowKey';
 		}
 	}
 

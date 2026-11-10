@@ -189,3 +189,50 @@ describe('Identifier in a deck item', () => {
 		expect(field({ container: 'not-a-deck' }).getValue()).toBe('');
 	});
 });
+
+describe('Identifier regenerateOn', () => {
+	const KEY = /^[a-z0-9]{32}$/;
+
+	// Site SEO's IndexNow key: a readonly autogen id-type field that gets a new
+	// value each time the IndexNow toggle turns on.
+	function keyField({ on = false, value = 'sharedkey' } = {}) {
+		const form = document.createElement('form');
+		form.innerHTML = `
+			<div class="form-field toggle-field" data-type="toggle"><input type="checkbox" name="indexNowEnabled"${on ? ' checked' : ''}></div>
+			<div class="form-field id-field" data-type="id"><input type="text" name="indexNowKey" value="${value}" readonly></div>`;
+		document.body.appendChild(form);
+		const owner = { id: 'seo-site', form, generateData: () => ({}), isTemplateForm: () => false, setId: () => {}, unsaved: () => {} };
+		const id = new Identifier(form.querySelector('.id-field'), { form: owner, autogen: '${uid-32}', regenerateOn: 'indexNowEnabled' });
+		const toggle = form.querySelector('.toggle-field');
+		const flip = checked => {
+			toggle.querySelector('input').checked = checked;
+			toggle.dispatchEvent(new CustomEvent('field-change'));
+		};
+		return { id, flip };
+	}
+
+	test('makes a new value when the watched toggle turns on', () => {
+		const { id, flip } = keyField();
+		flip(true);
+		expect(id.getValue()).toMatch(KEY);
+		expect(id.getValue()).not.toBe('sharedkey');
+	});
+
+	test('makes another on every off-and-on, and keeps it while off', () => {
+		const { id, flip } = keyField({ on: true });
+		const first = id.getValue();
+
+		flip(false);
+		expect(id.getValue()).toBe(first);
+
+		flip(true);
+		expect(id.getValue()).toMatch(KEY);
+		expect(id.getValue()).not.toBe(first);
+	});
+
+	test('leaves the value alone when the toggle reports a change but stays on', () => {
+		const { id, flip } = keyField({ on: true });
+		flip(true);
+		expect(id.getValue()).toBe('sharedkey');
+	});
+});

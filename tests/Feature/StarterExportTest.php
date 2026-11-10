@@ -151,6 +151,27 @@ it('blanks sensitive settings and keeps the rest', function (): void {
 		->and($result->scrubbedSettings)->toContain('settings.json: smtp.password', 'settings.json: sync.key');
 });
 
+it('turns IndexNow off and drops its key, so sites built from the starter never share one', function (): void {
+	$seo = $this->src . '/tcms-data/seo-site';
+	@mkdir($seo, 0o755, true);
+	file_put_contents($seo . '/.meta.json', json_encode(['id' => 'seo-site', 'schema' => 'seo-site', 'count' => 1]));
+	file_put_contents($seo . '/seo-site.json', json_encode([
+		'id'              => 'seo-site',
+		'siteName'        => 'Juniper Table',
+		'indexNowEnabled' => true,
+		'indexNowKey'     => '36rgpfrs4itk3z6qes1ejtbco78tsu6a',
+	]));
+
+	$result = ($this->export)();
+	$record = ($this->json)('tcms-data/seo-site/seo-site.json');
+
+	expect($record['indexNowEnabled'])->toBeFalse()
+		->and($record['indexNowKey'])->toBe('')
+		->and($record['siteName'])->toBe('Juniper Table')
+		->and($result->scrubbedSettings)->toContain('seo-site/seo-site.json: indexNowKey')
+		->and(json_decode((string)file_get_contents($seo . '/seo-site.json'), true)['indexNowKey'])->toBe('36rgpfrs4itk3z6qes1ejtbco78tsu6a');
+});
+
 it('leaves lock files and leftover write temps behind', function (): void {
 	// Saves leave a .lock beside .meta.json and .index.json in every
 	// collection, and a killed write can leave a .tmp — neither belongs in a

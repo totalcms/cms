@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
@@ -116,4 +117,31 @@ it('hydrates the Internal category on the sitemap-meta reserved schema', functio
 	$c = $this->app->getContainer();
 
 	expect($c->get(SchemaFetcher::class)->fetchSchema('sitemap-meta')->category)->toBe('Internal');
+});
+
+it('gives the site a new IndexNow key when IndexNow is turned on, and keeps it on later saves', function (): void {
+	$c = $this->app->getContainer();
+	$c->get(CollectionFetcher::class)->fetchOrCreateReserved('seo-site');
+	$updater = $c->get(ObjectUpdater::class);
+	$read    = fn (): array => $c->get(ObjectFetcher::class)->fetchObject('seo-site', 'seo-site')->toArray();
+
+	// Saved off with a key copied from another site, as a starter ships it.
+	$shared = '36rgpfrs4itk3z6qes1ejtbco78tsu6a';
+	$c->get(ObjectSaver::class)->saveObject('seo-site', ['id' => 'seo-site', 'siteName' => 'Juniper', 'indexNowEnabled' => false, 'indexNowKey' => $shared]);
+	expect($read()['indexNowKey'])->toBe($shared);
+
+	// Turned on, still posting the copied key: the stored key is new.
+	$updater->updateObject('seo-site', 'seo-site', [...$read(), 'indexNowEnabled' => true, 'indexNowKey' => $shared]);
+	$key = $read()['indexNowKey'];
+	expect($key)->not->toBe($shared)->toMatch('/^[a-z0-9]{32}$/');
+
+	// A later save from a form that still holds the old key keeps the new one.
+	$updater->updateObject('seo-site', 'seo-site', [...$read(), 'siteName' => 'Juniper Table', 'indexNowKey' => $shared]);
+	expect($read())->toMatchArray(['siteName' => 'Juniper Table', 'indexNowKey' => $key]);
+
+	// Off, then on with the key the admin form made when the toggle went on:
+	// that key is kept, so the page shows what the key file serves.
+	$updater->updateObject('seo-site', 'seo-site', [...$read(), 'indexNowEnabled' => false]);
+	$updater->updateObject('seo-site', 'seo-site', [...$read(), 'indexNowEnabled' => true, 'indexNowKey' => 'formmadekey0123456789abcdefghijk']);
+	expect($read()['indexNowKey'])->toBe('formmadekey0123456789abcdefghijk');
 });

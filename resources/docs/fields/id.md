@@ -43,6 +43,25 @@ The pattern is enforced at JSON Schema validation time (rejects raw input
 that wouldn't be a valid snake_case id even after slugification — e.g.
 identifiers starting with a digit).
 
+## Regenerate When a Toggle Turns On
+
+`regenerateOn` names another field in the same form, usually a toggle. Each
+time that field turns on, the form makes a new value from the `autogen`
+pattern. It works on any `id`-type property except the object's own `id`,
+which is locked once the object exists. A value someone typed over is kept.
+
+```json
+{
+	"autogen"      : "${uid-32}",
+	"regenerateOn" : "indexNowEnabled",
+	"readonly"     : true
+}
+```
+
+The Site SEO record uses this for its IndexNow key, so turning IndexNow on
+shows a new key straight away. The setting only acts in the admin form. Code
+that saves through the API decides the value for itself.
+
 ## Special Autogen Variables
 
 * **now** - Current timestamp in milliseconds (e.g., 1692123456789)

@@ -1,5 +1,6 @@
 import TotalField from './totalfield';
 import Autogen from './autogen';
+import { findScopedFieldContainers, listenToScopedField } from './fieldCollection.mjs';
 const slugify = require('slugify')
 
 // A deck item's id when its schema has no autogen rule. Mirrors
@@ -84,6 +85,7 @@ export default class Identifier extends TotalField {
 				this.validateIdExists();
 			});
 		}
+		this.regenerateListener();
         // Check ID changes directly
         this.input.addEventListener("input",  e => this.lock(), {once: true});
 		this.input.addEventListener("change", e => this.validateIdExists());
@@ -95,6 +97,32 @@ export default class Identifier extends TotalField {
 				categoryField.addEventListener("change", () => this.validateIdExists());
 			}
 		}
+	}
+
+	// `regenerateOn` names another field, usually a toggle. Each time that
+	// field turns on, the autogen value is made again: Site SEO's IndexNow
+	// key gets a new one whenever IndexNow is switched on, so the page shows
+	// the key the server will keep. A field the user has typed into (locked)
+	// keeps its value.
+	regenerateListener() {
+		const watch = this.settings.regenerateOn;
+		if (!this.settings.autogen || !watch) return;
+
+		const scope = this.isInDeck ? this.deckItem : this.form.form;
+		// The watched field may not have its TotalField yet when this runs,
+		// so a checkbox's own input answers until it does.
+		const isOn = () => findScopedFieldContainers(scope, watch).some(c => c.totalfield
+			? Boolean(c.totalfield.getValue())
+			: Boolean(c.querySelector('input[type="checkbox"]')?.checked));
+
+		let wasOn = isOn();
+		listenToScopedField(scope, watch, () => {
+			const on = isOn();
+			if (on && !wasOn && !this.isLocked()) {
+				this.setValue(this.autogenId());
+			}
+			wasOn = on;
+		});
 	}
 
 	autogenId() {

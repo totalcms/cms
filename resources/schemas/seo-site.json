@@ -158,11 +158,12 @@
 		"indexNowKey": {
 			"type"     : "string",
 			"label"    : "IndexNow Key",
-			"help"     : "Generated for you and served at <code>/{key}.txt</code>, which is how the engines confirm the submissions come from this site. Nothing to do with it; it is shown so you can verify the file if a submission is rejected.",
+			"help"     : "Generated for you and served at <code>/{key}.txt</code>, which is how the engines confirm the submissions come from this site. A new key is made each time IndexNow is turned on. Nothing to do with it; it is shown so you can verify the file if a submission is rejected.",
 			"field"    : "id",
 			"settings" : {
-				"autogen"    : "${uid-32}",
-				"readonly"   : true,
+				"autogen"      : "${uid-32}",
+				"regenerateOn" : "indexNowEnabled",
+				"readonly"     : true,
 				"visibility" : {
 					"watch"    : "indexNowEnabled",
 					"value"    : "1",
