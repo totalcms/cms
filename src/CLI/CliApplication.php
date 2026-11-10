@@ -98,6 +98,7 @@ class CliApplication
 
 		// MCP server status + local tool dispatch helper
 		$app->addCommand(new Command\Mcp\McpStatusCommand($totalcms));
+		$app->addCommand(new Command\Mcp\McpLocalKeyCommand($totalcms));
 		$app->addCommand(new Command\Mcp\McpTestCommand($totalcms));
 
 		// OAuth commands

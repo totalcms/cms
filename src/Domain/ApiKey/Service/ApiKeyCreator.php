@@ -25,10 +25,11 @@ readonly class ApiKeyCreator
 	 *
 	 * @param string $name Human-readable name for the key
 	 * @param array<string,mixed> $scopes Permissions (methods, paths)
+	 * @param bool $localOnly The key works only from this computer
 	 *
 	 * @throws \InvalidArgumentException If validation fails
 	 */
-	public function createApiKey(string $name, array $scopes): ApiKeyData
+	public function createApiKey(string $name, array $scopes, bool $localOnly = false): ApiKeyData
 	{
 		$methods = $scopes['methods'] ?? [];
 		$paths   = $scopes['paths'] ?? [];
@@ -49,12 +50,13 @@ readonly class ApiKeyCreator
 		}
 
 		$apiKey = new ApiKeyData([
-			'id'       => $this->generateUuid(),
-			'name'     => $name,
-			'key'      => $this->generateKey(),
-			'created'  => gmdate('Y-m-d\TH:i:s\Z'),
-			'lastUsed' => null,
-			'scopes'   => $scopes,
+			'id'        => $this->generateUuid(),
+			'name'      => $name,
+			'key'       => $this->generateKey(),
+			'created'   => gmdate('Y-m-d\TH:i:s\Z'),
+			'lastUsed'  => null,
+			'scopes'    => $scopes,
+			'localOnly' => $localOnly,
 		]);
 
 		$this->repository->save($apiKey);

@@ -66,7 +66,10 @@ readonly class XmlRpcAuth
 		// caller may actually do.
 		$apiKey = $this->apiKeyFetcher->validateKeyForPath($password, self::SCOPE_PATH);
 
-		if (!$apiKey instanceof ApiKeyData) {
+		// A local-only key is for AI tools on the computer that made it
+		// (Total CMS Studio). No desktop editor needs one, and this path
+		// doesn't go through ApiKeyAuthenticator's locality check.
+		if (!$apiKey instanceof ApiKeyData || $apiKey->localOnly) {
 			throw XmlRpcFault::badCredentials();
 		}
 

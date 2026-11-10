@@ -24,17 +24,21 @@ readonly class ApiKeyData
 	/** @var array<string,mixed> */
 	public array $scopes;
 
+	/** Works only from this computer ({@see \TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::isLocalRequest()}). */
+	public bool $localOnly;
+
 	/**
 	 * @param array<string,mixed> $data
 	 */
 	public function __construct(array $data)
 	{
-		$this->id       = $data['id'];
-		$this->name     = $data['name'];
-		$this->key      = $data['key'];
-		$this->created  = $data['created'];
-		$this->lastUsed = $data['lastUsed'] ?? null;
-		$this->scopes   = $data['scopes'] ?? ['methods' => [], 'paths' => []];
+		$this->localOnly = (bool)($data['localOnly'] ?? false);
+		$this->id        = $data['id'];
+		$this->name      = $data['name'];
+		$this->key       = $this->localOnly ? (string)($data['localKey'] ?? $data['key']) : $data['key'];
+		$this->created   = $data['created'];
+		$this->lastUsed  = $data['lastUsed'] ?? null;
+		$this->scopes    = $data['scopes'] ?? ['methods' => [], 'paths' => []];
 	}
 
 	/**
@@ -57,13 +61,23 @@ readonly class ApiKeyData
 	 */
 	public function toArray(): array
 	{
-		return [
-			'id'       => $this->id,
-			'name'     => $this->name,
-			'key'      => $this->key,
-			'created'  => $this->created,
-			'lastUsed' => $this->lastUsed,
-			'scopes'   => $this->scopes,
+		$data = [
+			'id'        => $this->id,
+			'name'      => $this->name,
+			'key'       => $this->key,
+			'created'   => $this->created,
+			'lastUsed'  => $this->lastUsed,
+			'scopes'    => $this->scopes,
+			'localOnly' => $this->localOnly,
 		];
+		if ($this->localOnly) {
+			// Cores before localOnly existed match on `key` and would take
+			// this one as an ordinary admin key, from anywhere. They never
+			// match an empty one.
+			$data['key']      = '';
+			$data['localKey'] = $this->key;
+		}
+
+		return $data;
 	}
 }

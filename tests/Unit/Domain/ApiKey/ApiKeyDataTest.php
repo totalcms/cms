@@ -96,15 +96,16 @@ final class ApiKeyDataTest extends TestCase
 	public function testToArrayReturnsAllProperties(): void
 	{
 		$data = [
-			'id'       => 'test-id',
-			'name'     => 'Test',
-			'key'      => 'tcms_test',
-			'created'  => '2025-01-15T10:30:00Z',
-			'lastUsed' => '2025-01-16T14:20:00Z',
-			'scopes'   => [
+			'id'        => 'test-id',
+			'name'      => 'Test',
+			'key'       => 'tcms_test',
+			'created'   => '2025-01-15T10:30:00Z',
+			'lastUsed'  => '2025-01-16T14:20:00Z',
+			'scopes'    => [
 				'methods' => ['GET'],
 				'paths'   => ['*'],
 			],
+			'localOnly' => false,
 		];
 
 		$apiKey = new ApiKeyData($data);

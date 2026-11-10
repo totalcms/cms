@@ -4296,6 +4296,17 @@
             "since": "3.5.0"
         },
         {
+            "name": "mcp:local-key",
+            "description": "Create an admin API key for AI tools working on a site in Total CMS Studio, such as Claude Code, Cursor or VS Code. Studio runs it when you choose **Connect AI tools**.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms mcp:local-key\ntcms mcp:local-key --name=\"Claude Code\" --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "schema:list",
             "description": "List all schemas.",
             "arguments": [],

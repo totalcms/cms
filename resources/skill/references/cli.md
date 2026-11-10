@@ -38,6 +38,7 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `info` — site status, version, configuration
 - `check` — the Server Checker on the CLI: integrity, license, permissions, PHP extensions, plus a Security section (public data folder, exposed files, registration groups, debug, headers; fixes in `operations/security.md`). Exits 1 when the install cannot run or a non-ignored security finding is critical, so deploy scripts can gate on it. `--no-security` skips the section; `--json` adds a `security` key; ignore ids via `$settings['security']['ignore']`
 - `setup:admin --email=… [--name=…] --password-stdin` — create the first admin and finish setup without the wizard; password on stdin only, 8+ chars; exits 1 when an admin already exists
+- `mcp:local-key [--name=…] [--json]` — admin API key for local AI tools. It authenticates only on a server that sets `TCMS_LOCAL_KEYS=1` (Total CMS Studio's does), from a loopback peer with a localhost Host and no forwarding headers, so it fails on the live site and through a share link. Reruns replace the local-only key of the same name. Total CMS Studio's Connect AI tools writes it into `.mcp.json`, `.cursor/mcp.json` and `.vscode/mcp.json` as server `totalcms-local`
 - `cache:clear` — clear all caches. Template edits don't need it, except for a `{% cache %}` block, which keeps its output until its `ttl`
 - `deploy` — post-deploy cleanup: wipe DI container, clear caches, run migrations
 

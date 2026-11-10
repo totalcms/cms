@@ -58,7 +58,7 @@ readonly class ApiKeyAuthenticator
 		// Validate the API key with method and path permissions
 		$method = $request->getMethod();
 
-		return $this->apiKeyFetcher->validateKey($apiKey, $method, $path);
+		return $this->onlyWhereAllowed($this->apiKeyFetcher->validateKey($apiKey, $method, $path), $request);
 	}
 
 	/**
@@ -75,7 +75,72 @@ readonly class ApiKeyAuthenticator
 	{
 		$apiKey = $this->extractApiKey($request);
 
-		return $apiKey === '' ? null : $this->apiKeyFetcher->validateKeyForPath($apiKey, $this->stripBasePath($request));
+		return $apiKey === '' ? null : $this->onlyWhereAllowed($this->apiKeyFetcher->validateKeyForPath($apiKey, $this->stripBasePath($request)), $request);
+	}
+
+	/** Headers a proxy adds when it passes a request on from elsewhere. */
+	private const FORWARDING_HEADERS = ['X-Forwarded-For', 'X-Forwarded-Host', 'X-Real-IP', 'Forwarded', 'Via', 'CF-Connecting-IP'];
+
+	/**
+	 * Whether $request may use a local-only key. All of these must hold:
+	 *
+	 * - The server accepts local-only keys: it sets TCMS_LOCAL_KEYS=1, as
+	 *   Total CMS Studio's does. A live server behind a proxy on the same
+	 *   machine sees a loopback peer and often a Host of localhost, so the
+	 *   request alone can't tell it apart; the server has to opt in.
+	 * - No proxy forwarded it.
+	 * - The socket peer is loopback AND the Host names this computer. The
+	 *   peer alone passes a Studio share, where cloudflared connects from
+	 *   loopback carrying the public Host; the Host alone is the caller's to
+	 *   choose.
+	 */
+	public static function isLocalRequest(ServerRequestInterface $request): bool
+	{
+		$server = $request->getServerParams();
+		if ((string)($server['TCMS_LOCAL_KEYS'] ?? '') !== '1') {
+			return false;
+		}
+		foreach (self::FORWARDING_HEADERS as $header) {
+			if ($request->hasHeader($header)) {
+				return false;
+			}
+		}
+		$peer = (string)($server['REMOTE_ADDR'] ?? '');
+		$host = $request->getHeaderLine('Host');
+		$host = strtolower($host !== '' ? $host : $request->getUri()->getHost());
+
+		return self::isLoopback($peer) && self::namesThisComputer($host);
+	}
+
+	private static function isLoopback(string $ip): bool
+	{
+		if ($ip === '::1') {
+			return true;
+		}
+
+		return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false && str_starts_with($ip, '127.');
+	}
+
+	private static function namesThisComputer(string $host): bool
+	{
+		// [::1]:8780 -> ::1, shop.localhost:8780 -> shop.localhost
+		if (preg_match('/^\[(.+)\](?::\d+)?$/', $host, $match) === 1) {
+			$host = $match[1];
+		} elseif (substr_count($host, ':') === 1) {
+			$host = substr($host, 0, (int)strpos($host, ':'));
+		}
+
+		return $host === 'localhost' || str_ends_with($host, '.localhost') || self::isLoopback($host);
+	}
+
+	/** $apiKey, unless it is local-only and $request came from elsewhere. */
+	private function onlyWhereAllowed(?ApiKeyData $apiKey, ServerRequestInterface $request): ?ApiKeyData
+	{
+		if ($apiKey instanceof ApiKeyData && $apiKey->localOnly && !self::isLocalRequest($request)) {
+			return null;
+		}
+
+		return $apiKey;
 	}
 
 	private function extractApiKey(ServerRequestInterface $request): string

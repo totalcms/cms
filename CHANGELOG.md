@@ -7,6 +7,7 @@ All notable changes to Total CMS will be documented in this file.
 ### Added
 
 - **Demo mode puts a site online as a read-only showroom.** Set `'demo' => ['enable' => true]` in `config/tcms.php` and anyone can open the admin without signing in and look at everything, with a banner on every page. Save, Delete, uploads, imports and every other change answer "This site is in demo mode, so saving is disabled", and the site's own forms and the MCP server are refused the same way. The Log Analyzer is hidden, since the logs hold visitors' IP addresses. Use it to show a starter before people install it. See [Demo Mode](https://docs.totalcms.co/operations/demo-mode)
+- **`tcms mcp:local-key` makes an admin key for AI tools on a Total CMS Studio site.** Claude Code, Cursor or VS Code working on the local copy get full access through the MCP server. The key works only on a server that accepts local-only keys, as Studio's does, and only from that computer, so it doesn't work on the live site after an upload or through a share link. Running it again replaces the earlier key. Studio's Connect AI tools uses it. See `mcp:local-key` in the CLI docs
 
 ### Changed
 

@@ -28,7 +28,10 @@
 				<div class="dash-card-details">
 					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">
 						<strong>{{ t('api_keys.key_label') }}</strong>
-						<code>{{ apiKey.getMaskedKey() }}</code>
+						<span>
+							<code>{{ apiKey.getMaskedKey() }}</code>
+							{% if apiKey.localOnly %}<span class="dash-badge">{{ t('api_keys.local_only') }}</span>{% endif %}
+						</span>
 					</div>
 
 					<div class="dash-card-detail" style="grid-template-columns:120px minmax(0, 1fr);">

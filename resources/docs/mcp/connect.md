@@ -120,6 +120,8 @@ Anonymous callers see only what you have deliberately exposed. An API key raises
 
 Create one in **Admin → API Keys**, then supply it as an `X-API-Key` header, or paste it into the desktop extension's **API key** field at install time.
 
+For a site in Total CMS Studio, **Connect AI tools** runs `tcms mcp:local-key`, which makes an admin key that works only on Studio's server and only from your computer. Studio writes it into the project's `.mcp.json` (Claude Code), `.cursor/mcp.json` (Cursor) and `.vscode/mcp.json` (VS Code) under the server name `totalcms-local`, so it doesn't replace a `totalcms` connection to your live site. See `mcp:local-key` in the [CLI docs](docs/extensions/cli).
+
 Without a key, what an agent can reach is governed by `mcp.publicAccess` and each collection's own `mcp.access` setting. Public access is on by default, but every collection starts as admin-only, so a site exposes nothing to anonymous callers until a collection is marked public.
 
 ## If it doesn't connect

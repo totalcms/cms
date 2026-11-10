@@ -968,6 +968,7 @@ return [
 	'api_keys.create_btn'            => 'Create API Key',
 	'api_keys.empty'                 => 'No API keys created yet.',
 	'api_keys.key_label'             => 'API Key:',
+	'api_keys.local_only'            => 'This computer only',
 	'api_keys.http_methods'          => 'HTTP Methods:',
 	'api_keys.endpoints'             => 'Endpoints:',
 	'api_keys.all_endpoints'         => 'All endpoints (*)',

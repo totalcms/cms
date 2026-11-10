@@ -94,6 +94,25 @@ The password is read from the first line of stdin and is never an option, so it 
 
 The command only makes the *first* admin. When the site already has one, it changes nothing and exits **1** with "This site already has an admin account." It also exits 1 for an invalid email or a short password. With `--json` it prints `{"created": true, "email": "…", "name": "…"}` on success and `{"error": "…"}` otherwise.
 
+### `mcp:local-key`
+
+Create an admin API key for AI tools working on a site in Total CMS Studio, such as Claude Code, Cursor or VS Code. Studio runs it when you choose **Connect AI tools**.
+
+```bash
+tcms mcp:local-key
+tcms mcp:local-key --name="Claude Code" --json
+```
+
+The key can do everything an admin can, but only where all of these hold:
+
+- The web server accepts local-only keys by setting the `TCMS_LOCAL_KEYS=1` server variable. Studio's server does; a live server doesn't, so the key doesn't work there if your `tcms-data` folder is uploaded.
+- The request comes from the same computer, with no proxy in between.
+- The request names the site as `localhost`, `*.localhost` or `127.0.0.1`, so it fails through a Studio share link.
+
+Still treat the key as a secret: anyone on your computer can use it. Studio keeps it out of git by listing the config files in your `.gitignore`.
+
+Running it again replaces the local-only key with the same name, so tools that reconnect don't pile up keys. Keys you make in **Admin → API Keys** are never touched. `--name` defaults to `Local AI tools`. With `--json` it prints `{"key": "…", "id": "…", "name": "…"}`. Without it, the command prints the key and one line about where to use it. In the admin, the key shows as **This computer only**.
+
 ## Schema Commands
 
 ### `schema:list`

@@ -968,6 +968,7 @@ return [
 	'api_keys.create_btn'            => 'Utwórz klucz API',
 	'api_keys.empty'                 => 'Nie utworzono jeszcze żadnych kluczy API.',
 	'api_keys.key_label'             => 'Klucz API:',
+	'api_keys.local_only'            => 'Tylko ten komputer',
 	'api_keys.http_methods'          => 'Metody HTTP:',
 	'api_keys.endpoints'             => 'Endpointy:',
 	'api_keys.all_endpoints'         => 'Wszystkie endpointy (*)',

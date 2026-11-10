@@ -75,6 +75,14 @@ it('faults with 403 when the key is invalid', function (): void {
 		->toThrow(XmlRpcFault::class, 'Bad login/pass combination.');
 });
 
+it('refuses a local-only key: it is for AI tools on this computer, not desktop editors', function (): void {
+	$local = new ApiKeyData([...xmlRpcApiKey()->toArray(), 'localOnly' => true, 'localKey' => 'tcms_testkey']);
+	$auth  = makeXmlRpcAuth(validatedKey: $local, proEdition: true);
+
+	expect(fn (): mixed => $auth->authenticate(['blog', 'joe', 'tcms_testkey']))
+		->toThrow(XmlRpcFault::class, 'Bad login/pass combination.');
+});
+
 it('faults with 401 naming Pro when the edition is too low', function (): void {
 	$auth = makeXmlRpcAuth(validatedKey: xmlRpcApiKey(), proEdition: false);
 

@@ -968,6 +968,7 @@ return [
 	'api_keys.create_btn'            => 'API-sleutel aanmaken',
 	'api_keys.empty'                 => 'Er zijn nog geen API-sleutels aangemaakt.',
 	'api_keys.key_label'             => 'API-sleutel:',
+	'api_keys.local_only'            => 'Alleen deze computer',
 	'api_keys.http_methods'          => 'HTTP-methoden:',
 	'api_keys.endpoints'             => 'Eindpunten:',
 	'api_keys.all_endpoints'         => 'Alle eindpunten (*)',

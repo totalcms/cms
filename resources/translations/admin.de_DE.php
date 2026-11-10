@@ -968,6 +968,7 @@ return [
 	'api_keys.create_btn'            => 'API-Schlüssel erstellen',
 	'api_keys.empty'                 => 'Noch keine API-Schlüssel erstellt.',
 	'api_keys.key_label'             => 'API-Schlüssel:',
+	'api_keys.local_only'            => 'Nur dieser Computer',
 	'api_keys.http_methods'          => 'HTTP-Methoden:',
 	'api_keys.endpoints'             => 'Endpunkte:',
 	'api_keys.all_endpoints'         => 'Alle Endpunkte (*)',
