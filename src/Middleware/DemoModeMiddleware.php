@@ -59,7 +59,7 @@ final readonly class DemoModeMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		if (self::isHiddenPage($this->path($request))) {
+		if ($this->isHiddenPage($this->path($request))) {
 			throw new HttpNotFoundException($request);
 		}
 
@@ -77,7 +77,7 @@ final readonly class DemoModeMiddleware implements MiddlewareInterface
 	}
 
 	/** A hidden utility page, or anything under it (the log download). */
-	private static function isHiddenPage(string $path): bool
+	private function isHiddenPage(string $path): bool
 	{
 		foreach (self::HIDDEN_UTILS as $page) {
 			$prefix = '/admin/utils/' . $page;

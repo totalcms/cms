@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'linked images',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Please fix validation errors before saving.',
-	'form.has_errors'       => 'Error in form, cannot save.',
-	'form.cannot_save'      => 'Cannot save: {reason}',
-	'form.action_failed'    => 'Action execution failed',
-	'form.upload_failed'    => 'Upload failed. Please check server logs for details.',
-	'form.unknown_error'    => 'Unknown error: {response}',
+	'form.fix_errors'           => 'Please fix validation errors before saving.',
+	'form.has_errors'           => 'Error in form, cannot save.',
+	'form.cannot_save'          => 'Cannot save: {reason}',
+	'form.action_failed'        => 'Action execution failed',
+	'form.upload_failed'        => 'Upload failed. Please check server logs for details.',
+	'form.unknown_error'        => 'Unknown error: {response}',
 	'form.required_file'        => '{label} is required - please upload a file',
 	'form.required_image'       => '{label} is required - please upload an image',
 	'form.required_images'      => '{label} is required - please upload at least one image',

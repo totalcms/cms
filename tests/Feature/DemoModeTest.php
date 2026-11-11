@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Support\Config;
 
@@ -20,7 +22,7 @@ beforeEach(function (): void {
 });
 
 /** A request with headers, which the Pest helpers don't take. */
-function demoRequest(Slim\App $app, string $method, string $path, array $headers = [], ?array $body = null): Psr\Http\Message\ResponseInterface
+function demoRequest(App $app, string $method, string $path, array $headers = [], ?array $body = null): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory->createServerRequest($method, $path);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ApiKey\Data;
 
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+
 /**
  * API Key data object.
  *
@@ -24,7 +26,7 @@ readonly class ApiKeyData
 	/** @var array<string,mixed> */
 	public array $scopes;
 
-	/** Works only from this computer ({@see \TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::isLocalRequest()}). */
+	/** Works only from this computer ({@see ApiKeyAuthenticator::isLocalRequest()}). */
 	public bool $localOnly;
 
 	/**

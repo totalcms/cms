@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'verlinkte Bilder',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Bitte beheben Sie die Validierungsfehler vor dem Speichern.',
-	'form.has_errors'       => 'Fehler im Formular, Speichern nicht möglich.',
-	'form.cannot_save'      => 'Speichern nicht möglich: {reason}',
-	'form.action_failed'    => 'Aktion konnte nicht ausgeführt werden',
-	'form.upload_failed'    => 'Upload fehlgeschlagen. Bitte prüfen Sie die Server-Logs.',
-	'form.unknown_error'    => 'Unbekannter Fehler: {response}',
+	'form.fix_errors'           => 'Bitte beheben Sie die Validierungsfehler vor dem Speichern.',
+	'form.has_errors'           => 'Fehler im Formular, Speichern nicht möglich.',
+	'form.cannot_save'          => 'Speichern nicht möglich: {reason}',
+	'form.action_failed'        => 'Aktion konnte nicht ausgeführt werden',
+	'form.upload_failed'        => 'Upload fehlgeschlagen. Bitte prüfen Sie die Server-Logs.',
+	'form.unknown_error'        => 'Unbekannter Fehler: {response}',
 	'form.required_file'        => '{label} ist erforderlich - bitte laden Sie eine Datei hoch',
 	'form.required_image'       => '{label} ist erforderlich - bitte laden Sie ein Bild hoch',
 	'form.required_images'      => '{label} ist erforderlich - bitte laden Sie mindestens ein Bild hoch',

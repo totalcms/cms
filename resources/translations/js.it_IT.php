@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'immagini con link',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Corregga gli errori di convalida prima di salvare.',
-	'form.has_errors'       => 'Errore nel modulo, impossibile salvare.',
-	'form.cannot_save'      => 'Impossibile salvare: {reason}',
-	'form.action_failed'    => 'Esecuzione dell\'azione non riuscita',
-	'form.upload_failed'    => 'Caricamento non riuscito. Controlli i log del server per i dettagli.',
-	'form.unknown_error'    => 'Errore sconosciuto: {response}',
+	'form.fix_errors'           => 'Corregga gli errori di convalida prima di salvare.',
+	'form.has_errors'           => 'Errore nel modulo, impossibile salvare.',
+	'form.cannot_save'          => 'Impossibile salvare: {reason}',
+	'form.action_failed'        => 'Esecuzione dell\'azione non riuscita',
+	'form.upload_failed'        => 'Caricamento non riuscito. Controlli i log del server per i dettagli.',
+	'form.unknown_error'        => 'Errore sconosciuto: {response}',
 	'form.required_file'        => 'Il campo {label} è obbligatorio: carichi un file',
 	'form.required_image'       => 'Il campo {label} è obbligatorio: carichi un\'immagine',
 	'form.required_images'      => 'Il campo {label} è obbligatorio: carichi almeno un\'immagine',

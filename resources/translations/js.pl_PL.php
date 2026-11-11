@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'obrazy z linkiem',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Popraw błędy walidacji przed zapisaniem.',
-	'form.has_errors'       => 'Błąd w formularzu, nie można zapisać.',
-	'form.cannot_save'      => 'Nie można zapisać: {reason}',
-	'form.action_failed'    => 'Wykonanie akcji nie powiodło się',
-	'form.upload_failed'    => 'Przesyłanie nie powiodło się. Sprawdź logi serwera, aby poznać szczegóły.',
-	'form.unknown_error'    => 'Nieznany błąd: {response}',
+	'form.fix_errors'           => 'Popraw błędy walidacji przed zapisaniem.',
+	'form.has_errors'           => 'Błąd w formularzu, nie można zapisać.',
+	'form.cannot_save'          => 'Nie można zapisać: {reason}',
+	'form.action_failed'        => 'Wykonanie akcji nie powiodło się',
+	'form.upload_failed'        => 'Przesyłanie nie powiodło się. Sprawdź logi serwera, aby poznać szczegóły.',
+	'form.unknown_error'        => 'Nieznany błąd: {response}',
 	'form.required_file'        => 'Pole {label} jest wymagane - prześlij plik',
 	'form.required_image'       => 'Pole {label} jest wymagane - prześlij obraz',
 	'form.required_images'      => 'Pole {label} jest wymagane - prześlij co najmniej jeden obraz',

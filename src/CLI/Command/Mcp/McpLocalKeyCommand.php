@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyDeleter;
 
@@ -21,7 +22,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyDeleter;
  *
  * The key is local-only: it authenticates only on a server that accepts
  * local-only keys (Studio's sets TCMS_LOCAL_KEYS=1), for a request from this
- * computer ({@see \TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator::isLocalRequest()}).
+ * computer ({@see ApiKeyAuthenticator::isLocalRequest()}).
  * The project folder, `tcms-data/` and all, is what gets uploaded to the live
  * site; there the key must not work.
  *

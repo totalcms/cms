@@ -9,7 +9,6 @@ use TotalCMS\Domain\Factory\Faker\FakerImageGD;
  * grays, or a `|`-joined palette, which draws them in the starter's colors.
  * The built-in starters use the palette form for their placeholder art.
  */
-
 beforeEach(function (): void {
 	$this->dir = sys_get_temp_dir() . '/faker-gd-' . uniqid();
 	mkdir($this->dir);

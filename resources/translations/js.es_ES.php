@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'imágenes enlazadas',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Corrija los errores de validación antes de guardar.',
-	'form.has_errors'       => 'Hay un error en el formulario; no se puede guardar.',
-	'form.cannot_save'      => 'No se puede guardar: {reason}',
-	'form.action_failed'    => 'Error al ejecutar la acción',
-	'form.upload_failed'    => 'Error al subir el archivo. Revise los registros del servidor para más detalles.',
-	'form.unknown_error'    => 'Error desconocido: {response}',
+	'form.fix_errors'           => 'Corrija los errores de validación antes de guardar.',
+	'form.has_errors'           => 'Hay un error en el formulario; no se puede guardar.',
+	'form.cannot_save'          => 'No se puede guardar: {reason}',
+	'form.action_failed'        => 'Error al ejecutar la acción',
+	'form.upload_failed'        => 'Error al subir el archivo. Revise los registros del servidor para más detalles.',
+	'form.unknown_error'        => 'Error desconocido: {response}',
 	'form.required_file'        => 'El campo {label} es obligatorio: suba un archivo',
 	'form.required_image'       => 'El campo {label} es obligatorio: suba una imagen',
 	'form.required_images'      => 'El campo {label} es obligatorio: suba al menos una imagen',

@@ -51,12 +51,12 @@ return [
 	'markdown.syntax.linkedImage'  => 'gelinkte afbeeldingen',
 
 	// ── Form messages (public forms) ────────────────────────────────────────
-	'form.fix_errors'       => 'Los de validatiefouten op voordat u opslaat.',
-	'form.has_errors'       => 'Fout in het formulier, opslaan niet mogelijk.',
-	'form.cannot_save'      => 'Opslaan niet mogelijk: {reason}',
-	'form.action_failed'    => 'Uitvoeren van de actie mislukt',
-	'form.upload_failed'    => 'Upload mislukt. Controleer de serverlogboeken voor details.',
-	'form.unknown_error'    => 'Onbekende fout: {response}',
+	'form.fix_errors'           => 'Los de validatiefouten op voordat u opslaat.',
+	'form.has_errors'           => 'Fout in het formulier, opslaan niet mogelijk.',
+	'form.cannot_save'          => 'Opslaan niet mogelijk: {reason}',
+	'form.action_failed'        => 'Uitvoeren van de actie mislukt',
+	'form.upload_failed'        => 'Upload mislukt. Controleer de serverlogboeken voor details.',
+	'form.unknown_error'        => 'Onbekende fout: {response}',
 	'form.required_file'        => '{label} is verplicht - upload een bestand',
 	'form.required_image'       => '{label} is verplicht - upload een afbeelding',
 	'form.required_images'      => '{label} is verplicht - upload minstens één afbeelding',
