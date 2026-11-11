@@ -99,9 +99,17 @@ The **Maintenance** section of each site has three jobs.
 
 Studio runs one job on a site at a time. If you stop a job before it finishes, run it again before you use the site.
 
+## Languages
+
+Studio comes in English (US and UK), German, Spanish, Italian, Dutch and Polish, and follows your Mac's language.
+
+To use Studio in a different language from the rest of your Mac, open System Settings › General › Language & Region › Applications, add Total CMS Studio and choose the language, then reopen Studio.
+
+Starter descriptions and update notes come from totalcms.co, so they are always in English.
+
 ## Troubleshooting
 
-Most problems come with a message that says what to do. The site log (**Show log**) has the details for anything that fails while Studio works on a site.
+Studio shows these messages in your Mac's language, and the tables list the English wording. Most problems come with a message that says what to do. The site log (**Show log**) has the details for anything that fails while Studio works on a site.
 
 ### Adding a site
 
