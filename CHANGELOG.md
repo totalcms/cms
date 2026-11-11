@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.6.9] - Unreleased
+## [3.6.9] - 2026-11-10
 
 ### Added
 
@@ -10,6 +10,7 @@ All notable changes to Total CMS will be documented in this file.
 - **A public form can let the visitor's browser fill it in.** Fields still turn autofill off by default, which keeps the admin from filling a record with the editor's own details. Give a field an `autocomplete` attribute, such as `{settings: {attributes: {autocomplete: 'tel'}}}`, and it now replaces that default, so a booking or contact form fills the visitor's name, phone, email and address. See Autofill on a Public Form in the [Form Builder](https://docs.totalcms.co/forms/builder) docs
 - **Total CMS's own messages follow the language a page was rendered in.** A form on a Spanish page now gets its refusals and errors in Spanish, such as demo mode's "saving is disabled", even for a visitor who isn't signed in. This covers the form's own messages ("Please fix validation errors before saving", upload errors) and the security refusals (a failed CSRF check, "Too many requests"). Total CMS ships German, Spanish, Italian, Dutch, Polish and British English as well as American English. A signed-in user's own language still wins in the admin. `cms.locale.set()` sets that language too: a page that calls `{{ cms.locale.set('es') }}` shows Spanish form messages and errors as well as Spanish dates and numbers, for that request only. An API client gets the same by sending an `X-Locale` header, such as `X-Locale: es`. See [Locale](https://docs.totalcms.co/twig/locale)
 - **`tcms mcp:local-key` makes an admin key for AI tools on a Total CMS Studio site.** Claude Code, Cursor or VS Code working on the local copy get full access through the MCP server. The key works only on a server that accepts local-only keys, as Studio's does, and only from that computer, so it doesn't work on the live site after an upload or through a share link. Running it again replaces the earlier key. Studio's Connect AI tools uses it. See `mcp:local-key` in the CLI docs
+- **An `id` field can make a new value when a toggle turns on.** Set `regenerateOn` to another field in the form, usually a toggle, and each time it's switched on the field gets a fresh value from its `autogen` pattern. A value someone typed over is kept. The IndexNow key uses it. See Regenerate When a Toggle Turns On in the [ID](https://docs.totalcms.co/fields/id) field docs
 
 ### Changed
 
@@ -21,9 +22,10 @@ All notable changes to Total CMS will be documented in this file.
 ### Fixed
 
 - **A starter's pages appear in the nav in the order the starter lists them.** The Business starter's nav came out as Services, Contact, About, Home
+- **The starters' Getting Started links open the right docs pages.** They pointed at paths the docs had since moved away from
 - **A quick share link no longer becomes the site's address for the CLI.** One visit through a Total CMS Studio share link on `trycloudflare.com` made `tcms` run as that address, which stops working when sharing stops. Quick-link addresses are now ignored, and a custom share domain is remembered as before
 
-## [3.6.8] - Unreleased
+## [3.6.8] - 2026-11-09
 
 ### Added
 
