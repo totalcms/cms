@@ -43,7 +43,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$noApiKey = $this->createMock(ApiKeyAuthenticator::class);
 		$noApiKey->method('hasApiKeyHeader')->willReturn(false);
 
-		$this->middleware = new CSRFProtectionMiddleware($noApiKey, csrfValidatorFor($this->csrfManager));
+		$this->middleware = new CSRFProtectionMiddleware($noApiKey, csrfValidatorFor($this->csrfManager), translationsFor());
 	}
 
 	protected function tearDown(): void
@@ -143,7 +143,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn($apiKeyData);
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager), translationsFor());
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
@@ -165,7 +165,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn(null); // key doesn't validate
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager), translationsFor());
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
@@ -187,7 +187,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn(null); // Bearer token is not a stored API key
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager), translationsFor());
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
@@ -197,5 +197,37 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$this->expectException(HttpForbiddenException::class);
 
 		$middleware->process($request, $handler);
+	}
+
+	// ------------------------------------------------------------------
+	// Test: the refusal is worded in the active locale
+	// ------------------------------------------------------------------
+
+	public function testRefusalMessageFollowsTheLocale(): void
+	{
+		$noApiKey = $this->createMock(ApiKeyAuthenticator::class);
+		$noApiKey->method('hasApiKeyHeader')->willReturn(false);
+		$middleware = new CSRFProtectionMiddleware($noApiKey, csrfValidatorFor($this->csrfManager), translationsFor('es_ES'));
+
+		$this->csrfManager->generateToken();
+
+		try {
+			$middleware->process($this->makePostRequest('wrong-token-value'), $this->makeHandler(new Response()));
+			$this->fail('Expected a 403');
+		} catch (HttpForbiddenException $e) {
+			$this->assertStringContainsString('Falló la validación CSRF', $e->getMessage());
+		}
+	}
+
+	public function testRefusalMessageKeepsTheEnglishText(): void
+	{
+		$this->csrfManager->generateToken();
+
+		try {
+			$this->middleware->process($this->makePostRequest('wrong-token-value'), $this->makeHandler(new Response()));
+			$this->fail('Expected a 403');
+		} catch (HttpForbiddenException $e) {
+			$this->assertSame('CSRF validation failed. This request appears to be a cross-site request forgery.', $e->getMessage());
+		}
 	}
 }

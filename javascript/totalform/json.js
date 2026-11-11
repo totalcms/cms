@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import { t } from "../i18n";
 
 // A complete, legal JSON escape — \uXXXX or one of the single-character
 // escapes JSON allows after a backslash.
@@ -138,7 +139,7 @@ export default class JSONField extends TotalField {
             this.getValue();
             return true;
         } catch {
-            this.error("Invalid JSON format.");
+            this.error(t("form.invalid_json", {}, "Invalid JSON format."));
             return false;
         }
 	}

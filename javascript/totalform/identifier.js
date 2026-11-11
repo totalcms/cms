@@ -1,6 +1,7 @@
 import TotalField from './totalfield';
 import Autogen from './autogen';
 import { findScopedFieldContainers, listenToScopedField } from './fieldCollection.mjs';
+import { t } from "../i18n";
 const slugify = require('slugify')
 
 // A deck item's id when its schema has no autogen rule. Mirrors
@@ -196,7 +197,7 @@ export default class Identifier extends TotalField {
 		console.warn("ID already exists: "+this.getValue());
         this.container.classList.remove("unsaved");
         this.container.classList.add("error");
-		this.input.setCustomValidity("ID already exists");
+		this.input.setCustomValidity(t("form.id_exists", {}, "ID already exists"));
     }
 
     idAvailable() {

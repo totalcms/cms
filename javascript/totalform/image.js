@@ -2,6 +2,7 @@ import TotalField from "./totalfield";
 import { attachPhotoDrop, insertPhotos } from "./photo-drop";
 import Droplet from "./droplet";
 import ImagePreview from "./image-preview";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -172,7 +173,7 @@ export default class ImageField extends TotalField {
 			this.input.value = this.property; // Set a dummy value to satisfy HTML5 required validation
 			// Check if image has been uploaded using the preview's hasImage method
 			if (!this.hasImage()) {
-				const message = `${this.label} is required - please upload an image`;
+				const message = t('form.required_image', {label: this.label}, '{label} is required - please upload an image');
 				this.input.setCustomValidity(message);
 				this.input.reportValidity();
 				this.error(message);

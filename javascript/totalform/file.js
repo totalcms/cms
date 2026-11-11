@@ -1,6 +1,7 @@
 import TotalField from "./totalfield";
 import Droplet from "./droplet";
 import FilePreview from "./file-preview";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -141,7 +142,7 @@ export default class FileField extends TotalField {
 			this.input.value = this.property; // Set a dummy value to satisfy HTML5 required validation
 			// Check if file has been uploaded using the preview's hasFile method
 			if (!this.hasFile()) {
-				const message = `${this.label} is required - please upload a file`;
+				const message = t('form.required_file', {label: this.label}, '{label} is required - please upload a file');
 				this.input.setCustomValidity(message);
 				this.input.reportValidity();
 				this.error(message);

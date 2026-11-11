@@ -215,3 +215,19 @@ final class TranslationServiceTest extends TestCase
 		}
 	}
 }
+
+test('switching locales adds each locale\'s resources once', function (): void {
+	$service = translationsFor('en_US');
+	$count   = fn (): int => count((new \ReflectionProperty(\Symfony\Component\Translation\Translator::class, 'resources'))->getValue($service->getTranslator()), COUNT_RECURSIVE);
+
+	$service->setLocale('es');
+	$after = $count();
+	$service->setLocale('en_US');
+	$service->setLocale('es');
+	$service->setLocale('en_US');
+
+	expect($count())->toBe($after);
+	expect($service->trans('demo.refused'))->toBe(translationsFor('en_US')->trans('demo.refused'));
+	$service->setLocale('es');
+	expect($service->trans('demo.refused'))->toContain('modo de demostración');
+});

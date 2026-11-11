@@ -2019,7 +2019,7 @@
         {
             "name": "cms.locale.set",
             "signature": "set(string $locale): string",
-            "description": "Set the locale for internationalization (dates, numbers, relative time). Useful for multilingual sites to switch locale per page. Requires the PHP intl extension to be installed.",
+            "description": "Set the locale for internationalization (dates, numbers, relative time) and the language of Total CMS's own text (form messages, errors) for the rest of the request. Useful for multilingual sites to switch locale per page.",
             "examples": [
                 "{{ cms.locale.set('de_DE') }}"
             ],
@@ -2055,6 +2055,13 @@
             "examples": [
                 "{{ cms.locale.translate('save') }}"
             ],
+            "url": "https://docs.totalcms.co/twig/locale/"
+        },
+        {
+            "name": "cms.locale.translatorLocale",
+            "signature": "translatorLocale(): string",
+            "description": "The language Total CMS's own text is rendered in right now. Unlike get(), it needs no intl and follows set() and the signed-in user's language.",
+            "examples": [],
             "url": "https://docs.totalcms.co/twig/locale/"
         },
         {

@@ -1,6 +1,8 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import { csrfHeaders } from "../csrf";
+import { t } from "../i18n";
+import { localeHeadersFor } from "../request-locale";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
@@ -57,7 +59,7 @@ export default class DepotDroplet
 			url               : this.settings.apiUrl,
 			method            : "post",
 			// See Droplet::newDropzone() — Dropzone's XHR needs the CSRF header.
-			headers           : Object.assign({}, csrfHeaders(), this.settings.requestHeaders),
+			headers           : Object.assign({}, csrfHeaders(), localeHeadersFor(this.settings.apiUrl), this.settings.requestHeaders),
 			parallelUploads   : 3,
 			paramName         : this.settings.paramName,
 			autoProcessQueue  : this.settings.autoProcessQueue,
@@ -277,7 +279,7 @@ export default class DepotDroplet
         }
         else {
             // this.event_error(file, this.options.localizeStrings.unknownError+" : "+response);
-            this.event_error(file, "Unknown error: "+response);
+            this.event_error(file, t("form.unknown_error", {response: response}, "Unknown error: {response}"));
         }
     }
 

@@ -16,6 +16,7 @@
  *
 **/
 import { getCsrfToken as readCsrfToken } from "./csrf";
+import { localeHeadersFor } from "./request-locale";
 import { rejectNonOk } from "./api-error";
 
 export default class TotalCMS {
@@ -162,6 +163,7 @@ export default class TotalCMS {
 		// hidden csrf_token form field, so the header is the route in.
 		const csrf = this.getCsrfToken();
 		if (csrf) headers["X-CSRF-Token"] = csrf;
+		Object.assign(headers, localeHeadersFor(this.buildApiQuery(api)));
 
 		// console.log(method, headers);
 
@@ -182,6 +184,7 @@ export default class TotalCMS {
 		// header keeps a single consistent path across both API methods.
 		const csrf = this.getCsrfToken();
 		if (csrf) headers["X-CSRF-Token"] = csrf;
+		Object.assign(headers, localeHeadersFor(this.buildApiQuery(api)));
 
 		// console.log(method, headers);
 
@@ -213,6 +216,7 @@ export default class TotalCMS {
 			const csrf = this.getCsrfToken();
 			if (csrf) headers["X-CSRF-Token"] = csrf;
 		}
+		Object.assign(headers, localeHeadersFor(this.buildApiQuery(api)));
 
 		return fetch(this.buildApiQuery(api), {
             method  : "GET",

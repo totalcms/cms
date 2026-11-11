@@ -1070,6 +1070,17 @@ function devModeFile(string $datadir): string
 }
 
 /**
+ * A real TranslationService on the shipped catalogs, in the given locale.
+ */
+function translationsFor(string $locale = 'en_US'): TranslationService
+{
+	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->locale = $locale;
+
+	return new TranslationService($config, dirname(__DIR__) . '/resources/translations');
+}
+
+/**
  * Build a CSRFRequestValidator wired to a real origin validator.
  *
  * The CSRF policy is "same origin OR valid token", so every consumer needs both

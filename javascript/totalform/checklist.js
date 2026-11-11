@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Checklist Field
@@ -45,7 +46,7 @@ export default class ChecklistField extends TotalField {
 		}
 
 		// None are checked but field is required
-		const message = 'Please select at least one option.';
+		const message = t('form.select_one_or_more', {}, 'Please select at least one option.');
 		this.input.setCustomValidity(message);
 		this.input.reportValidity();
 		this.error(message);

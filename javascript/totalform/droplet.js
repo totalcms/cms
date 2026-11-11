@@ -1,6 +1,8 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import { csrfHeaders } from "../csrf";
+import { t } from "../i18n";
+import { localeHeadersFor } from "../request-locale";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
@@ -59,7 +61,7 @@ export default class Droplet {
 			// Dropzone builds its own XHR, so it never sees the CSRF header
 			// TotalCMSApi adds to fetch(). Session-authenticated /api writes
 			// are rejected without it.
-			headers           : Object.assign({}, csrfHeaders(), this.settings.requestHeaders),
+			headers           : Object.assign({}, csrfHeaders(), localeHeadersFor(this.settings.apiUrl), this.settings.requestHeaders),
 			parallelUploads   : 3,
 			paramName         : this.settings.paramName,
 			autoProcessQueue  : this.settings.autoProcessQueue,
@@ -379,7 +381,7 @@ export default class Droplet {
 		}
 		if (!message || message === '') {
 			console.error("Upload error with undefined message. File:", file.name, "Status:", file.status, "XHR:", file.xhr);
-			message = "Upload failed. Please check server logs for details.";
+			message = t("form.upload_failed", {}, "Upload failed. Please check server logs for details.");
 		}
 		console.error("Droplet upload error:", message);
 		this.field.error(message);
@@ -401,7 +403,7 @@ export default class Droplet {
         }
         else {
             // this.event_error(file, this.options.localizeStrings.unknownError+" : "+response);
-            this.event_error(file, "Unknown error: "+response);
+            this.event_error(file, t("form.unknown_error", {response: response}, "Unknown error: {response}"));
         }
     }
 

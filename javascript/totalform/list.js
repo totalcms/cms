@@ -1,6 +1,7 @@
 import MultiSelectField from "./multiselect";
 import Choices from "choices.js";
 import TotalSortable from "./total-sortable";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS List Field
@@ -129,7 +130,7 @@ export default class ListField extends MultiSelectField {
 		if (this.input.required) {
 			const items = this.getValue();
 			if ((this.settings.asString === true && items === '') || (this.settings.asString === false && (!Array.isArray(items) || items.length === 0))) {
-				const errorMessage = "Please add at least one item to the list.";
+				const errorMessage = t("form.list_required", {}, "Please add at least one item to the list.");
 				this.input.setCustomValidity(errorMessage);
 				this.input.reportValidity();
 				this.error(errorMessage);

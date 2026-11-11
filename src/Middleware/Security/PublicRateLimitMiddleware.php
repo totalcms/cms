@@ -10,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Security\RateLimit\PublicRateLimiter;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -26,6 +27,7 @@ readonly class PublicRateLimitMiddleware implements MiddlewareInterface
 		private string $name,
 		private int $max,
 		private int $windowSeconds,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -36,7 +38,7 @@ readonly class PublicRateLimitMiddleware implements MiddlewareInterface
 		if (!$result->allowed) {
 			return $this->renderer->json(
 				(new Response())->withStatus(429),
-				['error' => ['message' => "Too many requests. Try again in {$result->retryAfter} seconds."]],
+				['error' => ['message' => $this->translator->trans('security.too_many_requests', ['seconds' => (string)$result->retryAfter])]],
 			)
 				->withHeader('Retry-After', (string)$result->retryAfter)
 				->withHeader('X-RateLimit-Limit', (string)$result->limit)

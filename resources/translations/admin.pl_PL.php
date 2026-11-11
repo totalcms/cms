@@ -825,6 +825,8 @@ return [
 
 	// ── Security ─────────────────────────────────────────────────────────────
 	'security.title'             => 'Bezpieczeństwo',
+	'security.csrf_failed'        => 'Weryfikacja CSRF nie powiodła się. To żądanie wygląda na fałszerstwo żądania między witrynami.',
+	'security.too_many_requests'  => 'Zbyt wiele żądań. Spróbuj ponownie za {seconds} s.',
 	'security.not_checked'       => 'Nie sprawdzono',
 	'security.ignored'           => 'Zignorowano',
 	'security.severity.critical' => 'Krytyczny',

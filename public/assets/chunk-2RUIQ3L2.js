@@ -1,0 +1,2 @@
+import{a as n}from"./chunk-N5O52Q2M.js";function i(){let e=n(r=>typeof r=="string"&&/^[A-Za-z0-9_-]{1,35}$/.test(r.trim()),"valid"),t=window.TCMS_CONFIG?.locale;if(e(t))return{"X-Locale":t.trim()};let o=(document.documentElement.getAttribute("lang")||"").trim();return e(o)?{"X-Locale":o}:{}}n(i,"localeHeaders");function c(e){let t;try{t=new URL(e,window.location.href)}catch{return{}}return t.origin===window.location.origin?i():{}}n(c,"localeHeadersFor");export{c as a};
+//# sourceMappingURL=chunk-2RUIQ3L2.js.map

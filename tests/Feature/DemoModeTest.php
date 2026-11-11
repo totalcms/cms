@@ -79,6 +79,21 @@ describe('with demo mode on', function (): void {
 		$this->assertFileDoesNotExist(objectPath('playground', 'demo-on'));
 	});
 
+	it('refuses a save in the language of the page that sent it', function (): void {
+		$spanish = 'Este sitio está en modo de demostración, por lo que no se puede guardar.';
+
+		$response = demoRequest($this->app, 'POST', '/api/playground', ['X-Locale' => 'es'], demoSnippet('demo-es'));
+		expect($response->getStatusCode())->toBe(403);
+		expect(json_decode((string)$response->getBody(), true))->toBe(['error' => $spanish]);
+	});
+
+	it('answers in English again when the next request names no language', function (): void {
+		demoRequest($this->app, 'POST', '/api/playground', ['X-Locale' => 'es'], demoSnippet('demo-es'));
+
+		$response = demoRequest($this->app, 'POST', '/api/playground', [], demoSnippet('demo-en'));
+		expect(json_decode((string)$response->getBody(), true))->toBe(['error' => DEMO_REFUSED]);
+	});
+
 	it('refuses every method that could change something', function (string $method, string $path): void {
 		$response = demoRequest($this->app, $method, $path, [], demoSnippet('anything'));
 

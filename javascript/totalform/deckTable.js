@@ -3,6 +3,7 @@ import { regenerateIds } from "./regenerateIds.mjs";
 import TotalSortable from "./total-sortable";
 import { collectScopedFieldValues } from "./fieldCollection.mjs";
 import { missingIdPropertyMessage } from "./deckItem";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Deck Table Field
@@ -265,7 +266,7 @@ export default class DeckTableField extends TotalField {
 
         // Check if required and empty
         if (this.input.required && rows.length === 0) {
-            const errorMessage = 'Please add at least one.';
+            const errorMessage = t('form.deck_required', {}, 'Please add at least one.');
             this.input.setCustomValidity(errorMessage);
             this.input.reportValidity();
             this.error(errorMessage);
@@ -275,7 +276,7 @@ export default class DeckTableField extends TotalField {
 
         // Check minimum item count
         if (this.minItems > 0 && rows.length < this.minItems) {
-            const errorMessage = `Please add at least ${this.minItems} items`;
+            const errorMessage = t('form.min_items', {count: this.minItems}, 'Please add at least {count} items');
             this.input.setCustomValidity(errorMessage);
             this.input.reportValidity();
             this.error(errorMessage);
@@ -285,7 +286,7 @@ export default class DeckTableField extends TotalField {
 
         // Check maximum item count
         if (this.maxItems > -1 && rows.length > this.maxItems) {
-            const errorMessage = `Maximum ${this.maxItems} items allowed`;
+            const errorMessage = t('form.max_items', {count: this.maxItems}, 'Maximum {count} items allowed');
             this.input.setCustomValidity(errorMessage);
             this.input.reportValidity();
             this.error(errorMessage);
@@ -301,14 +302,14 @@ export default class DeckTableField extends TotalField {
             const itemId = idInput ? String(idInput.value) : '';
 
             if (itemId.length === 0) {
-                const errorMessage = idInput ? 'Item ID cannot be empty' : missingIdPropertyMessage(this.schemaref);
+                const errorMessage = idInput ? t('form.item_id_empty', {}, 'Item ID cannot be empty') : missingIdPropertyMessage(this.schemaref);
                 this.error(errorMessage);
                 isValid = false;
                 continue;
             }
 
             if (itemIds.includes(itemId)) {
-                const errorMessage = `Duplicate ID found: ${itemId}`;
+                const errorMessage = t('form.duplicate_id', {id: itemId}, 'Duplicate ID found: {id}');
                 this.error(errorMessage);
                 isValid = false;
                 continue;

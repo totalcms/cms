@@ -21,6 +21,7 @@ use TotalCMS\Middleware\MaintenanceModeMiddleware;
 use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Middleware\PostMaxSizeMiddleware;
+use TotalCMS\Middleware\RequestLocaleMiddleware;
 use TotalCMS\Middleware\RequestScopeResetMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
@@ -43,6 +44,11 @@ return function (App $app): void {
 	// method MethodOverrideMiddleware (outside) has already settled on, and it
 	// runs before any route's own middleware or action can write anything.
 	$app->add(DemoModeMiddleware::class);
+	// Added after DemoModeMiddleware, so it runs first: the page's language
+	// (X-Locale) is set before demo mode builds its refusal message.
+	// UserLocaleMiddleware still runs later on admin routes, so a signed-in
+	// user's own locale wins.
+	$app->add(RequestLocaleMiddleware::class);
 	$app->addRoutingMiddleware();
 	// SetupCheckMiddleware sits OUTSIDE RoutingMiddleware so it can intercept
 	// requests for unrouted paths (e.g. `/`) — otherwise Slim would throw a

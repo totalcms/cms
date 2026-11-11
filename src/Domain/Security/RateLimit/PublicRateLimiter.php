@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Security\RateLimit;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Middleware\Security\PublicRateLimitMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -30,6 +31,7 @@ class PublicRateLimiter
 		private readonly Config $config,
 		private readonly ClientIpResolver $clientIpResolver,
 		private readonly JsonRenderer $renderer,
+		private readonly TranslationService $translator,
 	) {
 	}
 
@@ -63,7 +65,7 @@ class PublicRateLimiter
 	 */
 	public function middleware(string $name, int $max, int $windowSeconds): PublicRateLimitMiddleware
 	{
-		return new PublicRateLimitMiddleware($this, $this->renderer, $name, $max, $windowSeconds);
+		return new PublicRateLimitMiddleware($this, $this->renderer, $name, $max, $windowSeconds, $this->translator);
 	}
 
 	/**

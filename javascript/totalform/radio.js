@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Radio Field
@@ -69,7 +70,7 @@ export default class RadioField extends TotalField {
 
 		// For required radio groups, check if any radio is selected
         if (this.input.required && this.getValue() === '') {
-			this.input.setCustomValidity("Please select an option.");
+			this.input.setCustomValidity(t("form.select_option", {}, "Please select an option."));
 			this.input.reportValidity();
 			this.error(this.input.validationMessage);
 			return false;

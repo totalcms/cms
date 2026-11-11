@@ -825,6 +825,8 @@ return [
 
 	// ── Security ─────────────────────────────────────────────────────────────
 	'security.title'             => 'Beveiliging',
+	'security.csrf_failed'        => 'CSRF-validatie mislukt. Dit verzoek lijkt een cross-site request forgery te zijn.',
+	'security.too_many_requests'  => 'Te veel verzoeken. Probeer het over {seconds} seconden opnieuw.',
 	'security.not_checked'       => 'Niet gecontroleerd',
 	'security.ignored'           => 'Genegeerd',
 	'security.severity.critical' => 'Kritiek',

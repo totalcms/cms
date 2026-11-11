@@ -825,6 +825,8 @@ return [
 
 	// ── Security ─────────────────────────────────────────────────────────────
 	'security.title'             => 'Sicherheit',
+	'security.csrf_failed'        => 'CSRF-Prüfung fehlgeschlagen. Diese Anfrage scheint eine Cross-Site-Request-Forgery zu sein.',
+	'security.too_many_requests'  => 'Zu viele Anfragen. Versuchen Sie es in {seconds} Sekunden erneut.',
 	'security.not_checked'       => 'Nicht geprüft',
 	'security.ignored'           => 'Ignoriert',
 	'security.severity.critical' => 'Kritisch',

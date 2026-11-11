@@ -26,7 +26,9 @@ Get the list of supported languages as a name-to-locale mapping.
 
 ### set()
 
-Set the active locale for the current request. Requires the PHP `intl` extension.
+Set the active locale for the current request. This sets dates and numbers, and also the language of Total CMS's own text for the rest of that request, including admin previews such as the Twig Playground. Dates and numbers need the PHP `intl` extension; the translated text does not.
+
+`set()` accepts `es`, `es-MX` and `es_MX`. A value that is malformed or that Total CMS ships no text for is ignored, and the page keeps its current language. Form and API messages follow the language the page was rendered in, so a page that calls `set('es')` gets Spanish messages from its forms. The forms do this by sending the page's language in an `X-Locale` header, and any API client can send the same header (`X-Locale: es`) to get Total CMS's messages in that language.
 
 ```twig
 {{ cms.locale.set('de_DE') }}

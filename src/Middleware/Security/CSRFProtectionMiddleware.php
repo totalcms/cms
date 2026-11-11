@@ -12,6 +12,7 @@ use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
+use TotalCMS\Domain\Translation\TranslationService;
 
 /**
  * CSRF Protection Middleware.
@@ -59,6 +60,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 	public function __construct(
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
 		private CSRFRequestValidator $csrfValidator,
+		private TranslationService $translator,
 	) {
 	}
 
@@ -98,7 +100,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		if (!$this->validateCSRFToken($request)) {
 			throw new HttpForbiddenException(
 				$request,
-				'CSRF validation failed. This request appears to be a cross-site request forgery.'
+				$this->translator->trans('security.csrf_failed')
 			);
 		}
 

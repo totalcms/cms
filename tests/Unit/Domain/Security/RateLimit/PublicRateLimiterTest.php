@@ -19,12 +19,12 @@ use TotalCMS\Support\Config;
  * `$settings['rateLimits'][<name>] = ['max' => …, 'window' => …]`.
  */
 
-function publicLimiter(array $rateLimits = []): PublicRateLimiter
+function publicLimiter(array $rateLimits = [], string $locale = 'en_US'): PublicRateLimiter
 {
 	$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	(new ReflectionProperty($config, 'rateLimits'))->setValue($config, $rateLimits);
 
-	return new PublicRateLimiter(new RateLimiter(rateLimitCache(), static fn (): int => 1_000_000), $config, testClientIpResolver(), new JsonRenderer());
+	return new PublicRateLimiter(new RateLimiter(rateLimitCache(), static fn (): int => 1_000_000), $config, testClientIpResolver(), new JsonRenderer(), translationsFor($locale));
 }
 
 function limiterRequest(string $ip = '203.0.113.5'): ServerRequestInterface
@@ -91,6 +91,16 @@ test('the middleware answers 429 with Retry-After once the limit is spent', func
 		->and($blocked->getStatusCode())->toBe(429)
 		->and($blocked->getHeaderLine('Retry-After'))->toBe('60')
 		->and(json_decode((string)$blocked->getBody(), true)['error']['message'])->toBe('Too many requests. Try again in 60 seconds.');
+});
+
+test('the 429 message is worded in the active locale', function (): void {
+	$middleware = publicLimiter([], 'es_ES')->middleware('commerce-checkout-es', 1, 60);
+
+	$middleware->process(limiterRequest('203.0.113.9'), okHandler());
+	$blocked = $middleware->process(limiterRequest('203.0.113.9'), okHandler());
+
+	expect($blocked->getStatusCode())->toBe(429)
+		->and(json_decode((string)$blocked->getBody(), true)['error']['message'])->toBe('Demasiadas solicitudes. Inténtelo de nuevo en 60 segundos.');
 });
 
 test('names are kept to safe cache-key characters', function (): void {

@@ -2,6 +2,7 @@ import TotalField from "./totalfield";
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import { csrfHeaders } from "../csrf";
+import { localeHeadersFor } from "../request-locale";
 import { t } from "../i18n";
 
 //-----------------------------------------------
@@ -182,7 +183,7 @@ export default class DepotDropField extends TotalField {
             url               : this.apiUploadUrl(),
             method            : "post",
             // See Droplet::newDropzone() — Dropzone's XHR needs the CSRF header.
-            headers           : Object.assign({}, csrfHeaders(), this.form.api.headers),
+            headers           : Object.assign({}, csrfHeaders(), localeHeadersFor(this.apiUploadUrl()), this.form.api.headers),
             parallelUploads   : 3,
             paramName         : this.property,
             autoProcessQueue  : !this.holdQueue && this.waitLeft() === 0,

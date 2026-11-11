@@ -45,6 +45,43 @@ it('emits the globals on a public page only for the forms feature', function ():
 	expect($without)->not->toContain('TCMS_TRANSLATIONS')->not->toContain('TCMS_CONFIG')->not->toContain('forms.js');
 });
 
+it('serves the catalog in the language a page sets with cms.locale.set', function (): void {
+	try {
+		$this->cms->locale->set('es');
+		$body = $this->cms->assetsBody();
+
+		preg_match('/window\.TCMS_TRANSLATIONS = (\{.*?\});window\.TCMS_CONFIG/s', $body, $m);
+		$catalog = json_decode($m[1] ?? '', true);
+
+		expect($catalog['confirm.delete_image'] ?? null)->toBe('¿Está seguro de que desea eliminar esta imagen?');
+	} finally {
+		$this->cms->locale->set('en_US');
+	}
+});
+
+it('tells the form runtime the locale the page was rendered in', function (): void {
+	try {
+		expect($this->cms->assetsBody())->toContain('"locale":"en_US"');
+
+		$this->cms->locale->set('es');
+		preg_match('/window\.TCMS_CONFIG = (\{.*?\});/s', $this->cms->assetsBody(), $m);
+
+		expect(json_decode($m[1] ?? '', true)['locale'] ?? null)->toBe('es');
+	} finally {
+		$this->cms->locale->set('en_US');
+	}
+});
+
+it('emits no catalog on a page without the forms feature, whatever its locale', function (): void {
+	try {
+		$this->cms->locale->set('es');
+
+		expect($this->cms->assetsBody(['except' => ['forms']]))->not->toContain('TCMS_TRANSLATIONS');
+	} finally {
+		$this->cms->locale->set('en_US');
+	}
+});
+
 describe('the forms feature', function (): void {
 	test('a public page gets forms.css in the head and forms.js in the body, and no admin bundle', function (): void {
 		$head = $this->cms->assetsHead();

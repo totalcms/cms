@@ -825,6 +825,8 @@ return [
 
 	// ── Security ─────────────────────────────────────────────────────────────
 	'security.title'             => 'Seguridad',
+	'security.csrf_failed'        => 'Falló la validación CSRF. Esta solicitud parece ser una falsificación de solicitudes entre sitios.',
+	'security.too_many_requests'  => 'Demasiadas solicitudes. Inténtelo de nuevo en {seconds} segundos.',
 	'security.not_checked'       => 'No comprobado',
 	'security.ignored'           => 'Ignorado',
 	'security.severity.critical' => 'Crítico',

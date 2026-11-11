@@ -13,8 +13,8 @@ use TotalCMS\Support\Config;
  * Config::__construct expects a full settings array; using
  * newInstanceWithoutConstructor and assigning the few properties we touch
  * (per CLAUDE.md guidance) keeps the test isolated from the rest of the
- * config machinery. TranslationService isn't touched by the new helpers,
- * so a bare instance is fine.
+ * config machinery. TranslationService is a real one: set() switches its
+ * locale, which a bare instance cannot do.
  *
  * @param array<int,array<string,string>> $locales
  */
@@ -27,8 +27,8 @@ function makeLocaleAdapter(array $locales = []): LocaleTwigAdapter
 		'available' => $locales,
 	];
 
-	$translatorRef = new ReflectionClass(TranslationService::class);
-	$translator    = $translatorRef->newInstanceWithoutConstructor();
+	$configRef->getProperty('locale')->setValue($config, 'en_US');
+	$translator = new TranslationService($config, dirname(__DIR__, 3) . '/resources/translations');
 
 	return new LocaleTwigAdapter($translator, $config);
 }
@@ -329,5 +329,65 @@ describe('LocalizedtextData REST serialization shape', function (): void {
 			'de'    => '',
 			'ar'    => '',
 		]);
+	});
+});
+
+describe('LocaleTwigAdapter::set', function (): void {
+	/**
+	 * An adapter backed by a real TranslationService on the site locale en_US.
+	 */
+	function makeTranslatingAdapter(): array
+	{
+		$configRc = new ReflectionClass(Config::class);
+		$config   = $configRc->newInstanceWithoutConstructor();
+		$configRc->getProperty('locale')->setValue($config, 'en_US');
+		$translator = new TranslationService($config, dirname(__DIR__, 3) . '/resources/translations');
+
+		return [new LocaleTwigAdapter($translator, $config), $translator];
+	}
+
+	test('set() switches the core translation catalog', function (): void {
+		[$adapter, $translator] = makeTranslatingAdapter();
+
+		try {
+			$adapter->set('es');
+			expect($translator->trans('confirm.delete_image', [], 'js'))->toBe('¿Está seguro de que desea eliminar esta imagen?')
+				->and($adapter->jsTranslations()['confirm.delete_image'])->toBe('¿Está seguro de que desea eliminar esta imagen?');
+
+			$adapter->set('en_US');
+			expect($translator->trans('confirm.delete_image', [], 'js'))->toBe('Are you sure that you want to delete this image?')
+				->and($adapter->jsTranslations()['confirm.delete_image'])->toBe('Are you sure that you want to delete this image?');
+		} finally {
+			$adapter->set('en_US');
+		}
+	});
+
+	test('set() with an unknown locale keeps English', function (): void {
+		[$adapter, $translator] = makeTranslatingAdapter();
+
+		try {
+			$adapter->set('xx');
+			expect($translator->trans('confirm.delete_image', [], 'js'))->toBe('Are you sure that you want to delete this image?');
+		} finally {
+			$adapter->set('en_US');
+		}
+	});
+});
+
+describe('LocaleTwigAdapter::set', function (): void {
+	test('a region with no file of its own still gives the language catalog', function (): void {
+		$adapter = makeLocaleAdapter();
+		$adapter->set('es-MX');
+
+		expect($adapter->t('demo.refused'))->toBe('Este sitio está en modo de demostración, por lo que no se puede guardar.');
+	});
+
+	test('a malformed value is ignored and does not throw', function (): void {
+		$adapter = makeLocaleAdapter();
+		$before  = $adapter->translatorLocale();
+
+		expect($adapter->set('zh Hant'))->toBe('');
+		expect($adapter->set('xx'))->toBe('');
+		expect($adapter->translatorLocale())->toBe($before);
 	});
 });

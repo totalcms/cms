@@ -6,6 +6,7 @@ import FormAccordions from './accordions';
 import tcmsConfirm from '../confirm-dialog';
 import { t } from '../i18n';
 import { csrfHeadersFor } from '../csrf';
+import { localeHeadersFor } from '../request-locale';
 
 
 //-----------------------------------------------
@@ -665,12 +666,12 @@ export default class TotalForm {
 		// an agent's submit with it. Every side effect below is unchanged.
 		if (!this.validate()) {
 			this.validated = false;
-			const message = 'Please fix validation errors before saving.';
+			const message = t('form.fix_errors', {}, 'Please fix validation errors before saving.');
 			this.error(message);
 			return Promise.reject(new Error(message));
 		}
 		if (!explicit && this.isError()) {
-			const message = 'Error in form, cannot save.';
+			const message = t('form.has_errors', {}, 'Error in form, cannot save.');
 			this.error(message);
 			return Promise.reject(new Error(message));
 		}
@@ -691,7 +692,7 @@ export default class TotalForm {
 		try {
 			data = this.generateData();
 		} catch (error) {
-			this.error(`Cannot save: ${error.message}`);
+			this.error(t('form.cannot_save', {reason: error.message}, 'Cannot save: {reason}'));
 			return Promise.reject(error);
 		}
 
@@ -881,7 +882,7 @@ export default class TotalForm {
 					// Same-origin targets are session-authenticated API routes that
 					// now require the CSRF token. Third-party webhooks must not get
 					// the header — it would force a preflight they can't answer.
-					headers : Object.assign({ 'Content-Type': 'application/json' }, csrfHeadersFor(action.link)),
+					headers : Object.assign({ 'Content-Type': 'application/json' }, csrfHeadersFor(action.link), localeHeadersFor(action.link)),
 					body    : JSON.stringify(this.generateData()),
 				});
 				if (!response.ok) {
@@ -927,7 +928,7 @@ export default class TotalForm {
 				}
 
 				// Otherwise, stop execution and show error
-				this.error(error.message || 'Action execution failed');
+				this.error(error.message || t('form.action_failed', {}, 'Action execution failed'));
 				throw error; // Re-throw to prevent further execution
 			}
 		}

@@ -43,9 +43,10 @@ readonly class LocaleTwigAdapter
 	}
 
 	/**
-	 * Set the locale for internationalization (dates, numbers, relative time).
-	 * Useful for multilingual sites to switch locale per page.
-	 * Requires the PHP intl extension to be installed.
+	 * Set the locale for internationalization (dates, numbers, relative time)
+	 * and the language of Total CMS's own text (form messages, errors) for the
+	 * rest of the request. Useful for multilingual sites to switch locale per page.
+	 * Dates and numbers need the PHP intl extension; the translations do not.
 	 *
 	 * Usage in Twig: {{ cms.locale.set('de_DE') }}
 	 *
@@ -55,12 +56,27 @@ readonly class LocaleTwigAdapter
 	 */
 	public function set(string $locale): string
 	{
+		// Unknown or malformed values leave Total CMS's text alone; set() never throws.
+		$resolved = $this->translator->resolveLocale($locale);
+		if ($resolved !== null) {
+			$this->translator->setLocale($resolved);
+		}
+
 		if (extension_loaded('intl')) {
 			\Locale::setDefault($locale);
 			I18n::setLocale($locale);
 		}
 
 		return '';
+	}
+
+	/**
+	 * The language Total CMS's own text is rendered in right now. Unlike get(),
+	 * it needs no intl and follows set() and the signed-in user's language.
+	 */
+	public function translatorLocale(): string
+	{
+		return $this->translator->getLocale();
 	}
 
 	/**

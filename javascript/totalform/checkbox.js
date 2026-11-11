@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Checkbox Field
@@ -24,7 +25,7 @@ export default class Checkbox extends TotalField {
 
 		// For required checkboxes, validate that they are checked
 		if (this.input.hasAttribute('required') && !this.input.checked) {
-			this.input.setCustomValidity('This field must be checked.');
+			this.input.setCustomValidity(t('form.must_be_checked', {}, 'This field must be checked.'));
 		}
 
 		// Call parent validation

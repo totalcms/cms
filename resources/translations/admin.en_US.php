@@ -825,6 +825,8 @@ return [
 
 	// ── Security ─────────────────────────────────────────────────────────────
 	'security.title'             => 'Security',
+	'security.csrf_failed'        => 'CSRF validation failed. This request appears to be a cross-site request forgery.',
+	'security.too_many_requests'  => 'Too many requests. Try again in {seconds} seconds.',
 	'security.not_checked'       => 'Not checked',
 	'security.ignored'           => 'Ignored',
 	'security.severity.critical' => 'Critical',

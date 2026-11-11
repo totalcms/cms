@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Translation;
 
 use Symfony\Component\Translation\Loader\PhpFileLoader;
 use Symfony\Component\Translation\Translator;
+use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Support\Config;
 
 /**
@@ -15,7 +16,15 @@ use TotalCMS\Support\Config;
  */
 class TranslationService
 {
+	private const MAX_LOCALE_LENGTH = 35;
+	private const LOCALE_PATTERN    = '/^[A-Za-z]{2,3}([_-][A-Za-z0-9]{2,8})*$/';
+
 	private readonly Translator $translator;
+
+	/** @var array<string,true> locales whose resources are already added, so a switch never re-adds them */
+	private array $loadedLocales = [];
+
+	private bool $englishLoaded = false;
 
 	public function __construct(
 		private readonly Config $config,
@@ -95,6 +104,44 @@ class TranslationService
 		$this->translator->setLocale($locale);
 	}
 
+	/**
+	 * True when Total CMS ships its own text for this locale: an exact file, a
+	 * file for the same language (es → es_ES), or English, which is built in.
+	 */
+	public function hasLocale(string $locale): bool
+	{
+		return $locale === 'en_US' || $this->resolveTranslationFile('admin', $locale) !== null;
+	}
+
+	/**
+	 * Validate an untrusted locale (a request header, a template argument) and
+	 * return the locale to switch to, or null to leave the translator alone.
+	 *
+	 * The value must look like a locale and be one Total CMS ships text for.
+	 * A bare language that matches the language of the active locale keeps the
+	 * active one, so `en` on an en_US site stays en_US instead of picking the
+	 * en_GB file. An explicit region (en-GB) is honored.
+	 */
+	public function resolveLocale(string $raw): ?string
+	{
+		$raw = trim($raw);
+		if ($raw === '' || strlen($raw) > self::MAX_LOCALE_LENGTH || preg_match(self::LOCALE_PATTERN, $raw) !== 1) {
+			return null;
+		}
+
+		$locale = LocaleTwigAdapter::canonicalizeLocale($raw);
+		if ($locale === '' || !$this->hasLocale($locale)) {
+			return null;
+		}
+
+		$active = $this->translator->getLocale();
+		if (!str_contains($locale, '_') && strtok($active, '_') === $locale) {
+			return $active;
+		}
+
+		return $locale;
+	}
+
 	public function getLocale(): string
 	{
 		return $this->translator->getLocale();
@@ -107,12 +154,19 @@ class TranslationService
 
 	private function loadTranslations(string $locale): void
 	{
+		// Adding a resource makes Symfony drop its loaded catalogs, so each
+		// locale's files go in once, however often the locale is switched.
+		if (isset($this->loadedLocales[$locale])) {
+			return;
+		}
+		$this->loadedLocales[$locale] = true;
+
 		$domains = ['admin', 'js'];
 
 		foreach ($domains as $domain) {
 			// Always load English as the fallback
 			$enFile = $this->translationsPath . "/{$domain}.en_US.php";
-			if (file_exists($enFile)) {
+			if (!$this->englishLoaded && file_exists($enFile)) {
 				$this->translator->addResource('php', $enFile, 'en_US', $domain);
 			}
 
@@ -128,6 +182,8 @@ class TranslationService
 				}
 			}
 		}
+
+		$this->englishLoaded = true;
 	}
 
 	/**

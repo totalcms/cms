@@ -6,6 +6,7 @@ import TotalSortable from "./total-sortable";
 import { attachPhotoDrop, insertPhotos } from "./photo-drop";
 import DropletArray from "./droplet-array";
 import Scrollable from "./scrollable";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Gallery Field
@@ -490,7 +491,7 @@ export default class GalleryField extends ImageField {
 
 		if (this.input.required) {
 			if (!this.preview || !Array.isArray(this.preview) || this.preview.length === 0) {
-				const message = `${this.label} is required - please upload at least one image`;
+				const message = t('form.required_images', {label: this.label}, '{label} is required - please upload at least one image');
 				this.input.setCustomValidity(message);
 				this.input.reportValidity();
 				this.error(message);
@@ -498,7 +499,7 @@ export default class GalleryField extends ImageField {
 			}
 
 			if (!this.hasImage()) {
-				const message = `${this.label} is required - please upload at least one image`;
+				const message = t('form.required_images', {label: this.label}, '{label} is required - please upload at least one image');
 				this.input.setCustomValidity(message);
 				this.input.reportValidity();
 				this.error(message);
