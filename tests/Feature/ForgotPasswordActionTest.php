@@ -24,6 +24,20 @@ describe('ForgotPasswordAction', function (): void {
 		$response = get('/admin/forgot-password/users');
 		expect($response->getStatusCode())->toBe(200);
 	});
+
+	it('keeps where the visitor started in the form and the back link', function (): void {
+		$body = (string)get('/admin/forgot-password/users?redirect=%2Fes%2Fprivate')->getBody();
+
+		expect($body)->toContain('<input type="hidden" name="redirect" value="/es/private">')
+			->and($body)->toContain('/login/users?redirect=%2Fes%2Fprivate');
+	});
+
+	it('drops a redirect to another site', function (): void {
+		$body = (string)get('/admin/forgot-password?redirect=https%3A%2F%2Fevil.example%2F')->getBody();
+
+		expect($body)->not->toContain('name="redirect"')
+			->and($body)->not->toContain('evil.example');
+	});
 });
 
 describe('ForgotPasswordSubmitAction', function (): void {
@@ -51,6 +65,13 @@ describe('ForgotPasswordSubmitAction', function (): void {
 	it('handles missing email field', function (): void {
 		$response = post('/admin/forgot-password', []);
 		expect($response->getStatusCode())->toBe(302);
+	});
+
+	it('sends the visitor back to the form with where they started', function (): void {
+		$response = post('/admin/forgot-password/users', ['email' => 'nobody@example.com', 'redirect' => '/es/private']);
+
+		expect($response->getStatusCode())->toBe(302)
+			->and($response->getHeaderLine('Location'))->toEndWith('/forgot-password/users?redirect=%2Fes%2Fprivate');
 	});
 
 	it('trims whitespace from email', function (): void {

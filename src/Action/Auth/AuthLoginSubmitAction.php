@@ -123,7 +123,9 @@ readonly class AuthLoginSubmitAction
 		// 4. Default to admin index
 		$postData    = (array)$request->getParsedBody();
 		$queryParams = $request->getQueryParams();
-		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
+		$redirectUrl = $this->stringParam($postData['redirect'] ?? null)
+			?? $this->stringParam($queryParams['redirect'] ?? null)
+			?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
 
 		// Open-redirect guard: the redirect target can arrive via a crafted
 		// link (?redirect=https://evil.example), and a login page that
@@ -176,5 +178,11 @@ readonly class AuthLoginSubmitAction
 	private function sameOriginRedirect(string $candidate, string $requestHost, string $fallback): string
 	{
 		return SameOriginRedirect::resolve($candidate, $requestHost, $fallback);
+	}
+
+	/** A non-empty string request value, or null: `?redirect[]=x` arrives as an array. */
+	private function stringParam(mixed $value): ?string
+	{
+		return is_string($value) && $value !== '' ? $value : null;
 	}
 }

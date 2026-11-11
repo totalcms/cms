@@ -117,6 +117,9 @@ return [
 	'flash.datapath_select_location'   => 'Seleziona una posizione per la cartella dati.',
 	'flash.config_save_failed'         => 'Salvataggio configurazione non riuscito: {error}',
 
+	// ── Objects ─────────────────────────────────────────────────────────────
+	'object.not_unique' => 'Il valore «{value}» di {label} esiste già in questa raccolta. Deve essere unico.',
+
 	// ── Login / Auth ────────────────────────────────────────────────────────
 	'login.setup_first_user'         => 'Crea il primo account utente',
 	'login.setup_first_user_desc'    => 'Le credenziali che inserirai qui sotto verranno usate per creare il primo utente amministratore.',

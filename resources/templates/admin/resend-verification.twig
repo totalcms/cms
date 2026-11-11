@@ -34,7 +34,7 @@
 						   id="field-email"
 						   name="email"
 						   placeholder="email@company.com"
-						   value="{{ getData.email | default('') }}"
+						   value="{{ (getData.email ?? '') is iterable ? '' : getData.email | default('') }}"
 						   required
 						   autofocus>
 					<div class="form-group-icon"></div>

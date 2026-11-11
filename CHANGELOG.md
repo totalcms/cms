@@ -2,6 +2,20 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.10] - Unreleased
+
+### Changed
+
+- **Password reset keeps where the visitor started.** When the login page has a `redirect`, its Forgot Password link passes it on, and it stays through the forgot-password form, the link in the reset email and the reset form. A whitelabel template on each step can use it, for example to show a Spanish page to someone who came from `/es`, and a custom reset mailer gets it as `data.redirect`. Only an address on your own site is kept. See URL Parameters in [Password Reset](https://docs.totalcms.co/auth/password-reset)
+
+### Fixed
+
+- **Forms built with `cms.form.builder()` follow the page's language.** A page that calls `cms.locale.set('es')` got Spanish labels from Total CMS everywhere but in its forms' own text, such as a date field's clear button, which stayed English. The forms were built without a translator
+- **"Must be unique" errors follow the page's language.** A visitor who registers with an email that's already taken now reads the refusal in the language of the page, such as Spanish, instead of English. Logs keep the English text
+- **A select's clear button is labeled in the page's language.** Its tooltip and screen reader label said "Clear selection" in English on every page. The date field's clear button was already translated
+- **The login page no longer breaks on a crafted link.** A `redirect` sent as a list, such as `?redirect[]=x`, crashed the page. It is now treated as no redirect, and an `email` sent as a list no longer fills the Forgot Password and Resend Verification forms with "Array"
+- **`tcms starter:export` no longer asks for a credit on file uploads.** A file field's image, such as the Site SEO record's SVG favicon, was named as missing a credit, but a file has no Credit section to fill in
+
 ## [3.6.9] - 2026-11-10
 
 ### Added

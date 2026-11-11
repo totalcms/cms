@@ -537,6 +537,7 @@ return [
 		$container->get(LoggerFactory::class),
 		$container->get(OPcacheService::class),
 		$container->get(RawRenderer::class),
+		$container->get(TranslationService::class),
 	),
 
 	PhpRenderer::class => fn (ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),

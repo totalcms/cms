@@ -110,6 +110,12 @@ readonly class LoginForm implements \Stringable
 			$forgotPasswordUrl = $this->collection
 				? "{$this->api}/admin/forgot-password/{$this->collection}"
 				: "{$this->api}/admin/forgot-password";
+			// Carried through forgot-password and the reset email back to the
+			// reset form, so a site's whitelabel templates on each step can
+			// tell where the visitor started (an /es page means Spanish).
+			if ($this->redirect !== null && $this->redirect !== '') {
+				$forgotPasswordUrl .= '?' . http_build_query(['redirect' => $this->redirect]);
+			}
 
 			$forgotPasswordLink = HTMLUtils::element(
 				'p',

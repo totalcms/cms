@@ -92,6 +92,7 @@ When creating custom password reset email templates, the following variables are
 | `data.resetUrl` | string | Complete password reset URL with token |
 | `data.expiryMinutes` | integer | Number of minutes before token expires |
 | `data.collection` | string | Authentication collection name |
+| `data.redirect` | string | Where the visitor started, such as `/es/private`, or empty. Use it to pick the email's language |
 
 **Note**: All variables must be accessed via the `data` object (e.g., `{{ data.resetUrl }}`), which is consistent with all custom mailer templates in Total CMS.
 
@@ -217,6 +218,18 @@ This is useful for:
 ```html
 <a href="/forgot-password?email={{ user.email }}">Reset your password</a>
 ```
+
+It also takes `redirect`, the same address the login form takes. When the login page has a `redirect`, its Forgot Password link passes it on, and it stays with the visitor through each step: the forgot-password form, the link in the reset email, and the reset form, which sends them there once the password is saved. Only an address on your own site is kept.
+
+That lets a whitelabel template on each step tell where the visitor started. On a bilingual site, `whitelabel/forgot-password-above.twig` and `whitelabel/reset-password-above.twig` can switch the page to Spanish for someone who came from an `/es` page, so the form's labels and messages follow:
+
+```twig
+{% if redirect|default('') matches '{^/es(/|\\?|$)}' %}
+	{% do cms.locale.set('es') %}
+{% endif %}
+```
+
+The reset email itself is still sent in English. To send it in another language, set up a custom mailer (see [Custom Email Templates](#custom-email-templates)) and choose the wording from `data.redirect`.
 
 ## Template Customization
 

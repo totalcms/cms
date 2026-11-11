@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => 'Il campo {label} è obbligatorio: carichi almeno un\'immagine',
 	'form.select_one_or_more'   => 'Selezioni almeno un\'opzione.',
 	'form.select_option'        => 'Selezioni un\'opzione.',
+	'form.clear_selection'      => 'Cancella selezione',
 	'form.must_be_checked'      => 'Questo campo deve essere selezionato.',
 	'form.passwords_mismatch'   => 'Le password non corrispondono.',
 	'form.list_required'        => 'Aggiunga almeno un elemento all\'elenco.',

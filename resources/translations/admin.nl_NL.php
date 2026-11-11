@@ -117,6 +117,9 @@ return [
 	'flash.datapath_select_location'   => 'Selecteer een locatie voor de datamap.',
 	'flash.config_save_failed'         => 'Configuratie opslaan mislukt: {error}',
 
+	// ── Objects ─────────────────────────────────────────────────────────────
+	'object.not_unique' => '{label} moet uniek zijn. De waarde \'{value}\' bestaat al in deze collectie.',
+
 	// ── Login / Auth ────────────────────────────────────────────────────────
 	'login.setup_first_user'         => 'Eerste gebruikersaccount instellen',
 	'login.setup_first_user_desc'    => 'De onderstaande gegevens worden gebruikt om het eerste beheerdersaccount aan te maken.',

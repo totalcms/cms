@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => 'El campo {label} es obligatorio: suba al menos una imagen',
 	'form.select_one_or_more'   => 'Seleccione al menos una opción.',
 	'form.select_option'        => 'Seleccione una opción.',
+	'form.clear_selection'      => 'Borrar selección',
 	'form.must_be_checked'      => 'Este campo debe estar marcado.',
 	'form.passwords_mismatch'   => 'Las contraseñas no coinciden.',
 	'form.list_required'        => 'Añada al menos un elemento a la lista.',

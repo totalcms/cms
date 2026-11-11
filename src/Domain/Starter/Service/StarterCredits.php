@@ -71,13 +71,18 @@ final class StarterCredits
 	/**
 	 * An image is any map with a name and an image MIME type, at any depth,
 	 * so card, deck and gallery images are found alongside top-level ones.
+	 * A file field's upload can be an image too, such as the Site SEO record's
+	 * SVG favicon, but a file has no Credit section to fill in, so it is
+	 * neither listed nor named as missing one.
 	 *
 	 * @param array<mixed> $value
 	 */
 	private function walk(array $value, string $where): void
 	{
 		if (is_string($value['name'] ?? null) && str_starts_with((string)($value['mime'] ?? ''), 'image/')) {
-			$this->add($value, $where);
+			if (!$this->isFileUpload($value)) {
+				$this->add($value, $where);
+			}
 
 			return;
 		}
@@ -87,6 +92,18 @@ final class StarterCredits
 				$this->walk($child, $where);
 			}
 		}
+	}
+
+	/**
+	 * A file or depot field's upload: it carries a download name and an
+	 * extension, which image and gallery fields never store.
+	 *
+	 * @param array<mixed> $value
+	 */
+	private function isFileUpload(array $value): bool
+	{
+		return !array_key_exists('credit', $value)
+			&& (array_key_exists('download', $value) || array_key_exists('ext', $value));
 	}
 
 	/** @param array<mixed> $image */

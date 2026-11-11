@@ -55,6 +55,8 @@ beforeEach(function (): void {
 			'author' => 'Nadin Sh', 'authorUrl' => 'https://www.pexels.com/@nadin-sh/', 'source' => 'Pexels', 'sourceUrl' => 'https://www.pexels.com/photo/25650514/', 'license' => 'Pexels License',
 		]]]),
 		'tcms-data/menu/cake.json'                      => json_encode(['id' => 'cake', 'gallery' => [['name' => 'cake.jpg', 'mime' => 'image/jpeg'], ['name' => 'slice.jpg', 'mime' => 'image/jpeg', 'credit' => ['source' => 'Unsplash']]]]),
+		// A file field's SVG favicon: an image, but a file has no credit to give.
+		'tcms-data/seo-site/seo-site.json'              => json_encode(['id' => 'seo-site', 'iconSvg' => ['name' => 'icon.svg', 'mime' => 'image/svg+xml', 'download' => 'icon.svg', 'ext' => 'svg']]),
 		'tcms-data/menu/burrata/image/photo.jpg'        => 'jpg',
 		'tcms-data/menu/burrata/image/.cache/small.jpg' => 'jpg',
 		'tcms-data/builder-pages/.meta.json'            => json_encode(['id' => 'builder-pages', 'schema' => 'builder-page', 'count' => 1]),

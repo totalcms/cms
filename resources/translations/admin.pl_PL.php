@@ -117,6 +117,9 @@ return [
 	'flash.datapath_select_location'   => 'Wybierz lokalizację folderu danych.',
 	'flash.config_save_failed'         => 'Nie udało się zapisać konfiguracji: {error}',
 
+	// ── Objects ─────────────────────────────────────────────────────────────
+	'object.not_unique' => 'Wartość „{value}” pola {label} już istnieje w tej kolekcji. Musi być unikalna.',
+
 	// ── Login / Auth ────────────────────────────────────────────────────────
 	'login.setup_first_user'         => 'Utwórz pierwsze konto użytkownika',
 	'login.setup_first_user_desc'    => 'Dane wpisane poniżej zostaną użyte do utworzenia pierwszego konta administratora.',

@@ -100,11 +100,10 @@ readonly class TotalFormFactory
 	{
 		// data-api is always the REST base; the JS resolves /admin/... routes
 		// against the site base itself (TotalCMS::buildApiQuery).
-		$options = array_merge($this->buttonLabels($options), [
+		$options = array_merge($this->formOptions($options), [
 			'route'                    => $route,
 			'api'                      => $this->api,
 			'formActionRegistry'       => $this->formActionRegistry,
-			'translator'               => $this->translationService->trans(...),
 		]);
 
 		$form = new TotalForm($this->services, FormOptions::fromArray($options));
@@ -157,7 +156,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'id'         => '',
 			'collection' => '',
-		], $this->buttonLabels($options), [
+		], $this->formOptions($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 		]);
@@ -174,7 +173,7 @@ readonly class TotalFormFactory
 			'path'       => '',
 			'collection' => '',
 			'id'         => '',
-		], $this->buttonLabels($options), [
+		], $this->formOptions($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 		]);
@@ -193,7 +192,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'id'         => '',
 			'collection' => '',
-		], $this->buttonLabels($options), [
+		], $this->formOptions($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 		]);
@@ -206,7 +205,7 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function builder(string $collection, array $options = []): ObjectForm
 	{
-		$options = array_merge($this->buttonLabels($options), [
+		$options = array_merge($this->formOptions($options), [
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'api'                      => $this->api,
@@ -223,7 +222,7 @@ readonly class TotalFormFactory
 	 */
 	public function deckBuilder(string $collection, string $property, array $options = []): DeckItemForm
 	{
-		$options = array_merge($this->buttonLabels($options), [
+		$options = array_merge($this->formOptions($options), [
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'id'                       => $options['id'] ?? '',
@@ -285,6 +284,25 @@ readonly class TotalFormFactory
 		return $options;
 	}
 
+	/**
+	 * A form's options with its button labels resolved and the admin-catalog
+	 * translator attached. The form's own text (a date's clear button, help,
+	 * placeholders) is translated when each field renders, so it follows the
+	 * language in effect then, including one a page set with cms.locale.set().
+	 * A form built without the translator fell back to English at every call.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function formOptions(array $options): array
+	{
+		$options               = $this->buttonLabels($options);
+		$options['translator'] = $this->translationService->trans(...);
+
+		return $options;
+	}
+
 	public function save(?string $label = null): string
 	{
 		$button = new SaveButton($label ?? $this->translationService->trans('btn.save'));
@@ -304,7 +322,7 @@ readonly class TotalFormFactory
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
 		// Use empty collection string to prevent fetching/creating any collection
-		$form = new ObjectForm($this->services, new FormOptions(api: $this->api));
+		$form = new ObjectForm($this->services, new FormOptions(api: $this->api, translator: $this->translationService->trans(...)));
 
 		return $form;
 	}

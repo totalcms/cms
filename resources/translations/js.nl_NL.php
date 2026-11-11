@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => '{label} is verplicht - upload minstens één afbeelding',
 	'form.select_one_or_more'   => 'Selecteer minstens één optie.',
 	'form.select_option'        => 'Selecteer een optie.',
+	'form.clear_selection'      => 'Selectie wissen',
 	'form.must_be_checked'      => 'Dit veld moet worden aangevinkt.',
 	'form.passwords_mismatch'   => 'De wachtwoorden komen niet overeen.',
 	'form.list_required'        => 'Voeg minstens één item toe aan de lijst.',

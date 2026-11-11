@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Select Field
@@ -30,7 +31,11 @@ export default class SelectField extends TotalField {
 		this.clearButton.type = "button";
 		this.clearButton.className = "select-clear-button";
 		this.clearButton.innerHTML = "&times;";
-		this.clearButton.title = "Clear selection";
+		// The button shows only a ×, so the label is the tooltip and the
+		// screen reader's text, in the page's language.
+		const label = t("form.clear_selection", {}, "Clear selection");
+		this.clearButton.title = label;
+		this.clearButton.setAttribute("aria-label", label);
 
 		// Add clear button to form group
 		const formGroup = this.input.closest(".form-group");

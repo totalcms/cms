@@ -126,6 +126,37 @@ describe('AuthLoginAction Feature Tests', function (): void {
 		// This test just ensures GET works properly
 	});
 
+	// `getData` is the Twig global for $_GET, read when the app is built, so
+	// the query goes into $_GET before a fresh bootstrap.
+	it('treats a query value sent as a list as missing', function (string $query): void {
+		$saved = $_GET;
+		parse_str($query, $_GET);
+		try {
+			$this->setUpApp(bootstrap());
+			$response = get('/admin/login?' . $query);
+		} finally {
+			$_GET = $saved;
+		}
+
+		$body = (string)$response->getBody();
+		expect($response->getStatusCode())->toBe(200);
+		expect($body)->not->toContain('TypeError')
+			->and($body)->not->toContain('name="redirect"');
+	})->with(['redirect[]=x', 'redirect[a]=x&redirect[b]=y']);
+
+	it('carries the redirect onto the forgot-password link', function (): void {
+		$saved = $_GET;
+		$_GET  = ['redirect' => '/es/private'];
+		try {
+			$this->setUpApp(bootstrap());
+			$body = (string)get('/admin/login/users?redirect=%2Fes%2Fprivate')->getBody();
+		} finally {
+			$_GET = $saved;
+		}
+
+		expect($body)->toContain('/admin/forgot-password/users?redirect=%2Fes%2Fprivate');
+	});
+
 	it('handles URL encoding in collection names', function (): void {
 		$encodedCollection = urlencode('test collection');
 		$response          = get("/admin/login/{$encodedCollection}");

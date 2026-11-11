@@ -99,6 +99,12 @@ final readonly class AdminForms
 		$options['loginWith'] ??= $this->services->config->auth['loginWith'] ?? 'both';
 		$options['showPasskeys'] ??= $this->services->editionFeatures->can(EditionFeature::PASSKEYS)
 			&& ($this->services->config->auth['usePasskeys'] ?? true);
+		// The login page passes `?redirect=` straight from the query, and
+		// `?redirect[]=x` arrives as an array. Anything but a string is no
+		// redirect at all.
+		if (array_key_exists('redirect', $options) && !is_string($options['redirect'])) {
+			$options['redirect'] = null;
+		}
 
 		$form = new LoginForm(...$options);
 

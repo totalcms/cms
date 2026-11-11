@@ -21,7 +21,8 @@ use TotalCMS\Domain\Translation\TranslationService;
  */
 final readonly class RequestLocaleMiddleware implements MiddlewareInterface
 {
-	private const HEADER = 'X-Locale';
+	/** Also read by DefaultErrorHandler, which runs after this middleware has put the locale back. */
+	public const HEADER = 'X-Locale';
 
 	public function __construct(private TranslationService $translator)
 	{

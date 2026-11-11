@@ -14,9 +14,12 @@ use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
+use TotalCMS\Domain\Translation\TranslatableException;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\PageRouterMiddleware;
+use TotalCMS\Middleware\RequestLocaleMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RawRenderer;
 
@@ -48,6 +51,7 @@ readonly class DefaultErrorHandler
 		LoggerFactory $loggerFactory,
 		private OPcacheService $opcacheService,
 		private RawRenderer $rawRenderer,
+		private ?TranslationService $translator = null,
 	) {
 		$this->logger          = $loggerFactory
 			->channelLogger(LogChannel::App);
@@ -109,7 +113,7 @@ readonly class DefaultErrorHandler
 		}
 
 		// Error message
-		$errorMessage = $this->getErrorMessage($exception, $statusCode, true);
+		$errorMessage = $this->getErrorMessage($exception, $statusCode, $request);
 
 		// Render response with no-cache headers to prevent browser caching of errors
 		$response = $this->responseFactory->createResponse();
@@ -247,24 +251,42 @@ readonly class DefaultErrorHandler
 	 *
 	 * @param \Throwable $exception The error
 	 * @param int $statusCode The http status code
-	 * @param bool $displayErrorDetails Display details
+	 * @param ServerRequestInterface $request The request, for the language it names
 	 *
 	 * @return string The message
 	 */
-	private function getErrorMessage(\Throwable $exception, int $statusCode, bool $displayErrorDetails): string
+	private function getErrorMessage(\Throwable $exception, int $statusCode, ServerRequestInterface $request): string
 	{
 		$reasonPhrase = $this->responseFactory->createResponse()->withStatus($statusCode)->getReasonPhrase();
-		$errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);
 
-		if ($displayErrorDetails) {
-			return sprintf(
-				'%s - %s',
-				$errorMessage,
-				$this->getExceptionText($exception)
-			);
+		return sprintf('%s %s - %s', $statusCode, $reasonPhrase, $this->visitorText($exception, $request));
+	}
+
+	/**
+	 * The exception's message as the visitor reads it: in the request's
+	 * language when the exception carries a translation key. Logs and Sentry
+	 * keep getMessage(), which stays English.
+	 */
+	private function visitorText(\Throwable $exception, ServerRequestInterface $request): string
+	{
+		if (!$exception instanceof TranslatableException || !$this->translator instanceof TranslationService) {
+			return $this->getExceptionText($exception);
 		}
 
-		return $errorMessage;
+		// RequestLocaleMiddleware puts the site's locale back in a finally
+		// block, before this handler runs, so apply the request's again here.
+		$locale = $this->translator->resolveLocale($request->getHeaderLine(RequestLocaleMiddleware::HEADER));
+		if ($locale === null) {
+			return $this->translator->trans($exception->translationKey(), $exception->translationParameters());
+		}
+
+		$previous = $this->translator->getLocale();
+		$this->translator->setLocale($locale);
+		try {
+			return $this->translator->trans($exception->translationKey(), $exception->translationParameters());
+		} finally {
+			$this->translator->setLocale($previous);
+		}
 	}
 
 	/**

@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => '{label} ist erforderlich - bitte laden Sie mindestens ein Bild hoch',
 	'form.select_one_or_more'   => 'Bitte wählen Sie mindestens eine Option aus.',
 	'form.select_option'        => 'Bitte wählen Sie eine Option aus.',
+	'form.clear_selection'      => 'Auswahl löschen',
 	'form.must_be_checked'      => 'Dieses Feld muss angehakt werden.',
 	'form.passwords_mismatch'   => 'Die Passwörter stimmen nicht überein.',
 	'form.list_required'        => 'Bitte fügen Sie der Liste mindestens einen Eintrag hinzu.',

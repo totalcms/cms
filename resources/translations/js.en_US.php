@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => '{label} is required - please upload at least one image',
 	'form.select_one_or_more'   => 'Please select at least one option.',
 	'form.select_option'        => 'Please select an option.',
+	'form.clear_selection'      => 'Clear selection',
 	'form.must_be_checked'      => 'This field must be checked.',
 	'form.passwords_mismatch'   => 'Passwords do not match.',
 	'form.list_required'        => 'Please add at least one item to the list.',

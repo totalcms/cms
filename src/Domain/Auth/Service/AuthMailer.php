@@ -29,12 +29,20 @@ readonly class AuthMailer
 	) {
 	}
 
-	public function sendPasswordReset(string $email, string $token, string $collection): OperationResult
+	/**
+	 * @param string $redirect Where the visitor started, already same-origin;
+	 *                         ResetPasswordAction reads it from the link.
+	 */
+	public function sendPasswordReset(string $email, string $token, string $collection, string $redirect = ''): OperationResult
 	{
 		$user     = $this->userValidator->findUserByEmail($email, $collection);
 		$userName = $user?->toArray()['name'] ?? '';
 
-		$resetUrl      = $this->adminUrl('/admin/reset-password/' . $token);
+		$resetUrl = $this->adminUrl('/admin/reset-password/' . $token);
+		if ($redirect !== '') {
+			$resetUrl .= '?' . http_build_query(['redirect' => $redirect]);
+		}
+
 		$expiryMinutes = (int)($this->config->auth['resetTokenExpiry'] ?? 30);
 		$mailerId      = (string)($this->config->auth['forgotPasswordMailerId'] ?? '');
 
@@ -46,6 +54,7 @@ readonly class AuthMailer
 				'resetUrl'      => $resetUrl,
 				'expiryMinutes' => $expiryMinutes,
 				'collection'    => $collection,
+				'redirect'      => $redirect,
 			]);
 		}
 

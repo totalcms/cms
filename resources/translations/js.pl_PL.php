@@ -62,6 +62,7 @@ return [
 	'form.required_images'      => 'Pole {label} jest wymagane - prześlij co najmniej jeden obraz',
 	'form.select_one_or_more'   => 'Wybierz co najmniej jedną opcję.',
 	'form.select_option'        => 'Wybierz opcję.',
+	'form.clear_selection'      => 'Wyczyść wybór',
 	'form.must_be_checked'      => 'To pole musi być zaznaczone.',
 	'form.passwords_mismatch'   => 'Hasła nie są takie same.',
 	'form.list_required'        => 'Dodaj do listy co najmniej jeden element.',

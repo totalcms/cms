@@ -58,6 +58,17 @@ final class AuthMailerTest extends TestCase
 		$this->assertTrue($this->mailer()->sendPasswordReset('a@b.c', 'tok', 'members')->success);
 	}
 
+	public function testResetLinkCarriesWhereTheVisitorStarted(): void
+	{
+		$this->users->method('findUserByEmail')->willReturn(null);
+		$this->twig->expects($this->once())->method('render')
+			->with('email/password-reset.twig', $this->callback(fn (array $v): bool => $v['resetUrl'] === 'https://example.com/cms/admin/reset-password/tok?redirect=%2Fes%2Fprivate'))
+			->willReturn('<p>reset</p>');
+		$this->emailSender->method('send')->willReturn(OperationResult::success('sent'));
+
+		$this->mailer()->sendPasswordReset('a@b.c', 'tok', 'members', '/es/private');
+	}
+
 	public function testResetGoesThroughTheCustomMailerWhenConfigured(): void
 	{
 		$this->config->auth['forgotPasswordMailerId'] = 'reset-mail';

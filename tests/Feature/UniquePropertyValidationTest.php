@@ -122,6 +122,24 @@ describe('Unique Property Validation', function (): void {
 			->assertSee('already exists');
 	});
 
+	test('it answers a duplicate in the language the request names', function (): void {
+		postJson('/api/collections/test-unique', [
+			'id'    => 'member-1',
+			'name'  => 'John Doe',
+			'email' => 'john@example.com',
+		])->assertOk();
+
+		$response = postJson('/api/collections/test-unique', [
+			'id'    => 'member-2',
+			'name'  => 'Jane Smith',
+			'email' => 'john@example.com',
+		], ['X-Locale' => 'es'])->assertBadRequest();
+
+		$message = json_decode((string)$response->getBody(), true)['error']['message'];
+		expect($message)->toContain('El valor «john@example.com» de Email ya existe en esta colección. Debe ser único.')
+			->not->toContain('must be unique');
+	});
+
 	test('it allows updating object keeping same email', function (): void {
 		// Save initial object
 		postJson('/api/collections/test-unique', [

@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Exception\UniqueValueException;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
@@ -303,7 +304,7 @@ class ObjectRepository extends StorageRepository
 
 			if ($duplicate !== null) {
 				$label = $propertyConfig['label'] ?? $property;
-				throw new \DomainException("{$label} must be unique. The value '{$searchValue}' already exists in this collection.");
+				throw new UniqueValueException((string)$label, $searchValue);
 			}
 		}
 	}

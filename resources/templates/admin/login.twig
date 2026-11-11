@@ -24,9 +24,11 @@
 	{% for message in flash.get('error') %}
 		{% set errorMessages = errorMessages|merge([message]) %}
 	{% endfor %}
+	{# A query value can arrive as a list (`?redirect[]=x`); that is no redirect. #}
+	{% set redirectParam = getData.redirect ?? null %}
 	{% set formSettings = {
 		collection    : collection ?? null,
-		redirect      : getData.redirect ?? null,
+		redirect      : redirectParam is iterable ? null : redirectParam,
 		flashMessages : errorMessages,
 		showPasskeys  : authCollection is not empty and cms.config('auth', 'usePasskeys') != false and cms.edition.can('passkeys')
 	} %}
