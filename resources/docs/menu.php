@@ -307,6 +307,7 @@ $menu = [
 			['title' => 'Licenses',          'path' => 'operations/licenses'],
 			['title' => 'Migrating from v1', 'path' => 'operations/migration-total-cms-one'],
 			['title' => 'Configuration',     'path' => 'operations/configuration'],
+			['title' => 'Total CMS Studio',  'path' => 'operations/studio'],
 		],
 	],
 ];

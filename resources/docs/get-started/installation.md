@@ -6,11 +6,14 @@ related:
   - get-started/your-first-site
   - operations/deployment
   - operations/nginx
+  - operations/studio
 ---
 
 # Installation
 
 You'll be up and running in under 5 minutes. The setup wizard handles everything after the initial command.
+
+On a Mac, [Total CMS Studio](docs/operations/studio) is quicker still. It's a free app with PHP and a web server built in, so you can make a working site from a starter in a few minutes without installing anything else.
 
 ## Composer install (recommended)
 
