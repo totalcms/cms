@@ -238,7 +238,8 @@ describe('DepotDropField', function (): void {
 			expect($html)->not->toContain('incoming')
 				->and($html)->not->toContain('publicUpload')
 				->and($html)->not->toContain('maxTotalMb')
-				->and($html)->not->toContain('777');
+				// As a whole number: the field's random hex ids contain "777" now and then.
+				->and($html)->not->toMatch('/\b777\b/');
 		}
 	});
 });
