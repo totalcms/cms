@@ -21,15 +21,17 @@ enum SocialCardReason: string
 	case LayersEmpty  = 'layers-empty';
 	case NoSiteKey    = 'no-site-key';
 	case HashMismatch = 'hash-mismatch';
+	case NeedsPro     = 'needs-pro';
 
 	/**
 	 * A card someone should look at before launch. Drawn, as-is and an unset
-	 * overlay are choices; a page that builds its own values is deliberate.
+	 * overlay are choices; a page that builds its own values is deliberate;
+	 * overlays below Pro are an edition, not a mistake.
 	 */
 	public function isProblem(): bool
 	{
 		return match ($this) {
-			self::Drawn, self::AsIs, self::NoOverlay, self::NoRecord => false,
+			self::Drawn, self::AsIs, self::NoOverlay, self::NoRecord, self::NeedsPro => false,
 			default => true,
 		};
 	}

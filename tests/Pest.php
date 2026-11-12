@@ -58,6 +58,8 @@ use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -1340,3 +1342,17 @@ function rateLimitCache(bool $working = true): CacheManager
 		}
 	};
 }
+
+/**
+ * An edition check that answers as the given edition would, for services
+ * built by hand. Tests that boot the app get Pro from FakeLicenseValidator.
+ */
+function editionsFor(Edition $edition = Edition::PRO): EditionFeatureService
+{
+	$editions = test()->createStub(EditionFeatureService::class);
+	$editions->method('can')->willReturnCallback(fn (EditionFeature $feature): bool => $edition->level() >= $feature->requiredEdition()->level());
+	$editions->method('getEdition')->willReturn($edition);
+
+	return $editions;
+}
+

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
 use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
+use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Support\Config;
@@ -13,7 +14,7 @@ use TotalCMS\Support\Config;
 // URL param, except below its size limit.
 
 /** @param array<string,mixed> $watermark */
-function renderParamsWith(array $watermark = [], array $imageworks = []): ImageRenderParams
+function renderParamsWith(array $watermark = [], array $imageworks = [], Edition $edition = Edition::PRO): ImageRenderParams
 {
 	$meta = test()->createMock(PropertyMetaResolver::class);
 	$meta->method('resolveSettings')->willReturn($watermark === [] ? [] : ['watermark' => $watermark]);
@@ -21,7 +22,7 @@ function renderParamsWith(array $watermark = [], array $imageworks = []): ImageR
 	$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->imageworks = $imageworks;
 
-	return new ImageRenderParams($meta, $config);
+	return new ImageRenderParams($meta, $config, editionsFor($edition));
 }
 
 function renderParamsImage(): ImageData
@@ -70,3 +71,16 @@ test('withoutWatermarks drops every mark param', function (): void {
 	expect(ImageRenderParams::withoutWatermarks(['w' => 300, 'mark' => 'logo.png', 'markw' => '100w', 'marktext' => 'x', 'marks' => [['mark' => 'a.png']], 'marksettings' => ['marktext' => 'y']]))
 		->toBe(['w' => 300]);
 });
+
+test('below Pro the layered marks are taken out, from the URL and the watermark', function (): void {
+	$watermark = ['mark' => 'logo.png', 'marks' => [['markfill' => '000000']]];
+	$url       = ['w' => 600, 'marks' => [['marktext' => 'Layer']], 'markfill' => '0b0f1a', 'marktext' => 'Title', 'marktextw' => '60w', 'marktextsize' => 40];
+
+	$standard = renderParamsWith($watermark, [], Edition::STANDARD)->clean($url, renderParamsImage(), renderParamsLocation());
+	$pro      = renderParamsWith($watermark)->clean($url, renderParamsImage(), renderParamsLocation());
+
+	expect($standard)->toBe(['w' => 600, 'marktext' => 'Title', 'marktextsize' => 40, 'marksettings' => ['mark' => 'logo.png']])
+		->and($pro['marks'])->toBe([['marktext' => 'Layer']])
+		->and($pro['marksettings'])->toBe($watermark);
+});
+

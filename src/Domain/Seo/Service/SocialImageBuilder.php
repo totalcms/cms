@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Seo\Service;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\ImageWorks\Exception\InvalidImageParamException;
 use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 use TotalCMS\Domain\Security\Encryption\SiteKey;
@@ -40,6 +42,12 @@ use TotalCMS\Support\Config;
  *
  * Only a record can have a card: a head given a literal array (a Stacks
  * page) or nothing has no record to rebuild it from, and keeps the plain image.
+ * Overlays are drawn with layered marks, a Pro feature: below Pro every page
+ * shares the plain image.
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") It decides a card from the
+ * record, the overlay, the site key and the edition; its data objects make up
+ * most of the count.
  */
 readonly class SocialImageBuilder
 {
@@ -56,6 +64,7 @@ readonly class SocialImageBuilder
 		private BuilderConfigService $builderConfig,
 		private Config $config,
 		private SocialCardRecorder $recorder,
+		private EditionFeatureService $editions,
 	) {
 	}
 
@@ -154,6 +163,11 @@ readonly class SocialImageBuilder
 	 */
 	private function layers(SeoContext $ctx, MetaPayload $meta): array
 	{
+		// Overlays are drawn with layered marks, a Pro feature.
+		if (!$this->editions->can(EditionFeature::IMAGE_LAYERS)) {
+			return [SocialCardReason::NeedsPro, [], null, '', null];
+		}
+
 		if ($ctx->fields->imageAsIs) {
 			return [SocialCardReason::AsIs, [], null, '', null];
 		}

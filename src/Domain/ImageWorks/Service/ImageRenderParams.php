@@ -6,6 +6,8 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Support\Config;
@@ -14,12 +16,15 @@ use TotalCMS\Support\Config;
  * Turns the params an ImageWorks request asks for into the params Glide
  * renders: presets resolved, sizes snapped and capped at the source, colors
  * and crops taken from the image, and the property's watermark enforced.
+ * Below Pro the layered marks are taken out (BasicMarks): the image still
+ * renders, with only the marks every edition draws.
  */
 final readonly class ImageRenderParams
 {
 	public function __construct(
 		private PropertyMetaResolver $metaResolver,
 		private Config $config,
+		private EditionFeatureService $editions,
 	) {
 	}
 
@@ -94,6 +99,10 @@ final readonly class ImageRenderParams
 		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
 			unset($schemaWatermarks['limit']);
 			$params['marksettings'] = $schemaWatermarks;
+		}
+
+		if (!$this->editions->can(EditionFeature::IMAGE_LAYERS)) {
+			$params = BasicMarks::only($params);
 		}
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide

@@ -50,6 +50,10 @@ enum EditionFeature: string
 	case API_KEYS      = 'api_keys';
 	case AUTOMATIONS   = 'automations';
 
+	// ImageWorks: the layer list, other records' images, color fills and
+	// wrapped text, and the share image overlays built on them
+	case IMAGE_LAYERS = 'image_layers';
+
 	/**
 	 * Get a human-readable label for this feature.
 	 */
@@ -77,6 +81,7 @@ enum EditionFeature: string
 			self::ACCESS_GROUPS          => 'Access Groups',
 			self::API_KEYS               => 'API Keys',
 			self::AUTOMATIONS            => 'Automations',
+			self::IMAGE_LAYERS           => 'Layered Image Marks',
 		};
 	}
 
@@ -136,6 +141,7 @@ enum EditionFeature: string
 			self::DATA_VIEWS,
 			self::API_KEYS,
 			self::AUTOMATIONS,
+			self::IMAGE_LAYERS,
 			self::BULK_MAILER => Edition::PRO,
 		};
 	}

@@ -64,7 +64,7 @@ function publicRouteGenerator(string $root, ?RenderSlots $slots = null, array $i
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams($meta, $config),
+		new ImageRenderParams($meta, $config, editionsFor()),
 		new ImageResponder($storage, $glide),
 		$glide,
 		$watermarks,

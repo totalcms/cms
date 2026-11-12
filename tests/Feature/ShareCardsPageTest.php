@@ -7,6 +7,8 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionRemover;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
 use function TotalCMS\Slim\Pest\get;
@@ -127,3 +129,15 @@ it('has every Share Cards string in every locale', function (): void {
 		}
 	}
 });
+
+it('is a Pro feature: below Pro the page is refused and so are its cards', function (): void {
+	$this->c->set(EditionFeatureService::class, editionsFor(Edition::STANDARD));
+
+	$page  = (string)get('/admin/utils/share-cards')->getBody();
+	$chunk = get('/admin/utils/share-cards/cards?section=blog&offset=0');
+
+	expect($page)->toContain('requires the Pro edition')
+		->and($page)->not->toContain('data-share-cards')
+		->and($chunk->getStatusCode())->toBe(403);
+});
+

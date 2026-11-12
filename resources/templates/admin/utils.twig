@@ -51,8 +51,7 @@
 		{ "title": "Collection Report",       "path": "collection-report" },
 		{ "title": "Collection Visualizer",   "path": "collection-visualizer" },
 		{ "title": "Object Visualizer",       "path": "object-visualizer" },
-		{ "title": "Share Cards",             "path": "share-cards" },
-	]
+	]|merge(cms.edition.can('image_layers') ? [{ "title": "Share Cards", "path": "share-cards" }] : [])
 },{
 	"title": "System",
 	"sub": [

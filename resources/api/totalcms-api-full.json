@@ -4592,6 +4592,7 @@
                 "x-tcms-route": "/admin/utils/{page:share-cards}/cards",
                 "x-tcms-action": "ShareCardsChunkAction",
                 "x-tcms-middleware": [
+                    "ImageLayersEditionMiddleware",
                     "UtilsAccessMiddleware",
                     "UserLocaleMiddleware",
                     "VersionCheckMiddleware",

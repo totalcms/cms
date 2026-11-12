@@ -364,6 +364,8 @@ A link shared on social media shows its `og:image`. Most pages have a photo ther
 
 The overlay is a list of [ImageWorks layers](docs/twig/imageworks#layered-marks), the same `marks` a template can pass to `cms.render.image()`. Text layers can take values from the record they are drawn for.
 
+> **Share image overlays are a Pro edition feature,** because they are drawn with layered marks. Below Pro, `cms.seo.head()` shares the plain image and the overlay settings are kept for when the site moves to Pro.
+
 ### Setting One Up
 
 Write the overlay as JSON in **Site SEO → Social Image Overlay**:

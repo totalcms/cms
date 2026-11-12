@@ -12,7 +12,7 @@ Total CMS is a one-time purchase, licensed per domain. There is no subscription:
 
 ## Editions
 
-Total CMS is sold in two editions. **Standard** covers a typical content site: blogs, galleries, file depots, forms that send email, access groups, passkeys, and a read-only MCP server for AI agents. **Pro** adds custom schemas, the external REST API with API keys, the OAuth server, Automations, Data Views, the bulk mailer, webhook form actions, and Algolia search.
+Total CMS is sold in two editions. **Standard** covers a typical content site: blogs, galleries, file depots, forms that send email, access groups, passkeys, and a read-only MCP server for AI agents. **Pro** adds custom schemas, the external REST API with API keys, the OAuth server, Automations, Data Views, the bulk mailer, webhook form actions, Algolia search, and layered ImageWorks marks with the share image overlays and Share Cards built on them.
 
 Every feature's documentation notes when it needs Pro. For the full side-by-side comparison and current prices, see the [pricing page](https://totalcms.co/pricing).
 

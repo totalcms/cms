@@ -13,6 +13,8 @@ related:
 
 Each card says why it looks the way it does. A card that fell back to the plain image says what stopped the [overlay](docs/site-builder/seo#share-image-overlays), and a filter shows only the cards that need a look.
 
+> **Share Cards is a Pro edition feature,** like the overlays it checks. Below Pro the page says it needs Pro, and it is left out of the Utilities menu.
+
 ## What It Shows
 
 The page has one section for the Site Builder pages, then one for each collection the Site Builder serves.

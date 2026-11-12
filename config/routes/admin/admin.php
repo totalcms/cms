@@ -59,6 +59,7 @@ use TotalCMS\Middleware\License\ApiKeysEditionMiddleware;
 use TotalCMS\Middleware\License\AutomationsEditionMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\License\DataViewsEditionMiddleware;
+use TotalCMS\Middleware\License\ImageLayersEditionMiddleware;
 use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
@@ -135,7 +136,7 @@ return function (App $app): void {
 		// not just access to some utility.
 		$group->get('/utils/{page:activity}/export', ActivityExportAction::class)->setName('admin-utils-activity-export')->add(UtilsAccessMiddleware::class);
 		$group->get('/utils/{page:logs}/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
-		$group->get('/utils/{page:share-cards}/cards', ShareCardsChunkAction::class)->setName('admin-utils-share-cards-cards')->add(UtilsAccessMiddleware::class);
+		$group->get('/utils/{page:share-cards}/cards', ShareCardsChunkAction::class)->setName('admin-utils-share-cards-cards')->add(UtilsAccessMiddleware::class)->add(ImageLayersEditionMiddleware::class);
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
 		$group->post('/utils/update/backup/delete', UpdateBackupDeleteAction::class)->setName('admin-update-backup-delete')->add(AdminOnlyMiddleware::class);

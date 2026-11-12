@@ -5,10 +5,15 @@ declare(strict_types=1);
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
+use TotalCMS\Domain\Seo\Data\SocialCardReason;
+use TotalCMS\Domain\Seo\Service\MetaBuilder;
+use TotalCMS\Domain\Seo\Service\SeoContextFactory;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
 use TotalCMS\Domain\Seo\Service\SocialImageMismatchLog;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -265,5 +270,22 @@ it('serves the card for a record whose own SEO card holds the image', function (
 
 	expect($response->getStatusCode())->toBe(200)
 		->and($response->getHeaderLine('Content-Type'))->toBe('image/jpeg');
+});
+
+it('shares the plain image below Pro: overlays are a Pro feature', function (): void {
+	($this->siteOverlay)(['marks' => [['marktext' => '${socialTitle}']]]);
+	$container = $this->app->getContainer();
+	$container->set(EditionFeatureService::class, editionsFor(Edition::STANDARD));
+
+	// A fresh builder: the head's own was built with the Pro license.
+	$ctx     = $container->get(SeoContextFactory::class)->make(($this->post)(), ['collection' => 'blog']);
+	$meta    = $container->get(MetaBuilder::class)->build($ctx);
+	$builder = $container->make(SocialImageBuilder::class);
+	$outcome = $builder->explain($ctx, $meta);
+
+	expect($outcome->reason)->toBe(SocialCardReason::NeedsPro)
+		->and($outcome->reason->isProblem())->toBeFalse()
+		->and($outcome->card?->hasOverlay())->toBeFalse()
+		->and($builder->apply($ctx, $meta)->ogImage)->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg');
 });
 

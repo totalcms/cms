@@ -70,7 +70,7 @@ function imageWorksGenerator(mixed $property, ?string &$captured = null): ImageG
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams(test()->createMock(PropertyMetaResolver::class), $config),
+		new ImageRenderParams(test()->createMock(PropertyMetaResolver::class), $config, editionsFor()),
 		new ImageResponder($filesystem, $glide),
 		$glide,
 		test()->createMock(WatermarkFactory::class),

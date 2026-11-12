@@ -10,6 +10,8 @@ use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
 use TotalCMS\Domain\Seo\Service\SocialImageMismatchLog;
 
@@ -34,6 +36,7 @@ readonly class ImageWorksSocialFetchAction
 		private ImageWorksImageFetchAction $imageFetch,
 		private CollectionFetcher $collections,
 		private SocialImageMismatchLog $mismatches,
+		private EditionFeatureService $editions,
 	) {
 	}
 
@@ -57,7 +60,8 @@ readonly class ImageWorksSocialFetchAction
 
 		// The record exists but drew no overlay for this hash: a stale or
 		// mis-signed share URL. Leave a trace (Share Cards shows the cause).
-		if ($hash !== '' && !$card->hasOverlay()) {
+		// Below Pro no card has an overlay, so there is nothing to trace.
+		if ($hash !== '' && !$card->hasOverlay() && $this->editions->can(EditionFeature::IMAGE_LAYERS)) {
 			$this->mismatches->note($args['collection'], $args['id'], $hash);
 		}
 

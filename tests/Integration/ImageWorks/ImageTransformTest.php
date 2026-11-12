@@ -71,7 +71,7 @@ function imageTransformGenerator(string $root, array $imageworks = []): ImageGen
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams($meta, $config),
+		new ImageRenderParams($meta, $config, editionsFor()),
 		new ImageResponder($storage, $glide),
 		$glide,
 		$watermarks,

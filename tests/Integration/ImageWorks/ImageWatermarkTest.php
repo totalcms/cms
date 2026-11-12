@@ -68,7 +68,7 @@ function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGen
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams($meta, $config),
+		new ImageRenderParams($meta, $config, editionsFor()),
 		new ImageResponder($storage, $glide),
 		$glide,
 		new WatermarkFactory($textFactory, $config, $storage, new ImageSourceResolver($fetcher), $loggerFactory),

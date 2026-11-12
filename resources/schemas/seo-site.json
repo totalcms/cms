@@ -64,7 +64,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"field": "json",
 			"label": "Social Image Overlay",
-			"help": "ImageWorks layers drawn over every share image, such as the page title. Leave empty for the plain image. See Site Builder → SEO in the docs.",
+			"help": "ImageWorks layers drawn over every share image, such as the page title. Leave empty for the plain image. Pro edition: below Pro the plain image is shared. See Site Builder → SEO in the docs.",
 			"placeholder": "{\"marks\": [{\"marktext\": \"${socialTitle}\", \"marktextw\": \"60w\", \"marktextsize\": \"6w\", \"marktextpos\": \"bottom-left\"}]}",
 			"default": {}
 		},

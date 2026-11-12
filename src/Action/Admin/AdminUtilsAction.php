@@ -28,6 +28,13 @@ readonly class AdminUtilsAction
 	 * the same keys whichever page renders. Builders return only the keys
 	 * they own; the merge below layers them over these.
 	 */
+	/** Utility pages gated to an edition. */
+	private const EDITION_PAGES = [
+		'import-rss'       => EditionFeature::RSS_IMPORT,
+		'import-wordpress' => EditionFeature::RSS_IMPORT,
+		'share-cards'      => EditionFeature::IMAGE_LAYERS,
+	];
+
 	private const DEFAULT_PAGE_DATA = [
 		'totalcms1DetectionData' => null,
 		'apiKeys'                => null,
@@ -77,10 +84,11 @@ readonly class AdminUtilsAction
 		$rawAction = $args['action'] ?? $query['action'] ?? '';
 		$action    = is_string($rawAction) ? $rawAction : '';
 
-		// Check edition for import pages (RSS, WordPress)
-		if (in_array($page, ['import-rss', 'import-wordpress'], true) && !$this->editionFeatures->can(EditionFeature::RSS_IMPORT)) {
+		// Utility pages that need an edition above the one running
+		$feature = self::EDITION_PAGES[$page] ?? null;
+		if ($feature instanceof EditionFeature && !$this->editionFeatures->can($feature)) {
 			return $this->twigRenderer->template($response, 'access-denied.twig', [
-				'message'  => EditionFeature::RSS_IMPORT->deniedMessage(),
+				'message'  => $feature->deniedMessage(),
 				'details'  => null,
 				'referrer' => $request->getHeaderLine('Referer') ?: null,
 			]);

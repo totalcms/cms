@@ -285,6 +285,8 @@ the same weight on a 400px thumbnail as on the 2,400px original.
   plate and padding included). When it still needs more than `marktextlines`
   lines (default 3), or a single word is wider than the box, the font size
   steps down until it fits. A title that fits on one line is left as it is.
+  Wrapping is a Pro edition feature: below Pro the text is drawn on one line
+  at `marktextsize`, as it was before wrapping.
 
 A relative size such as `6w` keeps a wrapped title the same shape at any
 image size, which matters when the image is smaller than the size you asked
@@ -404,6 +406,8 @@ A name that matches no file draws in Roboto without an error, so check the spell
 Each entry takes the same parameters as a single mark: `mark*` for a logo, an
 image or a [color fill](#color-fills), `marktext*` for text. That gives you a large headline over a small
 caption, two logos, or a profile photo beside a name, all in one render.
+
+> **Layered marks are a Pro edition feature.** That covers `marks`, images from other records (`markimage`, `markshape`), color fills (`markfill`, `markgradient`) and [wrapped text](#text-size). Below Pro, ImageWorks leaves those parameters out and draws the image without them, in a URL and in a schema's watermark settings alike, so a lapsed license gives plainer images, not broken ones. One logo and one line of text, tiled or not, work on every edition.
 
 ```twig
 {# A share card: big title, caption, address, and the logo #}
