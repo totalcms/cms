@@ -25,7 +25,7 @@ This downloads Total CMS into `my-site/`, then runs a short post-install script 
 
 ### What the install asks
 
-After Composer finishes downloading, you'll be prompted with up to three questions.
+After Composer finishes downloading, you'll be prompted with up to four questions.
 
 #### 1. Layout
 
@@ -49,13 +49,19 @@ A starter pre-seeds your install with sample pages and content so you have somet
 | business | Homepage with sections, about page, contact form |
 | portfolio | Project gallery layout with sample entries |
 
-Pick `none` if you want a fully empty install. You can run `tcms builder:init <starter>` later to apply one.
+Pick `none` for a bare install: no sample pages, no frontend pipeline and no git-managed templates, and the install asks nothing more. You can run `tcms builder:init <starter>` later to apply a starter, or `tcms builder:frontend` to add the pipeline. For a scripted install, the environment variables [below](#non-interactive-installs) can still turn either on.
 
-#### 3. Frontend pipeline *(root layout only)*
+#### 3. Frontend pipeline *(root layout with a starter)*
 
 Installs Vite at the project root to compile your site's CSS and JS into `public/assets/`. Builder layouts load the compiled files with `{{ cms.builder.css(...) }}`. It builds during the install if Node 20.19+ or 22.12+ is present. Without Node, the files are installed and you can build later.
 
 Default: **yes**. Answer no if you bring your own tooling. You can add it later with `tcms builder:frontend`.
+
+#### 4. Git-managed templates *(root layout with a starter)*
+
+Keeps the Site Builder templates in a `builder/` folder at the project root instead of in `tcms-data/`, so they live in your git repository. Total CMS sees the folder and treats it as the source of truth: the dashboard's template editor becomes read-only, and the Sync Manager leaves templates to git. See [Git-First Templates](docs/operations/git-first-templates).
+
+Default: **no**.
 
 ### After the install
 
@@ -74,12 +80,22 @@ For CI or scripted installs, set environment variables and the prompts use those
 |---|---|---|
 | `TCMS_LAYOUT` | root &#124; subpath | `root` |
 | `TCMS_STARTER` | none &#124; minimal &#124; blog &#124; business &#124; portfolio | `none` |
-| `TCMS_FRONTEND` | 0 &#124; 1 | `1` |
+| `TCMS_FRONTEND` | 0 &#124; 1 | `1`, or `0` when `TCMS_STARTER` is `none` |
+| `TCMS_GIT_TEMPLATES` | 0 &#124; 1 | `0` |
 
 ```bash
 TCMS_LAYOUT=root TCMS_STARTER=blog TCMS_FRONTEND=1 \
   composer create-project totalcms/totalcms my-site --no-interaction
 ```
+
+`--no-interaction` with no variables at all gives a bare root install: no starter, no frontend pipeline, templates in `tcms-data/`. Set every variable anyway in a script you keep, so it doesn't change if a default does:
+
+```bash
+TCMS_LAYOUT=root TCMS_STARTER=none TCMS_FRONTEND=0 TCMS_GIT_TEMPLATES=0 \
+  composer create-project totalcms/totalcms my-site --no-interaction
+```
+
+`TCMS_FRONTEND=1` and `TCMS_GIT_TEMPLATES=1` work without a starter too. Git-managed templates then start from the built-in default layout.
 
 ## Alternative: zip download
 
