@@ -5,93 +5,48 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Repository;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 
 final class OAuthReplayDetectorTest extends TestCase
 {
 	private const TTL = 2592000; // 30 days in seconds
 
+	private string $dir;
+
+	private OAuthReplayDetector $detector;
+
+	protected function setUp(): void
+	{
+		$this->dir      = sys_get_temp_dir() . '/oauth-replay-test-' . uniqid('', true);
+		$this->detector = new OAuthReplayDetector(new OAuthStateStore($this->dir), self::TTL);
+	}
+
+	protected function tearDown(): void
+	{
+		recursiveDelete($this->dir);
+	}
+
 	public function testRecordRotatedThenGetRotatedIdentityReturnsIdentity(): void
 	{
-		$hash     = hash('sha256', 'some-token-id');
-		$clientId = 'client-abc';
-		$userId   = 'user-xyz';
+		$hash = hash('sha256', 'some-token-id');
+		$this->detector->recordRotated($hash, 'client-abc', 'admin@example.test');
 
-		$cache = $this->createMock(CacheManager::class);
-
-		$cache->expects($this->once())
-			->method('storeComputedData')
-			->with(
-				'oauth.replay.' . $hash,
-				['client_id' => $clientId, 'user_id' => $userId],
-				self::TTL,
-			)
-			->willReturn(true);
-
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.replay.' . $hash)
-			->willReturn(['client_id' => $clientId, 'user_id' => $userId]);
-
-		$detector = new OAuthReplayDetector($cache, self::TTL);
-		$detector->recordRotated($hash, $clientId, $userId);
-
-		$identity = $detector->getRotatedIdentity($hash);
-
-		$this->assertNotNull($identity);
-		$this->assertSame($clientId, $identity['client_id']);
-		$this->assertSame($userId, $identity['user_id']);
+		$this->assertSame(
+			['client_id' => 'client-abc', 'user_id' => 'admin@example.test'],
+			$this->detector->getRotatedIdentity($hash),
+		);
 	}
 
 	public function testGetRotatedIdentityReturnsNullForUnseenHash(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-
-		$cache->expects($this->never())
-			->method('storeComputedData');
-
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.replay.unknown-hash')
-			->willReturn(null);
-
-		$detector = new OAuthReplayDetector($cache, self::TTL);
-
-		$this->assertNull($detector->getRotatedIdentity('unknown-hash'));
+		$this->assertNull($this->detector->getRotatedIdentity('unknown-hash'));
 	}
 
-	public function testIdentityValuesRoundTripExactly(): void
+	public function testGetRotatedIdentityReturnsNullWhenStoredDataMalformed(): void
 	{
-		$hash     = hash('sha256', 'round-trip-token');
-		$clientId = 'my-client-id-42';
-		$userId   = 'admin@example.test';
+		(new OAuthStateStore($this->dir))->put('replay', 'some-hash', ['only_client_id' => 'missing-user'], 60);
 
-		$cache = $this->createMock(CacheManager::class);
-
-		$cache->method('storeComputedData')->willReturn(true);
-		$cache->method('getComputedData')->willReturn(['client_id' => $clientId, 'user_id' => $userId]);
-
-		$detector = new OAuthReplayDetector($cache, self::TTL);
-		$detector->recordRotated($hash, $clientId, $userId);
-
-		$identity = $detector->getRotatedIdentity($hash);
-
-		$this->assertNotNull($identity);
-		$this->assertSame($clientId, $identity['client_id']);
-		$this->assertSame($userId, $identity['user_id']);
-	}
-
-	public function testGetRotatedIdentityReturnsNullWhenCacheDataMalformed(): void
-	{
-		$cache = $this->createMock(CacheManager::class);
-
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->willReturn(['only_client_id' => 'missing-user']);
-
-		$detector = new OAuthReplayDetector($cache, self::TTL);
-
-		$this->assertNull($detector->getRotatedIdentity('some-hash'));
+		$this->assertNull($this->detector->getRotatedIdentity('some-hash'));
 	}
 }

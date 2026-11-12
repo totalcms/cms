@@ -12,6 +12,7 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\TotalCMS;
 
@@ -21,15 +22,18 @@ beforeEach(function (): void {
 	$this->grantsTmpFile   = $prefix . '-grants.json';
 	$this->clientsTmpFile  = $prefix . '-clients.json';
 	$this->gcMarkerFile    = $prefix . '-marker';
+	$this->stateDir        = $prefix . '-state';
 	$this->grantRepository = new OAuthGrantRepository(...jsonStoreArgs($this->grantsTmpFile));
 	$this->clientPruner    = new OAuthClientPruner(
 		new OAuthClientRepository(...jsonStoreArgs($this->clientsTmpFile)),
 		$this->grantRepository,
+		new OAuthStateStore($this->stateDir),
 		$this->gcMarkerFile,
 	);
 });
 
 afterEach(function (): void {
+	recursiveDelete($this->stateDir);
 	foreach ([$this->grantsTmpFile, $this->clientsTmpFile, $this->gcMarkerFile] as $file) {
 		if (is_file($file)) {
 			unlink($file);
@@ -97,6 +101,7 @@ it('reports zero when no grants are expired', function (): void {
 	expect($tester->getStatusCode())->toBe(0);
 	expect($tester->getDisplay())->toContain('Pruned 0 expired OAuth grants');
 	expect($tester->getDisplay())->toContain('Pruned 0 stale dynamic clients');
+	expect($tester->getDisplay())->toContain('Pruned 0 expired OAuth state entries');
 });
 
 it('prunes expired grants and reports the count', function (): void {

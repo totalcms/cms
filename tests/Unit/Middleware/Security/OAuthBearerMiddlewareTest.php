@@ -12,46 +12,45 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Middleware\Security\OAuthBearerMiddleware;
 
 final class OAuthBearerMiddlewareTest extends TestCase
 {
+	private string $stateDir = '';
+
 	// ── Helpers ──────────────────────────────────────────────────────────────
 
 	/**
-	 * Build an OAuthRevocationList that always returns a fixed value without
-	 * touching the cache. OAuthRevocationList is `final` so we cannot use
-	 * createMock — instead we build it from a fake CacheManager.
+	 * An OAuthRevocationList over a throwaway state store, with every jti
+	 * mapped to true already revoked.
 	 *
 	 * @param array<string,bool> $revokedJtis  map of jti → isRevoked
 	 */
 	private function revocationList(array $revokedJtis = []): OAuthRevocationList
 	{
-		$cache = new class($revokedJtis) extends CacheManager {
-			/** @param array<string,bool> $revokedJtis */
-			public function __construct(private readonly array $revokedJtis)
-			{
-				// Skip real CacheManager constructor — no actual cache needed.
+		if ($this->stateDir === '') {
+			$this->stateDir = sys_get_temp_dir() . '/oauth-bearer-test-' . uniqid('', true);
+		}
+		$list = new OAuthRevocationList(new OAuthStateStore($this->stateDir), 3600);
+		foreach ($revokedJtis as $jti => $revoked) {
+			if ($revoked) {
+				$list->revoke($jti);
 			}
+		}
 
-			public function getComputedData(string $key): mixed
-			{
-				// The revocation list prefixes with 'oauth.revoked.jti.'
-				$jti = str_replace('oauth.revoked.jti.', '', $key);
+		return $list;
+	}
 
-				return $this->revokedJtis[$jti] ?? false;
-			}
-
-			public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
-			{
-				return true; // no-op in tests
-			}
-		};
-
-		return new OAuthRevocationList($cache, 3600);
+	protected function tearDown(): void
+	{
+		if ($this->stateDir !== '') {
+			recursiveDelete($this->stateDir);
+		}
 	}
 
 	/**
@@ -70,7 +69,35 @@ final class OAuthBearerMiddlewareTest extends TestCase
 		ResourceServer $resourceServer,
 		OAuthRevocationList $revocationList,
 	): OAuthBearerMiddleware {
-		return new OAuthBearerMiddleware($this->factoryReturning($resourceServer), $revocationList);
+		return new OAuthBearerMiddleware($this->factoryReturning($resourceServer), $revocationList, $this->clients());
+	}
+
+	/**
+	 * A client store holding the listed client ids.
+	 *
+	 * @param list<string> $ids
+	 */
+	private function clients(array $ids = ['client-1']): OAuthClientRepository
+	{
+		if ($this->stateDir === '') {
+			$this->stateDir = sys_get_temp_dir() . '/oauth-bearer-test-' . uniqid('', true);
+		}
+		$clients = new OAuthClientRepository(...jsonStoreArgs($this->stateDir . '/oauth-clients.json'));
+		foreach ($ids as $id) {
+			$clients->save(new OAuthClientData(
+				id: $id,
+				name: 'Claude',
+				secretHash: 'hash',
+				redirectUris: ['https://claude.ai/api/mcp/auth_callback'],
+				scopes: ['mcp:tools'],
+				isDynamic: true,
+				isConfidential: true,
+				createdAt: '2026-11-11T00:00:00Z',
+				createdBy: 'dynamic',
+			));
+		}
+
+		return $clients;
 	}
 
 	/**
@@ -189,6 +216,32 @@ final class OAuthBearerMiddlewareTest extends TestCase
 		$this->assertSame(['read', 'write'], $handler->received->getAttribute('oauth_scopes'));
 	}
 
+	// ── A token whose client was deleted → 401 ───────────────────────────────
+
+	public function testTokenOfADeletedClientReturns401(): void
+	{
+		// Deleting a client drops its grants; its access token, a JWT, must
+		// stop working then too, not when it expires an hour later.
+		$factory         = new Psr17Factory();
+		$incomingRequest = $factory->createServerRequest('POST', '/mcp')
+			->withHeader('Authorization', 'Bearer valid.jwt.token');
+
+		$resourceServer = $this->createMock(ResourceServer::class);
+		$resourceServer->method('validateAuthenticatedRequest')->willReturn($incomingRequest
+			->withAttribute('oauth_access_token_id', 'jti-live')
+			->withAttribute('oauth_client_id', 'deleted-client')
+			->withAttribute('oauth_scopes', ['mcp:tools']));
+
+		$handler    = $this->capturingHandler();
+		$middleware = new OAuthBearerMiddleware($this->factoryReturning($resourceServer), $this->revocationList(), $this->clients(['client-1']));
+		$response   = $middleware->process($incomingRequest, $handler);
+
+		$this->assertSame(401, $response->getStatusCode());
+		$this->assertStringContainsString('error="invalid_token"', $response->getHeaderLine('WWW-Authenticate'));
+		$this->assertStringContainsString('client removed', $response->getHeaderLine('WWW-Authenticate'));
+		$this->assertNull($handler->received);
+	}
+
 	// ── Test 5: Bearer present but keys missing → 401, no 500 ────────────────
 
 	public function testMissingKeysReturns401NotServerError(): void
@@ -202,7 +255,7 @@ final class OAuthBearerMiddlewareTest extends TestCase
 			->willThrowException(new \RuntimeException('Invalid key supplied'));
 
 		$handler    = $this->capturingHandler();
-		$middleware = new OAuthBearerMiddleware($factory, $this->revocationList());
+		$middleware = new OAuthBearerMiddleware($factory, $this->revocationList(), $this->clients());
 		$response   = $middleware->process($this->request('GET', 'Bearer any.jwt.token'), $handler);
 
 		$this->assertSame(401, $response->getStatusCode());

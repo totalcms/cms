@@ -141,8 +141,9 @@ final readonly class McpRequestAuthorizer
 			$method      = $body->method();
 			$operation   = $body->operation();
 			$isLifecycle = $body->isLifecycle();
+			$listsEmpty  = array_key_exists($operation, McpServerFactory::LISTED_EMPTY_WHEN_UNGRANTED);
 
-			if ($method !== '' && !$isLifecycle && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
+			if ($method !== '' && !$isLifecycle && !$listsEmpty && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
 				$clientId = $this->personaContext->getClientId();
 				$this->activityLogger->scopeRejected($clientId, $operation, $this->personaContext->getScopes());
 

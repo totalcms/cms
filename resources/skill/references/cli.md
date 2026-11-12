@@ -120,7 +120,7 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `mcp:status` — MCP server status: enabled, edition, tool counts per persona
 - `mcp:test <tool> --params='{"collection":"blog"}' [--persona=public]` — invoke an MCP tool locally and print the result
 - `oauth:setup` — generate the OAuth signing key pair (once per site)
-- `oauth:gc` — prune expired grants and stale self-registered clients
+- `oauth:gc` — prune expired grants, stale self-registered clients and expired OAuth state (codes, revocations)
 
 ### Maintenance
 - `repair:index <collection>` — rebuild `.index.json` + count from objects on disk (`--all` for every collection); `--check` only reports unreadable files, index/file drift and a wrong count, changes nothing, exits 1 on a problem

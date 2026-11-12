@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Repository;
 
-use TotalCMS\Domain\Cache\CacheManager;
-
 /**
  * Tracks refresh-token hashes that have been rotated out so a later
- * presentation of the same token signals theft. The cache TTL equals
- * the refresh-token lifetime — after that the hash falls out, but by
+ * presentation of the same token signals theft. Kept in OAuthStateStore,
+ * not the cache, which a cache clear would empty and blind the check. The
+ * TTL equals the refresh-token lifetime — after that the hash falls out, but by
  * then the token would be expired anyway.
  *
  * Independent of OAuthRevocationList (which tracks access-token jti's).
@@ -18,10 +17,10 @@ use TotalCMS\Domain\Cache\CacheManager;
  */
 final readonly class OAuthReplayDetector
 {
-	private const PREFIX = 'oauth.replay.';
+	private const BUCKET = 'replay';
 
 	public function __construct(
-		private CacheManager $cache,
+		private OAuthStateStore $state,
 		private int $refreshTokenTtlSeconds,
 	) {
 	}
@@ -33,8 +32,9 @@ final readonly class OAuthReplayDetector
 	 */
 	public function recordRotated(string $hash, string $clientId, string $userId): void
 	{
-		$this->cache->storeComputedData(
-			self::PREFIX . $hash,
+		$this->state->put(
+			self::BUCKET,
+			$hash,
 			['client_id' => $clientId, 'user_id' => $userId],
 			$this->refreshTokenTtlSeconds,
 		);
@@ -48,7 +48,7 @@ final readonly class OAuthReplayDetector
 	 */
 	public function getRotatedIdentity(string $hash): ?array
 	{
-		$data = $this->cache->getComputedData(self::PREFIX . $hash);
+		$data = $this->state->get(self::BUCKET, $hash);
 		if (!is_array($data) || !isset($data['client_id'], $data['user_id'])) {
 			return null;
 		}

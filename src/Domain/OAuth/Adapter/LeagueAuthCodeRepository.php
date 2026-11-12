@@ -6,28 +6,24 @@ namespace TotalCMS\Domain\OAuth\Adapter;
 
 use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
 use League\OAuth2\Server\Repositories\AuthCodeRepositoryInterface;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 
 /**
- * Bridges league's AuthCodeRepositoryInterface to T3's CacheManager.
+ * Bridges league's AuthCodeRepositoryInterface to T3's OAuthStateStore.
  *
- * Authorization codes are short-lived (10 minutes). T3 does not need to
- * inspect their payload — league encrypts the code before handing it to
- * the client and decrypts it on exchange. T3 only tracks existence vs.
- * revocation via a cache flag.
+ * T3 does not need a code's payload: league encrypts it into the code it
+ * hands the client and decrypts it on exchange. T3 tracks only whether the
+ * code is still unspent, from consent until the code expires.
  *
- * Cache key format: `oauth.authcode.{identifier}`
- * Value: `true`  = valid (not yet revoked)
- *        `false` = revoked
- * Missing entry   = treated as revoked (expired or never issued)
+ * A code with no entry reads as revoked: spent, expired, or never issued.
+ * See OAuthStateStore for why this is not kept in the cache.
  */
 final readonly class LeagueAuthCodeRepository implements AuthCodeRepositoryInterface
 {
-	private const PREFIX = 'oauth.authcode.';
-	private const TTL    = 600; // 10 minutes
+	private const BUCKET = 'authcodes';
 
 	public function __construct(
-		private CacheManager $cache,
+		private OAuthStateStore $state,
 	) {
 	}
 
@@ -38,29 +34,21 @@ final readonly class LeagueAuthCodeRepository implements AuthCodeRepositoryInter
 
 	public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
 	{
-		$this->cache->storeComputedData(
-			self::PREFIX . $authCodeEntity->getIdentifier(),
+		$this->state->put(
+			self::BUCKET,
+			$authCodeEntity->getIdentifier(),
 			true,
-			self::TTL,
+			$authCodeEntity->getExpiryDateTime()->getTimestamp() - time(),
 		);
 	}
 
 	public function revokeAuthCode(string $codeId): void
 	{
-		// Store a false sentinel — treats the code as permanently revoked
-		// for the remainder of the TTL window.
-		$this->cache->storeComputedData(
-			self::PREFIX . $codeId,
-			false,
-			self::TTL,
-		);
+		$this->state->delete(self::BUCKET, $codeId);
 	}
 
 	public function isAuthCodeRevoked(string $codeId): bool
 	{
-		$value = $this->cache->getComputedData(self::PREFIX . $codeId);
-
-		// Missing entry (null) or false sentinel → revoked.
-		return $value !== true;
+		return $this->state->get(self::BUCKET, $codeId) !== true;
 	}
 }

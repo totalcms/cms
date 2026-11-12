@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [3.6.10] - Unreleased
 
+### Security
+
+- **OAuth security fixes.** Update as soon as you can. **Behavior change:** deleting an OAuth client now stops its access tokens from the next request, instead of when they expire
+
 ### Added
 
 - **Logo watermarks can be tiled, like text watermarks.** `markpos: tile` repeats the logo over the whole image in offset rows, so no corner is left clean to crop out. It is faint (30% opacity) unless you set `markalpha`, and `markrepeat` (1 to 12, default 4) sets how many logos run across the image. It works in a schema's `watermark` settings and alongside a text mark, and the ImageWorks image builder offers it as a Tile position with a count. See [ImageWorks](https://docs.totalcms.co/twig/imageworks#tiled-logo-watermarks)
@@ -24,11 +28,16 @@ All notable changes to Total CMS will be documented in this file.
 - **A text mark's pixel `marktextsize` follows `dpr`**, like ImageWorks' other pixel sizes, so a `dpr: 2` render draws the text twice as large to match the doubled image.
 - **The MCP server runs on mcp/sdk 0.10.** An MCP session now belongs to the caller that opened it: a request carrying another API key's, OAuth client's or user's session id is answered 404, as if the session did not exist. Sessions open before the update are refused once, and clients reconnect on their own. A client can now end its session with `DELETE /mcp`, as the MCP spec asks of a client that is done; it used to be answered 405, so sessions stayed until they expired. Browser-based MCP clients on another origin now work past `initialize`: they can read the session id the server returns (it was hidden from them) and send the protocol headers every later request carries. See [CORS](https://docs.totalcms.co/mcp/server#cors-and-browser-ai-clients) A tool call whose `arguments` is not an object (`[]` instead of `{}`) is refused with `-32602`, as the spec requires. See [Security considerations](https://docs.totalcms.co/mcp/server#security-considerations)
 - **Extensions report MCP tool errors with `Mcp\Server\Exception\ToolCallException`.** The SDK moved the class from `Mcp\Exception\ToolCallException`. The old name keeps working as an alias for now, so existing extensions load as before; move to the new name before a later release removes it. See [Extending MCP](https://docs.totalcms.co/mcp/extensions#returning-data-and-reporting-errors)
+- **An MCP client is never told to reconnect for listing what its token wasn't granted.** When a user unticks scopes at consent, or a token is issued without `cms:admin` for a user who cannot grant it, listing prompts or resources the token lacks now returns an empty list. It used to be refused with 403 `insufficient_scope`, which claude.ai reads as a broken connector. Reading a prompt or resource still needs the scope. See [OAuth tokens and MCP scopes](https://docs.totalcms.co/apis/oauth#oauth-tokens-and-mcp-scopes)
+- **OAuth keeps its short-lived state in `tcms-data/.system/oauth-state/`.** The web server must be able to write there, as it already writes the rest of `.system/`. `tcms oauth:gc` and the daily OAuth sweep remove expired entries
 
 ### Fixed
 
 ### Fixed
 
+- **Connecting claude.ai and other OAuth clients no longer fails with "Authorization code has been revoked".** The code handed out at consent was kept in the cache, so the exchange a second later failed while dev mode was on, after a cache clear, and on hosts whose APCu isn't shared between PHP workers, which made the first connect fail on many shared hosts. See [Troubleshooting](https://docs.totalcms.co/apis/oauth#troubleshooting)
+- **MCP clients on the 2026-07-28 protocol can connect with an OAuth token.** Their opening `server/discover` request was refused with 403 for every token, as were `resources/unsubscribe` and `subscriptions/listen` for a token with `mcp:resources`
+- **The OAuth activity log names the user on `token.issued`, and the target on `group.rejected`.** `user_id` was always empty, so an issued token looked like it belonged to nobody, and a refused `create_object` didn't say which collection the client asked for. See [Event types](https://docs.totalcms.co/apis/oauth#event-types)
 - **Automations sync again.** A push from the Sync Manager or `tcms push` was refused for every automation, because only a signed-in super-admin could write automation code and a push signs in with an API key. A key with the Sync Manager permission now counts: only a super-admin can create one. Since an automation runs PHP on the server, keep that key as safe as an admin password
 - **Data Views no longer always show as newer on the live site in the Sync Manager.** Every scheduled rebuild records when it ran on the view, so a view rebuilt on production differed from your copy even when nobody had edited it. The build time and last error are now each site's own and are left out of a sync
 - **Forms built with `cms.form.builder()` follow the page's language.** A page that calls `cms.locale.set('es')` got Spanish labels from Total CMS everywhere but in its forms' own text, such as a date field's clear button, which stayed English. The forms were built without a translator

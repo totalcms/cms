@@ -9,6 +9,7 @@ use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 
 final class OAuthClientPrunerTest extends TestCase
@@ -16,6 +17,7 @@ final class OAuthClientPrunerTest extends TestCase
 	private string $tmpDir;
 	private OAuthClientRepository $clients;
 	private OAuthGrantRepository $grants;
+	private OAuthStateStore $state;
 	private OAuthClientPruner $pruner;
 
 	protected function setUp(): void
@@ -25,19 +27,13 @@ final class OAuthClientPrunerTest extends TestCase
 
 		$this->clients = new OAuthClientRepository(...jsonStoreArgs($this->tmpDir . '/oauth-clients.json'));
 		$this->grants  = new OAuthGrantRepository(...jsonStoreArgs($this->tmpDir . '/oauth-grants.json'));
-		$this->pruner  = new OAuthClientPruner($this->clients, $this->grants, $this->tmpDir . '/.oauth-gc');
+		$this->state   = new OAuthStateStore($this->tmpDir . '/oauth-state');
+		$this->pruner  = new OAuthClientPruner($this->clients, $this->grants, $this->state, $this->tmpDir . '/.oauth-gc');
 	}
 
 	protected function tearDown(): void
 	{
-		// Two globs: '*' skips dotfiles, and the GC marker is one.
-		$files = array_merge((array)glob($this->tmpDir . '/*'), (array)glob($this->tmpDir . '/.[!.]*'));
-		foreach ($files as $file) {
-			if (is_string($file)) {
-				@unlink($file);
-			}
-		}
-		@rmdir($this->tmpDir);
+		recursiveDelete($this->tmpDir);
 	}
 
 	private function makeClient(string $id, bool $isDynamic, string $createdAt): void
@@ -159,11 +155,18 @@ final class OAuthClientPrunerTest extends TestCase
 	{
 		$this->makeClient('dead-registration', true, $this->daysAgo(3));
 		$this->makeGrant('expired-orphan', 'gone-client', $this->daysAgo(5));
+		$this->state->put('revoked', 'live-jti', true, 3600);
+		$this->state->put('authcodes', 'old-code', true, 600);
+		foreach (glob($this->tmpDir . '/oauth-state/authcodes/*.json') ?: [] as $path) {
+			file_put_contents($path, (string)json_encode(['expires' => time() - 60, 'value' => true]));
+		}
 
 		$this->pruner->maybeRunDaily();
 
 		$this->assertNull($this->clients->find('dead-registration'));
 		$this->assertNull($this->grants->find('expired-orphan'));
+		$this->assertSame([], glob($this->tmpDir . '/oauth-state/authcodes/*.json'));
+		$this->assertTrue($this->state->get('revoked', 'live-jti'));
 		$this->assertFileExists($this->tmpDir . '/.oauth-gc');
 	}
 

@@ -144,14 +144,24 @@ final readonly class OAuthActivityLogger
 		]);
 	}
 
-	public function groupRejected(string $clientId, string $operation, string $userId): void
+	/**
+	 * $target is the collection or schema the caller was refused, when there
+	 * is one. Without it a refusal of create_object could not say which
+	 * collection the client asked for.
+	 */
+	public function groupRejected(string $clientId, string $operation, string $userId, string $target = ''): void
 	{
-		$this->logger->info('OAuth group-rejected request', [
+		$context = [
 			'type'      => 'group.rejected',
 			'client_id' => $clientId,
 			'operation' => $operation,
 			'user_id'   => $userId,
-		]);
+		];
+		if ($target !== '') {
+			$context['target'] = $target;
+		}
+
+		$this->logger->info('OAuth group-rejected request', $context);
 	}
 
 	public function dynamicRegistration(string $clientId, string $clientName, string $remoteAddr): void

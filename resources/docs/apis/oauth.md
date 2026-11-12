@@ -151,11 +151,14 @@ Scopes define what an authorized connection can do. When you create a static cli
 | `cms:write` | Create, update, and delete your content | `POST`, `PUT`, `PATCH`, `DELETE` on `/api/collections/*` and `/api/objects/*` | `create_object`, `update_object`, `patch_object` |
 | `cms:admin` | Administer your site | `/api/schemas/*`, `/api/cache/*`, `/api/extensions/*` | `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions` |
 | `mcp:tools` | Call AI tools on your site | (MCP only) | Authorizes all `tools/call` requests |
-| `mcp:resources` | Read addressable AI resources | (MCP only) | Authorizes `resources/read`, `resources/subscribe`, `resources/list` |
+| `mcp:resources` | Read addressable AI resources | (MCP only) | Authorizes `resources/read`, `resources/list`, `resources/templates/list`, `resources/subscribe`, `resources/unsubscribe`, `subscriptions/listen` |
+| `mcp:prompts` | List and retrieve AI prompts | (MCP only) | Authorizes `prompts/list`, `prompts/get` |
+
+Any `mcp:*` scope lets a client open a connection: `initialize`, and `server/discover` on the 2026-07-28 protocol revision.
 
 `cms:admin` implies `cms:read` and `cms:write` — you don't need all three for a full-access connection.
 
-**Scope is not the whole story — your access groups cap what a token can actually reach.** REST and MCP both resolve a token's real authority as *scope ∩ the approving user's access-group permissions*, the same groups you manage under **Admin → Access Groups**. A `cms:write` token approved by a blogger-group user can write only to the collections that group can create/update in the dashboard — not every collection `cms:write` mentions in the table above. A `cms:read` token similarly only reads what the user's groups (or, for MCP calls only, a collection's own public MCP exposure) allow — REST has no such exposure carve-out; `CollectionAccessMiddleware`'s Bearer branch is a plain group check regardless of the collection's `mcp.access` setting. **Admin (API keys, or a token elevated to the admin persona — see below) bypasses the group check**, same as it always has.
+**Scope is not the whole story — your access groups cap what a token can actually reach.** REST and MCP both resolve a token's real authority as *scope ∩ the approving user's access-group permissions*, the same groups you manage under **Admin → Access Groups**. A `cms:write` token approved by a blogger-group user can write only to the collections that group can create/update in the dashboard — not every collection `cms:write` mentions in the table above. A `cms:read` token similarly only reads what the user's groups (or, for MCP calls only, a collection's own public MCP exposure) allow — REST has no such exposure carve-out; `CollectionAccessMiddleware`'s Bearer branch is a plain group check regardless of the collection's `mcp.access` setting. **Admin (an API key with every path and every method, or a token elevated to the admin persona — see below) bypasses the group check**, same as it always has. A key limited to some paths or methods is checked like a group made from them; see [Keys over MCP](docs/apis/api-keys#keys-over-mcp).
 
 `cms:admin` is additionally **privilege-gated at issuance**: it lands in a token when the approving user is in the **admin group**, OR when their access groups grant at least one `schemas` / `collectionsMeta` / `utils` permission (the same permissions that unlock schema editing, collection settings, or utilities like cache-clearing in the dashboard). For anyone else the requested scope is silently narrowed away — the consent screen doesn't display it, and the issued token doesn't carry it. Holding the scope only grants what those groups actually allow: a non-admin schema editor's `cms:admin` token can create/update/delete the schemas their groups permit, and nothing else — it does not become a full-access admin token. See [Super-admin elevation](#super-admin-elevation) for the separate, stricter bar on becoming the unrestricted admin persona.
 
@@ -195,7 +198,7 @@ Navigate to **Admin → Utilities → OAuth Grants** (`/admin/utils/oauth-grants
 
 ### Delete a client
 
-In **Admin → Utilities → OAuth Clients**, click **Delete** on any client. This cascades — all active grants for that client are revoked and their tokens become invalid. The connected app cannot reconnect without a new client setup.
+In **Admin → Utilities → OAuth Clients**, click **Delete** on any client. This cascades — all active grants for that client are revoked, its refresh tokens stop working, and its access tokens are refused from the next request on rather than when they expire. The connected app cannot reconnect without a new client setup.
 
 ### Self-revocation
 
@@ -278,7 +281,7 @@ The JWT access tokens are RS256-signed. Resource servers (or auditing tools) can
 
 ## Pruning expired grants and stale clients with `oauth:gc`
 
-OAuth records accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk until explicitly pruned. Self-registered clients pile up even faster: MCP clients (claude.ai, Claude Desktop, Cursor) register a fresh client every time a connector is added, so failed or abandoned connection attempts each leave a client record behind. The `oauth:gc` command removes both:
+OAuth records accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk until explicitly pruned. Self-registered clients pile up even faster: MCP clients (claude.ai, Claude Desktop, Cursor) register a fresh client every time a connector is added, so failed or abandoned connection attempts each leave a client record behind. The `oauth:gc` command removes both, along with expired entries in `tcms-data/.system/oauth-state/`:
 
 ```bash
 tcms oauth:gc
@@ -291,11 +294,13 @@ Pruned 14 expired OAuth grants.
 Pruned 6 stale dynamic clients.
   - Anthropic/ClaudeAI (f9920001-…)
   ...
+Pruned 37 expired OAuth state entries (codes, revocations, rotated refresh tokens).
 ```
 
 The command is safe to run at any time:
 
 - **Grants** are removed only after their refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+- **OAuth state** — authorization codes waiting to be exchanged, revoked access-token ids, and the hashes of rotated refresh tokens kept to catch a replay — is removed only once it has expired.
 - **Clients** are removed only when they are self-registered (RFC 7591), at least 24 hours old, and hold no active grant. Every completed connection creates a grant at the consent screen, so a grantless dynamic client is a dead registration by definition; the 24-hour floor protects registrations whose user is still mid-consent. Manually configured clients are never touched.
 
 The same client cleanup is available in the admin: the **Remove stale clients** button on the OAuth Applications page (Utilities → OAuth Applications) prunes the self-registered list on demand.
@@ -329,10 +334,11 @@ Every OAuth lifecycle event is appended to `tcms-data/.system/logs/mcp.log` unde
 | `client.deleted` | INFO | A client is deleted from the admin (cascades to all grants) |
 | `consent.granted` | INFO | A user approves the consent screen |
 | `consent.denied` | INFO | A user clicks Deny on the consent screen |
-| `token.issued` | INFO | An access token is minted after code exchange |
+| `token.issued` | INFO | An access token is minted after code exchange; `user_id` is the user who approved it |
 | `token.refreshed` | INFO | An access token is renewed via refresh token |
 | `token.revoked` | INFO | A token is revoked via the admin or `POST /oauth/revoke` |
 | `scope.rejected` | INFO | A request is rejected because the token lacks the required scope |
+| `group.rejected` | INFO | A request is rejected because the caller's access groups (or a limited API key's paths and methods) do not grant it; `target` names the collection or schema when there is one |
 | `login_collection.rejected` | **WARNING** | A session from an auth collection other than the [login collection](#login-collection) tried to authorize a client |
 | `security.refresh_replay` | **WARNING** | A previously-used refresh token is presented — the entire grant chain is revoked immediately |
 | `security.rate_limit` | **WARNING** | The token endpoint or dynamic-registration rate limit is hit |
@@ -356,7 +362,7 @@ The `token_hash` in replay events is a truncated prefix of the presented token's
 
 Tokens issued through the OAuth flow authenticate requests to `/mcp` — but only if they carry an `mcp:*` scope. A token with `cms:read` alone, without any `mcp:*` scope, receives a **403** on every MCP request regardless of what collections it could otherwise reach.
 
-The token's scopes determine which tools and resources appear in `tools/list` and `resources/list`. An agent whose token lacks `mcp:resources` cannot subscribe to change notifications; one without `mcp:prompts` cannot invoke prompts. T3 filters the surface at session initialization so agents only see what their token can actually call.
+The token's scopes determine which tools, resources and prompts the server offers. An agent whose token lacks `mcp:resources` cannot read resources or subscribe to change notifications; one without `mcp:prompts` cannot get prompts. T3 filters the surface when it builds the server for each request, so agents only see what their token can actually call: listing resources or prompts the token was not granted returns an empty list rather than a 403, which some clients take as a broken connection.
 
 ### Super-admin elevation
 
@@ -411,6 +417,10 @@ T3 requires an exact string match including protocol (`https://`), hostname, pat
 **"Insufficient scope" (403)**
 
 The token was authorized with a narrower scope than the operation requires. Example: a token with only `cms:read` calling `query_collection` on an admin-access collection, or a token without `mcp:tools` calling a tool. Either re-authorize with broader scopes or check whether the collection's `mcp.access` setting is more restrictive than intended.
+
+**"Authorization code has been revoked" on the first connect**
+
+The token exchange found no record of the code it was handed. Before 3.6.10 codes were kept in the cache, so the exchange failed whenever dev mode was on, the cache was cleared between consent and exchange, or the host's APCu was not shared between PHP workers. Codes now live in `tcms-data/.system/oauth-state/`; on 3.6.10 or later this error means the code was already used, or the client took longer than `oauth.authCodeTtl` (10 minutes) to exchange it. Check that `tcms-data/.system/` is writable by the web server.
 
 **429 on `/oauth/token`**
 

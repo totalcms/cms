@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\OAuth\Service;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 
 /**
  * Removes stale RFC 7591 self-registered clients. MCP clients (claude.ai,
@@ -33,6 +34,7 @@ final readonly class OAuthClientPruner
 	public function __construct(
 		private OAuthClientRepository $clients,
 		private OAuthGrantRepository $grants,
+		private OAuthStateStore $state,
 		private string $gcMarkerPath,
 	) {
 	}
@@ -43,9 +45,10 @@ final readonly class OAuthClientPruner
 	 * marker-file throttle the job queue uses for its daily VACUUM. Sites
 	 * that never use OAuth never pay the cost because the hooks never fire.
 	 *
-	 * Runs the full sweep (expired grants + stale dynamic clients) at most
-	 * once per day. Failures are swallowed: hygiene must never break the
-	 * token issuance or registration that happened to trigger it.
+	 * Runs the full sweep (expired grants, stale dynamic clients, expired
+	 * OAuth state) at most once per day. Failures are swallowed: hygiene must
+	 * never break the token issuance or registration that happened to trigger
+	 * it.
 	 */
 	public function maybeRunDaily(): void
 	{
@@ -57,10 +60,22 @@ final readonly class OAuthClientPruner
 
 			$this->grants->pruneExpired();
 			$this->pruneStaleDynamicClients();
+			$this->pruneExpiredState();
 			touch($this->gcMarkerPath);
 		} catch (\Throwable) {
 			// Skipped this pass; the next qualifying request retries.
 		}
+	}
+
+	/**
+	 * Remove expired authorization codes, revocations and rotated refresh-token
+	 * hashes from the OAuth state store.
+	 *
+	 * @return int The number of entries removed
+	 */
+	public function pruneExpiredState(): int
+	{
+		return $this->state->pruneExpired();
 	}
 
 	/**

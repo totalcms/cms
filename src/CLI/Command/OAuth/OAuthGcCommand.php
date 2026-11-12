@@ -19,7 +19,7 @@ class OAuthGcCommand extends BaseCommand
 		parent::configure();
 		$this
 			->setName('oauth:gc')
-			->setDescription('Prune expired OAuth grants and stale self-registered clients');
+			->setDescription('Prune expired OAuth grants, stale self-registered clients and expired OAuth state');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -55,6 +55,13 @@ class OAuthGcCommand extends BaseCommand
 		foreach ($prunedClients as $client) {
 			$output->writeln(sprintf('  - %s (%s)', $client->name, $client->id));
 		}
+
+		$prunedState = $pruner->pruneExpiredState();
+		$output->writeln(sprintf(
+			'<info>Pruned %d expired OAuth state entr%s (codes, revocations, rotated refresh tokens).</info>',
+			$prunedState,
+			$prunedState === 1 ? 'y' : 'ies',
+		));
 
 		return 0;
 	}

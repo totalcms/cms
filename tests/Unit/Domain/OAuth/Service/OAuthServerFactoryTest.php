@@ -9,7 +9,6 @@ use League\OAuth2\Server\ResourceServer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAuthCodeRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientRepository;
@@ -19,6 +18,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
@@ -85,23 +85,20 @@ final class OAuthServerFactoryTest extends TestCase
 	/** @param array<string,mixed> $oauthOverrides */
 	private function makeFactory(array $oauthOverrides = []): OAuthServerFactory
 	{
-		$cache = $this->createMock(CacheManager::class);
+		$state = new OAuthStateStore($this->tmpDir . '/oauth-state');
 
 		$clientRepo  = new OAuthClientRepository(...jsonStoreArgs($this->tmpDir . '/clients.json'));
 		$grantRepo   = new OAuthGrantRepository(...jsonStoreArgs($this->tmpDir . '/grants.json'));
-		$revocation  = new OAuthRevocationList($cache, 3600);
+		$revocation  = new OAuthRevocationList($state, 3600);
 		$scopeReg    = new OAuthScopeRegistry();
 
-		$replayCache = $this->createMock(CacheManager::class);
-		$replayCache->method('storeComputedData')->willReturn(true);
-		$replayCache->method('getComputedData')->willReturn(null);
-		$replayDetector = new OAuthReplayDetector($replayCache, 2592000);
+		$replayDetector = new OAuthReplayDetector($state, 2592000);
 		$activityLogger = new OAuthActivityLogger(new NullLogger());
 
 		$leagueClients       = new LeagueClientRepository($clientRepo);
 		$leagueAccessTokens  = new LeagueAccessTokenRepository($revocation);
 		$leagueRefreshTokens = new LeagueRefreshTokenRepository($grantRepo, $replayDetector, $activityLogger);
-		$leagueAuthCodes     = new LeagueAuthCodeRepository($cache);
+		$leagueAuthCodes     = new LeagueAuthCodeRepository($state);
 		$leagueScopes        = new LeagueScopeRepository(
 			$scopeReg,
 			$clientRepo,

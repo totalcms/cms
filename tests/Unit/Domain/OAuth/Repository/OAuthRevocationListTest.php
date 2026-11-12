@@ -5,47 +5,45 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Repository;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 
 final class OAuthRevocationListTest extends TestCase
 {
 	private const TTL = 3600;
 
-	public function testRevokeThenCheckReturnsTrue(): void
+	private string $dir;
+
+	protected function setUp(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
+		$this->dir = sys_get_temp_dir() . '/oauth-revocation-test-' . uniqid('', true);
+	}
 
-		$cache->expects($this->once())
-			->method('storeComputedData')
-			->with('oauth.revoked.jti.test-jti-123', true, self::TTL)
-			->willReturn(true);
+	protected function tearDown(): void
+	{
+		recursiveDelete($this->dir);
+	}
 
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.revoked.jti.test-jti-123')
-			->willReturn(true);
-
-		$list = new OAuthRevocationList($cache, self::TTL);
+	public function testRevokedJtiIsRevoked(): void
+	{
+		$list = new OAuthRevocationList(new OAuthStateStore($this->dir), self::TTL);
 		$list->revoke('test-jti-123');
 
 		$this->assertTrue($list->isRevoked('test-jti-123'));
 	}
 
-	public function testUnrevokedReturnsFalse(): void
+	public function testUnrevokedJtiIsNotRevoked(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-
-		$cache->expects($this->never())
-			->method('storeComputedData');
-
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.revoked.jti.unknown-jti')
-			->willReturn(null);
-
-		$list = new OAuthRevocationList($cache, self::TTL);
+		$list = new OAuthRevocationList(new OAuthStateStore($this->dir), self::TTL);
 
 		$this->assertFalse($list->isRevoked('unknown-jti'));
+	}
+
+	public function testRevocationOutlivesTheInstanceThatWroteIt(): void
+	{
+		// A cache clear used to un-revoke a token; the list now lives on disk.
+		(new OAuthRevocationList(new OAuthStateStore($this->dir), self::TTL))->revoke('jti-kept');
+
+		$this->assertTrue((new OAuthRevocationList(new OAuthStateStore($this->dir), self::TTL))->isRevoked('jti-kept'));
 	}
 }

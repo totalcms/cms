@@ -62,10 +62,13 @@ readonly class OAuthTokenAction
 				$parsedBody = (array)($request->getParsedBody() ?? []);
 				$clientId   = (string)($parsedBody['client_id'] ?? '');
 				$grantType  = (string)($parsedBody['grant_type'] ?? '');
-				$scopes     = $this->scopesFromJwt((string)$payload['access_token']);
+				$claims     = $this->claimsFromJwt((string)$payload['access_token']);
+				$scopes     = $this->scopesFrom($claims);
 
 				if ($grantType === 'authorization_code') {
-					$this->activityLogger->tokenIssued($clientId, '', $scopes);
+					// The token's subject is the user who approved it. The log
+					// used to write '', which read as "issued to nobody".
+					$this->activityLogger->tokenIssued($clientId, is_string($claims['sub'] ?? null) ? $claims['sub'] : '', $scopes);
 				} elseif ($grantType === 'refresh_token') {
 					// grant_id is not surfaced in the league response body; pass '' as
 					// a known limitation — improving this would require hooking into
@@ -84,18 +87,19 @@ readonly class OAuthTokenAction
 	}
 
 	/**
-	 * Granted scopes, read from the issued access token's `scopes` claim.
+	 * The claims of the issued access token: its `scopes` and its `sub`, the
+	 * user who approved it.
 	 *
-	 * The response body carries no scope field, but the access token is a JWS
-	 * whose payload league builds with `->withClaim('scopes', …)`. Decoding the
+	 * The response body carries neither, but the access token is a JWS whose
+	 * payload league builds with `->withClaim('scopes', …)`. Decoding the
 	 * payload segment is read-only and needs no key: this is for the audit line,
 	 * not for a trust decision, and the token was just minted by this process.
-	 * Returns an empty list rather than throwing — a missing audit detail must
+	 * Returns an empty array rather than throwing — a missing audit detail must
 	 * never break a successful token exchange.
 	 *
-	 * @return list<string>
+	 * @return array<string,mixed>
 	 */
-	private function scopesFromJwt(string $jwt): array
+	private function claimsFromJwt(string $jwt): array
 	{
 		$segments = explode('.', $jwt);
 		if (count($segments) !== 3) {
@@ -108,7 +112,18 @@ readonly class OAuthTokenAction
 		}
 
 		$claims = json_decode($payload, true);
-		if (!is_array($claims) || !is_array($claims['scopes'] ?? null)) {
+
+		return is_array($claims) ? $claims : [];
+	}
+
+	/**
+	 * @param array<string,mixed> $claims
+	 *
+	 * @return list<string>
+	 */
+	private function scopesFrom(array $claims): array
+	{
+		if (!is_array($claims['scopes'] ?? null)) {
 			return [];
 		}
 

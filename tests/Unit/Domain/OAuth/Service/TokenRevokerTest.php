@@ -11,11 +11,11 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\OAuth\Service\TokenRevoker;
@@ -32,7 +32,7 @@ final class TokenRevokerTest extends TestCase
 
 	private string $tmp = '';
 	private OAuthGrantRepository $grants;
-	private CacheManager&MockObject $cache;
+	private OAuthRevocationList $revocations;
 	private LoggerInterface&MockObject $log;
 	private TokenRevoker $revoker;
 
@@ -42,14 +42,14 @@ final class TokenRevokerTest extends TestCase
 		mkdir($this->tmp, 0755, true);
 
 		$this->grants = new OAuthGrantRepository(...jsonStoreArgs($this->tmp . '/grants.json'));
-		$this->cache  = $this->createMock(CacheManager::class);
+		$this->revocations = new OAuthRevocationList(new OAuthStateStore($this->tmp . '/oauth-state'), 3600);
 		$this->log    = $this->createMock(LoggerInterface::class);
 		$factory      = $this->createMock(OAuthServerFactory::class);
 		$factory->method('encryptionKey')->willReturn(self::KEY);
 
 		$this->revoker = new TokenRevoker(
 			$this->grants,
-			new OAuthRevocationList($this->cache, 3600),
+			$this->revocations,
 			new OAuthActivityLogger($this->log),
 			$factory,
 		);
@@ -108,24 +108,23 @@ final class TokenRevokerTest extends TestCase
 
 	public function testGarbageIsANoOp(): void
 	{
-		$this->cache->expects($this->never())->method('storeComputedData');
 		$this->log->expects($this->never())->method('info');
 
 		$this->assertNull($this->revoker->revoke('not-a-token', '', $this->client()));
+		$this->assertDirectoryDoesNotExist($this->tmp . '/oauth-state');
 	}
 
 	public function testAnAccessTokenForTheClientLandsOnTheRevocationList(): void
 	{
-		$this->cache->expects($this->once())->method('storeComputedData')->with($this->stringContains('jti-9'), true, 3600);
 		$this->expectRevokedLog('access_token', 'jti-9');
 
 		$this->assertSame('access_token', $this->revoker->revoke($this->accessToken('client-a'), '', $this->client()));
+		$this->assertTrue($this->revocations->isRevoked('jti-9'));
 	}
 
 	public function testAnAccessTokenIssuedToAnotherClientIsANoOp(): void
 	{
-		$this->cache->expects($this->never())->method('storeComputedData');
-
 		$this->assertNull($this->revoker->revoke($this->accessToken('client-b'), 'access_token', $this->client()));
+		$this->assertFalse($this->revocations->isRevoked('jti-9'));
 	}
 }

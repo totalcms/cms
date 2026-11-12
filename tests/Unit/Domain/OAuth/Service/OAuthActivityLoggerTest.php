@@ -258,4 +258,32 @@ final class OAuthActivityLoggerTest extends TestCase
 		$sut = new OAuthActivityLogger($logger);
 		$sut->tokenFailed('c-9', 'refresh_token', 'invalid_client', null, '');
 	}
+
+	public function testGroupRejectedNamesTheRefusedTarget(): void
+	{
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('info')
+			->with(
+				'OAuth group-rejected request',
+				$this->callback(
+					static fn (array $ctx): bool => $ctx['type'] === 'group.rejected'
+					&& $ctx['client_id'] === 'apikey:k-1'
+					&& $ctx['operation'] === 'create_object'
+					&& $ctx['target'] === 'superblog'
+				),
+			);
+
+		(new OAuthActivityLogger($logger))->groupRejected('apikey:k-1', 'create_object', '', 'superblog');
+	}
+
+	public function testGroupRejectedWithoutATargetLeavesTheKeyOut(): void
+	{
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('info')
+			->with('OAuth group-rejected request', $this->callback(static fn (array $ctx): bool => !array_key_exists('target', $ctx)));
+
+		(new OAuthActivityLogger($logger))->groupRejected('c-1', 'list_schemas', 'u-1');
+	}
 }

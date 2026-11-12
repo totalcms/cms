@@ -5,6 +5,8 @@ declare(strict_types=1);
 use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Support\Config;
 
@@ -120,6 +122,20 @@ test('an OAuth bearer request is refused even alongside an admin session', funct
 	$factory = $this->createMock(OAuthServerFactory::class);
 	$factory->method('buildResourceServer')->willReturn($resource);
 	$this->app->getContainer()->set(OAuthServerFactory::class, $factory);
+
+	// The bearer check refuses a token whose client no longer exists, so the
+	// probe's client has to be registered for the request to reach the route.
+	$this->app->getContainer()->get(OAuthClientRepository::class)->save(new OAuthClientData(
+		id: 'probe-client',
+		name: 'Probe',
+		secretHash: 'hash',
+		redirectUris: ['https://probe.test/cb'],
+		scopes: ['cms:admin'],
+		isDynamic: false,
+		isConfidential: true,
+		createdAt: gmdate('c'),
+		createdBy: 'test',
+	));
 
 	$response = post('/api/extensions/install', [], ['Authorization' => 'Bearer probe-token']);
 

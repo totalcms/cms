@@ -5,45 +5,47 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Adapter;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 
 final class LeagueAccessTokenRepositoryTest extends TestCase
 {
 	private const TTL = 3600;
 
+	private string $dir;
+
+	protected function setUp(): void
+	{
+		$this->dir = sys_get_temp_dir() . '/oauth-access-token-test-' . uniqid('', true);
+	}
+
+	protected function tearDown(): void
+	{
+		recursiveDelete($this->dir);
+	}
+
+	private function revocationList(): OAuthRevocationList
+	{
+		return new OAuthRevocationList(new OAuthStateStore($this->dir), self::TTL);
+	}
+
 	public function testPersistNewAccessTokenIsNoOp(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-		$cache->expects($this->never())->method('storeComputedData');
+		$adapter = new LeagueAccessTokenRepository($this->revocationList());
 
-		$revocationList = new OAuthRevocationList($cache, self::TTL);
-		$adapter        = new LeagueAccessTokenRepository($revocationList);
-
-		$entity = new LeagueAccessTokenEntity();
-		// Should not throw and should not interact with cache.
-		$adapter->persistNewAccessToken($entity);
+		// Should not throw and should write nothing: tokens are JWTs.
+		$adapter->persistNewAccessToken(new LeagueAccessTokenEntity());
+		$this->assertDirectoryDoesNotExist($this->dir);
 	}
 
 	public function testRevokeAndIsRevokedRoundTrip(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-		$cache->expects($this->once())
-			->method('storeComputedData')
-			->with('oauth.revoked.jti.tok-abc', true, self::TTL)
-			->willReturn(true);
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.revoked.jti.tok-abc')
-			->willReturn(true);
-
-		$revocationList = new OAuthRevocationList($cache, self::TTL);
-		$adapter        = new LeagueAccessTokenRepository($revocationList);
+		$adapter = new LeagueAccessTokenRepository($this->revocationList());
 
 		$adapter->revokeAccessToken('tok-abc');
 		$this->assertTrue($adapter->isAccessTokenRevoked('tok-abc'));
@@ -51,24 +53,14 @@ final class LeagueAccessTokenRepositoryTest extends TestCase
 
 	public function testIsAccessTokenRevokedReturnsFalseForFreshToken(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-		$cache->expects($this->once())
-			->method('getComputedData')
-			->with('oauth.revoked.jti.fresh-tok')
-			->willReturn(null);
-
-		$revocationList = new OAuthRevocationList($cache, self::TTL);
-		$adapter        = new LeagueAccessTokenRepository($revocationList);
+		$adapter = new LeagueAccessTokenRepository($this->revocationList());
 
 		$this->assertFalse($adapter->isAccessTokenRevoked('fresh-tok'));
 	}
 
 	public function testGetNewTokenReturnsEntityWithCorrectClientAndScopes(): void
 	{
-		$cache = $this->createMock(CacheManager::class);
-
-		$revocationList = new OAuthRevocationList($cache, self::TTL);
-		$adapter        = new LeagueAccessTokenRepository($revocationList);
+		$adapter = new LeagueAccessTokenRepository($this->revocationList());
 
 		$clientData = new OAuthClientData(
 			id: 'c-1',

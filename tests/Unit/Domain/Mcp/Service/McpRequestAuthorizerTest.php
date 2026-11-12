@@ -268,11 +268,27 @@ final class McpRequestAuthorizerTest extends TestCase
 		);
 		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 
-		// No mcp:resources scope for a session: the gate answers 403 insufficient_scope.
-		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('resources/list'));
+		// No mcp:resources scope for a session: reading one answers 403
+		// insufficient_scope.
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('resources/read'));
 
 		self::assertInstanceOf(ResponseInterface::class, $result);
 		self::assertSame(403, $result->getStatusCode());
+	}
+
+	public function testSessionCallerListsNoResourcesInsteadOfARefusal(): void
+	{
+		$this->mcpAuth->method('resolveCaller')->willReturn(
+			new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::Session, 'members:member-1'),
+		);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
+
+		// The list passes the gate: the server built for a caller without
+		// mcp:resources registers none, so it comes back empty. A 403 here made
+		// claude.ai ask the user to reconnect.
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('resources/list'));
+
+		self::assertSame(McpPersona::AUTHENTICATED, $result);
 	}
 
 	public function testApiKeyCallerRecordsItsKindAndNothingElseChanges(): void

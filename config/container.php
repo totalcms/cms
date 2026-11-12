@@ -167,6 +167,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
+use TotalCMS\Domain\OAuth\Repository\OAuthStateStore;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -1295,18 +1296,25 @@ return [
 	OAuthClientPruner::class => fn (ContainerInterface $container): OAuthClientPruner => new OAuthClientPruner(
 		$container->get(OAuthClientRepository::class),
 		$container->get(OAuthGrantRepository::class),
+		$container->get(OAuthStateStore::class),
 		$container->get(Config::class)->datadir . '/.system/.oauth-gc',
 	),
 
-	// Both caches must hold an entry as long as the token it tracks can live,
+	// Codes, revocations and rotated refresh tokens, outside the cache (see the
+	// class docblock): a cache clear must not un-revoke a token.
+	OAuthStateStore::class => fn (ContainerInterface $container): OAuthStateStore => new OAuthStateStore(
+		$container->get(Config::class)->datadir . '/.system/oauth-state',
+	),
+
+	// Both lists must hold an entry as long as the token it tracks can live,
 	// so their TTLs follow the configured lifetimes (see OAuthTtl).
 	OAuthRevocationList::class => fn (ContainerInterface $container): OAuthRevocationList => new OAuthRevocationList(
-		$container->get(CacheManager::class),
+		$container->get(OAuthStateStore::class),
 		OAuthTtl::seconds($container->get(Config::class)->oauth['accessTokenTtl'] ?? null, 3600),
 	),
 
 	OAuthReplayDetector::class => fn (ContainerInterface $container): OAuthReplayDetector => new OAuthReplayDetector(
-		$container->get(CacheManager::class),
+		$container->get(OAuthStateStore::class),
 		refreshTokenTtlSeconds: OAuthTtl::seconds($container->get(Config::class)->oauth['refreshTokenTtl'] ?? null, 30 * 24 * 3600),
 	),
 

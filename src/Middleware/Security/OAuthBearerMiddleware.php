@@ -12,6 +12,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 
@@ -30,15 +32,17 @@ use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
  * middleware in the chain (ApiKeyAuthenticator, session auth) handle those.
  * The presence of the Bearer header is the sole trigger.
  *
- * On Bearer failure (invalid signature, expired, revoked jti), returns
- * RFC 6750-compliant 401 with WWW-Authenticate: Bearer realm="T3",
- * error="invalid_token" and the exception's JSON error body.
+ * On Bearer failure (invalid signature, expired, revoked jti, or a client
+ * that has since been deleted), returns RFC 6750-compliant 401 with
+ * WWW-Authenticate: Bearer realm="T3", error="invalid_token" and a JSON
+ * error body.
  */
 readonly class OAuthBearerMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private OAuthServerFactory $serverFactory,
 		private OAuthRevocationList $revocationList,
+		private OAuthClientRepository $clients,
 	) {
 	}
 
@@ -80,18 +84,31 @@ readonly class OAuthBearerMiddleware implements MiddlewareInterface
 
 		$jti = (string)$validated->getAttribute('oauth_access_token_id', '');
 		if ($jti !== '' && $this->revocationList->isRevoked($jti)) {
-			return (new Response(401))
-				->withHeader('Content-Type', 'application/json')
-				->withHeader(
-					'WWW-Authenticate',
-					'Bearer realm="T3", error="invalid_token", error_description="token revoked"',
-				)
-				->withBody(Stream::create(json_encode([
-					'error'             => 'invalid_token',
-					'error_description' => 'The access token has been revoked.',
-				]) ?: '{}'));
+			return $this->invalidToken('token revoked', 'The access token has been revoked.');
+		}
+
+		// Deleting a client drops its grants, so its refresh token stops
+		// working, but an access token is a self-contained JWT and would
+		// otherwise stay good until it expires (an hour by default).
+		$clientId = (string)$validated->getAttribute('oauth_client_id', '');
+		if (!$this->clients->find($clientId) instanceof OAuthClientData) {
+			return $this->invalidToken('client removed', 'The OAuth client this token was issued to no longer exists.');
 		}
 
 		return $handler->handle($validated);
+	}
+
+	private function invalidToken(string $reason, string $description): ResponseInterface
+	{
+		return (new Response(401))
+			->withHeader('Content-Type', 'application/json')
+			->withHeader(
+				'WWW-Authenticate',
+				sprintf('Bearer realm="T3", error="invalid_token", error_description="%s"', $reason),
+			)
+			->withBody(Stream::create(json_encode([
+				'error'             => 'invalid_token',
+				'error_description' => $description,
+			]) ?: '{}'));
 	}
 }

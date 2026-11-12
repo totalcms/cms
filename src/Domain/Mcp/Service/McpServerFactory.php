@@ -10,6 +10,7 @@ use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\JsonRpc\MessageInterface;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\Builder;
 use Mcp\Server\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
@@ -56,6 +57,22 @@ use TotalCMS\Support\Version;
  */
 readonly class McpServerFactory
 {
+	/**
+	 * List methods the scope gate lets through for a token that lacks the
+	 * scope, because build() registers nothing of that kind for it and the
+	 * list comes back empty. Refusing them answered 403 insufficient_scope,
+	 * which claude.ai reads as a broken connector and asks the user to
+	 * reconnect (a support case, 2026-11-11). Reading or getting an item still
+	 * needs the scope.
+	 *
+	 * @var array<string,string> method => the scope build() registers it under
+	 */
+	public const LISTED_EMPTY_WHEN_UNGRANTED = [
+		'resources/list'           => 'mcp:resources',
+		'resources/templates/list' => 'mcp:resources',
+		'prompts/list'             => 'mcp:prompts',
+	];
+
 	public function __construct(
 		private ToolRegistry $toolRegistry,
 		private ResourceRegistry $resourceRegistry,
@@ -162,8 +179,36 @@ readonly class McpServerFactory
 			return $builder->build();
 		}
 
+		// A token the user narrowed at consent gets nothing it was not granted,
+		// the same way it gets no tool it cannot call, so listing an ungranted
+		// kind answers an empty list (see LISTED_EMPTY_WHEN_UNGRANTED). The SDK
+		// may still name the kind in its capabilities: it advertises every kind
+		// once list-change notifications are on.
+		if ($this->grantsCapability($persona, 'mcp:resources')) {
+			$this->registerResources($builder, $persona);
+		}
+		if ($this->grantsCapability($persona, 'mcp:prompts')) {
+			$this->registerPrompts($builder, $persona);
+		}
+
+		return $builder->build();
+	}
+
+	/**
+	 * Whether the caller's connection was granted $scope. Only an
+	 * AUTHENTICATED caller carries scopes; admin and anonymous callers are
+	 * bounded by their persona instead.
+	 */
+	private function grantsCapability(McpPersona $persona, string $scope): bool
+	{
+		return $persona !== McpPersona::AUTHENTICATED
+			|| in_array($scope, $this->scopeRegistry->expand($this->personaContext->getScopes()), true);
+	}
+
+	private function registerResources(Builder $builder, McpPersona $persona): void
+	{
 		// $this->personaContext->getAuthority() mirrors the ToolRegistry call
-		// above (Task 10): an AUTHENTICATED caller's resolved UserAuthority
+		// in build() (Task 10): an AUTHENTICATED caller's resolved UserAuthority
 		// additionally narrows collection-scoped resources to what their
 		// access groups grant `read` on, so resources/list matches the
 		// call-time gate CollectionResource::read() enforces.
@@ -210,7 +255,10 @@ readonly class McpServerFactory
 				mimeType: $template->mimeType,
 			);
 		}
+	}
 
+	private function registerPrompts(Builder $builder, McpPersona $persona): void
+	{
 		// Register prompts (Phase 5 Chunk B).
 		// discover() returns cached results on subsequent calls within one request.
 		// The persona filter hides inaccessible prompts from prompts/list; the
@@ -223,8 +271,6 @@ readonly class McpServerFactory
 		// Extension-registered prompts: collection-stored prompts always win a
 		// name collision (soft deny), and the same persona filter applies.
 		$this->promptRegistrar->registerExtensionPrompts($builder, $this->extensions->getAllMcpPrompts(), $prompts, $persona);
-
-		return $builder->build();
 	}
 
 	/**
@@ -480,7 +526,7 @@ readonly class McpServerFactory
 				}
 
 				if (!$satisfied) {
-					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId(), $target);
 
 					throw new ToolCallException(sprintf(
 						"Your account's groups do not grant %s on '%s'.",
