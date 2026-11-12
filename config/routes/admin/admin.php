@@ -33,6 +33,7 @@ use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStartAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStopAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
+use TotalCMS\Action\Admin\ShareCardsChunkAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
 use TotalCMS\Action\Admin\UpdateBackupDeleteAction;
@@ -134,6 +135,7 @@ return function (App $app): void {
 		// not just access to some utility.
 		$group->get('/utils/{page:activity}/export', ActivityExportAction::class)->setName('admin-utils-activity-export')->add(UtilsAccessMiddleware::class);
 		$group->get('/utils/{page:logs}/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
+		$group->get('/utils/{page:share-cards}/cards', ShareCardsChunkAction::class)->setName('admin-utils-share-cards-cards')->add(UtilsAccessMiddleware::class);
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
 		$group->post('/utils/update/backup/delete', UpdateBackupDeleteAction::class)->setName('admin-update-backup-delete')->add(AdminOnlyMiddleware::class);

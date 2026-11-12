@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\PagePreview;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
@@ -31,6 +32,7 @@ class BuilderTwigAdapter
 		private readonly BuilderNavigation $navigation,
 		private readonly BuilderAssetRenderer $assets,
 		private readonly PageRouter $router,
+		private readonly PagePreview $preview,
 	) {
 	}
 
@@ -58,6 +60,12 @@ class BuilderTwigAdapter
 	 */
 	public function page(?string $path = null): ?array
 	{
+		// A page previewed in-process (Share Cards) is the current page, drafts included.
+		$previewed = $path === null ? $this->preview->current() : null;
+		if ($previewed instanceof RouteMatch) {
+			return self::record($previewed);
+		}
+
 		$path ??= (string)($_SERVER['REQUEST_URI'] ?? '/');
 
 		// The router matches paths as Slim sees them, after the base path is
@@ -71,13 +79,19 @@ class BuilderTwigAdapter
 		// No template required: on a site the router never serves (Stacks, a
 		// hand-written front end) a page record is an SEO carrier and has none.
 		$match = $this->router->match($path, requireTemplate: false);
-		if (!$match instanceof RouteMatch) {
-			return null;
-		}
 
-		// A collection URL routes to an object, not a page record. Hand it
-		// back tagged with its collection — the key cms.seo.head() reads — so
-		// the one call in a layout covers post pages as well as pages.
+		return $match instanceof RouteMatch ? self::record($match) : null;
+	}
+
+	/**
+	 * A collection URL routes to an object, not a page record. Hand it back
+	 * tagged with its collection — the key cms.seo.head() reads — so the one
+	 * call in a layout covers post pages as well as pages.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function record(RouteMatch $match): array
+	{
 		if ($match->collection !== null) {
 			return $match->pageData + ['_collection' => $match->collection];
 		}

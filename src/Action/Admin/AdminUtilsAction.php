@@ -47,6 +47,7 @@ readonly class AdminUtilsAction
 		'objectVisualizerData'   => null,
 		'permissionMatrixData'   => null,
 		'securityReport'         => null,
+		'shareCards'             => null,
 	];
 
 	public function __construct(

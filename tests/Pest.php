@@ -34,6 +34,7 @@ use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Builder\Service\PagePreview;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -634,6 +635,7 @@ function buildBuilderTwigAdapter(
 		new BuilderNavigation($builderConfig, $indexReader, $orderService),
 		new BuilderAssetRenderer($config),
 		$router,
+		new PagePreview(),
 	);
 }
 

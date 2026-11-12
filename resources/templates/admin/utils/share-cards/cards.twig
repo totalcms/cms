@@ -1,0 +1,59 @@
+{#
+	One chunk of Share Cards (ShareCardsChunkAction). Autoescape is off in
+	this install's Twig, so the chunk turns it on; t() output is marked safe, so
+	values from a record or an error are also escaped before they go into t().
+#}
+{% autoescape 'html' %}
+{% set calm = ['as-is', 'no-record', 'no-overlay'] %}
+{% for card in cards %}
+{% set head = card.head %}
+{% set reason = head.reason ? head.reason.value : '' %}
+{% set message = reason == 'layer-refused' and head.layer is null ? 'layers-refused' : reason %}
+<article class="share-card dash-card" data-problem="{{ card.isProblem() ? 1 : 0 }}">
+	<div class="share-card-image">
+		{% if card.imageSrc %}
+		<img loading="lazy" src="{{ card.imageSrc }}" width="1200" height="630" alt="">
+		{% else %}
+		<span>{{ t('share_cards.no_image_placeholder') }}</span>
+		{% endif %}
+		{% if card.draft or card.noindex %}
+		<span class="share-card-badges">
+			{% if card.draft %}<span class="dash-badge sm">{{ t('share_cards.badge_draft') }}</span>{% endif %}
+			{% if card.noindex %}<span class="dash-badge sm">{{ t('share_cards.badge_noindex') }}</span>{% endif %}
+		</span>
+		{% endif %}
+	</div>
+	<div class="share-card-preview">
+		{% if head.ogTitle %}
+		<strong class="share-card-title">{{ head.ogTitle }}</strong>
+		{% else %}
+		<span class="share-card-message warning">{{ t('share_cards.no_title') }}</span>
+		{% endif %}
+		{% if head.ogDescription %}
+		<span class="share-card-description">{{ head.ogDescription }}</span>
+		{% else %}
+		<span class="share-card-message warning">{{ t('share_cards.no_description') }}</span>
+		{% endif %}
+	</div>
+	{% set showReason = reason and reason != 'drawn' %}
+	{% if showReason or head.fromRecord %}
+	<div class="share-card-notes">
+		{% if showReason %}
+		<p class="share-card-message {{ reason in calm ? 'info' : 'warning' }}">{{ t('share_cards.reason.' ~ message, {
+			detail: head.detail|e,
+			layer: head.layer is null ? '' : head.layer + 1,
+		}) }}</p>
+		{% endif %}
+		{% if head.fromRecord %}
+		<p class="share-card-message {{ head.failed ? 'warning' : 'info' }}">{{ t('share_cards.from_record', {note: head.note|e}) }}</p>
+		{% endif %}
+	</div>
+	{% endif %}
+	{# A div, not <footer>: .dash-card > footer adds a border and centers its contents. #}
+	<div class="share-card-actions">
+		<a class="share-card-path" href="{{ card.shareUrl }}" target="_blank" rel="noopener" title="{{ t('share_cards.open') }}"><span>{{ card.path }}</span></a>
+		<a class="dash-card-action edit" href="{{ card.editUrl }}">{{ t('share_cards.edit') }}</a>
+	</div>
+</article>
+{% endfor %}
+{% endautoescape %}

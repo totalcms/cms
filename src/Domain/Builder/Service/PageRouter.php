@@ -51,6 +51,26 @@ readonly class PageRouter
 	}
 
 	/**
+	 * The match for one page record, for previewing it (the Share Cards
+	 * utility): built the way a request to its route is, but without the
+	 * published check, so a draft can be previewed before it goes live.
+	 */
+	public function matchForPage(PageData $page): RouteMatch
+	{
+		return $this->buildPageMatch($page);
+	}
+
+	/**
+	 * The match for one collection object, for previewing it: the same match
+	 * a request to its URL gets, found by id rather than by path. Null when
+	 * the object cannot be read.
+	 */
+	public function matchForObject(CollectionData $collection, string $id): ?RouteMatch
+	{
+		return $this->buildCollectionMatch($collection, $id, ['id' => $id]);
+	}
+
+	/**
 	 * Find a builder page configured as the universal 404 fallback. Any
 	 * published page whose status is 404 is treated as the not-found page —
 	 * the same field that drives the response code also marks the page as the

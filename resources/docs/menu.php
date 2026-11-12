@@ -117,6 +117,7 @@ $menu = [
 			['title' => 'Frontend Assets',       'path' => 'site-builder/frontend'],
 			['title' => 'Builder Twig Reference', 'path' => 'site-builder/twig'],
 			['title' => 'SEO',                    'path' => 'site-builder/seo'],
+			['title' => 'Share Cards',            'path' => 'site-builder/share-cards'],
 		],
 	],
 	[

@@ -10,6 +10,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
+use TotalCMS\Domain\Seo\Service\SocialImageMismatchLog;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 // Share images with an overlay (SocialImageBuilder): the head prints
@@ -224,3 +225,45 @@ it('leaves a collection named social its own image URLs', function (): void {
 	expect($response->getStatusCode())->toBe(200);
 	expect(imagesx(imagecreatefromstring((string)$response->getBody())))->toBe(100);
 });
+
+it('notes a share URL whose hash no longer matches, and not the right one', function (): void {
+	($this->siteOverlay)(['marks' => [['marktext' => '${socialTitle}']]]);
+	$good = (string)parse_url(($this->ogImage)(), PHP_URL_PATH) . '?v=' . ($this->hashOf)(($this->ogImage)());
+
+	$log = $this->createMock(SocialImageMismatchLog::class);
+	$log->expects($this->once())->method('note')->with('blog', 'hello', '0000000000000000');
+	$this->app->getContainer()->set(SocialImageMismatchLog::class, $log);
+
+	$this->app->handle($this->createRequest('GET', $good));
+	$this->app->handle($this->createRequest('GET', '/imageworks/social/blog/hello.jpg?v=0000000000000000'));
+});
+
+it('serves the card for a record whose own SEO card holds the image', function (): void {
+	($this->siteOverlay)(['marks' => [['marktext' => '${socialTitle}']]]);
+	$container = $this->app->getContainer();
+	$container->get(BuilderInstaller::class)->ensurePagesCollection();
+	$container->get(ObjectSaver::class)->saveObject('builder-pages', [
+		'id'       => 'about',
+		'title'    => 'About Us',
+		'route'    => '/about',
+		'template' => 'about',
+		'seo'      => ['image' => ['name' => 'about.jpg', 'size' => 10, 'width' => 1200, 'height' => 630, 'mime' => 'image/jpeg']],
+	]);
+	$dir = cmsDataDir() . '/builder-pages/about/seo/image';
+	@mkdir($dir, 0777, true);
+	$im = imagecreatetruecolor(1200, 630);
+	imagefill($im, 0, 0, imagecolorallocate($im, 200, 120, 40));
+	imagejpeg($im, $dir . '/about.jpg', 90);
+
+	$page = $container->get(ObjectFetcher::class)->fetchObject('builder-pages', 'about')->toArray();
+	preg_match('/<meta property="og:image" content="([^"]+)"/', ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]), $m);
+	$url = html_entity_decode($m[1] ?? '');
+
+	expect($url)->toContain('/imageworks/social/builder-pages/about.jpg?v=');
+
+	$response = $this->app->handle($this->createRequest('GET', (string)parse_url($url, PHP_URL_PATH) . '?v=' . ($this->hashOf)($url)));
+
+	expect($response->getStatusCode())->toBe(200)
+		->and($response->getHeaderLine('Content-Type'))->toBe('image/jpeg');
+});
+

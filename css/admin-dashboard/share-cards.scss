@@ -1,0 +1,207 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Share Cards utility (admin/utils/share-cards): a grid of link previews,
+// one section per collection. Built on the shared dash-card and dash-badge.
+// Card rules are `.dash-card.share-card`: cards.scss loads after this file,
+// and its `.dash-card` padding and gap would win at equal specificity.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// The intro and the filter bar read as one block: closer together than the
+// page section's 2rem gap, which then spaces that block from the sections.
+.share-cards-intro {
+	display : grid;
+	gap     : 1rem;
+
+	> * {
+		margin-block : 0;
+	}
+}
+
+.share-cards-filters {
+	display   : flex;
+	flex-wrap : wrap;
+	gap       : 0.5rem;
+
+	button {
+		border      : 0;
+		cursor      : pointer;
+		font-family : inherit;
+	}
+}
+
+.share-cards-section {
+	> header {
+		display         : flex;
+		flex-wrap       : wrap;
+		gap             : 0.5rem 1rem;
+		align-items     : baseline;
+		justify-content : space-between;
+		padding-bottom  : 0.5rem;
+		border-bottom   : 1px solid oklch(var(--totalform-border-color));
+
+		h2 {
+			margin    : 0;
+			font-size : 1.2rem;
+		}
+	}
+}
+
+.share-cards-grid {
+	display               : grid;
+	gap                   : 1.5rem;
+	grid-template-columns : repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+	margin-top            : 1rem;
+}
+
+.dash-card.share-card {
+	padding  : 0;
+	gap      : 0;
+	overflow : hidden;
+
+	&[hidden] {
+		display : none;
+	}
+}
+
+// The share image, edge to edge, with the record's badges on its corner.
+.share-card-image {
+	position        : relative;
+	aspect-ratio    : 1200 / 630;
+	background      : oklch(var(--totalform-icon-bg));
+	display         : flex;
+	align-items     : center;
+	justify-content : center;
+	color           : oklch(var(--totalform-darkgray));
+	border-bottom   : 1px solid oklch(var(--totalform-border-color));
+
+	img {
+		display    : block;
+		width      : 100%;
+		height     : 100%;
+		object-fit : cover;
+	}
+}
+
+.share-card-badges {
+	position : absolute;
+	top      : 0.6rem;
+	right    : 0.6rem;
+	display  : flex;
+	gap      : 0.35rem;
+
+	.dash-badge {
+		background      : oklch(0% 0 0 / 0.65);
+		color           : oklch(100% 0 0);
+		backdrop-filter : blur(4px);
+	}
+}
+
+// What a link preview shows under the image.
+.share-card-preview {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.3rem;
+	padding        : 0.9rem 1.1rem 0.75rem;
+}
+
+.share-card-title,
+.share-card-description {
+	display            : -webkit-box;
+	-webkit-box-orient : vertical;
+	-webkit-line-clamp : 2;
+	line-clamp         : 2;
+	overflow           : hidden;
+}
+
+.share-card-title {
+	line-height : 1.3;
+}
+
+.share-card-description {
+	font-size   : 0.88rem;
+	line-height : 1.4;
+	color       : oklch(var(--totalform-darkgray));
+}
+
+.share-card-notes {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.5rem;
+	padding        : 0 1.1rem 0.75rem;
+}
+
+// The page's path and the Edit link, on one row at the foot of every card.
+.share-card-actions {
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	gap             : 0.75rem;
+	margin-top      : auto;
+	padding         : 0.6rem 0.75rem 0.6rem 1.1rem;
+	border-top      : 1px solid oklch(var(--totalform-border-color));
+
+	.dash-card-action {
+		flex-shrink : 0;
+		padding     : 0.4rem 0.75rem;
+	}
+}
+
+.share-card-path {
+	display         : inline-flex;
+	align-items     : center;
+	gap             : 0.4rem;
+	min-width       : 0;
+	padding         : 0.3rem 0.6rem;
+	border-radius   : var(--totalform-radius);
+	background      : oklch(var(--totalform-icon-bg));
+	color           : oklch(var(--totalform-text-color));
+	font-family     : ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size       : 0.8rem;
+	text-decoration : none;
+	transition      : background-color 0.2s, color 0.2s;
+
+	span {
+		overflow      : hidden;
+		text-overflow : ellipsis;
+		white-space   : nowrap;
+	}
+
+	&::after {
+		content          : "";
+		flex-shrink      : 0;
+		width            : 0.8rem;
+		height           : 0.8rem;
+		background-color : currentColor;
+		mask-image       : var(--icon-external);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+		opacity          : 0.7;
+	}
+
+	&:hover {
+		background : oklch(var(--totalform-accent) / 0.1);
+		color      : oklch(var(--totalform-accent));
+	}
+}
+
+.share-card-message {
+	margin        : 0;
+	padding       : 0.4rem 0.6rem;
+	border-radius : var(--totalform-radius);
+	font-size     : 0.85rem;
+
+	&.warning {
+		background : oklch(var(--totalform-warning) / 0.1);
+		color      : oklch(var(--totalform-warning));
+	}
+
+	&.info {
+		background : oklch(var(--totalform-info) / 0.1);
+		color      : oklch(var(--totalform-info));
+	}
+}
+
+.share-cards-skipped {
+	font-size  : 0.9rem;
+	color      : oklch(var(--totalform-darkgray));
+}

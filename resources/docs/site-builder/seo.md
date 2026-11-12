@@ -6,6 +6,7 @@ related:
   - collections/sitemap-builder
   - site-builder/twig
   - site-builder/starters
+  - site-builder/share-cards
 ---
 
 # SEO
@@ -447,7 +448,9 @@ When a social network asks for that image, Total CMS reads the record again, bui
 - **An edit gives a new address.** Change the title, the image or the overlay and `v` changes with it, so the networks fetch the new card instead of showing a cached old one. Most of them cache a share image for days, so this is what keeps a corrected title from going out with the old one.
 - **The card is cached like any ImageWorks image.** The first request draws it, and later ones are served from the cache.
 
-An overlay that ImageWorks would refuse, such as a misspelled position or a size out of range, is not drawn at all, and the plain image is shared instead. Check a new overlay by opening a page's `og:image` address in the browser.
+An overlay that ImageWorks would refuse, such as a misspelled position or a size out of range, is not drawn at all, and the plain image is shared instead. To check every card at once, open [Share Cards](docs/site-builder/share-cards) (**Utilities → Reporting**): it shows each page's card and says why any of them fell back to the plain image.
+
+> **Don't change a drawn value before the head.** The hash covers what the record says. A template that merges a new title onto the record before `cms.seo.head()`, such as `object|merge({title: 'Total CMS: ' ~ object.title})`, signs a card the image route can't rebuild, and every share gets the plain image. Shape the share title with the SEO card's **Social Title** or the collection's **Social Title Template** instead. See [A Card That No Longer Matches](docs/site-builder/share-cards#a-card-that-no-longer-matches).
 
 ### Limits
 

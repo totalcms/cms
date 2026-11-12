@@ -37,6 +37,7 @@ use TotalCMS\Action\Admin\Utils\ServerCheckerPageData;
 use TotalCMS\Action\Admin\Utils\SyncPageData;
 use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
+use TotalCMS\Action\Admin\Utils\ShareCardsPageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
@@ -1412,6 +1413,7 @@ return [
 			'collection-visualizer' => $visualizer,
 			'object-visualizer'     => $visualizer,
 			'permission-matrix'     => $visualizer,
+			'share-cards'           => $container->get(ShareCardsPageData::class),
 		]);
 	},
 ];

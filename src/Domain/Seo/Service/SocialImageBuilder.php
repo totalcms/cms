@@ -14,6 +14,8 @@ use TotalCMS\Domain\Seo\Data\MetaPayload;
 use TotalCMS\Domain\Seo\Data\SeoContext;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\Data\SocialCard;
+use TotalCMS\Domain\Seo\Data\SocialCardOutcome;
+use TotalCMS\Domain\Seo\Data\SocialCardReason;
 use TotalCMS\Support\Config;
 
 /**
@@ -53,19 +55,24 @@ readonly class SocialImageBuilder
 		private ObjectFetcher $objects,
 		private BuilderConfigService $builderConfig,
 		private Config $config,
+		private SocialCardRecorder $recorder,
 	) {
 	}
 
 	/** The meta with og:image swapped for the share card, when an overlay applies. */
 	public function apply(SeoContext $ctx, MetaPayload $meta): MetaPayload
 	{
-		$card = $this->card($ctx, $meta);
+		$outcome = $this->explain($ctx, $meta);
+		$card    = $outcome->card;
 		if ($card === null || !$card->hasOverlay()) {
+			$this->recorder->record($outcome);
+
 			return $meta;
 		}
 
 		$path = parse_url($this->config->api . self::ROUTE . '/' . rawurlencode($card->collection) . '/' . rawurlencode($card->id) . '.jpg', PHP_URL_PATH);
 		$url  = $ctx->settings->absolute((is_string($path) ? $path : '') . '?v=' . $card->hash);
+		$this->recorder->record($outcome->withOgImage($url));
 
 		return $meta->withImage($url, $meta->ogImageAlt !== '' ? $meta->ogImageAlt : $card->firstText);
 	}
@@ -99,37 +106,90 @@ readonly class SocialImageBuilder
 	/** The card for a context, with or without an overlay; null with no record or no image. */
 	public function card(SeoContext $ctx, MetaPayload $meta): ?SocialCard
 	{
+		return $this->explain($ctx, $meta)->card;
+	}
+
+	/**
+	 * The card for a context and why it is what it is. The card is null with
+	 * no record or no image; otherwise it is plain unless the reason is Drawn.
+	 */
+	public function explain(SeoContext $ctx, MetaPayload $meta): SocialCardOutcome
+	{
+		if ($meta->ogImage === '') {
+			return new SocialCardOutcome(SocialCardReason::NoImage, null, '');
+		}
+
 		$subject = $this->subject($ctx);
 		$source  = $subject === null ? null : $this->source($ctx, $meta, $subject);
 		if ($subject === null || $source === null) {
-			return null;
+			return new SocialCardOutcome($subject === null ? SocialCardReason::NoRecord : SocialCardReason::Untraced, null, $meta->ogImage);
 		}
 
-		$overlay = $ctx->fields->imageAsIs ? null : $this->overlay($ctx);
-		$marks   = $overlay === null ? [] : $this->checked($this->filled($overlay['marks'], $ctx, $meta));
-		$params  = SeoSettings::OG_IMAGE;
+		[$reason, $marks, $fit, $detail, $layer] = $this->layers($ctx, $meta);
+		$params                                  = SeoSettings::OG_IMAGE;
 
 		if ($marks !== []) {
-			$params['fit']   = $this->fit($overlay['fit'] ?? null) ?? $params['fit'];
+			$params['fit']   = $fit ?? $params['fit'];
 			$params['marks'] = $marks;
 		}
 
 		$hash = $this->hash($subject, $meta, $params);
 		// No site key (an install before setup): no hash to prove a URL, so no overlay.
-		if ($hash === '') {
+		if ($marks !== [] && $hash === '') {
 			$params = SeoSettings::OG_IMAGE;
 			$marks  = [];
+			$reason = SocialCardReason::NoSiteKey;
 		}
 
-		$firstText = '';
+		$card = new SocialCard(...[...$subject, ...$source, 'params' => $params, 'hash' => $hash, 'firstText' => self::firstText($marks)]);
+
+		return new SocialCardOutcome($reason, $card, $meta->ogImage, $detail, $layer);
+	}
+
+	/**
+	 * The layers to draw, and the reason when there are none: as is, no
+	 * overlay, every layer empty, or a layer ImageWorks refused.
+	 *
+	 * @return array{0:SocialCardReason,1:list<array<string,int|float|string>>,2:?string,3:string,4:?int}
+	 */
+	private function layers(SeoContext $ctx, MetaPayload $meta): array
+	{
+		if ($ctx->fields->imageAsIs) {
+			return [SocialCardReason::AsIs, [], null, '', null];
+		}
+
+		$overlay = $this->overlay($ctx);
+		if ($overlay === null) {
+			return [SocialCardReason::NoOverlay, [], null, '', null];
+		}
+
+		$filled = $this->filled($overlay['marks'], $ctx, $meta);
+		if ($filled === []) {
+			return [SocialCardReason::LayersEmpty, [], null, '', null];
+		}
+
+		[$marks, $layer, $detail] = $this->checked($filled);
+		if ($marks === []) {
+			return [SocialCardReason::LayerRefused, [], null, $detail, $layer];
+		}
+
+		return [SocialCardReason::Drawn, $marks, $this->fit($overlay['fit'] ?? null), '', null];
+	}
+
+	/**
+	 * The first text a layer draws, for og:image:alt when the image has none.
+	 *
+	 * @param list<array<string,int|float|string>> $marks
+	 */
+	private static function firstText(array $marks): string
+	{
 		foreach ($marks as $layer) {
 			if (is_string($layer['marktext'] ?? null) && $layer['marktext'] !== '') {
-				$firstText = str_replace("\n", ' ', $layer['marktext']);
-				break;
+				return str_replace("\n", ' ', $layer['marktext']);
 			}
 		}
 
-		return new SocialCard(...[...$subject, ...$source, 'params' => $params, 'hash' => $hash, 'firstText' => $firstText]);
+		return '';
 	}
 
 	/**
@@ -315,29 +375,36 @@ readonly class SocialImageBuilder
 	 * visitor, and may break lines. An overlay ImageWorks would refuse draws
 	 * nothing, and the plain image is shared instead.
 	 *
+	 * Each layer is checked on its own first, so a refusal can name the layer
+	 * and the parameter; then the whole list, for the limits on the list itself.
+	 *
 	 * @param list<array<string,int|float|string>> $marks
 	 *
-	 * @return list<array<string,int|float|string>>
+	 * @return array{0:list<array<string,int|float|string>>,1:?int,2:string} The layers, or none with the refused layer and the reason
 	 */
 	private function checked(array $marks): array
 	{
-		if ($marks === []) {
-			return [];
-		}
-
 		$masked = array_map(
 			fn (array $layer): array => isset($layer['marktext']) ? ['marktext' => 'x'] + $layer : $layer,
 			$marks,
 		);
 
+		foreach ($masked as $i => $layer) {
+			try {
+				ImageParamValidator::validate(['marks' => [$layer]]);
+			} catch (InvalidImageParamException $e) {
+				return [[], $i, $e->getMessage()];
+			}
+		}
+
 		try {
 			$checked = ImageParamValidator::validate(['marks' => $masked])['marks'] ?? [];
-		} catch (InvalidImageParamException) {
-			return [];
+		} catch (InvalidImageParamException $e) {
+			return [[], null, $e->getMessage()];
 		}
 
 		if (!is_array($checked)) {
-			return [];
+			return [[], null, ''];
 		}
 
 		$out = [];
@@ -348,7 +415,7 @@ readonly class SocialImageBuilder
 			$out[] = $layer;
 		}
 
-		return $out;
+		return [$out, null, ''];
 	}
 
 	/** The overlay's fit, when ImageWorks takes it. */

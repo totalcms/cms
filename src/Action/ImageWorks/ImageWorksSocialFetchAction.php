@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
+use TotalCMS\Domain\Seo\Service\SocialImageMismatchLog;
 
 /**
  * A record's share image: `/imageworks/social/{collection}/{id}.jpg?v=…`,
@@ -32,6 +33,7 @@ readonly class ImageWorksSocialFetchAction
 		private ImageGenerator $imageGenerator,
 		private ImageWorksImageFetchAction $imageFetch,
 		private CollectionFetcher $collections,
+		private SocialImageMismatchLog $mismatches,
 	) {
 	}
 
@@ -53,10 +55,22 @@ readonly class ImageWorksSocialFetchAction
 			throw new HttpNotFoundException($request);
 		}
 
+		// The record exists but drew no overlay for this hash: a stale or
+		// mis-signed share URL. Leave a trace (Share Cards shows the cause).
+		if ($hash !== '' && !$card->hasOverlay()) {
+			$this->mismatches->note($args['collection'], $args['id'], $hash);
+		}
+
 		$params = ['fm' => $format] + $card->params;
 
-		return $this->respond($request, $response, fn (): ResponseInterface => $card->gallery
-			? $this->imageGenerator->forPublicRoute()->generateGalleryImage($card->imageCollection, $card->imageId, $card->imageProperty, 'first', $params, $request)
-			: $this->imageGenerator->forPublicRoute()->generateImage($card->imageCollection, $card->imageId, $card->imageProperty, $params, $request));
+		// An image inside a card, such as a record's own SEO image (`seo.image`),
+		// is found by property and path, as the `/{prop}/{path}` image route does.
+		$parts    = explode('.', $card->imageProperty, 2);
+		$property = $parts[0];
+		$path     = $card->gallery ? 'first' : ($parts[1] ?? null);
+
+		return $this->respond($request, $response, fn (): ResponseInterface => $path !== null
+			? $this->imageGenerator->forPublicRoute()->generateGalleryImage($card->imageCollection, $card->imageId, $property, $path, $params, $request)
+			: $this->imageGenerator->forPublicRoute()->generateImage($card->imageCollection, $card->imageId, $property, $params, $request));
 	}
 }

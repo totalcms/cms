@@ -180,6 +180,12 @@ readonly class TwigEngine
 		}
 	}
 
+	/** True when the loader can find this template, such as `pages/blog.twig`. */
+	public function templateExists(string $name): bool
+	{
+		return $this->twig->getLoader()->exists($name);
+	}
+
 	/** @param array<mixed> $data */
 	public function renderString(string $template, array $data = []): string
 	{

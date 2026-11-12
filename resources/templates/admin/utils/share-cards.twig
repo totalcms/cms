@@ -1,0 +1,160 @@
+{#
+	Share Cards: every share card on a Site Builder site, a section per
+	collection. The frame comes from ShareCardsPageData; the cards load a
+	chunk at a time from utils/share-cards/cards (ShareCardsChunkAction).
+	Autoescape is off in this install's Twig, so the page turns it on; t()
+	output is marked safe, so values from records are also escaped before t().
+#}
+{% autoescape 'html' %}
+{% set data = shareCards %}
+
+<h1>{{ t('share_cards.title') }}</h1>
+
+
+<section class="dash-content-section share-cards" data-share-cards data-chunk="{{ data.chunk|default(25) }}">
+	<section class="share-cards-intro">
+		<p>{{ t('share_cards.desc') }}</p>
+
+		{% if not data.builder %}
+		<p class="share-cards-needs-builder share-card-message info">{{ t('share_cards.needs_builder') }}</p>
+		{% else %}
+		<nav class="share-cards-filters" aria-label="{{ t('share_cards.title') }}">
+			<button type="button" class="dash-badge accent" data-filter="all" aria-pressed="true">{{ t('share_cards.all') }} <span data-count="total">{{ t('share_cards.loading') }}</span></button>
+			<button type="button" class="dash-badge muted" data-filter="problems" aria-pressed="false">{{ t('share_cards.problems') }} <span data-count="problems">{{ t('share_cards.loading') }}</span></button>
+			{% for section in data.sections %}
+			<button type="button" class="dash-badge muted" data-filter="{{ section.id }}" aria-pressed="false">{{ section.title }} <span data-section-count="{{ section.id }}">{{ section.count }}</span></button>
+			{% endfor %}
+		</nav>
+		{% endif %}
+	</section>
+
+	{% if data.builder %}
+
+	{% for section in data.sections %}
+	<section class="share-cards-section" data-section="{{ section.id }}" data-total="{{ section.count }}">
+		<header>
+			<h2>{{ section.title }} <span class="dash-badge muted sm" data-section-count="{{ section.id }}">{{ section.count }}</span></h2>
+			<a href="{{ section.settingsUrl }}">{{ section.kind == 'pages' ? t('share_cards.settings_site') : t('share_cards.settings_collection') }}</a>
+		</header>
+		<div class="share-cards-grid">
+			{% if section.count == 0 %}<p class="share-card-message info">{{ t('share_cards.empty') }}</p>{% endif %}
+		</div>
+	</section>
+	{% endfor %}
+
+	{% if data.skipped %}
+	<p class="share-cards-skipped">{{ t('share_cards.skipped', {collections: data.skipped|join(', ')|e}) }}</p>
+	{% endif %}
+
+<script>
+(function () {
+	// Not '.share-cards': the sidebar's menu item for this page has that class.
+	const root = document.querySelector('[data-share-cards]');
+	if (!root) {
+		return;
+	}
+
+	const T = {
+		loading: {{ t('share_cards.loading') | json_encode | raw }},
+		failed:  {{ t('share_cards.chunk_failed') | json_encode | raw }},
+	};
+	const chunk      = Number(root.dataset.chunk) || 25;
+	const sections   = Array.from(root.querySelectorAll('.share-cards-section'));
+	const totalEl    = root.querySelector('[data-count="total"]');
+	const problemsEl = root.querySelector('[data-count="problems"]');
+	const buttons    = Array.from(root.querySelectorAll('[data-filter]'));
+	let problems     = 0;
+	let filter       = 'all';
+
+	function showCounts(done) {
+		const total  = root.querySelectorAll('.share-card').length;
+		const suffix = done ? '' : ' ' + T.loading;
+		totalEl.textContent    = total + suffix;
+		problemsEl.textContent = problems + suffix;
+	}
+
+	function applyFilter() {
+		for (const section of sections) {
+			const cards = Array.from(section.querySelectorAll('.share-card'));
+			for (const card of cards) {
+				card.hidden = filter === 'problems' && card.dataset.problem !== '1';
+			}
+			if (filter === 'problems') {
+				section.hidden = !cards.some((card) => !card.hidden);
+			} else {
+				section.hidden = filter !== 'all' && filter !== section.dataset.section;
+			}
+		}
+		for (const button of buttons) {
+			const on = button.dataset.filter === filter;
+			button.setAttribute('aria-pressed', on ? 'true' : 'false');
+			button.classList.toggle('accent', on);
+			button.classList.toggle('muted', !on);
+		}
+	}
+
+	for (const button of buttons) {
+		button.addEventListener('click', () => {
+			filter = button.dataset.filter;
+			applyFilter();
+		});
+	}
+
+	// One chunk; the next offset, or null after the last. A failed chunk
+	// (a fatal error in one page, a timeout) costs that chunk, not the page.
+	async function loadChunk(section, offset) {
+		const grid  = section.querySelector('.share-cards-grid');
+		const total = Number(section.dataset.total) || 0;
+		const url   = 'utils/share-cards/cards?section=' + encodeURIComponent(section.dataset.section) + '&offset=' + offset;
+
+		try {
+			const response = await fetch(url, {credentials: 'same-origin', headers: {Accept: 'text/html'}});
+			// A redirect (an expired session, a template that redirects and
+			// exits) lands on another page with a 200: not a chunk.
+			const next = response.headers.get('X-Share-Cards-Next');
+			if (!response.ok || response.redirected || next === null) {
+				throw new Error(String(response.status));
+			}
+			grid.insertAdjacentHTML('beforeend', await response.text());
+			problems += Number(response.headers.get('X-Share-Cards-Problems')) || 0;
+
+			return next === '' ? null : Number(next);
+		} catch (error) {
+			const note       = document.createElement('p');
+			note.className   = 'share-card-message warning';
+			note.textContent = T.failed;
+			grid.append(note);
+
+			return offset + chunk < total ? offset + chunk : null;
+		}
+	}
+
+	(async function () {
+		showCounts(false);
+		for (const section of sections) {
+			if ((Number(section.dataset.total) || 0) === 0) {
+				continue;
+			}
+			let offset = 0;
+			while (offset !== null) {
+				offset = await loadChunk(section, offset);
+				showCounts(false);
+				applyFilter();
+			}
+			// Pages that aren't HTML (feeds) come back with no card, so the
+			// count known up front can be high: show the cards that loaded.
+			const loaded = section.querySelectorAll('.share-card').length;
+			for (const el of root.querySelectorAll('[data-section-count]')) {
+				if (el.dataset.sectionCount === section.dataset.section) {
+					el.textContent = loaded;
+				}
+			}
+		}
+		showCounts(true);
+		applyFilter();
+	})();
+})();
+</script>
+	{% endif %}
+</section>
+{% endautoescape %}

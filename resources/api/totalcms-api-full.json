@@ -4562,6 +4562,46 @@
                 ]
             }
         },
+        "/admin/utils/{page}/cards": {
+            "get": {
+                "operationId": "admin-utils-share-cards-cards",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(?:share-cards)$"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/utils/{page:share-cards}/cards",
+                "x-tcms-action": "ShareCardsChunkAction",
+                "x-tcms-middleware": [
+                    "UtilsAccessMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware"
+                ]
+            }
+        },
         "/admin/utils/{page}/download": {
             "get": {
                 "operationId": "admin-utils-logs-download",

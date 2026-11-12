@@ -53,6 +53,7 @@ readonly class AccessGroupAnalyzer
 		'pretty-url',
 		'project-setup',
 		'server-checker',
+		'share-cards',
 		'twig-debugger',
 	];
 

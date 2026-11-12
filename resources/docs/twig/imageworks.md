@@ -452,6 +452,20 @@ where the text sits, is dark enough to read white text on any photo.
 ]}, {collection: 'blog'}) }}
 ```
 
+#### Two fades for bright photos
+
+One fade strong enough for a white sky darkens the whole photo. Stack two
+instead: a light fade over the full height, then a short, strong one at the
+edge where the text sits. Fills are layers, so the second darkens the first.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markgradient: 'bottom', markh: '100h', markpos: 'bottom', markalpha: 50},
+    {markfill: '0b0f1a', markgradient: 'bottom', markh: '45h', markpos: 'bottom', markalpha: 80},
+    {marktext: post.title, marktextw: '60w', marktextsize: '6w', marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'}
+]}, {collection: 'blog'}) }}
+```
+
 #### Fade from the top
 
 The same idea for a headline at the top: flip `markgradient`, `markpos` and
