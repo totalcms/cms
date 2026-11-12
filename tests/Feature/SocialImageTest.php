@@ -43,7 +43,9 @@ beforeEach(function (): void {
 		'siteName'     => 'Bistro',
 		'defaultImage' => ['name' => 'share.jpg', 'size' => 10, 'width' => 1600, 'height' => 900, 'mime' => 'image/jpeg', 'alt' => 'Share alt'],
 	]);
-	$dir = cmsDataDir() . '/seo-site/seo-site/defaultImage';
+	// Property folders are slugified (lowercase): a case-insensitive macOS
+	// disk forgives `defaultImage`, Linux CI does not.
+	$dir = cmsDataDir() . '/seo-site/seo-site/defaultimage';
 	@mkdir($dir, 0777, true);
 	$im = imagecreatetruecolor(1600, 900);
 	imagefill($im, 0, 0, imagecolorallocate($im, 40, 120, 200));
