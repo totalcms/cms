@@ -84,15 +84,15 @@ It can't start, stop, rename, share or remove a site. To work on a site's conten
 
 To set it up, open Settings (**Total CMS Studio › Settings…**) and find **AI tools**. Each AI tool has a row with one button:
 
-- **Claude Code** and **Codex (ChatGPT)**: click **Copy prompt** and paste it into the tool. The prompt asks the tool to add Studio itself, and to tell you when to restart it. Claude Code adds Studio for your user, so it works in every folder. These two rows are always there, because Studio can't tell whether they're installed.
+- **Claude Code** and **Codex (ChatGPT)**: click **Copy Prompt** and paste it into the tool. The prompt asks the tool to add Studio itself, and to tell you when to restart it. Claude Code adds Studio for your user, so it works in every folder. These two rows are always there, because Studio can't tell whether they're installed.
 - **Cursor** and **VS Code**: click **Add to Cursor** or **Add to VS Code**. The app opens and asks you to confirm before it adds Studio.
 - **Claude Desktop**: click **Add to Claude Desktop**. Studio adds itself to Claude Desktop's settings and leaves everything else in that file alone. Quit and reopen Claude Desktop to use it.
 
-Cursor, VS Code and Claude Desktop only get a row when they're installed. For any other AI tool, open **Show setup for other tools** and copy the command or config it needs: the Claude Code command, JSON for Claude Desktop and Cursor, JSON for VS Code, and TOML for Codex. If the tool already has a config file, add the `totalcms-studio` entry under its existing `mcpServers` key (`servers` in VS Code) rather than replacing the file.
+Cursor, VS Code and Claude Desktop only get a row when they're in your Applications folder. For any other AI tool, open **Show setup for other tools** and copy the command or config it needs: the Claude Code command, JSON for Claude Desktop and Cursor, JSON for VS Code, and TOML for Codex. If the tool already has a config file, add the `totalcms-studio` entry under its existing `mcpServers` key (`servers` in VS Code) rather than replacing the file. For Codex, replace any existing `[mcp_servers.totalcms-studio]` table in `config.toml`, because a second one makes the file invalid.
 
 ChatGPT's chat can only connect to MCP servers on the internet, and Studio opens no network port, so it can't reach Studio. Use Codex, ChatGPT's coding agent, instead.
 
-The setup points at the copy of Studio that's running. If you move Studio, set it up again. If Studio is still on its disk image or in Downloads, Settings asks you to move it to your Applications folder first, because the path wouldn't last.
+The setup points at the copy of Studio that's running. If you move Studio, set it up again; the prompts replace the old entry. If Studio is running from its disk image, or macOS is running it from a temporary location, Settings asks you to move it to your Applications folder first, because the path wouldn't last.
 
 You don't need to have Studio open. When an AI tool asks for something, Studio opens in the background if it isn't running. Creating a site takes a few minutes, the same as in the window, and the new site appears in the sidebar when it's done. Some AI tools stop waiting after a minute or so. The site is still being made, and it shows up in `list_sites` once it's done, so the tool should check again later instead of starting over. Studio makes one site at a time, so **New Site…** asks you to wait while an AI tool is creating one.
 
