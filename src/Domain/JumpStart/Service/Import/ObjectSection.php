@@ -15,6 +15,7 @@ use TotalCMS\Domain\JumpStart\Data\ImportReport;
 use TotalCMS\Domain\JumpStart\Service\NestedMediaFields;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -153,6 +154,14 @@ readonly class ObjectSection
 				continue;
 			}
 			if (array_key_exists($fieldName, $existing)) {
+				$objectData[$fieldName] = $existing[$fieldName];
+			}
+		}
+
+		// The destination's own state (SyncableCollections::siteLocalFields())
+		// never travels either, so the same rule keeps it.
+		foreach (SyncableCollections::siteLocalFields($collectionId) as $fieldName) {
+			if (!array_key_exists($fieldName, $objectData) && array_key_exists($fieldName, $existing)) {
 				$objectData[$fieldName] = $existing[$fieldName];
 			}
 		}

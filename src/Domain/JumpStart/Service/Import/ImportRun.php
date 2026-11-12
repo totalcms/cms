@@ -20,7 +20,8 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  * RCE vector). Only callers that established a super-admin operator or run
  * with shell trust opt in, mirroring SystemCollectionGuardMiddleware's rule
  * for the generic write path, so every write surface enforces the same
- * "super-admin only" policy.
+ * "super-admin only" policy. A sync push with an API key that has the Sync
+ * Manager permission counts: only a super-admin can create that key.
  */
 final readonly class ImportRun
 {

@@ -48,3 +48,17 @@ it('withholds auth from the Sync Manager even though the CLI allows it', functio
 it('withholds everything the seed carve-outs already refuse', function (string $id): void {
 	expect(SyncableCollections::seedableInUi($id))->toBeFalse();
 })->with(['playground', 'image', 'gallery', 'file', 'depot', 'builder-pages', 'automations']);
+
+it('syncs the Site SEO singleton under its own flag', function (): void {
+	// Created on install on every site, so a seed push (which never
+	// overwrites) could not move a change to it.
+	expect(SyncableCollections::contains('seo-site'))->toBeTrue()
+		->and(SyncableCollections::flagFor('seo-site'))->toBe('seo');
+});
+
+it('names the fields each site keeps for itself', function (): void {
+	expect(SyncableCollections::siteLocalFields('dataviews'))->toBe(['lastBuilt', 'lastError'])
+		->and(SyncableCollections::siteLocalFields('seo-site'))->toBe(['indexNowEnabled', 'indexNowKey'])
+		->and(SyncableCollections::siteLocalFields('builder-pages'))->toBe([]);
+});
+

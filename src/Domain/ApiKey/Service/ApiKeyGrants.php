@@ -42,6 +42,17 @@ final readonly class ApiKeyGrants
 	}
 
 	/**
+	 * Whether the key has the Sync Manager permission: the `/sync` endpoints,
+	 * or every endpoint.
+	 */
+	public static function grantsSync(ApiKeyData $apiKey): bool
+	{
+		$paths = self::paths($apiKey);
+
+		return in_array('*', $paths, true) || in_array('sync', $paths, true);
+	}
+
+	/**
 	 * Whether the key may read data view $viewId.
 	 */
 	public static function reachesView(ApiKeyData $apiKey, string $viewId): bool

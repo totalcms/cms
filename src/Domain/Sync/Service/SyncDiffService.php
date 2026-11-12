@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Sync\Service;
 
+use TotalCMS\Domain\Sync\Data\SyncableCollections;
+
 /**
  * Compares the local and remote sync payloads item by item, so a dry-run can
  * say what would actually CHANGE rather than merely list what would travel.
@@ -66,9 +68,12 @@ final class SyncDiffService
 				fn (array $item): ?string => null, // templates carry no timestamp
 				[],
 			),
+			// A field a site keeps for itself is left out, so a Data View rebuilt
+			// on one side reads the same. A remote on an older release still
+			// sends it, so the diff cannot rely on the export leaving it out.
 			'objects' => $this->diffCategory(
-				$this->indexObjects($local['objects'] ?? []),
-				$this->indexObjects($remote['objects'] ?? []),
+				$this->indexObjects($this->withoutSiteLocalFields($local['objects'] ?? [])),
+				$this->indexObjects($this->withoutSiteLocalFields($remote['objects'] ?? [])),
 				fn (array $item): ?string => is_string($item['data']['updated'] ?? null) && $item['data']['updated'] !== '' ? $item['data']['updated'] : null,
 				['updated'],
 			),
@@ -115,6 +120,28 @@ final class SyncDiffService
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Objects without the fields each site keeps for itself
+	 * (SyncableCollections::siteLocalFields()).
+	 *
+	 * @param array<int,mixed> $objects
+	 *
+	 * @return array<int,mixed>
+	 */
+	private function withoutSiteLocalFields(array $objects): array
+	{
+		foreach ($objects as $i => $object) {
+			if (!is_array($object) || !is_array($object['data'] ?? null)) {
+				continue;
+			}
+			foreach (SyncableCollections::siteLocalFields((string)($object['collection'] ?? '')) as $field) {
+				unset($objects[$i]['data'][$field]);
+			}
+		}
+
+		return $objects;
 	}
 
 	/**

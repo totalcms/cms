@@ -7,6 +7,8 @@ namespace TotalCMS\Action\Sync;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Renderer\JsonRenderer;
@@ -41,14 +43,25 @@ readonly class SyncImportAction
 	}
 
 	/**
-	 * A sync push that mirrors `automations` (code-executing system collection)
-	 * is RCE-grade on the receiving side, so it requires a real super-admin
-	 * session — an API key alone is not sufficient. This matches
-	 * SystemCollectionGuardMiddleware's policy for the generic write path.
+	 * A sync push that mirrors `automations` (code-executing system
+	 * collection) is RCE-grade on the receiving side, so it needs a
+	 * super-admin's authority: their session, or an API key with the Sync
+	 * Manager permission. Only a super-admin can create a key, and one given
+	 * that permission was made to push what sync moves, automations included.
+	 * A signed-in user who is not a super-admin is still refused, as
+	 * SystemCollectionGuardMiddleware refuses them on the generic write path.
 	 */
-	private function callerIsSuperAdmin(): bool
+	private function mayWriteSystemCollections(ServerRequestInterface $request): bool
 	{
-		return $this->accessManager->sessionIsSuperAdmin();
+		if ($this->accessManager->sessionIsSuperAdmin()) {
+			return true;
+		}
+
+		$apiKey = $request->getAttribute('apiKey');
+
+		return $request->getAttribute('authMethod') === 'apikey'
+			&& $apiKey instanceof ApiKeyData
+			&& ApiKeyGrants::grantsSync($apiKey);
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
@@ -68,7 +81,7 @@ readonly class SyncImportAction
 			throw new HttpBadRequestException($request, 'JSON root must be an object');
 		}
 
-		$result = $this->jumpStartImporter->importFromDefinition($definition, true, $this->callerIsSuperAdmin());
+		$result = $this->jumpStartImporter->importFromDefinition($definition, true, $this->mayWriteSystemCollections($request));
 
 		return $this->renderer->json($response, $result->toArray());
 	}

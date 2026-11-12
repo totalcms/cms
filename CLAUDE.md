@@ -143,7 +143,7 @@ local run for code CI then failed, so the local gate now always recomputes.
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
   - **`/src/Domain/Mailer/`** - Transactional + bulk mailer (bulk is edition-gated)
   - **`/src/Domain/AccessGroup/`** + **`/src/Domain/ApiKey/`** + **`/src/Domain/OAuth/`** - Authorization credentials and grouping
-  - **`/src/Domain/Sync/`** - `tcms push` / `tcms pull` collection sync (5-collection allowlist)
+  - **`/src/Domain/Sync/`** - `tcms push` / `tcms pull` collection sync (6-collection allowlist)
   - **`/src/Domain/Visualizer/`** - Collection + object relationship diagrams (Mermaid)
   - *(53 domains total — the above are the high-traffic ones; browse `src/Domain/` for the rest)*
 - **`/src/CLI/`** - Symfony Console CLI application and commands

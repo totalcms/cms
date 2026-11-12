@@ -14,7 +14,7 @@ Sync lets you push schemas and templates from a local development instance to a 
 
 - **`--collections` now means collection SETTINGS**, not objects. Before 3.5.1 it moved objects from five allowlisted collections; that meaning is gone.
 - **The flag formerly named `collection-meta` is removed.** Its job — pushing/pulling collection settings — is now `--collections`.
-- Objects for the five site-machinery collections move via their own feature flags instead: `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`.
+- Objects for the site-machinery collections move via their own feature flags instead: `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`, and (since 3.6.10) `--seo`.
 - **New:** `push --objects=collection[:id,id]` seeds object data from any seedable collection to production. Unlike everything else in Sync, it never overwrites — existing objects on the target are skipped unless you add `--overwrite`. It is push-only; `pull` has no equivalent.
 
 If you have scripts or CI steps calling `tcms push --collections=...` expecting objects, or the old collection-settings flag, update them before upgrading.
@@ -23,17 +23,30 @@ If you have scripts or CI steps calling `tcms push --collections=...` expecting 
 
 - Custom schemas (`.schemas/` directory)
 - Custom templates
-- **Collection settings** — every collection's configuration (`.meta.json`): URL, MCP card, sitemap settings, access groups, schema overrides, form settings. Moved with `--collections` (any collection, not just the five below). A collection that exists on the source but not the target is created there (settings only — its objects don't travel). The environment-local counters (`count`, `totalObjects`) and the content timestamp (`lastUpdated`) **never** move: the receiving side always keeps its own, no matter what a payload carries.
-- **Site-machinery objects**, one feature flag per collection — `--pages` (`builder-pages`), `--dataviews` (`dataviews`), `--mailer` (`mailer`), `--mcp-prompts` (`mcp-prompt`), `--automations` (`automations`). Each upserts: given with no value it moves every object in that collection (`--pages`), given a value it moves just those ids (`--pages=home,about`).
+- **Collection settings** — every collection's configuration (`.meta.json`): URL, MCP card, sitemap settings, access groups, schema overrides, form settings. Moved with `--collections` (any collection, not just the flagged ones below). A collection that exists on the source but not the target is created there (settings only — its objects don't travel). The environment-local counters (`count`, `totalObjects`) and the content timestamp (`lastUpdated`) **never** move: the receiving side always keeps its own, no matter what a payload carries.
+- **Site-machinery objects**, one feature flag per collection — `--pages` (`builder-pages`), `--dataviews` (`dataviews`), `--mailer` (`mailer`), `--mcp-prompts` (`mcp-prompt`), `--automations` (`automations`), `--seo` (`seo-site`, the Site SEO record). Each upserts: given with no value it moves every object in that collection (`--pages`), given a value it moves just those ids (`--pages=home,about`).
 - **Seeded objects (push only)** — `--objects=collection[:id,id]` exports object data from any seedable collection and lands it on the target, but only where the target doesn't already have that id. See [Seeding objects with `--objects`](#seeding-objects-with-objects) below.
 
 > **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and the flagged/settings/seeded data only. See [Git-First Templates](docs/operations/git-first-templates).
 
-### The five feature flags
+### The feature flags
 
-`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, and `--automations` each move one reserved collection's objects, always in upsert mode (same as schemas and templates — the target's copy is replaced). They're named for the admin feature, not the storage collection, so you don't have to know that Pages live in a collection called `builder-pages`.
+`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`, and `--seo` each move one reserved collection's objects, always in upsert mode (same as schemas and templates — the target's copy is replaced). They're named for the admin feature, not the storage collection, so you don't have to know that Pages live in a collection called `builder-pages`.
 
-These five are the only collections sync can move *destructively* (overwriting an existing object on the target). Every other collection's objects only ever arrive via `--objects`, which is non-destructive by default — see below.
+These are the only collections sync can move *destructively* (overwriting an existing object on the target). Every other collection's objects only ever arrive via `--objects`, which is non-destructive by default — see below.
+
+Site SEO is on the list because every install creates its record, so a seed push, which never overwrites, could not move a change to it.
+
+#### What each site keeps for itself
+
+A few fields of a flagged record are the site's own state, not something you authored, so they never travel in either direction and the receiving side keeps its own:
+
+| Collection | Fields | Why |
+|---|---|---|
+| Data Views | `lastBuilt`, `lastError` | Every scheduled rebuild writes them on the site that ran it. Without this, a view rebuilt on production showed as newer there forever. |
+| Site SEO | `indexNowEnabled`, `indexNowKey` | The key identifies one site to the search engines. Turn IndexNow on separately on each site. |
+
+The images on the Site SEO record (default image, logo, icons) don't travel either, like every other media field. Upload them on each site.
 
 ### Seeding objects with `--objects`
 
@@ -43,7 +56,7 @@ These five are the only collections sync can move *destructively* (overwriting a
 - A push that mixes seeded objects with anything else — `push --schemas=faq --objects=faq` — sends **two** requests: the schemas, templates, feature-flag objects and collection settings upsert through `/api/sync/import`, then the seeded objects alone go to the skip-existing `/api/import/jumpstart`. Each half keeps the semantics its flag documents. The mirror half goes first (so a new schema or collection exists before its rows land); if it fails, the seed is not sent and the command says so, and it exits non-zero if either half fails.
 - `--objects` and `--overwrite` are **push-only** — `pull` has no seeding mode.
 - Not every collection is seedable:
-  - The five feature-flag collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) are reachable only through their own flag, not `--objects`.
+  - The feature-flag collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`, `seo-site`) are reachable only through their own flag, not `--objects`.
   - `image`, `gallery`, `file`, and `depot` can never be seeded — see [Binaries never travel](#what-never-gets-synced) below.
   - `playground` can never be seeded — it's a per-install scratchpad created on demand, not portable content.
 - Binaries never travel even for seedable collections: a card or field that references an image/file/gallery/depot is exported without that field, so the receiving object simply won't have it populated. A pushed blog post never blanks a production image or file field, because the field never arrives at all.
@@ -94,7 +107,7 @@ On your **production** Total CMS instance:
 
 1. Go to **Utilities > API Keys**
 2. Create a new key with **GET** and **POST** permissions
-3. Under endpoints, choose **Specific endpoints** and tick **Sync Manager** — this grants the `/sync` routes that push (`POST /sync/import`) and pull (`GET /sync/export`) use, and nothing else. Both routes are admin only for a signed-in session; an API key is checked against its own endpoint grant instead
+3. Under endpoints, choose **Specific endpoints** and tick **Sync Manager** — this grants the `/sync` routes that push (`POST /sync/import`) and pull (`GET /sync/export`) use, and nothing else. Both routes are admin only for a signed-in session; an API key is checked against its own endpoint grant instead. A key with Sync Manager can push everything sync moves, **automations included**, and an automation's handler is PHP that runs on the server. Only a super-admin can create a key, so this is their authority, but keep the key as safe as an admin password
 4. If you will seed objects with `tcms push --objects`, also tick **Content Import (seeding)**. Seeded objects go to `POST /import/jumpstart`, a different route from the rest of a push, so a key granted only Sync Manager answers `401 Invalid API key or insufficient permissions` for that half while everything else succeeds
 5. Copy the generated API key
 
@@ -185,7 +198,7 @@ tcms push --dry-run
 tcms push --json
 ```
 
-Filters are exclusive: as soon as any of `--schemas`, `--templates`, `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`, `--collections`, or `--objects` is given, the categories you did not mention are left out entirely.
+Filters are exclusive: as soon as any of `--schemas`, `--templates`, `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`, `--seo`, `--collections`, or `--objects` is given, the categories you did not mention are left out entirely.
 
 `--objects` and `--overwrite` are push-only — seeding content onto production has no pull equivalent.
 
@@ -265,7 +278,7 @@ Everything except a plain `--objects` seed overwrites on the target: if a schema
 
 `--objects` is the exception, and deliberately so: existing objects on the target are left alone unless you add `--overwrite`, because seeding a fresh site with starter content should never clobber something an editor already changed in production.
 
-> **A bare `tcms push` is a full mirror.** With no filter flags, a push carries every custom schema, every template, every object in the five feature-flagged collections, and every collection's settings — but never seeds `--objects`, which only ever runs when named explicitly. If pages are edited on the production server, push from local with that in mind. To move one thing, name it: the moment any filter flag is given, the categories you did not mention are excluded — `tcms push --schemas=blog` pushes the blog schema and nothing else. `--dry-run` shows the complete payload.
+> **A bare `tcms push` is a full mirror.** With no filter flags, a push carries every custom schema, every template, every object in the feature-flagged collections, and every collection's settings — but never seeds `--objects`, which only ever runs when named explicitly. If pages are edited on the production server, push from local with that in mind. To move one thing, name it: the moment any filter flag is given, the categories you did not mention are excluded — `tcms push --schemas=blog` pushes the blog schema and nothing else. `--dry-run` shows the complete payload.
 
 ## Automatic Backups
 
@@ -283,7 +296,7 @@ Backups only cover what sync overwrites. They are not a substitute for real back
 
 ## Timestamps
 
-Schemas carry a top-level `updated` value stamped on every save, and each of the five feature-flagged collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) has an auto-maintained `updated` field. These exist so dry-run can tell you which side of a difference holds the newer edit.
+Schemas carry a top-level `updated` value stamped on every save, and each of the feature-flagged collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`, `seo-site`) has an auto-maintained `updated` field. These exist so dry-run can tell you which side of a difference holds the newer edit.
 
 Collections carry **two** timestamps with deliberately different meanings:
 
@@ -314,7 +327,7 @@ Both approaches can coexist. Use git for your primary deployment workflow, and S
 
 **"Sync not configured"** — Set the production URL and API key in Settings > Sync.
 
-**Push fails with HTTP 401** — The API key is invalid or doesn't have the required permissions. Verify the key on the production server has GET and POST access to `/export/*` and `/import/*`.
+**Push fails with HTTP 401** — The API key is invalid or doesn't have the required permissions. Verify the key on the production server has GET and POST and the **Sync Manager** endpoint (plus **Content Import** if you seed objects).
 
 **Push fails with HTTP 404** — The production server URL may be incorrect. Make sure it points to the Total CMS API root (e.g., `https://example.com/tcms`), not the site root.
 

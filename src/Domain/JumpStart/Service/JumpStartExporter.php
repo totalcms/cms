@@ -313,7 +313,7 @@ readonly class JumpStartExporter
 			$objectCount = 0;
 			foreach ($index->objects as $object) {
 				$object        = $this->objectFetcher->fetchObject($collection->id, $object['id']);
-				$processedData = $this->processObjectData($object, $collection->schema);
+				$processedData = $this->processObjectData($object, $collection->schema, $collection->id);
 
 				$this->jumpstart->addObject([
 					'collection' => $collection->id,
@@ -447,7 +447,7 @@ readonly class JumpStartExporter
 				$this->jumpstart->addObject([
 					'collection' => $collectionId,
 					'id'         => $fetched->id,
-					'data'       => $this->processObjectData($fetched, $collection->schema),
+					'data'       => $this->processObjectData($fetched, $collection->schema, $collectionId),
 				]);
 				$count++;
 			}
@@ -460,7 +460,7 @@ readonly class JumpStartExporter
 	}
 
 	/** @return array<string,mixed> */
-	private function processObjectData(ObjectData $object, string $schemaId): array
+	private function processObjectData(ObjectData $object, string $schemaId, string $collectionId): array
 	{
 		$schema        = $this->schemaFetcher->fetchSchema($schemaId);
 		$processedData = $object->toArray();
@@ -503,6 +503,12 @@ readonly class JumpStartExporter
 			}
 		}
 		unset($processedData['id']);
+
+		// The site's own state (a Data View's last build, the IndexNow key)
+		// is not the source's to send.
+		foreach (SyncableCollections::siteLocalFields($collectionId) as $fieldName) {
+			unset($processedData[$fieldName]);
+		}
 
 		// The loop above only sees top-level fields. Media inside a card or
 		// deck (a page's `seo.image`) gets the same treatment.

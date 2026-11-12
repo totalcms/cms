@@ -8,6 +8,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 
@@ -20,6 +21,10 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
  * Dates are preserved on both paths. Imported data is the authoritative
  * history of its source; restamping would make the copy read newer than the
  * original and poison any freshness comparison between the two sides.
+ *
+ * `import.updated` carries the object as it was before, as `object.updated`
+ * does: without it a listener cannot tell an update from a new record, and
+ * the IndexNow key listener made a new key on every push of Site SEO.
  */
 readonly class ImportedObjectWriter
 {
@@ -27,6 +32,7 @@ readonly class ImportedObjectWriter
 		private ObjectSaver $objectSaver,
 		private ObjectUpdater $objectUpdater,
 		private EventDispatcher $eventDispatcher,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -54,13 +60,24 @@ readonly class ImportedObjectWriter
 	{
 		$this->eventDispatcher->suspendForImport($collection);
 		try {
+			$previous = $this->previous($collection, $id);
+
 			$objectData['id'] = $id;
 			$object           = $this->objectUpdater->updateObject($collection, $id, $objectData, preserveDates: true);
-			$this->eventDispatcher->dispatch(CoreEvent::IMPORT_UPDATED, new ObjectEventPayload($collection, $object->id, $object));
+			$this->eventDispatcher->dispatch(CoreEvent::IMPORT_UPDATED, new ObjectEventPayload($collection, $object->id, $object, $previous));
 
 			return $object;
 		} finally {
 			$this->eventDispatcher->resumeForImport($collection);
+		}
+	}
+
+	private function previous(string $collection, string $id): ?ObjectData
+	{
+		try {
+			return $this->objectFetcher->fetchObject($collection, $id);
+		} catch (\Throwable) {
+			return null;
 		}
 	}
 }

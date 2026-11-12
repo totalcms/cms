@@ -5050,6 +5050,10 @@
                     "description": "Automations \u2014 all of them, or just the ones listed"
                 },
                 {
+                    "name": "--seo",
+                    "description": "The Site SEO record (its IndexNow key and images stay on each site)"
+                },
+                {
                     "name": "--collections",
                     "description": "Comma-separated collection IDs whose SETTINGS to push (any collection; counters never travel)"
                 },
@@ -5108,6 +5112,10 @@
                 {
                     "name": "--automations[=id,id]",
                     "description": "Automations \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--seo",
+                    "description": "The Site SEO record (its IndexNow key and images stay on each site)"
                 },
                 {
                     "name": "--collections",

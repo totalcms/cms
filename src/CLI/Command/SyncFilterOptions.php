@@ -24,10 +24,10 @@ trait SyncFilterOptions
 	/**
 	 * Options shared by `push` and `pull`.
 	 *
-	 * The five feature flags replace the old `--collections`, which named a
+	 * The feature flags replace the old `--collections`, which named a
 	 * gated set of collection ids and leaked storage detail: to the operator
-	 * those five are Pages, Data Views, Mailer templates, MCP prompts and
-	 * Automations — features, not collections. `--collections` is now the
+	 * they are Pages, Data Views, Mailer templates, MCP prompts, Automations
+	 * and Site SEO — features, not collections. `--collections` is now the
 	 * collection SETTINGS flag (formerly `--collection-meta`), which is what
 	 * the name should always have meant.
 	 */
@@ -59,7 +59,7 @@ trait SyncFilterOptions
 	 * category resolves to null / all. But the moment ANY filter option is
 	 * given, the categories the operator did NOT mention resolve to none.
 	 * `tcms push --schemas=blog` means "push the blog schema", not "push the
-	 * blog schema, plus every template, plus every object in five collections"
+	 * blog schema, plus every template, plus every object in the flagged collections"
 	 * — the old behaviour, where unmentioned categories silently defaulted to
 	 * "all", turned a one-schema deploy into an unintended content overwrite
 	 * on the target.

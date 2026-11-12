@@ -29,13 +29,16 @@ final class SyncableCollections
 		'mcp-prompt',
 		'dataviews',
 		'automations',
+		'seo-site',
 	];
 
 	/**
-	 * The five feature-named CLI flags and the collection each one moves.
+	 * The feature-named CLI flags and the collection each one moves.
 	 *
 	 * These collections are site machinery the developer authors — Pages,
-	 * Data Views, Mailer templates, MCP prompts, Automations. The operator
+	 * Data Views, Mailer templates, MCP prompts, Automations, Site SEO. Site
+	 * SEO is a singleton every install creates, so a seed push (which never
+	 * overwrites) could not move a change to it. The operator
 	 * knows them by their admin labels, not by collection id, which is why
 	 * the flags are named for the feature and not for the storage. It also
 	 * spares anyone having to know that the collection is `builder-pages`
@@ -53,6 +56,24 @@ final class SyncableCollections
 		'mailer'      => 'mailer',
 		'mcp-prompts' => 'mcp-prompt',
 		'automations' => 'automations',
+		'seo'         => 'seo-site',
+	];
+
+	/**
+	 * Fields of a synced record that are the site's own state rather than
+	 * something the developer authored. A push leaves them out, the diff
+	 * ignores them, and an upsert keeps the destination's.
+	 *
+	 * A Data View's last build is written by every scheduled rebuild on the
+	 * site that ran it, so without this a view rebuilt on production read
+	 * "remote newer" forever. The IndexNow key identifies one site to the
+	 * search engines; copying it would put two sites under one key.
+	 *
+	 * @var array<string,list<string>>
+	 */
+	public const SITE_LOCAL_FIELDS = [
+		'dataviews' => ['lastBuilt', 'lastError'],
+		'seo-site'  => ['indexNowEnabled', 'indexNowKey'],
 	];
 
 	/**
@@ -69,7 +90,7 @@ final class SyncableCollections
 	 * pointing at a file the target does not have. Refusing beats shipping
 	 * an empty husk.
 	 *
-	 * The five in FEATURE_FLAGS are excluded by seedable() rather than
+	 * The collections in FEATURE_FLAGS are excluded by seedable() rather than
 	 * listed here: they are reachable, just through their own flag.
 	 *
 	 * @var list<string>
@@ -81,6 +102,12 @@ final class SyncableCollections
 		'file',
 		'depot',
 	];
+
+	/** @return list<string> */
+	public static function siteLocalFields(string $collectionId): array
+	{
+		return self::SITE_LOCAL_FIELDS[$collectionId] ?? [];
+	}
 
 	public static function contains(string $id): bool
 	{

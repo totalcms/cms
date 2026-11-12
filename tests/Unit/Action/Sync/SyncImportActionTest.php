@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Action\Sync\SyncImportAction;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Renderer\JsonRenderer;
@@ -46,7 +47,7 @@ final class SyncImportActionTest extends TestCase
 		$definition = ['name' => 'Mirror', 'objects' => []];
 		$this->stubBody((string)json_encode($definition));
 
-		// Anonymous / API-key-only caller: no AUTH_USER in session.
+		// Anonymous caller: no AUTH_USER in session and no API key.
 		$access = $this->createMock(AccessManager::class);
 		$access->method('sessionIsSuperAdmin')->willReturn(false);
 
@@ -92,6 +93,52 @@ final class SyncImportActionTest extends TestCase
 		$this->jumpStartImporter->expects($this->once())
 			->method('importFromDefinition')
 			->with($definition, true, true)
+			->willReturn(OperationResult::success());
+
+		$this->renderer->method('json')->willReturn($this->response);
+
+		($this->actionWithAccess($access))($this->request, $this->response);
+	}
+
+	/**
+	 * A key with the Sync Manager permission was made by a super-admin (only
+	 * they can create keys) for exactly this, so it may push everything sync
+	 * moves, automations included.
+	 *
+	 * @return array<string,array{list<string>,bool}>
+	 */
+	public static function syncKeys(): array
+	{
+		return [
+			'Sync Manager permission' => [['/sync'], true],
+			'all endpoints'           => [['*'], true],
+			'other endpoints only'    => [['/collections', '/import'], false],
+		];
+	}
+
+	/**
+	 * @param list<string> $paths
+	 *
+	 * @dataProvider syncKeys
+	 */
+	public function testApiKeyWithSyncPermissionAuthorizesSystemCollections(array $paths, bool $allowed): void
+	{
+		$definition = ['name' => 'Mirror', 'objects' => []];
+		$this->stubBody((string)json_encode($definition));
+
+		$key = new ApiKeyData(['id' => 'k1', 'name' => 'Sync', 'key' => 'x', 'created' => '', 'scopes' => ['methods' => ['GET', 'POST'], 'paths' => $paths]]);
+		$this->request->method('getAttribute')->willReturnCallback(fn (string $name): mixed => match ($name) {
+			'authMethod' => 'apikey',
+			'apiKey'     => $key,
+			default      => null,
+		});
+
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(false);
+
+		$this->jumpStartImporter->expects($this->once())
+			->method('importFromDefinition')
+			->with($definition, true, $allowed)
 			->willReturn(OperationResult::success());
 
 		$this->renderer->method('json')->willReturn($this->response);

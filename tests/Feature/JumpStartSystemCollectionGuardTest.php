@@ -2,9 +2,12 @@
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Support\Config;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -157,5 +160,60 @@ describe('JumpStart system-collection guard', function (): void {
 		expect($body)->toContain('refused');
 		// And the RCE-carrying object must never have been written.
 		expect($this->objects->existsObject('automations', 'pwn'))->toBeFalse();
+	});
+
+	// A push from another site's Sync Manager or `tcms push` comes in with an
+	// API key. Only a super-admin can create one, so a key given the Sync
+	// Manager permission carries their authority for everything sync moves.
+	$pushAutomation = function (string $key, string $id): array {
+		// The suite runs with auth off, which skips every access check.
+		$config         = $this->app->getContainer()->get(Config::class);
+		$auth           = $config->auth;
+		$auth['enable'] = true;
+		$config->auth   = $auth;
+
+		$payload = json_encode([
+			'name'    => 'Mirror',
+			'objects' => [[
+				'collection' => 'automations',
+				'id'         => $id,
+				'data'       => [
+					'id'       => $id,
+					'name'     => 'Nightly',
+					'enabled'  => false,
+					'triggers' => ['t0' => ['id' => 't0', 'type' => 'schedule', 'cron' => '0 1 * * *']],
+					'handler'  => "<?php\n\nreturn function (\$ctx) { return 'ok'; };\n",
+				],
+			]],
+		]);
+
+		$factory  = new Psr17Factory();
+		$response = $this->app->handle($factory->createServerRequest('POST', '/api/sync/import')
+			->withHeader('Content-Type', 'application/json')
+			->withHeader('X-API-Key', $key)
+			->withBody($factory->createStream((string)$payload)));
+
+		return [$response->getStatusCode(), (string)$response->getBody()];
+	};
+
+	it('accepts an automations push from a key with the Sync Manager permission', function () use ($pushAutomation): void {
+		$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('automations');
+		$key = $this->app->getContainer()->get(ApiKeyCreator::class)->createApiKey('sync', ['methods' => ['GET', 'POST'], 'paths' => ['/sync']]);
+
+		[$status, $body] = $pushAutomation->call($this, $key->key, 'nightly');
+
+		expect($status)->toBe(200)
+			->and($body)->not->toContain('refused')
+			->and($this->objects->existsObject('automations', 'nightly'))->toBeTrue();
+	});
+
+	it('refuses the same push from a key without it', function () use ($pushAutomation): void {
+		$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('automations');
+		$key = $this->app->getContainer()->get(ApiKeyCreator::class)->createApiKey('content', ['methods' => ['GET', 'POST'], 'paths' => ['/collections']]);
+
+		[$status] = $pushAutomation->call($this, $key->key, 'refused-nightly');
+
+		expect($status)->toBe(401)
+			->and($this->objects->existsObject('automations', 'refused-nightly'))->toBeFalse();
 	});
 });

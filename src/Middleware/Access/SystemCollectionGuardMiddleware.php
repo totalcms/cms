@@ -30,8 +30,10 @@ use TotalCMS\Support\Config;
  * credential. Reads are not gated here (that is a separate hardening). The
  * import/sync write paths (`/api/import/jumpstart`, `/api/sync/import`) reach
  * the object store through JumpStartImporter rather than this route, so they
- * enforce the same super-admin requirement themselves — see
+ * enforce the super-admin requirement themselves — see
  * JumpStartImporter::$allowSystemCollections and the two import/sync actions.
+ * The sync import also accepts an API key with the Sync Manager permission:
+ * only a super-admin can create one, and it exists to push what sync moves.
  *
  * Marked `readonly` (not `final`) so tests can override route-argument
  * resolution — mirroring the `BaseAccessMiddleware` testing approach.

@@ -26,6 +26,27 @@ describe('SyncDiffService', function (): void {
 		expect($diff['schemas']['blog']['newer'])->toBeNull();
 	});
 
+	test('a Data View rebuilt on one side only is SAME', function (): void {
+		// Every scheduled rebuild writes lastBuilt (and bumps updated) on the
+		// site that ran it. That is the site's own state, not an edit.
+		$view = fn (string $built, string $updated): array => ['objects' => [[
+			'collection' => 'dataviews',
+			'id'         => 'posts',
+			'data'       => ['name' => 'Posts', 'definition' => '{% set data = [] %}', 'lastBuilt' => $built, 'lastError' => '', 'updated' => $updated],
+		]]];
+
+		$diff = $this->service->diff($view('2026-11-01T09:00:00-08:00', '2026-11-01T09:00:00-08:00'), $view('2026-11-12T03:00:00-08:00', '2026-11-12T03:00:00-08:00'));
+
+		expect($diff['objects']['dataviews/posts']['status'])->toBe(SyncDiffService::SAME)
+			->and($diff['objects']['dataviews/posts']['newer'])->toBeNull();
+	});
+
+	test('a field a site keeps for itself still differs in another collection', function (): void {
+		$page = fn (string $built): array => ['objects' => [['collection' => 'builder-pages', 'id' => 'home', 'data' => ['lastBuilt' => $built]]]];
+
+		expect($this->service->diff($page('a'), $page('b'))['objects']['builder-pages/home']['status'])->toBe(SyncDiffService::DIFFERS);
+	});
+
 	test('different content is DIFFERS with the later side hinted newer', function (): void {
 		$diff = $this->service->diff(
 			['schemas' => [['id' => 'blog', 'properties' => ['title' => [], 'tags' => []], 'updated' => '2026-07-29T10:00:00+00:00']]],
