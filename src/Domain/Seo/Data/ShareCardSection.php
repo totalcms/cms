@@ -11,7 +11,7 @@ namespace TotalCMS\Domain\Seo\Data;
  */
 final readonly class ShareCardSection
 {
-	public const PAGES = 'pages';
+	public const PAGES      = 'pages';
 	public const COLLECTION = 'collection';
 
 	public function __construct(

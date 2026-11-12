@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Seo\Service;
 
 use TotalCMS\Domain\Builder\Data\RouteMatch;
-use TotalCMS\Domain\Builder\Service\PagePreview;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Exception\PageResponseException;
+use TotalCMS\Domain\Builder\Service\PagePreview;
 use TotalCMS\Domain\Seo\Data\RenderedShareHead;
+use TotalCMS\Domain\Seo\Data\SocialCard;
 use TotalCMS\Domain\Seo\Data\SocialCardOutcome;
 use TotalCMS\Domain\Seo\Data\SocialCardReason;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
@@ -32,7 +33,7 @@ use TotalCMS\Support\Config;
  */
 readonly class ShareCardRenderer
 {
-	private const NOTE_MAX = 200;
+	private const NOTE_MAX     = 200;
 	private const ERROR_MARKUP = 'class="cms-twig-error';
 
 	public function __construct(
@@ -90,45 +91,45 @@ readonly class ShareCardRenderer
 	 */
 	private function renderHtml(RouteMatch $match): array
 	{
-		$data = ['params' => $match->params];
+		$data                                                  = ['params' => $match->params];
 		$data[$match->collection !== null ? 'object' : 'page'] = $match->pageData;
 
 		try {
 			$html = $this->twig->render($match->template, $data);
 		} catch (\Throwable $e) {
-			$decline = self::decline($e);
+			$decline = $this->decline($e);
 
-			return ['', $decline ?? self::firstLine($e->getMessage()), $decline === null];
+			return ['', $decline ?? $this->firstLine($e->getMessage()), $decline === null];
 		}
 
 		// TwigEngine answers a failed render with an error block, not an exception.
 		if (str_contains($html, self::ERROR_MARKUP)) {
-			return ['', self::errorMessage($html), true];
+			return ['', $this->errorMessage($html), true];
 		}
 
 		return [$html, null, false];
 	}
 
 	/** Why a template chose not to render the page, or null when it failed. */
-	private static function decline(\Throwable $e): ?string
+	private function decline(\Throwable $e): ?string
 	{
 		return match (true) {
 			PageNotFoundException::find($e) instanceof PageNotFoundException => 'refused to render',
 			PageRedirectException::find($e) instanceof PageRedirectException => 'redirects',
 			PageResponseException::find($e) instanceof PageResponseException => 'answers with its own response',
-			default => null,
+			default                                                          => null,
 		};
 	}
 
 	/** The message in TwigEngine's error block, without the traceback that follows it. */
-	private static function errorMessage(string $html): string
+	private function errorMessage(string $html): string
 	{
 		preg_match('#<p class="cms-twig-error[^"]*">(.*?)</p>#s', $html, $m);
 
-		return self::firstLine(html_entity_decode(strip_tags($m[1] ?? 'the template failed')));
+		return $this->firstLine(html_entity_decode(strip_tags($m[1] ?? 'the template failed')));
 	}
 
-	private static function firstLine(string $message): string
+	private function firstLine(string $message): string
 	{
 		$line = trim(strtok(trim($message), "\n") ?: '');
 
@@ -138,8 +139,8 @@ readonly class ShareCardRenderer
 	/** @param list<SocialCardOutcome> $outcomes */
 	private function fromHtml(string $html, array $outcomes): RenderedShareHead
 	{
-		$og      = self::openGraph($html);
-		$outcome = self::outcomeFor($og['og:image'], $outcomes);
+		$og      = $this->openGraph($html);
+		$outcome = $this->outcomeFor($og['og:image'], $outcomes);
 		$reason  = $outcome->reason ?? ($og['og:image'] === '' ? SocialCardReason::NoImage : SocialCardReason::NoRecord);
 
 		if ($reason === SocialCardReason::Drawn && $this->mismatched($og['og:image'])) {
@@ -157,7 +158,7 @@ readonly class ShareCardRenderer
 	 *
 	 * @return array{'og:image':string,'og:title':string,'og:description':string}
 	 */
-	private static function openGraph(string $html): array
+	private function openGraph(string $html): array
 	{
 		$og = ['og:image' => '', 'og:title' => '', 'og:description' => ''];
 		if (trim($html) === '') {
@@ -182,7 +183,7 @@ readonly class ShareCardRenderer
 	 *
 	 * @param list<SocialCardOutcome> $outcomes
 	 */
-	private static function outcomeFor(string $ogImage, array $outcomes): ?SocialCardOutcome
+	private function outcomeFor(string $ogImage, array $outcomes): ?SocialCardOutcome
 	{
 		foreach ($outcomes as $outcome) {
 			if ($outcome->ogImage === $ogImage && $ogImage !== '') {
@@ -210,7 +211,7 @@ readonly class ShareCardRenderer
 
 		$card = $this->socialImages->forRecord(rawurldecode($m[1]), rawurldecode($m[2]), $hash);
 
-		return $card === null || !$card->hasOverlay();
+		return !$card instanceof SocialCard || !$card->hasOverlay();
 	}
 
 	/**

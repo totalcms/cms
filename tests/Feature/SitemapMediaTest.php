@@ -103,4 +103,3 @@ it('lists a video file as content, with its uploaded poster', function (): void 
 		->toMatch('#<video:thumbnail_loc>https?://[^<]+/imageworks/clips/tour/video/poster\.jpg\?w=1280[^<]*</video:thumbnail_loc>#')
 		->not->toContain('<video:player_loc>');
 });
-

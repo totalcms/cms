@@ -55,9 +55,9 @@ beforeEach(function (): void {
 		$container->get(ObjectUpdater::class)->updateObject($collection, $id, array_merge($current, $data));
 	};
 
-	$this->render = fn (string $template, array $vars = []): string => $container->get(TwigEngine::class)->renderString($template, $vars);
-	$this->post   = fn (): array => $container->get(ObjectFetcher::class)->fetchObject('blog', 'hello')->toArray();
-	$this->head   = fn (): string => ($this->render)("{{ cms.seo.head(post, {collection: 'blog'}) }}", ['post' => ($this->post)()]);
+	$this->render  = fn (string $template, array $vars = []): string => $container->get(TwigEngine::class)->renderString($template, $vars);
+	$this->post    = fn (): array => $container->get(ObjectFetcher::class)->fetchObject('blog', 'hello')->toArray();
+	$this->head    = fn (): string => ($this->render)("{{ cms.seo.head(post, {collection: 'blog'}) }}", ['post' => ($this->post)()]);
 	$this->ogImage = function (): string {
 		preg_match('/<meta property="og:image" content="([^"]+)"/', ($this->head)(), $m);
 
@@ -182,7 +182,7 @@ it('serves the card from the route, and the plain image for any other hash', fun
 	expect([imagesx($cardImage), imagesy($cardImage)])->toBe([1200, 630]);
 
 	// The red plate sits in the middle of the card and nowhere on the plain image.
-	$red = fn (\GdImage $im): int => ((imagecolorat($im, 600, 315) >> 16) & 0xFF) - (imagecolorat($im, 600, 315) & 0xFF);
+	$red = fn (GdImage $im): int => ((imagecolorat($im, 600, 315) >> 16) & 0xFF) - (imagecolorat($im, 600, 315) & 0xFF);
 	expect($red($cardImage))->toBeGreaterThan(100)
 		->and($red($plainImage))->toBeLessThan(0);
 });
@@ -288,4 +288,3 @@ it('shares the plain image below Pro: overlays are a Pro feature', function (): 
 		->and($outcome->card?->hasOverlay())->toBeFalse()
 		->and($builder->apply($ctx, $meta)->ogImage)->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg');
 });
-

@@ -12,11 +12,11 @@ use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 // Imagick's put the tails of g, j, p, q and y below the plate.
 
 /** Whether a row of the drawn mark is all plate, with no text in it. */
-function textMarkRowIsPlate(\GdImage $image, int $y): bool
+function textMarkRowIsPlate(GdImage $image, int $y): bool
 {
 	for ($x = 0; $x < imagesx($image); $x += 2) {
 		$p = imagecolorat($image, $x, $y);
-		if (abs((($p >> 16) & 0xFF) - 0x0b) + abs((($p >> 8) & 0xFF) - 0x0f) + abs(($p & 0xFF) - 0x1a) > 40) {
+		if (abs((($p >> 16) & 0xFF) - 0x0B) + abs((($p >> 8) & 0xFF) - 0x0F) + abs(($p & 0xFF) - 0x1A) > 40) {
 			return false;
 		}
 	}
@@ -59,7 +59,7 @@ it('keeps the whole text on its plate, with even padding', function (DriverInter
  *
  * @return list<array{int,int}>
  */
-function textMarkLines(\GdImage $image): array
+function textMarkLines(GdImage $image): array
 {
 	$bands = [];
 	$start = null;
@@ -81,7 +81,7 @@ function textMarkLines(\GdImage $image): array
 }
 
 /** The first column with text in it, within a band of rows. */
-function textMarkFirstInk(\GdImage $image, array $band): int
+function textMarkFirstInk(GdImage $image, array $band): int
 {
 	for ($x = 0; $x < imagesx($image); $x++) {
 		for ($y = $band[0]; $y <= $band[1]; $y++) {
@@ -96,7 +96,7 @@ function textMarkFirstInk(\GdImage $image, array $band): int
 }
 
 /** @param array<string,mixed> $params */
-function textMarkDraw(DriverInterface $driver, array $params, ?int $wrapWidth = null): \GdImage
+function textMarkDraw(DriverInterface $driver, array $params, ?int $wrapWidth = null): GdImage
 {
 	$factory = (new ReflectionClass(TextWatermarkFactory::class))->newInstanceWithoutConstructor();
 	$mark    = $factory->draw(new TextWatermarkStyle($params + ['marktextbg' => '0b0f1a', 'marktextpad' => 10]), $driver, $wrapWidth);

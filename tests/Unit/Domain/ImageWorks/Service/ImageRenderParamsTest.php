@@ -83,4 +83,3 @@ test('below Pro the layered marks are taken out, from the URL and the watermark'
 		->and($pro['marks'])->toBe([['marktext' => 'Layer']])
 		->and($pro['marksettings'])->toBe($watermark);
 });
-

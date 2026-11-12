@@ -64,8 +64,8 @@ readonly class SitemapBuilder
 
 		// The image and video properties to list. The index rarely holds them,
 		// so naming any means reading each object in full.
-		$images = self::propertyList($sitemapSettings['images'] ?? null);
-		$videos = self::propertyList($sitemapSettings['videos'] ?? null);
+		$images = $this->propertyList($sitemapSettings['images'] ?? null);
+		$videos = $this->propertyList($sitemapSettings['videos'] ?? null);
 
 		// Fetch and filter the index
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
@@ -127,7 +127,7 @@ readonly class SitemapBuilder
 	 *
 	 * @return list<string>
 	 */
-	private static function propertyList(mixed $value): array
+	private function propertyList(mixed $value): array
 	{
 		if (!is_array($value)) {
 			return [];

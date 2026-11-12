@@ -62,7 +62,7 @@ final class ImageParamValidator
 		// A markimage layer cut to a circle (a profile photo)
 		'markshape' => ['circle'],
 		// A fill that fades out: solid at this edge, clear at the other
-		'markgradient' => ['top', 'bottom', 'left', 'right'],
+		'markgradient'  => ['top', 'bottom', 'left', 'right'],
 		'marktextalign' => ['left', 'center', 'right'],
 	];
 

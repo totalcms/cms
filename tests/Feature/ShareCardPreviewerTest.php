@@ -242,4 +242,3 @@ it('does not count a page that is not an HTML document', function (): void {
 	expect($feed?->head->document)->toBeFalse()
 		->and($feed?->isProblem())->toBeFalse();
 });
-

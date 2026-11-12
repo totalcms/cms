@@ -61,4 +61,3 @@ it('names the fields each site keeps for itself', function (): void {
 		->and(SyncableCollections::siteLocalFields('seo-site'))->toBe(['indexNowEnabled', 'indexNowKey'])
 		->and(SyncableCollections::siteLocalFields('builder-pages'))->toBe([]);
 });
-

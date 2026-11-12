@@ -30,8 +30,8 @@ readonly class AuthMailer
 	}
 
 	/**
-	 * @param string $redirect Where the visitor started, already same-origin;
-	 *                         ResetPasswordAction reads it from the link.
+	 * @param string $redirect where the visitor started, already same-origin;
+	 *                         ResetPasswordAction reads it from the link
 	 */
 	public function sendPasswordReset(string $email, string $token, string $collection, string $redirect = ''): OperationResult
 	{

@@ -12,6 +12,7 @@ use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Seo\Data\SocialCard;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
 use TotalCMS\Domain\Seo\Service\SocialImageMismatchLog;
 
@@ -50,7 +51,7 @@ readonly class ImageWorksSocialFetchAction
 
 		$hash = $request->getQueryParams()['v'] ?? null;
 		$card = is_string($hash) ? $this->socialImages->forRecord($args['collection'], $args['id'], $hash) : null;
-		if ($card === null) {
+		if (!$card instanceof SocialCard) {
 			if ($this->collections->collectionExists('social')) {
 				return ($this->imageFetch)($request, $response, ['collection' => 'social', 'id' => $args['collection'], 'property' => $args['id'], 'format' => $args['format'] ?? '']);
 			}

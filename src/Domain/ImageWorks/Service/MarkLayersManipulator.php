@@ -78,7 +78,7 @@ final class MarkLayersManipulator extends BaseManipulator
 		$rules = new Watermark();
 		$rules->setParams(array_filter(
 			['dpr' => $this->getParam('dpr')] + $layer,
-			fn (mixed $value): bool => is_scalar($value),
+			is_scalar(...),
 		));
 
 		$mark = match (true) {
@@ -204,7 +204,7 @@ final class MarkLayersManipulator extends BaseManipulator
 		// Intervention hands Imagick an opacity rounded to one decimal, which
 		// draws a fade as about ten visible bands; draw those rows natively.
 		$imagick = $native instanceof \Imagick ? $native : null;
-		$draw    = $imagick === null ? null : new \ImagickDraw();
+		$draw    = $imagick instanceof \Imagick ? new \ImagickDraw() : null;
 
 		for ($step = 0; $step < $length - 1; $step++) {
 			// 1 at the solid edge, falling to 0 at the clear one.
@@ -217,7 +217,7 @@ final class MarkLayersManipulator extends BaseManipulator
 				: $this->line($fill, $line, [$r, $g, $b], $opacity);
 		}
 
-		if ($imagick !== null && $draw !== null) {
+		if ($imagick instanceof \Imagick && $draw instanceof \ImagickDraw) {
 			$imagick->drawImage($draw);
 		}
 

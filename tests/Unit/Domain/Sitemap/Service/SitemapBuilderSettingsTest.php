@@ -13,11 +13,11 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Exception\SitemapDisabledException;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Sitemap\Service\SitemapMedia;
 

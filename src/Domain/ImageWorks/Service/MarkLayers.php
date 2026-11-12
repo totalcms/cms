@@ -182,9 +182,7 @@ final class MarkLayers
 	 */
 	private static function withDefaultWidth(array $layer): array
 	{
-		if (!isset($layer['markw'])) {
-			$layer['markw'] = self::DEFAULT_WIDTH;
-		}
+		$layer['markw'] ??= self::DEFAULT_WIDTH;
 
 		return $layer;
 	}

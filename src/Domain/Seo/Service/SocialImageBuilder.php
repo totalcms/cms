@@ -73,7 +73,7 @@ readonly class SocialImageBuilder
 	{
 		$outcome = $this->explain($ctx, $meta);
 		$card    = $outcome->card;
-		if ($card === null || !$card->hasOverlay()) {
+		if (!$card instanceof SocialCard || !$card->hasOverlay()) {
 			$this->recorder->record($outcome);
 
 			return $meta;
@@ -101,7 +101,7 @@ readonly class SocialImageBuilder
 
 		$ctx  = $this->contexts->make($subject, ['collection' => $collection]);
 		$card = $this->card($ctx, $this->metaBuilder->build($ctx));
-		if ($card === null || $card->collection !== $collection || $card->id !== $id) {
+		if (!$card instanceof SocialCard || $card->collection !== $collection || $card->id !== $id) {
 			return null;
 		}
 
@@ -150,7 +150,7 @@ readonly class SocialImageBuilder
 			$reason = SocialCardReason::NoSiteKey;
 		}
 
-		$card = new SocialCard(...[...$subject, ...$source, 'params' => $params, 'hash' => $hash, 'firstText' => self::firstText($marks)]);
+		$card = new SocialCard(...[...$subject, ...$source, 'params' => $params, 'hash' => $hash, 'firstText' => $this->firstText($marks)]);
 
 		return new SocialCardOutcome($reason, $card, $meta->ogImage, $detail, $layer);
 	}
@@ -195,7 +195,7 @@ readonly class SocialImageBuilder
 	 *
 	 * @param list<array<string,int|float|string>> $marks
 	 */
-	private static function firstText(array $marks): string
+	private function firstText(array $marks): string
 	{
 		foreach ($marks as $layer) {
 			if (is_string($layer['marktext'] ?? null) && $layer['marktext'] !== '') {
@@ -345,7 +345,7 @@ readonly class SocialImageBuilder
 			'socialTitle' => $meta->socialTitle,
 			'site'        => $ctx->siteName,
 			'path'        => (string)(parse_url($ctx->url, PHP_URL_PATH) ?? ''),
-			default       => self::property($ctx->object, $key),
+			default       => $this->property($ctx->object, $key),
 		};
 
 		$text = trim((string)preg_replace('/[ \t\r\n]+/', ' ', html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
@@ -359,18 +359,18 @@ readonly class SocialImageBuilder
 	 *
 	 * @param array<string,mixed> $data
 	 */
-	private static function property(array $data, string $key): string
+	private function property(array $data, string $key): string
 	{
 		$value = $data;
 		foreach (explode('.', $key) as $segment) {
-			$value = self::firstOf($value);
+			$value = $this->firstOf($value);
 			if (!is_array($value) || !array_key_exists($segment, $value)) {
 				return '';
 			}
 			$value = $value[$segment];
 		}
 
-		$value = self::firstOf($value);
+		$value = $this->firstOf($value);
 		if (is_bool($value)) {
 			return '';
 		}
@@ -378,7 +378,7 @@ readonly class SocialImageBuilder
 		return is_scalar($value) ? trim((string)$value) : '';
 	}
 
-	private static function firstOf(mixed $value): mixed
+	private function firstOf(mixed $value): mixed
 	{
 		return is_array($value) && $value !== [] && array_is_list($value) ? $value[0] : $value;
 	}

@@ -957,7 +957,7 @@ return [
 	'access_groups.util_setup'             => 'Konfiguracja projektu',
 	'access_groups.util_server'            => 'Kontrola serwera',
 	'access_groups.util_debugger'          => 'Debugger Twig',
-	'access_groups.util_share_cards'      => 'Karty udostępniania',
+	'access_groups.util_share_cards'       => 'Karty udostępniania',
 	'access_groups.create_submit'          => 'Utwórz grupę dostępu',
 	'access_groups.update_submit'          => 'Zaktualizuj grupę dostępu',
 	'access_groups.edit_title'             => 'Edytuj grupę dostępu',

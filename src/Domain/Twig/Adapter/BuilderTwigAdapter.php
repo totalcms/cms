@@ -63,7 +63,7 @@ class BuilderTwigAdapter
 		// A page previewed in-process (Share Cards) is the current page, drafts included.
 		$previewed = $path === null ? $this->preview->current() : null;
 		if ($previewed instanceof RouteMatch) {
-			return self::record($previewed);
+			return $this->record($previewed);
 		}
 
 		$path ??= (string)($_SERVER['REQUEST_URI'] ?? '/');
@@ -80,7 +80,7 @@ class BuilderTwigAdapter
 		// hand-written front end) a page record is an SEO carrier and has none.
 		$match = $this->router->match($path, requireTemplate: false);
 
-		return $match instanceof RouteMatch ? self::record($match) : null;
+		return $match instanceof RouteMatch ? $this->record($match) : null;
 	}
 
 	/**
@@ -90,7 +90,7 @@ class BuilderTwigAdapter
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function record(RouteMatch $match): array
+	private function record(RouteMatch $match): array
 	{
 		if ($match->collection !== null) {
 			return $match->pageData + ['_collection' => $match->collection];

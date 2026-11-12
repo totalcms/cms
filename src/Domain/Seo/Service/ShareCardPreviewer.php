@@ -115,8 +115,8 @@ readonly class ShareCardPreviewer
 		return new ShareCard(
 			path: $path,
 			shareUrl: $settings->absolute($path),
-			imageSrc: self::local($head, $settings->baseUrl),
-			domain: self::host($settings->baseUrl),
+			imageSrc: $this->local($head, $settings->baseUrl),
+			domain: $this->host($settings->baseUrl),
 			editUrl: $editUrl,
 			draft: (bool)($record['draft'] ?? false),
 			noindex: SeoFields::fromArray(is_array($record['seo'] ?? null) ? $record['seo'] : [])->noindex,
@@ -129,10 +129,10 @@ readonly class ShareCardPreviewer
 	 * this install (its path and query), since before launch that address may
 	 * not serve it yet; one on any other host (a CDN, a bucket) is left alone.
 	 */
-	private static function local(RenderedShareHead $head, string $baseUrl): string
+	private function local(RenderedShareHead $head, string $baseUrl): string
 	{
 		$host = strtolower((string)parse_url($head->ogImage, PHP_URL_HOST));
-		if ($head->ogImage === '' || ($host !== '' && $host !== self::host($baseUrl))) {
+		if ($head->ogImage === '' || ($host !== '' && $host !== $this->host($baseUrl))) {
 			return $head->ogImage;
 		}
 
@@ -142,7 +142,7 @@ readonly class ShareCardPreviewer
 		return $path . ($query !== '' ? '?' . $query : '');
 	}
 
-	private static function host(string $url): string
+	private function host(string $url): string
 	{
 		return strtolower((string)parse_url($url, PHP_URL_HOST));
 	}

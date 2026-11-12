@@ -161,7 +161,7 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 		'unknown shape'    => [[['markimage' => 'blog/post-1/image', 'markshape' => 'star']]],
 		'two path parts'   => [[['markimage' => 'blog/image']]],
 		'unknown gradient' => [[['markfill' => '000000', 'markgradient' => 'diagonal']]],
-		'fill injection'   => [[['markfill' => "000) OR (1=1"]]],
+		'fill injection'   => [[['markfill' => '000) OR (1=1']]],
 	]);
 
 	it('counts the flat marks toward the cap', function (): void {

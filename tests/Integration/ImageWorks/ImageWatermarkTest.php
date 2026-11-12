@@ -52,9 +52,9 @@ function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGen
 
 	$fetcher = test()->createMock(PropertyFetcher::class);
 	$fetcher->method('fetchProperty')->willReturn(new ImageData([
-		'name'   => 'photo.jpg',
-		'width'  => WATERMARK_SOURCE_W,
-		'height' => WATERMARK_SOURCE_H,
+		'name'    => 'photo.jpg',
+		'width'   => WATERMARK_SOURCE_W,
+		'height'  => WATERMARK_SOURCE_H,
 		'mime'    => 'image/jpeg',
 		'palette' => ['#ff0000', '#00ff00'],
 	]));
@@ -876,7 +876,7 @@ function watermarkRedColumns(string $body): int
 	return $columns;
 }
 
-function watermarkIsRed(\GdImage $im, int $x, int $y): bool
+function watermarkIsRed(GdImage $im, int $x, int $y): bool
 {
 	$p = imagecolorat($im, $x, $y);
 

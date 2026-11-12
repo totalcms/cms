@@ -140,4 +140,3 @@ it('is a Pro feature: below Pro the page is refused and so are its cards', funct
 		->and($page)->not->toContain('data-share-cards')
 		->and($chunk->getStatusCode())->toBe(403);
 });
-

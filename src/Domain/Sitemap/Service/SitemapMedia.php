@@ -74,7 +74,7 @@ readonly class SitemapMedia
 
 			if (is_array($value) && array_is_list($value)) {
 				foreach ($value as $image) {
-					if (is_array($image) && self::isImage($image)) {
+					if (is_array($image) && $this->isImage($image)) {
 						yield $this->media->galleryPath($object, (string)$image['name'], $params, $options);
 					}
 				}
@@ -82,14 +82,14 @@ readonly class SitemapMedia
 				continue;
 			}
 
-			if (is_array($value) && self::isImage($value)) {
+			if (is_array($value) && $this->isImage($value)) {
 				yield $this->media->imagePath($object, $params, $options);
 			}
 		}
 	}
 
 	/** @param array<array-key,mixed> $image */
-	private static function isImage(array $image): bool
+	private function isImage(array $image): bool
 	{
 		return (string)($image['name'] ?? '') !== '' && (int)($image['size'] ?? 0) > 0;
 	}

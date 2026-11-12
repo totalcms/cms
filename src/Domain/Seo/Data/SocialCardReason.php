@@ -32,7 +32,7 @@ enum SocialCardReason: string
 	{
 		return match ($this) {
 			self::Drawn, self::AsIs, self::NoOverlay, self::NoRecord, self::NeedsPro => false,
-			default => true,
+			default                                                                  => true,
 		};
 	}
 }

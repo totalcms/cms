@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
 use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
+use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -134,7 +135,7 @@ readonly class WatermarkFactory
 
 		[$collection, $id, $property] = $parts;
 		$imageData                    = $this->sources->markImage($collection, $id, $property, $parts[3] ?? null);
-		if ($imageData === null) {
+		if (!$imageData instanceof ImageData) {
 			return null;
 		}
 

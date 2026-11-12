@@ -957,7 +957,7 @@ return [
 	'access_groups.util_setup'             => 'Project Setup',
 	'access_groups.util_server'            => 'Server Checker',
 	'access_groups.util_debugger'          => 'Twig Debugger',
-	'access_groups.util_share_cards'      => 'Share Cards',
+	'access_groups.util_share_cards'       => 'Share Cards',
 	'access_groups.create_submit'          => 'Zugriffsgruppe erstellen',
 	'access_groups.update_submit'          => 'Zugriffsgruppe aktualisieren',
 	'access_groups.edit_title'             => 'Zugriffsgruppe bearbeiten',
