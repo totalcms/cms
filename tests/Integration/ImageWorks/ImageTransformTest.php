@@ -5,7 +5,6 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
@@ -66,8 +65,7 @@ function imageTransformGenerator(string $root, array $imageworks = []): ImageGen
 	// tests are about the transform. Null from both factories is the
 	// "no watermark configured" path.
 	$watermarks = test()->createMock(WatermarkFactory::class);
-	$watermarks->method('createImageWatermark')->willReturn(null);
-	$watermarks->method('createTextWatermark')->willReturn(null);
+	$watermarks->method('prepare')->willReturn([]);
 
 	$glide = new GlideFactory($storage, $config);
 
@@ -75,7 +73,6 @@ function imageTransformGenerator(string $root, array $imageworks = []): ImageGen
 		new ImageSourceResolver($fetcher),
 		new ImageRenderParams($meta, $config),
 		new ImageResponder($storage, $glide),
-		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
 		$glide,
 		$watermarks,
 		$config,

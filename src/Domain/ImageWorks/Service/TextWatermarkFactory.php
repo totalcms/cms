@@ -2,6 +2,11 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Intervention\Image\Colors\Rgb\Color;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Interfaces\DriverInterface;
+use Intervention\Image\Interfaces\ImageInterface;
+use Intervention\Image\Typography\Font;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -11,11 +16,12 @@ use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
 /**
- * Text watermark generator for ImageWorks.
+ * Draws text watermarks for ImageWorks with Intervention Image.
  *
- * Draws the text to a transparent PNG with GD, which Glide then lays over the
- * image like any other watermark. In tiled mode the PNG is a whole pattern of
- * marks (see WatermarkPatternBuilder). Each style is drawn once and kept in
+ * A text layer is drawn onto a transparent canvas of the image's own driver
+ * (GD or Imagick) at render time and placed like a logo (see
+ * MarkLayersManipulator). Only a tiled mark is kept as a file: the whole
+ * pattern of marks (see WatermarkPatternBuilder), drawn once into
  * WATERMARK_DIR under a name made from its settings.
  */
 readonly class TextWatermarkFactory
@@ -24,8 +30,10 @@ readonly class TextWatermarkFactory
 
 	/** Outline directions: enough that a thick outline has no gaps. */
 	private const STROKE_STEPS = 24;
-	/** Shadow opacity: GD alpha, 0 opaque to 127 clear. */
-	private const SHADOW_ALPHA = 70;
+	/** Shadow opacity, 0 clear to 255 opaque. */
+	private const SHADOW_OPACITY = 115;
+	/** Line spacing as a multiple of the font's line height. */
+	private const LINE_HEIGHT = 1.25;
 
 	private LoggerInterface $logger;
 
@@ -39,7 +47,8 @@ readonly class TextWatermarkFactory
 	}
 
 	/**
-	 * Generate a text watermark image with caching.
+	 * The text watermark as a PNG in WATERMARK_DIR: the pattern of marks in
+	 * tiled mode, otherwise the one mark. Each style is drawn once.
 	 *
 	 * @param array<string,mixed> $params Text watermark parameters
 	 *
@@ -58,26 +67,32 @@ readonly class TextWatermarkFactory
 			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate text watermark.');
 		}
 
-		$image = $this->drawText($style);
-		if ($style->tiles > 0) {
-			$image = WatermarkPatternBuilder::build($image, $style->tiles);
+		$native = $this->draw($style, new GdDriver())->core()->native();
+		if (!$native instanceof \GdImage) {
+			throw new \RuntimeException('Failed to draw text watermark');
 		}
 
-		$this->save($image, $filename);
+		$this->save($style->tiles > 0 ? WatermarkPatternBuilder::build($native, $style->tiles) : $native, $filename);
 
 		return $filename;
 	}
 
-	private function drawText(TextWatermarkStyle $style): \GdImage
+	/**
+	 * The text drawn once, on a transparent canvas (or its background
+	 * color) of the given driver, with its outline, shadow and angle.
+	 */
+	public function draw(TextWatermarkStyle $style, DriverInterface $driver): ImageInterface
 	{
 		$fontPath = $this->getFontPath($style->font);
+		if ($fontPath === null) {
+			throw new \RuntimeException('No font found for the text watermark');
+		}
+
 		// Only depot fonts create temporary files that need cleanup
-		$isTemporaryFont = $style->font !== null && $fontPath !== null && str_contains($fontPath, sys_get_temp_dir());
+		$isTemporaryFont = $style->font !== null && str_contains($fontPath, sys_get_temp_dir());
 
 		try {
-			return $fontPath !== null && function_exists('imagettftext')
-				? $this->drawTtfText($style, $fontPath)
-				: $this->drawBuiltinText($style);
+			return $this->drawWithFont($style, $driver, $fontPath);
 		} finally {
 			if ($isTemporaryFont && file_exists($fontPath)) {
 				unlink($fontPath);
@@ -85,59 +100,124 @@ readonly class TextWatermarkFactory
 		}
 	}
 
-	private function drawTtfText(TextWatermarkStyle $style, string $fontPath): \GdImage
+	private function drawWithFont(TextWatermarkStyle $style, DriverInterface $driver, string $fontPath): ImageInterface
 	{
-		$box = imageftbbox($style->fontSize, $style->angle, $fontPath, $style->text);
-		if (!is_array($box)) {
-			throw new \RuntimeException('Failed to create text bounding box');
-		}
+		$font = new Font($fontPath);
+		$font->setSize($style->fontSize);
+		$font->setAlignment('left');
+		$font->setValignment('top');
+		$font->setLineHeight(self::LINE_HEIGHT);
 
-		// For rotated text the box is the envelope of the four corners:
-		// [0,1] lower left, [2,3] lower right, [4,5] upper right, [6,7] upper left.
-		$minX = min($box[0], $box[2], $box[4], $box[6]);
-		$maxX = max($box[0], $box[2], $box[4], $box[6]);
-		$minY = min($box[1], $box[3], $box[5], $box[7]);
-		$maxY = max($box[1], $box[3], $box[5], $box[7]);
+		[$textWidth, $textHeight] = $this->textSize($style->text, $font, $driver);
 
-		$lineCount = substr_count($style->text, "\n") + 1;
-		$padding   = $style->padding + $style->effectsMargin();
-		// Extra width balances the font's side bearing; extra height leaves
-		// room for descenders (and rotation), per line.
-		$width       = abs($maxX - $minX) + ($padding * 2) + ($style->fontSize * 0.1);
-		$extraHeight = $style->angle === 0 ? ($style->fontSize * 0.5 * $lineCount) : ($style->fontSize * 0.8 * $lineCount);
-		$height      = abs($maxY - $minY) + ($padding * 2) + $extraHeight;
-
-		$image = $this->canvas((int)$width, (int)$height, $style->background);
-
-		if ($style->angle === 0) {
-			// Baseline from the top, so multi-line text grows downward.
-			$x = $padding;
-			$y = $padding + $style->fontSize;
-		} else {
-			// Center the rotated text in the canvas.
-			$x = (imagesx($image) / 2) - ($minX + ($maxX - $minX) / 2);
-			$y = (imagesy($image) / 2) - ($minY + ($maxY - $minY) / 2);
-		}
-
-		/** @param array{int<0,255>,int<0,255>,int<0,255>} $rgb */
-		$draw = function (array $rgb, int $alpha, float $x, float $y) use ($image, $style, $fontPath): void {
-			$color = imagecolorallocatealpha($image, $rgb[0], $rgb[1], $rgb[2], max(0, min(127, $alpha)));
-			if ($color === false || imagettftext($image, $style->fontSize, $style->angle, (int)round($x), (int)round($y), $color, $fontPath, $style->text) === false) {
-				throw new \RuntimeException('Failed to render TTF text');
-			}
-		};
+		// Draw with room to spare, then trim to the drawn pixels: the font
+		// metrics each driver reports put descenders (g, y) in different
+		// places, and Imagick's cut them off the plate. Trimming gives the
+		// same box on both, and even padding on all four sides.
+		$margin = $style->effectsMargin() + $style->fontSize;
+		$ink    = $driver->createImage(
+			max(10, $textWidth + ($margin * 2)),
+			max(10, $textHeight + ($margin * 2)),
+		);
 
 		if ($style->shadow > 0) {
-			$draw($style->shadowColor, self::SHADOW_ALPHA, $x + $style->shadow, $y + $style->shadow);
+			$this->text($ink, $style->text, $font, new Color(...[...$style->shadowColor, self::SHADOW_OPACITY]), $margin + $style->shadow, $margin + $style->shadow);
 		}
 
+		$strokeColor = new Color(...$style->strokeColor);
 		foreach ($this->strokeOffsets($style->stroke) as [$dx, $dy]) {
-			$draw($style->strokeColor, 0, $x + $dx, $y + $dy);
+			$this->text($ink, $style->text, $font, $strokeColor, $margin + $dx, $margin + $dy);
 		}
 
-		$draw($style->color, 0, $x, $y);
+		$this->text($ink, $style->text, $font, new Color(...$style->color), $margin, $margin);
+		$ink = $this->trimmed($ink);
 
-		return $image;
+		$padding = max(0, $style->padding);
+		$canvas  = $driver->createImage($ink->width() + ($padding * 2), $ink->height() + ($padding * 2));
+		if ($style->background !== null) {
+			$canvas->fill(new Color(...$style->background));
+		}
+
+		$canvas->place($ink, 'top-left', $padding, $padding);
+
+		// Positive angles turn counter-clockwise, as GD's text angle did.
+		return $style->angle === 0 ? $canvas : $canvas->rotate($style->angle, new Color(0, 0, 0, 0));
+	}
+
+	/**
+	 * The image cut to its drawn pixels; as it was when nothing is drawn.
+	 * The canvas must have a clear margin, so its top-left pixel is empty.
+	 */
+	private function trimmed(ImageInterface $image): ImageInterface
+	{
+		$native = $image->core()->native();
+
+		if ($native instanceof \Imagick) {
+			$native->trimImage(0);
+			$native->setImagePage(0, 0, 0, 0);
+
+			return $image;
+		}
+
+		if (!$native instanceof \GdImage) {
+			return $image;
+		}
+
+		// GD's own crop drops the alpha channel, so it only measures here:
+		// the ink box, then the box from (0,0) to the ink's far corner, which
+		// together give the offset Intervention's alpha-safe crop needs.
+		$ink = imagecropauto($native, IMG_CROP_TRANSPARENT);
+		if ($ink === false) {
+			return $image;
+		}
+
+		$clear = imagecolorat($native, 0, 0);
+		if ($clear === false) {
+			return $image;
+		}
+
+		imagealphablending($native, false);
+		imagesetpixel($native, 0, 0, 0);
+		$corner = imagecropauto($native, IMG_CROP_TRANSPARENT);
+		imagesetpixel($native, 0, 0, $clear);
+
+		if ($corner === false) {
+			return $image;
+		}
+
+		$width  = imagesx($ink);
+		$height = imagesy($ink);
+
+		return $image->crop($width, $height, imagesx($corner) - $width, imagesy($corner) - $height, new Color(0, 0, 0, 0));
+	}
+
+	private function text(ImageInterface $canvas, string $text, Font $font, Color $color, float $x, float $y): void
+	{
+		$font->setColor($color);
+		$canvas->text($text, (int)round($x), (int)round($y), $font);
+	}
+
+	/**
+	 * Width of the longest line and height of the block, from the font's own
+	 * metrics: the first line's ascent and descent plus a line height per
+	 * further line.
+	 *
+	 * @return array{int,int}
+	 */
+	private function textSize(string $text, Font $font, DriverInterface $driver): array
+	{
+		$processor = $driver->fontProcessor();
+		$lines     = explode("\n", $text);
+		$width     = 0;
+
+		foreach ($lines as $line) {
+			$box   = $processor->boxSize($line, $font);
+			$width = max($width, $box->width() + max(0, $box->pivot()->x()));
+		}
+
+		$height = $processor->typographicalSize($font) + ($processor->leading($font) * (count($lines) - 1));
+
+		return [(int)ceil($width), (int)ceil($height)];
 	}
 
 	/**
@@ -157,53 +237,6 @@ readonly class TextWatermarkFactory
 		}
 
 		return $offsets;
-	}
-
-	/** Without a TTF font: GD's built-in bitmap font, with no outline or shadow. */
-	private function drawBuiltinText(TextWatermarkStyle $style): \GdImage
-	{
-		$lineCount = substr_count($style->text, "\n") + 1;
-		$width     = strlen($style->text) * ($style->fontSize * 0.6) + ($style->padding * 2);
-		$height    = ($style->fontSize * 1.5 * $lineCount) + ($style->padding * 2);
-
-		$image  = $this->canvas((int)$width, (int)$height, $style->background);
-		$color  = imagecolorallocatealpha($image, $style->color[0], $style->color[1], $style->color[2], 0);
-		$fontId = min(5, max(1, intdiv($style->fontSize, 10)));
-		if ($color === false) {
-			throw new \RuntimeException('Failed to allocate text color');
-		}
-
-		imagestring($image, $fontId, $style->padding, (int)(($height - imagefontheight($fontId)) / 2), $style->text, $color);
-
-		return $image;
-	}
-
-	/** @param array{int<0,255>,int<0,255>,int<0,255>}|null $background null for transparent */
-	private function canvas(int $width, int $height, ?array $background): \GdImage
-	{
-		$image = imagecreatetruecolor(max(10, $width), max(10, $height));
-		if ($image === false) {
-			throw new \RuntimeException('Failed to create image resource');
-		}
-
-		if ($background === null) {
-			// Transparent background - crucial for watermarks
-			imagealphablending($image, false);
-			imagesavealpha($image, true);
-			$fill = imagecolorallocatealpha($image, 0, 0, 0, 127);
-		} else {
-			$fill = imagecolorallocate($image, $background[0], $background[1], $background[2]);
-		}
-
-		if ($fill === false) {
-			throw new \RuntimeException('Failed to allocate background color');
-		}
-
-		imagefill($image, 0, 0, $fill);
-		// Blend the text onto it.
-		imagealphablending($image, true);
-
-		return $image;
 	}
 
 	private function save(\GdImage $image, string $filename): void

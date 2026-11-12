@@ -71,6 +71,31 @@ final readonly class ImageSourceResolver
 		return [$this->galleryImage($propertyData, $path), null];
 	}
 
+	/**
+	 * The image a `markimage` layer names: an image property, or one gallery
+	 * image by name or first/last. Null when there is none, or when it is
+	 * another kind of field. A random or featured pick would freeze into the
+	 * cached render, so those names are not offered.
+	 */
+	public function markImage(string $collection, string $id, string $property, ?string $name = null): ?ImageData
+	{
+		if (in_array($name, ['random', 'featured'], true)) {
+			return null;
+		}
+
+		try {
+			$propertyData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+
+			if ($name === null) {
+				return $propertyData instanceof ImageData && $propertyData->name !== '' ? $propertyData : null;
+			}
+
+			return $propertyData instanceof GalleryData ? $this->galleryImage($propertyData, $name) : null;
+		} catch (\Throwable) {
+			return null;
+		}
+	}
+
 	/** Pick a gallery image by name (without extension) or by first/last/random/featured. */
 	private function galleryImage(GalleryData $galleryData, string $name): ImageData
 	{

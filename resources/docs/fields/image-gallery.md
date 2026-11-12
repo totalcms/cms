@@ -167,7 +167,7 @@ Watermark settings allow you to automatically apply watermarks to images and gal
 
 Watermark settings are enforced during image processing:
 - **Cannot be removed** via URL parameters
-- **Cannot be overridden** via URL parameters
+- **Cannot be overridden** via URL parameters: they are drawn last, on top of any marks the URL asks for, and no URL parameter (not even `markalpha=0`) changes them
 - **Protects all image requests** (Twig templates, direct API access, etc.)
 - **Maximum security** for photographers and content creators
 
@@ -270,6 +270,8 @@ You can use both image and text watermarks together:
 	}
 }
 ```
+
+A schema text mark replaces a text mark the URL sends, and a schema logo replaces the URL's logo. Layers a template lists in [`marks`](docs/twig/imageworks#layered-marks) stay, under the schema's watermark.
 
 ### Dimension-Based Watermark Control
 

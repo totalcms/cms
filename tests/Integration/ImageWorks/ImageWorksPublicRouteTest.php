@@ -7,7 +7,6 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use TotalCMS\Domain\ImageWorks\Exception\RenderBusyException;
-use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageParamValidator;
@@ -59,8 +58,7 @@ function publicRouteGenerator(string $root, ?RenderSlots $slots = null, array $i
 	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 	$watermarks = test()->createMock(WatermarkFactory::class);
-	$watermarks->method('createImageWatermark')->willReturn(null);
-	$watermarks->method('createTextWatermark')->willReturn(null);
+	$watermarks->method('prepare')->willReturn([]);
 
 	$glide = new GlideFactory($storage, $config);
 
@@ -68,7 +66,6 @@ function publicRouteGenerator(string $root, ?RenderSlots $slots = null, array $i
 		new ImageSourceResolver($fetcher),
 		new ImageRenderParams($meta, $config),
 		new ImageResponder($storage, $glide),
-		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
 		$glide,
 		$watermarks,
 		$config,

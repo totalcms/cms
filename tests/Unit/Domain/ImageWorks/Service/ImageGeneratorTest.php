@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Stream;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
@@ -73,7 +72,6 @@ function imageWorksGenerator(mixed $property, ?string &$captured = null): ImageG
 		new ImageSourceResolver($fetcher),
 		new ImageRenderParams(test()->createMock(PropertyMetaResolver::class), $config),
 		new ImageResponder($filesystem, $glide),
-		new DoubleWatermarkRenderer($filesystem, $glide, $loggerFactory),
 		$glide,
 		test()->createMock(WatermarkFactory::class),
 		$config,

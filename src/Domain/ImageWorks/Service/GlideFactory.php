@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use League\Glide\Api\Api;
+use League\Glide\Manipulators\ManipulatorInterface;
+use League\Glide\Manipulators\Watermark;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
@@ -40,11 +43,16 @@ readonly class GlideFactory
 		];
 	}
 
+	/**
+	 * The Glide server for one source folder. With `$marks`, that manipulator
+	 * draws the watermarks in place of Glide's own, which draws one.
+	 */
 	public function create(
 		string $source,
 		ImageData $imageData,
 		?string $watermarkPath = null,
 		?string $cacheDir      = null,
+		?MarkLayersManipulator $marks = null,
 	): Server {
 		// Create Glide server
 		$glide = ServerFactory::create([
@@ -63,6 +71,16 @@ readonly class GlideFactory
 			'presets'                => $this->presets($imageData),
 			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),
 		]);
+
+		if ($marks instanceof MarkLayersManipulator) {
+			$api = $glide->getApi();
+			if ($api instanceof Api) {
+				$glide->setApi(new Api($api->getImageManager(), array_map(
+					fn (ManipulatorInterface $manipulator): ManipulatorInterface => $manipulator instanceof Watermark ? $marks : $manipulator,
+					$api->getManipulators(),
+				), $api->getEncoder()));
+			}
+		}
 
 		return $glide;
 	}

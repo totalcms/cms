@@ -178,7 +178,7 @@ You can configure watermarks at the schema, collection, or per-object level usin
 
 Watermark settings follow the three-level override hierarchy: **schema → collection → per-object**. Override at the collection level in collection meta, or per-object using custom properties.
 
-**Replacing the logo.** Watermarked renders are cached by the logo file's modified time, so uploading a new `logo.png` under the same name re-renders every image on its next request. The old renders stay on disk until you clear the cache.
+**Replacing the logo.** Watermarked renders are cached by the logo file's modified time, so uploading a new `logo.png` under the same name re-renders every image on its next request. The old renders stay on disk until you clear the cache. The same goes for an image placed with [`markimage`](#images-from-other-records).
 
 ### Protecting Original Images
 
@@ -192,10 +192,13 @@ the source image. When the property carries `settings.watermark`, that shortcut
 is skipped: the image is processed and marked before it is served, so there is
 no URL that yields a clean original.
 
-**They override URL parameters.** Schema settings are merged *after* anything
-in the query string, so a visitor cannot weaken, move or remove the mark by
-editing the URL. Passing `marktextsize=1` against a schema that sets
-`marktextsize=140` still produces the schema's watermark.
+**They override URL parameters.** The schema's watermark is drawn last, on top
+of anything the URL asks for, and no URL parameter changes it, so a visitor
+cannot weaken, move or remove the mark by editing the URL. Passing
+`marktextsize=1` or `marktextalpha=0` against a schema that sets
+`marktextsize=140` still produces the schema's watermark. A schema text mark
+replaces the URL's own `marktext`, and a schema logo replaces the URL's `mark`;
+layers the URL lists in [`marks`](#layered-marks) are drawn under the schema's.
 
 If you need the unmarked file, read it from the object's property directly in a
 template rather than through an ImageWorks URL.
@@ -316,8 +319,7 @@ font size, so they keep their look at any image size.
 }) }}
 ```
 
-Outline and shadow need a TTF or OTF font. On a server without FreeType, the
-text falls back to GD's built-in bitmap font and is drawn without them.
+Text is drawn with the TTF or OTF font you choose, or Roboto by default.
 
 ### Custom Fonts
 
@@ -358,6 +360,65 @@ Upload TTF or OTF fonts to the watermark-fonts depot (configurable via `watermar
     marktextalpha: 50
 }) }}
 ```
+
+## Layered Marks
+
+`marks` takes a list of marks and draws them in order, each over the last.
+Each entry takes the same parameters as a single mark: `mark*` for a logo or
+an image, `marktext*` for text. That gives you a large headline over a small
+caption, two logos, or a profile photo beside a name, all in one render.
+
+```twig
+{# A share card: big title, caption, address, and the logo #}
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {marktext: post.title, marktextw: '70w', marktextpos: 'top-left', marktextx: '5w', marktexty: '8h', marktextbg: '0b0f1a'},
+    {marktext: 'Read the full story', marktextw: '30w', marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'},
+    {marktext: 'example.com', marktextcolor: 'f97318', marktextw: '20w', marktextpos: 'top-right', marktextpad: '4w'},
+    {mark: 'logo.png', markw: '8w', markpos: 'bottom-right', markpad: '4w'}
+]}, {collection: 'blog'}) }}
+```
+
+- The flat parameters still work, and draw first: `mark` and `marktext`
+  outside the list are a logo layer and a text layer, in that order. An entry
+  with both `mark` and `marktext` is two layers too.
+- One request draws at most **6 layers**, counting the flat ones. A public
+  image URL asking for more is refused with a 400.
+- Tiled marks (`markpos: 'tile'`, `marktextpos: 'tile'`) work as layers.
+- A [schema watermark](#schema-level-watermarks) is drawn on top of every
+  layer the URL asks for.
+
+### Images From Other Records
+
+`markimage` places an image from another record, such as the author's photo on
+a blog post's share image, or a member's photo on their profile card. It takes
+the same sizing and position parameters as `mark`.
+
+| Value | Image |
+|-------|-------|
+| `collection/id/property` | The image in an image field |
+| `collection/id/property/name` | The gallery image with that file name (without its extension) |
+| `collection/id/property/first` | The first gallery image (`last` for the last one) |
+
+| Parameter | Description |
+|-----------|-------------|
+| `markimage` | The image to place, as above |
+| `markshape` | `circle` cuts the image to a circle. With only `markw` set it is cut square first, around the image's focal point |
+
+```twig
+{# The author's photo, round, in the bottom-left corner #}
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markimage: 'authors/' ~ post.author ~ '/photo', markshape: 'circle', markw: '15w', markpos: 'bottom-left', markpad: '4w'},
+    {marktext: post.author_name, marktextw: '30w', marktextpos: 'bottom-left', marktextx: '22w', marktexty: '8h'}
+]}, {collection: 'blog'}) }}
+```
+
+- Only image and gallery fields can be placed. `random` and `featured` are not
+  offered, because the render is cached and would keep its first pick.
+- When the record or its image is missing, that layer is left out and the rest
+  of the image is drawn as usual.
+- With `markfit: 'crop'`, any image is cut around its focal point.
+- Every image ImageWorks can place is already public through its own
+  ImageWorks URL; `markimage` reaches nothing that URL does not.
 
 ## Color Palette Integration
 

@@ -31,7 +31,7 @@ final readonly class ImageRenderParams
 	 *
 	 * @param array<string,mixed> $params
 	 *
-	 * @return array<string,int|string>
+	 * @return array<string,mixed>
 	 */
 	public function clean(array $params, ImageData $imageData, ImageLocation $location, ?SizeLadder $sizeLadder = null): array
 	{
@@ -88,19 +88,12 @@ final readonly class ImageRenderParams
 			$params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
 		}
 
-		if (isset($params['mark']) && !isset($params['markw'])) {
-			$params['markw'] = '100w';
-		}
-
-		// Don't auto-set marktextw for text watermarks - allow fixed-size text via marktextsize
-		// Users can explicitly set marktextw if they want scaling behavior
-
-		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
-		// Check if watermark should be applied based on limit setting
+		// The property's watermark is drawn on top of anything the URL asks
+		// for, as its own layers (see MarkLayers::withSettings), so no URL key
+		// can change it. Below its size limit the image is left unmarked.
 		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
-			// Remove limit setting before merging (not a valid imageworks parameter)
 			unset($schemaWatermarks['limit']);
-			$params = array_merge($params, $schemaWatermarks);
+			$params['marksettings'] = $schemaWatermarks;
 		}
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide

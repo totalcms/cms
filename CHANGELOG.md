@@ -7,9 +7,13 @@ All notable changes to Total CMS will be documented in this file.
 ### Added
 
 - **Logo watermarks can be tiled, like text watermarks.** `markpos: tile` repeats the logo over the whole image in offset rows, so no corner is left clean to crop out. It is faint (30% opacity) unless you set `markalpha`, and `markrepeat` (1 to 12, default 4) sets how many logos run across the image. It works in a schema's `watermark` settings and alongside a text mark, and the ImageWorks image builder offers it as a Tile position with a count. See [ImageWorks](https://docs.totalcms.co/twig/imageworks#tiled-logo-watermarks)
+- **ImageWorks draws a list of marks in one image.** `marks` takes up to 6 layers, each with the same options as a single logo or text mark, drawn in order: a large headline over a small caption, two logos, or a photo beside a name. The flat `mark` and `marktext` parameters still work and draw first. See [Layered Marks](https://docs.totalcms.co/twig/imageworks#layered-marks)
+- **A mark can be an image from another record.** `markimage: 'authors/jane/photo'` places the image from that record's image field, and `.../gallery/first` (or a file name) a gallery image, so a blog post's image can carry its author's photo. `markshape: 'circle'` cuts it round, around its focal point. A record or image that is missing leaves that layer out. See [Images From Other Records](https://docs.totalcms.co/twig/imageworks#images-from-other-records)
 
 ### Changed
 
+- **Text watermarks are drawn with Intervention Image.** Every mark is now drawn in one pass, where a logo and a text mark together used to take two, with a temporary file between them. Text marks may look slightly different from before (letter spacing, line spacing and outline edges), so cached images re-render once. A server without a TrueType font no longer falls back to GD's bitmap font; Roboto ships with Total CMS
+- **A schema watermark is drawn on top of the URL's marks.** Its settings used to be merged into the URL's, so a URL could set an option the schema left out, such as `marktextalpha=0`, and hide the mark. They are now drawn as their own layer that no URL parameter changes
 - **Password reset keeps where the visitor started.** When the login page has a `redirect`, its Forgot Password link passes it on, and it stays through the forgot-password form, the link in the reset email and the reset form. A whitelabel template on each step can use it, for example to show a Spanish page to someone who came from `/es`, and a custom reset mailer gets it as `data.redirect`. Only an address on your own site is kept. See URL Parameters in [Password Reset](https://docs.totalcms.co/auth/password-reset)
 
 ### Fixed

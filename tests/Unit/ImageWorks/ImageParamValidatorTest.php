@@ -111,3 +111,43 @@ describe('ImageParamValidator keeps what Total CMS sends', function (): void {
 		expect(ImageParamValidator::validate(['w' => 300, 'dpr' => 1.5]))->toBe(['w' => 300, 'dpr' => 1.5]);
 	});
 });
+
+describe('ImageParamValidator checks each mark layer', function (): void {
+	it('keeps a list of layers, checked like single marks', function (): void {
+		$params = ImageParamValidator::validate(['w' => '1200', 'marks' => [
+			['mark' => 'flame.png', 'markw' => '7w', 'markpos' => 'bottom-right', 'utm' => 'dropped'],
+			['marktext' => 'Big title', 'marktextsize' => '76', 'marktextbg' => '0b0f1a'],
+			['markimage' => 'team/jane@example.com/photo', 'markshape' => 'circle', 'markw' => '15w'],
+			['markimage' => 'blog/post-1/gallery/first'],
+		]]);
+
+		expect($params['marks'])->toBe([
+			['mark' => 'flame.png', 'markw' => '7w', 'markpos' => 'bottom-right'],
+			['marktext' => 'Big title', 'marktextsize' => 76, 'marktextbg' => '0b0f1a'],
+			['markimage' => 'team/jane@example.com/photo', 'markshape' => 'circle', 'markw' => '15w'],
+			['markimage' => 'blog/post-1/gallery/first'],
+		]);
+	});
+
+	it('rejects a list that breaks the rules', function (mixed $marks): void {
+		expect(fn () => ImageParamValidator::validate(['marks' => $marks]))->toThrow(InvalidImageParamException::class);
+	})->with([
+		'not a list'       => ['flame.png'],
+		'entry not a list' => [['flame.png']],
+		'nested deeper'    => [[['mark' => ['a.png']]]],
+		'draws nothing'    => [[['markw' => '10w']]],
+		'bad value'        => [[['marktextsize' => '9999', 'marktext' => 'x']]],
+		'seven entries'    => [array_fill(0, 7, ['marktext' => 'x'])],
+		'traversal'        => [[['markimage' => 'blog/../auth/admin']]],
+		'unknown shape'    => [[['markimage' => 'blog/post-1/image', 'markshape' => 'star']]],
+		'two path parts'   => [[['markimage' => 'blog/image']]],
+	]);
+
+	it('counts the flat marks toward the cap', function (): void {
+		// Four entries of logo + text are eight layers.
+		$marks = array_fill(0, 4, ['mark' => 'a.png', 'marktext' => 'x']);
+
+		expect(fn () => ImageParamValidator::validate(['marks' => $marks]))->toThrow(InvalidImageParamException::class)
+			->and(ImageParamValidator::validate(['mark' => 'a.png', 'marks' => array_fill(0, 5, ['marktext' => 'x'])]))->toHaveKey('marks');
+	});
+});

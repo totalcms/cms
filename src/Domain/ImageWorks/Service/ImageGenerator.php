@@ -7,7 +7,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
-use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Support\Config;
 
@@ -16,10 +15,10 @@ use TotalCMS\Support\Config;
  * and Twig's data URIs.
  *
  * Finding the source image is ImageSourceResolver's job, shaping the params
- * is ImageRenderParams', the HTTP headers are ImageResponder's, and the
- * two-pass render for both watermarks is DoubleWatermarkRenderer's. This
- * class builds the Glide render and its watermarks, and holds cache misses
- * to the render slots on the public route.
+ * is ImageRenderParams', the HTTP headers are ImageResponder's, and drawing
+ * the watermark layers is MarkLayersManipulator's. This class builds the
+ * Glide render and its layers, and holds cache misses to the render slots on
+ * the public route.
  */
 class ImageGenerator
 {
@@ -32,7 +31,6 @@ class ImageGenerator
 		private readonly ImageSourceResolver $sources,
 		private readonly ImageRenderParams $renderParams,
 		private readonly ImageResponder $responder,
-		private readonly DoubleWatermarkRenderer $doubleMarks,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
 		private readonly Config $config,
@@ -126,7 +124,7 @@ class ImageGenerator
 			return CacheState::Original;
 		}
 
-		return $this->isCached($this->glideRender($location, $imageData, $params), $location, $imageData)
+		return $this->isCached($this->glideRender($location, $imageData, $params), $imageData)
 			? CacheState::Cached
 			: CacheState::Missing;
 	}
@@ -144,12 +142,10 @@ class ImageGenerator
 		return $this->responder->processed($imagePath, $request, $params, function () use ($location, $imageData, $params): ResponseInterface {
 			$render = $this->glideRender($location, $imageData, $params);
 
-			$make = fn (): ResponseInterface => $render['marks'] !== null
-				? $this->doubleMarks->render($render['glide'], $location, $imageData, $render['marks'][0], $render['marks'][1], $render['params'])
-				: $render['glide']->getImageResponse($imageData->name, $render['params']);
+			$make = fn (): ResponseInterface => $render['glide']->getImageResponse($imageData->name, $render['params']);
 
 			// A cached file costs no render, so it never waits for a slot.
-			return $this->limitRenders && !$this->isCached($render, $location, $imageData)
+			return $this->limitRenders && !$this->isCached($render, $imageData)
 				? ($this->renderSlots ??= RenderSlots::fromConfig($this->config))->run($make)
 				: $make();
 		});
@@ -157,73 +153,42 @@ class ImageGenerator
 
 	/**
 	 * The one step that turns the cleaned params into what Glide renders:
-	 * builds the watermarks, the Glide server and the final Glide params.
-	 * The route and cacheState() both go through here, so a cache check keys
-	 * exactly the file the route makes. When both an image and a text
-	 * watermark apply, `marks` holds them and `params` are the pre-watermark
-	 * params for the two-pass render; otherwise `marks` is null and `params`
-	 * are final.
+	 * the mark layers (the URL's, then the property's watermark on top),
+	 * the Glide server, and the final Glide params. The route and
+	 * cacheState() both go through here, so a cache check keys exactly the
+	 * file the route makes. The layers carry their files' versions, so a
+	 * replaced logo or profile photo is a new cache key.
 	 *
 	 * @param array<string,mixed> $params
 	 *
-	 * @return array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}}
+	 * @return array{glide: Server, params: array<string,mixed>}
 	 */
 	private function glideRender(ImageLocation $location, ImageData $imageData, array $params): array
 	{
-		$imageMark = $this->watermarkFactory->createImageWatermark($params);
-		// Use requested width if specified, otherwise use original image width
-		$effectiveWidth = isset($params['w']) ? (int)$params['w'] : $imageData->width;
-		$textMark       = $this->watermarkFactory->createTextWatermark($params, $effectiveWidth);
-
-		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
-		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();
+		$settings = $params['marksettings'] ?? [];
+		$marks    = $this->watermarkFactory->prepare(MarkLayers::withSettings($params, is_array($settings) ? $settings : []));
 
 		$glide = $this->glideFactory->create(
-			source        : $location->path(),
-			imageData     : $imageData,
-			watermarkPath : $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR,
-			cacheDir      : $hasImageMark ? $this->markCacheDir($imageMark) : null,
+			source    : $location->path(),
+			imageData : $imageData,
+			marks     : $marks === [] ? null : $this->watermarkFactory->manipulator(),
 		);
 
 		$glideParams = ImageRenderParams::withoutWatermarks($params);
-
-		if ($hasImageMark && $hasTextMark) {
-			return ['glide' => $glide, 'params' => $glideParams, 'marks' => [$imageMark, $textMark]];
+		if ($marks !== []) {
+			$glideParams['marks'] = $marks;
 		}
 
-		if ($hasTextMark) {
-			$glideParams = array_merge($glideParams, $textMark->toArray());
-		} elseif ($hasImageMark) {
-			$glideParams = array_merge($glideParams, $imageMark->toArray());
-		}
-
-		return ['glide' => $glide, 'params' => $glideParams, 'marks' => null];
+		return ['glide' => $glide, 'params' => $glideParams];
 	}
 
 	/**
-	 * A logo is named by file name only, so a new logo.png would keep serving
-	 * every image cached with the old one. Renders that carry a logo are filed
-	 * under a cache folder named for the logo file's version instead.
-	 */
-	private function markCacheDir(Watermark $imageMark): ?string
-	{
-		$version = $this->watermarkFactory->version($imageMark);
-
-		return $version === null ? null : GlideFactory::CACHEDIR . '/mark-' . $version;
-	}
-
-	/**
-	 * Whether the file a render would serve is already in the cache. With both
-	 * watermarks that file is the text pass's output.
+	 * Whether the file a render would serve is already in the cache.
 	 *
-	 * @param array{glide: Server, params: array<string,mixed>, marks: ?array{0: Watermark, 1: Watermark}} $render
+	 * @param array{glide: Server, params: array<string,mixed>} $render
 	 */
-	private function isCached(array $render, ImageLocation $location, ImageData $imageData): bool
+	private function isCached(array $render, ImageData $imageData): bool
 	{
-		if ($render['marks'] === null) {
-			return $render['glide']->cacheFileExists($imageData->name, $render['params']);
-		}
-
-		return $this->doubleMarks->isCached($render['glide'], $location, $imageData, $render['marks'][0], $render['marks'][1], $render['params']);
+		return $render['glide']->cacheFileExists($imageData->name, $render['params']);
 	}
 }

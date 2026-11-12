@@ -57,6 +57,8 @@ final class ImageParamValidator
 		'flip' => ['v', 'h', 'both'],
 		'or'   => ['auto', '0', '90', '180', '270'],
 		'filt' => ['greyscale', 'sepia'],
+		// A markimage layer cut to a circle (a profile photo)
+		'markshape' => ['circle'],
 	];
 
 	/**
@@ -93,6 +95,9 @@ final class ImageParamValidator
 		// File names: a watermark image, a font
 		'mark'          => '/^[A-Za-z0-9 ._\/-]{1,255}$/',
 		'marktextfont'  => '/^[A-Za-z0-9 ._\/-]{1,255}$/',
+		// An image on a record: collection/id/property, plus a gallery image
+		// name or first/last. Ids can be emails.
+		'markimage'     => '/^[A-Za-z0-9_-]{1,64}\/[A-Za-z0-9_.@+-]{1,128}\/[A-Za-z0-9_-]{1,64}(\/[A-Za-z0-9 ._-]{1,128})?$/',
 		// One preset or a comma list. An unknown name is harmless: Glide
 		// leaves `p` out of the cache key and skips presets it does not know.
 		'p'             => '/^[A-Za-z0-9_-]{1,64}(,[A-Za-z0-9_-]{1,64}){0,7}$/',
@@ -106,7 +111,7 @@ final class ImageParamValidator
 	 *
 	 * @throws InvalidImageParamException
 	 *
-	 * @return array<string,int|float|string>
+	 * @return array<string,int|float|string|list<array<string,int|float|string>>>
 	 */
 	public static function validate(array $query): array
 	{
@@ -114,24 +119,97 @@ final class ImageParamValidator
 
 		foreach ($query as $key => $value) {
 			$key = (string)$key;
+			if ($key === 'marks') {
+				$params['marks'] = self::marks($value);
+				continue;
+			}
+
 			if (!self::isKnown($key)) {
 				continue;
 			}
 
-			if (!is_scalar($value) || is_bool($value)) {
-				throw InvalidImageParamException::forKey($key);
+			$checked = self::scalar($key, $value);
+			if ($checked !== null) {
+				$params[$key] = $checked;
 			}
+		}
 
-			$value = trim((string)$value);
-			// An empty value means "not set", as it always has.
-			if ($value === '') {
-				continue;
-			}
+		if (($params['marks'] ?? null) === []) {
+			unset($params['marks']);
+		}
 
-			$params[$key] = self::checked($key, $value);
+		// Each text layer is a font render, and anyone can write a URL.
+		if (self::layerCount($params) > MarkLayers::MAX) {
+			throw InvalidImageParamException::forKey('marks');
 		}
 
 		return $params;
+	}
+
+	/**
+	 * The `marks` list: up to MarkLayers::MAX entries, each a set of the
+	 * `mark*` keys a single mark takes. An entry that draws nothing, or
+	 * nests anything deeper, is a 400 like any other bad value.
+	 *
+	 * @return list<array<string,int|float|string>>
+	 */
+	private static function marks(mixed $value): array
+	{
+		if (!is_array($value) || count($value) > MarkLayers::MAX) {
+			throw InvalidImageParamException::forKey('marks');
+		}
+
+		$marks = [];
+		foreach ($value as $entry) {
+			if (!is_array($entry)) {
+				throw InvalidImageParamException::forKey('marks');
+			}
+
+			$layer = [];
+			foreach ($entry as $key => $item) {
+				$key = (string)$key;
+				if (!str_starts_with($key, 'mark') || !self::isKnown($key)) {
+					continue;
+				}
+
+				$checked = self::scalar($key, $item);
+				if ($checked !== null) {
+					$layer[$key] = $checked;
+				}
+			}
+
+			if (MarkLayers::fromFlat($layer) === []) {
+				throw InvalidImageParamException::forKey('marks');
+			}
+
+			$marks[] = $layer;
+		}
+
+		return $marks;
+	}
+
+	/** @param array<string,int|float|string|list<array<string,int|float|string>>> $params */
+	private static function layerCount(array $params): int
+	{
+		$marks = $params['marks'] ?? [];
+		$count = count(MarkLayers::fromFlat($params));
+		foreach (is_array($marks) ? $marks : [] as $entry) {
+			$count += count(MarkLayers::fromFlat($entry));
+		}
+
+		return $count;
+	}
+
+	/** The checked value, or null for an empty one ("not set", as it always has meant). */
+	private static function scalar(string $key, mixed $value): int|float|string|null
+	{
+		if (!is_scalar($value) || is_bool($value)) {
+			throw InvalidImageParamException::forKey($key);
+		}
+
+		$value = trim((string)$value);
+
+		return $value === '' ? null : self::checked($key, $value);
 	}
 
 	private static function isKnown(string $key): bool
@@ -175,7 +253,7 @@ final class ImageParamValidator
 			return $value;
 		}
 
-		$isFile = in_array($key, ['mark', 'marktextfont'], true);
+		$isFile = in_array($key, ['mark', 'marktextfont', 'markimage'], true);
 		if (preg_match(self::PATTERNS[$key], $value) !== 1 || ($isFile && str_contains($value, '..'))) {
 			throw InvalidImageParamException::forKey($key);
 		}

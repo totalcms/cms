@@ -6,7 +6,6 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
-use TotalCMS\Domain\ImageWorks\Service\DoubleWatermarkRenderer;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
@@ -14,6 +13,7 @@ use TotalCMS\Domain\ImageWorks\Service\ImageResponder;
 use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkFactory;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -21,8 +21,8 @@ use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-// Watermarking end to end with the real TextWatermarkFactory (which renders the
-// text to a PNG with GD and RobotoRegular.ttf) and the real Glide compositor.
+// Watermarking end to end with the real TextWatermarkFactory (which draws the
+// text with Intervention and RobotoRegular.ttf) and the real Glide render.
 // The sibling ImageTransformTest mocks watermarking away to isolate resizing;
 // this file is the other half.
 //
@@ -69,9 +69,8 @@ function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGen
 		new ImageSourceResolver($fetcher),
 		new ImageRenderParams($meta, $config),
 		new ImageResponder($storage, $glide),
-		new DoubleWatermarkRenderer($storage, $glide, $loggerFactory),
 		$glide,
-		new WatermarkFactory($textFactory, $config, $storage),
+		new WatermarkFactory($textFactory, $config, $storage, new ImageSourceResolver($fetcher), $loggerFactory),
 		$config,
 	);
 }
@@ -254,17 +253,18 @@ describe('ImageWorks text watermarks', function (): void {
 		expect($out['width'])->toBe(900);
 	});
 
-	it('caches the rendered text so the same mark is not redrawn', function (): void {
-		// generateTextWatermark() keys on the text and its styling; a second
-		// request must reuse the PNG rather than rasterise it again.
-		watermarkRun($this->root, ['w' => 600, 'marktext' => 'Cached'], 'wm-cache-first');
-		$before = glob($this->root . '/.system/watermarks/*.png') ?: [];
+	it('draws a text mark in the render, with no text file left behind', function (): void {
+		// Text is drawn into the render itself; only a tiled pattern is kept.
+		$params = ['w' => 600, 'marktext' => 'Cached'];
+		$cache  = $this->root . '/blog/post-1/image/.cache';
 
-		watermarkRun($this->root, ['w' => 700, 'marktext' => 'Cached'], 'wm-cache-second');
-		$after = glob($this->root . '/.system/watermarks/*.png') ?: [];
+		$first = watermarkRun($this->root, $params, 'wm-cache-first');
+		$files = watermarkCacheFiles($cache);
+		$again = watermarkRun($this->root, $params, 'wm-cache-second');
 
-		expect($before)->not->toBe([]);
-		expect(count($after))->toBe(count($before));
+		expect(glob($this->root . '/.system/watermarks/*.png') ?: [])->toBe([])
+			->and(watermarkCacheFiles($cache))->toBe($files)
+			->and($again['body'])->toBe($first['body']);
 	});
 
 	it('sizes the mark to the image when no size is set', function (): void {
@@ -320,14 +320,11 @@ describe('ImageWorks text watermarks', function (): void {
 		expect(watermarkPixelDiff($outlined['body'], $shadowed['body']))->toBeGreaterThan(0.1);
 	});
 
-	it('renders a separate watermark when the styling differs', function (): void {
-		watermarkRun($this->root, ['w' => 600, 'marktext' => 'Styled', 'marktextcolor' => 'ffffff'], 'wm-style-a');
-		$one = count(glob($this->root . '/.system/watermarks/*.png') ?: []);
+	it('renders a separate image when the styling differs', function (): void {
+		$a = watermarkRun($this->root, ['w' => 600, 'marktext' => 'Styled', 'marktextcolor' => 'ffffff'], 'wm-style-a');
+		$b = watermarkRun($this->root, ['w' => 600, 'marktext' => 'Styled', 'marktextcolor' => 'ff0000'], 'wm-style-b');
 
-		watermarkRun($this->root, ['w' => 600, 'marktext' => 'Styled', 'marktextcolor' => 'ff0000'], 'wm-style-b');
-		$two = count(glob($this->root . '/.system/watermarks/*.png') ?: []);
-
-		expect($two)->toBeGreaterThan($one);
+		expect(watermarkPixelDiff($a['body'], $b['body']))->toBeGreaterThan(0.1);
 	});
 });
 
@@ -343,8 +340,6 @@ describe('ImageWorks image watermarks', function (): void {
 	});
 
 	it('composites text and logo together', function (): void {
-		// handleBothWatermarks() runs Glide twice, once per mark; the result must
-		// still be a single valid image at the requested size.
 		$out = watermarkRun($this->root, [
 			'w'        => 900,
 			'mark'     => 'logo.png', 'markpos' => 'top-left', 'markw' => '160',
@@ -355,9 +350,9 @@ describe('ImageWorks image watermarks', function (): void {
 		expect($out['height'])->toBe((int)round(900 * WATERMARK_SOURCE_H / WATERMARK_SOURCE_W));
 	});
 
-	it('caches the two-pass result, so a repeat request renders nothing', function (): void {
-		// The text pass used to key its cache on a random temp file name: every
-		// request rendered again and left a `.cache/temp_*.png/` folder behind.
+	it('caches logo and text together, so a repeat request renders nothing', function (): void {
+		// Both marks are drawn in one pass; the old two-pass render keyed its
+		// cache on a random temp file name and left `.cache/temp_*.png/` behind.
 		$params = [
 			'w'        => 900,
 			'mark'     => 'logo.png', 'markpos' => 'top-left', 'markw' => '160',
@@ -461,18 +456,6 @@ describe('ImageWorks image watermarks', function (): void {
 		expect($escape['body'])->toBe($plain['body'])
 			->and(glob($this->root . '/.system/watermarks/image_watermark_*.png') ?: [])->toBe([]);
 	});
-
-	it('sweeps the temp folders the old two-pass render leaked', function (): void {
-		$cache = $this->root . '/blog/post-1/image/.cache';
-		mkdir($cache . '/temp_65a1b2c3d4e5f.png', 0700, true);
-		file_put_contents($cache . '/temp_65a1b2c3d4e5f.png/0123abcd', 'stale');
-
-		watermarkRun($this->root, [
-			'w' => 600, 'mark' => 'logo.png', 'marktext' => 'Sweep', 'marktextsize' => 40,
-		], 'wm-both-sweep');
-
-		expect(is_dir($cache . '/temp_65a1b2c3d4e5f.png'))->toBeFalse();
-	});
 });
 
 describe('ImageWorks schema-enforced watermarks', function (): void {
@@ -500,9 +483,8 @@ describe('ImageWorks schema-enforced watermarks', function (): void {
 	});
 
 	it('lets schema settings win over conflicting URL parameters', function (): void {
-		// array_merge($params, $schemaWatermarks) puts the schema last on
-		// purpose: a visitor cannot weaken or move the mark from the query
-		// string.
+		// The schema's text replaces the URL's flat text and is drawn last:
+		// a visitor cannot weaken or move the mark from the query string.
 		$urlOnly = watermarkRun($this->root, [
 			'w' => 900, 'marktext' => 'URL CHOICE', 'marktextsize' => 40, 'marktextpos' => 'top-left',
 		], 'wm-schema-url-only');
@@ -562,5 +544,196 @@ describe('ImageWorks watermark limit setting', function (): void {
 
 		expect($original['width'])->toBe(WATERMARK_SOURCE_W);
 		expect($original['bytes'])->not->toBe($plain['bytes']);
+	});
+});
+
+/** How far one pixel moved between two renders: summed RGB difference. */
+function watermarkPixelDelta(string $a, string $b, int $x, int $y): int
+{
+	$pa = imagecolorat(imagecreatefromstring($a), $x, $y);
+	$pb = imagecolorat(imagecreatefromstring($b), $x, $y);
+
+	return abs((($pa >> 16) & 0xFF) - (($pb >> 16) & 0xFF))
+		+ abs((($pa >> 8) & 0xFF) - (($pb >> 8) & 0xFF))
+		+ abs(($pa & 0xFF) - ($pb & 0xFF));
+}
+
+/** Red channel minus blue at a pixel: positive reads red, negative blue. */
+function watermarkRedness(string $body, int $x, int $y): int
+{
+	$p = imagecolorat(imagecreatefromstring($body), $x, $y);
+
+	return (($p >> 16) & 0xFF) - ($p & 0xFF);
+}
+
+/** A flat square PNG in one color. */
+function watermarkSquare(string $path, int $r, int $g, int $b): void
+{
+	if (!is_dir(dirname($path))) {
+		mkdir(dirname($path), 0755, true);
+	}
+
+	$im = imagecreatetruecolor(200, 200);
+	imagefill($im, 0, 0, imagecolorallocate($im, $r, $g, $b));
+	imagepng($im, $path);
+}
+
+describe('ImageWorks mark layers', function (): void {
+	beforeEach(function (): void {
+		watermarkSquare($this->root . '/gallery/watermarks/gallery/red.png', 255, 0, 0);
+		watermarkSquare($this->root . '/gallery/watermarks/gallery/blue.png', 0, 0, 255);
+		// A record's image for markimage; the fetcher stub names every image photo.jpg.
+		watermarkSquare($this->root . '/blog/post-2/image/photo.jpg', 255, 0, 0);
+	});
+
+	it('draws a one-layer list exactly as the flat params do', function (): void {
+		$logo = ['mark' => 'logo.png', 'markpos' => 'top-left', 'markw' => '160'];
+		$text = ['marktext' => 'Total CMS', 'marktextsize' => 60, 'marktextpos' => 'bottom-right'];
+
+		$flatLogo = watermarkRun($this->root, ['w' => 900] + $logo, 'wm-layers-flat-logo');
+		$listLogo = watermarkRun($this->root, ['w' => 900, 'marks' => [$logo]], 'wm-layers-list-logo');
+		$flatBoth = watermarkRun($this->root, ['w' => 900] + $logo + $text, 'wm-layers-flat-both');
+		$listBoth = watermarkRun($this->root, ['w' => 900, 'marks' => [$logo, $text]], 'wm-layers-list-both');
+
+		expect($listLogo['body'])->toBe($flatLogo['body'])
+			->and($listBoth['body'])->toBe($flatBoth['body']);
+	});
+
+	it('draws the layers in list order', function (): void {
+		$red  = ['mark' => 'red.png', 'markpos' => 'center', 'markw' => '300'];
+		$blue = ['mark' => 'blue.png', 'markpos' => 'center', 'markw' => '300'];
+
+		$blueOnTop = watermarkRun($this->root, ['w' => 900, 'marks' => [$red, $blue]], 'wm-layers-blue-on-top');
+		$redOnTop  = watermarkRun($this->root, ['w' => 900, 'marks' => [$blue, $red]], 'wm-layers-red-on-top');
+
+		expect(watermarkRedness($blueOnTop['body'], 450, 250))->toBeLessThan(-150)
+			->and(watermarkRedness($redOnTop['body'], 450, 250))->toBeGreaterThan(150);
+	});
+
+	it('draws several text layers in their own sizes and places', function (): void {
+		$plain   = watermarkRun($this->root, ['w' => 1200], 'wm-layers-text-plain');
+		$layered = watermarkRun($this->root, ['w' => 1200, 'marks' => [
+			['marktext' => 'Headline', 'marktextw' => '60w', 'marktextpos' => 'top-left', 'marktextbg' => '000000'],
+			['marktext' => 'A small caption', 'marktextw' => '30w', 'marktextpos' => 'bottom-left'],
+			['marktext' => 'totalcms.co', 'marktextcolor' => 'f97318', 'marktextw' => '20w', 'marktextpos' => 'top-right'],
+		]], 'wm-layers-three-texts');
+
+		$footprint = watermarkFootprint($plain['body'], $layered['body']);
+		expect($footprint['quarters'])->toBeGreaterThanOrEqual(3)
+			->and($footprint['span'])->toBeGreaterThan(0.8);
+	});
+
+	it('serves a repeat request from the cache', function (): void {
+		$params = ['w' => 900, 'marks' => [
+			['mark' => 'logo.png', 'markpos' => 'top-left', 'markw' => '160'],
+			['marktext' => 'One', 'marktextpos' => 'center'],
+			['markimage' => 'blog/post-2/image', 'markw' => '100', 'markpos' => 'bottom-right'],
+		]];
+		$cache = $this->root . '/blog/post-1/image/.cache';
+
+		$first = watermarkRun($this->root, $params, 'wm-layers-cache-first');
+		$files = watermarkCacheFiles($cache);
+		$again = watermarkRun($this->root, $params, 'wm-layers-cache-second');
+
+		expect(watermarkCacheFiles($cache))->toBe($files)
+			->and($again['body'])->toBe($first['body']);
+		expect(watermarkGenerator($this->root)->cacheState('blog', 'post-1', 'image', null, $params))->toBe(CacheState::Cached);
+	});
+
+	it('draws the property watermark on top of the URL layers', function (): void {
+		$out = watermarkRun($this->root, ['w' => 900, 'marks' => [
+			['mark' => 'blue.png', 'markpos' => 'center', 'markw' => '300'],
+		]], 'wm-layers-settings-on-top', ['mark' => 'red.png', 'markpos' => 'center', 'markw' => '200']);
+
+		expect(watermarkRedness($out['body'], 450, 250))->toBeGreaterThan(150);
+	});
+
+	it('keeps URL alpha from fading the property watermark', function (): void {
+		$settings = ['marktext' => 'PROTECTED', 'marktextw' => '80w', 'marktextpos' => 'center'];
+
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-layers-alpha-plain');
+		$faded = watermarkRun($this->root, ['w' => 900, 'marktextalpha' => 0, 'markalpha' => 0], 'wm-layers-alpha-attempt', $settings);
+
+		expect(watermarkPixelDiff($plain['body'], $faded['body']))->toBeGreaterThan(0.5);
+	});
+
+	it('places an image from another record', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 900], 'wm-layers-markimage-plain');
+		$marked = watermarkRun($this->root, ['w' => 900, 'markimage' => 'blog/post-2/image', 'markw' => '200', 'markpos' => 'top-left', 'markpad' => '0'], 'wm-layers-markimage');
+
+		expect(watermarkRedness($marked['body'], 100, 100))->toBeGreaterThan(150)
+			->and(watermarkPixelDelta($plain['body'], $marked['body'], 600, 400))->toBeLessThan(30);
+	});
+
+	it('cuts an image to a circle with markshape', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 900], 'wm-layers-circle-plain');
+		$circle = watermarkRun($this->root, ['w' => 900, 'marks' => [
+			['markimage' => 'blog/post-2/image', 'markw' => '300', 'markshape' => 'circle', 'markpos' => 'top-left', 'markpad' => '0'],
+		]], 'wm-layers-circle');
+
+		// Inside the circle the image is red; its square's corner is untouched.
+		expect(watermarkRedness($circle['body'], 150, 150))->toBeGreaterThan(150)
+			->and(watermarkPixelDelta($plain['body'], $circle['body'], 8, 8))->toBeLessThan(30);
+	});
+
+	it('draws nothing for an image that is not there', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-layers-missing-plain');
+
+		$missing = watermarkRun($this->root, ['w' => 900, 'markimage' => 'blog/post-9/image'], 'wm-layers-missing');
+		// The stub record holds an image, not a gallery, so a gallery name finds nothing.
+		$notGallery = watermarkRun($this->root, ['w' => 900, 'markimage' => 'blog/post-2/image/first'], 'wm-layers-not-gallery');
+		$escape     = watermarkRun($this->root, ['w' => 900, 'markimage' => 'blog/../post-2/image'], 'wm-layers-escape');
+
+		expect($missing['body'])->toBe($plain['body'])
+			->and($notGallery['body'])->toBe($plain['body'])
+			->and($escape['body'])->toBe($plain['body']);
+	});
+
+	it('renders again when the record image is replaced', function (): void {
+		$params = ['w' => 900, 'markimage' => 'blog/post-2/image', 'markw' => '300', 'markpos' => 'center'];
+		$before = watermarkRun($this->root, $params, 'wm-layers-markimage-before');
+
+		$path = $this->root . '/blog/post-2/image/photo.jpg';
+		watermarkSquare($path, 0, 0, 255);
+		touch($path, time() + 60);
+		clearstatcache();
+
+		$after = watermarkRun($this->root, $params, 'wm-layers-markimage-after');
+
+		expect(watermarkRedness($before['body'], 450, 250))->toBeGreaterThan(150)
+			->and(watermarkRedness($after['body'], 450, 250))->toBeLessThan(-150);
+	});
+
+	it('draws no more than six layers', function (): void {
+		$layer = fn (int $i): array => ['marktext' => "L{$i}", 'marktextw' => '10w', 'marktextpos' => 'top-left', 'marktextx' => (string)($i * 100)];
+
+		$six   = watermarkRun($this->root, ['w' => 900, 'marks' => array_map($layer, range(0, 5))], 'wm-layers-six');
+		$seven = watermarkRun($this->root, ['w' => 900, 'marks' => array_map($layer, range(0, 6))], 'wm-layers-seven');
+
+		expect($seven['body'])->toBe($six['body']);
+	});
+
+	it('draws the same layers with GD as with Imagick', function (): void {
+		// Glide takes Imagick when it works; pretend it does not.
+		$probe = new ReflectionProperty(ImagickSupport::class, 'formats');
+		$probe->setValue(null, []);
+
+		try {
+			$plain = watermarkRun($this->root, ['w' => 900], 'wm-layers-gd-plain');
+			$out   = watermarkRun($this->root, ['w' => 900, 'marks' => [
+				['mark' => 'blue.png', 'markpos' => 'center', 'markw' => '300'],
+				['mark' => 'red.png', 'markpos' => 'center', 'markw' => '100'],
+				['markimage' => 'blog/post-2/image', 'markw' => '300', 'markshape' => 'circle', 'markpos' => 'top-left', 'markpad' => '0'],
+				['marktext' => 'Caption', 'marktextw' => '30w', 'marktextpos' => 'bottom-left', 'marktextstroke' => 5],
+			]], 'wm-layers-gd');
+		} finally {
+			ImagickSupport::reset();
+		}
+
+		expect(watermarkRedness($out['body'], 450, 250))->toBeGreaterThan(150)
+			->and(watermarkRedness($out['body'], 450, 140))->toBeLessThan(-150)
+			->and(watermarkRedness($out['body'], 150, 150))->toBeGreaterThan(150)
+			->and(watermarkPixelDelta($plain['body'], $out['body'], 8, 8))->toBeLessThan(30)
+			->and(watermarkFootprint($plain['body'], $out['body'])['quarters'])->toBeGreaterThanOrEqual(3);
 	});
 });

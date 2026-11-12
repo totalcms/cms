@@ -2,11 +2,19 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
 use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
-use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
+/**
+ * Turns the mark layers (see MarkLayers) into what MarkLayersManipulator
+ * draws: each file found and stamped with its version, each tiled mark
+ * drawn into its pattern, each record's image looked up. A layer whose file
+ * is missing is left out, as Glide left out a mark it could not find.
+ */
 readonly class WatermarkFactory
 {
 	/** A text mark with no size set spans this much of the image width. */
@@ -14,10 +22,22 @@ readonly class WatermarkFactory
 	/** Tiled marks cover the whole image, so they default to faint. */
 	public const DEFAULT_TILE_ALPHA = 30;
 
+	/** Where Glide placed a mark with no position. */
+	private const DEFAULT_POSITION = 'bottom-right';
+	/** A text mark with no position sits in the middle. */
+	private const DEFAULT_TEXT_POSITION = 'center';
+
+	/** The keys that place and size a mark on the image. */
+	private const PLACEMENT = ['markw', 'markh', 'markx', 'marky', 'markpad', 'markfit', 'markpos', 'markalpha'];
+
 	public function __construct(
 		private TextWatermarkFactory $textWatermarkFactory,
 		private Config $config,
 		private StorageAdapterInterface $filesystem,
+		// Required, not optional: PHP-DI's autowiring skips optional
+		// parameters, so a `= null` here was always null in the app.
+		private ImageSourceResolver $sources,
+		private LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -28,84 +48,244 @@ readonly class WatermarkFactory
 		return sprintf('gallery/%s/gallery', $objectID);
 	}
 
-	/** @param array<string,mixed> $params watermark parameters */
-	public function createImageWatermark(array $params = []): ?Watermark
+	/** The manipulator that draws prepared layers, reading files from the data root. */
+	public function manipulator(): MarkLayersManipulator
 	{
-		if (!isset($params['mark']) || empty($params['mark'])) {
-			return null;
-		}
-
-		if (($params['markpos'] ?? '') === 'tile') {
-			return $this->tiledImageWatermark($params);
-		}
-
-		return new Watermark(
-			mark      : $params['mark'],
-			markpos   : $params['markpos'] ?? 'bottom-right',
-			markw     : $params['markw'] ?? '100w',
-			markh     : $params['markh'] ?? null,
-			markx     : $params['markx'] ?? null,
-			marky     : $params['marky'] ?? null,
-			markfit   : $params['markfit'] ?? null,
-			markpad   : $params['markpad'] ?? null,
-			markalpha : $params['markalpha'] ?? null,
-			path      : $this->watermarkPath(),
+		return new MarkLayersManipulator(
+			$this->filesystem->flysystem(),
+			$this->textWatermarkFactory,
+			$this->loggerFactory->channelLogger(LogChannel::ImageGenerator),
 		);
 	}
 
 	/**
-	 * The logo repeated over the whole image, like a tiled text mark. The
-	 * pattern is drawn once into WATERMARK_DIR under a name made from the logo,
-	 * its modified time and the tile count, so a replaced logo gets a new
-	 * pattern (and, through version(), a new render cache). Null when the logo
-	 * is missing or GD cannot read it, as Glide skips a mark it cannot find.
+	 * The layers ready to draw, in order.
 	 *
-	 * @param array<string,mixed> $params watermark parameters
+	 * @param list<array<string,mixed>> $layers from MarkLayers
+	 *
+	 * @return list<array<string,int|float|string>>
 	 */
-	private function tiledImageWatermark(array $params): ?Watermark
+	public function prepare(array $layers): array
 	{
-		// Glide reads a logo through a filesystem rooted at the gallery; this
-		// reads through the data root, so `..` would reach any image on the site
-		// and stamp it, tiled, onto a public one.
-		$mark = (string)$params['mark'];
+		$prepared = [];
+
+		foreach ($layers as $layer) {
+			$ready = match ($layer['kind'] ?? null) {
+				MarkLayers::LOGO  => $this->logoLayer($layer),
+				MarkLayers::IMAGE => $this->imageLayer($layer),
+				MarkLayers::TEXT  => $this->textLayer($layer),
+				default           => null,
+			};
+
+			if ($ready !== null) {
+				$prepared[] = $ready;
+			}
+		}
+
+		return $prepared;
+	}
+
+	/**
+	 * A logo from the watermarks gallery.
+	 *
+	 * @param array<string,mixed> $layer
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function logoLayer(array $layer): ?array
+	{
+		$mark = (string)$layer['mark'];
+		// Glide read a logo through a filesystem rooted at the gallery; this
+		// reads through the data root, so `..` would reach any file on the site.
 		if (str_contains($mark, '..') || str_starts_with($mark, '/')) {
 			return null;
 		}
 
-		$logoPath = $this->watermarkPath() . '/' . $mark;
-		$tiles    = WatermarkPatternBuilder::tiles($params['markrepeat'] ?? null);
+		$path = $this->watermarkPath() . '/' . $mark;
 
-		try {
-			$logoVersion = $this->filesystem->flysystem()->lastModified($logoPath);
-		} catch (\Throwable) {
-			return null;
+		if (($layer['markpos'] ?? '') === 'tile') {
+			return $this->tiledLayer($path, $layer['markrepeat'] ?? null, $layer['markalpha'] ?? null);
 		}
 
-		$pattern = 'image_watermark_' . substr(hash('sha256', $mark . '|' . $logoVersion . '|' . $tiles), 0, 16) . '.png';
-		if (!$this->filesystem->fileExists(TextWatermarkFactory::WATERMARK_DIR . '/' . $pattern) && !$this->drawImagePattern($logoPath, $tiles, $pattern)) {
-			return null;
-		}
-
-		// The pattern covers the whole image and is cropped to its shape.
-		return new Watermark(
-			mark      : $pattern,
-			markpos   : 'center',
-			markw     : '100w',
-			markh     : '100h',
-			markfit   : 'crop',
-			markalpha : (string)($params['markalpha'] ?? self::DEFAULT_TILE_ALPHA),
-			path      : TextWatermarkFactory::WATERMARK_DIR,
-		);
+		return $this->fileLayer($path, $layer, self::DEFAULT_POSITION);
 	}
 
-	/** Tile the logo into a pattern PNG; false when the logo is not an image GD reads. */
-	private function drawImagePattern(string $logoPath, int $tiles, string $pattern): bool
+	/**
+	 * An image on a record: `collection/id/property`, or a gallery image as
+	 * `collection/id/property/name` (`first` and `last` work too). With
+	 * `markshape: circle` it is cut square around its focal point, then round.
+	 *
+	 * @param array<string,mixed> $layer
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function imageLayer(array $layer): ?array
+	{
+		$target = (string)$layer['markimage'];
+		$parts  = explode('/', $target);
+		if (str_contains($target, '..') || count($parts) < 3 || count($parts) > 4 || in_array('', $parts, true)) {
+			return null;
+		}
+
+		[$collection, $id, $property] = $parts;
+		$imageData                    = $this->sources->markImage($collection, $id, $property, $parts[3] ?? null);
+		if ($imageData === null) {
+			return null;
+		}
+
+		$path = (new ImageLocation($collection, $id, $property))->path($imageData->name);
+
+		if (($layer['markpos'] ?? '') === 'tile') {
+			return $this->tiledLayer($path, $layer['markrepeat'] ?? null, $layer['markalpha'] ?? null);
+		}
+
+		$circle = ($layer['markshape'] ?? '') === 'circle';
+		if ($circle) {
+			$layer['markh'] ??= $layer['markw'];
+			$layer['markfit'] ??= 'crop';
+		}
+
+		$ready = $this->fileLayer($path, $layer, self::DEFAULT_POSITION);
+		if ($ready === null) {
+			return null;
+		}
+
+		$fit = (string)($layer['markfit'] ?? '');
+		if ($fit === 'crop' || $fit === 'crop-focalpoint') {
+			$ready['focalfit'] = GlideFactory::cropFocalpoint('crop-focalpoint', $imageData->focalpoint);
+		}
+
+		if ($circle) {
+			$ready['markshape'] = 'circle';
+		}
+
+		return $ready;
+	}
+
+	/**
+	 * A text layer. A tiled one becomes its pattern file; any other is drawn
+	 * by the manipulator, at the width it asks for:
+	 * - `marktextw` when set (`40w` is 40% of the image width);
+	 * - with only `marktextsize`, that fixed size, shrunk to 90% of the image
+	 *   when it would be wider;
+	 * - with neither, DEFAULT_TEXT_WIDTH, so the mark keeps its proportion on
+	 *   a thumbnail and on the original alike.
+	 *
+	 * @param array<string,mixed> $layer
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function textLayer(array $layer): ?array
+	{
+		if (TextWatermarkStyle::isTiled($layer)) {
+			try {
+				$pattern = $this->textWatermarkFactory->generateTextWatermark($layer);
+			} catch (\Throwable) {
+				return null;
+			}
+
+			return $this->tiledFile(TextWatermarkFactory::WATERMARK_DIR . '/' . $pattern, '', $layer['marktextalpha'] ?? null);
+		}
+
+		$text = array_filter(
+			$layer,
+			fn (mixed $value, string $key): bool => str_starts_with($key, 'marktext') && is_scalar($value),
+			ARRAY_FILTER_USE_BOTH,
+		);
+
+		$placement = array_filter([
+			'markpos'   => $layer['marktextpos'] ?? self::DEFAULT_TEXT_POSITION,
+			'markw'     => $layer['marktextw'] ?? (isset($layer['marktextsize']) ? null : self::DEFAULT_TEXT_WIDTH),
+			'markh'     => $layer['marktexth'] ?? null,
+			'markx'     => $layer['marktextx'] ?? null,
+			'marky'     => $layer['marktexty'] ?? null,
+			'markfit'   => $layer['marktextfit'] ?? null,
+			'markpad'   => $layer['marktextpad'] ?? null,
+			'markalpha' => $layer['marktextalpha'] ?? null,
+		], fn (mixed $value): bool => $value !== null && $value !== '');
+
+		if (!isset($layer['marktextw']) && isset($layer['marktextsize'])) {
+			$placement['fitwidth'] = 1;
+		}
+
+		return $text + $placement;
+	}
+
+	/**
+	 * A mark read from a file, with its placement keys and version.
+	 *
+	 * @param array<string,mixed> $layer
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function fileLayer(string $path, array $layer, string $position): ?array
+	{
+		$version = $this->version($path);
+		if ($version === null) {
+			return null;
+		}
+
+		$ready = ['src' => $path, 'v' => $version, 'markpos' => $position];
+		foreach (self::PLACEMENT as $key) {
+			$value = $layer[$key] ?? null;
+			if ((is_string($value) && $value !== '') || is_int($value) || is_float($value)) {
+				$ready[$key] = $value;
+			}
+		}
+
+		return $ready;
+	}
+
+	/**
+	 * A logo or record image repeated over the whole image. The pattern is
+	 * drawn once into WATERMARK_DIR under a name made from the file, its
+	 * version and the tile count, so a replaced file gets a new pattern.
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function tiledLayer(string $path, mixed $repeat, mixed $alpha): ?array
+	{
+		$version = $this->version($path);
+		if ($version === null) {
+			return null;
+		}
+
+		$tiles   = WatermarkPatternBuilder::tiles($repeat);
+		$pattern = TextWatermarkFactory::WATERMARK_DIR . '/image_watermark_' . substr(hash('sha256', $path . '|' . $version . '|' . $tiles), 0, 16) . '.png';
+
+		if (!$this->filesystem->fileExists($pattern) && !$this->drawImagePattern($path, $tiles, $pattern)) {
+			return null;
+		}
+
+		return $this->tiledFile($pattern, $version, $alpha);
+	}
+
+	/**
+	 * A pattern covers the whole image and is cropped to its shape.
+	 *
+	 * @return array<string,int|float|string>
+	 */
+	private function tiledFile(string $pattern, string $version, mixed $alpha): array
+	{
+		return [
+			'src'       => $pattern,
+			'v'         => $version,
+			'markpos'   => 'center',
+			'markw'     => '100w',
+			'markh'     => '100h',
+			'markfit'   => 'crop',
+			'markalpha' => is_numeric($alpha) ? (int)$alpha : self::DEFAULT_TILE_ALPHA,
+		];
+	}
+
+	/** Tile the image into a pattern PNG; false when it is not an image GD reads. */
+	private function drawImagePattern(string $path, int $tiles, string $pattern): bool
 	{
 		if (!function_exists('imagecreatefromstring')) {
 			return false;
 		}
 
-		$logo = @imagecreatefromstring($this->filesystem->read($logoPath));
+		$logo = @imagecreatefromstring($this->filesystem->read($path));
 		if ($logo === false) {
 			return false;
 		}
@@ -117,97 +297,20 @@ readonly class WatermarkFactory
 			return false;
 		}
 
-		$this->filesystem->write(TextWatermarkFactory::WATERMARK_DIR . '/' . $pattern, $content);
+		$this->filesystem->write($pattern, $content);
 
 		return true;
 	}
 
 	/**
-	 * @param array<string,mixed> $params watermark parameters
-	 * @param int $baseImageWidth width of the base image for auto-scaling check
+	 * A file's modified time, or null when it cannot be read. Files are named
+	 * by name only; this is what tells a new logo.png from the old one, and
+	 * it goes into the render's cache key.
 	 */
-	public function createTextWatermark(array $params = [], int $baseImageWidth = 0): ?Watermark
-	{
-		if (!isset($params['marktext']) || empty($params['marktext'])) {
-			return null;
-		}
-
-		// Generate the text watermark image
-		$textWatermarkPath = $this->textWatermarkFactory->generateTextWatermark($params);
-
-		if (TextWatermarkStyle::isTiled($params)) {
-			// The pattern covers the whole image and is cropped to its shape.
-			return new Watermark(
-				mark      : $textWatermarkPath,
-				markpos   : 'center',
-				markw     : '100w',
-				markh     : '100h',
-				markfit   : 'crop',
-				markalpha : (string)($params['marktextalpha'] ?? self::DEFAULT_TILE_ALPHA),
-				path      : TextWatermarkFactory::WATERMARK_DIR,
-			);
-		}
-
-		return new Watermark(
-			mark      : $textWatermarkPath,
-			markpos   : $params['marktextpos'] ?? 'center',
-			markw     : $this->textWidth($params, $textWatermarkPath, $baseImageWidth),
-			markh     : $params['marktexth'] ?? null,
-			markx     : $params['marktextx'] ?? null,
-			marky     : $params['marktexty'] ?? null,
-			markfit   : $params['marktextfit'] ?? null,
-			markpad   : $params['marktextpad'] ?? null,
-			markalpha : $params['marktextalpha'] ?? null,
-			path      : TextWatermarkFactory::WATERMARK_DIR,
-		);
-	}
-
-	/**
-	 * How wide the text mark is drawn on the image:
-	 * - `marktextw` when set (`40w` is 40% of the image width);
-	 * - with only `marktextsize`, that fixed size, shrunk to 90% of the image
-	 *   when it would be wider;
-	 * - with neither, DEFAULT_TEXT_WIDTH, so the mark keeps its proportion on
-	 *   a thumbnail and on the original alike.
-	 *
-	 * @param array<string,mixed> $params
-	 */
-	private function textWidth(array $params, string $textWatermarkPath, int $baseImageWidth): ?string
-	{
-		if (isset($params['marktextw'])) {
-			return (string)$params['marktextw'];
-		}
-
-		if (!isset($params['marktextsize'])) {
-			return self::DEFAULT_TEXT_WIDTH;
-		}
-
-		if ($baseImageWidth <= 0) {
-			return null;
-		}
-
-		try {
-			$watermarkSize = @getimagesizefromstring($this->filesystem->read(TextWatermarkFactory::WATERMARK_DIR . '/' . $textWatermarkPath));
-			// Wider than the image: 90% leaves room for x/y offsets.
-			if ($watermarkSize !== false && $watermarkSize[0] > $baseImageWidth) {
-				return '90w';
-			}
-		} catch (\Exception) {
-			// Silently fail - just don't auto-scale if we can't check dimensions
-		}
-
-		return null;
-	}
-
-	/**
-	 * The image mark file's modified time, or null when it cannot be read. A
-	 * logo is named by file name only; this is what tells a new logo.png
-	 * from the old one.
-	 */
-	public function version(Watermark $imageMark): ?string
+	private function version(string $path): ?string
 	{
 		try {
-			return (string)$this->filesystem->flysystem()->lastModified($imageMark->path . '/' . $imageMark->mark);
+			return (string)$this->filesystem->flysystem()->lastModified($path);
 		} catch (\Throwable) {
 			return null;
 		}
