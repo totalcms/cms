@@ -16,7 +16,9 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
+use TotalCMS\Domain\Sitemap\Service\SitemapMedia;
 
 /**
  * Test sitemap filtering functionality.
@@ -45,7 +47,9 @@ final class SitemapBuilderFilterTest extends TestCase
 			$this->mockIndexFilter,
 			$this->mockCollectionFetcher,
 			$this->mockObjectUrlBuilder,
-			$this->mockSeoSettings
+			$this->mockSeoSettings,
+			$this->createMock(ObjectFetcher::class),
+			$this->createMock(SitemapMedia::class),
 		);
 
 		// Mock ObjectUrlBuilder to return simple URL based on object id

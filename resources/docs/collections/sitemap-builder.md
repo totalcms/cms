@@ -43,8 +43,48 @@ Each collection has a **Sitemap** card on its edit form (`/admin/collections/{co
 | **Priority** | Default crawl priority for objects (0.0 to 1.0). |
 | **Include Filter** | Only include objects matching this expression (e.g. `published:true`). |
 | **Exclude Filter** | Skip objects matching this expression (e.g. `draft:true`). |
+| **Images** | Image and gallery properties to list under each object. See [Images and Videos](#images-and-videos). |
+| **Videos** | Video properties to list under each object. See [Images and Videos](#images-and-videos). |
 
 Saving the collection writes these into the collection's `.meta.json` under a `sitemap` block. The `/sitemap/{collection}` route reads them as defaults — no query string required for routine use.
+
+## Images and Videos
+
+A sitemap can also list the images and videos on each object's page. Search engines find an image in an `<img>` tag on their own. What they miss are images that load later: a gallery's full-size images in a lightbox, or objects that Load More brings in. Listing them in the sitemap is how those get into image search.
+
+Name the properties in the collection's Sitemap card:
+
+- **Images** offers the schema's image and gallery properties. A gallery lists every image in it, up to 1,000 per object.
+- **Videos** offers the schema's video properties.
+
+Choose only the images that are the page's own content, such as a post's photo or a product's gallery. Leave out an author's photo or an icon.
+
+Each image is listed as an ImageWorks address 1,600px wide, so it carries the schema's watermark and is the same image visitors see:
+
+```xml
+<url>
+  <loc>https://example.com/blog/harvest-trip</loc>
+  <image:image>
+    <image:loc>https://example.com/imageworks/blog/harvest-trip/image.jpg?w=1600&amp;cache=4bb8c592</image:loc>
+  </image:image>
+</url>
+```
+
+Google requires a thumbnail, a title and a description for each video, and a video without a thumbnail is left out:
+
+| Tag | Comes from |
+|---|---|
+| `video:thumbnail_loc` | The video's uploaded poster, else the thumbnail its provider supplies |
+| `video:title` | The video's own title, else the object's title, else the page title |
+| `video:description` | The page's meta description, else the title |
+| `video:player_loc` | The provider's player, for YouTube, Vimeo and the other services the video field knows |
+| `video:content_loc` | The file itself, for a video file such as an `.mp4` |
+
+A link to a video page the video field does not recognize is left out, since there is no player to point to.
+
+Objects excluded from the sitemap, or with **No Index** on, list nothing. The social share image is never listed: it is not on the page.
+
+Naming any property here means each object is read in full when the sitemap is built, not just the collection index. On a collection of many thousands of objects, the sitemap takes longer to build.
 
 ## Pages Sitemap
 

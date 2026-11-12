@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"description" : "Sitemap settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
 	"category"    : "Internal",
-	"formgrid"    : "enabled .\npriority priority\nfrequency date\nexclude include",
+	"formgrid"    : "enabled .\npriority priority\nfrequency date\nexclude include\nimages videos",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -92,6 +92,40 @@
 			"default"     : "",
 			"settings"    : {
 				"visibility" : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"images": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Images",
+			"help"     : "Image and gallery properties to list for each object, so search engines find the images its page shows.",
+			"field"    : "list",
+			"settings" : {
+				"propertyOptions" : {
+					"source" : "schemaProperties",
+					"fields" : ["image", "gallery"]
+				},
+				"visibility"      : {
+					"watch"    : "enabled",
+					"value"    : "1",
+					"operator" : "=="
+				}
+			}
+		},
+		"videos": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Videos",
+			"help"     : "Video properties to list for each object. A video needs a thumbnail: an uploaded poster or the provider's.",
+			"field"    : "list",
+			"settings" : {
+				"propertyOptions" : {
+					"source" : "schemaProperties",
+					"fields" : ["video"]
+				},
+				"visibility"      : {
 					"watch"    : "enabled",
 					"value"    : "1",
 					"operator" : "=="

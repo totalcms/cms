@@ -604,6 +604,8 @@ class FormField
 	 *   property counts as string).
 	 * - {"source": "schemaProperties", "owner": true}: only the properties that
 	 *   can hold an owner (OwnerPropertyKind): strings and lists of strings.
+	 * - {"source": "schemaProperties", "fields": ["image", "gallery"]}: only the
+	 *   properties of those field types.
 	 *
 	 * Return shape varies by source, and all three shapes `HTMLUtils::options()`
 	 * accepts are legal here: a flat list of strings, a list of `{value, label}`
@@ -654,9 +656,10 @@ class FormField
 		}
 
 		if (($source['source'] ?? null) === 'schemaProperties') {
-			$types = array_values(array_filter((array)($source['types'] ?? []), is_string(...)));
+			$types  = array_values(array_filter((array)($source['types'] ?? []), is_string(...)));
+			$fields = array_values(array_filter((array)($source['fields'] ?? []), is_string(...)));
 
-			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true);
+			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true, $fields);
 		}
 
 		return null;

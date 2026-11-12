@@ -17,7 +17,9 @@ use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Exception\SitemapDisabledException;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
+use TotalCMS\Domain\Sitemap\Service\SitemapMedia;
 
 /**
  * Tests that SitemapBuilder reads saved sitemap card settings as defaults
@@ -54,6 +56,8 @@ final class SitemapBuilderSettingsTest extends TestCase
 			$this->mockCollectionFetcher,
 			$this->mockObjectUrlBuilder,
 			$this->mockSeoSettings,
+			$this->createMock(ObjectFetcher::class),
+			$this->createMock(SitemapMedia::class),
 		);
 	}
 
@@ -175,6 +179,8 @@ final class SitemapBuilderSettingsTest extends TestCase
 			$this->mockCollectionFetcher,
 			$this->mockObjectUrlBuilder,
 			$seoSettings,
+			$this->createMock(ObjectFetcher::class),
+			$this->createMock(SitemapMedia::class),
 		);
 
 		$xml = $builder->buildSitemap('blog');

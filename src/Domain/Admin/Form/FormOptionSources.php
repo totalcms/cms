@@ -258,15 +258,18 @@ final readonly class FormOptionSources
 	 * is one of them; a property with no type counts as `string`. An empty
 	 * `$types` returns every key. `$ownerOnly` keeps only properties that can
 	 * hold an owner (OwnerPropertyKind): string properties and lists of
-	 * strings, never a gallery or another list of objects.
+	 * strings, never a gallery or another list of objects. `$fields` keeps
+	 * only properties of those field types (`image`, `gallery`, `video`), read
+	 * from the property's `$ref` or its `field`.
 	 *
 	 * @param array<string> $types
+	 * @param array<string> $fields
 	 *
 	 * @return array<string>
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = '', string $schema = '', array $types = [], bool $ownerOnly = false): array
+	public function schemaPropertyKeys(string $collection = '', string $schema = '', array $types = [], bool $ownerOnly = false, array $fields = []): array
 	{
 		try {
 			if ($collection !== '') {
@@ -290,7 +293,12 @@ final readonly class FormOptionSources
 				continue;
 			}
 
-			if ($types === [] || in_array(PropertyDefinition::fromArray(is_array($definition) ? $definition : [])->effectiveJsonType() ?? 'string', $types, true)) {
+			$property = PropertyDefinition::fromArray(is_array($definition) ? $definition : []);
+			if ($fields !== [] && !in_array($property->resolveType(), $fields, true) && !in_array($property->field, $fields, true)) {
+				continue;
+			}
+
+			if ($types === [] || in_array($property->effectiveJsonType() ?? 'string', $types, true)) {
 				$keys[] = (string)$key;
 			}
 		}

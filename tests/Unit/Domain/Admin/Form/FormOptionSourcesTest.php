@@ -232,6 +232,24 @@ describe('objects and properties', function (): void {
 		expect($sources->schemaPropertyKeys('members', '', ['string', 'array']))->toBe(['tags', 'slug']);
 	});
 
+	test('schemaPropertyKeys keeps only the asked-for field types, by $ref or by field', function (): void {
+		$ref                = static fn (string $type): string => "https://www.totalcms.co/schemas/properties/{$type}.json";
+		$schema             = new SchemaData();
+		$schema->properties = [
+			'title'   => ['type' => 'string'],
+			'hero'    => ['$ref' => $ref('image'), 'field' => 'image'],
+			'photos'  => ['$ref' => $ref('gallery'), 'field' => 'gallery'],
+			'promo'   => ['$ref' => $ref('video'), 'field' => 'video'],
+			'cover'   => ['field' => 'image'],
+		];
+		$fetcher = $this->createMock(SchemaFetcher::class);
+		$fetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$sources = new FormOptionSources(formServices(['schemaFetcher' => $fetcher]));
+
+		expect($sources->schemaPropertyKeys('members', '', [], false, ['image', 'gallery']))->toBe(['hero', 'photos', 'cover'])
+			->and($sources->schemaPropertyKeys('members', '', [], false, ['video']))->toBe(['promo']);
+	});
+
 	test('schemaPropertyKeys owner-only keeps strings and lists of strings, never a gallery, image or boolean', function (): void {
 		$ref                = static fn (string $type): string => "https://www.totalcms.co/schemas/properties/{$type}.json";
 		$schema             = new SchemaData();

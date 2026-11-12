@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Sitemap\Service;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Seo\Data\SeoFields;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Data\Sitemap;
@@ -17,6 +18,8 @@ readonly class SitemapBuilder
 		private CollectionFetcher $collectionFetcher,
 		private ObjectUrlBuilder $objectUrlBuilder,
 		private SeoSettingsLoader $seoSettings,
+		private ObjectFetcher $objectFetcher,
+		private SitemapMedia $media,
 	) {
 	}
 
@@ -56,7 +59,13 @@ readonly class SitemapBuilder
 
 		// One base URL for the whole sitemap — the same Site SEO value the
 		// canonical tags use, so a `www.` (or apex) choice is made in one place.
-		$baseUrl = $this->seoSettings->load()->baseUrl;
+		$settings = $this->seoSettings->load();
+		$baseUrl  = $settings->baseUrl;
+
+		// The image and video properties to list. The index rarely holds them,
+		// so naming any means reading each object in full.
+		$images = self::propertyList($sitemapSettings['images'] ?? null);
+		$videos = self::propertyList($sitemapSettings['videos'] ?? null);
 
 		// Fetch and filter the index
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
@@ -87,10 +96,44 @@ readonly class SitemapBuilder
 			}
 
 			$location = $sitemap->newLocation($url, $locationOptions);
+			if ($images !== [] || $videos !== []) {
+				$this->media->add($location, $this->fullObject($collection, $object), $collection, $images, $videos, $settings);
+			}
 			$sitemap->addLocation($location);
 		}
 
 		return $sitemap->toXML();
+	}
+
+	/**
+	 * The object as stored, for its media properties; the index entry when
+	 * the file cannot be read, so one bad object costs only its images.
+	 *
+	 * @param array<string,mixed> $entry
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function fullObject(string $collection, array $entry): array
+	{
+		try {
+			return $this->objectFetcher->fetchObject($collection, (string)($entry['id'] ?? ''))->toArray();
+		} catch (\Throwable) {
+			return $entry;
+		}
+	}
+
+	/**
+	 * A list setting as property names.
+	 *
+	 * @return list<string>
+	 */
+	private static function propertyList(mixed $value): array
+	{
+		if (!is_array($value)) {
+			return [];
+		}
+
+		return array_values(array_unique(array_filter(array_map(trim(...), array_filter($value, is_string(...))), static fn (string $v): bool => $v !== '')));
 	}
 
 	/**

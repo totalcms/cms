@@ -975,26 +975,28 @@ class TotalForm implements \Stringable
 	 * `$types` keeps only properties of those JSON-Schema types (an untyped
 	 * property counts as `string`); empty keeps every property. `$ownerOnly`
 	 * keeps only properties that can hold an owner (see OwnerPropertyKind).
+	 * `$fields` keeps only properties of those field types, such as `image`.
 	 *
 	 * @param array<string> $types
+	 * @param array<string> $fields
 	 *
 	 * @return array<string>
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = '', array $types = [], bool $ownerOnly = false): array
+	public function schemaPropertyKeys(string $collection = '', array $types = [], bool $ownerOnly = false, array $fields = []): array
 	{
 		if ($collection !== '') {
-			return $this->optionSources()->schemaPropertyKeys($collection, '', $types, $ownerOnly);
+			return $this->optionSources()->schemaPropertyKeys($collection, '', $types, $ownerOnly, $fields);
 		}
 
 		// CollectionForm path: schema name lives on the loaded CollectionData
 		if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
-			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema, $types, $ownerOnly);
+			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema, $types, $ownerOnly, $fields);
 		}
 
 		// ObjectForm path: collection name on the form itself
-		return $this->optionSources()->schemaPropertyKeys($this->collection, '', $types, $ownerOnly);
+		return $this->optionSources()->schemaPropertyKeys($this->collection, '', $types, $ownerOnly, $fields);
 	}
 
 	/**
