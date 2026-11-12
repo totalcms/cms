@@ -149,6 +149,19 @@ describe('wrapped text marks', function (): void {
 			->and($lines[1][0] - $lines[0][1])->toBeGreaterThanOrEqual(6);
 	})->with('text mark drivers');
 
+	it('spaces lines by the font size, whatever the driver measures', function (DriverInterface $driver): void {
+		// Two lines of capitals only, so each line's ink starts at its cap height.
+		$mark  = textMarkDraw($driver, ['marktext' => "TOTAL CMS\nTOTAL CMS", 'marktextsize' => 60], 2000);
+		$lines = textMarkLines($mark);
+
+		// About 1.25 times the size from line to line. Imagick measures a font
+		// by its capitals and GD by its full height, so a multiple of either
+		// gave one driver far tighter lines than the other.
+		expect($lines)->toHaveCount(2)
+			->and($lines[1][0] - $lines[0][0])->toBeGreaterThanOrEqual(68)
+			->and($lines[1][0] - $lines[0][0])->toBeLessThanOrEqual(82);
+	})->with('text mark drivers');
+
 	it('centers the lines when asked', function (DriverInterface $driver): void {
 		$text   = "MEET THE ROASTER ON\nTHE LORING";
 		$left   = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60], 2000);
