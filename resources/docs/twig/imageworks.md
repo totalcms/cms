@@ -364,8 +364,8 @@ Upload TTF or OTF fonts to the watermark-fonts depot (configurable via `watermar
 ## Layered Marks
 
 `marks` takes a list of marks and draws them in order, each over the last.
-Each entry takes the same parameters as a single mark: `mark*` for a logo or
-an image, `marktext*` for text. That gives you a large headline over a small
+Each entry takes the same parameters as a single mark: `mark*` for a logo, an
+image or a [color fill](#color-fills), `marktext*` for text. That gives you a large headline over a small
 caption, two logos, or a profile photo beside a name, all in one render.
 
 ```twig
@@ -386,6 +386,96 @@ caption, two logos, or a profile photo beside a name, all in one render.
 - Tiled marks (`markpos: 'tile'`, `marktextpos: 'tile'`) work as layers.
 - A [schema watermark](#schema-level-watermarks) is drawn on top of every
   layer the URL asks for.
+
+### Color Fills
+
+`markfill` lays a color over the image, or over a band of it, so the text and
+logos drawn after it stay readable on any photo. It is a layer like any other:
+put it first in `marks` and everything after it sits on top.
+
+| Parameter | Description |
+|-----------|-------------|
+| `markfill` | The color: hex (`0b0f1a`), or `palette0` to `palette4` for one of the image's own colors |
+| `markalpha` | Opacity, 0-100 (default: 50) |
+| `markgradient` | `top`, `bottom`, `left` or `right`: solid at that edge, fading to clear at the other. Leave it out for a flat color |
+| `markw`, `markh` | Size of the fill (default: the whole image), e.g. `markh: '30h'` for a band 30% of the image tall |
+| `markpos`, `markx`, `marky` | Where the fill sits, as for a logo (default: `center`) |
+
+#### Fade from the bottom
+
+The one to reach for first on a share card. The fade runs the full height of
+the image, so the top of the photo stays clear and bright while the bottom,
+where the text sits, is dark enough to read white text on any photo.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markgradient: 'bottom', markh: '100h', markpos: 'bottom', markalpha: 85},
+    {marktext: post.title, marktextw: '60w', marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'},
+    {mark: 'logo.png', markw: '12w', markpos: 'top-right', markpad: '4w'}
+]}, {collection: 'blog'}) }}
+```
+
+#### Fade from the top
+
+The same idea for a headline at the top: flip `markgradient`, `markpos` and
+the text position.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markgradient: 'top', markh: '100h', markpos: 'top', markalpha: 85},
+    {marktext: post.title, marktextw: '60w', marktextpos: 'top-left', marktextx: '5w', marktexty: '8h'}
+]}, {collection: 'blog'}) }}
+```
+
+#### Fade from one side
+
+Text down one side, with the photo's subject clear on the other. The fill is
+`70w` wide, so the last 30% of the image is untouched.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markgradient: 'left', markw: '70w', markh: '100h', markpos: 'left', markalpha: 90},
+    {marktext: post.title, marktextw: '35w', marktextpos: 'left', marktextx: '5w'}
+]}, {collection: 'blog'}) }}
+```
+
+#### Darken the whole photo
+
+A flat tint for text in the middle of the image. The photo shows through less
+than with a fade, so keep it for busy photos where text anywhere is hard to read.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markalpha: 65},
+    {marktext: post.title, marktextw: '70w', marktextpos: 'center'}
+]}, {collection: 'blog'}) }}
+```
+
+#### A solid band
+
+A strip of color behind a short label.
+
+```twig
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markh: '22h', markpos: 'bottom', markalpha: 90},
+    {marktext: 'New on the blog', marktextw: '40w', marktextpos: 'bottom', marktexty: '6h'}
+]}, {collection: 'blog'}) }}
+```
+
+#### Tips
+
+- **How strong:** 60-75 for a flat tint behind white text, 85-100 for a fade.
+  A fade loses opacity evenly from its solid edge, so halfway along it is at
+  half the opacity you set; that is why it needs the higher number. Below
+  about 50, a dark fill on a dark photo is hard to notice at all.
+- **Near-black beats pure black.** A deep navy or charcoal such as `0b0f1a`
+  looks richer than `000000` and still gives white text full contrast.
+- **Palette colors follow the photo.** `palette0` is the image's main color,
+  which can be light on one photo and dark on the next. White text on a light
+  palette color is unreadable, so use a palette fill where the text color is
+  chosen for it, or as a low-opacity tint under a hex fade.
+- **Keep every mark in `marks`.** The flat `mark` and `marktext` parameters
+  are drawn before the `marks` list, so they would end up under the fill.
 
 ### Images From Other Records
 

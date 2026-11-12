@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Intervention\Image\Colors\Rgb\Color;
+use Intervention\Image\Geometry\Factories\RectangleFactory;
 use Intervention\Image\Interfaces\ImageInterface;
 use League\Flysystem\FilesystemOperator;
 use League\Glide\Manipulators\BaseManipulator;
@@ -19,7 +21,8 @@ use TotalCMS\Domain\ImageWorks\Data\TextWatermarkStyle;
  * Its `marks` param is the list WatermarkFactory::prepare() builds: a layer
  * with `src` is an image file under the data root (a logo, a record's image,
  * a tiled pattern), a layer with `marktext` is text drawn here with
- * Intervention. Either is sized and placed with Glide's watermark rules, so
+ * Intervention, and a layer with `fill` is a color drawn here, flat or
+ * fading out from one edge. Either is sized and placed with Glide's watermark rules, so
  * `markpos`, `markpad`, `15w` and `markalpha` mean what they always have.
  * Each layer's file version is in the list, so Glide's cache key changes
  * when a file does.
@@ -72,20 +75,24 @@ final class MarkLayersManipulator extends BaseManipulator
 	/** @param array<array-key,mixed> $layer */
 	private function drawLayer(ImageInterface $image, array $layer): ImageInterface
 	{
-		$mark = isset($layer['src']) ? $this->readMark($image, (string)$layer['src']) : $this->drawText($image, $layer);
-		if (!$mark instanceof ImageInterface) {
-			return $image;
-		}
-
-		if (($layer['fitwidth'] ?? false) && $mark->width() > $image->width()) {
-			$layer['markw'] = self::OVERSIZE_TEXT_WIDTH;
-		}
-
 		$rules = new Watermark();
 		$rules->setParams(array_filter(
 			['dpr' => $this->getParam('dpr')] + $layer,
 			fn (mixed $value): bool => is_scalar($value),
 		));
+
+		$mark = match (true) {
+			isset($layer['src'])  => $this->readMark($image, (string)$layer['src']),
+			isset($layer['fill']) => $this->drawFill($image, $layer, $rules),
+			default               => $this->drawText($image, $layer),
+		};
+		if (!$mark instanceof ImageInterface) {
+			return $image;
+		}
+
+		if (($layer['fitwidth'] ?? false) && $mark->width() > $image->width()) {
+			$rules->setParams(['markw' => self::OVERSIZE_TEXT_WIDTH] + $layer + ['dpr' => $this->getParam('dpr')]);
+		}
 
 		$markx   = $rules->getDimension($image, 'markx');
 		$marky   = $rules->getDimension($image, 'marky');
@@ -130,6 +137,80 @@ final class MarkLayersManipulator extends BaseManipulator
 			fn (mixed $value, int|string $key): bool => str_starts_with((string)$key, 'marktext') && is_scalar($value),
 			ARRAY_FILTER_USE_BOTH,
 		)), $image->driver());
+	}
+
+	/**
+	 * A block of color the size the layer asks for (the whole image by
+	 * default). With `gradient` it is solid at that edge and clear at the
+	 * other, drawn a line at a time so it works on either driver.
+	 *
+	 * @param array<array-key,mixed> $layer
+	 */
+	private function drawFill(ImageInterface $image, array $layer, Watermark $rules): ?ImageInterface
+	{
+		$width  = (int)round($rules->getDimension($image, 'markw') ?? $image->width());
+		$height = (int)round($rules->getDimension($image, 'markh') ?? $image->height());
+		if ($width < 1 || $height < 1) {
+			return null;
+		}
+
+		[$r, $g, $b] = TextWatermarkStyle::parseColor((string)$layer['fill']);
+		$fill        = $image->driver()->createImage($width, $height);
+		$gradient    = (string)($layer['gradient'] ?? '');
+
+		if ($gradient === '') {
+			return $fill->fill(new Color($r, $g, $b));
+		}
+
+		$vertical = $gradient === 'top' || $gradient === 'bottom';
+		$length   = $vertical ? $height : $width;
+		$fromEnd  = $gradient === 'bottom' || $gradient === 'right';
+		$native   = $fill->core()->native();
+		// Intervention hands Imagick an opacity rounded to one decimal, which
+		// draws a fade as about ten visible bands; draw those rows natively.
+		$imagick = $native instanceof \Imagick ? $native : null;
+		$draw    = $imagick === null ? null : new \ImagickDraw();
+
+		for ($step = 0; $step < $length - 1; $step++) {
+			// 1 at the solid edge, falling to 0 at the clear one.
+			$opacity = 1 - ($step / ($length - 1));
+			$at      = $fromEnd ? $length - 1 - $step : $step;
+			$line    = $vertical ? [0, $at, $width, 1] : [$at, 0, 1, $height];
+
+			$draw instanceof \ImagickDraw
+				? $this->imagickLine($draw, $line, [$r, $g, $b], $opacity)
+				: $this->line($fill, $line, [$r, $g, $b], $opacity);
+		}
+
+		if ($imagick !== null && $draw !== null) {
+			$imagick->drawImage($draw);
+		}
+
+		return $fill;
+	}
+
+	/**
+	 * @param array{int,int,int,int} $line x, y, width, height
+	 * @param array{int,int,int} $rgb
+	 */
+	private function imagickLine(\ImagickDraw $draw, array $line, array $rgb, float $opacity): void
+	{
+		[$x, $y, $w, $h] = $line;
+		$draw->setFillColor(new \ImagickPixel(sprintf('rgba(%d,%d,%d,%.4F)', ...[...$rgb, $opacity])));
+		$draw->rectangle($x, $y, $x + $w - 1, $y + $h - 1);
+	}
+
+	/**
+	 * @param array{int,int,int,int} $line x, y, width, height
+	 * @param array{int,int,int} $rgb
+	 */
+	private function line(ImageInterface $fill, array $line, array $rgb, float $opacity): void
+	{
+		[$x, $y, $w, $h] = $line;
+		$fill->drawRectangle($x, $y, function (RectangleFactory $rectangle) use ($w, $h, $rgb, $opacity): void {
+			$rectangle->size($w, $h);
+			$rectangle->background(new Color(...[...$rgb, (int)round(255 * $opacity)]));
+		});
 	}
 
 	/**

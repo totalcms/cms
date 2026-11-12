@@ -166,7 +166,7 @@ class ImageGenerator
 	private function glideRender(ImageLocation $location, ImageData $imageData, array $params): array
 	{
 		$settings = $params['marksettings'] ?? [];
-		$marks    = $this->watermarkFactory->prepare(MarkLayers::withSettings($params, is_array($settings) ? $settings : []));
+		$marks    = $this->watermarkFactory->prepare(MarkLayers::withSettings($params, is_array($settings) ? $settings : []), $imageData->palette);
 
 		$glide = $this->glideFactory->create(
 			source    : $location->path(),

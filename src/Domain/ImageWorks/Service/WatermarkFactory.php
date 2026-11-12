@@ -22,6 +22,9 @@ readonly class WatermarkFactory
 	/** Tiled marks cover the whole image, so they default to faint. */
 	public const DEFAULT_TILE_ALPHA = 30;
 
+	/** A fill is half see-through unless you set its opacity. */
+	public const DEFAULT_FILL_ALPHA = 50;
+
 	/** Where Glide placed a mark with no position. */
 	private const DEFAULT_POSITION = 'bottom-right';
 	/** A text mark with no position sits in the middle. */
@@ -62,10 +65,11 @@ readonly class WatermarkFactory
 	 * The layers ready to draw, in order.
 	 *
 	 * @param list<array<string,mixed>> $layers from MarkLayers
+	 * @param array<string> $palette the image's colors, for `palette0`-`palette4` fills
 	 *
 	 * @return list<array<string,int|float|string>>
 	 */
-	public function prepare(array $layers): array
+	public function prepare(array $layers, array $palette = []): array
 	{
 		$prepared = [];
 
@@ -74,6 +78,7 @@ readonly class WatermarkFactory
 				MarkLayers::LOGO  => $this->logoLayer($layer),
 				MarkLayers::IMAGE => $this->imageLayer($layer),
 				MarkLayers::TEXT  => $this->textLayer($layer),
+				MarkLayers::FILL  => $this->fillLayer($layer, $palette),
 				default           => null,
 			};
 
@@ -209,6 +214,48 @@ readonly class WatermarkFactory
 		}
 
 		return $text + $placement;
+	}
+
+	/**
+	 * A color over the image or a band of it, flat or fading out from one
+	 * edge. The color is hex, or one of the image's own palette colors.
+	 *
+	 * @param array<string,mixed> $layer
+	 * @param array<string> $palette
+	 *
+	 * @return array<string,int|float|string>|null
+	 */
+	private function fillLayer(array $layer, array $palette): ?array
+	{
+		$color = (string)$layer['markfill'];
+		if (str_starts_with($color, GlideFactory::PALETTE)) {
+			if ($palette === []) {
+				return null;
+			}
+
+			$color = GlideFactory::updateBackgroundColor($color, $palette);
+		}
+
+		try {
+			$rgb = TextWatermarkStyle::parseColor($color);
+		} catch (\InvalidArgumentException) {
+			return null;
+		}
+
+		$ready = ['fill' => sprintf('%02x%02x%02x', ...$rgb), 'markpos' => 'center', 'markalpha' => self::DEFAULT_FILL_ALPHA];
+		foreach (self::PLACEMENT as $key) {
+			$value = $layer[$key] ?? null;
+			if ((is_string($value) && $value !== '') || is_int($value) || is_float($value)) {
+				$ready[$key] = $value;
+			}
+		}
+
+		$gradient = $layer['markgradient'] ?? null;
+		if (in_array($gradient, ['top', 'bottom', 'left', 'right'], true)) {
+			$ready['gradient'] = $gradient;
+		}
+
+		return $ready;
 	}
 
 	/**

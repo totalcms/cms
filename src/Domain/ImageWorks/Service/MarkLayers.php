@@ -7,10 +7,12 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 /**
  * Turns watermark params into the list of layers drawn over an image.
  *
- * A layer is one of three kinds, each taking the keys a single mark takes:
+ * A layer is one of four kinds, each taking the keys a single mark takes:
  *   - logo:  `mark`, a file in the watermarks gallery, with the `mark*` keys;
  *   - image: `markimage`, an image on a record (`collection/id/property`,
  *            plus a gallery image or nested path), with the `mark*` keys;
+ *   - fill:  `markfill`, a color laid over the image or a band of it,
+ *            flat or fading out (`markgradient`), with the `mark*` keys;
  *   - text:  `marktext`, with the `marktext*` keys.
  *
  * The flat params of the original API read as up to two layers, logo then
@@ -22,12 +24,19 @@ final class MarkLayers
 	public const LOGO  = 'logo';
 	public const IMAGE = 'image';
 	public const TEXT  = 'text';
+	public const FILL  = 'fill';
 
 	/** Layers one request may ask for: each text layer is a font render. */
 	public const MAX = 6;
 
 	/** A logo or image with no size set spans the image, as Glide's mark did. */
 	private const DEFAULT_WIDTH = '100w';
+	/** A fill with no height set covers the image top to bottom. */
+	private const DEFAULT_HEIGHT = '100h';
+
+	/** Keys that belong to one image kind only. */
+	private const IMAGE_ONLY = ['markimage', 'markshape'];
+	private const FILL_ONLY  = ['markfill', 'markgradient'];
 
 	/**
 	 * Every layer the params ask for: the flat params first, then `marks` in
@@ -54,9 +63,9 @@ final class MarkLayers
 	}
 
 	/**
-	 * The layers one flat set of params describes: an image or logo layer,
-	 * then a text layer. `markimage` wins over `mark`, since both read the
-	 * same `mark*` sizing keys.
+	 * The layers one flat set of params describes: an image, logo or fill
+	 * layer, then a text layer. They share the `mark*` sizing keys, so one
+	 * set draws one of them: `markimage`, else `mark`, else `markfill`.
 	 *
 	 * @param array<array-key,mixed> $params
 	 *
@@ -68,10 +77,13 @@ final class MarkLayers
 		$image  = self::keys($params, false);
 
 		if (self::filled($image['markimage'] ?? null)) {
-			$layers[] = ['kind' => self::IMAGE] + self::withDefaultWidth($image);
+			$layers[] = ['kind' => self::IMAGE] + self::withDefaultWidth(self::without($image, self::FILL_ONLY));
 		} elseif (self::filled($image['mark'] ?? null)) {
-			unset($image['markimage'], $image['markshape']);
-			$layers[] = ['kind' => self::LOGO] + self::withDefaultWidth($image);
+			$layers[] = ['kind' => self::LOGO] + self::withDefaultWidth(self::without($image, [...self::IMAGE_ONLY, ...self::FILL_ONLY]));
+		} elseif (self::filled($image['markfill'] ?? null)) {
+			$fill = self::withDefaultWidth(self::without($image, self::IMAGE_ONLY));
+			$fill['markh'] ??= self::DEFAULT_HEIGHT;
+			$layers[] = ['kind' => self::FILL] + $fill;
 		}
 
 		$text = self::keys($params, true);
@@ -105,6 +117,7 @@ final class MarkLayers
 		}
 
 		$enforcedKinds = array_column(self::fromFlat($settings), 'kind');
+		// A URL fill is a backdrop, not a mark the schema replaces.
 		$flat          = array_values(array_filter(
 			self::fromFlat($params),
 			fn (array $layer): bool => !self::replaced($layer['kind'], $enforcedKinds),
@@ -118,11 +131,11 @@ final class MarkLayers
 	/** @param list<string> $enforcedKinds */
 	private static function replaced(string $kind, array $enforcedKinds): bool
 	{
-		if ($kind === self::TEXT) {
-			return in_array(self::TEXT, $enforcedKinds, true);
-		}
-
-		return in_array(self::LOGO, $enforcedKinds, true) || in_array(self::IMAGE, $enforcedKinds, true);
+		return match ($kind) {
+			self::TEXT              => in_array(self::TEXT, $enforcedKinds, true),
+			self::LOGO, self::IMAGE => in_array(self::LOGO, $enforcedKinds, true) || in_array(self::IMAGE, $enforcedKinds, true),
+			default                 => false,
+		};
 	}
 
 	/**
@@ -149,6 +162,17 @@ final class MarkLayers
 		}
 
 		return $keys;
+	}
+
+	/**
+	 * @param array<string,int|float|string> $layer
+	 * @param list<string> $keys
+	 *
+	 * @return array<string,int|float|string>
+	 */
+	private static function without(array $layer, array $keys): array
+	{
+		return array_diff_key($layer, array_flip($keys));
 	}
 
 	/**

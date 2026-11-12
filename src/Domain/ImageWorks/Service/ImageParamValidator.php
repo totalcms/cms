@@ -59,6 +59,8 @@ final class ImageParamValidator
 		'filt' => ['greyscale', 'sepia'],
 		// A markimage layer cut to a circle (a profile photo)
 		'markshape' => ['circle'],
+		// A fill that fades out: solid at this edge, clear at the other
+		'markgradient' => ['top', 'bottom', 'left', 'right'],
 	];
 
 	/**
@@ -92,6 +94,7 @@ final class ImageParamValidator
 		'marktextbg'          => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextstrokecolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		'marktextshadowcolor' => '/^[A-Za-z0-9#,._-]{1,64}$/',
+		'markfill'            => '/^[A-Za-z0-9#,._-]{1,64}$/',
 		// File names: a watermark image, a font
 		'mark'          => '/^[A-Za-z0-9 ._\/-]{1,255}$/',
 		'marktextfont'  => '/^[A-Za-z0-9 ._\/-]{1,255}$/',

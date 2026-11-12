@@ -119,6 +119,7 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 			['marktext' => 'Big title', 'marktextsize' => '76', 'marktextbg' => '0b0f1a'],
 			['markimage' => 'team/jane@example.com/photo', 'markshape' => 'circle', 'markw' => '15w'],
 			['markimage' => 'blog/post-1/gallery/first'],
+			['markfill' => 'palette0', 'markgradient' => 'Bottom', 'markh' => '40h'],
 		]]);
 
 		expect($params['marks'])->toBe([
@@ -126,6 +127,7 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 			['marktext' => 'Big title', 'marktextsize' => 76, 'marktextbg' => '0b0f1a'],
 			['markimage' => 'team/jane@example.com/photo', 'markshape' => 'circle', 'markw' => '15w'],
 			['markimage' => 'blog/post-1/gallery/first'],
+			['markfill' => 'palette0', 'markgradient' => 'bottom', 'markh' => '40h'],
 		]);
 	});
 
@@ -141,6 +143,8 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 		'traversal'        => [[['markimage' => 'blog/../auth/admin']]],
 		'unknown shape'    => [[['markimage' => 'blog/post-1/image', 'markshape' => 'star']]],
 		'two path parts'   => [[['markimage' => 'blog/image']]],
+		'unknown gradient' => [[['markfill' => '000000', 'markgradient' => 'diagonal']]],
+		'fill injection'   => [[['markfill' => "000) OR (1=1"]]],
 	]);
 
 	it('counts the flat marks toward the cap', function (): void {

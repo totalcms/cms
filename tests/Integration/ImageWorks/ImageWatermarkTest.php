@@ -55,7 +55,8 @@ function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGen
 		'name'   => 'photo.jpg',
 		'width'  => WATERMARK_SOURCE_W,
 		'height' => WATERMARK_SOURCE_H,
-		'mime'   => 'image/jpeg',
+		'mime'    => 'image/jpeg',
+		'palette' => ['#ff0000', '#00ff00'],
 	]));
 
 	$meta = test()->createMock(PropertyMetaResolver::class);
@@ -737,3 +738,92 @@ describe('ImageWorks mark layers', function (): void {
 			->and(watermarkFootprint($plain['body'], $out['body'])['quarters'])->toBeGreaterThanOrEqual(3);
 	});
 });
+
+describe('ImageWorks fill layers', function (): void {
+	beforeEach(function (): void {
+		watermarkSquare($this->root . '/gallery/watermarks/gallery/red.png', 255, 0, 0);
+	});
+
+	it('tints the whole image with a color', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 900], 'wm-fill-plain');
+		$tinted = watermarkRun($this->root, ['w' => 900, 'marks' => [['markfill' => 'ff0000', 'markalpha' => 60]]], 'wm-fill-tint');
+
+		// Every corner moves toward red, and no pixel is fully red.
+		foreach ([[10, 10], [890, 10], [10, 490], [890, 490], [450, 250]] as [$x, $y]) {
+			expect(watermarkRedness($tinted['body'], $x, $y))->toBeGreaterThan(watermarkRedness($plain['body'], $x, $y) + 60)
+				->and(watermarkRedness($tinted['body'], $x, $y))->toBeLessThan(250);
+		}
+	});
+
+	it('fades out from the edge it names', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-fill-fade-plain');
+		$fade  = watermarkRun($this->root, ['w' => 900, 'marks' => [
+			['markfill' => '000000', 'markgradient' => 'bottom', 'markalpha' => 100],
+		]], 'wm-fill-fade-bottom');
+
+		$h = imagesy(imagecreatefromstring($fade['body']));
+		// Solid at the bottom, untouched at the top, part way between.
+		expect(watermarkPixelDelta($plain['body'], $fade['body'], 450, 3))->toBeLessThan(30)
+			->and(watermarkPixelDelta($fade['body'], watermarkSolid(0, 0, 0), 450, $h - 2))->toBeLessThan(30)
+			->and(watermarkPixelDelta($plain['body'], $fade['body'], 450, (int)($h * 0.7)))->toBeGreaterThan(30);
+	});
+
+	it('covers only the band it is sized to', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-fill-band-plain');
+		$band  = watermarkRun($this->root, ['w' => 900, 'marks' => [
+			['markfill' => '0000ff', 'markh' => '30h', 'markpos' => 'bottom', 'markalpha' => 100],
+		]], 'wm-fill-band');
+
+		$h = imagesy(imagecreatefromstring($band['body']));
+		expect(watermarkRedness($band['body'], 450, $h - 10))->toBeLessThan(-150)
+			->and(watermarkPixelDelta($plain['body'], $band['body'], 450, (int)($h * 0.5)))->toBeLessThan(30);
+	});
+
+	it('takes a color from the image palette', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-fill-palette-plain');
+		$fill  = watermarkRun($this->root, ['w' => 900, 'marks' => [['markfill' => 'palette1', 'markalpha' => 100]]], 'wm-fill-palette');
+
+		// The stub image's palette is red, green; palette1 is green.
+		$p = imagecolorat(imagecreatefromstring($fill['body']), 450, 250);
+		expect((($p >> 8) & 0xFF) - (($p >> 16) & 0xFF))->toBeGreaterThan(150);
+		expect($plain['body'])->not->toBe($fill['body']);
+	});
+
+	it('sits under the layers after it', function (): void {
+		$out = watermarkRun($this->root, ['w' => 900, 'marks' => [
+			['markfill' => '0000ff', 'markalpha' => 100],
+			['mark' => 'red.png', 'markpos' => 'center', 'markw' => '200'],
+		]], 'wm-fill-under-logo');
+
+		expect(watermarkRedness($out['body'], 450, 250))->toBeGreaterThan(150)
+			->and(watermarkRedness($out['body'], 50, 50))->toBeLessThan(-150);
+	});
+
+	it('draws the fade with GD too', function (): void {
+		$probe = new ReflectionProperty(ImagickSupport::class, 'formats');
+		$probe->setValue(null, []);
+
+		try {
+			$fade = watermarkRun($this->root, ['w' => 900, 'marks' => [
+				['markfill' => '000000', 'markgradient' => 'top', 'markh' => '50h', 'markpos' => 'top', 'markalpha' => 100],
+			]], 'wm-fill-fade-gd');
+		} finally {
+			ImagickSupport::reset();
+		}
+
+		$h = imagesy(imagecreatefromstring($fade['body']));
+		expect(watermarkPixelDelta($fade['body'], watermarkSolid(0, 0, 0), 450, 2))->toBeLessThan(30)
+			->and(watermarkPixelDelta($fade['body'], watermarkRun($this->root, ['w' => 900], 'wm-fill-fade-gd-plain')['body'], 450, $h - 5))->toBeLessThan(30);
+	});
+});
+
+/** A 900x504 JPEG in one color, to compare a pixel against. */
+function watermarkSolid(int $r, int $g, int $b): string
+{
+	$im = imagecreatetruecolor(900, 504);
+	imagefill($im, 0, 0, imagecolorallocate($im, $r, $g, $b));
+	ob_start();
+	imagejpeg($im);
+
+	return (string)ob_get_clean();
+}

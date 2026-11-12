@@ -39,4 +39,16 @@ describe('MarkLayers', function (): void {
 	it('leaves the URL layers alone when there is no property watermark', function (): void {
 		expect(MarkLayers::withSettings(['marktext' => 'x'], []))->toBe(MarkLayers::fromParams(['marktext' => 'x']));
 	});
+
+	it('reads markfill as a fill layer that covers the image unless sized', function (): void {
+		expect(MarkLayers::fromFlat(['markfill' => '000000', 'markalpha' => 40, 'markshape' => 'circle']))->toBe([
+			['kind' => MarkLayers::FILL, 'markfill' => '000000', 'markalpha' => 40, 'markw' => '100w', 'markh' => '100h'],
+		])->and(MarkLayers::fromFlat(['markfill' => '000000', 'markh' => '30h'])[0]['markh'])->toBe('30h');
+	});
+
+	it('keeps a URL fill under a property watermark', function (): void {
+		$layers = MarkLayers::withSettings(['markfill' => '000000'], ['mark' => 'logo.png']);
+
+		expect(array_column($layers, 'kind'))->toBe([MarkLayers::FILL, MarkLayers::LOGO]);
+	});
 });
