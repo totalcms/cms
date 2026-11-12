@@ -23,10 +23,13 @@ Studio needs macOS 14 (Sonoma) or later on a Mac with Apple silicon. It needs an
 2. Click **New Site…**.
 3. Pick a starter. Starters marked "Coming soon" aren't available yet.
 4. Choose a folder for the site. Pick an empty folder, or make one with **New Folder**. The site's files go straight into it. Studio starts you in `~/Sites`.
-5. Give the site a name, then fill in the admin account: name, email and password.
+   With one of the Total CMS starters (not a starter pack), two options sit under the folder:
+   - **Build CSS and JavaScript with Vite**, on by default. Turn it off if you bring your own tools.
+   - **Git-managed templates**, off by default. It keeps the Site Builder templates in the site's `builder/` folder so they go into git with your code. See [Git-First Templates](docs/operations/git-first-templates).
+5. Fill in the admin account: name, email and password. Leave the password empty to set the account up in the browser instead.
 6. Click **Create Site**.
 
-Studio downloads Total CMS, installs the frontend packages, builds the CSS and JavaScript, and creates your admin account. When it's done, the site's homepage opens in your browser. **Open Admin** in Studio takes you to the admin, already set up and ready to sign in.
+Studio downloads Total CMS, installs the frontend packages, builds the CSS and JavaScript (unless you turned that off), and creates your admin account. When it's done, the site's homepage opens in your browser. **Open Admin** in Studio takes you to the admin, already set up and ready to sign in.
 
 Each site gets its own address on your computer, such as `http://photo-test.localhost:8780`, with the admin at `/admin`. Sites on a `.localhost` address run with every Pro feature and need no license key. See [Development Domains](docs/operations/licenses#development-domains).
 
