@@ -126,7 +126,7 @@ The template handler's named parameters map one-to-one with `{name}` placeholder
 
 **Return raw data — do not wrap it in a `content` envelope.** The SDK formats your return value into the MCP `content` array for you: an array is JSON-encoded into a single text block, and a string or scalar becomes a text block verbatim. If you return your own `['content' => [...]]` wrapper, the SDK encodes that *entire wrapper* as text, and the agent receives a double-encoded envelope it has to unwrap twice. Match the core tools in `src/Domain/Mcp/Tool/` — return the bare data.
 
-**Report errors by throwing `\Mcp\Exception\ToolCallException`.** The SDK catches it at the tool boundary and builds a protocol-level error result (it sets the `isError` flag for you). Returning a hand-built `['isError' => true, ...]` array does *not* work — that array contains no `Content` objects, so the SDK JSON-encodes it as ordinary text and the call still reports success.
+**Report errors by throwing `\Mcp\Server\Exception\ToolCallException`.** The SDK catches it at the tool boundary and builds a protocol-level error result (it sets the `isError` flag for you). Returning a hand-built `['isError' => true, ...]` array does *not* work — that array contains no `Content` objects, so the SDK JSON-encodes it as ordinary text and the call still reports success.
 
 ```php
 handler: function (string $invoice_id) use ($context): array {
@@ -134,12 +134,14 @@ handler: function (string $invoice_id) use ($context): array {
     $invoice = $repo->find($invoice_id);
 
     if ($invoice === null) {
-        throw new \Mcp\Exception\ToolCallException("Invoice '{$invoice_id}' not found.");
+        throw new \Mcp\Server\Exception\ToolCallException("Invoice '{$invoice_id}' not found.");
     }
 
     return $invoice;
 },
 ```
+
+Before Total CMS 3.6.10 (mcp/sdk 0.10) the class was `\Mcp\Exception\ToolCallException`. That name still works, as an alias of the new one, so an extension written against it keeps loading, but use the new name in new code: the alias will be removed in a later release.
 
 Use `ToolCallException` for recoverable domain errors — bad input, a missing record, a failed external call — so the agent receives a structured error it can reason about and report to the user. Let genuine programming exceptions propagate; the SDK converts them to a generic error response at the transport boundary, which surfaces as a Sentry event if Sentry is configured.
 
@@ -157,7 +159,7 @@ $context->registerMcpTool(
         $userId  = $session?->get('AUTH_USER');
 
         if ($userId === null) {
-            throw new \Mcp\Exception\ToolCallException('Not authenticated.');
+            throw new \Mcp\Server\Exception\ToolCallException('Not authenticated.');
         }
 
         $orders = $context->get(\Acme\Orders\Repository\OrderRepository::class)

@@ -31,6 +31,13 @@ return function (RouteCollectorProxyInterface $app): void {
 		->add(OAuthBearerMiddleware::class)     // innermost — sets oauth_* attributes
 		->add(McpRateLimitMiddleware::class)
 		->add(McpCorsMiddleware::class);         // outermost — CORS / preflight first
+	// DELETE ends a session (Streamable HTTP: a client SHOULD send it when it
+	// is done). The SDK answers it, and only for the caller that opened the
+	// session: another caller, or a session that is gone, gets 404.
+	$app->delete('/mcp', McpEndpointAction::class)
+		->add(OAuthBearerMiddleware::class)
+		->add(McpRateLimitMiddleware::class)
+		->add(McpCorsMiddleware::class);
 	// OPTIONS route lets the CORS middleware short-circuit preflights without
 	// Slim returning a 405 for the missing handler. The action is never
 	// dispatched on OPTIONS because the middleware returns 204 before

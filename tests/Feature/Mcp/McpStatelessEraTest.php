@@ -6,7 +6,7 @@ use Mcp\Schema\JsonRpc\Notification;
 use Mcp\Schema\Notification\ResourceUpdatedNotification;
 use Mcp\Schema\Notification\ToolListChangedNotification;
 use Mcp\Schema\Wire\McpHeader;
-use Mcp\Server\Stateless\RequestMeta;
+use Mcp\Schema\RequestMeta;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
@@ -288,7 +288,8 @@ function mcpGuardCallTool(App $app, string $userId, array $scopes, string $toolN
 		'method'  => 'tools/call',
 		'params'  => [
 			'name'      => $toolName,
-			'arguments' => $arguments,
+			// `[]` would encode as a JSON array, which mcp/sdk 0.10 refuses.
+			'arguments' => $arguments === [] ? new stdClass() : $arguments,
 		],
 	], $sessionId);
 }

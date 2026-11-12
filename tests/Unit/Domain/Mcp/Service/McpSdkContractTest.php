@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Service;
 
-use Mcp\Capability\Registry\ElementReference;
-use Mcp\Capability\Registry\ReferenceHandler;
+use Mcp\Server\Capability\Registry\ElementReference;
+use Mcp\Server\Capability\Registry\ReferenceHandler;
 use Mcp\Server\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 

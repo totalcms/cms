@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mcp\Capability\Discovery\SchemaValidator;
+use Mcp\Server\Capability\Discovery\SchemaValidator;
 use Slim\App;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
@@ -443,10 +443,10 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 
 	it('the SchemaValidator reads stdClass as an object and [] as an array', function (): void {
 		// Since mcp/sdk 0.9 the SchemaValidator no longer reads an empty PHP
-		// array as an object — `[]` is a JSON array to it. CallToolHandler
-		// turns empty top-level arguments into stdClass before validating, so
-		// a call sending `{}` (decoded as `[]`) still passes — the HTTP tests
-		// calling tools with `'arguments' => []` (McpAuthPersonaScopesTest and
+		// array as an object — `[]` is a JSON array to it. Since 0.10 tool
+		// arguments keep their JSON types, so a call sending `{}` arrives as
+		// stdClass and one sending `[]` is refused with -32602 — the HTTP tests
+		// calling tools with `'arguments' => new stdClass()` (McpAuthPersonaScopesTest and
 		// others) cover that half.
 		$validator      = new SchemaValidator();
 		$noParamsSchema = [

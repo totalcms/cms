@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
@@ -61,7 +61,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  * mirror and `structuredContent` from this raw return value, exactly like
  * every other core tool (see ListCollectionsTool, QueryCollectionTool).
  *
- * **Errors throw `Mcp\Exception\ToolCallException`** with a recovery hint
+ * **Errors throw `Mcp\Server\Exception\ToolCallException`** with a recovery hint
  * appended to the message. `CallToolHandler` catches it at the transport
  * boundary and builds a `CallToolResult` with `isError: true` — the same
  * convention every other core MCP tool uses (see GetObjectTool). A

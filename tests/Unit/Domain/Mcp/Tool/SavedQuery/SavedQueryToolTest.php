@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Tool\SavedQuery;
 
-use Mcp\Capability\Registry;
-use Mcp\Capability\Registry\ReferenceHandler;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Capability\Registry;
+use Mcp\Server\Capability\Registry\ReferenceHandler;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\Response;

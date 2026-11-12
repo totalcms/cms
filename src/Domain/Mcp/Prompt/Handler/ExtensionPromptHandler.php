@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Prompt\Handler;
 
-use Mcp\Exception\PromptGetException;
+use Mcp\Server\Exception\PromptGetException;
 use Mcp\Schema\Prompt;
 use Mcp\Server\ClientGateway;
 use Mcp\Server\Handler\PromptHandlerInterface;

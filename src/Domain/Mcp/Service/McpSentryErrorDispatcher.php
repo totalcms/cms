@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
-use Mcp\Event\ErrorEvent;
+use Mcp\Server\Event\ErrorEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Sentry\State\Scope;
 

@@ -4,7 +4,7 @@ use DI\Container;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mcp\Schema\Wire\McpHeader;
-use Mcp\Server\Stateless\RequestMeta;
+use Mcp\Schema\RequestMeta;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
@@ -708,6 +708,12 @@ function signInAs(App $app, string $userId, string $authCollection = ''): void
  */
 function mcpStatelessCall(App $app, string $method, array $params = [], array $headers = [], string $ip = '203.0.113.77'): ResponseInterface
 {
+	// Tool arguments are a JSON object, which an empty PHP array is not: it
+	// encodes as `[]`, which mcp/sdk 0.10 refuses with -32602. Clients send `{}`.
+	if (($params['arguments'] ?? null) === []) {
+		$params['arguments'] = new stdClass();
+	}
+
 	$params['_meta'] = [
 		RequestMeta::PROTOCOL_VERSION    => '2026-07-28',
 		RequestMeta::CLIENT_CAPABILITIES => new stdClass(),

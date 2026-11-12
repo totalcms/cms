@@ -221,6 +221,14 @@ readonly class McpEndpointAction
 			);
 		}
 
+		// Bind the session to the caller that opens it (mcp/sdk 0.10): another
+		// caller presenting its Mcp-Session-Id gets 404. Anonymous callers have
+		// no principal and stay unbound.
+		$principal = $this->personaContext->getPrincipal();
+		if ($principal !== null) {
+			$request = $request->withAttribute(StreamableHttpTransport::PRINCIPAL_ATTRIBUTE, $principal);
+		}
+
 		$transport = new StreamableHttpTransport($request, middleware: $middleware);
 
 		return $server->run($transport);

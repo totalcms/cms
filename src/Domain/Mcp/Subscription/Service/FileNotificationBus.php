@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Subscription\Service;
 
-use Mcp\JsonRpc\MessageFactory;
+use Mcp\Schema\MessageFactory;
 use Mcp\Schema\JsonRpc\Notification;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
@@ -153,15 +153,12 @@ final readonly class FileNotificationBus implements NotificationBusInterface
 			return [];
 		}
 
+		// A frame holds one message: mcp/sdk 0.10 dropped JSON-RPC batches, and
+		// create() throws on anything it cannot read (caught below).
 		try {
-			$found = [];
-			foreach ($this->messageFactory->create($entry['frame']) as $message) {
-				if ($message instanceof Notification) {
-					$found[] = $message;
-				}
-			}
+			$message = $this->messageFactory->create($entry['frame']);
 
-			return $found;
+			return $message instanceof Notification ? [$message] : [];
 		} catch (\Throwable $e) {
 			$this->logger->warning('Dropped an unreadable notification from the bus.', [
 				'sequence'  => $entry['seq'],

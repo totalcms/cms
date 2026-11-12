@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 
 /**

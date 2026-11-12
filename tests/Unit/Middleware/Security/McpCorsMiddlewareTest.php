@@ -148,10 +148,46 @@ final class McpCorsMiddlewareTest extends TestCase
 		// it would return is replaced by the middleware's own 204.
 		$this->assertSame(204, $response->getStatusCode());
 		$this->assertSame('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
-		$this->assertSame('POST, GET, OPTIONS', $response->getHeaderLine('Access-Control-Allow-Methods'));
+		$this->assertSame('POST, GET, DELETE, OPTIONS', $response->getHeaderLine('Access-Control-Allow-Methods'));
 		$this->assertStringContainsString('Mcp-Session-Id', $response->getHeaderLine('Access-Control-Allow-Headers'));
 		$this->assertStringContainsString('X-API-Key', $response->getHeaderLine('Access-Control-Allow-Headers'));
 		$this->assertSame('86400', $response->getHeaderLine('Access-Control-Max-Age'));
+	}
+
+	public function testPreflightAllowsTheHeadersEveryMcpRequestCarries(): void
+	{
+		// Every request after `initialize` carries MCP-Protocol-Version, the
+		// 2026-07-28 era adds Mcp-Method and Mcp-Name, and a resumed SSE stream
+		// sends Last-Event-ID. A preflight that leaves one out fails the request.
+		$allowed = $this->middleware()
+			->process($this->request('OPTIONS', 'https://claude.ai'), $this->passthroughHandler())
+			->getHeaderLine('Access-Control-Allow-Headers');
+
+		foreach (['MCP-Protocol-Version', 'Mcp-Method', 'Mcp-Name', 'Last-Event-ID', 'Authorization', 'Content-Type'] as $header) {
+			$this->assertStringContainsString($header, $allowed);
+		}
+	}
+
+	public function testAllowedOriginCanReadTheSessionIdAndAuthChallenge(): void
+	{
+		// Without Expose-Headers a cross-origin script cannot read the
+		// Mcp-Session-Id that `initialize` returns, nor the WWW-Authenticate
+		// that starts OAuth sign-in on a 401.
+		$exposed = $this->middleware()
+			->process($this->request('POST', 'https://claude.ai'), $this->passthroughHandler())
+			->getHeaderLine('Access-Control-Expose-Headers');
+
+		foreach (['Mcp-Session-Id', 'WWW-Authenticate', 'Retry-After'] as $header) {
+			$this->assertStringContainsString($header, $exposed);
+		}
+	}
+
+	public function testDisallowedOriginGetsNoExposeHeaders(): void
+	{
+		$response = $this->middleware(['https://example.com'])
+			->process($this->request('POST', 'https://evil.example'), $this->passthroughHandler());
+
+		$this->assertSame('', $response->getHeaderLine('Access-Control-Expose-Headers'));
 	}
 
 	public function testPreflightFromDisallowedOriginStillReturns204ButNoAllowOriginHeader(): void
@@ -164,7 +200,7 @@ final class McpCorsMiddlewareTest extends TestCase
 
 		$this->assertSame(204, $response->getStatusCode());
 		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'));
-		$this->assertSame('POST, GET, OPTIONS', $response->getHeaderLine('Access-Control-Allow-Methods'));
+		$this->assertSame('POST, GET, DELETE, OPTIONS', $response->getHeaderLine('Access-Control-Allow-Methods'));
 	}
 
 	// ── Hygiene on the allowlist ─────────────────────────────────────────────

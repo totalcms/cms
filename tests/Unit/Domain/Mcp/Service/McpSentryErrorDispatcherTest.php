@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Service;
 
-use Mcp\Event\ErrorEvent;
+use Mcp\Server\Event\ErrorEvent;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\Request;
 use Mcp\Server\Session\SessionInterface;

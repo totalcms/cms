@@ -83,6 +83,7 @@ final readonly class McpRequestAuthorizer
 		// synchronously from inside the server->run() call below.
 		$this->personaContext->set($persona);
 		$this->personaContext->setCallerKind($caller->kind);
+		$this->personaContext->setPrincipal($this->principalFor($caller, $request));
 
 		// A browser session (WebMCP) is equipped like a read-only OAuth grant
 		// the user approved: read scope, the tool surface, and the user's own
@@ -163,6 +164,31 @@ final readonly class McpRequestAuthorizer
 		}
 
 		return $persona;
+	}
+
+	/**
+	 * Who opened an MCP session, so the SDK serves the session to that caller
+	 * alone: a request naming another caller's `Mcp-Session-Id` gets 404, as
+	 * for an unknown session.
+	 *
+	 * It names the grant, not the credential. An OAuth client refreshing its
+	 * token, or a browser session renewing its cookie, keeps its MCP session.
+	 * Anonymous callers have no principal: they share one surface and cannot
+	 * use a session an identified caller opened, since the SDK matches the
+	 * principal exactly.
+	 */
+	private function principalFor(McpCaller $caller, ServerRequestInterface $request): ?string
+	{
+		return match ($caller->kind) {
+			McpCallerKind::ApiKey    => 'apikey:' . $caller->apiKeyId,
+			McpCallerKind::OAuth     => sprintf(
+				'oauth:%s:%s',
+				(string)$request->getAttribute('oauth_client_id', ''),
+				(string)$request->getAttribute('oauth_user_id', ''),
+			),
+			McpCallerKind::Session   => 'session:' . $caller->userRef,
+			McpCallerKind::Anonymous => null,
+		};
 	}
 
 	/**

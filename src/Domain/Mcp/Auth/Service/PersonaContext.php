@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
@@ -56,6 +56,8 @@ class PersonaContext
 	private ?ApiKeyData $limitedKey = null;
 
 	private McpCallerKind $callerKind = McpCallerKind::Anonymous;
+
+	private ?string $principal = null;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -179,6 +181,21 @@ class PersonaContext
 	public function callerKind(): McpCallerKind
 	{
 		return $this->callerKind;
+	}
+
+	/**
+	 * Who opened this request's MCP session, as the SDK binds it (see
+	 * McpRequestAuthorizer::principalFor()). Null for an anonymous caller,
+	 * and for a context nobody resolved.
+	 */
+	public function setPrincipal(?string $principal): void
+	{
+		$this->principal = $principal;
+	}
+
+	public function getPrincipal(): ?string
+	{
+		return $this->principal;
 	}
 
 	/**

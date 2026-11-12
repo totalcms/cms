@@ -142,7 +142,7 @@ final readonly class PromptRegistrar
 		$src = sprintf(
 			'return function (%s) use ($renderer, $prompt, $persona): array {
 				if (!\\TotalCMS\\Domain\\Mcp\\Prompt\\Service\\PromptRegistrar::personaCanAccess($persona, $prompt->access)) {
-					throw new \\Mcp\\Exception\\PromptGetException(sprintf(
+					throw new \\Mcp\\Server\\Exception\\PromptGetException(sprintf(
 						\'Prompt "%%s" requires %%s access.\',
 						$prompt->name,
 						$prompt->access,

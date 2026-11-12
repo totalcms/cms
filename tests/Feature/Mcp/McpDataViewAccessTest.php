@@ -91,7 +91,7 @@ test('an OAuth member whose groups grant data views reads a view open to signed-
 	$viewId = dataViewAccessSeedView($this->app, 'members-orders', 'authenticated');
 	$mcp    = dataViewAccessSession($this->app, 'editor-user-test-com');
 
-	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => []]);
+	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => new stdClass()]);
 	expect(array_column($listed['result']['structuredContent']['views'] ?? [], 'id'))->toContain($viewId);
 
 	$view = $mcp('tools/call', ['name' => 'get_view', 'arguments' => ['id' => $viewId]]);
@@ -106,7 +106,7 @@ test('an OAuth member whose groups do not grant data views cannot see or read it
 	$viewId = dataViewAccessSeedView($this->app, 'members-orders', 'authenticated');
 	$mcp    = dataViewAccessSession($this->app, 'viewer-user-test-com');
 
-	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => []]);
+	$listed = $mcp('tools/call', ['name' => 'list_views', 'arguments' => new stdClass()]);
 	expect(array_column($listed['result']['structuredContent']['views'] ?? [], 'id'))->not->toContain($viewId);
 
 	foreach (['get_view' => ['id' => $viewId], 'query_view' => ['id' => $viewId], 'describe_view' => ['id' => $viewId]] as $tool => $arguments) {

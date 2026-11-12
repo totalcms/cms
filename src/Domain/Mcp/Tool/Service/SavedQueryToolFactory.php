@@ -114,7 +114,7 @@ final readonly class SavedQueryToolFactory
 	 * properties vary per collection schema, so they aren't enumerated
 	 * beyond `id`/`url`.
 	 *
-	 * Failures throw `Mcp\Exception\ToolCallException`, which
+	 * Failures throw `Mcp\Server\Exception\ToolCallException`, which
 	 * `CallToolHandler` converts into a `CallToolResult` with `isError: true`
 	 * — that path never reaches `structuredContent`/this schema, so no error
 	 * shape is declared here (same as every other core tool's outputSchema).

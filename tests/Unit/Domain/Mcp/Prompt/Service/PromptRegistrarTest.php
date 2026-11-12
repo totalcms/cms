@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Prompt\Service;
 
-use Mcp\Exception\PromptGetException;
-use Mcp\Server;
+use Mcp\Server\Exception\PromptGetException;
+use Mcp\Server\Builder;
+use Mcp\Server\Server;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptArgData;
@@ -39,7 +40,7 @@ final class PromptRegistrarTest extends TestCase
 		$builder = Server::builder();
 		$this->registrar->registerAll($builder, $prompts, $persona);
 
-		$ref        = new \ReflectionProperty(Server\Builder::class, 'prompts');
+		$ref        = new \ReflectionProperty(Builder::class, 'prompts');
 		$registered = $ref->getValue($builder);
 
 		return array_column($registered, 'handler');
@@ -106,7 +107,7 @@ final class PromptRegistrarTest extends TestCase
 		$publicPrompt = new PromptData(name: 'greet', description: 'd', body: 'Hello {{ args.name }}', access: 'public');
 		$registrar->registerAll($builder, [$publicPrompt], McpPersona::PUBLIC_);
 
-		$ref        = new \ReflectionProperty(Server\Builder::class, 'prompts');
+		$ref        = new \ReflectionProperty(Builder::class, 'prompts');
 		$registered = $ref->getValue($builder);
 
 		$handler = $registered[0]['handler'];

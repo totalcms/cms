@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Extension\Service;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Exception\EntrypointLoadException;
 use TotalCMS\Domain\Extension\ExtensionInterface;
+use TotalCMS\Domain\Mcp\Service\LegacySdkNames;
 
 /**
  * Turns a manifest's entrypoint file into its ExtensionInterface class:
@@ -23,6 +24,10 @@ final class ExtensionEntrypointLoader
 	 */
 	public function load(ExtensionManifest $manifest, string $extPath): string
 	{
+		// Before any extension code runs, so an extension written against
+		// mcp/sdk 0.9's class names still loads.
+		LegacySdkNames::register();
+
 		$autoloadFile = $extPath . '/vendor/autoload.php';
 		if (is_file($autoloadFile)) {
 			require_once $autoloadFile;

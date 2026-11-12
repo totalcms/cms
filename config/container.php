@@ -4,7 +4,7 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\ResourceServer;
-use Mcp\JsonRpc\MessageFactory as McpMessageFactory;
+use Mcp\Schema\MessageFactory as McpMessageFactory;
 use Mcp\Server\Protocol as McpProtocol;
 use Mcp\Server\Session\FileSessionStore as McpFileSessionStore;
 use Mcp\Server\Session\SessionManager as McpSessionManager;

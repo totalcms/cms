@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
-use Mcp\Capability\Registry\ElementReference;
-use Mcp\Capability\Registry\ReferenceHandler;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Capability\Registry\ElementReference;
+use Mcp\Server\Capability\Registry\ReferenceHandler;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\JsonRpc\MessageInterface;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server;
+use Mcp\Server\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
@@ -286,7 +286,7 @@ readonly class McpServerFactory
 	 * --- Argument-binding note (see task-7-report.md for the full write-up) ---
 	 * A naive wrapper — e.g. `fn (...$args) => ...` or `fn (array $args) =>
 	 * ...` registered directly as the tool's handler — silently breaks the
-	 * SDK's named-argument binding. Mcp\Capability\Registry\ReferenceHandler
+	 * SDK's named-argument binding. Mcp\Server\Capability\Registry\ReferenceHandler
 	 * ::prepareArguments() builds the call by reflecting on the HANDLER
 	 * closure's OWN parameter list and looking each name up in the JSON-RPC
 	 * argument bag; reflecting on a generic wrapper finds parameters named

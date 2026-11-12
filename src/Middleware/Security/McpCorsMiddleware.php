@@ -37,6 +37,23 @@ use TotalCMS\Support\Config;
  */
 final readonly class McpCorsMiddleware implements MiddlewareInterface
 {
+	/**
+	 * Request headers a browser client may send. Besides credentials and the
+	 * session id: the protocol revision every request after `initialize`
+	 * carries, the method and name the 2026-07-28 era repeats from the body,
+	 * and the id an SSE stream resumes from. `Mcp-Param-*` headers are not
+	 * listed: no T3 tool declares `x-mcp-header`, so no client sends one.
+	 */
+	public const ALLOW_HEADERS = 'Content-Type, Authorization, X-API-Key, Mcp-Session-Id, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Last-Event-ID';
+
+	/**
+	 * Response headers a browser client may read. Without this a cross-origin
+	 * script cannot see the `Mcp-Session-Id` that `initialize` hands back, so it
+	 * cannot send its next request. `WWW-Authenticate` drives the OAuth sign-in
+	 * prompt on a 401, and `Retry-After` says when to retry a 503.
+	 */
+	public const EXPOSE_HEADERS = 'Mcp-Session-Id, WWW-Authenticate, Retry-After';
+
 	public function __construct(
 		private Config $config,
 	) {
@@ -61,6 +78,7 @@ final readonly class McpCorsMiddleware implements MiddlewareInterface
 		if ($echoed !== null) {
 			return $response
 				->withHeader('Access-Control-Allow-Origin', $echoed)
+				->withHeader('Access-Control-Expose-Headers', self::EXPOSE_HEADERS)
 				->withHeader('Vary', 'Origin');
 		}
 
@@ -135,8 +153,8 @@ final readonly class McpCorsMiddleware implements MiddlewareInterface
 
 		return $response
 			->withHeader('Vary', 'Origin')
-			->withHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-			->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Mcp-Session-Id')
+			->withHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS')
+			->withHeader('Access-Control-Allow-Headers', self::ALLOW_HEADERS)
 			->withHeader('Access-Control-Max-Age', '86400');
 	}
 }

@@ -13589,8 +13589,27 @@
                     "OAuthBearerMiddleware"
                 ]
             },
-            "options": {
+            "delete": {
                 "operationId": "mcp.3",
+                "tags": [
+                    "mcp"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/mcp",
+                "x-tcms-action": "McpEndpointAction",
+                "x-tcms-middleware": [
+                    "McpCorsMiddleware",
+                    "McpRateLimitMiddleware",
+                    "OAuthBearerMiddleware"
+                ]
+            },
+            "options": {
+                "operationId": "mcp.4",
                 "tags": [
                     "mcp"
                 ],

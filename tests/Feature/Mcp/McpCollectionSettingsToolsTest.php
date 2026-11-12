@@ -247,7 +247,7 @@ test('an OAuth member whose group only reads some schemas cannot change them and
 		'jsonrpc' => '2.0',
 		'id'      => 2,
 		'method'  => 'tools/call',
-		'params'  => ['name' => 'list_schemas', 'arguments' => []],
+		'params'  => ['name' => 'list_schemas', 'arguments' => new stdClass()],
 	], $sessionId)->getBody(), true);
 	expect(array_column($listed['result']['structuredContent']['schemas'] ?? [], 'id'))->toBe(['blog']);
 

@@ -536,6 +536,8 @@ Admin → Settings → MCP Server → CORS Allowed Origins
 
 Preflight `OPTIONS` requests short-circuit to a 204 with the standard handshake headers; the rate limiter doesn't see them so a single browser tab can perform a normal session without burning the public-IP quota on preflights.
 
+A browser client may send `Authorization`, `X-API-Key`, `Mcp-Session-Id`, `MCP-Protocol-Version`, `Mcp-Method`, `Mcp-Name` and `Last-Event-ID`, and may read `Mcp-Session-Id`, `WWW-Authenticate` and `Retry-After` from the response, so it can keep its session, start OAuth sign-in on a 401 and back off on a 503.
+
 ---
 
 ## API key authorization
@@ -682,7 +684,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 - [ ] Tool names ≤ 64 characters (including any `toolPrefix`).
 - [ ] Read and write operations split into separate tools (no mixed-mode tools).
 - [ ] Tool descriptions don't instruct Claude ("always do X", "you must call Y first") — Total CMS uses `setInstructions()` for cross-tool guidance.
-- [ ] Tools report errors by throwing `Mcp\Exception\ToolCallException` with a recovery hint in the message — the SDK sets `isError: true` for you (see [Extending MCP](docs/mcp/extensions), "Returning data and reporting errors"). A hand-built `['isError' => true, ...]` return array does NOT set the outer `CallToolResult.isError`.
+- [ ] Tools report errors by throwing `Mcp\Server\Exception\ToolCallException` with a recovery hint in the message — the SDK sets `isError: true` for you (see [Extending MCP](docs/mcp/extensions), "Returning data and reporting errors"). A hand-built `['isError' => true, ...]` return array does NOT set the outer `CallToolResult.isError`.
 - [ ] Lazy authentication verified: public tools work unauthenticated; only protected tools challenge.
 - [ ] Submission slug chosen carefully (fixed after publication).
 
@@ -693,6 +695,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 - **Anonymous content is opt-in.** `mcp.publicAccess` defaults to `true`, so anonymous callers can open a session, but `mcp.access` defaults to `admin` on every collection, so a fresh install never leaks content until the operator opts a collection in. Set `mcp.publicAccess: false` to turn anonymous callers away with a 401.
 - **Drafts are server-filtered.** Public/anonymous callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side. AUTHENTICATED (OAuth) callers see drafts only in collections where their access groups grant `read` — public `mcp.access` exposure by itself does not unlock drafts, even though it unlocks published content. `get_view` / `query_view` are the one exception: a view's result is built with full access, drafts included, and is gated by the `dataviews` permission as a whole — see [Data views follow the data views grant](#data-views-follow-the-data-views-grant).
 - **Public registration carries automatic login.** Forms that use the public registration endpoint auto-log the new user in; gate them with CAPTCHA / rate limit / email verification when the access group new users land in reaches sensitive content. (Unrelated to MCP directly, but worth flagging — the same operator who exposes a collection to MCP might also be running public registration.)
+- **A session belongs to the caller that opened it.** A request naming another caller's `Mcp-Session-Id` gets 404, as if the session did not exist: another API key, another OAuth client, or the same client acting for another user. An OAuth client that refreshes its token keeps its session. Anonymous callers share one unbound surface, and cannot use a session an identified caller opened. A client ends its session with `DELETE /mcp` and its `Mcp-Session-Id`; only the caller that opened it can.
 - **API keys are scoped.** A key scoped only to `/collections/blog` does NOT unlock MCP; the operator must explicitly include `/mcp` (or `*`) in the scope.
 - **No prompt-injection mitigation at the tool layer.** Content stored in `styledtext` fields is returned to the agent verbatim (after format conversion). Operators with untrusted user-generated content should sanitize at write time, not rely on MCP-side filtering.
 

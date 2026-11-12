@@ -251,7 +251,7 @@ describe('McpAuthenticatedPersona', function (): void {
 	// class of issue by pre-creating 'blog'; pre-creating 'dataviews' here is
 	// the equivalent fix scoped to these tests.
 	//
-	// Error shape note: CollectionResource throws Mcp\Exception\ToolCallException
+	// Error shape note: CollectionResource throws Mcp\Server\Exception\ToolCallException
 	// on denial — the SAME exception class the pre-existing "collection not
 	// found" / "mcp.access denied" checks in this handler already use. The MCP
 	// SDK's ReadResourceHandler only special-cases ResourceReadException /

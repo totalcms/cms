@@ -95,7 +95,7 @@ test('an OAuth member cannot reach an apikey collection', function (): void {
 	$config      = $this->app->getContainer()->get(Config::class);
 	$config->mcp = array_merge($config->mcp, ['publicAccess' => true]);
 
-	$response = mcpStatelessCall($this->app, 'tools/call', ['name' => 'list_collections', 'arguments' => []], [], '203.0.113.126');
+	$response = mcpStatelessCall($this->app, 'tools/call', ['name' => 'list_collections', 'arguments' => new stdClass()], [], '203.0.113.126');
 	$ids      = array_column(json_decode((string)$response->getBody(), true)['result']['structuredContent']['collections'] ?? [], 'id');
 
 	expect($ids)->not->toContain('blog');
