@@ -197,7 +197,7 @@
 	max-width     : 100%;
 	flex          : 1;
 	min-width     : 0;
-	resize        : vertical;
+	position      : relative;
 
 	.cm-editor {
 		height           : 100%;
@@ -631,4 +631,35 @@
 	&:after {
 		mask-image : var(--icon-folder);
 	}
+}
+
+//------------------------------
+// Resize grip (resizeGrip.js)
+//------------------------------
+// The corner handle for boxes holding a scrolling editor, where Safari will
+// not draw the native `resize` grip.
+.totalform-resize-grip {
+	position         : absolute;
+	right            : 0;
+	bottom           : 0;
+	z-index          : 2;
+	width            : 14px;
+	height           : 14px;
+	cursor           : ns-resize;
+	touch-action     : none;
+	// The lines are drawn smaller than the grab area and kept off the edges.
+	background-repeat   : no-repeat;
+	background-size     : 8px 8px;
+	background-position : right 3px bottom 3px;
+	background-image : linear-gradient(
+		135deg,
+		transparent 40%,
+		oklch(var(--totalform-mediumgray)) 40%,
+		oklch(var(--totalform-mediumgray)) 52%,
+		transparent 52%,
+		transparent 72%,
+		oklch(var(--totalform-mediumgray)) 72%,
+		oklch(var(--totalform-mediumgray)) 84%,
+		transparent 84%
+	);
 }

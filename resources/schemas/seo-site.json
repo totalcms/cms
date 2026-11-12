@@ -5,7 +5,7 @@
 	"type": "object",
 	"category": "Internal",
 	"description": "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and extra meta tags. One record per site.",
-	"formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultSocialDescription\n---Social Sharing---\ndefaultImage twitterHandle\n---Organization---\norganizationName sameAs\ncontactEmail sameAs\ncontactUrl sameAs\norganizationLogo .\n---Favicons---\nicon touchIcon\niconSvg themeColor\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\nemitGenerator .\n---Search Engines---\nindexNowEnabled indexNowKey\n---\nupdated created",
+	"formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultSocialDescription\n---Social Sharing---\ndefaultImage twitterHandle\nsocialImageOptions socialImageOptions\n---Organization---\norganizationName sameAs\ncontactEmail sameAs\ncontactUrl sameAs\norganizationLogo .\n---Favicons---\nicon touchIcon\niconSvg themeColor\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\nemitGenerator .\n---Search Engines---\nindexNowEnabled indexNowKey\n---\nupdated created",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -59,6 +59,14 @@
 			"field": "image",
 			"label": "Default Social Image",
 			"help": "Social sharing image used when nothing more specific resolves (1200×630 recommended)"
+		},
+		"socialImageOptions": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Social Image Overlay",
+			"help": "ImageWorks layers drawn over every share image, such as the page title. Leave empty for the plain image. See Site Builder → SEO in the docs.",
+			"placeholder": "{\"marks\": [{\"marktext\": \"${socialTitle}\", \"marktextw\": \"60w\", \"marktextsize\": \"6w\", \"marktextpos\": \"bottom-left\"}]}",
+			"default": {}
 		},
 		"twitterHandle": {
 			"type": "string",

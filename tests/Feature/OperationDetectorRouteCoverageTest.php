@@ -180,6 +180,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'stream-file-depot',
 		'stream-upload',
 		'sync-export',
+		'social-image-fetch', // Public share image; the keyed hash decides what is drawn
 		'sync-import',
 		'upload-delete',
 		'upload-get',

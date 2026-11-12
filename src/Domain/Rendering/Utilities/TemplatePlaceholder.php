@@ -84,4 +84,31 @@ class TemplatePlaceholder
 
 		return is_scalar($value) ? trim((string)$value) : '';
 	}
+
+	/**
+	 * Render a template, or return `''` when it has placeholders and every
+	 * one of them resolved to nothing: `${name} — ${city}` with neither would
+	 * otherwise trim to a bare `—`. One placeholder resolving is enough. A
+	 * template with no complete placeholder is plain text and comes back as is.
+	 *
+	 * @param callable(string):string $resolver
+	 */
+	public static function renderOrEmpty(string $template, callable $resolver): string
+	{
+		if (self::extractKeys($template) === []) {
+			return $template;
+		}
+
+		$resolved = false;
+		$rendered = self::render($template, function (string $key) use ($resolver, &$resolved): string {
+			$value = $resolver($key);
+			if ($value !== '') {
+				$resolved = true;
+			}
+
+			return $value;
+		});
+
+		return $resolved ? trim($rendered) : '';
+	}
 }

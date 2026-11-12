@@ -9,6 +9,7 @@ use TotalCMS\Domain\Seo\Data\SeoContext;
 use TotalCMS\Domain\Seo\Service\JsonLdBuilder;
 use TotalCMS\Domain\Seo\Service\MetaBuilder;
 use TotalCMS\Domain\Seo\Service\SeoContextFactory;
+use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\Markup;
 
@@ -49,6 +50,7 @@ final readonly class SeoTwigAdapter
 		private MetaBuilder $metaBuilder,
 		private JsonLdBuilder $jsonLdBuilder,
 		private \Closure $twigEngineFactory,
+		private SocialImageBuilder $socialImages,
 	) {
 	}
 
@@ -236,7 +238,8 @@ final readonly class SeoTwigAdapter
 	{
 		$ctx = $this->contexts->make($subject, $options);
 
-		return [$ctx, $this->metaBuilder->build($ctx)];
+		// The share card, when the site has an overlay, in place of the image it is drawn on.
+		return [$ctx, $this->socialImages->apply($ctx, $this->metaBuilder->build($ctx))];
 	}
 
 	/**

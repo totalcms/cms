@@ -17,6 +17,8 @@ final readonly class SeoFields
 		public bool $noindex,
 		public bool $nofollow,
 		public string $jsonldType,
+		/** Use the social image as it is: no share-image overlay, for a hand-designed image. */
+		public bool $imageAsIs = false,
 	) {
 	}
 
@@ -35,6 +37,7 @@ final readonly class SeoFields
 			noindex: $bool('noindex'),
 			nofollow: $bool('nofollow'),
 			jsonldType: $str('jsonldType'),
+			imageAsIs: $bool('imageAsIs'),
 		);
 	}
 

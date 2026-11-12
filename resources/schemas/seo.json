@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
 	"category": "Internal",
-	"formgrid": "jsonldType jsonldType noindex nofollow\ntitle title socialTitle socialTitle\ndescription description socialDescription socialDescription\nimage image image image",
+	"formgrid": "jsonldType jsonldType noindex nofollow\ntitle title socialTitle socialTitle\ndescription description socialDescription socialDescription\nimage image image image\nimageAsIs imageAsIs imageAsIs imageAsIs",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -50,6 +50,13 @@
 			"label": "Social Image",
 			"help": "Social sharing image; 1200×630 recommended",
 			"field": "image"
+		},
+		"imageAsIs": {
+			"type": "boolean",
+			"label": "Use the Image as Is",
+			"help": "Share this image without the site's social image overlay, for an image that was designed as a share card.",
+			"field": "toggle",
+			"default": false
 		},
 		"noindex": {
 			"type": "boolean",

@@ -13137,6 +13137,49 @@
                 "x-tcms-middleware": []
             }
         },
+        "/imageworks/social/{collection}/{id}.{format}": {
+            "get": {
+                "operationId": "social-image-fetch",
+                "tags": [
+                    "imageworks"
+                ],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/imageworks/social/{collection}/{id}.{format}",
+                "x-tcms-action": "ImageWorksSocialFetchAction",
+                "x-tcms-middleware": []
+            }
+        },
         "/imageworks/upload/{collection}/{id}/{property}/{path}": {
             "get": {
                 "operationId": "uploads-image-fetch",

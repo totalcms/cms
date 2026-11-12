@@ -229,23 +229,10 @@ class MetaBuilder
 	 */
 	private function renderTemplate(string $title, SeoContext $ctx): string
 	{
-		// No *complete* placeholder: a literal `${` with no closing brace is
-		// text, not a template, and must survive as the title it was typed as.
-		if (TemplatePlaceholder::extractKeys($title) === []) {
-			return $title;
-		}
-
-		$resolved = false;
-		$rendered = TemplatePlaceholder::render($title, function (string $key) use ($ctx, &$resolved): string {
-			$value = $key === 'site' ? $ctx->siteName : TemplatePlaceholder::resolvePath($ctx->object, $key);
-			if ($value !== '') {
-				$resolved = true;
-			}
-
-			return $value;
-		});
-
-		return $resolved ? trim($rendered) : '';
+		return TemplatePlaceholder::renderOrEmpty(
+			$title,
+			fn (string $key): string => $key === 'site' ? $ctx->siteName : TemplatePlaceholder::resolvePath($ctx->object, $key),
+		);
 	}
 
 	/**

@@ -47,4 +47,14 @@ final readonly class MetaPayload
 		public bool $noindex,
 	) {
 	}
+
+	/** The same values with another share image: the share card, in place of the image it is drawn on. */
+	public function withImage(string $ogImage, string $ogImageAlt): self
+	{
+		$values               = get_object_vars($this);
+		$values['ogImage']    = $ogImage;
+		$values['ogImageAlt'] = $ogImageAlt;
+
+		return new self(...$values);
+	}
 }

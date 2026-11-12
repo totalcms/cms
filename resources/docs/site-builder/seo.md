@@ -100,6 +100,7 @@ Every Site Builder page has an **SEO** section on its edit form. It holds the pe
 | **Description** | Replaces the meta description for this record. |
 | **Social Description** | A punchier description for share cards. It replaces `og:description` and `twitter:description` only — `<meta name="description">` and the JSON-LD are untouched. Leave it empty and the share cards use the description. |
 | **Social Image** | The share image. 1200×630 is the recommendation; Total CMS crops to that ratio. |
+| **Use the Image as Is** | Shares this record's image without the site's [share image overlay](#share-image-overlays), for an image that was designed as a share card already. |
 | **No Index** | Asks crawlers not to index this page. **Also removes it from the sitemaps.** |
 | **No Follow** | Asks crawlers not to follow the links on this page. |
 | **Structured Data Type** | `Automatic`, `Webpage`, `Article` or `Blog post`. For an object, Automatic is the collection's Structured Data Type; for a Site Builder page it is Webpage, because a page has no collection setting behind it. The other three override that for this one record, on `og:type` and in the JSON-LD alike: Article and Blog post add the matching node and the `article:` dates, Webpage opts a record out of a blog collection's default. |
@@ -191,6 +192,7 @@ Open **Collections → your collection → Settings** and fill in the **SEO** se
 | **Description Template** | Composes the meta description from the object's properties, with the same `${property}` placeholders as the titles: `${summary}`, `${cuisine} in ${city}`, `${site}` for the site name, dot paths into cards. A bare property name on its own is that property, so `summary` works as well as `${summary}`. Markup and markdown are stripped and the result is capped at 160 characters. Used when an object has no SEO description of its own. |
 | **Social Description Template** | The same, for `og:description` and `twitter:description`, independent of the Description Template. Leave it empty to use the description. |
 | **Image Property** | Which property supplies the social image. Point it at a **gallery** and its first image is used — handy for a collection whose objects carry a gallery instead of a single hero image. The gallery has to be a property of the object itself; one nested inside a card is not picked up. |
+| **Social Image Overlay** | The layers drawn over this collection's share images, in place of the site's overlay. See [Share Image Overlays](#share-image-overlays). |
 
 Saving writes the mapping into the collection's `.meta.json`:
 
@@ -245,6 +247,7 @@ tcms collection:create seo-site
 | **Default Social Description** | The same for `og:description` and `twitter:description`, independent of the Default Description. Leave it empty and the share cards use whatever description resolved. |
 | **Default Social Image** | An image **upload**, not a URL. The fallback share image, served through ImageWorks at 1200×630 and emitted as an absolute URL. |
 | **Twitter / X Handle** | With or without the `@`. Emitted as `twitter:site`. |
+| **Social Image Overlay** | Layers drawn over every share image: the page title, a logo, a dark fade behind the text. Leave it empty for the plain image. See [Share Image Overlays](#share-image-overlays). |
 | **Organization Name** | The publishing entity in the JSON-LD. Falls back to the site name. |
 | **Organization Logo** | An image **upload** too. Any aspect ratio, at least 112×112 — it is never cropped or upscaled, only bounded, and served through ImageWorks at up to 600px wide. |
 | **Social Profiles** | One absolute URL per line — X, Instagram, LinkedIn, GitHub. Emitted as `Organization.sameAs`. |
@@ -277,7 +280,7 @@ Site-wide values of your own — a tagline, a phone number, a footer blurb — c
     "id": "myseo",
     "type": "object",
     "inheritFrom": ["seo-site"],
-    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultSocialDescription defaultSocialDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
+    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultSocialDescription defaultSocialDescription\ndefaultImage twitterHandle\nsocialImageOptions socialImageOptions\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
     "properties": {
         "tagline": {
             "type": "string",
@@ -353,6 +356,107 @@ Every size is cut from that one upload by ImageWorks, so 512×512 or larger is t
 No page at that route means no link. A draft, a redirect, or a collection URL pattern that happens to swallow the path does not count.
 
 `cms.seo.icons()` prints just these tags — the icons, the manifest link and the theme color — for a layout that places the pieces itself.
+
+## Share Image Overlays
+
+A link shared on social media shows its `og:image`. Most pages have a photo there and nothing else, so a post looks like every other post until someone reads the small print under it. An overlay draws the page's own title over that photo, with your logo and a dark fade behind the text, so the image says what the page is. You design it once, and every page gets its own card.
+
+The overlay is a list of [ImageWorks layers](docs/twig/imageworks#layered-marks), the same `marks` a template can pass to `cms.render.image()`. Text layers can take values from the record they are drawn for.
+
+### Setting One Up
+
+Write the overlay as JSON in **Site SEO → Social Image Overlay**:
+
+```json
+{
+    "fit": "crop-focalpoint",
+    "marks": [
+        {"markfill": "0b0f1a", "markgradient": "bottom", "markh": "100h", "markpos": "bottom", "markalpha": 85},
+        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "markpad": "5w"},
+        {"marktext": "${site}", "marktextsize": "3w", "marktextpos": "top-left", "markpad": "5w"}
+    ]
+}
+```
+
+That draws, from the bottom up:
+
+1. A dark fade, solid at the bottom edge and gone by the top, so white text is readable on any photo. See [Color Fills](docs/twig/imageworks#color-fills) for other fades.
+2. The share title, in the lower left. It wraps onto up to three lines and gets smaller if a long title needs more. See [Text Size](docs/twig/imageworks#text-size).
+3. The site name, small, in the upper left.
+
+Every page and record now shares a card like that in place of its plain image. The head prints the card's address and nothing else changes.
+
+`fit` is optional and takes the ImageWorks [fit modes](docs/twig/imageworks#fit-modes); the default, `crop-focalpoint`, keeps each image's focal point in the frame. The size is always 1200×630. ImageWorks never makes an image larger than it is, so a smaller source image gives a narrower card. A bare list of layers, without the `fit` and `marks` around it, works too.
+
+### Placeholders
+
+Any text in a layer can hold `${…}` placeholders:
+
+| Placeholder | Fills in |
+|---|---|
+| `${socialTitle}` | The share title, exactly as `og:title` has it: the card's Social Title, the collection's Social Title Template, or the title. |
+| `${site}` | The site name. |
+| `${path}` | The page's path, such as `/blog/meet-the-roaster`. |
+| `${title}`, `${author}`, `${category.name}` | Any property of the record, dot paths into cards included. A list fills in its first item, so a post with several authors shows the first. |
+
+Markup is stripped from what a placeholder fills in, and the value is cut to 255 characters.
+
+A layer whose placeholders all come back empty is left out, so a post with no author does not get an empty "By" line. A layer with no placeholders is always drawn.
+
+Placeholders work in `markimage` too, which draws an image from another record. A post whose `author` holds the id of a record in a `team` collection can show that person's photo:
+
+```json
+{"markimage": "team/${author}/photo", "markshape": "circle", "markw": "12w", "markpos": "top-right", "markpad": "5w"}
+```
+
+The text is drawn in the site's default watermark font. To use another, upload it to the **watermark-fonts** depot and name it with `marktextfont`. See [Custom Fonts](docs/twig/imageworks#custom-fonts).
+
+### One Collection, Another Look
+
+A collection can have an overlay of its own: **Collections → your collection → Settings → SEO → Social Image Overlay**, in the same format. It replaces the site's overlay for that collection's objects. The two are not merged, so a collection overlay that wants the site name says `${site}` itself.
+
+A blog can show the author and the date where the rest of the site shows only a title:
+
+```json
+{
+    "marks": [
+        {"markfill": "0b0f1a", "markgradient": "bottom", "markh": "100h", "markpos": "bottom", "markalpha": 85},
+        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "markpad": "5w"},
+        {"marktext": "By ${author}", "marktextsize": "3w", "marktextpos": "top-left", "markpad": "5w"}
+    ]
+}
+```
+
+Site Builder pages have no collection settings, so they always use the site's overlay.
+
+### Opting a Record Out
+
+Turn on **Use the Image as Is** in a record's SEO card to share its image without any overlay. Use it for an image that was designed as a share card already, with its own text on it.
+
+### How the Card Is Served
+
+The head does not put the layers in the URL. It prints a short address for the record:
+
+```html
+<meta property="og:image" content="https://example.com/imageworks/social/blog/meet-the-roaster.jpg?v=c174c0ce73206b56">
+```
+
+When a social network asks for that image, Total CMS reads the record again, builds the same layers and draws them. The `v` value is a hash of everything drawn, signed with the site's own key:
+
+- **Only the site can make a card.** A link someone types with a different `v` gets the plain 1200×630 image, never their own text over your photo.
+- **An edit gives a new address.** Change the title, the image or the overlay and `v` changes with it, so the networks fetch the new card instead of showing a cached old one. Most of them cache a share image for days, so this is what keeps a corrected title from going out with the old one.
+- **The card is cached like any ImageWorks image.** The first request draws it, and later ones are served from the cache.
+
+An overlay that ImageWorks would refuse, such as a misspelled position or a size out of range, is not drawn at all, and the plain image is shared instead. Check a new overlay by opening a page's `og:image` address in the browser.
+
+### Limits
+
+An overlay needs a record to read again when the image is requested. Two kinds of page do not have one, and they share the plain image:
+
+- A page that hands `cms.seo.head()` a [literal set of values](#pages-the-router-did-not-render), the shape a Stacks page uses.
+- A page that calls `cms.seo.head()` with nothing at all.
+
+A Site Builder page and a collection object always have a record, and get the card.
 
 ## Structured Data
 

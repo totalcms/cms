@@ -1,5 +1,6 @@
 import TotalField from './totalfield';
 import { t } from "../i18n";
+import { addResizeGrip } from './resizeGrip';
 
 // A complete, legal JSON escape — \uXXXX or one of the single-character
 // escapes JSON allows after a backslash.
@@ -59,6 +60,8 @@ export default class JSONField extends TotalField {
         this.input.parentNode.insertBefore(editorContainer, this.input.nextSibling);
 
         editorContainer.style.height = height + 'px';
+        // Drawn by us, not CSS `resize`: Safari shows no grip over the editor.
+        addResizeGrip(editorContainer);
 
         this.editor = window.TotalCMSCodeMirror.createJsonEditor(editorContainer, {
             value: this.input.value || '',

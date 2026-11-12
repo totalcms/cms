@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "SEO settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
 	"category": "Internal",
-	"formgrid": "title socialTitle\ndescription socialDescription\nimage type",
+	"formgrid": "title socialTitle\ndescription socialDescription\nimage type\nimageOptions imageOptions",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -85,6 +85,14 @@
 				"propertyOptions": "schemaProperties",
 				"sortOptions": true
 			}
+		},
+		"imageOptions": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Social Image Overlay",
+			"help": "ImageWorks layers drawn over this collection's share images, in place of the site's overlay. Leave empty to use the site's.",
+			"placeholder": "{\"marks\": [{\"marktext\": \"${title}\", \"marktextw\": \"60w\", \"marktextsize\": \"6w\"}]}",
+			"default": {}
 		}
 	},
 	"required": []

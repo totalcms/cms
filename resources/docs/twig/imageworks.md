@@ -354,7 +354,13 @@ Text is drawn with the TTF or OTF font you choose, or Roboto by default.
 
 ### Custom Fonts
 
-Upload TTF or OTF fonts to the watermark-fonts depot (configurable via `watermarkFontsDepot` setting). The default font is RobotoRegular.
+Text is drawn in Roboto Regular unless a mark names another font. To add one:
+
+1. Open the **Depot** collection in the admin and create an object with the id `watermark-fonts`, or open it if it exists.
+2. Upload your `.ttf` or `.otf` files to its depot field.
+3. Name a font by its file name in `marktextfont`, with or without the extension: `Dorsa-Regular` finds `Dorsa-Regular.ttf`.
+
+A name that matches no file draws in Roboto without an error, so check the spelling when the font does not change. The depot object's id is the `watermarkFontsDepot` ImageWorks setting, if you want another.
 
 ```twig
 {# Simple copyright watermark #}

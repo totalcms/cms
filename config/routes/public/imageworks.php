@@ -13,6 +13,9 @@ return function (RouteCollectorProxyInterface $app): void {
 		// name by `/{collection}/{id}/{property}/{path:.+}.{format}`.
 		$group->get('/upload/{collection}/{id}/{property}/{path:.+}', ImageWorks\ImageWorksUploadFetchAction::class)->setName('uploads-image-fetch');
 
+		// Share images, before the image route below would read `social` as a collection.
+		$group->get('/social/{collection}/{id}.{format}', ImageWorks\ImageWorksSocialFetchAction::class)->setName('social-image-fetch');
+
 		$group->get('/{id}.{format}', ImageWorks\ImageWorksImageFetchAction::class)->setName('image-fetch-short');
 		$group->get('/{collection}/{id}/{property}.{format}', ImageWorks\ImageWorksImageFetchAction::class)->setName('image-fetch');
 		$group->get('/{id}/{name}.{format}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch-short');

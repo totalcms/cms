@@ -30,7 +30,7 @@ use TotalCMS\Support\Config;
 class SeoSettingsLoader
 {
 	/** Collection id, schema id and object id are all the same for the singleton. */
-	private const RECORD = 'seo-site';
+	public const RECORD = 'seo-site';
 
 	private ?SeoSettings $loaded = null;
 

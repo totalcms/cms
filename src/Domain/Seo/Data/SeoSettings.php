@@ -122,6 +122,14 @@ final readonly class SeoSettings
 		 * a version is what a vulnerability scanner reads.
 		 */
 		public bool $emitGenerator = true,
+		/**
+		 * The share-image overlay for every page and record without one of its
+		 * own: the Site SEO record's Social Image Overlay, as stored (see
+		 * SocialImageBuilder for its shape). `[]` for none.
+		 *
+		 * @var array<array-key,mixed>
+		 */
+		public array $socialImageOptions = [],
 	) {
 	}
 
@@ -197,7 +205,23 @@ final readonly class SeoSettings
 			indexNowEnabled: (bool)($data['indexNowEnabled'] ?? false),
 			indexNowKey: $str('indexNowKey'),
 			emitGenerator: !array_key_exists('emitGenerator', $data) || filter_var($data['emitGenerator'], FILTER_VALIDATE_BOOL),
+			socialImageOptions: self::json($data['socialImageOptions'] ?? null),
 		);
+	}
+
+	/**
+	 * A JSON field's value as an array: the field saves an object natively,
+	 * but older saves hold the raw JSON string.
+	 *
+	 * @return array<array-key,mixed>
+	 */
+	public static function json(mixed $value): array
+	{
+		if (is_string($value) && trim($value) !== '') {
+			$value = json_decode($value, true);
+		}
+
+		return is_array($value) ? $value : [];
 	}
 
 	/**
@@ -248,6 +272,7 @@ final readonly class SeoSettings
 			indexNowEnabled: $this->indexNowEnabled,
 			indexNowKey: $this->indexNowKey,
 			emitGenerator: $this->emitGenerator,
+			socialImageOptions: $this->socialImageOptions,
 		);
 	}
 }

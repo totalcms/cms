@@ -202,6 +202,7 @@ use TotalCMS\Domain\Seo\Service\JsonLd\WebSiteProvider;
 use TotalCMS\Domain\Seo\Service\JsonLdBuilder;
 use TotalCMS\Domain\Seo\Service\MetaBuilder;
 use TotalCMS\Domain\Seo\Service\SeoContextFactory;
+use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
 use TotalCMS\Domain\Session\Service\SessionBootstrap;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Skill\Listener\ExtensionSkillListener;
@@ -595,6 +596,7 @@ return [
 		$container->get(MetaBuilder::class),
 		$container->get(JsonLdBuilder::class),
 		fn (): TwigEngine => $container->get(TwigEngine::class),
+		$container->get(SocialImageBuilder::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(

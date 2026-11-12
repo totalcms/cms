@@ -310,7 +310,7 @@ readonly class SeoContextFactory
 		if ($block['image'] !== '') {
 			// A mapped gallery is described by the image that actually wins,
 			// which is its first — not by the list, which has no alt of its own.
-			$image = $this->galleryFirstImage($object, $block['image']) ?? $object[$block['image']] ?? null;
+			$image = self::galleryFirstImage($object, $block['image']) ?? $object[$block['image']] ?? null;
 			if (is_array($image) && trim((string)($image['name'] ?? '')) !== '') {
 				$alts[$block['image']] = trim((string)($image['alt'] ?? ''));
 			}
@@ -340,7 +340,7 @@ readonly class SeoContextFactory
 		// token. `featured` and `random` are routes too, but both land on
 		// array_rand(), and a share image that changes between two scrapes is
 		// one no scraper can cache.
-		if ($this->galleryFirstImage($object, $property) !== null) {
+		if (self::galleryFirstImage($object, $property) !== null) {
 			return $settings->absolute($this->media->galleryPath($object, 'first', SeoSettings::OG_IMAGE, $options));
 		}
 
@@ -368,7 +368,7 @@ readonly class SeoContextFactory
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	private function galleryFirstImage(array $object, string $property): ?array
+	public static function galleryFirstImage(array $object, string $property): ?array
 	{
 		$value = $object[$property] ?? null;
 		if (!is_array($value) || $value === [] || !array_is_list($value)) {
