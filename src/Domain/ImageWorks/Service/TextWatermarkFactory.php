@@ -33,8 +33,10 @@ readonly class TextWatermarkFactory
 	private const STROKE_STEPS = 24;
 	/** Shadow opacity, 0 clear to 255 opaque. */
 	private const SHADOW_OPACITY = 115;
-	/** Line spacing as a multiple of the font's line height. */
-	private const LINE_HEIGHT = 1.25;
+	/** Line spacing as a multiple of the font's height (the "Hy" box), the same on both drivers. */
+	private const LINE_HEIGHT = 1.4;
+	/** Intervention's GD driver scales line spacing by this; dividing it out matches Imagick. */
+	private const GD_LEADING = 0.8;
 	/** Wrapped text steps down this share of its size at a time... */
 	private const STEP_DOWN = 0.9;
 	/** ...and stops at this size, in pixels, whatever still overflows. */
@@ -116,7 +118,7 @@ readonly class TextWatermarkFactory
 			$style = $this->fitted($style, $driver, $fontPath, $wrapWidth);
 		}
 
-		$font = $this->font($fontPath, $style, $wrapWidth);
+		$font = $this->font($fontPath, $style, $wrapWidth, $driver);
 
 		[$textWidth, $textHeight] = $this->textSize($style->text, $font, $driver);
 
@@ -173,7 +175,7 @@ readonly class TextWatermarkFactory
 		while (true) {
 			$candidate = $size === $style->fontSize ? $style : $style->withFontSize($size);
 			$limit     = $this->textWrapWidth($candidate, $wrapWidth);
-			$font      = $this->font($fontPath, $candidate, $wrapWidth);
+			$font      = $this->font($fontPath, $candidate, $wrapWidth, $driver);
 			$block     = $processor->textBlock($candidate->text, $font, new Point(0, 0));
 
 			$widest = 0;
@@ -190,13 +192,13 @@ readonly class TextWatermarkFactory
 	}
 
 	/** The font for a style; with a wrap width, it wraps inside the plate's padding. */
-	private function font(string $fontPath, TextWatermarkStyle $style, ?int $wrapWidth): Font
+	private function font(string $fontPath, TextWatermarkStyle $style, ?int $wrapWidth, DriverInterface $driver): Font
 	{
 		$font = new Font($fontPath);
 		$font->setSize($style->fontSize);
 		$font->setAlignment($style->align);
 		$font->setValignment('top');
-		$font->setLineHeight(self::LINE_HEIGHT);
+		$font->setLineHeight($driver instanceof GdDriver ? self::LINE_HEIGHT / self::GD_LEADING : self::LINE_HEIGHT);
 
 		if ($wrapWidth !== null) {
 			$font->setWrapWidth($this->textWrapWidth($style, $wrapWidth));

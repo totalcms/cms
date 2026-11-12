@@ -140,6 +140,15 @@ describe('wrapped text marks', function (): void {
 		expect([imagesx($wrapped), imagesy($wrapped)])->toBe([imagesx($plain), imagesy($plain)]);
 	})->with('text mark drivers');
 
+	it('leaves clear space between one line\'s tails and the capitals below', function (DriverInterface $driver): void {
+		$mark  = textMarkDraw($driver, ['marktext' => "Roasting gjpqy\nTHE LORING", 'marktextsize' => 60], 2000);
+		$lines = textMarkLines($mark);
+
+		// At a 1.0 line height the tails of g and y ran into the next line's capitals.
+		expect($lines)->toHaveCount(2)
+			->and($lines[1][0] - $lines[0][1])->toBeGreaterThanOrEqual(6);
+	})->with('text mark drivers');
+
 	it('centers the lines when asked', function (DriverInterface $driver): void {
 		$text   = "MEET THE ROASTER ON\nTHE LORING";
 		$left   = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60], 2000);
