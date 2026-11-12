@@ -16,6 +16,10 @@ final readonly class TextWatermarkStyle
 {
 	/** Font size the mark is drawn at; Glide scales the result to fit. */
 	public const DEFAULT_SIZE = 500;
+	/** Wrapped text: lines allowed before the font size steps down. */
+	public const DEFAULT_LINES = 3;
+	public const ALIGNMENTS    = ['left', 'center', 'right'];
+
 	/** Marks across the longer side of the image in tiled mode. */
 	public const DEFAULT_TILES = WatermarkPatternBuilder::DEFAULT_TILES;
 	/** Tiled marks run diagonally unless an angle is set. */
@@ -40,6 +44,13 @@ final readonly class TextWatermarkStyle
 	public array $shadowColor;
 	/** Marks across the longer side when tiled; 0 for a single mark. */
 	public int $tiles;
+	/** Most lines wrapped text may take (see TextWatermarkFactory::draw). */
+	public int $lines;
+	/** How the lines of a block sit against each other: left, center or right. */
+	public string $align;
+
+	/** @var array<string,mixed> the `marktext*` params, to redraw at another size */
+	private array $params;
 
 	/** @param array<string,mixed> $params */
 	public function __construct(array $params)
@@ -49,8 +60,17 @@ final readonly class TextWatermarkStyle
 			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
 		}
 
+		$this->params = array_filter(
+			$params,
+			fn (mixed $value, int|string $key): bool => str_starts_with((string)$key, 'marktext'),
+			ARRAY_FILTER_USE_BOTH,
+		);
+
+		// A relative size (`6w`) is worked out against the image before it
+		// gets here; one that was not, in a tiled pattern, draws at the default.
+		$size           = $params['marktextsize'] ?? null;
 		$this->text     = $text;
-		$this->fontSize = max(1, (int)($params['marktextsize'] ?? self::DEFAULT_SIZE));
+		$this->fontSize = is_numeric($size) ? max(1, (int)$size) : self::DEFAULT_SIZE;
 		$this->color    = self::parseColor((string)($params['marktextcolor'] ?? 'ffffff'));
 		$font           = (string)($params['marktextfont'] ?? '');
 		$this->font     = $font === '' ? null : $font;
@@ -66,6 +86,17 @@ final readonly class TextWatermarkStyle
 		$this->strokeColor = self::parseColor((string)($params['marktextstrokecolor'] ?? '000000'));
 		$this->shadow      = $this->percentOfSize($params['marktextshadow'] ?? 0, $this->fontSize);
 		$this->shadowColor = self::parseColor((string)($params['marktextshadowcolor'] ?? '000000'));
+
+		$lines       = $params['marktextlines'] ?? null;
+		$this->lines = is_numeric($lines) ? max(1, min(6, (int)$lines)) : self::DEFAULT_LINES;
+		$align       = strtolower((string)($params['marktextalign'] ?? ''));
+		$this->align = in_array($align, self::ALIGNMENTS, true) ? $align : 'left';
+	}
+
+	/** The same style at another font size, its outline and shadow scaled with it. */
+	public function withFontSize(int $size): self
+	{
+		return new self(['marktextsize' => max(1, $size)] + $this->params);
 	}
 
 	/** @param array<string,mixed> $params */

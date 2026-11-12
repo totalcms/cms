@@ -253,13 +253,15 @@ Render text directly on images without needing a separate watermark image.
 |-----------|------|-------------|
 | `marktext` | string | Text to render |
 | `marktextfont` | string | Font family name (TTF/OTF from the watermark-fonts depot) |
-| `marktextsize` | integer | Font size the text is drawn at, in pixels (default: 500). Set it without `marktextw` for a fixed size; see [Text size](#text-size) |
+| `marktextsize` | mixed | Font size in pixels, or relative to the image (`6w` is 6% of its width, `4h` 4% of its height). With `marktextw` the text wraps; see [Text size](#text-size) |
 | `marktextcolor` | string | Text color as hex without `#` (e.g., `ffffff`) |
 | `marktextbg` | string | Background color as hex (optional, transparent if not set) |
 | `marktextpad` | integer | Padding around text in pixels (default: 10) |
 | `marktextangle` | integer | Rotation angle in degrees (-360 to 360, default: 0) |
 | `marktextpos` | string | Position (same options as image watermarks), or `tile` to repeat the text over the whole image |
 | `marktextw` | mixed | Text width in pixels or relative to the image (e.g., `50w` for 50% of image width). Default: `40w` when `marktextsize` is not set |
+| `marktextlines` | integer | Wrapped text only: the most lines before the font size steps down (1-6, default: 3) |
+| `marktextalign` | string | How the lines line up: `left` (default), `center` or `right` |
 | `marktextalpha` | integer | Opacity (0-100, where 100 is fully opaque). Default: 100, or 30 when tiled |
 | `marktextstroke` | integer | Outline width as a percentage of the font size (0-25, default: 0) |
 | `marktextstrokecolor` | string | Outline color as hex (default: `000000`) |
@@ -272,11 +274,40 @@ Render text directly on images without needing a separate watermark image.
 With no size set, the text spans 40% of the image's width, so the mark has
 the same weight on a 400px thumbnail as on the 2,400px original.
 
-- **`marktextw`** sets that width yourself: `25w` for a quarter of the image,
-  or a pixel width.
-- **`marktextsize` alone** draws the text at that fixed pixel size, whatever
-  the image size. If the text would be wider than the image, it is shrunk to
-  90% of the image width.
+- **`marktextw` alone** sets that width yourself: `25w` for a quarter of the
+  image, or a pixel width. The text stays on one line and is scaled to fit,
+  so a long title comes out small.
+- **`marktextsize` alone** draws the text at that size, whatever the image
+  size. If the text would be wider than the image, it is shrunk to 90% of the
+  image width.
+- **Both together wrap the text.** `marktextw` is the box and `marktextsize`
+  the font size: the text breaks between words to stay inside the box (its
+  plate and padding included). When it still needs more than `marktextlines`
+  lines (default 3), or a single word is wider than the box, the font size
+  steps down until it fits. A title that fits on one line is left as it is.
+
+A relative size such as `6w` keeps a wrapped title the same shape at any
+image size, which matters when the image is smaller than the size you asked
+for (ImageWorks never enlarges a photo, so `w: 1200` on a 1,024px photo
+gives a 1,024px card).
+
+```twig
+{# A share card title: up to three lines across 60% of the image #}
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markgradient: 'bottom', markh: '100h', markpos: 'bottom', markalpha: 85},
+    {marktext: post.title, marktextw: '60w', marktextsize: '6w', marktextlines: 3,
+     marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'}
+]}, {collection: 'blog'}) }}
+
+{# Centered over a darkened photo #}
+{{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
+    {markfill: '0b0f1a', markalpha: 65},
+    {marktext: post.title, marktextw: '70w', marktextsize: '7w', marktextalign: 'center', marktextpos: 'center'}
+]}, {collection: 'blog'}) }}
+```
+
+A line break in the text always starts a new line, though URLs do not accept
+one: line breaks reach a mark only from settings stored on the server.
 
 ### Tiled Watermarks
 
@@ -410,7 +441,7 @@ where the text sits, is dark enough to read white text on any photo.
 ```twig
 {{ cms.media.imagePath(post, {w: 1200, h: 630, fit: 'crop', marks: [
     {markfill: '0b0f1a', markgradient: 'bottom', markh: '100h', markpos: 'bottom', markalpha: 85},
-    {marktext: post.title, marktextw: '60w', marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'},
+    {marktext: post.title, marktextw: '60w', marktextsize: '6w', marktextpos: 'bottom-left', marktextx: '5w', marktexty: '8h'},
     {mark: 'logo.png', markw: '12w', markpos: 'top-right', markpad: '4w'}
 ]}, {collection: 'blog'}) }}
 ```

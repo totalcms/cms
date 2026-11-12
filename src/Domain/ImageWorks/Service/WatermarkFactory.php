@@ -170,7 +170,9 @@ readonly class WatermarkFactory
 	/**
 	 * A text layer. A tiled one becomes its pattern file; any other is drawn
 	 * by the manipulator, at the width it asks for:
-	 * - `marktextw` when set (`40w` is 40% of the image width);
+	 * - with `marktextw` and `marktextsize`, the text wraps to that width at
+	 *   that size (see TextWatermarkFactory::draw) and is placed as drawn;
+	 * - `marktextw` alone: one line scaled to it (`40w` is 40% of the image width);
 	 * - with only `marktextsize`, that fixed size, shrunk to 90% of the image
 	 *   when it would be wider;
 	 * - with neither, DEFAULT_TEXT_WIDTH, so the mark keeps its proportion on
@@ -198,9 +200,10 @@ readonly class WatermarkFactory
 			ARRAY_FILTER_USE_BOTH,
 		);
 
+		$wraps     = self::wraps($layer);
 		$placement = array_filter([
 			'markpos'   => $layer['marktextpos'] ?? self::DEFAULT_TEXT_POSITION,
-			'markw'     => $layer['marktextw'] ?? (isset($layer['marktextsize']) ? null : self::DEFAULT_TEXT_WIDTH),
+			'markw'     => $wraps ? null : ($layer['marktextw'] ?? (isset($layer['marktextsize']) ? null : self::DEFAULT_TEXT_WIDTH)),
 			'markh'     => $layer['marktexth'] ?? null,
 			'markx'     => $layer['marktextx'] ?? null,
 			'marky'     => $layer['marktexty'] ?? null,
@@ -214,6 +217,21 @@ readonly class WatermarkFactory
 		}
 
 		return $text + $placement;
+	}
+
+	/**
+	 * Whether a text layer wraps: it has both a box width and a font size.
+	 *
+	 * @param array<array-key,mixed> $layer
+	 */
+	public static function wraps(array $layer): bool
+	{
+		return self::given($layer['marktextw'] ?? null) && self::given($layer['marktextsize'] ?? null);
+	}
+
+	private static function given(mixed $value): bool
+	{
+		return is_scalar($value) && !is_bool($value) && (string)$value !== '';
 	}
 
 	/**

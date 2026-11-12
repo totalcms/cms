@@ -38,6 +38,12 @@ describe('ImageParamValidator rejects what no page would send', function (): voi
 		['w', '0x10'],
 		['markrepeat', '0'],
 		['markrepeat', '13'],
+		['marktextlines', '0'],
+		['marktextlines', '7'],
+		['marktextsize', '0w'],
+		['marktextsize', '101w'],
+		['marktextsize', 'w'],
+		['marktextsize', '6x'],
 	]);
 
 	it('rejects values outside a fixed list', function (string $key, string $value): void {
@@ -47,6 +53,7 @@ describe('ImageParamValidator rejects what no page would send', function (): voi
 		['flip', 'sideways'],
 		['or', '45'],
 		['filt', 'blur'],
+		['marktextalign', 'justify'],
 	]);
 
 	it('rejects an array where a value belongs', function (): void {
@@ -86,7 +93,17 @@ describe('ImageParamValidator keeps what Total CMS sends', function (): void {
 		['fm', 'JPG'],
 		['or', 'auto'],
 		['gam', '1.5'],
+		['marktextsize', '76'],
+		['marktextsize', '6w'],
+		['marktextsize', '4.5h'],
+		['marktextlines', '3'],
+		['marktextalign', 'center'],
 	]);
+
+	it('keeps a relative font size as written, and a pixel size as a number', function (): void {
+		expect(ImageParamValidator::validate(['marktextsize' => '6W']))->toBe(['marktextsize' => '6w'])
+			->and(ImageParamValidator::validate(['marktextsize' => '64']))->toBe(['marktextsize' => 64]);
+	});
 
 	it('returns numbers as ints, so equal sizes share one cache file', function (): void {
 		expect(ImageParamValidator::validate(['w' => '0300', 'h' => '150.7', 'q' => '82', 'bri' => '-20']))

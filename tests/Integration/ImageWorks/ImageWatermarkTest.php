@@ -827,3 +827,58 @@ function watermarkSolid(int $r, int $g, int $b): string
 
 	return (string)ob_get_clean();
 }
+
+describe('ImageWorks wrapped text layers', function (): void {
+	it('wraps a long title at a relative size instead of shrinking it onto one line', function (): void {
+		$title = 'Meet the roaster: a day on the Loring with our head roaster';
+		$plate = ['marktext' => $title, 'marktextbg' => 'ff0000', 'marktextpos' => 'top-left', 'marktextw' => '60w'];
+
+		$oneLine = watermarkRun($this->root, ['w' => 900, 'marks' => [$plate]], 'wm-text-oneline');
+		$wrapped = watermarkRun($this->root, ['w' => 900, 'marks' => [$plate + ['marktextsize' => '5w']]], 'wm-text-wrapped');
+
+		// The plate is a band as wide as 60w: thin on one line, tall when wrapped.
+		expect(watermarkRedRows($wrapped['body']))->toBeGreaterThan(watermarkRedRows($oneLine['body']) * 2)
+			->and(watermarkRedColumns($wrapped['body']))->toBeLessThanOrEqual(540);
+	});
+});
+
+/** Rows of the image with plate red in them. */
+function watermarkRedRows(string $body): int
+{
+	$im   = imagecreatefromstring($body);
+	$rows = 0;
+	for ($y = 0; $y < imagesy($im); $y++) {
+		for ($x = 0; $x < imagesx($im); $x += 3) {
+			if (watermarkIsRed($im, $x, $y)) {
+				$rows++;
+				break;
+			}
+		}
+	}
+
+	return $rows;
+}
+
+/** Columns of the image with plate red in them. */
+function watermarkRedColumns(string $body): int
+{
+	$im      = imagecreatefromstring($body);
+	$columns = 0;
+	for ($x = 0; $x < imagesx($im); $x++) {
+		for ($y = 0; $y < imagesy($im); $y += 3) {
+			if (watermarkIsRed($im, $x, $y)) {
+				$columns++;
+				break;
+			}
+		}
+	}
+
+	return $columns;
+}
+
+function watermarkIsRed(\GdImage $im, int $x, int $y): bool
+{
+	$p = imagecolorat($im, $x, $y);
+
+	return (($p >> 16) & 0xFF) - ($p & 0xFF) > 150 && (($p >> 8) & 0xFF) < 100;
+}

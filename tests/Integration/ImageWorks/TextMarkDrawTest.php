@@ -48,3 +48,116 @@ it('keeps the whole text on its plate, with even padding', function (DriverInter
 		return new ImagickDriver();
 	}],
 ]);
+
+// Wrapping (marktextw + marktextsize): the text breaks at word boundaries to
+// the box, and steps down in size when it needs more than marktextlines
+// lines. Capitals only, so every line is a clear band of rows with plate
+// between them.
+
+/**
+ * The bands of rows that hold text, as [first row, last row].
+ *
+ * @return list<array{int,int}>
+ */
+function textMarkLines(\GdImage $image): array
+{
+	$bands = [];
+	$start = null;
+	for ($y = 0; $y < imagesy($image); $y++) {
+		$ink = !textMarkRowIsPlate($image, $y);
+		if ($ink && $start === null) {
+			$start = $y;
+		} elseif (!$ink && $start !== null) {
+			$bands[] = [$start, $y - 1];
+			$start   = null;
+		}
+	}
+
+	if ($start !== null) {
+		$bands[] = [$start, imagesy($image) - 1];
+	}
+
+	return $bands;
+}
+
+/** The first column with text in it, within a band of rows. */
+function textMarkFirstInk(\GdImage $image, array $band): int
+{
+	for ($x = 0; $x < imagesx($image); $x++) {
+		for ($y = $band[0]; $y <= $band[1]; $y++) {
+			$p = imagecolorat($image, $x, $y);
+			if ((($p >> 16) & 0xFF) > 128) {
+				return $x;
+			}
+		}
+	}
+
+	return -1;
+}
+
+/** @param array<string,mixed> $params */
+function textMarkDraw(DriverInterface $driver, array $params, ?int $wrapWidth = null): \GdImage
+{
+	$factory = (new ReflectionClass(TextWatermarkFactory::class))->newInstanceWithoutConstructor();
+	$mark    = $factory->draw(new TextWatermarkStyle($params + ['marktextbg' => '0b0f1a', 'marktextpad' => 10]), $driver, $wrapWidth);
+
+	return imagecreatefromstring((string)$mark->toPng());
+}
+
+describe('wrapped text marks', function (): void {
+	it('wraps a long title at its size instead of shrinking it', function (DriverInterface $driver): void {
+		$mark = textMarkDraw($driver, ['marktext' => 'MEET THE ROASTER A DAY ON THE LORING', 'marktextsize' => 60], 600);
+
+		expect(count(textMarkLines($mark)))->toBeGreaterThanOrEqual(2)
+			->and(imagesx($mark))->toBeLessThanOrEqual(600);
+		// Still drawn at 60px: a line of capitals is about two-thirds of that tall.
+		expect(textMarkLines($mark)[0][1] - textMarkLines($mark)[0][0])->toBeGreaterThan(35);
+	})->with('text mark drivers');
+
+	it('steps the size down to keep within the line cap', function (DriverInterface $driver): void {
+		$text  = 'MEET THE ROASTER A DAY ON THE LORING WITH OUR HEAD ROASTER FROM FIRST CRACK TO THE CUPPING TABLE';
+		$three = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60], 600);
+		$two   = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60, 'marktextlines' => 2], 600);
+
+		expect(count(textMarkLines($three)))->toBeLessThanOrEqual(3)
+			->and(count(textMarkLines($two)))->toBe(2)
+			->and(imagesx($two))->toBeLessThanOrEqual(600);
+		// Two lines needed a smaller size than three did.
+		expect(textMarkLines($two)[0][1] - textMarkLines($two)[0][0])
+			->toBeLessThan(textMarkLines($three)[0][1] - textMarkLines($three)[0][0]);
+	})->with('text mark drivers');
+
+	it('still breaks at a newline', function (DriverInterface $driver): void {
+		$mark = textMarkDraw($driver, ['marktext' => "SHORT\nTEXT", 'marktextsize' => 60], 2000);
+
+		expect(textMarkLines($mark))->toHaveCount(2);
+	})->with('text mark drivers');
+
+	it('leaves a title that fits on one line as it was', function (DriverInterface $driver): void {
+		$wrapped = textMarkDraw($driver, ['marktext' => 'MEET THE ROASTER', 'marktextsize' => 60], 2000);
+		$plain   = textMarkDraw($driver, ['marktext' => 'MEET THE ROASTER', 'marktextsize' => 60]);
+
+		expect([imagesx($wrapped), imagesy($wrapped)])->toBe([imagesx($plain), imagesy($plain)]);
+	})->with('text mark drivers');
+
+	it('centers the lines when asked', function (DriverInterface $driver): void {
+		$text   = "MEET THE ROASTER ON\nTHE LORING";
+		$left   = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60], 2000);
+		$center = textMarkDraw($driver, ['marktext' => $text, 'marktextsize' => 60, 'marktextalign' => 'center'], 2000);
+
+		// The short second line starts at the padding when left aligned, well in when centered.
+		expect(textMarkFirstInk($left, textMarkLines($left)[1]))->toBeLessThan(25)
+			->and(textMarkFirstInk($center, textMarkLines($center)[1]))->toBeGreaterThan(100);
+	})->with('text mark drivers');
+});
+
+dataset('text mark drivers', [
+	'gd'      => [fn (): DriverInterface => new GdDriver()],
+	'imagick' => [function (): DriverInterface {
+		if (!extension_loaded('imagick')) {
+			test()->markTestSkipped('Imagick is not installed');
+		}
+
+		return new ImagickDriver();
+	}],
+]);

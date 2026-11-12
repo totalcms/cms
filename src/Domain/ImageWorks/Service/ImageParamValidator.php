@@ -37,6 +37,8 @@ final class ImageParamValidator
 		'markalpha'     => [0, 100],
 		'marktextalpha' => [0, 100],
 		'marktextsize'  => [1, 1000],
+		// Wrapped text: the most lines before the font size steps down
+		'marktextlines' => [1, 6],
 		'marktextangle' => [-360, 360],
 		// Tiled mode: marks across the longer side
 		'markrepeat'     => [1, 12],
@@ -61,6 +63,7 @@ final class ImageParamValidator
 		'markshape' => ['circle'],
 		// A fill that fades out: solid at this edge, clear at the other
 		'markgradient' => ['top', 'bottom', 'left', 'right'],
+		'marktextalign' => ['left', 'center', 'right'],
 	];
 
 	/**
@@ -226,6 +229,15 @@ final class ImageParamValidator
 
 	private static function checked(string $key, string $value): int|float|string
 	{
+		// A font size can be a share of the image, as `6w` or `4.5h`
+		if ($key === 'marktextsize' && preg_match('/^(\d{1,3}(\.\d{1,2})?)[wh]$/i', $value, $match) === 1) {
+			if ((float)$match[1] <= 0 || (float)$match[1] > 100) {
+				throw InvalidImageParamException::forKey($key);
+			}
+
+			return strtolower($value);
+		}
+
 		if (isset(self::INTEGERS[$key])) {
 			[$min, $max] = self::INTEGERS[$key];
 

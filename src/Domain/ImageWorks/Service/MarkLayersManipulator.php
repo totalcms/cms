@@ -132,11 +132,46 @@ final class MarkLayersManipulator extends BaseManipulator
 	/** @param array<array-key,mixed> $layer */
 	private function drawText(ImageInterface $image, array $layer): ImageInterface
 	{
-		return $this->textMarks->draw(new TextWatermarkStyle(array_filter(
+		$text = array_filter(
 			$layer,
 			fn (mixed $value, int|string $key): bool => str_starts_with((string)$key, 'marktext') && is_scalar($value),
 			ARRAY_FILTER_USE_BOTH,
-		)), $image->driver());
+		);
+
+		if (isset($text['marktextsize'])) {
+			$size                 = $this->pixels((string)$text['marktextsize'], $image);
+			$text['marktextsize'] = $size === null ? TextWatermarkStyle::DEFAULT_SIZE : max(1, (int)round($size));
+		}
+
+		$wrapWidth = null;
+		if (WatermarkFactory::wraps($layer)) {
+			$width     = $this->pixels((string)$layer['marktextw'], $image);
+			$wrapWidth = $width === null ? null : max(1, (int)floor($width));
+		}
+
+		return $this->textMarks->draw(new TextWatermarkStyle($text), $image->driver(), $wrapWidth);
+	}
+
+	/**
+	 * A length in pixels on this image: a share of its width or height
+	 * (`6w`, `4.5h`), or a number of pixels scaled by the device pixel ratio.
+	 * Glide's own reading takes whole percentages only.
+	 */
+	private function pixels(string $value, ImageInterface $image): ?float
+	{
+		if (preg_match('/^(\d{1,3}(?:\.\d+)?)([wh])$/', $value, $match) === 1) {
+			$share = min(100.0, (float)$match[1]) / 100;
+
+			return ($match[2] === 'h' ? $image->height() : $image->width()) * $share;
+		}
+
+		if (!is_numeric($value) || (float)$value <= 0) {
+			return null;
+		}
+
+		$dpr = $this->getParam('dpr');
+
+		return (float)$value * (is_numeric($dpr) && $dpr > 0 && $dpr <= 8 ? (float)$dpr : 1.0);
 	}
 
 	/**

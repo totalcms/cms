@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Intervention\Image\Colors\Rgb\Color;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Geometry\Point;
 use Intervention\Image\Interfaces\DriverInterface;
 use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Typography\Font;
@@ -34,6 +35,10 @@ readonly class TextWatermarkFactory
 	private const SHADOW_OPACITY = 115;
 	/** Line spacing as a multiple of the font's line height. */
 	private const LINE_HEIGHT = 1.25;
+	/** Wrapped text steps down this share of its size at a time... */
+	private const STEP_DOWN = 0.9;
+	/** ...and stops at this size, in pixels, whatever still overflows. */
+	private const MIN_SIZE = 8;
 
 	private LoggerInterface $logger;
 
@@ -80,8 +85,13 @@ readonly class TextWatermarkFactory
 	/**
 	 * The text drawn once, on a transparent canvas (or its background
 	 * color) of the given driver, with its outline, shadow and angle.
+	 *
+	 * With a wrap width, the whole mark (plate and padding included) stays
+	 * that wide: the text breaks at word boundaries, and when it still needs
+	 * more than `$style->lines` lines, or a word is wider than the box, the
+	 * font size steps down until it fits. `\n` in the text always breaks.
 	 */
-	public function draw(TextWatermarkStyle $style, DriverInterface $driver): ImageInterface
+	public function draw(TextWatermarkStyle $style, DriverInterface $driver, ?int $wrapWidth = null): ImageInterface
 	{
 		$fontPath = $this->getFontPath($style->font);
 		if ($fontPath === null) {
@@ -92,7 +102,7 @@ readonly class TextWatermarkFactory
 		$isTemporaryFont = $style->font !== null && str_contains($fontPath, sys_get_temp_dir());
 
 		try {
-			return $this->drawWithFont($style, $driver, $fontPath);
+			return $this->drawWithFont($style, $driver, $fontPath, $wrapWidth);
 		} finally {
 			if ($isTemporaryFont && file_exists($fontPath)) {
 				unlink($fontPath);
@@ -100,13 +110,13 @@ readonly class TextWatermarkFactory
 		}
 	}
 
-	private function drawWithFont(TextWatermarkStyle $style, DriverInterface $driver, string $fontPath): ImageInterface
+	private function drawWithFont(TextWatermarkStyle $style, DriverInterface $driver, string $fontPath, ?int $wrapWidth): ImageInterface
 	{
-		$font = new Font($fontPath);
-		$font->setSize($style->fontSize);
-		$font->setAlignment('left');
-		$font->setValignment('top');
-		$font->setLineHeight(self::LINE_HEIGHT);
+		if ($wrapWidth !== null) {
+			$style = $this->fitted($style, $driver, $fontPath, $wrapWidth);
+		}
+
+		$font = $this->font($fontPath, $style, $wrapWidth);
 
 		[$textWidth, $textHeight] = $this->textSize($style->text, $font, $driver);
 
@@ -120,16 +130,23 @@ readonly class TextWatermarkFactory
 			max(10, $textHeight + ($margin * 2)),
 		);
 
+		// The point Intervention aligns the block on: its left edge, middle or right edge.
+		$left = $margin + match ($style->align) {
+			'center' => $textWidth / 2,
+			'right'  => $textWidth,
+			default  => 0,
+		};
+
 		if ($style->shadow > 0) {
-			$this->text($ink, $style->text, $font, new Color(...[...$style->shadowColor, self::SHADOW_OPACITY]), $margin + $style->shadow, $margin + $style->shadow);
+			$this->text($ink, $style->text, $font, new Color(...[...$style->shadowColor, self::SHADOW_OPACITY]), $left + $style->shadow, $margin + $style->shadow);
 		}
 
 		$strokeColor = new Color(...$style->strokeColor);
 		foreach ($this->strokeOffsets($style->stroke) as [$dx, $dy]) {
-			$this->text($ink, $style->text, $font, $strokeColor, $margin + $dx, $margin + $dy);
+			$this->text($ink, $style->text, $font, $strokeColor, $left + $dx, $margin + $dy);
 		}
 
-		$this->text($ink, $style->text, $font, new Color(...$style->color), $margin, $margin);
+		$this->text($ink, $style->text, $font, new Color(...$style->color), $left, $margin);
 		$ink = $this->trimmed($ink);
 
 		$padding = max(0, $style->padding);
@@ -142,6 +159,56 @@ readonly class TextWatermarkFactory
 
 		// Positive angles turn counter-clockwise, as GD's text angle did.
 		return $style->angle === 0 ? $canvas : $canvas->rotate($style->angle, new Color(0, 0, 0, 0));
+	}
+
+	/**
+	 * The style at the largest size, from its own down, whose text wraps
+	 * into at most `lines` lines with every line inside the box.
+	 */
+	private function fitted(TextWatermarkStyle $style, DriverInterface $driver, string $fontPath, int $wrapWidth): TextWatermarkStyle
+	{
+		$processor = $driver->fontProcessor();
+		$size      = $style->fontSize;
+
+		while (true) {
+			$candidate = $size === $style->fontSize ? $style : $style->withFontSize($size);
+			$limit     = $this->textWrapWidth($candidate, $wrapWidth);
+			$font      = $this->font($fontPath, $candidate, $wrapWidth);
+			$block     = $processor->textBlock($candidate->text, $font, new Point(0, 0));
+
+			$widest = 0;
+			foreach ($block as $line) {
+				$widest = max($widest, $processor->boxSize((string)$line, $font)->width());
+			}
+
+			if (($block->count() <= $candidate->lines && $widest <= $limit) || $size <= self::MIN_SIZE) {
+				return $candidate;
+			}
+
+			$size = max(self::MIN_SIZE, (int)floor($size * self::STEP_DOWN));
+		}
+	}
+
+	/** The font for a style; with a wrap width, it wraps inside the plate's padding. */
+	private function font(string $fontPath, TextWatermarkStyle $style, ?int $wrapWidth): Font
+	{
+		$font = new Font($fontPath);
+		$font->setSize($style->fontSize);
+		$font->setAlignment($style->align);
+		$font->setValignment('top');
+		$font->setLineHeight(self::LINE_HEIGHT);
+
+		if ($wrapWidth !== null) {
+			$font->setWrapWidth($this->textWrapWidth($style, $wrapWidth));
+		}
+
+		return $font;
+	}
+
+	/** The width the text itself may take: the box less padding and effects on both sides. */
+	private function textWrapWidth(TextWatermarkStyle $style, int $wrapWidth): int
+	{
+		return max(1, $wrapWidth - (2 * (max(0, $style->padding) + $style->effectsMargin())));
 	}
 
 	/**
@@ -199,23 +266,23 @@ readonly class TextWatermarkFactory
 
 	/**
 	 * Width of the longest line and height of the block, from the font's own
-	 * metrics: the first line's ascent and descent plus a line height per
-	 * further line.
+	 * metrics, once the text is broken into lines (at `\n`, and at the
+	 * font's wrap width when it has one).
 	 *
 	 * @return array{int,int}
 	 */
 	private function textSize(string $text, Font $font, DriverInterface $driver): array
 	{
 		$processor = $driver->fontProcessor();
-		$lines     = explode("\n", $text);
+		$lines     = $processor->textBlock($text, $font, new Point(0, 0));
 		$width     = 0;
 
 		foreach ($lines as $line) {
-			$box   = $processor->boxSize($line, $font);
+			$box   = $processor->boxSize((string)$line, $font);
 			$width = max($width, $box->width() + max(0, $box->pivot()->x()));
 		}
 
-		$height = $processor->typographicalSize($font) + ($processor->leading($font) * (count($lines) - 1));
+		$height = $processor->typographicalSize($font) + ($processor->leading($font) * ($lines->count() - 1));
 
 		return [(int)ceil($width), (int)ceil($height)];
 	}
