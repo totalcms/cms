@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Data;
 
+use TotalCMS\Domain\ImageWorks\Service\WatermarkPatternBuilder;
+
 /**
  * How a text watermark is drawn, read from the `marktext*` params.
  *
@@ -15,7 +17,7 @@ final readonly class TextWatermarkStyle
 	/** Font size the mark is drawn at; Glide scales the result to fit. */
 	public const DEFAULT_SIZE = 500;
 	/** Marks across the longer side of the image in tiled mode. */
-	public const DEFAULT_TILES = 4;
+	public const DEFAULT_TILES = WatermarkPatternBuilder::DEFAULT_TILES;
 	/** Tiled marks run diagonally unless an angle is set. */
 	public const DEFAULT_TILE_ANGLE = 30;
 
@@ -56,7 +58,7 @@ final readonly class TextWatermarkStyle
 		$background       = (string)($params['marktextbg'] ?? '');
 		$this->background = $background === '' ? null : self::parseColor($background);
 
-		$this->tiles   = self::isTiled($params) ? min(12, max(1, (int)($params['marktextrepeat'] ?? self::DEFAULT_TILES))) : 0;
+		$this->tiles   = self::isTiled($params) ? WatermarkPatternBuilder::tiles($params['marktextrepeat'] ?? null) : 0;
 		$this->padding = (int)($params['marktextpad'] ?? 10);
 		$this->angle   = (int)($params['marktextangle'] ?? ($this->tiles > 0 ? self::DEFAULT_TILE_ANGLE : 0));
 

@@ -15,7 +15,7 @@ use TotalCMS\Support\PathResolver;
  *
  * Draws the text to a transparent PNG with GD, which Glide then lays over the
  * image like any other watermark. In tiled mode the PNG is a whole pattern of
- * marks (see TextPatternBuilder). Each style is drawn once and kept in
+ * marks (see WatermarkPatternBuilder). Each style is drawn once and kept in
  * WATERMARK_DIR under a name made from its settings.
  */
 readonly class TextWatermarkFactory
@@ -60,7 +60,7 @@ readonly class TextWatermarkFactory
 
 		$image = $this->drawText($style);
 		if ($style->tiles > 0) {
-			$image = TextPatternBuilder::build($image, $style->tiles);
+			$image = WatermarkPatternBuilder::build($image, $style->tiles);
 		}
 
 		$this->save($image, $filename);

@@ -39,6 +39,7 @@ final class ImageParamValidator
 		'marktextsize'  => [1, 1000],
 		'marktextangle' => [-360, 360],
 		// Tiled mode: marks across the longer side
+		'markrepeat'     => [1, 12],
 		'marktextrepeat' => [1, 12],
 		// Outline width and shadow offset, as a percentage of the font size
 		'marktextstroke' => [0, 25],

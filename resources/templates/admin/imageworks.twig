@@ -85,9 +85,10 @@
 				      	"See the Fit Options Docs for more information.",
 			markpad   : "Sets the padding around the watermark in pixels or using relative dimensions. " ~
 					   	"For relative dimensions, 5w represents 5% of the width of the image.",
-			markalpha : "Sets the alpha of the watermark. Use values between 0 and 100.",
+			markalpha : "Sets the alpha of the watermark. Use values between 0 and 100. Tiled marks default to 30.",
 			markpos   : "Sets the position of the watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
-					  	"top, bottom, left, right, center.",
+					  	"top, bottom, left, right, center, or tile to repeat the logo over the whole image.",
+			markrepeat : "Tiled position only: how many logos run across the image. Use values between 1 and 12. Defaults to 4.",
 			bg        : "Sets the background color of the image. Accepts hex values (without hashtag) or named colors. " ~
 						"You can also use palette and palette0 - palette4 to access colors from the image.",
 			border    : "Sets the border of the image. Accepts width, color, and method. " ~
@@ -296,7 +297,9 @@
 							{ value: "left", label: t('imageworks.pos_left_center') },
 							{ value: "right", label: t('imageworks.pos_right_center') },
 							{ value: "center", label: t('imageworks.pos_center') },
+							{ value: "tile", label: t('imageworks.pos_tile') },
 						]) }}
+						{{ _self.input("markrepeat", "number", t('imageworks.text_repeat'), "icon-pixels", help.markrepeat, values.markrepeat, { min:1, max:12 }) }}
 						{{ _self.input("markfit", "text", t('imageworks.fit_crop'), "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 						<button type="button" class='open-fit-docs'>{{ t('imageworks.fit_docs') }}</button>
 					</section>
@@ -331,7 +334,7 @@
 							{ value: "center", label: t('imageworks.pos_center') },
 							{ value: "tile", label: t('imageworks.pos_tile') },
 						]) }}
-						{{ _self.input("marktextrepeat", "number", t('imageworks.text_repeat'), "icon-pixels", help.marktextrepeat, values.marktextrepeat, { min:1, max:12, placeholder:4 }) }}
+						{{ _self.input("marktextrepeat", "number", t('imageworks.text_repeat'), "icon-pixels", help.marktextrepeat, values.marktextrepeat, { min:1, max:12 }) }}
 						{{ _self.input("marktextpad", "text", t('imageworks.padding'), "icon-padding", help.marktextpad, values.marktextpad) }}
 						{{ _self.input("marktextangle", "number", t('imageworks.angle'), "icon-angle", help.marktextangle, values.marktextangle) }}
 						{{ _self.input("marktextalpha", "number", t('imageworks.alpha'), "icon-eye", help.marktextalpha, values.marktextalpha, { min:0, max:100 }) }}

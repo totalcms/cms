@@ -405,6 +405,63 @@ describe('ImageWorks image watermarks', function (): void {
 		expect(watermarkPixelDiff($before['body'], $after['body']))->toBeGreaterThan(0.5);
 	});
 
+	it('tiles the logo over the whole image', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 1200], 'wm-logo-tile-plain');
+		$single = watermarkRun($this->root, ['w' => 1200, 'mark' => 'logo.png', 'markpos' => 'center', 'markw' => '300', 'markalpha' => 80], 'wm-logo-tile-single');
+		$tiled  = watermarkRun($this->root, ['w' => 1200, 'mark' => 'logo.png', 'markpos' => 'tile', 'markalpha' => 80], 'wm-logo-tile');
+
+		expect($tiled['width'])->toBe(1200)
+			->and($tiled['height'])->toBe((int)round(1200 * WATERMARK_SOURCE_H / WATERMARK_SOURCE_W));
+		expect(watermarkFootprint($plain['body'], $tiled['body'])['quarters'])->toBe(4);
+		expect(watermarkPixelDiff($plain['body'], $tiled['body']))->toBeGreaterThan(watermarkPixelDiff($plain['body'], $single['body']));
+	});
+
+	it('puts more logos on the image when markrepeat is higher', function (): void {
+		$few  = watermarkRun($this->root, ['w' => 1200, 'mark' => 'logo.png', 'markpos' => 'tile', 'markrepeat' => 2, 'markalpha' => 80], 'wm-logo-tile-2');
+		$many = watermarkRun($this->root, ['w' => 1200, 'mark' => 'logo.png', 'markpos' => 'tile', 'markrepeat' => 8, 'markalpha' => 80], 'wm-logo-tile-8');
+
+		expect(watermarkPixelDiff($few['body'], $many['body']))->toBeGreaterThan(0.5);
+	});
+
+	it('tiles the logo under a text mark too', function (): void {
+		$logoOnly = watermarkRun($this->root, ['w' => 900, 'mark' => 'logo.png', 'markpos' => 'tile', 'markalpha' => 80], 'wm-logo-tile-alone');
+		$both     = watermarkRun($this->root, [
+			'w'        => 900,
+			'mark'     => 'logo.png', 'markpos' => 'tile', 'markalpha' => 80,
+			'marktext' => 'Total CMS', 'marktextsize' => 60, 'marktextpos' => 'bottom-right',
+		], 'wm-logo-tile-and-text');
+
+		expect($both['width'])->toBe(900);
+		expect(watermarkPixelDiff($logoOnly['body'], $both['body']))->toBeGreaterThan(0.1);
+	});
+
+	it('draws a new tiled pattern when the logo file is replaced', function (): void {
+		$params = ['w' => 900, 'mark' => 'logo.png', 'markpos' => 'tile', 'markalpha' => 80];
+		$before = watermarkRun($this->root, $params, 'wm-logo-tile-before');
+
+		$logoPath = $this->root . '/gallery/watermarks/gallery/logo.png';
+		$logo     = imagecreatetruecolor(300, 120);
+		imagefill($logo, 0, 0, imagecolorallocate($logo, 255, 0, 0));
+		imagepng($logo, $logoPath);
+		touch($logoPath, time() + 60);
+		clearstatcache();
+
+		$after = watermarkRun($this->root, $params, 'wm-logo-tile-after');
+
+		expect(watermarkPixelDiff($before['body'], $after['body']))->toBeGreaterThan(0.5)
+			->and(glob($this->root . '/.system/watermarks/image_watermark_*.png') ?: [])->toHaveCount(2);
+	});
+
+	it('will not tile an image from outside the watermark gallery', function (): void {
+		// Glide reads logos through a filesystem rooted at the gallery; the
+		// tiled pattern reads through the data root, where `..` reaches any image.
+		$plain  = watermarkRun($this->root, ['w' => 900], 'wm-logo-tile-escape-plain');
+		$escape = watermarkRun($this->root, ['w' => 900, 'mark' => '../../../blog/post-1/image/photo.jpg', 'markpos' => 'tile'], 'wm-logo-tile-escape');
+
+		expect($escape['body'])->toBe($plain['body'])
+			->and(glob($this->root . '/.system/watermarks/image_watermark_*.png') ?: [])->toBe([]);
+	});
+
 	it('sweeps the temp folders the old two-pass render leaked', function (): void {
 		$cache = $this->root . '/blog/post-1/image/.cache';
 		mkdir($cache . '/temp_65a1b2c3d4e5f.png', 0700, true);

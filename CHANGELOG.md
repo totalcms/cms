@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [3.6.10] - Unreleased
 
+### Added
+
+- **Logo watermarks can be tiled, like text watermarks.** `markpos: tile` repeats the logo over the whole image in offset rows, so no corner is left clean to crop out. It is faint (30% opacity) unless you set `markalpha`, and `markrepeat` (1 to 12, default 4) sets how many logos run across the image. It works in a schema's `watermark` settings and alongside a text mark, and the ImageWorks image builder offers it as a Tile position with a count. See [ImageWorks](https://docs.totalcms.co/twig/imageworks#tiled-logo-watermarks)
+
 ### Changed
 
 - **Password reset keeps where the visitor started.** When the login page has a `redirect`, its Forgot Password link passes it on, and it stays through the forgot-password form, the link in the reset email and the reset form. A whitelabel template on each step can use it, for example to show a Spanish page to someone who came from `/es`, and a custom reset mailer gets it as `data.redirect`. Only an address on your own site is kept. See URL Parameters in [Password Reset](https://docs.totalcms.co/auth/password-reset)

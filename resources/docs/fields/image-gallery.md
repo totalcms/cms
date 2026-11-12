@@ -189,10 +189,26 @@ Watermark settings are enforced during image processing:
 - **markw** - Watermark width (pixels or percentage like "50w")
 - **markh** - Watermark height (pixels or percentage)
 - **markpad** - Padding from edge in pixels
-- **markpos** - Position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
-- **markalpha** - Transparency (0-100, where 100 is fully opaque)
+- **markpos** - Position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`, or `tile` to repeat the logo over the whole image
+- **markalpha** - Transparency (0-100, where 100 is fully opaque). Tiled logos default to 30
+- **markrepeat** - With `tile`, how many logos run across the image (1-12, default 4)
 
 Replacing the watermark image with a new file under the same name re-renders every image on its next request.
+
+#### Tiled Logo Watermark
+
+```json
+{
+	"watermark": {
+		"mark": "logo.png",
+		"markpos": "tile",
+		"markrepeat": 5,
+		"limit": 800
+	}
+}
+```
+
+The logo repeats in offset rows across the whole image. Size, padding and fit settings don't apply to a tiled logo. See [ImageWorks → Tiled Logo Watermarks](docs/twig/imageworks#tiled-logo-watermarks).
 
 ### Text Watermarks
 ```json

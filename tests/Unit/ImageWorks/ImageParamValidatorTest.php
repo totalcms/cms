@@ -36,6 +36,8 @@ describe('ImageParamValidator rejects what no page would send', function (): voi
 		['dpr', '9'],
 		['w', '1e3'],
 		['w', '0x10'],
+		['markrepeat', '0'],
+		['markrepeat', '13'],
 	]);
 
 	it('rejects values outside a fixed list', function (string $key, string $value): void {

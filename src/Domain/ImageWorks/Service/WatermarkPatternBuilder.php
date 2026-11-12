@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 /**
- * The tiled text watermark: one mark repeated over a square, in rows offset
- * by half a mark like brickwork, so no strip of the image is left clear to
- * crop out. Glide then scales the square to cover the image and crops it to
- * the image's shape (`markw=100w`, `markh=100h`, `markfit=crop`), so the
- * longer side always carries `$tiles` marks whatever the image's size.
+ * A tiled watermark, text or logo: one mark repeated over a square, in rows
+ * offset by half a mark like brickwork, so no strip of the image is left
+ * clear to crop out. Glide then scales the square to cover the image and
+ * crops it to the image's shape (`markw=100w`, `markh=100h`, `markfit=crop`),
+ * so the longer side always carries `$tiles` marks whatever the image's size.
  */
-final class TextPatternBuilder
+final class WatermarkPatternBuilder
 {
 	/** Pattern side in pixels: sharp on a 2,400px image, small to keep. */
 	public const SIZE = 2400;
+	/** Marks across the longer side when no count is set. */
+	public const DEFAULT_TILES = 4;
+	/** More than this and each mark is too small to read. */
+	public const MAX_TILES = 12;
 	/** Share of each cell the mark fills; the rest is the gap. */
 	private const FILL = 0.7;
 
@@ -51,5 +55,13 @@ final class TextPatternBuilder
 		}
 
 		return $pattern;
+	}
+
+	/** The tile count a request asks for, held to 1–MAX_TILES. */
+	public static function tiles(mixed $repeat): int
+	{
+		$tiles = is_numeric($repeat) ? (int)$repeat : self::DEFAULT_TILES;
+
+		return min(self::MAX_TILES, max(1, $tiles));
 	}
 }

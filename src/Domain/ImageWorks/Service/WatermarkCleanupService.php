@@ -37,7 +37,8 @@ readonly class WatermarkCleanupService
 	}
 
 	/**
-	 * Clear cached watermarks older than specified time.
+	 * Clear cached watermarks older than specified time: drawn text marks and
+	 * tiled logo patterns, both of which are redrawn on the next request.
 	 *
 	 * @param int $maxAge Maximum age in seconds (default: 30 days). Use 0 to clear all regardless of age.
 	 *
@@ -54,7 +55,7 @@ readonly class WatermarkCleanupService
 
 			foreach ($files as $filePath) {
 				$filename = basename($filePath);
-				if (str_starts_with($filename, 'text_watermark_')) {
+				if (str_starts_with($filename, 'text_watermark_') || str_starts_with($filename, 'image_watermark_')) {
 					// If clearing all, skip timestamp check
 					if ($clearAll) {
 						$this->filesystem->delete($filePath);

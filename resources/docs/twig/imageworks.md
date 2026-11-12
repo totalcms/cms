@@ -117,9 +117,10 @@ Overlay another image as a watermark.
 | `mark` | string | Watermark image filename |
 | `markw` | mixed | Watermark width (pixels or percentage like `25w`) |
 | `markh` | mixed | Watermark height (pixels or percentage like `25h`) |
-| `markpos` | string | Position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right` |
+| `markpos` | string | Position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`, or `tile` to repeat the logo over the whole image |
 | `markpad` | integer | Padding from edge in pixels |
-| `markalpha` | integer | Opacity (0-100, where 100 is fully opaque) |
+| `markalpha` | integer | Opacity (0-100, where 100 is fully opaque). Default: 100, or 30 when tiled |
+| `markrepeat` | integer | Tiled mode only: logos across the image (1-12, default: 4) |
 | `markfit` | string | How the watermark fits: `contain`, `max`, `fill`, `stretch`, `crop` |
 
 ```twig
@@ -131,6 +132,25 @@ Overlay another image as a watermark.
     markpos: 'bottom-right',
     markpad: 20,
     markalpha: 70
+}) }}
+```
+
+### Tiled Logo Watermarks
+
+`markpos: 'tile'` repeats the logo over the whole image in offset rows, the
+same way a [tiled text mark](#tiled-watermarks) does, so there is no clean
+corner to crop out. The logo is faint (`markalpha` 30) unless you set the
+opacity, and `markrepeat` sets how many logos run across the image.
+`markw`, `markh`, `markpad` and `markfit` don't apply to a tiled logo. Use a
+PNG with a transparent background: a JPEG logo tiles as solid rectangles.
+
+```twig
+{# Proof sheet: the studio logo repeated across the image #}
+{{ cms.media.imagePath('photo', {
+    w: 1600,
+    mark: 'logo.png',
+    markpos: 'tile',
+    markrepeat: 5
 }) }}
 ```
 

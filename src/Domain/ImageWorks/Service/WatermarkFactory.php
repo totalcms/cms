@@ -35,6 +35,10 @@ readonly class WatermarkFactory
 			return null;
 		}
 
+		if (($params['markpos'] ?? '') === 'tile') {
+			return $this->tiledImageWatermark($params);
+		}
+
 		return new Watermark(
 			mark      : $params['mark'],
 			markpos   : $params['markpos'] ?? 'bottom-right',
@@ -47,6 +51,75 @@ readonly class WatermarkFactory
 			markalpha : $params['markalpha'] ?? null,
 			path      : $this->watermarkPath(),
 		);
+	}
+
+	/**
+	 * The logo repeated over the whole image, like a tiled text mark. The
+	 * pattern is drawn once into WATERMARK_DIR under a name made from the logo,
+	 * its modified time and the tile count, so a replaced logo gets a new
+	 * pattern (and, through version(), a new render cache). Null when the logo
+	 * is missing or GD cannot read it, as Glide skips a mark it cannot find.
+	 *
+	 * @param array<string,mixed> $params watermark parameters
+	 */
+	private function tiledImageWatermark(array $params): ?Watermark
+	{
+		// Glide reads a logo through a filesystem rooted at the gallery; this
+		// reads through the data root, so `..` would reach any image on the site
+		// and stamp it, tiled, onto a public one.
+		$mark = (string)$params['mark'];
+		if (str_contains($mark, '..') || str_starts_with($mark, '/')) {
+			return null;
+		}
+
+		$logoPath = $this->watermarkPath() . '/' . $mark;
+		$tiles    = WatermarkPatternBuilder::tiles($params['markrepeat'] ?? null);
+
+		try {
+			$logoVersion = $this->filesystem->flysystem()->lastModified($logoPath);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		$pattern = 'image_watermark_' . substr(hash('sha256', $mark . '|' . $logoVersion . '|' . $tiles), 0, 16) . '.png';
+		if (!$this->filesystem->fileExists(TextWatermarkFactory::WATERMARK_DIR . '/' . $pattern) && !$this->drawImagePattern($logoPath, $tiles, $pattern)) {
+			return null;
+		}
+
+		// The pattern covers the whole image and is cropped to its shape.
+		return new Watermark(
+			mark      : $pattern,
+			markpos   : 'center',
+			markw     : '100w',
+			markh     : '100h',
+			markfit   : 'crop',
+			markalpha : (string)($params['markalpha'] ?? self::DEFAULT_TILE_ALPHA),
+			path      : TextWatermarkFactory::WATERMARK_DIR,
+		);
+	}
+
+	/** Tile the logo into a pattern PNG; false when the logo is not an image GD reads. */
+	private function drawImagePattern(string $logoPath, int $tiles, string $pattern): bool
+	{
+		if (!function_exists('imagecreatefromstring')) {
+			return false;
+		}
+
+		$logo = @imagecreatefromstring($this->filesystem->read($logoPath));
+		if ($logo === false) {
+			return false;
+		}
+
+		ob_start();
+		$saved   = imagepng(WatermarkPatternBuilder::build($logo, $tiles));
+		$content = (string)ob_get_clean();
+		if (!$saved || $content === '') {
+			return false;
+		}
+
+		$this->filesystem->write(TextWatermarkFactory::WATERMARK_DIR . '/' . $pattern, $content);
+
+		return true;
 	}
 
 	/**
