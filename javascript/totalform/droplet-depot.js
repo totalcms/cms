@@ -142,6 +142,11 @@ export default class DepotDroplet
             if (!this.testSet.processRules(file, count)) {
                 file.rejectFile(this.testSet.errors);
 				this.displayTestSetErrors();
+				// The rejected file never uploads, so it has no stored name and
+				// the trash button cannot remove it: it stayed in the browser
+				// until the page was reloaded. Take it out, as Droplet does with
+				// an image that fails a rule (event_thumbnail).
+				this.dropzone.removeFile(file);
             } else {
                 file.acceptFile();
             }

@@ -133,6 +133,16 @@ export default class DepotField extends TotalField {
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
 
+    validate() {
+        // DepotDroplet reports a rejected file (wrong type, too large) as this
+        // input's custom validity, and the file is removed. Nothing else
+        // cleared it, so the message outlived the file and every save failed
+        // until the page was reloaded. Clear it first, as file and image
+        // fields do.
+        this.input.setCustomValidity("");
+        return super.validate();
+    }
+
     fileAdded(file) {
         this.form.processFields();
         file.path = this.getPath();
