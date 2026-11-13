@@ -7,6 +7,7 @@ All notable changes to Total CMS will be documented in this file.
 ### Security
 
 - **OAuth security fixes.** Update as soon as you can. **Behavior change:** deleting an OAuth client now stops its access tokens from the next request, instead of when they expire
+- **HTML sanitizer security fixes.** Update as soon as you can. **Behavior change:** a link in a text or styled text field must now be a web, email or phone address, or a relative path; any other kind of link is saved as `#sanitized`. Add other kinds, such as `whatsapp`, to `htmlclean.allowed_url_schemes`. An unclosed tag at the end of a field is now saved as text. See [HTML Sanitization](https://docs.totalcms.co/operations/security#html-sanitization)
 
 ### Added
 
@@ -36,8 +37,11 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **A YouTube or Vimeo embed in styled text stays where you put it.** Saving used to move every allowed iframe to the end of the field
+
 ### Fixed
 
+- **Protected image files download for signed-in users again.** A protected file whose name ended in an image extension, such as `photo.jpg` in a depot, sent a signed-in user to the login page, and back to it after signing in, round and round. Since 3.6.3, those download links were served without the visitor's session, so they couldn't see the login
 - **Connecting claude.ai and other OAuth clients no longer fails with "Authorization code has been revoked".** The code handed out at consent was kept in the cache, so the exchange a second later failed while dev mode was on, after a cache clear, and on hosts whose APCu isn't shared between PHP workers, which made the first connect fail on many shared hosts. See [Troubleshooting](https://docs.totalcms.co/apis/oauth#troubleshooting)
 - **MCP clients on the 2026-07-28 protocol can connect with an OAuth token.** Their opening `server/discover` request was refused with 403 for every token, as were `resources/unsubscribe` and `subscriptions/listen` for a token with `mcp:resources`
 - **The OAuth activity log names the user on `token.issued`, and the target on `group.rejected`.** `user_id` was always empty, so an issued token looked like it belonged to nobody, and a refused `create_object` didn't say which collection the client asked for. See [Event types](https://docs.totalcms.co/apis/oauth#event-types)

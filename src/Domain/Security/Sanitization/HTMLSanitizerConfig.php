@@ -48,6 +48,14 @@ class HTMLSanitizerConfig
 		'codepen.io', 'jsfiddle.net', 'github.com', 'gist.github.com',
 	];
 
+	/**
+	 * URL schemes a link or media URL may use. Relative URLs need no scheme.
+	 * Sites can replace the list with `htmlclean.allowed_url_schemes`.
+	 */
+	public const ALLOWED_URL_SCHEMES = [
+		'http', 'https', 'mailto', 'tel', 'sms', 'callto', 'ftp', 'sftp', 'webcal', 'xmpp', 'geo',
+	];
+
 	public const DANGEROUS_MIME_TYPES = [
 		'application/x-php', 'application/x-httpd-php', 'application/php', 'application/x-sh',
 		'application/x-csh', 'text/x-php', 'text/x-shellscript', 'application/x-executable',

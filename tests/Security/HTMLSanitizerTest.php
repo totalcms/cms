@@ -422,4 +422,202 @@ final class HTMLSanitizerTest extends TestCase
 		$this->assertStringContainsString('very_long_parameter_name=very_long_parameter_value', $longerResult);
 		$this->assertStringContainsString('another_param=', $longerResult);
 	}
+
+	/**
+	 * The browser decodes character references before it reads a URL scheme,
+	 * so every spelling below is a `javascript:` link to it.
+	 */
+	public function testEncodedJavaScriptHrefsBecomePlaceholder(): void
+	{
+		$cases = [
+			'<a href="javas&#99;ript:alert(1)">x</a>',
+			'<a href="&#106;avascript:alert(1)">x</a>',
+			'<a href="&#x6A;avascript:alert(1)">x</a>',
+			'<a href="&#0000106;avascript:alert(1)">x</a>',
+			'<a href="javas&#99ript:alert(1)">x</a>',
+			'<a href="javascript&colon;alert(1)">x</a>',
+			'<a href="java&#x09;script:alert(1)">x</a>',
+			'<a href="java&Tab;script:alert(1)">x</a>',
+			"<a href=\"java\tscript:alert(1)\">x</a>",
+			'<a href=" JaVaScRiPt:alert(1)">x</a>',
+			'<a href="jajavascript:vascript:alert(1)">x</a>',
+			'<a href=javascript:alert(1)>x</a>',
+			'<a href="vbscript:msgbox(1)">x</a>',
+			'<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>',
+			'<svg><a xlink:href="javas&#99;ript:alert(1)"><text>x</text></a></svg>',
+		];
+
+		foreach ($cases as $input) {
+			$result = HTMLSanitizer::sanitizeRichContent($input);
+			$this->assertStringContainsString('href="' . HTMLSanitizer::SANITIZED_HREF . '"', $result, $input);
+			$this->assertStringNotContainsString('alert', $result, $input);
+			$this->assertStringNotContainsString('msgbox', $result, $input);
+		}
+	}
+
+	public function testDoubleEncodedHrefIsLeftAlone(): void
+	{
+		// The browser decodes once: `&amp;#106;` is the text `&#106;`, not `j`.
+		$input = '<a href="&amp;#106;avascript:alert(1)">x</a>';
+
+		$this->assertSame($input, HTMLSanitizer::sanitizeRichContent($input));
+	}
+
+	public function testSafeLinksAreKept(): void
+	{
+		$cases = [
+			'<a href="https://example.com/?q=javascript:1">x</a>',
+			'<a href="http://example.com">x</a>',
+			'<a href="/about">x</a>',
+			'<a href="about/team">x</a>',
+			'<a href="#top">x</a>',
+			'<a href="?page=2">x</a>',
+			'<a href="//cdn.example.com/x">x</a>',
+			'<a href="mailto:hello@example.com">x</a>',
+			'<a href="tel:+15551234567">x</a>',
+			'<a href="">x</a>',
+			'<img src="data:image/png;base64,iVBORw0KGgo=" alt="dot">',
+		];
+
+		foreach ($cases as $input) {
+			$this->assertSame($input, HTMLSanitizer::sanitizeRichContent($input), $input);
+		}
+	}
+
+	public function testUnlistedSchemesCanBeAllowedByConfig(): void
+	{
+		$input = '<a href="whatsapp://send?text=hi">x</a>';
+
+		$this->assertStringContainsString(HTMLSanitizer::SANITIZED_HREF, HTMLSanitizer::sanitizeRichContent($input));
+		$this->assertSame($input, HTMLSanitizer::sanitizeRichContent($input, [
+			'allowed_url_schemes' => [...HTMLSanitizerConfig::ALLOWED_URL_SCHEMES, 'whatsapp'],
+		]));
+	}
+
+	public function testDangerousNonLinkUrlsAreRemoved(): void
+	{
+		$cases = [
+			'<img src="javas&#99;ript:alert(1)" alt="a">'         => '<img alt="a">',
+			'<a href="/x"><img src="data:text/html,<b>"></a>'     => '<a href="/x"><img></a>',
+			'<button formaction="javascript:alert(1)">b</button>' => '<button>b</button>',
+			'<a href="data:image/svg+xml,x">x</a>'                => '<a href="#sanitized">x</a>',
+		];
+
+		foreach ($cases as $input => $expected) {
+			$this->assertSame($expected, HTMLSanitizer::sanitizeRichContent($input), $input);
+		}
+	}
+
+	/**
+	 * Inputs that ran script with no click at all before the tokenizer.
+	 */
+	public function testTagsTheRegexPassesMissed(): void
+	{
+		$cases = [
+			'<script >alert(1)</script >',
+			'<script src="//evil.example/x.js"></script >',
+			'<script src="//evil.example/x.js">',
+			'<SCRIPT>alert(1)</SCRIPT>',
+			'<scr<script></script>ipt>alert(1)</script>',
+			'<img src="x"onerror="alert(1)">',
+			"<img src='x'onerror='alert(1)'>",
+			'<a title=">" href="javascript:alert(1)">x</a>',
+			'<img src=x o style="a"nerror=alert(1)>',
+			'<textarea><b title="</textarea><img src=x onerror=alert(1)>">',
+			'<!--<a title="--><img src=x onerror=alert(1)>">',
+			'<noscript><p title="</noscript><img src=x onerror=alert(1)>">',
+			'<svg><animate attributeName="href" values="javas&#99;ript:alert(1)"/></svg>',
+			'<svg><set attributeName="href" to="javascript:alert(1)"/></svg>',
+			'<iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>',
+			'<base href="javascript:alert(1)//">',
+			'<embed src="javascript:alert(1)">',
+		];
+
+		foreach ($cases as $input) {
+			$result = HTMLSanitizer::sanitizeRichContent($input);
+			$this->assertDoesNotMatchRegularExpression('/<script/i', $result, $input);
+			$this->assertDoesNotMatchRegularExpression('/[\s\/"\']on[a-z]+\s*=/i', $result, $input);
+			$this->assertStringNotContainsString('javascript:', $result, $input);
+			$this->assertStringNotContainsString('&#99;ript', $result, $input);
+			$this->assertStringNotContainsString('srcdoc', $result, $input);
+		}
+	}
+
+	public function testRemovingAnAttributeNeverJoinsItsNeighbours(): void
+	{
+		// Dropping `b` must not glue `script:…` onto `href=java`.
+		$result = HTMLSanitizer::sanitizeRichContent('<a href=java b="javascript:"script:alert(1)>x</a>');
+
+		$this->assertStringNotContainsString('href=javascript', $result);
+		$this->assertStringContainsString('href=java ', $result);
+	}
+
+	public function testUnterminatedTagIsShownAsText(): void
+	{
+		// Left as a tag it would swallow whatever the template prints after it.
+		$this->assertSame(
+			'&lt;a href="javascript:alert(1)',
+			HTMLSanitizer::sanitizeRichContent('<a href="javascript:alert(1)')
+		);
+		$this->assertSame('if a&lt;b then c', HTMLSanitizer::sanitizeRichContent('if a<b then c'));
+	}
+
+	public function testIframeHostMustMatchExactly(): void
+	{
+		$cases = [
+			'<iframe src="https://youtube.com.evil.example/embed/1"></iframe>',
+			'<iframe src="https://youtube.com@evil.example/embed/1"></iframe>',
+			'<iframe src="https://evil.example/?u=https://www.youtube.com/"></iframe>',
+			'<iframe src="https://evil.example/embed/1">',
+			'<iframe src="javascript:alert(1)">',
+			'<iframe>',
+		];
+
+		foreach ($cases as $input) {
+			$this->assertStringNotContainsString('<iframe', HTMLSanitizer::sanitizeRichContent($input), $input);
+		}
+	}
+
+	public function testAllowedIframeStaysInPlace(): void
+	{
+		$input = '<p>a</p><iframe src="https://www.youtube.com/embed/1"></iframe><p>b</p>';
+
+		$this->assertSame($input, HTMLSanitizer::sanitizeRichContent($input));
+	}
+
+	public function testStylesAreCheckedAfterDecoding(): void
+	{
+		$config = ['allowed_css_properties' => ['color', 'background']];
+
+		$this->assertSame(
+			'<p style="color:red">s</p><p>t</p>',
+			HTMLSanitizer::sanitizeRichContent(
+				'<p style="color:red">s</p><p style="background:url(javas&#99;ript:x)">t</p>',
+				$config
+			)
+		);
+	}
+
+	public function testAllowedTagsCannotBeStitchedBackTogether(): void
+	{
+		$result = HTMLSanitizer::sanitizeRichContent('<<b>img src=x onerror=alert(1)>', ['allowed_tags' => ['p']]);
+
+		$this->assertStringNotContainsString('<img', $result);
+		$this->assertStringNotContainsString('onerror', $result);
+	}
+
+	public function testSanitizingTwiceChangesNothing(): void
+	{
+		$inputs = [
+			'<a href="javas&#99;ript:alert(1)">x</a><img src="x"onerror="alert(1)">',
+			'<textarea><b title="</textarea><img src=x onerror=alert(1)>">',
+			'<p style="color:red" class="a">Text <a href="/x" target="_blank">link</a></p>',
+			'if a<b then c',
+		];
+
+		foreach ($inputs as $input) {
+			$once = HTMLSanitizer::sanitizeRichContent($input);
+			$this->assertSame($once, HTMLSanitizer::sanitizeRichContent($once), $input);
+		}
+	}
 }

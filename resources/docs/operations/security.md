@@ -231,6 +231,28 @@ return [
 
 Total CMS sanitizes HTML content by default to prevent XSS attacks. This is especially important for user-generated content.
 
+When a text or styled text field is saved, the sanitizer:
+
+- Removes `<script>`, `<style>`, `<object>`, `<embed>`, `<form>`, `<input>`, `<link>`, `<meta>`, `<base>` and frames
+- Removes event handler attributes (`onclick`, `onerror`, …) and `srcdoc`
+- Keeps an `<iframe>` only when its `src` is on an allowed host (YouTube, Vimeo, and the others in `allowed_iframe_domains`)
+- Checks every link and media address after decoding it, as the browser does, so `javas&#99;ript:` counts as `javascript:`
+
+A link (`href`) must be a relative path or use one of these schemes: `http`, `https`, `mailto`, `tel`, `sms`, `callto`, `ftp`, `sftp`, `webcal`, `xmpp`, `geo`. Any other link is saved as `href="#sanitized"`, so it still looks like a link but goes nowhere. An image or video `src` may also be an inline `data:image/...` picture; any other `src` is removed.
+
+To allow another scheme, replace the list in `tcms.php`. Include the defaults you still want:
+
+```php
+return [
+	'htmlclean' => [
+		'allowed_url_schemes' => [
+			'http', 'https', 'mailto', 'tel', 'sms', 'callto', 'ftp', 'sftp', 'webcal', 'xmpp', 'geo',
+			'whatsapp',
+		],
+	],
+];
+```
+
 **⚠️ Warning: Disabling HTML Sanitization**
 
 While it's possible to disable HTML sanitization for certain fields, this significantly increases security risks:
