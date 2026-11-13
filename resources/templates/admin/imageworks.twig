@@ -238,15 +238,11 @@
 				<div class="content">
 					<div class="filter-strip" id="filter-strip">
 						<input type="hidden" name="filt" value="{{ selectedFilter|e }}">
-						{# Looks and duotones share one pick-one row; extras stack on top of them, so they get a row of their own #}
-						{% set tileRows = [
-							{ filters: filters|filter(f => f.group == 'look')|merge(filters|filter(f => f.group == 'duotone')), title: null, label: t('imageworks.filters') },
-							{ filters: filters|filter(f => f.group == 'effect'), title: t('imageworks.filter_group.effect'), label: t('imageworks.filter_group.effect') },
-						] %}
-						{% for row in tileRows %}
-							{% if row.filters|length > 0 %}
-							{% if row.title %}<h5 class="filter-group-title">{{ row.title }}</h5>{% endif %}
-							<div class="filter-tiles" role="group" aria-label="{{ row.label|e('html_attr') }}">
+						{# Rows come from AdminImageworksAction: core and site looks, one row per extension, then Extras #}
+						{% for row in filterRows %}
+							{% set rowTitle = row.kind == 'extras' ? t('imageworks.filter_group.effect') : row.title %}
+							{% if rowTitle %}<h5 class="filter-group-title">{{ rowTitle|e }}</h5>{% endif %}
+							<div class="filter-tiles" role="group" aria-label="{{ (rowTitle ?: t('imageworks.filters'))|e('html_attr') }}">
 								{% for f in row.filters %}
 									{% set filterLabel = f.owner == 'core' ? t(f.label) : f.label %}
 									<button type="button" class="filter-tile" data-filter="{{ f.name|e('html_attr') }}" data-group="{{ f.group|e('html_attr') }}" aria-pressed="{{ f.name in selectedChain ? 'true' : 'false' }}" aria-label="{{ filterLabel|e('html_attr') }}">
@@ -255,7 +251,6 @@
 									</button>
 								{% endfor %}
 							</div>
-							{% endif %}
 						{% endfor %}
 					</div>
 					<section>

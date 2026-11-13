@@ -168,3 +168,22 @@ test('looks and duotones share one row of tiles, and extras sit in a row of thei
 	expect($body)->toContain('<h5 class="filter-group-title">Extras</h5>');
 });
 
+test('an extension gets its own titled row for looks, while its effects join Extras', function (): void {
+	$this->app->getContainer()->get(ImageFilterRegistry::class)->registerExtensionFilters([
+		'acme/photo-pack' => [
+			['name' => 'acme-kodak', 'filter' => ['label' => 'Kodak', 'steps' => [['sepia', 0.4]]], 'group' => 'look'],
+			['name' => 'acme-dust', 'filter' => ['label' => 'Dust', 'steps' => [['grain', 0.2]]], 'group' => 'effect'],
+		],
+	]);
+
+	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+
+	preg_match_all('/<div class="filter-tiles[^"]*" role="group" aria-label="([^"]*)">(.*?)<\/div>/s', $body, $rows);
+	expect(array_map(html_entity_decode(...), $rows[1]))->toBe(['Filters', 'acme/photo-pack', 'Extras']);
+	expect($rows[2][1])->toContain('data-filter="acme-kodak" data-group="look"')
+		->not->toContain('acme-dust');
+	expect($rows[2][2])->toContain('data-filter="acme-dust" data-group="effect"');
+	expect($rows[2][0])->not->toContain('acme-kodak');
+	expect($body)->toContain('<h5 class="filter-group-title">acme/photo-pack</h5>');
+});
+

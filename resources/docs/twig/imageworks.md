@@ -173,7 +173,7 @@ return [
 {{ cms.media.imagePath('hero', {w: 1600, filt: 'golden'}) }}
 ```
 
-A filter needs a `steps` list (1 to 12 steps). `label` is the name shown in the admin tool, and `group` (`look`, `duotone` or `effect`, default `look`) decides where it sits in the admin strip: looks and then duotones share the first row, where one is picked at a time, and `effect` filters are listed under Extras, where they stack on top of the chosen look instead of replacing it. Names are 1-48 lowercase letters, digits and hyphens. A recipe that is not valid is refused and logged, and the rest still load.
+A filter needs a `steps` list (1 to 12 steps). `label` is the name shown in the admin tool, and `group` (`look`, `duotone` or `effect`, default `look`) decides where it sits in the admin strip: looks and then duotones share the first row, where one is picked at a time, and `effect` filters are listed under Extras, where they stack on top of the chosen look instead of replacing it. An extension's looks and duotones get a row of their own, titled with the extension's name; they are still picked one at a time along with the core looks, and its `effect` filters join Extras. Names are 1-48 lowercase letters, digits and hyphens. A recipe that is not valid is refused and logged, and the rest still load.
 
 | Step | Arguments | What it does |
 |------|-----------|--------------|
