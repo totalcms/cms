@@ -368,15 +368,27 @@ The overlay is a list of [ImageWorks layers](docs/twig/imageworks#layered-marks)
 
 ### Setting One Up
 
-Write the overlay as JSON in **Site SEO → Social Image Overlay**:
+Open **Site SEO** and click **Add overlay…** beside **Social Image Overlay**. A dialog opens with your share image on the right, drawn on one of your own records:
+
+1. **Pick a preset.** Title on fade, Title and site name, Byline, Band, and Logo in the corner (offered once the **watermarks** gallery has a file). Each one shows its card on the record you are previewing.
+2. **Check it on other records.** **Preview with** switches the record, so you can see a long title, a short one and a light photo. The line under the preview says whether the card draws, or why it doesn't, in the same words as [Share Cards](docs/site-builder/share-cards).
+3. **Click Apply, then save the record.** Nothing is saved until you save the form. **Cancel** or Escape throws away what you did in the dialog.
+
+**Crop** at the top of the dialog sets which part of the photo is kept (`fit`). **Remove overlay** clears it, so shares use the plain image again.
+
+The row on the form shows a small copy of the card and a one-line summary such as "3 layers · fade, title, site name". Click **Design…** to change it.
+
+### Writing It by Hand
+
+The overlay is stored as JSON, and the dialog's **JSON** tab edits it directly. Anything you write there is kept, including keys the dialog has no controls for. The preview updates as you type, and **Apply** stays off while the JSON doesn't parse. This is the format AI agents and the API write:
 
 ```json
 {
     "fit": "crop-focalpoint",
     "marks": [
         {"markfill": "0b0f1a", "markgradient": "bottom", "markh": "100h", "markpos": "bottom", "markalpha": 85},
-        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "markpad": "5w"},
-        {"marktext": "${site}", "marktextsize": "3w", "marktextpos": "top-left", "markpad": "5w"}
+        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "marktextpad": "5w"},
+        {"marktext": "${site}", "marktextsize": "3w", "marktextpos": "top-left", "marktextpad": "5w"}
     ]
 }
 ```
@@ -416,7 +428,7 @@ The text is drawn in the site's default watermark font. To use another, upload i
 
 ### One Collection, Another Look
 
-A collection can have an overlay of its own: **Collections → your collection → Settings → SEO → Social Image Overlay**, in the same format. It replaces the site's overlay for that collection's objects. The two are not merged, so a collection overlay that wants the site name says `${site}` itself.
+A collection can have an overlay of its own: **Collections → your collection → Settings → SEO → Social Image Overlay**. The same dialog designs it, and its preview uses that collection's records. It replaces the site's overlay for that collection's objects. The two are not merged, so a collection overlay that wants the site name says `${site}` itself.
 
 A blog can show the author and the date where the rest of the site shows only a title:
 
@@ -424,8 +436,8 @@ A blog can show the author and the date where the rest of the site shows only a 
 {
     "marks": [
         {"markfill": "0b0f1a", "markgradient": "bottom", "markh": "100h", "markpos": "bottom", "markalpha": 85},
-        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "markpad": "5w"},
-        {"marktext": "By ${author}", "marktextsize": "3w", "marktextpos": "top-left", "markpad": "5w"}
+        {"marktext": "${socialTitle}", "marktextw": "80w", "marktextsize": "7w", "marktextpos": "bottom-left", "marktextpad": "5w"},
+        {"marktext": "By ${author}", "marktextsize": "3w", "marktextpos": "top-left", "marktextpad": "5w"}
     ]
 }
 ```

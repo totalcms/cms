@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'Brak nakładki: symbole zastępcze wszystkich warstw były puste dla tego rekordu.',
 	'share_cards.reason.no-site-key'         => 'Brak nakładki: klucz witryny nie jest jeszcze skonfigurowany.',
 	'share_cards.reason.hash-mismatch'       => 'Brak nakładki: strona zmienia wartość rysowaną przez kartę (np. tytuł) przed cms.seo.head(), więc karta nie pasuje już do rekordu.',
+	'overlay_preview.reason.drawn'           => 'Narysowane tak, jak pokażą je udostępnienia.',
+	'overlay_preview.reason.no-overlay'      => 'Brak warstw: udostępnienia używają zwykłego obrazu.',
+	'overlay_preview.reason.no-record'       => 'Nie można odczytać tego rekordu, więc nie ma czego pokazać.',
+	'overlay_preview.reason.needs-pro'       => 'Edycja Pro: poniżej Pro udostępnienia używają zwykłego obrazu, pokazanego tutaj.',
 ];

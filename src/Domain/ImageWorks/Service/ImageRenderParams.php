@@ -67,17 +67,24 @@ final readonly class ImageRenderParams
 			$params = $sizeLadder->snap($params, $imageData);
 		}
 
-		// Make sure that the requested width and height are not larger than the original image
-		if (isset($params['w']) && $params['w'] > $imageData->width && $imageData->width > 0) {
-			$params['w'] = $imageData->width;
+		// Never larger than the original image; a crop keeps its shape
+		// while it shrinks (ImageDimensionCalculator::withinSource).
+		[$width, $height] = ImageDimensionCalculator::withinSource(
+			isset($params['w']) ? (int)$params['w'] : null,
+			isset($params['h']) ? (int)$params['h'] : null,
+			$imageData->width,
+			$imageData->height,
+			$params['fit'] ?? null,
+		);
+		if ($width !== null) {
+			$params['w'] = $width;
+		}
+		if ($height !== null) {
+			$params['h'] = $height;
 		}
 
 		if (isset($params['w']) && $params['w'] == 0) {
 			unset($params['w']);
-		}
-
-		if (isset($params['h']) && $params['h'] > $imageData->height && $imageData->height > 0) {
-			$params['h'] = $imageData->height;
 		}
 
 		if (isset($params['h']) && $params['h'] == 0) {

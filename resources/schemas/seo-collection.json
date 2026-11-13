@@ -92,7 +92,11 @@
 			"label": "Social Image Overlay",
 			"help": "ImageWorks layers drawn over this collection's share images, in place of the site's overlay. Leave empty to use the site's. Pro edition.",
 			"placeholder": "{\"marks\": [{\"marktext\": \"${title}\", \"marktextw\": \"60w\", \"marktextsize\": \"6w\"}]}",
-			"default": {}
+			"default": {},
+			"settings": {
+				"designer": "socialOverlay",
+				"designerScope": "collection"
+			}
 		}
 	},
 	"required": []

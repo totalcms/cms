@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'Geen overlay: de placeholders van alle lagen waren leeg voor dit record.',
 	'share_cards.reason.no-site-key'         => 'Geen overlay: de sitesleutel is nog niet ingesteld.',
 	'share_cards.reason.hash-mismatch'       => 'Geen overlay: de pagina wijzigt een waarde die de kaart tekent (zoals de titel) vóór cms.seo.head(), dus de kaart past niet meer bij het record.',
+	'overlay_preview.reason.drawn'           => 'Getekend zoals het bij delen verschijnt.',
+	'overlay_preview.reason.no-overlay'      => 'Nog geen lagen: bij delen wordt de gewone afbeelding gebruikt.',
+	'overlay_preview.reason.no-record'       => 'Dit record kan niet worden gelezen, dus er is niets te tonen.',
+	'overlay_preview.reason.needs-pro'       => 'Pro-editie: onder Pro wordt bij delen de gewone afbeelding gebruikt, die hier staat.',
 ];

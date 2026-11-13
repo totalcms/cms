@@ -38,13 +38,8 @@ class ImageDimensionCalculator
 		// Calculate aspect ratio
 		$aspectRatio = $originalWidth / $originalHeight;
 
-		// Glide NEVER upscales images - clamp target dimensions to original size
-		if ($targetWidth !== null) {
-			$targetWidth = min($targetWidth, $originalWidth);
-		}
-		if ($targetHeight !== null) {
-			$targetHeight = min($targetHeight, $originalHeight);
-		}
+		// ImageWorks never upscales: the target is held to the source size
+		[$targetWidth, $targetHeight] = self::withinSource($targetWidth, $targetHeight, $originalWidth, $originalHeight, $fit);
 
 		// Handle different fit modes (matching Glide behavior)
 		// https://glide.thephpleague.com/2.0/api/size/#fit-fit
@@ -88,14 +83,38 @@ class ImageDimensionCalculator
 			];
 		}
 
-		// Only height specified — maintain aspect ratio. $targetHeight is
-		// guaranteed non-null here: the "both null" branch returned at line 32,
-		// the "both non-null" branch returned at line 69, and the "width-only"
-		// branch returned just above — leaving "height-only" as the sole path
-		// that reaches here.
+		// Only height specified — maintain aspect ratio. Every other case
+		// returned above, so the height is set here.
+		$targetHeight ??= $originalHeight;
+
 		return [
 			'width'  => (int)round($targetHeight * $aspectRatio),
 			'height' => $targetHeight,
+		];
+	}
+
+	/**
+	 * A requested size held to the source, since ImageWorks never upscales.
+	 * Each side is capped on its own, except for a crop given both sides:
+	 * that asks for a shape, so both shrink by the same factor and the crop
+	 * keeps it. A 640×480 photo asked for 1200×630 with `fit=crop` gives
+	 * 640×336, not an uncropped 640×480.
+	 *
+	 * @return array{0:?int,1:?int}
+	 */
+	public static function withinSource(?int $width, ?int $height, int $sourceWidth, int $sourceHeight, mixed $fit): array
+	{
+		$crop = is_string($fit) && ($fit === 'crop' || str_starts_with($fit, 'crop-'));
+		if ($crop && $width !== null && $height !== null && $width > 0 && $height > 0 && $sourceWidth > 0 && $sourceHeight > 0
+			&& ($width > $sourceWidth || $height > $sourceHeight)) {
+			$scale = min($sourceWidth / $width, $sourceHeight / $height);
+
+			return [max(1, (int)round($width * $scale)), max(1, (int)round($height * $scale))];
+		}
+
+		return [
+			$width !== null && $sourceWidth > 0 ? min($width, $sourceWidth) : $width,
+			$height !== null && $sourceHeight > 0 ? min($height, $sourceHeight) : $height,
 		];
 	}
 

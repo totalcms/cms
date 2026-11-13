@@ -39,7 +39,21 @@ export default class JSONField extends TotalField {
     constructor(container, settings) {
         super(container, settings);
 
-        this.editor = null;
+        this.editor   = null;
+        this.designer = null;
+
+        // A share-image overlay (`"settings": {"designer": "socialOverlay"}`)
+        // gets a summary row and a design dialog instead of the code editor.
+        // Loaded on demand so other JSON fields don't pay for it. The textarea
+        // stays the value holder, so getValue/validate/save are unchanged.
+        if (this.settings.designer === 'socialOverlay') {
+            this.input.style.display = 'none';
+            import('./overlay-designer/designer.js').then(({ default: OverlayDesigner }) => {
+                this.designer = new OverlayDesigner(this);
+            });
+            return;
+        }
+
         this.initializeCodeEditor();
     }
 
@@ -95,6 +109,9 @@ export default class JSONField extends TotalField {
         }
         if (this.editor) {
             this.editor.setValue(value);
+        } else if (this.settings.designer === 'socialOverlay') {
+            this.input.value = value;
+            this.designer?.refresh();
         } else {
             this.input.innerHTML = value;
         }

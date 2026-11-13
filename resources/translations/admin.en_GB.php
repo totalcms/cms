@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'No overlay: every layer\'s placeholders were empty for this record.',
 	'share_cards.reason.no-site-key'         => 'No overlay: the site key isn\'t set up yet.',
 	'share_cards.reason.hash-mismatch'       => 'No overlay: the page changed a value the card draws (such as the title) before cms.seo.head(), so the card no longer matches the record.',
+	'overlay_preview.reason.drawn'           => 'Drawn as shares will show it.',
+	'overlay_preview.reason.no-overlay'      => 'No layers yet: shares use the plain image.',
+	'overlay_preview.reason.no-record'       => 'This record can\'t be read, so there is nothing to preview.',
+	'overlay_preview.reason.needs-pro'       => 'Pro edition: below Pro, shares use the plain image, shown here.',
 ];

@@ -102,8 +102,18 @@ class ImageDimensionCalculatorTest extends TestCase
 	{
 		$result = ImageDimensionCalculator::calculate(1920, 1080, ['w' => 3000, 'h' => 2000, 'fit' => 'crop']);
 
-		// Even with crop, should not exceed original dimensions
-		$this->assertEquals(['width' => 1920, 'height' => 1080], $result);
+		// Never past the source, and still the 3:2 the crop asked for
+		$this->assertEquals(['width' => 1620, 'height' => 1080], $result);
+	}
+
+	public function testCropKeepsItsShapeOnASmallSource(): void
+	{
+		// A share card (1200×630) from a 640×480 photo: smaller, same shape
+		$this->assertEquals(['width' => 640, 'height' => 336], ImageDimensionCalculator::calculate(640, 480, ['w' => 1200, 'h' => 630, 'fit' => 'crop-focalpoint']));
+		// Only one side past the source still shrinks both
+		$this->assertEquals(['width' => 640, 'height' => 320], ImageDimensionCalculator::calculate(640, 2000, ['w' => 1200, 'h' => 600, 'fit' => 'crop']));
+		// Contain keeps the source's own shape, so its sides are capped on their own
+		$this->assertEquals(['width' => 640, 'height' => 480], ImageDimensionCalculator::calculate(640, 480, ['w' => 1200, 'h' => 630]));
 	}
 
 	public function testStretchModeReturnsExactDimensions(): void

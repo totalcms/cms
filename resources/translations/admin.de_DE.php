@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'Kein Overlay: Die Platzhalter aller Ebenen waren für diesen Datensatz leer.',
 	'share_cards.reason.no-site-key'         => 'Kein Overlay: Der Website-Schlüssel ist noch nicht eingerichtet.',
 	'share_cards.reason.hash-mismatch'       => 'Kein Overlay: Die Seite ändert einen Wert, den die Karte zeichnet (etwa den Titel), vor cms.seo.head(), daher passt die Karte nicht mehr zum Datensatz.',
+	'overlay_preview.reason.drawn'           => 'So gezeichnet, wie Shares es zeigen.',
+	'overlay_preview.reason.no-overlay'      => 'Noch keine Ebenen: Shares nutzen das einfache Bild.',
+	'overlay_preview.reason.no-record'       => 'Dieser Eintrag lässt sich nicht lesen, daher gibt es keine Vorschau.',
+	'overlay_preview.reason.needs-pro'       => 'Pro-Edition: Unter Pro nutzen Shares das einfache Bild, das hier zu sehen ist.',
 ];

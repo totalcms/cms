@@ -68,11 +68,7 @@ readonly class ImageWorksSocialFetchAction
 
 		$params = ['fm' => $format] + $card->params;
 
-		// An image inside a card, such as a record's own SEO image (`seo.image`),
-		// is found by property and path, as the `/{prop}/{path}` image route does.
-		$parts    = explode('.', $card->imageProperty, 2);
-		$property = $parts[0];
-		$path     = $card->gallery ? 'first' : ($parts[1] ?? null);
+		[$property, $path] = $card->imageTarget();
 
 		return $this->respond($request, $response, fn (): ResponseInterface => $path !== null
 			? $this->imageGenerator->forPublicRoute()->generateGalleryImage($card->imageCollection, $card->imageId, $property, $path, $params, $request)

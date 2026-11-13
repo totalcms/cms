@@ -6,13 +6,15 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Support\Config;
 
 /**
- * Who may open the ImageWorks and file-links tools for an object.
+ * Who may open the ImageWorks and file-links tools for an object, and draw
+ * the overlay designer's previews on one.
  *
  * Both tools are opened in a dialog from an image or file field, which can
  * sit on a front-end form a member of any auth collection is editing. So
@@ -45,11 +47,21 @@ final readonly class MediaToolAccess
 		$collection = is_string($query['collection'] ?? null) && $query['collection'] !== '' ? $query['collection'] : $defaultCollection;
 		$id         = is_string($query['id'] ?? null) ? $query['id'] : '';
 
-		$allowed = $request->getAttribute('authMethod') === 'session'
-			&& $this->guard->can($this->actorResolver->fromSession(), $collection, Operation::Read, $id)->passes();
-
-		if (!$allowed) {
+		if ($request->getAttribute('authMethod') !== 'session' || !$this->canRead($collection, $id)) {
 			throw new HttpForbiddenException($request, 'Access denied');
 		}
+	}
+
+	/** Whether the signed-in user may read the object, by the collection routes' rule. */
+	public function canRead(string $collection, string $id): bool
+	{
+		return !$this->config->authEnabled()
+			|| $this->guard->can($this->actorResolver->fromSession(), $collection, Operation::Read, $id)->passes();
+	}
+
+	/** The signed-in user, or null with auth off (every record is readable). */
+	public function actor(): ?Actor
+	{
+		return $this->config->authEnabled() ? $this->actorResolver->fromSession() : null;
 	}
 }

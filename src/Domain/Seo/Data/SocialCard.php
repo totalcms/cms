@@ -32,6 +32,21 @@ final readonly class SocialCard
 	) {
 	}
 
+	/**
+	 * The image property to draw and the path inside it, as the
+	 * `/{prop}/{path}` image route takes them: a gallery draws its first
+	 * image, and an image inside a card (a record's own `seo.image`) is found
+	 * by property and path. The path is null for a plain image property.
+	 *
+	 * @return array{0:string,1:?string}
+	 */
+	public function imageTarget(): array
+	{
+		$parts = explode('.', $this->imageProperty, 2);
+
+		return [$parts[0], $this->gallery ? 'first' : ($parts[1] ?? null)];
+	}
+
 	/** Whether there is an overlay to draw, rather than the plain image. */
 	public function hasOverlay(): bool
 	{

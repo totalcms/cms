@@ -101,15 +101,20 @@ final class MarkLayersManipulator extends BaseManipulator
 			$markx = $marky = $markpad;
 		}
 
-		$size = new Size();
-		$size->setParams([
-			'w'   => $rules->getDimension($image, 'markw'),
-			'h'   => $rules->getDimension($image, 'markh'),
-			// A record's image may be cut around its focal point (crop-50-30),
-			// which Glide's watermark fits do not include.
-			'fit' => isset($layer['focalfit']) ? (string)$layer['focalfit'] : $rules->getFit(),
-		]);
-		$mark = $size->run($mark);
+		// A fill is drawn at its size already. Fitting it again would shrink
+		// it: 36h of a 630px card is 226.8px, and a 1200×227 fill "contained"
+		// in 1200×226.8 comes out a few pixels narrow, short of both edges.
+		if (!isset($layer['fill'])) {
+			$size = new Size();
+			$size->setParams([
+				'w'   => $rules->getDimension($image, 'markw'),
+				'h'   => $rules->getDimension($image, 'markh'),
+				// A record's image may be cut around its focal point (crop-50-30),
+				// which Glide's watermark fits do not include.
+				'fit' => isset($layer['focalfit']) ? (string)$layer['focalfit'] : $rules->getFit(),
+			]);
+			$mark = $size->run($mark);
+		}
 
 		if (($layer['markshape'] ?? '') === 'circle') {
 			$mark = $this->circle($mark);

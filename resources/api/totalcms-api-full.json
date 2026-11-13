@@ -3856,6 +3856,80 @@
                 ]
             }
         },
+        "/admin/seo/overlay-preview": {
+            "post": {
+                "operationId": "admin-overlay-preview",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/seo/overlay-preview",
+                "x-tcms-action": "OverlayPreviewAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware"
+                ]
+            }
+        },
+        "/admin/seo/overlay-preview/options": {
+            "get": {
+                "operationId": "admin-overlay-preview-options",
+                "tags": [
+                    "admin"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/seo/overlay-preview/options",
+                "x-tcms-action": "OverlayPreviewOptionsAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware"
+                ]
+            }
+        },
         "/admin/settings": {
             "get": {
                 "operationId": "admin-settings.0",

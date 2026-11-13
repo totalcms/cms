@@ -33,6 +33,8 @@ use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStartAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStopAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
+use TotalCMS\Action\Admin\Seo\OverlayPreviewAction;
+use TotalCMS\Action\Admin\Seo\OverlayPreviewOptionsAction;
 use TotalCMS\Action\Admin\ShareCardsChunkAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
@@ -136,6 +138,12 @@ return function (App $app): void {
 		// not just access to some utility.
 		$group->get('/utils/{page:activity}/export', ActivityExportAction::class)->setName('admin-utils-activity-export')->add(UtilsAccessMiddleware::class);
 		$group->get('/utils/{page:logs}/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
+		// The share-image overlay designer (a dialog on the Social Image Overlay
+		// fields): previews a draft on a record the user may read. No edition
+		// gate: below Pro the preview answers with the plain image and says why.
+		$group->post('/seo/overlay-preview', OverlayPreviewAction::class)->setName('admin-overlay-preview');
+		$group->get('/seo/overlay-preview/options', OverlayPreviewOptionsAction::class)->setName('admin-overlay-preview-options');
+
 		$group->get('/utils/{page:share-cards}/cards', ShareCardsChunkAction::class)->setName('admin-utils-share-cards-cards')->add(UtilsAccessMiddleware::class)->add(ImageLayersEditionMiddleware::class);
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);

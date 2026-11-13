@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'Sin superposición: los marcadores de todas las capas estaban vacíos para este registro.',
 	'share_cards.reason.no-site-key'         => 'Sin superposición: la clave del sitio aún no está configurada.',
 	'share_cards.reason.hash-mismatch'       => 'Sin superposición: la página cambia un valor que dibuja la tarjeta (como el título) antes de cms.seo.head(), así que la tarjeta ya no coincide con el registro.',
+	'overlay_preview.reason.drawn'           => 'Dibujada tal como la mostrarán al compartir.',
+	'overlay_preview.reason.no-overlay'      => 'Aún no hay capas: al compartir se usa la imagen sin superposición.',
+	'overlay_preview.reason.no-record'       => 'No se puede leer este registro, así que no hay nada que previsualizar.',
+	'overlay_preview.reason.needs-pro'       => 'Edición Pro: por debajo de Pro, al compartir se usa la imagen sin superposición, la que se ve aquí.',
 ];

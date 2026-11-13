@@ -1,0 +1,300 @@
+//--------------------------------
+// Share image overlay designer: the form row and its dialog
+// (javascript/totalform/overlay-designer/designer.js)
+//--------------------------------
+
+.overlay-row {
+	display          : flex;
+	align-items      : center;
+	gap              : 0.75rem;
+	padding          : 0.5rem 0.75rem;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-background));
+	min-height       : 3rem;
+
+	// Square the side the field icon sits against, as text inputs do.
+	&:has(~ .form-group-icon) {
+		border-top-right-radius    : 0;
+		border-bottom-right-radius : 0;
+	}
+}
+
+// The designer edits an image, not JSON. Keyed on the setting so the icon
+// is right before the designer's module loads.
+.json-field[data-settings*="socialOverlay"] .form-group-icon:after {
+	mask-image : var(--icon-image);
+}
+
+.overlay-row-thumb {
+	width         : 120px;
+	aspect-ratio  : 1200 / 630;
+	object-fit    : cover;
+	border-radius : calc(var(--totalform-radius) / 2);
+	flex-shrink   : 0;
+}
+
+.overlay-row-text {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.15rem;
+	flex           : 1;
+	min-width      : 0;
+}
+
+.overlay-row-summary {
+	color         : oklch(var(--totalform-text-color));
+	overflow      : hidden;
+	text-overflow : ellipsis;
+}
+
+.overlay-row-note {
+	font-size : 0.85em;
+	color     : oklch(var(--totalform-info));
+}
+
+.overlay-row-button {
+	flex-shrink : 0;
+}
+
+dialog.cms-modal.overlay-designer {
+	max-width : 1240px;
+	height    : 90vh;
+
+	&[open] {
+		grid-template-rows : auto auto minmax(0, 1fr) auto;
+		align-items        : stretch;
+	}
+
+	.overlay-header {
+		display     : flex;
+		align-items : center;
+		gap         : 1rem;
+
+		h2 {
+			margin    : 0;
+			flex      : 1;
+			font-size : 1.25rem;
+		}
+	}
+
+	.overlay-fit-label {
+		display     : flex;
+		align-items : center;
+		gap         : 0.5rem;
+		font-size   : 0.9rem;
+		color       : oklch(var(--totalform-label-color));
+	}
+
+	.overlay-close {
+		background : none;
+		border     : none;
+		font-size  : 1.75rem;
+		line-height: 1;
+		cursor     : pointer;
+		color      : oklch(var(--totalform-darkgray));
+
+		&:hover { color : oklch(var(--totalform-accent)); }
+	}
+
+	.overlay-tabs {
+		display       : flex;
+		gap           : 0.25rem;
+		border-bottom : 1px solid oklch(var(--totalform-border-color));
+	}
+
+	.overlay-tab {
+		background    : none;
+		border        : none;
+		border-bottom : 2px solid transparent;
+		padding       : 0.5rem 0.9rem;
+		margin-bottom : -1px;
+		cursor        : pointer;
+		font-weight   : 600;
+		color         : oklch(var(--totalform-darkgray));
+
+		&[aria-selected="true"] {
+			color        : oklch(var(--totalform-accent));
+			border-color : oklch(var(--totalform-accent));
+		}
+
+		&:disabled {
+			opacity : 0.4;
+			cursor  : not-allowed;
+		}
+	}
+
+	.overlay-body {
+		display               : grid;
+		grid-template-columns : minmax(0, 2fr) minmax(0, 3fr);
+		gap                   : 1.25rem;
+		min-height            : 0;
+
+		@media screen and (max-width: 60em) {
+			grid-template-columns : 1fr;
+			overflow-y            : auto;
+		}
+	}
+
+	.overlay-panes {
+		min-height : 0;
+		overflow-y : auto;
+	}
+
+	.overlay-pane[hidden] { display : none; }
+
+	.overlay-presets {
+		display               : grid;
+		grid-template-columns : repeat(auto-fill, minmax(170px, 1fr));
+		gap                   : 0.75rem;
+	}
+
+	.overlay-preset {
+		display          : grid;
+		gap              : 0.3rem;
+		align-content    : start;
+		padding          : 0.5rem;
+		text-align       : left;
+		cursor           : pointer;
+		color            : oklch(var(--totalform-text-color));
+		background-color : oklch(var(--totalform-background));
+		border           : 2px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+
+		&:hover { border-color : oklch(var(--totalform-accent) / 0.6); }
+
+		&[aria-pressed="true"] { border-color : oklch(var(--totalform-accent)); }
+
+		strong { font-size : 0.95rem; }
+	}
+
+	.overlay-preset-thumb {
+		display          : block;
+		aspect-ratio     : 1200 / 630;
+		border-radius    : calc(var(--totalform-radius) / 2);
+		background-color : oklch(var(--totalform-icon-bg));
+		overflow         : hidden;
+
+		img {
+			display    : block;
+			width      : 100%;
+			height     : 100%;
+			object-fit : cover;
+		}
+	}
+
+	.overlay-preset-desc {
+		font-size : 0.8rem;
+		color     : oklch(var(--totalform-help-color));
+	}
+
+	.overlay-json-editor {
+		height : 100%;
+		min-height : 20rem;
+		border     : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+
+		> * { height : 100%; }
+	}
+
+	.overlay-json-error {
+		margin    : 0.5rem 0 0;
+		color     : oklch(var(--totalform-error));
+		font-size : 0.85rem;
+	}
+
+	.overlay-preview {
+		display       : flex;
+		flex-direction: column;
+		gap           : 0.75rem;
+		min-width     : 0;
+	}
+
+	.overlay-picker {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.5rem;
+
+		select, input {
+			flex      : 1 1 10rem;
+			min-width : 0;
+		}
+
+		select[hidden] { display : none; }
+	}
+
+	.overlay-picker-label {
+		font-size : 0.9rem;
+		color     : oklch(var(--totalform-label-color));
+	}
+
+	.overlay-stage {
+		position         : relative;
+		aspect-ratio     : 1200 / 630;
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-icon-bg));
+		overflow         : hidden;
+
+		img {
+			display    : block;
+			width      : 100%;
+			height     : 100%;
+			// The server always draws the card at 1.91:1 (a crop keeps its
+			// shape on a small image), so contain fills the stage and never
+			// cuts off a layer.
+			object-fit : contain;
+			transition : opacity 0.15s;
+		}
+
+		&.loading img { opacity : 0.6; }
+	}
+
+	.overlay-status, .overlay-note {
+		margin        : 0;
+		padding       : 0.4rem 0.6rem;
+		border-radius : var(--totalform-radius);
+		font-size     : 0.85rem;
+	}
+
+	.overlay-status {
+		&:empty { display : none; }
+
+		&.ok {
+			background : oklch(var(--totalform-success) / 0.1);
+			color      : oklch(var(--totalform-success));
+		}
+
+		&.info {
+			background : oklch(var(--totalform-info) / 0.1);
+			color      : oklch(var(--totalform-info));
+		}
+
+		&.warning {
+			background : oklch(var(--totalform-warning) / 0.1);
+			color      : oklch(var(--totalform-warning));
+		}
+	}
+
+	.overlay-note {
+		background : oklch(var(--totalform-info) / 0.1);
+		color      : oklch(var(--totalform-info));
+	}
+
+	.overlay-actions {
+		display     : flex;
+		align-items : center;
+		gap         : 0.75rem;
+	}
+
+	.overlay-spacer { flex : 1; }
+
+	.overlay-remove {
+		background : none;
+		border     : none;
+		padding    : 0;
+		cursor     : pointer;
+		color      : oklch(var(--totalform-error));
+		text-decoration : underline;
+	}
+}

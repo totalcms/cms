@@ -69,6 +69,9 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'admin-impersonate-start',
 		'admin-impersonate-stop',
 		'admin-index',
+		// Overlay designer: the actions check read access to the previewed record (MediaToolAccess).
+		'admin-overlay-preview',
+		'admin-overlay-preview-options',
 		'admin-profile',
 		'admin-sync',
 		'admin-update-apply',

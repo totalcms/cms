@@ -119,10 +119,25 @@ readonly class SocialImageBuilder
 	}
 
 	/**
+	 * The card a draft overlay would give a record, for the overlay designer:
+	 * the same checks as a real card, with the draft in place of the stored
+	 * overlay. The record's "Use the Image as Is" is passed over, since the
+	 * point is to see the overlay.
+	 *
+	 * @param array<array-key,mixed> $overlay `{fit, marks}` or the bare list of marks
+	 */
+	public function preview(SeoContext $ctx, MetaPayload $meta, array $overlay): SocialCardOutcome
+	{
+		return $this->explain($ctx, $meta, $overlay);
+	}
+
+	/**
 	 * The card for a context and why it is what it is. The card is null with
 	 * no record or no image; otherwise it is plain unless the reason is Drawn.
+	 *
+	 * @param array<array-key,mixed>|null $draft An overlay to use in place of the stored one (preview())
 	 */
-	public function explain(SeoContext $ctx, MetaPayload $meta): SocialCardOutcome
+	public function explain(SeoContext $ctx, MetaPayload $meta, ?array $draft = null): SocialCardOutcome
 	{
 		if ($meta->ogImage === '') {
 			return new SocialCardOutcome(SocialCardReason::NoImage, null, '');
@@ -134,7 +149,7 @@ readonly class SocialImageBuilder
 			return new SocialCardOutcome($subject === null ? SocialCardReason::NoRecord : SocialCardReason::Untraced, null, $meta->ogImage);
 		}
 
-		[$reason, $marks, $fit, $detail, $layer] = $this->layers($ctx, $meta);
+		[$reason, $marks, $fit, $detail, $layer] = $this->layers($ctx, $meta, $draft);
 		$params                                  = SeoSettings::OG_IMAGE;
 
 		if ($marks !== []) {
@@ -159,20 +174,22 @@ readonly class SocialImageBuilder
 	 * The layers to draw, and the reason when there are none: as is, no
 	 * overlay, every layer empty, or a layer ImageWorks refused.
 	 *
+	 * @param array<array-key,mixed>|null $draft
+	 *
 	 * @return array{0:SocialCardReason,1:list<array<string,int|float|string>>,2:?string,3:string,4:?int}
 	 */
-	private function layers(SeoContext $ctx, MetaPayload $meta): array
+	private function layers(SeoContext $ctx, MetaPayload $meta, ?array $draft): array
 	{
 		// Overlays are drawn with layered marks, a Pro feature.
 		if (!$this->editions->can(EditionFeature::IMAGE_LAYERS)) {
 			return [SocialCardReason::NeedsPro, [], null, '', null];
 		}
 
-		if ($ctx->fields->imageAsIs) {
+		if ($draft === null && $ctx->fields->imageAsIs) {
 			return [SocialCardReason::AsIs, [], null, '', null];
 		}
 
-		$overlay = $this->overlay($ctx);
+		$overlay = $draft === null ? $this->overlay($ctx) : self::normalized($draft);
 		if ($overlay === null) {
 			return [SocialCardReason::NoOverlay, [], null, '', null];
 		}

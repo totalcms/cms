@@ -1721,4 +1721,8 @@ return [
 	'share_cards.reason.layers-empty'        => 'Nessun overlay: i segnaposto di tutti i livelli erano vuoti per questo record.',
 	'share_cards.reason.no-site-key'         => 'Nessun overlay: la chiave del sito non è ancora configurata.',
 	'share_cards.reason.hash-mismatch'       => 'Nessun overlay: la pagina cambia un valore disegnato dalla scheda (come il titolo) prima di cms.seo.head(), quindi la scheda non corrisponde più al record.',
+	'overlay_preview.reason.drawn'           => 'Disegnata come apparirà nelle condivisioni.',
+	'overlay_preview.reason.no-overlay'      => 'Ancora nessun livello: le condivisioni usano l\'immagine semplice.',
+	'overlay_preview.reason.no-record'       => 'Impossibile leggere questo record, quindi non c\'è niente da visualizzare.',
+	'overlay_preview.reason.needs-pro'       => 'Edizione Pro: sotto Pro le condivisioni usano l\'immagine semplice, mostrata qui.',
 ];

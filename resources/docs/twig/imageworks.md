@@ -36,6 +36,8 @@ ImageWorks is the image processing engine in Total CMS. It transforms images on-
 | `crop-{position}` | Crop anchored to a position (see below) |
 | `crop-focalpoint` | Crop using the image's saved focal point |
 
+ImageWorks never makes an image larger than the original. With a crop, a size bigger than the image keeps its shape: `{w: 1200, h: 630, fit: 'crop'}` on a 640×480 photo gives a 640×336 image, the same 1.91:1 shape, just smaller. Other fits cap each side at the original's size.
+
 ### Crop Positions
 
 Use with `fit: 'crop-{position}'`:
