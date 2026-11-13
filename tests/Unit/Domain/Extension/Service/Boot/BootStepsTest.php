@@ -20,13 +20,18 @@ use TotalCMS\Domain\Extension\Service\Boot\AutomationsStep;
 use TotalCMS\Domain\Extension\Service\Boot\EventListenersStep;
 use TotalCMS\Domain\Extension\Service\Boot\FieldTypesStep;
 use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
+use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
 use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
+use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
+use TotalCMS\Domain\Extension\Service\GuardedImageFilter;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -188,6 +193,53 @@ final class BootStepsTest extends TestCase
 		$this->manager->method('getAllFormActions')->willReturn(['a/x' => [$fa]]);
 
 		(new FormActionsStep($this->container([FormActionRegistry::class => $registry]), new NullLogger()))->wire($this->manager);
+	}
+
+	public function testImageFiltersAreRegisteredUnderTheirExtensionId(): void
+	{
+		$def      = ['label' => 'Warm', 'steps' => [['sepia', 0.3]]];
+		$filters  = ['a/x' => [['name' => 'a-warm', 'filter' => $def, 'group' => 'look']]];
+		$registry = $this->createMock(ImageFilterRegistry::class);
+		$registry->expects($this->once())->method('registerExtensionFilters')->with($filters);
+		$this->manager->method('getAllImageFilters')->willReturn($filters);
+
+		(new ImageFiltersStep($this->container([ImageFilterRegistry::class => $registry]), new NullLogger()))->wire($this->manager);
+	}
+
+	public function testImageFilterClassesRunUnderTheExtensionGuard(): void
+	{
+		$class    = $this->createStub(ImageFilter::class);
+		$registry = $this->createMock(ImageFilterRegistry::class);
+		$registry->expects($this->once())->method('registerExtensionFilters')->with($this->callback(
+			static fn (array $filters): bool => $filters['a/x'][0]['filter'] instanceof GuardedImageFilter
+				&& $filters['a/x'][0]['name'] === 'a-glow'
+				&& $filters['a/x'][1]['filter'] === ['steps' => [['sepia', 0.3]]],
+		));
+		$this->manager->method('getAllImageFilters')->willReturn(['a/x' => [
+			['name' => 'a-glow', 'filter' => $class, 'group' => 'effect'],
+			['name' => 'a-warm', 'filter' => ['steps' => [['sepia', 0.3]]], 'group' => 'look'],
+		]]);
+
+		(new ImageFiltersStep($this->container([ImageFilterRegistry::class => $registry, ExtensionGuard::class => testExtensionGuard()]), new NullLogger()))
+			->wire($this->manager);
+	}
+
+	public function testImageFiltersStepLeavesTheRegistryUnbuiltWithNoFilters(): void
+	{
+		// Building the registry logs config refusals: not on every request of a site with no extension filters.
+		$this->manager->method('getAllImageFilters')->willReturn([]);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('has')->willReturn(true);
+		$container->expects($this->never())->method('get');
+
+		(new ImageFiltersStep($container, new NullLogger()))->wire($this->manager);
+	}
+
+	public function testImageFiltersStepRunsAfterFormActions(): void
+	{
+		$steps = ExtensionManager::BOOT_STEPS;
+
+		self::assertSame(array_search(FormActionsStep::class, $steps, true) + 1, array_search(ImageFiltersStep::class, $steps, true));
 	}
 
 	public function testMcpRegistersToolsAndOnlyResolvesTheResourceRegistryWhenNeeded(): void

@@ -16,6 +16,7 @@
 				{% if args.step %}step="{{args.step}}"{% endif %}
 				{% if args.list %}list="{{args.list}}"{% endif %}
 				{% if args.placeholder %}placeholder="{{args.placeholder}}"{% endif %}
+				{% if args.disabled|default(false) %}disabled{% endif %}
 			>
             <div class="form-group-icon"></div>
         </div>
@@ -74,7 +75,9 @@
 			sharp     : "Sharpen the image. Use values between 0 and 100.",
 			blur      : "Adds a blur effect to the image. Use values between 0 and 100.",
 			pixel     : "Applies a pixelation effect to the image. Use values between 0 and 1000.",
-			filt      : "Applies a filter effect to the image. Accepts greyscale or sepia.",
+			filtamt   : "How strongly the filter is applied. Use values between 0 and 100, in steps of 5. Defaults to 100.",
+			duo       : "Shadow and highlight colors for the Duotone filter, separated by a comma: hex colors without # " ~
+				        "or palette0 to palette4 from the image. See the Duotone Options for more information.",
 			mark      : "Adds a watermark to the image. The value should be the name of the image added to the " ~
 				    	"configured watermarks gallery.",
 			markw     : "Sets the width of the watermark in pixels or using relative dimensions. " ~
@@ -227,6 +230,44 @@
 				</div>
 			</details>
 
+			{% set selectedFilter = values.filt|default('') %}
+			{% set selectedChain = selectedFilter|lower|split(',') %}
+			{% set duotoneChosen = 'duotone' in selectedChain %}
+			<details class="cms-accordion"{% if selectedFilter != '' %} open{% endif %}>
+				<summary>{{ t('imageworks.filters') }}</summary>
+				<div class="content">
+					<div class="filter-strip" id="filter-strip">
+						<input type="hidden" name="filt" value="{{ selectedFilter|e }}">
+						{# Looks and duotones share one pick-one row; extras stack on top of them, so they get a row of their own #}
+						{% set tileRows = [
+							{ filters: filters|filter(f => f.group == 'look')|merge(filters|filter(f => f.group == 'duotone')), title: null, label: t('imageworks.filters') },
+							{ filters: filters|filter(f => f.group == 'effect'), title: t('imageworks.filter_group.effect'), label: t('imageworks.filter_group.effect') },
+						] %}
+						{% for row in tileRows %}
+							{% if row.filters|length > 0 %}
+							{% if row.title %}<h5 class="filter-group-title">{{ row.title }}</h5>{% endif %}
+							<div class="filter-tiles" role="group" aria-label="{{ row.label|e('html_attr') }}">
+								{% for f in row.filters %}
+									{% set filterLabel = f.owner == 'core' ? t(f.label) : f.label %}
+									<button type="button" class="filter-tile" data-filter="{{ f.name|e('html_attr') }}" data-group="{{ f.group|e('html_attr') }}" aria-pressed="{{ f.name in selectedChain ? 'true' : 'false' }}" aria-label="{{ filterLabel|e('html_attr') }}">
+										<img src="{{ imagePath ~ ('?' in imagePath ? '&' : '?') ~ 'w=144&h=144&fit=crop&filt=' ~ f.name|url_encode }}" alt="" width="72" height="72" loading="lazy" draggable="false">
+										<span>{{ filterLabel|e }}</span>
+									</button>
+								{% endfor %}
+							</div>
+							{% endif %}
+						{% endfor %}
+					</div>
+					<section>
+						{{ _self.input("filtamt", "number", t('imageworks.filter_strength'), "icon-filters", help.filtamt, values.filtamt, { min:0, max:100, step:5 }) }}
+					</section>
+					<section class="filter-duo" id="filter-duo"{% if not duotoneChosen %} hidden{% endif %}>
+						{{ _self.input("duo", "text", t('imageworks.duo_colors'), "icon-paint-roller", help.duo, values.duo, { list:"duo-options", placeholder:"000000,palette0", disabled: not duotoneChosen }) }}
+						<button type="button" class="open-duo-docs">{{ t('imageworks.duo_docs') }}</button>
+					</section>
+				</div>
+			</details>
+
 			<details class="cms-accordion">
 				<summary>{{ t('imageworks.effects') }}</summary>
 				<div class="content">
@@ -239,10 +280,6 @@
 					<section>
 						{{ _self.input("blur", "number", t('imageworks.blur'), "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
 						{{ _self.input("pixel", "number", t('imageworks.pixelate'), "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
-						{{ _self.select("filt", t('imageworks.filter_effect'), "icon-filters", help.filt, values.filt, [
-							{ value: "greyscale", label: t('imageworks.black_white') },
-							{ value: "sepia", label: t('imageworks.sepia') },
-						]) }}
 						{# {{ _self.select("flip", "Flip", "Flip the image", [
 							{ value: "v", label: "Vertical" },
 							{ value: "h", label: "Horizontal" },
@@ -359,6 +396,14 @@
 			<option value="15,palette3,shrink"></option>
 		</datalist>
 
+		<datalist id="duo-options">
+			<option value="000000,palette0"></option>
+			<option value="palette4,palette0"></option>
+			<option value="1b1f3b,f4a261"></option>
+			<option value="0b3d6b,f4f1de"></option>
+			<option value="2d1b4e,ff6f91"></option>
+		</datalist>
+
 		<datalist id="fit-options">
 			<option value="contain"></option>
 			<option value="max"></option>
@@ -437,6 +482,33 @@
 					<dt>crop-focalpoint-<code>zoom</code></dt>
 					<dd>Just like the explicit option above, you can zoom into the focal point that is stored
 					within the CMS.</dd>
+				</dl>
+			</section>
+		</dialog>
+
+		<dialog id="duo-modal" class="cms-modal">
+			<section class="scroller">
+				<h3>Duotone Options</h3>
+				<button type="button" class="close">Close</button>
+				<p>The Duotone filter maps the dark parts of the image to the first color and the light
+				parts to the second. Write the two colors separated by a comma.</p>
+				<dl class="option-docs">
+					<dt><code>000000,palette0</code></dt>
+					<dd>(<em>Default</em>) Black shadows with the image's own main color as the highlight.</dd>
+
+					<dt><code>shadow</code>,<code>highlight</code></dt>
+					<dd>Hex colors without the <code>#</code>, with 3 or 6 digits in any case.
+					Example: <code>1b1f3b,f4a261</code> for navy shadows and orange highlights.</dd>
+
+					<dt><code>palette0</code> to <code>palette4</code></dt>
+					<dd>Colors extracted from the image, from most to least dominant.
+					Example: <code>palette4,palette0</code>.</dd>
+
+					<dt>Mixing both</dt>
+					<dd>Hex and palette colors can be combined: <code>000000,palette2</code>.</dd>
+
+					<dt>Anything else</dt>
+					<dd>A value that is not two valid colors falls back to the default.</dd>
 				</dl>
 			</section>
 		</dialog>

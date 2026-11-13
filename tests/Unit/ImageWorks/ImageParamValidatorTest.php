@@ -52,7 +52,6 @@ describe('ImageParamValidator rejects what no page would send', function (): voi
 		['fm', 'php'],
 		['flip', 'sideways'],
 		['or', '45'],
-		['filt', 'blur'],
 		['marktextalign', 'justify'],
 	]);
 
@@ -170,5 +169,37 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 
 		expect(fn () => ImageParamValidator::validate(['marks' => $marks]))->toThrow(InvalidImageParamException::class)
 			->and(ImageParamValidator::validate(['mark' => 'a.png', 'marks' => array_fill(0, 5, ['marktext' => 'x'])]))->toHaveKey('marks');
+	});
+});
+
+
+describe('ImageParamValidator filter params', function (): void {
+	it('accepts a chain and a duotone pair', function (): void {
+		expect(ImageParamValidator::validate(['filt' => 'ember,vignette']))->toBe(['filt' => 'ember,vignette'])
+			->and(ImageParamValidator::validate(['duo' => '1b1f3b,palette0']))->toBe(['duo' => '1b1f3b,palette0']);
+	});
+
+	it('rejects bad filt and duo values', function (string $key, string $value): void {
+		expect(fn () => ImageParamValidator::validate([$key => $value]))->toThrow(InvalidImageParamException::class);
+	})->with([
+		['filt', 'a,b,c,d'],
+		['filt', 'ember;drop'],
+		['filtamt', '101'],
+		['duo', 'red'],
+	]);
+
+	it('lowercases filt, as it did before filters had their own pattern', function (): void {
+		expect(ImageParamValidator::validate(['filt' => 'Greyscale']))->toBe(['filt' => 'greyscale'])
+			->and(ImageParamValidator::validate(['filt' => 'SEPIA']))->toBe(ImageParamValidator::validate(['filt' => 'sepia']))
+			->and(ImageParamValidator::validate(['filt' => 'Noir,EMBER']))->toBe(['filt' => 'noir,ember']);
+	});
+
+	it('rounds filtamt to the nearest 5', function (): void {
+		expect(ImageParamValidator::validate(['filtamt' => '42']))->toBe(['filtamt' => 40])
+			->and(ImageParamValidator::validate(['filtamt' => '43']))->toBe(['filtamt' => 45]);
+	});
+
+	it('drops filtv from a URL', function (): void {
+		expect(ImageParamValidator::validate(['filtv' => 'abc']))->toBe([]);
 	});
 });

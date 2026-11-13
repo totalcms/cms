@@ -8,6 +8,7 @@ use TotalCMS\Domain\Extension\Service\Boot\EventListenersStep;
 use TotalCMS\Domain\Extension\Service\Boot\ExtensionBootStep;
 use TotalCMS\Domain\Extension\Service\Boot\FieldTypesStep;
 use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
+use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
@@ -28,6 +29,7 @@ test('bootAll runs the wiring steps in the documented order', function (): void 
 		AutomationsStep::class,
 		PageMiddlewareStep::class,
 		FormActionsStep::class,
+		ImageFiltersStep::class,
 		McpStep::class,
 		SearchProvidersStep::class,
 		TwigStep::class,

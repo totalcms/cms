@@ -64,11 +64,11 @@ function watermarkGenerator(string $root, array $watermarkSchema = []): ImageGen
 
 	$textFactory = new TextWatermarkFactory($storage, $config, $loggerFactory);
 
-	$glide = new GlideFactory($storage, $config);
+	$glide = new GlideFactory($storage, $config, imageFilterRegistry($config), $loggerFactory);
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams($meta, $config, editionsFor()),
+		new ImageRenderParams($meta, $config, editionsFor(), imageFilterRegistry($config)),
 		new ImageResponder($storage, $glide),
 		$glide,
 		new WatermarkFactory($textFactory, $config, $storage, new ImageSourceResolver($fetcher), $loggerFactory),

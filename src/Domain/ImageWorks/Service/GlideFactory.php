@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use League\Glide\Api\Api;
+use League\Glide\Manipulators\Filter;
 use League\Glide\Manipulators\ManipulatorInterface;
 use League\Glide\Manipulators\Watermark;
 use League\Glide\Responses\PsrResponseFactory;
@@ -10,6 +11,10 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\ImageWorks\Filter\FilterManipulator;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -24,6 +29,8 @@ readonly class GlideFactory
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private Config $config,
+		private ImageFilterRegistry $filters,
+		private LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -72,14 +79,25 @@ readonly class GlideFactory
 			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),
 		]);
 
-		if ($marks instanceof MarkLayersManipulator) {
-			$api = $glide->getApi();
-			if ($api instanceof Api) {
-				$glide->setApi(new Api($api->getImageManager(), array_map(
-					fn (ManipulatorInterface $manipulator): ManipulatorInterface => $manipulator instanceof Watermark ? $marks : $manipulator,
-					$api->getManipulators(),
-				), $api->getEncoder()));
-			}
+		$api = $glide->getApi();
+		if ($api instanceof Api) {
+			// The filter step is always ImageWorks' own: it runs the registry's
+			// filters, and greyscale keeps Glide's output.
+			$filter = new FilterManipulator(
+				$this->filters,
+				$imageData->palette,
+				(int)($this->config->imageworks['filterMaxPixels'] ?? 25000000),
+				$this->loggerFactory->channelLogger(LogChannel::ImageGenerator),
+			);
+
+			$glide->setApi(new Api($api->getImageManager(), array_map(
+				fn (ManipulatorInterface $manipulator): ManipulatorInterface => match (true) {
+					$manipulator instanceof Filter => $filter,
+					$marks instanceof MarkLayersManipulator && $manipulator instanceof Watermark => $marks,
+					default => $manipulator,
+				},
+				$api->getManipulators(),
+			), $api->getEncoder()));
 		}
 
 		return $glide;
@@ -146,7 +164,8 @@ readonly class GlideFactory
 		// This method is used to get the color from the palette if the color is a palette color
 		if (str_starts_with($color, self::PALETTE)) {
 			$index = intval(str_replace(self::PALETTE, '', $color));
-			$color = $imageColors[$index] ?? $imageColors[0];
+			// An image with no palette (extractPalette off) resolves to white.
+			$color = $imageColors[$index] ?? ($imageColors === [] ? 'ffffff' : reset($imageColors));
 		}
 
 		return str_replace('#', '', $color);

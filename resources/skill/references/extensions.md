@@ -52,10 +52,18 @@ Twig functions / filters / globals · CLI commands · API, admin and public
 routes · admin nav items · dashboard widgets · custom field types · event
 listeners · automations · page middleware · form actions · admin and
 frontend assets · container definitions · schemas · MCP tools, resources
-and prompts · search providers · file storage · logging.
+and prompts · search providers · ImageWorks filters · file storage · logging.
 
 Rules that bite:
 
+- **Image filters.** `$context->addImageFilter('acme-noir', $recipeOrImageFilter)`:
+  the name must start with the vendor and a hyphen (`acme/photo-pack` →
+  `acme-…`), else it is refused and logged. A class implements
+  `ImageFilter` (`label()`, `apply()`, `version()`); bump `version()` when
+  output changes, it is in the cache key. All three run under the extension
+  guard (a throw counts toward quarantine; a failed `apply()` leaves the image
+  as it was). A longer vendor keeps its prefix: `acme` cannot register
+  `acme-labs-…` while `acme-labs` is installed. Capability `imageworks:filters`.
 - **Twig collision protection.** An extension cannot override a core Twig
   function or filter; namespace yours (`acme_price`, not `price`).
 - **CLI names cannot shadow built-ins.**

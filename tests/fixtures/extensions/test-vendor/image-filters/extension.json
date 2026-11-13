@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/image-filters",
+    "name": "Image Filters",
+    "description": "Test extension that registers ImageWorks filters",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

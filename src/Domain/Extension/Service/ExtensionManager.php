@@ -30,11 +30,13 @@ use TotalCMS\Domain\Extension\Service\Boot\EventListenersStep;
 use TotalCMS\Domain\Extension\Service\Boot\ExtensionBootStep;
 use TotalCMS\Domain\Extension\Service\Boot\FieldTypesStep;
 use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
+use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
 use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -99,6 +101,7 @@ class ExtensionManager
 		AutomationsStep::class,
 		PageMiddlewareStep::class,
 		FormActionsStep::class,
+		ImageFiltersStep::class,
 		McpStep::class,
 		SearchProvidersStep::class,
 		TwigStep::class,
@@ -986,6 +989,25 @@ class ExtensionManager
 			$actions = $context->getRegisteredFormActions();
 			if ($actions !== []) {
 				$all[$id] = array_values($actions);
+			}
+		}
+
+		return $all;
+	}
+
+	/**
+	 * ImageWorks filter registrations, gated by `imageworks:filters`:
+	 * extension id => list of filter registrations.
+	 *
+	 * @return array<string,list<array{name:string, filter:array<string,mixed>|ImageFilter, group:string}>>
+	 */
+	public function getAllImageFilters(): array
+	{
+		$all = [];
+		foreach ($this->permittedContexts('imageworks:filters') as $id => $context) {
+			$filters = $context->getRegisteredImageFilters();
+			if ($filters !== []) {
+				$all[$id] = $filters;
 			}
 		}
 

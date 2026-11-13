@@ -17,6 +17,7 @@ use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
@@ -92,6 +93,9 @@ final class ExtensionContext
 
 	/** @var array<string, Data\FormAction> */
 	private array $formActions = [];
+
+	/** @var list<array{name:string, filter:array<string,mixed>|ImageFilter, group:string}> */
+	private array $imageFilters = [];
 
 	/** @var list<McpToolDefinition> Tools registered for the MCP server */
 	private array $mcpTools = [];
@@ -848,6 +852,27 @@ final class ExtensionContext
 		return $this->pageMiddleware;
 	}
 
+	/**
+	 * Register an ImageWorks filter, selected with `filt=<name>`.
+	 *
+	 * The name must start with this extension's vendor (`acme-noir` for
+	 * `acme/photo-pack`). Validation (prefix, duplicates, recipe, group) happens
+	 * in the ImageFilterRegistry at boot; a refused filter is logged only.
+	 *
+	 * @param array<string,mixed>|ImageFilter $filter A recipe array or an ImageFilter
+	 * @param string                          $group  look, duotone or effect
+	 */
+	public function addImageFilter(string $name, array|ImageFilter $filter, string $group = 'look'): void
+	{
+		$this->imageFilters[] = ['name' => $name, 'filter' => $filter, 'group' => $group];
+	}
+
+	/** @return list<array{name:string, filter:array<string,mixed>|ImageFilter, group:string}> */
+	public function getRegisteredImageFilters(): array
+	{
+		return $this->imageFilters;
+	}
+
 	/** @return array<string, Data\FormAction> */
 	public function getRegisteredFormActions(): array
 	{
@@ -896,6 +921,7 @@ final class ExtensionContext
 			'container'       => 'Container Defs',
 			'page-middleware' => 'Page Middleware',
 			'form-actions'    => 'Form Actions',
+			'imageworks:filters' => 'Image Filters',
 			'mcp:tools'       => 'MCP Tools',
 			'mcp:resources'   => 'MCP Resources',
 			'mcp:search'      => 'Search Provider',
@@ -928,6 +954,7 @@ final class ExtensionContext
 		'container'       => 'containerDefinitions',
 		'page-middleware' => 'pageMiddleware',
 		'form-actions'    => 'formActions',
+		'imageworks:filters' => 'imageFilters',
 		'schemas'         => null,
 		'mcp:tools'       => 'mcpTools',
 		'mcp:resources'   => null,

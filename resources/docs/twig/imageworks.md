@@ -72,7 +72,9 @@ Use with `fit: 'crop-{position}'`:
 | `blur` | integer | Blur amount (0-100) |
 | `sharp` | integer | Sharpen amount (0-100) |
 | `pixel` | integer | Pixelate amount (0-1000) |
-| `filt` | string | Filter: `greyscale`, `sepia` |
+| `filt` | string | Filter name, or a comma chain of up to 3 (`ember,vignette`). See [Photo Filters](#photo-filters) |
+| `filtamt` | integer | Filter strength (0-100, default 100). Applies to the whole `filt` chain |
+| `duo` | string | Two colors for the `duotone` filter, `shadow,highlight` (hex without `#`, or `palette0`-`palette4`) |
 | `bri` | integer | Brightness adjustment (-100 to 100) |
 | `con` | integer | Contrast adjustment (-100 to 100) |
 | `gam` | float | Gamma correction (0.1 to 9.99) |
@@ -86,6 +88,124 @@ Use with `fit: 'crop-{position}'`:
 
 {# Sharpened product photo #}
 {{ cms.media.imagePath('product', {w: 600, sharp: 15}) }}
+```
+
+### Photo Filters
+
+`filt` applies a look to the image when it is rendered, so the original stays untouched and one edit to a template or preset changes the look site-wide. Filters are free in every edition.
+
+![Every built-in filter on the same photo](docs/twig/images/imageworks-filters.jpg)
+
+| Group | Filters |
+|-------|---------|
+| Looks | `sepia` (warm brown, classic), `bloom` (bright and airy), `harbor` (cool and crisp), `ember` (golden hour), `meadow` (soft and faded, green-yellow cast), `dusk` (moody, rose-violet), `attic` (vintage), `pop` (punchy), `matte` (lifted blacks, muted color), `polar` (cold and bright), `noir` (high-contrast black and white), `ash` (soft black and white) |
+| Duotones | `lagoon` (navy to aqua), `sunset` (purple to orange), `fern` (green to sage), `blush` (burgundy to pink), `duotone` (your own two colors, see below) |
+| Extras | `vignette` (darkens the corners), `grain` (film grain in the midtones, the same look at any image size), `warm` (a soft golden tint), `cool` (a soft blue tint), `leak` (warm light bleeding in from the top-right corner). Made for chains: they stack on top of a look |
+
+`greyscale` still works exactly as before. `sepia` keeps its name, but since 3.6.10 it is a recipe like the other looks: the old version washed out to near-white on Imagick servers and crushed the shadows on GD, so existing `sepia` images re-render once with the new look.
+
+```twig
+{# One look #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'ember'}) }}
+
+{# A chain is applied in order, left to right #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'harbor,vignette'}) }}
+
+{# A look with film grain on top #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'ember,grain'}) }}
+
+{# Half strength: the filtered image blended over the original #}
+{{ cms.media.imagePath('portrait', {w: 600, filt: 'noir', filtamt: 50}) }}
+```
+
+Rules for the URL:
+
+- Names are not case-sensitive: `Greyscale` is `greyscale`, and shares its cache file. A chain takes up to 3 names, and order matters.
+- A name that is not registered (a typo, or a disabled extension's filter) is dropped silently. If none of the names is known, the image is served as it would be with no `filt`: unfiltered from the same cache file, or with the default `filt` when `imageworks.defaults` sets one. A malformed value, such as a name with a space or 4 names, is a 400.
+- `filtamt` runs from 0 to 100, where 100 (the default) is full strength and 0 is no filter at all (the same cache file as no `filt`). The public URL rounds it to the nearest 5, so there are 21 strengths and not 101.
+- `filt`, `filtamt` and `duo` are applied before watermarks and marks, so a logo keeps its colors under `noir`.
+- Transparent PNG and WebP images stay transparent at any `filtamt`: only the colors are blended, never the alpha.
+- An animated GIF is filtered frame by frame.
+
+If `imageworks.defaults` sets `filtamt`, that value applies to URLs that do not send one, and a URL cannot override it back to 100.
+
+### Duotone
+
+`filt=duotone` maps the image's brightness onto two colors: `duo` is `shadow,highlight`. Each color is a 3 or 6 digit hex value without `#`, in any case (`fff`, `FFFFFF` and `ffffff` are the same color and the same cache file), or `palette0` to `palette4` to use one of the image's [own colors](#color-palette-integration). A pair with anything else in it, such as a color name, falls back to the default. `duo` only applies with the `duotone` filter and is ignored otherwise.
+
+```twig
+{# Fixed colors #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'duotone', duo: '1b1f3b,f4a261'}) }}
+
+{# Black to the photo's dominant color, which is also the default #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'duotone', duo: '000000,palette0'}) }}
+
+{# Duotone plus a vignette #}
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'duotone,vignette'}) }}
+```
+
+Without `duo`, `duotone` uses `000000,palette0`: a monochrome image in the photo's own color.
+
+### Your own filters
+
+Define filters in `tcms.php` as recipes: an ordered list of steps, as plain data. Once defined, a filter is used like a built-in, in `filt`, in presets and in the admin ImageWorks tool.
+
+```php
+return [
+    'imageworks' => [
+        'filters' => [
+            'golden' => [
+                'label' => 'Golden',
+                'group' => 'look',
+                'steps' => [
+                    ['sepia', 0.25],
+                    ['saturate', 1.3],
+                    ['overlay', 'ff9a3c', 'soft-light', 0.25],
+                    ['vignette', 0.3],
+                ],
+            ],
+        ],
+    ],
+];
+```
+
+```twig
+{{ cms.media.imagePath('hero', {w: 1600, filt: 'golden'}) }}
+```
+
+A filter needs a `steps` list (1 to 12 steps). `label` is the name shown in the admin tool, and `group` (`look`, `duotone` or `effect`, default `look`) decides where it sits in the admin strip: looks and then duotones share the first row, where one is picked at a time, and `effect` filters are listed under Extras, where they stack on top of the chosen look instead of replacing it. Names are 1-48 lowercase letters, digits and hyphens. A recipe that is not valid is refused and logged, and the rest still load.
+
+| Step | Arguments | What it does |
+|------|-----------|--------------|
+| `brightness` | factor (0-10) | Like CSS `brightness()`; 1 is unchanged |
+| `contrast` | factor (0-10) | Like CSS `contrast()`; 1 is unchanged |
+| `saturate` | factor (0-10) | Like CSS `saturate()`; 1 is unchanged |
+| `grayscale` | amount (0-1) | Like CSS `grayscale()` |
+| `sepia` | amount (0-1) | Like CSS `sepia()` |
+| `hue-rotate` | degrees (-360 to 360) | Like CSS `hue-rotate()` |
+| `fade` | amount (0-1) | Lifts the blacks for a matte look |
+| `overlay` | color, mode, opacity (0-1) | A flat color layered over the image. Modes: `normal`, `multiply`, `screen`, `overlay`, `soft-light` |
+| `vignette` | strength (0-1), optional color | Darkens toward the corners; the color defaults to black |
+| `gradient-map` | 2 to 8 colors | Maps brightness onto the colors, shadows first. This is a duotone |
+| `grain` | amount (0-1) | Monochrome film grain, strongest in the midtones; pure black and white are left alone. The grain grows with the image (one grain per pixel up to a 900px short side, then larger), so it looks the same at any size. The pattern is fixed, so the same image always renders the same |
+| `leak` | color, position, amount (0-1) | A light leak: screens the color in from a corner (`top-left`, `top-right`, `bottom-left`, `bottom-right`) or an edge (`top`, `bottom`, `left`, `right`), fading out over 60% of the image |
+
+Colors are 3 or 6 digit hex, with or without `#`.
+
+The steps use the CSS filter scale, where 1 means unchanged. That is not the scale of the `bri` and `con` parameters (-100 to 100). The advantage is that you can try a look with CSS `filter:` in the browser and copy the numbers.
+
+Notes:
+
+- A filter with the same name as a built-in replaces it, `sepia` included. Only `greyscale` cannot be redefined.
+- Editing a recipe re-renders its images automatically: the cache key carries a version of the recipe.
+- Extensions can ship filters of their own. See [Image Filters](docs/extensions/extension-points#image-filters) in Extension Points.
+
+#### Image size limit
+
+On servers using the GD driver, filters run in PHP, pixel by pixel. A filter on an image larger than `imageworks.filterMaxPixels` (default 25,000,000 pixels, enough for a 5K retina image) is refused with a 400 and nothing is cached. On GD the limit covers the built-in filters and recipes from `tcms.php` or an extension; `greyscale` and an extension's own PHP class filters are not limited. Imagick runs the color steps natively, so there the limit applies only to filters with a `vignette`, `grain` or `leak` step (`ember`, `attic`, `noir`, `vignette`, `grain`, `leak`, and any recipe that uses one), the steps that are still computed in PHP. An animation counts every frame: a 10-frame GIF of 3,000,000 pixels is 30,000,000. A value of 0 or less turns the limit off. Raise or lower it in `tcms.php`:
+
+```php
+return ['imageworks' => ['filterMaxPixels' => 40000000]];
 ```
 
 ## Borders

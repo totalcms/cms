@@ -889,6 +889,53 @@ Provider ids must be unique across all extensions + the built-in `text` provider
 
 See the bundled [Algolia Search extension](docs/extensions/algolia-search) for a complete working example.
 
+## Image Filters
+
+Register a photo filter that ImageWorks users pick with `filt`, in templates, presets and the admin ImageWorks tool. A filter is a recipe (an array) or a class.
+
+```php
+use TotalCMS\Domain\ImageWorks\Filter\FilterContext;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
+use Intervention\Image\Interfaces\ImageInterface;
+
+public function register(ExtensionContext $context): void
+{
+    // A recipe: same format as imageworks.filters in tcms.php
+    $context->addImageFilter('acme-noir', [
+        'label' => 'Acme Noir',
+        'steps' => [
+            ['grayscale', 1],
+            ['contrast', 1.25],
+            ['vignette', 0.4],
+        ],
+    ]);
+
+    // A class, for anything a recipe cannot do. The third argument is the admin group
+    $context->addImageFilter('acme-grain', new GrainFilter(), 'effect');
+}
+
+final class GrainFilter implements ImageFilter
+{
+    public function label(): string { return 'Acme Grain'; }
+
+    public function apply(ImageInterface $image, FilterContext $context): ImageInterface
+    {
+        // $context->driver is 'gd' or 'imagick'; $context->palette is the image's hex colors
+        return $image;
+    }
+
+    public function version(): string { return '1'; }
+}
+```
+
+**Capability:** `imageworks:filters` ("Image Filters")
+
+- **The vendor prefix.** The name must start with the extension's vendor and a hyphen: `acme/photo-pack` may register `acme-noir`, never `noir`. Core filter names never contain a hyphen, so an extension can never replace a built-in. When one vendor's name is a prefix of another's, the longer vendor keeps its own: with `acme-labs/pack` installed, `acme/photo-pack` cannot register `acme-labs-noir`. A name without the prefix, a duplicate, or an invalid recipe is refused and logged, and the rest of the extension still loads.
+- **Recipes** use the step reference in [ImageWorks](docs/twig/imageworks#your-own-filters). Their cache key follows the steps, so editing one re-renders automatically.
+- **Classes** implement `ImageFilter`: `label()`, `apply(ImageInterface $image, FilterContext $context)` and `version()`. Work on both GD and Imagick, keep the alpha channel, and return the image. `version()` is part of the cache key: change it whenever the output changes, or visitors keep getting files rendered by the old look. Your `label()`, `apply()` and `version()` run under the extension guard, like your Twig functions and event listeners: a throw is logged against your extension and counts toward [auto-quarantine](docs/extensions/safety). A filter that throws is skipped and the image renders as it was before your filter ran, even if `apply()` changed it first. A throwing `label()` shows the filter's name in the admin, and a throwing `version()` keys the render under `err`. Class filters are not held to the `filterMaxPixels` limit; they own their cost.
+- **Strength** (`filtamt`) is applied by ImageWorks around your filter. Do not implement it.
+- An admin can switch the **Image Filters** capability off. The extension's filters are then unregistered, and their names drop out of URLs silently, serving the unfiltered image.
+
 ## Agent Skill
 
 An extension can teach coding agents how to use it. Ship a `skill/` directory next to `extension.json`, in the layout the core skill uses:

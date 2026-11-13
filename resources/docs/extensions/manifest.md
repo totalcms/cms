@@ -257,6 +257,7 @@ When an extension is enabled, the system runs a trial registration to discover w
 | `container` | `$context->addContainerDefinition(...)` | DI container services |
 | `page-middleware` | `$context->addPageMiddleware(...)` | Per-page middleware |
 | `form-actions` | `$context->addFormAction(...)` | Custom form action types (Pro) |
+| `imageworks:filters` | `$context->addImageFilter(...)` | ImageWorks photo filters for `filt` |
 
 If a new version of an extension adds a capability it didn't have before, Total CMS detects it on update and adds it to the permissions list **turned off** — the operator opts into the new feature from the extension's settings. (For sideloaded extensions, an update whose code contains high-risk patterns disables the extension until the operator reviews it.) See [Stability & Safety](docs/extensions/safety) for how the review and update protections work.
 

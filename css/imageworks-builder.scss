@@ -128,7 +128,8 @@ pre#twig-macro, pre#twig-render-macro {
 	}
 }
 
-#fit-modal .close {
+#fit-modal .close,
+#duo-modal .close {
 	position : absolute;
 	top      : 0;
 	right    : 0;
@@ -139,7 +140,8 @@ pre#twig-macro, pre#twig-render-macro {
 }
 
 // If the modal is in an iframe, we need to make it full screen
-.in-iframe #fit-modal[open] {
+.in-iframe #fit-modal[open],
+.in-iframe #duo-modal[open] {
 	transform  : none;
 	top        : 0;
 	left       : 0;
@@ -156,4 +158,67 @@ pre#twig-macro, pre#twig-render-macro {
 		font-weight : bold;
 		margin-top  : 1rem;
 	}
+}
+.filter-strip {
+	grid-column : 1 / -1;
+	display     : grid;
+	gap         : 0.5rem;
+
+	.filter-group-title {
+		font-size      : 0.7rem;
+		font-weight    : normal;
+		text-transform : uppercase;
+		letter-spacing : 0.05em;
+		color          : oklch(var(--totalform-darkgray));
+	}
+
+	.filter-tiles {
+		display   : flex;
+		flex-wrap : wrap;
+		gap       : 0.5rem;
+	}
+
+	.filter-tile {
+		display        : grid;
+		gap            : 0.25rem;
+		width          : 72px;
+		padding        : 0;
+		border         : 2px solid oklch(var(--totalform-border-color));
+		border-radius  : var(--totalform-radius);
+		background     : oklch(var(--totalform-nearwhite));
+		color          : oklch(var(--totalform-text-color));
+		font-size      : 0.65rem;
+		text-align     : center;
+		cursor         : pointer;
+		overflow       : hidden;
+
+		img {
+			display      : block;
+			width        : 72px;
+			height       : 72px;
+			object-fit   : cover;
+			border       : none;
+			box-shadow   : none;
+		}
+
+		span {
+			padding       : 0 0.125rem 0.25rem;
+			overflow      : hidden;
+			text-overflow : ellipsis;
+			white-space   : nowrap;
+		}
+
+		&:focus-visible {
+			outline        : 2px solid oklch(var(--totalform-accent));
+			outline-offset : 2px;
+		}
+
+		&[aria-pressed="true"] {
+			border-color : oklch(var(--totalform-accent));
+		}
+	}
+}
+
+.filter-duo[hidden] {
+	display : none;
 }

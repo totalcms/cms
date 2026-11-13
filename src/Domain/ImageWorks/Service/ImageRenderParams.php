@@ -6,6 +6,7 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\ImageData;
@@ -25,6 +26,7 @@ final readonly class ImageRenderParams
 		private PropertyMetaResolver $metaResolver,
 		private Config $config,
 		private EditionFeatureService $editions,
+		private ImageFilterRegistry $filters,
 	) {
 	}
 
@@ -51,7 +53,7 @@ final readonly class ImageRenderParams
 		// The Action class automatically adds the format to the params so we need to check for that
 		// If the only param is 'fm' and it matches the original image's format, return original
 		// But if defaults or watermarks exist, we must let Glide process the image
-		if (!$hasDefaults && $schemaWatermarks === [] && ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm'])))) {
+		if (!$hasDefaults && $schemaWatermarks === [] && $this->isOriginal($params, $imageData)) {
 			return [];
 		}
 
@@ -101,12 +103,166 @@ final readonly class ImageRenderParams
 			$params['marksettings'] = $schemaWatermarks;
 		}
 
+		$params = $this->cleanFilters($params, $imageData->palette);
+
+		// An unknown-only `filt` is gone now: serve the original as it would be with no `filt`
+		if (!$hasDefaults && $schemaWatermarks === [] && $this->isOriginal($params, $imageData)) {
+			return [];
+		}
+
 		if (!$this->editions->can(EditionFeature::IMAGE_LAYERS)) {
 			$params = BasicMarks::only($params);
 		}
 
 		// Only filter out null and empty string values, preserve 0 and other falsy values that are valid for Glide
 		return array_filter($params, fn ($value): bool => $value !== null && $value !== '');
+	}
+
+	/**
+	 * Nothing asked for, or only the source's own format.
+	 *
+	 * @param array<string,mixed> $params
+	 */
+	private function isOriginal(array $params, ImageData $imageData): bool
+	{
+		return $params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with($imageData->name, (string)$params['fm']));
+	}
+
+	/**
+	 * The filter params, held to the same rules whether they came from a URL,
+	 * a preset, the defaults or a template: only known names (at most 3), a
+	 * strength from 1 to 99 (0 is no filter), a normalized duotone pair only
+	 * for `duotone`, and a `filtv` of our own so a changed recipe is a new
+	 * cache file.
+	 *
+	 * Glide merges `imageworks.defaults` after this runs, so a default `filt`
+	 * is cleaned here too: it is copied in when the request has none, or when
+	 * every name the request gave was dropped.
+	 *
+	 * @param array<string,mixed> $params
+	 * @param array<string>       $palette
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function cleanFilters(array $params, array $palette): array
+	{
+		$defaults = $this->config->imageworks['defaults'] ?? [];
+		$defaults = is_array($defaults) ? $defaults : [];
+
+		$names = $this->filterNames($params['filt'] ?? null);
+		if ($names === [] && !empty($defaults['filt'])) {
+			unset($params['filt'], $params['filtamt'], $params['duo']);
+			foreach (['filt', 'filtamt', 'duo'] as $key) {
+				if (isset($defaults[$key])) {
+					$params[$key] = $defaults[$key];
+				}
+			}
+			$names = $this->filterNames($params['filt']);
+		}
+
+		// Never trust an incoming version: it is ours to set.
+		unset($params['filtv']);
+
+		if ($names === []) {
+			unset($params['filt'], $params['filtamt'], $params['duo']);
+
+			return $params;
+		}
+
+		$params['filt'] = implode(',', $names);
+
+		if (isset($params['filtamt']) && is_numeric($params['filtamt'])) {
+			$amount = (int)round((float)$params['filtamt']);
+			if ($amount >= 100) {
+				unset($params['filtamt']);
+			} elseif ($amount <= 0) {
+				// No strength is no filter. A default `filt` would come back
+				// with Glide's defaults, so then the 0 stays to switch it off.
+				unset($params['filt'], $params['filtamt'], $params['duo']);
+				if (!empty($defaults['filt'])) {
+					$params['filtamt'] = 0;
+				}
+
+				return $params;
+			} else {
+				$params['filtamt'] = $amount;
+			}
+		} else {
+			unset($params['filtamt']);
+		}
+
+		if (!in_array('duotone', $names, true)) {
+			unset($params['duo']);
+		} else {
+			$params['duo'] = $this->duoColors($params['duo'] ?? null, $palette);
+		}
+
+		$version = $this->filters->chainVersion($names);
+		if ($version !== null) {
+			$params['filtv'] = $version;
+		}
+
+		return $params;
+	}
+
+	/**
+	 * The duotone pair as two lowercase 6-digit hex colors, `paletteN`
+	 * resolved from the image. A 3-digit color is expanded, so `fff` and
+	 * `FFFFFF` are one cache file; a pair with anything else in it is the
+	 * default `000000,palette0`.
+	 *
+	 * @param array<string> $palette
+	 */
+	private function duoColors(mixed $duo, array $palette): string
+	{
+		$colors = is_scalar($duo) ? array_map('trim', explode(',', (string)$duo)) : [];
+		if (count($colors) !== 2 || in_array(null, array_map(self::duoColor(...), $colors), true)) {
+			$colors = ['000000', 'palette0'];
+		}
+
+		return implode(',', array_map(
+			fn (string $color): string => self::duoColor(GlideFactory::updateBackgroundColor((string)self::duoColor($color), $palette)) ?? 'ffffff',
+			$colors
+		));
+	}
+
+	/** A hex color as 6 lowercase digits, `paletteN` as it is, anything else null. */
+	private static function duoColor(string $color): ?string
+	{
+		$color = strtolower($color);
+		if (preg_match('/^palette\d{1,2}$/', $color) === 1) {
+			return $color;
+		}
+		if (preg_match('/^#?([0-9a-f]{3}|[0-9a-f]{6})$/', $color, $match) !== 1) {
+			return null;
+		}
+
+		$hex = $match[1];
+
+		return strlen($hex) === 3 ? $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2] : $hex;
+	}
+
+	/**
+	 * The known filter names a `filt` value holds: lowercased, matching the
+	 * name pattern, at most 3.
+	 *
+	 * @return list<string>
+	 */
+	private function filterNames(mixed $filt): array
+	{
+		if (!is_string($filt) || $filt === '') {
+			return [];
+		}
+
+		$names = [];
+		foreach (explode(',', strtolower($filt)) as $name) {
+			$name = trim($name);
+			if (preg_match(ImageFilterRegistry::NAME_PATTERN, $name) === 1 && $this->filters->get($name) !== null) {
+				$names[] = $name;
+			}
+		}
+
+		return array_slice(array_values(array_unique($names)), 0, 3);
 	}
 
 	/**
@@ -155,21 +311,29 @@ final readonly class ImageRenderParams
 	 */
 	private function resolvePreset(array $params): array
 	{
-		$presetName = (string)$params['p'];
-		$presets    = $this->config->imageworks['presets'] ?? [];
+		$presets = $this->config->imageworks['presets'] ?? [];
+		$merged  = [];
+		$found   = false;
 
-		if (!isset($presets[$presetName])) {
-			return $params;
+		// A comma list applies in order, later presets over earlier, as Glide does
+		foreach (explode(',', (string)$params['p']) as $name) {
+			$name = trim($name);
+			if (isset($presets[$name]) && is_array($presets[$name])) {
+				$merged = array_merge($merged, $presets[$name]);
+				$found  = true;
+			}
 		}
 
-		$presetValues = $presets[$presetName];
+		if (!$found) {
+			return $params;
+		}
 
 		// Remove preset key since we're resolving it manually
 		unset($params['p']);
 
-		// Merge preset values first, then overlay explicit params
-		// This means explicit params take precedence over preset values
-		return array_merge($presetValues, $params);
+		// Preset values first, then explicit params override them,
+		// so dimension constraints apply to preset w/h values
+		return array_merge($merged, $params);
 	}
 
 	/**

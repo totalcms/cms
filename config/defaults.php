@@ -357,6 +357,16 @@ $settings['imageworks'] = [
 	// the last ones. Cached images never wait.
 	'renderSlots'         => 0,
 	'renderWait'          => 30,
+	// Photo filters for the `filt` parameter, name => recipe, e.g.
+	// 'site-look' => ['label' => 'Site look', 'steps' => [['sepia', 0.2]]].
+	// A name that matches a built-in filter replaces it; greyscale cannot be
+	// redefined.
+	'filters'             => [],
+	// A recipe filter refuses an output larger than this many pixels, every
+	// frame counted (nothing is cached): on GD all of them, since GD filters
+	// in PHP; on Imagick only those with a vignette, grain or leak step.
+	// 0 or less: no limit.
+	'filterMaxPixels'     => 25000000,
 	'defaults'            => [
 		'fm' => 'jpg',
 		'q'  => 92,

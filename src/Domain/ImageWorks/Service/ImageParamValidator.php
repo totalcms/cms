@@ -32,6 +32,8 @@ final class ImageParamValidator
 		'blur'          => [0, 100],
 		'pixel'         => [0, 1000],
 		'sharp'         => [0, 100],
+		// Filter strength; rounded to the nearest 5 so it cannot fan out the cache
+		'filtamt'       => [0, 100],
 		'bri'           => [-100, 100],
 		'con'           => [-100, 100],
 		'markalpha'     => [0, 100],
@@ -58,7 +60,6 @@ final class ImageParamValidator
 		'fm'   => ['avif', 'gif', 'jpg', 'jpeg', 'pjpg', 'png', 'webp', 'tiff', 'heic'],
 		'flip' => ['v', 'h', 'both'],
 		'or'   => ['auto', '0', '90', '180', '270'],
-		'filt' => ['greyscale', 'sepia'],
 		// A markimage layer cut to a circle (a profile photo)
 		'markshape' => ['circle'],
 		// A fill that fades out: solid at this edge, clear at the other
@@ -104,6 +105,9 @@ final class ImageParamValidator
 		// An image on a record: collection/id/property, plus a gallery image
 		// name or first/last. Ids can be emails.
 		'markimage'     => '/^[A-Za-z0-9_-]{1,64}\/[A-Za-z0-9_.@+-]{1,128}\/[A-Za-z0-9_-]{1,64}(\/[A-Za-z0-9 ._-]{1,128})?$/',
+		// A chain of up to three filter names, and a duotone's two colors
+		'filt'          => '/^[a-z0-9-]{1,48}(,[a-z0-9-]{1,48}){0,2}$/',
+		'duo'           => '/^[A-Za-z0-9#._-]{1,32},[A-Za-z0-9#._-]{1,32}$/',
 		// One preset or a comma list. An unknown name is harmless: Glide
 		// leaves `p` out of the cache key and skips presets it does not know.
 		'p'             => '/^[A-Za-z0-9_-]{1,64}(,[A-Za-z0-9_-]{1,64}){0,7}$/',
@@ -214,6 +218,10 @@ final class ImageParamValidator
 		}
 
 		$value = trim((string)$value);
+		// Filter names are lowercase; `filt=Greyscale` has always rendered.
+		if ($key === 'filt') {
+			$value = strtolower($value);
+		}
 
 		return $value === '' ? null : self::checked($key, $value);
 	}
@@ -239,9 +247,7 @@ final class ImageParamValidator
 		}
 
 		if (isset(self::INTEGERS[$key])) {
-			[$min, $max] = self::INTEGERS[$key];
-
-			return (int)self::number($key, $value, $min, $max);
+			return self::integer($key, $value);
 		}
 
 		if (isset(self::DECIMALS[$key])) {
@@ -274,6 +280,14 @@ final class ImageParamValidator
 		}
 
 		return $value;
+	}
+
+	private static function integer(string $key, string $value): int
+	{
+		[$min, $max] = self::INTEGERS[$key];
+		$number      = (int)self::number($key, $value, $min, $max);
+
+		return $key === 'filtamt' ? (int)(round($number / 5) * 5) : $number;
 	}
 
 	private static function number(string $key, string $value, int|float $min, int|float $max): float

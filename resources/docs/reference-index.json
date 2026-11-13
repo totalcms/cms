@@ -5878,6 +5878,13 @@
                 "permission": null
             },
             {
+                "name": "addImageFilter",
+                "signature": "addImageFilter(string $name, array|ImageFilter $filter, string $group = 'look'): void",
+                "description": "Register an ImageWorks filter, selected with `filt=<name>`. The name must start with this extension's vendor (`acme-noir` for `acme/photo-pack`). Validation (prefix, duplicates, recipe, group) happens in the ImageFilterRegistry at boot; a refused filter is logged only.",
+                "phase": "register",
+                "permission": null
+            },
+            {
                 "name": "capabilityKeys",
                 "signature": "capabilityKeys(): array",
                 "description": "Every capability key an extension can register, in display order. Matches the keys of \\capabilityLabels() \u2014 a test asserts it.",
@@ -6130,6 +6137,10 @@
             {
                 "id": "form-actions",
                 "description": "Form Actions"
+            },
+            {
+                "id": "imageworks:filters",
+                "description": "Image Filters"
             },
             {
                 "id": "mcp:tools",

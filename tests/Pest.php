@@ -1,6 +1,8 @@
 <?php
 
 use DI\Container;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\ImageInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Mcp\Schema\Wire\McpHeader;
@@ -52,6 +54,9 @@ use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
+use TotalCMS\Domain\ImageWorks\Filter\FilterContext;
+use TotalCMS\Domain\ImageWorks\Filter\FilterRecipe;
+use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
@@ -87,6 +92,7 @@ use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
@@ -1360,4 +1366,75 @@ function editionsFor(Edition $edition = Edition::PRO): EditionFeatureService
 	$editions->method('getEdition')->willReturn($edition);
 
 	return $editions;
+}
+
+function filterRecipeFor(array $steps): FilterRecipe
+{
+	return FilterRecipe::fromDefinition('test', ['steps' => $steps]);
+}
+
+function filterRecipeContext(string $driver): FilterContext
+{
+	return new FilterContext($driver, [], null);
+}
+
+function skipUnlessFilterDriver(string $driver): void
+{
+	if ($driver === 'imagick' && !ImagickSupport::isUsable()) {
+		test()->markTestSkipped('Imagick is not usable on this host');
+	}
+}
+
+/**
+ * Build a w x h test image on the given Intervention driver ('gd' or 'imagick').
+ * $rgba is either one [r, g, b, a] fill or a list of w*h such pixels in row
+ * order. Channels are 0-255; alpha 255 is opaque.
+ *
+ * @param array<int,int|array<int,int>> $rgba
+ */
+function filterTestImage(string $driver, int $width, int $height, array $rgba): ImageInterface
+{
+	$manager = $driver === 'imagick' ? ImageManager::imagick() : ImageManager::gd();
+	$image   = $manager->create($width, $height);
+	$pixels  = is_array($rgba[0]) ? $rgba : array_fill(0, $width * $height, $rgba);
+	$native  = $image->core()->native();
+
+	if ($native instanceof GdImage) {
+		imagealphablending($native, false);
+		imagesavealpha($native, true);
+		foreach ($pixels as $i => [$r, $g, $b, $a]) {
+			$gdAlpha = (int) round((255 - $a) * 127 / 255);
+			imagesetpixel($native, $i % $width, intdiv($i, $width), ($gdAlpha << 24) | ($r << 16) | ($g << 8) | $b);
+		}
+
+		return $image;
+	}
+
+	$iterator = $native->getPixelIterator();
+	foreach ($iterator as $y => $row) {
+		foreach ($row as $x => $pixel) {
+			[$r, $g, $b, $a] = $pixels[$y * $width + $x];
+			$pixel->setColor(sprintf('rgba(%d,%d,%d,%.5f)', $r, $g, $b, $a / 255));
+		}
+		$iterator->syncIterator();
+	}
+
+	return $image;
+}
+
+/**
+ * A filter registry over a bare Config (no site filters unless $config carries
+ * them) and a silent logger.
+ */
+function imageFilterRegistry(?Config $config = null): ImageFilterRegistry
+{
+	if (!$config instanceof Config) {
+		$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->imageworks = ['presets' => [], 'defaults' => [], 'filters' => []];
+	}
+
+	$loggerFactory = test()->createMock(LoggerFactory::class);
+	$loggerFactory->method('channelLogger')->willReturn(new Psr\Log\NullLogger());
+
+	return new ImageFilterRegistry($config, $loggerFactory);
 }

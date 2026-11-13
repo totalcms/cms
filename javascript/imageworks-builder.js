@@ -1,4 +1,5 @@
 import MacroBuilder from "./macro-builder";
+import { initFilterStrip } from "./imageworks-filter-strip";
 import Details from "./totalform/details";
 import Dialog from "./totalform/dialog";
 
@@ -29,6 +30,14 @@ document.addEventListener("DOMContentLoaded", event => {
 		button.addEventListener("click", event => {
 			event.preventDefault();
 			fitModal.open();
+		});
+	});
+
+	const duoModal = new Dialog(document.getElementById("duo-modal"));
+	Array.from(document.getElementsByClassName("open-duo-docs")).forEach(button => {
+		button.addEventListener("click", event => {
+			event.preventDefault();
+			duoModal.open();
 		});
 	});
 
@@ -92,6 +101,10 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	};
 	getImageSize();
+
+	// Filter strip: tiles write the hidden `filt` input and show the `duo`
+	// field for duotone. Both reach the preview URL through FormData.
+	initFilterStrip(document.getElementById("filter-strip"));
 
 	const getFormData = () => {
 		const form     = document.querySelector("form");

@@ -67,11 +67,11 @@ function imageTransformGenerator(string $root, array $imageworks = []): ImageGen
 	$watermarks = test()->createMock(WatermarkFactory::class);
 	$watermarks->method('prepare')->willReturn([]);
 
-	$glide = new GlideFactory($storage, $config);
+	$glide = new GlideFactory($storage, $config, imageFilterRegistry($config), $loggerFactory);
 
 	return new ImageGenerator(
 		new ImageSourceResolver($fetcher),
-		new ImageRenderParams($meta, $config, editionsFor()),
+		new ImageRenderParams($meta, $config, editionsFor(), imageFilterRegistry($config)),
 		new ImageResponder($storage, $glide),
 		$glide,
 		$watermarks,
