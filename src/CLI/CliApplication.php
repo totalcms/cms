@@ -6,7 +6,9 @@ namespace TotalCMS\CLI;
 
 use Sentry\State\Scope;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command as ConsoleCommand;
 use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use TotalCMS\Domain\Auth\Data\Actor;
@@ -258,29 +260,40 @@ class CliApplication
 	}
 
 	/**
-	 * Event dispatcher that captures command errors to Sentry. Tags the event
-	 * with the CLI context + command name, then flushes — the transport is
-	 * async and this process is about to exit, so an explicit flush is required
-	 * or the event is lost.
+	 * Event dispatcher that captures command errors to Sentry, then flushes —
+	 * the transport is async and this process is about to exit, so an explicit
+	 * flush is required or the event is lost.
+	 *
+	 * The CLI context and command name are tagged when the command starts, not
+	 * when it fails: a fatal error (memory, time limit) never reaches the ERROR
+	 * listener, and Sentry's shutdown handler reports it with whatever the
+	 * scope holds by then (TOTAL-CMS-RM, -RQ arrived with no command).
 	 */
 	public static function sentryErrorDispatcher(): EventDispatcher
 	{
 		$dispatcher = new EventDispatcher();
 
+		$dispatcher->addListener(ConsoleEvents::COMMAND, static function (ConsoleCommandEvent $event): void {
+			self::tagCommand($event->getCommand());
+		});
+
 		$dispatcher->addListener(ConsoleEvents::ERROR, static function (ConsoleErrorEvent $event): void {
-			configureScope(static function (Scope $scope) use ($event): void {
-				$scope->setTag('context', 'cli');
-
-				$command = $event->getCommand();
-				if ($command instanceof \Symfony\Component\Console\Command\Command && $command->getName() !== null) {
-					$scope->setTag('command', $command->getName());
-				}
-			});
-
+			self::tagCommand($event->getCommand());
 			captureException($event->getError());
 			flush();
 		});
 
 		return $dispatcher;
+	}
+
+	private static function tagCommand(?ConsoleCommand $command): void
+	{
+		configureScope(static function (Scope $scope) use ($command): void {
+			$scope->setTag('context', 'cli');
+
+			if ($command?->getName() !== null) {
+				$scope->setTag('command', $command->getName());
+			}
+		});
 	}
 }

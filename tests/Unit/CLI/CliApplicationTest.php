@@ -20,4 +20,12 @@ final class CliApplicationTest extends TestCase
 		// crashed silently on cron.
 		$this->assertTrue($dispatcher->hasListeners(ConsoleEvents::ERROR));
 	}
+
+	public function testSentryTagsTheCommandWhenItStarts(): void
+	{
+		// A fatal error (memory, time limit) never reaches the ERROR listener;
+		// Sentry's shutdown handler reports it with the scope as it stands, so
+		// the command must be on the scope before it runs (TOTAL-CMS-RM, -RQ).
+		$this->assertTrue(CliApplication::sentryErrorDispatcher()->hasListeners(ConsoleEvents::COMMAND));
+	}
 }

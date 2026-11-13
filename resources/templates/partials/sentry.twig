@@ -49,6 +49,9 @@
 
 				// Ignore browser extension errors
 				if (message.includes('runtime.sendMessage')) return null;
+				// A web-clipper extension rejecting a promise of its own, with no
+				// stack: Total CMS has no tabs API (TOTALCMS-DASHBOARD-60).
+				if (message.includes('no clipping info for given tab')) return null;
 				if (event.exception && event.exception.values) {
 					var frames = event.exception.values.flatMap(function(v) {
 						return (v.stacktrace && v.stacktrace.frames) || [];

@@ -27,6 +27,7 @@ use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
 use Symfony\Component\Console\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Infrastructure\Filesystem\UnsafePathException;
@@ -429,23 +430,8 @@ class SentryMiddleware implements MiddlewareInterface
 			return null;
 		}
 
-		// DI failures survive to here on the CLI by design (see WEB_ONLY_IGNORE):
-		// a wiring regression that hard-downs `jobs:process` is worth paging on.
-		// But "No entry or class found" for one of OUR classes is never that.
-		// PHP-DI only says it when the class could not be loaded at the moment
-		// it resolved — a real wiring bug in a class that loads fails with a
-		// different message (an unresolvable constructor parameter, say). So it
-		// means the files were not readable: a half-copied install, or a cron
-		// run (`automations:process`, `jobs:process`) landing while a Stacks
-		// export or deploy is rewriting them. No change to T3 fixes either.
-		//
-		// This used to report when class_exists() succeeded here, reading that
-		// as "the class exists, so the container is at fault". That is a race
-		// on optimized installs: the Composer classmap hands back the path
-		// without checking the file, a missed include is not cached as a miss,
-		// and by the time this filter runs the copy has finished — so every
-		// mid-copy cron run reported as a wiring bug.
-		if (str_contains($exception->getMessage(), "No entry or class found for 'TotalCMS\\")) {
+		// One of T3's own files caught unreadable, mid copy (see caughtMidCopy).
+		if (self::caughtMidCopy($exception, $file)) {
 			return null;
 		}
 
@@ -498,6 +484,56 @@ class SentryMiddleware implements MiddlewareInterface
 		}
 
 		return $event;
+	}
+
+	/**
+	 * True when the exception says one of T3's own files could not be read at
+	 * the moment it was needed: a half-copied install, an upload or Stacks
+	 * export in flight, or a cron run landing while vendor/ is replaced.
+	 */
+	private static function caughtMidCopy(\Throwable $exception, string $file): bool
+	{
+		// DI failures survive to here on the CLI by design (see WEB_ONLY_IGNORE):
+		// a wiring regression that hard-downs `jobs:process` is worth paging on.
+		// But "No entry or class found" for one of OUR classes is never that.
+		// PHP-DI only says it when the class could not be loaded at the moment
+		// it resolved — a real wiring bug in a class that loads fails with a
+		// different message (an unresolvable constructor parameter, say). So it
+		// means the files were not readable: a half-copied install, or a cron
+		// run (`automations:process`, `jobs:process`) landing while a Stacks
+		// export or deploy is rewriting them. No change to T3 fixes either.
+		//
+		// This used to report when class_exists() succeeded here, reading that
+		// as "the class exists, so the container is at fault". That is a race
+		// on optimized installs: the Composer classmap hands back the path
+		// without checking the file, a missed include is not cached as a miss,
+		// and by the time this filter runs the copy has finished — so every
+		// mid-copy cron run reported as a wiring bug.
+		if (str_contains($exception->getMessage(), "No entry or class found for 'TotalCMS\\")) {
+			return true;
+		}
+
+		// The serializer's form of the same thing. ObjectNormalizer supports
+		// every class that exists, so "no supporting normalizer" for one of OUR
+		// data classes means class_exists() came back false: the file was not
+		// readable when the read ran (TOTAL-CMS-RR, a cron run on a Composer
+		// install while vendor/ was being replaced).
+		if ($exception instanceof NotNormalizableValueException
+			&& str_starts_with($exception->getMessage(), 'Could not denormalize object of type "TotalCMS\\')
+			&& str_ends_with($exception->getMessage(), 'no supporting normalizer found.')) {
+			return true;
+		}
+
+		// A route file that returned nothing: `(require 'x.php')($app)` calls
+		// require's 1. Every route file returns a closure and every test loads
+		// them all, so this is a file caught empty or half-written, mid upload
+		// or mid Stacks export (TOTAL-CMS-RN, -RP: two requests a second apart).
+		$routes = PathResolver::packageRoot() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routes';
+		if ($exception instanceof \Error && $exception->getMessage() === 'Value of type int is not callable' && str_starts_with($file, $routes)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

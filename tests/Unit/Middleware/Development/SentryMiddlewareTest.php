@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\EventHint;
 use Slim\Exception\HttpNotFoundException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use TotalCMS\Infrastructure\Filesystem\UnsafePathException;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
@@ -76,6 +77,36 @@ final class SentryMiddlewareTest extends TestCase
 
 		$this->assertTrue(class_exists('TotalCMS\\Domain\\Twig\\Service\\TwigEngine'));
 		$this->assertNull($this->filter($exception));
+	}
+
+	public function testDropsADataClassTheSerializerCouldNotLoad(): void
+	{
+		// ObjectNormalizer supports every class that exists, so this message for
+		// a T3 class means its file was unreadable mid-copy (TOTAL-CMS-RR).
+		$exception = new NotNormalizableValueException('Could not denormalize object of type "TotalCMS\\Domain\\Index\\Data\\IndexData", no supporting normalizer found.');
+
+		$this->assertNull($this->filter($exception));
+	}
+
+	public function testReportsOtherSerializerFailures(): void
+	{
+		$this->assertInstanceOf(Event::class, $this->filter(new NotNormalizableValueException('Could not denormalize object of type "Vendor\\Thing", no supporting normalizer found.')));
+		$this->assertInstanceOf(Event::class, $this->filter(new NotNormalizableValueException('The type of the "objects" attribute for class "TotalCMS\\Domain\\Index\\Data\\IndexData" must be one of "array" ("string" given).')));
+	}
+
+	public function testDropsARouteFileCaughtHalfWritten(): void
+	{
+		// `(require 'emergency.php')($api)` with an empty file calls int 1
+		// (TOTAL-CMS-RN, -RP).
+		$exception = new \Error('Value of type int is not callable');
+		(new \ReflectionProperty($exception, 'file'))->setValue($exception, PathResolver::packageRoot() . '/config/routes.php');
+
+		$this->assertNull($this->filter($exception, fromTotalCms: false));
+	}
+
+	public function testReportsAnUncallableIntelsewhere(): void
+	{
+		$this->assertInstanceOf(Event::class, $this->filter(new \Error('Value of type int is not callable')));
 	}
 
 	public function testReportsAMissingClassOutsideTotalCms(): void
