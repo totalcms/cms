@@ -97,7 +97,7 @@ readonly class OverlayPreviewOptions
 
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
 			$wanted = $collection->id === $pagesId || $collection->url !== '' || $collection->id === $requested;
-			if ($wanted && ($actor === null || $this->guard->can($actor, $collection->id, Operation::List)->passes())) {
+			if ($wanted && (!$actor instanceof Actor || $this->guard->can($actor, $collection->id, Operation::List)->passes())) {
 				$out[] = $collection;
 			}
 		}
@@ -122,7 +122,7 @@ readonly class OverlayPreviewOptions
 		}
 
 		$entries = array_values(array_filter($entries, is_array(...)));
-		if ($actor !== null) {
+		if ($actor instanceof Actor) {
 			$entries = $this->guard->readScope($actor, $collection)->filter($entries);
 		}
 		usort($entries, static fn (array $a, array $b): int => self::stamp($b) <=> self::stamp($a));
@@ -131,7 +131,7 @@ readonly class OverlayPreviewOptions
 		$out    = [];
 		foreach ($entries as $entry) {
 			$id    = is_scalar($entry['id'] ?? null) ? (string)$entry['id'] : '';
-			$title = self::titleOf($entry, $id);
+			$title = $this->titleOf($entry, $id);
 			if ($id === '' || ($needle !== '' && !str_contains(mb_strtolower($id . ' ' . $title), $needle))) {
 				continue;
 			}
@@ -177,7 +177,7 @@ readonly class OverlayPreviewOptions
 	}
 
 	/** @param array<array-key,mixed> $entry */
-	private static function titleOf(array $entry, string $id): string
+	private function titleOf(array $entry, string $id): string
 	{
 		foreach (['title', 'name', 'label'] as $key) {
 			if (is_string($entry[$key] ?? null) && trim($entry[$key]) !== '') {

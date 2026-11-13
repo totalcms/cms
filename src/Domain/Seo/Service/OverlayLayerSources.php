@@ -61,9 +61,9 @@ readonly class OverlayLayerSources
 			}
 			$name       = (string)$name;
 			$definition = PropertyDefinition::fromArray($raw);
-			$label      = self::label($definition, $name);
+			$label      = $this->label($definition, $name);
 
-			if (self::isCard($definition, $raw)) {
+			if ($this->isCard($definition, $raw)) {
 				foreach ($this->cardFields($raw) as $field) {
 					$out[] = ['path' => $name . '.' . $field['path'], 'label' => $label . ' → ' . $field['label']];
 				}
@@ -89,7 +89,7 @@ readonly class OverlayLayerSources
 	{
 		$out = [];
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
-			if ($actor !== null && !$this->guard->can($actor, $collection->id, Operation::List)->passes()) {
+			if ($actor instanceof Actor && !$this->guard->can($actor, $collection->id, Operation::List)->passes()) {
 				continue;
 			}
 
@@ -101,7 +101,7 @@ readonly class OverlayLayerSources
 				$definition = PropertyDefinition::fromArray($raw);
 				$type       = $definition->resolveType();
 				if (in_array($type, self::IMAGES, true)) {
-					$images[] = ['path' => $type === 'gallery' ? $name . '/first' : (string)$name, 'label' => self::label($definition, (string)$name)];
+					$images[] = ['path' => $type === 'gallery' ? $name . '/first' : (string)$name, 'label' => $this->label($definition, (string)$name)];
 				}
 			}
 
@@ -168,8 +168,8 @@ readonly class OverlayLayerSources
 				continue;
 			}
 			$definition = PropertyDefinition::fromArray($sub);
-			if (!self::isCard($definition, $sub) && !in_array($definition->resolveType(), self::NOT_TEXT, true) && !$definition->isPassword()) {
-				$out[] = ['path' => (string)$name, 'label' => self::label($definition, (string)$name)];
+			if (!$this->isCard($definition, $sub) && !in_array($definition->resolveType(), self::NOT_TEXT, true) && !$definition->isPassword()) {
+				$out[] = ['path' => (string)$name, 'label' => $this->label($definition, (string)$name)];
 			}
 		}
 
@@ -215,13 +215,13 @@ readonly class OverlayLayerSources
 	}
 
 	/** @param array<array-key,mixed> $raw */
-	private static function isCard(PropertyDefinition $definition, array $raw): bool
+	private function isCard(PropertyDefinition $definition, array $raw): bool
 	{
 		/** @var array<string,mixed> $raw */
 		return $definition->resolveType() === 'card' || $definition->field === 'card' || ($definition->ref === SchemaData::PROPERTY_TYPE_TO_REF['card'] && PropertyDefinition::extractSchemaRef($raw) !== null);
 	}
 
-	private static function label(PropertyDefinition $definition, string $name): string
+	private function label(PropertyDefinition $definition, string $name): string
 	{
 		return $definition->label !== '' ? $definition->label : $name;
 	}

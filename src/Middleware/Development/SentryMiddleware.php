@@ -529,11 +529,8 @@ class SentryMiddleware implements MiddlewareInterface
 		// them all, so this is a file caught empty or half-written, mid upload
 		// or mid Stacks export (TOTAL-CMS-RN, -RP: two requests a second apart).
 		$routes = PathResolver::packageRoot() . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routes';
-		if ($exception instanceof \Error && $exception->getMessage() === 'Value of type int is not callable' && str_starts_with($file, $routes)) {
-			return true;
-		}
 
-		return false;
+		return $exception instanceof \Error && $exception->getMessage() === 'Value of type int is not callable' && str_starts_with($file, $routes);
 	}
 
 	/**

@@ -12,10 +12,11 @@ use TotalCMS\Domain\Seo\Data\OverlayPresets;
 use TotalCMS\Domain\Seo\Data\SocialCardReason;
 use TotalCMS\Domain\Seo\Service\MetaBuilder;
 use TotalCMS\Domain\Seo\Service\OverlayLayerSources;
-use TotalCMS\Domain\Seo\Service\OverlayPreviewOptions;
 use TotalCMS\Domain\Seo\Service\OverlayPreviewer;
+use TotalCMS\Domain\Seo\Service\OverlayPreviewOptions;
 use TotalCMS\Domain\Seo\Service\SeoContextFactory;
 use TotalCMS\Domain\Seo\Service\SocialImageBuilder;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
@@ -207,7 +208,7 @@ it('lists the watermark logos and fonts', function (): void {
 	$c->get(ObjectSaver::class)->saveObject('gallery', ['id' => 'watermarks', 'gallery' => [
 		['name' => 'logo.png', 'size' => 10, 'width' => 100, 'height' => 100, 'mime' => 'image/png'],
 	]]);
-	$c->get(TotalCMS\Support\Config::class)->imageworks = ['watermarksGallery' => 'watermarks'] + $c->get(TotalCMS\Support\Config::class)->imageworks;
+	$c->get(Config::class)->imageworks = ['watermarksGallery' => 'watermarks'] + $c->get(Config::class)->imageworks;
 
 	$options = $this->picker->for(null, 'blog');
 
@@ -265,7 +266,7 @@ it('answers the record picker over the admin route', function (): void {
 });
 
 it('keeps the routes behind the admin sign-in', function (): void {
-	$this->app->getContainer()->get(TotalCMS\Support\Config::class)->auth = ['enable' => true] + $this->app->getContainer()->get(TotalCMS\Support\Config::class)->auth;
+	$this->app->getContainer()->get(Config::class)->auth = ['enable' => true] + $this->app->getContainer()->get(Config::class)->auth;
 
 	expect(get('/admin/seo/overlay-preview/options?collection=blog')->getStatusCode())->toBeIn([302, 401, 403]);
 });
