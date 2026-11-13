@@ -197,6 +197,13 @@ final class LazySessionStartMiddlewareTest extends TestCase
 			'api'            => ['/api/collections/svg/logo.svg'],
 			'admin sub-path' => ['/mysite/admin/icons/x.png', '/mysite/index.php'],
 			'not at the end' => ['/badges/pill.svg/edit'],
+			// Protected files check the login on these routes. Without a
+			// session, a logged-in admin downloading `photo.jpg` from a depot
+			// was sent to the login page and back, round and round.
+			'depot download'    => ['/download/files/report/depot/photo.jpg'],
+			'file download'     => ['/download/upload/blog/post/body/chart.png'],
+			'depot stream'      => ['/stream/files/report/depot/photo.jpg'],
+			'download sub-path' => ['/mysite/download/files/report/depot/logo.svg', '/mysite/index.php'],
 		];
 	}
 

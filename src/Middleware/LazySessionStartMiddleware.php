@@ -105,13 +105,16 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 	 * Builder page that serves an image (a badge other sites embed, an OG
 	 * card) otherwise opens a session, and sets a cookie, on every view of
 	 * every page the image sits on. Admin and API paths keep their session
-	 * whatever they end in.
+	 * whatever they end in, and so do the file routes (`/download/`,
+	 * `/stream/`): a protected file checks the login there, and a depot file
+	 * named `photo.jpg` sent a logged-in admin to the login page, and back
+	 * again after signing in, round and round.
 	 */
 	private function isSessionlessPath(string $path): bool
 	{
 		return str_starts_with($path, '/imageworks/')
 			|| str_starts_with($path, '/api/assets/')
 			|| preg_match('#^/api/ext/[^/]+/[^/]+/assets/#', $path) === 1
-			|| (preg_match('#\.(svg|png|jpe?g|gif|webp|avif|ico)$#i', $path) === 1 && preg_match('#^/(admin|api)/#', $path) !== 1);
+			|| (preg_match('#\.(svg|png|jpe?g|gif|webp|avif|ico)$#i', $path) === 1 && preg_match('#^/(admin|api|download|stream)/#', $path) !== 1);
 	}
 }

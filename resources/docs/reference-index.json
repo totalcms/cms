@@ -1326,9 +1326,9 @@
         {
             "name": "cms.data.depot",
             "signature": "depot(string $id, array $options = []): array",
-            "description": "Get depot (multi-file storage) data as an array. Default collection: `depot`, default property: `depot`.",
+            "description": "Get depot (multi-file storage) data as an array. The files are in its `files` key. Default collection: `depot`, default property: `depot`.",
             "examples": [
-                "{% set files = cms.data.depot('documents') %}\n{% for file in files %}\n    <p>{{ file.name }} ({{ file.size }} bytes)</p>\n{% endfor %}",
+                "{% set files = cms.data.depot('documents').files %}\n{% for file in files %}\n    <p>{{ file.name }} ({{ file.size }} bytes)</p>\n{% endfor %}",
                 "{# Using defaults #}\n{{ cms.data.text('headline') }}\n\n{# Custom collection and property #}\n{{ cms.data.text('headline', {collection: 'pages', property: 'title'}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/data/"

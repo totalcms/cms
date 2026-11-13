@@ -207,10 +207,10 @@ For generating download/stream URLs, see [cms.media](docs/twig/media).
 
 ### depot()
 
-Get depot (multi-file storage) data as an array. Default collection: `depot`, default property: `depot`.
+Get depot (multi-file storage) data as an array. The files are in its `files` key. Default collection: `depot`, default property: `depot`.
 
 ```twig
-{% set files = cms.data.depot('documents') %}
+{% set files = cms.data.depot('documents').files %}
 {% for file in files %}
     <p>{{ file.name }} ({{ file.size }} bytes)</p>
 {% endfor %}
