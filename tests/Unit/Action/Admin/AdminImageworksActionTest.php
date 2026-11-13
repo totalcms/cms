@@ -6,9 +6,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Action\Admin\AdminImageworksAction;
 use Psr\Log\NullLogger;
-use ReflectionClass;
+use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\GuardedImageFilter;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
@@ -35,7 +34,7 @@ final class AdminImageworksActionTest extends TestCase
 
 	private function filterRegistry(): ImageFilterRegistry
 	{
-		$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config             = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->imageworks = ['presets' => [], 'defaults' => [], 'filters' => []];
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
@@ -114,7 +113,7 @@ final class AdminImageworksActionTest extends TestCase
 
 	public function testSiteConfigLooksStayInTheMainRow(): void
 	{
-		$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config             = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->imageworks = ['presets' => [], 'defaults' => [], 'filters' => ['site-look' => ['label' => 'Site', 'steps' => [['sepia', 0.2]]]]];
 		$loggerFactory      = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());

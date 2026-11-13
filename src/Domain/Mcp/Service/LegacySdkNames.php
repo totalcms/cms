@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
+use Mcp\Schema\Exception\ExceptionInterface;
+use Mcp\Schema\MessageFactory;
+
 /**
  * Keeps extensions written against mcp/sdk 0.9 loading on 0.10.
  *
@@ -29,9 +32,9 @@ final class LegacySdkNames
 
 	/** Old names that do not follow a prefix move. */
 	private const RENAMES = [
-		'Mcp\\JsonRpc\\MessageFactory'       => 'Mcp\\Schema\\MessageFactory',
+		'Mcp\\JsonRpc\\MessageFactory'       => MessageFactory::class,
 		// The interface every SDK exception implements, as the old one was.
-		'Mcp\\Exception\\ExceptionInterface' => 'Mcp\\Schema\\Exception\\ExceptionInterface',
+		'Mcp\\Exception\\ExceptionInterface' => ExceptionInterface::class,
 	];
 
 	private static bool $registered = false;

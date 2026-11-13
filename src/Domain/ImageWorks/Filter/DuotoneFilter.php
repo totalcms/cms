@@ -21,7 +21,7 @@ final readonly class DuotoneFilter implements ImageFilter
 	public function apply(ImageInterface $image, FilterContext $context): ImageInterface
 	{
 		[$shadow, $highlight] = $context->duo ?? ['000000', 'ffffff'];
-		$step = new FilterStep('gradient-map', [$shadow, $highlight]);
+		$step                 = new FilterStep('gradient-map', [$shadow, $highlight]);
 
 		return RecipeRenderers::for($image)->apply($image, [$step], $context);
 	}

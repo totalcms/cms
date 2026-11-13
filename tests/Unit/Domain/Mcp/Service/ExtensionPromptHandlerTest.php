@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Mcp\Server\Exception\PromptGetException;
 use Mcp\Server\ClientGateway;
+use Mcp\Server\Exception\PromptGetException;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 

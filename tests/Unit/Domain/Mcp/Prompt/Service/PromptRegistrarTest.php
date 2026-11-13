@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Prompt\Service;
 
-use Mcp\Server\Exception\PromptGetException;
 use Mcp\Server\Builder;
+use Mcp\Server\Exception\PromptGetException;
 use Mcp\Server\Server;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;

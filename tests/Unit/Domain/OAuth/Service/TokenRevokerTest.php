@@ -41,10 +41,10 @@ final class TokenRevokerTest extends TestCase
 		$this->tmp = sys_get_temp_dir() . '/tcms-revoke-' . uniqid();
 		mkdir($this->tmp, 0755, true);
 
-		$this->grants = new OAuthGrantRepository(...jsonStoreArgs($this->tmp . '/grants.json'));
+		$this->grants      = new OAuthGrantRepository(...jsonStoreArgs($this->tmp . '/grants.json'));
 		$this->revocations = new OAuthRevocationList(new OAuthStateStore($this->tmp . '/oauth-state'), 3600);
-		$this->log    = $this->createMock(LoggerInterface::class);
-		$factory      = $this->createMock(OAuthServerFactory::class);
+		$this->log         = $this->createMock(LoggerInterface::class);
+		$factory           = $this->createMock(OAuthServerFactory::class);
 		$factory->method('encryptionKey')->willReturn(self::KEY);
 
 		$this->revoker = new TokenRevoker(

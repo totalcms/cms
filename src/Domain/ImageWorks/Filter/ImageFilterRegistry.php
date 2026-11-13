@@ -38,7 +38,7 @@ class ImageFilterRegistry
 	/** @var list<string> Vendors of every extension registering filters in this drain */
 	private array $vendors = [];
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
 	public function __construct(Config $config, LoggerFactory $loggerFactory)
 	{
@@ -47,7 +47,7 @@ class ImageFilterRegistry
 		$configured = $config->imageworks['filters'] ?? [];
 		if (is_array($configured)) {
 			foreach ($configured as $name => $definition) {
-				$this->registerConfig((string) $name, $definition);
+				$this->registerConfig((string)$name, $definition);
 			}
 		}
 
@@ -87,13 +87,13 @@ class ImageFilterRegistry
 	public function registerExtensionFilters(array $byExtension): void
 	{
 		$this->vendors = array_values(array_unique(array_map(
-			static fn (int|string $id): string => explode('/', (string) $id)[0],
+			static fn (int|string $id): string => explode('/', (string)$id)[0],
 			array_keys($byExtension),
 		)));
 
 		foreach ($byExtension as $extensionId => $filters) {
 			foreach ($filters as $filter) {
-				$this->registerExtensionFilter((string) $extensionId, $filter['name'], $filter['filter'], $filter['group']);
+				$this->registerExtensionFilter((string)$extensionId, $filter['name'], $filter['filter'], $filter['group']);
 			}
 		}
 	}

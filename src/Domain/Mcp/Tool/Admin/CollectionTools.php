@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;

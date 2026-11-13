@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Content;
 
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;

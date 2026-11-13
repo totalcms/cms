@@ -6,8 +6,8 @@ use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\ImageWorks\Data\CacheState;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
-use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\ImageWorks\Service\ImageRenderParams;
 use TotalCMS\Domain\ImageWorks\Service\ImageSourceResolver;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
@@ -27,7 +27,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	$c = $this->app->getContainer();
 
-	$this->config         = $c->get(Config::class);
+	$this->config           = $c->get(Config::class);
 	$this->imageworksBefore = $this->config->imageworks;
 
 	$c->get(SchemaSaver::class)->saveSchema(['id' => 'snaps', 'type' => 'object', 'properties' => [

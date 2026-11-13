@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
-use Psr\Log\AbstractLogger;
+use Tests\Fakes\RecordingLogger;
 use TotalCMS\Domain\ImageWorks\Exception\FilterTooLargeException;
 use TotalCMS\Domain\ImageWorks\Filter\BuiltInFilters;
 use TotalCMS\Domain\ImageWorks\Filter\DuotoneFilter;
@@ -17,20 +17,8 @@ use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
 // FilterManipulator on both drivers: the strength blend, animations, the
 // pixel limit and the rule that a failed filter leaves the image untouched.
 
-/** Collects log records so a test can assert on them. */
-final class FilterManipulatorLogger extends AbstractLogger
-{
-	/** @var list<array{level:mixed,message:string,context:array<array-key,mixed>}> */
-	public array $records = [];
-
-	public function log($level, string|\Stringable $message, array $context = []): void
-	{
-		$this->records[] = ['level' => $level, 'message' => (string)$message, 'context' => $context];
-	}
-}
-
 /** @param array<string,mixed> $params */
-function runFilterManipulator(ImageInterface $image, array $params, int $maxPixels = 25000000, ?ImageFilterRegistry $registry = null, ?FilterManipulatorLogger $logger = null): ImageInterface
+function runFilterManipulator(ImageInterface $image, array $params, int $maxPixels = 25000000, ?ImageFilterRegistry $registry = null, ?RecordingLogger $logger = null): ImageInterface
 {
 	$manipulator = new FilterManipulator($registry ?? imageFilterRegistry(), [], $maxPixels, $logger);
 	$manipulator->setParams($params);
@@ -187,7 +175,7 @@ describe('a failed filter leaves the image untouched', function (): void {
 		};
 		$registry = imageFilterRegistry();
 		$registry->registerExtensionFilter('acme/pack', 'acme-smash', $smash);
-		$logger = new FilterManipulatorLogger();
+		$logger = new RecordingLogger();
 
 		$image = runFilterManipulator(filterTestImage($driver, 2, 1, [200, 40, 40, 255]), ['filt' => 'acme-smash'], registry: $registry, logger: $logger);
 

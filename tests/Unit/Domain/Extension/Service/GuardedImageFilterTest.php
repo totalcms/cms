@@ -31,7 +31,7 @@ final class GuardedFilterLog extends AbstractLogger
 	/** @var list<string> */
 	public array $errors = [];
 
-	public function log($level, string|\Stringable $message, array $context = []): void
+	public function log($level, string|Stringable $message, array $context = []): void
 	{
 		if ($level === 'error') {
 			$this->errors[] = (string)$message;

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Intervention\Image\Interfaces\ImageInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Glide\ServerFactory;
 use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\ImageWorks\Exception\FilterTooLargeException;
 use TotalCMS\Domain\ImageWorks\Filter\FilterContext;
@@ -33,7 +35,7 @@ final class FilterRenderLogger extends AbstractLogger
 	/** @var list<array{level:mixed,message:string,context:array<array-key,mixed>}> */
 	public array $records = [];
 
-	public function log($level, string|\Stringable $message, array $context = []): void
+	public function log($level, string|Stringable $message, array $context = []): void
 	{
 		$this->records[] = ['level' => $level, 'message' => (string)$message, 'context' => $context];
 	}
@@ -191,7 +193,7 @@ describe('FilterManipulator', function (): void {
 				return 'Boom';
 			}
 
-			public function apply(\Intervention\Image\Interfaces\ImageInterface $image, FilterContext $context): \Intervention\Image\Interfaces\ImageInterface
+			public function apply(ImageInterface $image, FilterContext $context): ImageInterface
 			{
 				throw new RuntimeException('kaboom');
 			}
@@ -254,7 +256,7 @@ final class ServerFactoryBaseline
 	public static function render(string $root, array $params): string
 	{
 		$flysystem = new Filesystem(new LocalFilesystemAdapter($root));
-		$server    = League\Glide\ServerFactory::create([
+		$server    = ServerFactory::create([
 			'source'             => $flysystem,
 			'cache'              => $flysystem,
 			'source_path_prefix' => 'blog/post-1/image',

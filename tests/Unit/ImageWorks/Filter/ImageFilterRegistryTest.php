@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Intervention\Image\Interfaces\ImageInterface;
+use League\Glide\Manipulators\Filter;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -23,10 +24,10 @@ use TotalCMS\Support\Config;
  */
 function filterRegistry(array $filters = []): array
 {
-	$config = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config             = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->imageworks = ['filters' => $filters];
-	$handler = new TestHandler();
-	$logger  = (new Logger('test'))->pushHandler($handler);
+	$handler            = new TestHandler();
+	$logger             = (new Logger('test'))->pushHandler($handler);
 
 	return [new ImageFilterRegistry($config, new LoggerFactory(['test' => $logger, 'level' => Level::Debug])), $handler];
 }
@@ -65,7 +66,7 @@ const BUILT_IN_NAMES = ['sepia', 'bloom', 'harbor', 'ember', 'meadow', 'dusk', '
 describe('ImageFilterRegistry', function (): void {
 	it('registers the legacy and built-in filters, none with a hyphen', function (): void {
 		[$registry] = filterRegistry();
-		$all = $registry->all();
+		$all        = $registry->all();
 
 		foreach (['greyscale', ...BUILT_IN_NAMES] as $name) {
 			expect($all)->toHaveKey($name);
@@ -94,7 +95,7 @@ describe('ImageFilterRegistry', function (): void {
 
 	it('registers the extras as core effects after the vignette', function (): void {
 		[$registry] = filterRegistry();
-		$all = $registry->all();
+		$all        = $registry->all();
 
 		foreach (['grain', 'warm', 'cool', 'leak'] as $name) {
 			expect($all[$name]->group)->toBe('effect');
@@ -108,7 +109,7 @@ describe('ImageFilterRegistry', function (): void {
 
 	it('limits the steps computed in PHP on Imagick, and every recipe on GD', function (string $name, bool $imagick): void {
 		[$registry] = filterRegistry();
-		$entry = $registry->get($name);
+		$entry      = $registry->get($name);
 
 		expect($entry?->isPixelLimitedOn('imagick'))->toBe($imagick);
 		expect($entry?->isPixelLimitedOn('gd'))->toBeTrue();
@@ -142,7 +143,7 @@ describe('ImageFilterRegistry', function (): void {
 
 	it('registers config filters before core', function (): void {
 		[$registry] = filterRegistry(['site-look' => filterRecipeDef()]);
-		$names = array_keys($registry->all());
+		$names      = array_keys($registry->all());
 
 		expect($names[0])->toBe('site-look');
 		expect(array_search('site-look', $names, true))->toBeLessThan(array_search('bloom', $names, true));
@@ -151,9 +152,9 @@ describe('ImageFilterRegistry', function (): void {
 
 	it('refuses and logs a bad recipe, a bad name and an unknown group', function (): void {
 		[$registry, $log] = filterRegistry([
-			'broken'  => ['steps' => [['nope', 1]]],
+			'broken'   => ['steps' => [['nope', 1]]],
 			'Bad_Name' => filterRecipeDef(),
-			'grouped' => ['group' => 'weird', 'steps' => [['sepia', 0.5]]],
+			'grouped'  => ['group' => 'weird', 'steps' => [['sepia', 0.5]]],
 		]);
 
 		expect($registry->get('broken'))->toBeNull();
@@ -300,7 +301,7 @@ describe('DuotoneFilter and LegacyGlideFilter', function (): void {
 		$a = filterTestImage('gd', 3, 1, [[255, 0, 0, 255], [64, 128, 192, 255], [10, 200, 90, 255]]);
 		$b = filterTestImage('gd', 3, 1, [[255, 0, 0, 255], [64, 128, 192, 255], [10, 200, 90, 255]]);
 
-		$filter = new League\Glide\Manipulators\Filter();
+		$filter = new Filter();
 		$filter->setParams(['filt' => $name]);
 		$expected = $filter->run($a);
 		$actual   = (new LegacyGlideFilter($name))->apply($b, new FilterContext('gd', [], null));

@@ -248,7 +248,7 @@ function filterWidePixels(): array
 {
 	$pixels = [];
 	for ($i = 0; $i < 256; $i++) {
-		$pixels[] = [$i, (($i % 16) * 17), 255 - $i, 255];
+		$pixels[] = [$i, ($i % 16) * 17, 255 - $i, 255];
 	}
 
 	return $pixels;
@@ -323,12 +323,12 @@ describe('grain cells', function (): void {
 	it('grow with the short side of the image', function (int $width, int $height, int $cell): void {
 		expect(NonlinearSteps::grainCell($width, $height))->toBe($cell);
 	})->with([
-		'thumbnail'   => [144, 144, 1],
-		'600 short'   => [900, 600, 1],
-		'1067 short'  => [1600, 1067, 2],
-		'1200 short'  => [1200, 1800, 2],
-		'1800 short'  => [2700, 1800, 3],
-		'2400 short'  => [3600, 2400, 4],
+		'thumbnail'    => [144, 144, 1],
+		'600 short'    => [900, 600, 1],
+		'1067 short'   => [1600, 1067, 2],
+		'1200 short'   => [1200, 1800, 2],
+		'1800 short'   => [2700, 1800, 3],
+		'2400 short'   => [3600, 2400, 4],
 		'a thin strip' => [5000, 10, 1],
 	]);
 

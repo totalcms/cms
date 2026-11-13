@@ -13,11 +13,11 @@ use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
 use TotalCMS\Domain\ImageWorks\Filter\FilterManipulator;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
-use TotalCMS\Factory\LogChannel;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 readonly class GlideFactory
@@ -92,9 +92,9 @@ readonly class GlideFactory
 
 			$glide->setApi(new Api($api->getImageManager(), array_map(
 				fn (ManipulatorInterface $manipulator): ManipulatorInterface => match (true) {
-					$manipulator instanceof Filter => $filter,
+					$manipulator instanceof Filter                                               => $filter,
 					$marks instanceof MarkLayersManipulator && $manipulator instanceof Watermark => $marks,
-					default => $manipulator,
+					default                                                                      => $manipulator,
 				},
 				$api->getManipulators(),
 			), $api->getEncoder()));

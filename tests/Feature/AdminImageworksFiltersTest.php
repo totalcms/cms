@@ -24,8 +24,8 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	$c = $this->app->getContainer();
 
-	$this->config           = $c->get(Config::class);
-	$this->imageworksBefore = $this->config->imageworks;
+	$this->config                                     = $c->get(Config::class);
+	$this->imageworksBefore                           = $this->config->imageworks;
 	$this->config->imageworks['filters']['site-look'] = ['label' => 'Site Look', 'steps' => [['sepia', 0.5]]];
 	$c->set(ImageFilterRegistry::class, autowire());
 
@@ -53,7 +53,7 @@ afterEach(function (): void {
 test('the filter strip lists core, legacy and config filters as tiles', function (): void {
 	$response = get('/admin/imageworks?collection=snaps&id=s1&property=photo');
 	expect($response->getStatusCode())->toBe(200);
-	$body = (string) $response->getBody();
+	$body = (string)$response->getBody();
 
 	expect($body)
 		->toContain('data-filter="ember"')
@@ -71,7 +71,7 @@ test('the filter strip lists core, legacy and config filters as tiles', function
 });
 
 test('filters have their own accordion, after sizing and before effects', function (): void {
-	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+	$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
 
 	$sizing  = strpos($body, '<summary>Sizing');
 	$filters = strpos($body, '<summary>Filters</summary>');
@@ -83,7 +83,7 @@ test('filters have their own accordion, after sizing and before effects', functi
 });
 
 test('duotone colors are a text field with suggestions and an options panel, not color pickers', function (): void {
-	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+	$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
 
 	expect($body)
 		->toMatch('/<input[^>]*type="text"[^>]*name="duo"[^>]*list="duo-options"/s')
@@ -96,7 +96,7 @@ test('duotone colors are a text field with suggestions and an options panel, not
 });
 
 test('the filters accordion stays closed when the image has no filter', function (): void {
-	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+	$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
 	expect($body)->not->toMatch('/<details class="cms-accordion"[^>]*open[^>]*>\s*<summary>Filters/');
 });
 
@@ -107,7 +107,7 @@ test('the filters accordion opens on load when the image already has a filter', 
 	$_GET      = ['collection' => 'snaps', 'id' => 's1', 'property' => 'photo', 'filt' => 'duotone'];
 
 	try {
-		$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo&filt=duotone')->getBody();
+		$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo&filt=duotone')->getBody();
 	} finally {
 		$_GET = $getBefore;
 	}
@@ -124,7 +124,7 @@ test('a chain the page opens with presses every tile in it', function (): void {
 	$_GET      = ['collection' => 'snaps', 'id' => 's1', 'property' => 'photo', 'filt' => 'ember,vignette'];
 
 	try {
-		$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo&filt=ember,vignette')->getBody();
+		$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo&filt=ember,vignette')->getBody();
 	} finally {
 		$_GET = $getBefore;
 	}
@@ -137,7 +137,7 @@ test('a chain the page opens with presses every tile in it', function (): void {
 });
 
 test('looks and duotones share one row of tiles, and extras sit in a row of their own', function (): void {
-	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+	$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
 
 	preg_match_all('/<div class="filter-tiles[^"]*"[^>]*>(.*?)<\/div>/s', $body, $rows);
 	expect($rows[1])->toHaveCount(2);
@@ -159,7 +159,7 @@ test('looks and duotones share one row of tiles, and extras sit in a row of thei
 		->not->toContain('data-filter="ember"');
 	expect($main)->not->toContain('data-filter="grain"')->not->toContain('data-filter="leak"');
 	// The extras keep the registry order, vignette first
-	$order = array_map(static fn (string $name): int|false => strpos($extras, "data-filter=\"{$name}\""), ['vignette', 'grain', 'warm', 'cool', 'leak']);
+	$order  = array_map(static fn (string $name): int|false => strpos($extras, "data-filter=\"{$name}\""), ['vignette', 'grain', 'warm', 'cool', 'leak']);
 	$sorted = $order;
 	sort($sorted);
 	expect($order)->toBe($sorted);
@@ -176,7 +176,7 @@ test('an extension gets its own titled row for looks, while its effects join Ext
 		],
 	]);
 
-	$body = (string) get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
+	$body = (string)get('/admin/imageworks?collection=snaps&id=s1&property=photo')->getBody();
 
 	preg_match_all('/<div class="filter-tiles[^"]*" role="group" aria-label="([^"]*)">(.*?)<\/div>/s', $body, $rows);
 	expect(array_map(html_entity_decode(...), $rows[1]))->toBe(['Filters', 'acme/photo-pack', 'Extras']);
@@ -186,4 +186,3 @@ test('an extension gets its own titled row for looks, while its effects join Ext
 	expect($rows[2][0])->not->toContain('acme-kodak');
 	expect($body)->toContain('<h5 class="filter-group-title">acme/photo-pack</h5>');
 });
-

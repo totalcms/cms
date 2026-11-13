@@ -13,6 +13,7 @@ final class FilterRuns
 {
 	/**
 	 * @param  list<FilterStep>              $steps
+	 *
 	 * @return list<ColorMatrix|FilterStep>
 	 */
 	public static function split(array $steps): array
@@ -23,16 +24,16 @@ final class FilterRuns
 		foreach ($steps as $step) {
 			if ($step->isLinear()) {
 				$matrix = LinearSteps::matrix($step);
-				$run    = $run === null ? $matrix : $run->then($matrix);
+				$run    = $run?->then($matrix) ?? $matrix;
 				continue;
 			}
-			if ($run !== null) {
+			if ($run instanceof ColorMatrix) {
 				$runs[] = $run;
 				$run    = null;
 			}
 			$runs[] = $step;
 		}
-		if ($run !== null) {
+		if ($run instanceof ColorMatrix) {
 			$runs[] = $run;
 		}
 

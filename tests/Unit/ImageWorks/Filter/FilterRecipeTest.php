@@ -150,7 +150,7 @@ describe('FilterRecipe::version', function (): void {
 	});
 
 	it('changes when one number changes', function (): void {
-		$changed          = emberDefinition();
+		$changed                = emberDefinition();
 		$changed['steps'][1][1] = 1.4;
 
 		expect(FilterRecipe::fromDefinition('ember', $changed)->version())

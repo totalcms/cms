@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Extension\Service;
 
 use Intervention\Image\Interfaces\ImageInterface;
-use Throwable;
 use TotalCMS\Domain\ImageWorks\Filter\FilterContext;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
 
@@ -43,7 +42,7 @@ final readonly class GuardedImageFilter implements ImageFilter
 	public function apply(ImageInterface $image, FilterContext $context): ImageInterface
 	{
 		// Set by reference inside the guarded call when the extension throws.
-		/** @var Throwable|null $failure */
+		/** @var \Throwable|null $failure */
 		$failure = null;
 		$result  = $this->guard->run(
 			$this->extensionId,
@@ -51,7 +50,7 @@ final readonly class GuardedImageFilter implements ImageFilter
 			function () use ($image, $context, &$failure): ImageInterface {
 				try {
 					return $this->filter->apply($image, $context);
-				} catch (Throwable $e) {
+				} catch (\Throwable $e) {
 					$failure = $e;
 
 					throw $e;
@@ -60,7 +59,7 @@ final readonly class GuardedImageFilter implements ImageFilter
 			null,
 		);
 
-		if ($failure instanceof Throwable) {
+		if ($failure instanceof \Throwable) {
 			throw $failure;
 		}
 

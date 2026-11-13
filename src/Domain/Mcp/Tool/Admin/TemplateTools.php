@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\Exception\ToolCallException;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Filter;
 
-use Closure;
 use Imagick;
 use Intervention\Image\Interfaces\ImageInterface;
-use LogicException;
 
 /**
  * Imagick renderer. Each run of consecutive linear steps is folded into one
@@ -18,19 +16,19 @@ final class ImagickRecipeRenderer implements RecipeRenderer
 	public function apply(ImageInterface $image, array $steps, FilterContext $context): ImageInterface
 	{
 		$imagick = $image->core()->native();
-		if (!$imagick instanceof Imagick) {
-			throw new LogicException('ImagickRecipeRenderer needs an Imagick image');
+		if (!$imagick instanceof \Imagick) {
+			throw new \LogicException('ImagickRecipeRenderer needs an Imagick image');
 		}
 
 		// Everything that can fail (a color the tables cannot read) is worked
 		// out before the first pixel changes, so a failed filter leaves no trace.
-		$passes = array_map(fn (ColorMatrix|FilterStep $run): Closure => $this->pass($run), FilterRuns::split($steps));
+		$passes = array_map($this->pass(...), FilterRuns::split($steps));
 
 		foreach ($imagick as $frame) {
 			// The math is RGB: on CMYK (or any other space) the matrix and the
 			// tables would work on the wrong channels. GD always decodes to RGB.
-			if ($frame->getImageColorspace() !== Imagick::COLORSPACE_SRGB) {
-				$frame->transformImageColorspace(Imagick::COLORSPACE_SRGB);
+			if ($frame->getImageColorspace() !== \Imagick::COLORSPACE_SRGB) {
+				$frame->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
 			}
 			foreach ($passes as $pass) {
 				$pass($frame);
@@ -40,38 +38,38 @@ final class ImagickRecipeRenderer implements RecipeRenderer
 		return $image;
 	}
 
-	/** @return Closure(Imagick):void */
-	private function pass(ColorMatrix|FilterStep $run): Closure
+	/** @return \Closure(\Imagick):void */
+	private function pass(ColorMatrix|FilterStep $run): \Closure
 	{
 		if ($run instanceof ColorMatrix) {
-			return fn (Imagick $frame) => $this->applyMatrix($frame, $run);
+			return fn (\Imagick $frame) => $this->applyMatrix($frame, $run);
 		}
 
 		switch ($run->op) {
 			case 'overlay':
 				$tables = NonlinearSteps::overlayTables($run);
 
-				return fn (Imagick $frame) => $this->applyTables($frame, $tables);
+				return fn (\Imagick $frame) => $this->applyTables($frame, $tables);
 			case 'gradient-map':
 				$tables = NonlinearSteps::gradientTables($run);
 
 				// W3C grayscale(1) uses the same 0.2126 / 0.7152 / 0.0722 luminance weights.
-				return function (Imagick $frame) use ($tables): void {
+				return function (\Imagick $frame) use ($tables): void {
 					$this->applyMatrix($frame, ColorMatrix::grayscale(1.0));
 					$this->applyTables($frame, $tables);
 				};
 			case 'vignette':
-				$strength = (float) $run->args[0];
-				$color    = NonlinearSteps::rgb((string) ($run->args[1] ?? '000000'));
+				$strength = (float)$run->args[0];
+				$color    = NonlinearSteps::rgb((string)($run->args[1] ?? '000000'));
 
-				return fn (Imagick $frame) => $this->applyVignette($frame, $strength, $color);
+				return fn (\Imagick $frame) => $this->applyVignette($frame, $strength, $color);
 			case 'grain':
 			case 'leak':
 				$map = NonlinearSteps::rowFunction($run);
 
-				return fn (Imagick $frame) => $this->applyRows($frame, $map);
+				return fn (\Imagick $frame) => $this->applyRows($frame, $map);
 			default:
-				throw new LogicException(sprintf('Unknown step "%s"', $run->op));
+				throw new \LogicException(sprintf('Unknown step "%s"', $run->op));
 		}
 	}
 
@@ -82,19 +80,21 @@ final class ImagickRecipeRenderer implements RecipeRenderer
 	 *
 	 * @param array{list<int>,list<int>,list<int>} $tables
 	 */
-	private function applyTables(Imagick $frame, array $tables): void
+	private function applyTables(\Imagick $frame, array $tables): void
 	{
 		$pixels = [];
 		for ($i = 0; $i < 256; $i++) {
-			array_push($pixels, $tables[0][$i], $tables[1][$i], $tables[2][$i]);
+			$pixels[] = $tables[0][$i];
+			$pixels[] = $tables[1][$i];
+			$pixels[] = $tables[2][$i];
 		}
 
-		$clut = new Imagick();
+		$clut = new \Imagick();
 		$clut->newImage(256, 1, 'black');
 		$clut->setImageFormat('png');
-		$clut->importImagePixels(0, 0, 256, 1, 'RGB', Imagick::PIXEL_CHAR, $pixels);
+		$clut->importImagePixels(0, 0, 256, 1, 'RGB', \Imagick::PIXEL_CHAR, $pixels);
 
-		$frame->clutImage($clut, Imagick::CHANNEL_RED | Imagick::CHANNEL_GREEN | Imagick::CHANNEL_BLUE);
+		$frame->clutImage($clut, \Imagick::CHANNEL_RED | \Imagick::CHANNEL_GREEN | \Imagick::CHANNEL_BLUE);
 		$frame->clampImage();
 		$clut->clear();
 	}
@@ -108,21 +108,21 @@ final class ImagickRecipeRenderer implements RecipeRenderer
 	 *
 	 * @param array{int,int,int} $colors
 	 */
-	private function applyVignette(Imagick $frame, float $strength, array $colors): void
+	private function applyVignette(\Imagick $frame, float $strength, array $colors): void
 	{
 		$width  = $frame->getImageWidth();
 		$height = $frame->getImageHeight();
 
 		for ($y = 0; $y < $height; $y++) {
 			$row    = NonlinearSteps::vignetteRow($y, $width, $height, $strength);
-			$pixels = $frame->exportImagePixels(0, $y, $width, 1, 'RGB', Imagick::PIXEL_CHAR);
+			$pixels = $frame->exportImagePixels(0, $y, $width, 1, 'RGB', \Imagick::PIXEL_CHAR);
 			$out    = [];
 			foreach ($pixels as $i => $value) {
 				$k     = $row[intdiv($i, 3)];
-				$v     = (int) round($value * (1 - $k) + $colors[$i % 3] * $k);
+				$v     = (int)round($value * (1 - $k) + $colors[$i % 3] * $k);
 				$out[] = $v < 0 ? 0 : ($v > 255 ? 255 : $v);
 			}
-			$frame->importImagePixels(0, $y, $width, 1, 'RGB', Imagick::PIXEL_CHAR, $out);
+			$frame->importImagePixels(0, $y, $width, 1, 'RGB', \Imagick::PIXEL_CHAR, $out);
 		}
 	}
 
@@ -132,23 +132,23 @@ final class ImagickRecipeRenderer implements RecipeRenderer
 	 * through the same NonlinearSteps code as GD. Only RGB is exported, so alpha
 	 * stays as it was. Like the vignette, they are held to `filterMaxPixels`.
 	 *
-	 * @param Closure(int, int, int, Closure():list<int>): ?list<int> $map
+	 * @param \Closure(int, int, int, \Closure():list<int>): ?list<int> $map
 	 */
-	private function applyRows(Imagick $frame, Closure $map): void
+	private function applyRows(\Imagick $frame, \Closure $map): void
 	{
 		$width  = $frame->getImageWidth();
 		$height = $frame->getImageHeight();
 
 		for ($y = 0; $y < $height; $y++) {
-			$read = static fn (): array => $frame->exportImagePixels(0, $y, $width, 1, 'RGB', Imagick::PIXEL_CHAR);
+			$read = static fn (): array => $frame->exportImagePixels(0, $y, $width, 1, 'RGB', \Imagick::PIXEL_CHAR);
 			$out  = $map($y, $width, $height, $read);
 			if ($out !== null) {
-				$frame->importImagePixels(0, $y, $width, 1, 'RGB', Imagick::PIXEL_CHAR, $out);
+				$frame->importImagePixels(0, $y, $width, 1, 'RGB', \Imagick::PIXEL_CHAR, $out);
 			}
 		}
 	}
 
-	private function applyMatrix(Imagick $frame, ColorMatrix $matrix): void
+	private function applyMatrix(\Imagick $frame, ColorMatrix $matrix): void
 	{
 		[$r, $g, $b] = $matrix->rows();
 

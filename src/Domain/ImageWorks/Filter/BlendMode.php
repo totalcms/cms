@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Filter;
 
-use InvalidArgumentException;
-
 /**
  * Per-channel blend formulas from W3C Compositing and Blending Level 1.
  * Channels are floats in 0-1; `$base` is the image, `$source` the overlay color.
@@ -20,7 +18,7 @@ final class BlendMode
 			'screen'     => self::screen($base, $source),
 			'overlay'    => self::hardLight($source, $base),
 			'soft-light' => self::softLight($base, $source),
-			default      => throw new InvalidArgumentException(sprintf('Unknown blend mode "%s"', $mode)),
+			default      => throw new \InvalidArgumentException(sprintf('Unknown blend mode "%s"', $mode)),
 		};
 	}
 

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Filter;
 
-use Closure;
-use LogicException;
-
 /**
  * The math of the nonlinear steps (overlay, vignette, gradient-map, grain,
  * leak), shared by both drivers. Overlay and gradient-map reduce to
@@ -46,9 +43,9 @@ final class NonlinearSteps
 	 */
 	public static function overlayTables(FilterStep $step): array
 	{
-		$color   = self::rgb((string) $step->args[0]);
-		$mode    = (string) $step->args[1];
-		$opacity = (float) $step->args[2];
+		$color   = self::rgb((string)$step->args[0]);
+		$mode    = (string)$step->args[1];
+		$opacity = (float)$step->args[2];
 
 		$tables = [[], [], []];
 		foreach ($color as $c => $channel) {
@@ -70,13 +67,13 @@ final class NonlinearSteps
 	 */
 	public static function gradientTables(FilterStep $step): array
 	{
-		$stops = array_map(static fn (mixed $hex): array => self::rgb((string) $hex), $step->args);
+		$stops = array_map(static fn (mixed $hex): array => self::rgb((string)$hex), $step->args);
 		$last  = count($stops) - 1;
 
 		$tables = [[], [], []];
 		for ($l = 0; $l < 256; $l++) {
 			$pos = $l / 255 * $last;
-			$i   = min((int) floor($pos), $last - 1);
+			$i   = min((int)floor($pos), $last - 1);
 			$f   = $pos - $i;
 			for ($c = 0; $c < 3; $c++) {
 				$tables[$c][] = self::byte($stops[$i][$c] + ($stops[$i + 1][$c] - $stops[$i][$c]) * $f);
@@ -99,10 +96,10 @@ final class NonlinearSteps
 
 		$row = [];
 		for ($x = 0; $x < $width; $x++) {
-			$dx = $cx > 0 ? (($x - $cx) / $cx) ** 2 : 0.0;
-			$d  = sqrt($dx + $dy) / M_SQRT2;
-			$t  = ($d - 0.35) / 0.65;
-			$t  = $t < 0.0 ? 0.0 : ($t > 1.0 ? 1.0 : $t);
+			$dx    = $cx > 0 ? (($x - $cx) / $cx) ** 2 : 0.0;
+			$d     = sqrt($dx + $dy) / M_SQRT2;
+			$t     = ($d - 0.35) / 0.65;
+			$t     = $t < 0.0 ? 0.0 : ($t > 1.0 ? 1.0 : $t);
 			$row[] = $strength * $t * $t * (3 - 2 * $t);
 		}
 
@@ -117,28 +114,28 @@ final class NonlinearSteps
 	 * it was, in which case it never calls the reader. Colors are read here,
 	 * before the first pixel changes.
 	 *
-	 * @return Closure(int, int, int, Closure():list<int>): ?list<int>
+	 * @return \Closure(int, int, int, \Closure():list<int>): ?list<int>
 	 */
-	public static function rowFunction(FilterStep $step): Closure
+	public static function rowFunction(FilterStep $step): \Closure
 	{
 		switch ($step->op) {
 			case 'grain':
-				$amount = (float) $step->args[0];
+				$amount = (float)$step->args[0];
 
-				return static fn (int $y, int $width, int $height, Closure $read): ?array => $amount > 0.0 ? self::grainRow($y, $width, $height, $read(), $amount) : null;
+				return static fn (int $y, int $width, int $height, \Closure $read): ?array => $amount > 0.0 ? self::grainRow($y, $width, $height, $read(), $amount) : null;
 			case 'leak':
-				$tables   = self::screenTables((string) $step->args[0]);
-				$position = (string) $step->args[1];
-				$amount   = (float) $step->args[2];
+				$tables   = self::screenTables((string)$step->args[0]);
+				$position = (string)$step->args[1];
+				$amount   = (float)$step->args[2];
 				self::leakAnchor($position);
 
-				return static function (int $y, int $width, int $height, Closure $read) use ($tables, $position, $amount): ?array {
+				return static function (int $y, int $width, int $height, \Closure $read) use ($tables, $position, $amount): ?array {
 					$mask = self::leakMaskRow($y, $width, $height, $position, $amount);
 
 					return $mask === null ? null : self::leakRow($read(), $mask, $tables);
 				};
 			default:
-				throw new LogicException(sprintf('"%s" is not a row step', $step->op));
+				throw new \LogicException(sprintf('"%s" is not a row step', $step->op));
 		}
 	}
 
@@ -168,11 +165,11 @@ final class NonlinearSteps
 			$l = (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
 			$d = $scale * ($noise[$x] ?? 0.0) * $l * (1 - $l);
 
-			$v     = (int) round($r + $d);
+			$v     = (int)round($r + $d);
 			$out[] = $v < 0 ? 0 : ($v > 255 ? 255 : $v);
-			$v     = (int) round($g + $d);
+			$v     = (int)round($g + $d);
 			$out[] = $v < 0 ? 0 : ($v > 255 ? 255 : $v);
-			$v     = (int) round($b + $d);
+			$v     = (int)round($b + $d);
 			$out[] = $v < 0 ? 0 : ($v > 255 ? 255 : $v);
 		}
 
@@ -185,7 +182,7 @@ final class NonlinearSteps
 	 */
 	public static function grainCell(int $width, int $height): int
 	{
-		return max(1, (int) round(min($width, $height) / self::GRAIN_CELL_PIXELS));
+		return max(1, (int)round(min($width, $height) / self::GRAIN_CELL_PIXELS));
 	}
 
 	/**
@@ -264,9 +261,9 @@ final class NonlinearSteps
 
 		$row = [];
 		for ($x = 0; $x < $width; $x++) {
-			$du = $au === null ? 0.0 : (($width > 1 ? $x / ($width - 1) : 0.0) - $au) ** 2;
-			$t  = sqrt($du + $dv) / $norm / self::LEAK_REACH;
-			$t  = $t > 1.0 ? 1.0 : $t;
+			$du    = $au === null ? 0.0 : (($width > 1 ? $x / ($width - 1) : 0.0) - $au) ** 2;
+			$t     = sqrt($du + $dv) / $norm / self::LEAK_REACH;
+			$t     = $t > 1.0 ? 1.0 : $t;
 			$row[] = $amount * (1 - $t * $t * (3 - 2 * $t));
 		}
 
@@ -296,9 +293,9 @@ final class NonlinearSteps
 			$b = $rgb[$i + 2];
 			$m = $mask[$x] ?? 0.0;
 			if ($m > 0.0) {
-				$r = (int) round($r + ($rt[$r] - $r) * $m);
-				$g = (int) round($g + ($gt[$g] - $g) * $m);
-				$b = (int) round($b + ($bt[$b] - $b) * $m);
+				$r = (int)round($r + ($rt[$r] - $r) * $m);
+				$g = (int)round($g + ($gt[$g] - $g) * $m);
+				$b = (int)round($b + ($bt[$b] - $b) * $m);
 			}
 			$out[] = $r;
 			$out[] = $g;
@@ -331,10 +328,10 @@ final class NonlinearSteps
 	public static function rgb(string $hex): array
 	{
 		if (preg_match('/^[0-9a-f]{6}$/i', $hex) !== 1) {
-			throw new LogicException(sprintf('"%s" is not a 6-digit hex color', $hex));
+			throw new \LogicException(sprintf('"%s" is not a 6-digit hex color', $hex));
 		}
 
-		return [(int) hexdec(substr($hex, 0, 2)), (int) hexdec(substr($hex, 2, 2)), (int) hexdec(substr($hex, 4, 2))];
+		return [(int)hexdec(substr($hex, 0, 2)), (int)hexdec(substr($hex, 2, 2)), (int)hexdec(substr($hex, 4, 2))];
 	}
 
 	/**
@@ -342,7 +339,7 @@ final class NonlinearSteps
 	 */
 	private static function leakAnchor(string $position): array
 	{
-		return self::LEAK_ANCHORS[$position] ?? throw new LogicException(sprintf('Unknown leak position "%s"', $position));
+		return self::LEAK_ANCHORS[$position] ?? throw new \LogicException(sprintf('Unknown leak position "%s"', $position));
 	}
 
 	/**
@@ -362,7 +359,7 @@ final class NonlinearSteps
 
 	private static function byte(float $value): int
 	{
-		$v = (int) round($value);
+		$v = (int)round($value);
 
 		return $v < 0 ? 0 : ($v > 255 ? 255 : $v);
 	}

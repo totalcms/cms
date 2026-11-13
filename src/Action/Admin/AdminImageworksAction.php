@@ -82,7 +82,7 @@ readonly class AdminImageworksAction
 		$rows = [['kind' => 'main', 'title' => null, 'filters' => [...$main, ...$duotones]]];
 		foreach ($byOwner as $owner => $ownFilters) {
 			usort($ownFilters, static fn (array $a, array $b): int => ($a['group'] === 'duotone') <=> ($b['group'] === 'duotone'));
-			$rows[] = ['kind' => 'extension', 'title' => $this->extensionName((string) $owner), 'filters' => $ownFilters];
+			$rows[] = ['kind' => 'extension', 'title' => $this->extensionName((string)$owner), 'filters' => $ownFilters];
 		}
 		$rows[] = ['kind' => 'extras', 'title' => null, 'filters' => $extras];
 

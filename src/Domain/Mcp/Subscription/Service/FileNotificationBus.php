@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Subscription\Service;
 
-use Mcp\Schema\MessageFactory;
 use Mcp\Schema\JsonRpc\Notification;
+use Mcp\Schema\MessageFactory;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;

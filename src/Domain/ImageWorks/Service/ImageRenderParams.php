@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\ImageWorks\Data\ImageLocation;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilterRegistry;
+use TotalCMS\Domain\ImageWorks\Filter\RegisteredFilter;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\ImageData;
@@ -215,19 +216,19 @@ final readonly class ImageRenderParams
 	 */
 	private function duoColors(mixed $duo, array $palette): string
 	{
-		$colors = is_scalar($duo) ? array_map('trim', explode(',', (string)$duo)) : [];
-		if (count($colors) !== 2 || in_array(null, array_map(self::duoColor(...), $colors), true)) {
+		$colors = is_scalar($duo) ? array_map(trim(...), explode(',', (string)$duo)) : [];
+		if (count($colors) !== 2 || in_array(null, array_map($this->duoColor(...), $colors), true)) {
 			$colors = ['000000', 'palette0'];
 		}
 
 		return implode(',', array_map(
-			fn (string $color): string => self::duoColor(GlideFactory::updateBackgroundColor((string)self::duoColor($color), $palette)) ?? 'ffffff',
+			fn (string $color): string => $this->duoColor(GlideFactory::updateBackgroundColor((string)$this->duoColor($color), $palette)) ?? 'ffffff',
 			$colors
 		));
 	}
 
 	/** A hex color as 6 lowercase digits, `paletteN` as it is, anything else null. */
-	private static function duoColor(string $color): ?string
+	private function duoColor(string $color): ?string
 	{
 		$color = strtolower($color);
 		if (preg_match('/^palette\d{1,2}$/', $color) === 1) {
@@ -257,7 +258,7 @@ final readonly class ImageRenderParams
 		$names = [];
 		foreach (explode(',', strtolower($filt)) as $name) {
 			$name = trim($name);
-			if (preg_match(ImageFilterRegistry::NAME_PATTERN, $name) === 1 && $this->filters->get($name) !== null) {
+			if (preg_match(ImageFilterRegistry::NAME_PATTERN, $name) === 1 && $this->filters->get($name) instanceof RegisteredFilter) {
 				$names[] = $name;
 			}
 		}

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace TotalCMS\Domain\ImageWorks\Filter;
+
 /**
  * The filters that ship with Total CMS (besides greyscale, which the registry
  * adds as a legacy filter). Labels are translation keys. Core names

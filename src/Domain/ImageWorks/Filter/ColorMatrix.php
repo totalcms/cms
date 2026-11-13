@@ -121,7 +121,7 @@ final readonly class ColorMatrix
 		$out = [];
 		foreach ($this->rows as $row) {
 			$value = $row[0] * $r + $row[1] * $g + $row[2] * $b + $row[3] * 255;
-			$out[] = (int) max(0, min(255, round($value)));
+			$out[] = (int)max(0, min(255, round($value)));
 		}
 
 		return [$out[0], $out[1], $out[2]];

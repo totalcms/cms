@@ -5,8 +5,8 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Mcp\Schema\Wire\McpHeader;
 use Mcp\Schema\RequestMeta;
+use Mcp\Schema\Wire\McpHeader;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
@@ -67,6 +67,7 @@ use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -92,7 +93,6 @@ use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
-use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
@@ -1403,7 +1403,7 @@ function filterTestImage(string $driver, int $width, int $height, array $rgba): 
 		imagealphablending($native, false);
 		imagesavealpha($native, true);
 		foreach ($pixels as $i => [$r, $g, $b, $a]) {
-			$gdAlpha = (int) round((255 - $a) * 127 / 255);
+			$gdAlpha = (int)round((255 - $a) * 127 / 255);
 			imagesetpixel($native, $i % $width, intdiv($i, $width), ($gdAlpha << 24) | ($r << 16) | ($g << 8) | $b);
 		}
 
@@ -1434,7 +1434,7 @@ function imageFilterRegistry(?Config $config = null): ImageFilterRegistry
 	}
 
 	$loggerFactory = test()->createMock(LoggerFactory::class);
-	$loggerFactory->method('channelLogger')->willReturn(new Psr\Log\NullLogger());
+	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 	return new ImageFilterRegistry($config, $loggerFactory);
 }

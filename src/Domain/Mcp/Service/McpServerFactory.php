@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
-use Mcp\Server\Capability\Registry\ElementReference;
-use Mcp\Server\Capability\Registry\ReferenceHandler;
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\JsonRpc\MessageInterface;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\Builder;
-use Mcp\Server\Server;
+use Mcp\Server\Capability\Registry\ElementReference;
+use Mcp\Server\Capability\Registry\ReferenceHandler;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
+use Mcp\Server\Server;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;

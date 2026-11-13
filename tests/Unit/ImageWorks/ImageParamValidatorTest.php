@@ -172,7 +172,6 @@ describe('ImageParamValidator checks each mark layer', function (): void {
 	});
 });
 
-
 describe('ImageParamValidator filter params', function (): void {
 	it('accepts a chain and a duotone pair', function (): void {
 		expect(ImageParamValidator::validate(['filt' => 'ember,vignette']))->toBe(['filt' => 'ember,vignette'])

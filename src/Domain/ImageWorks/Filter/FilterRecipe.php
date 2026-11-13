@@ -16,9 +16,9 @@ use TotalCMS\Domain\ImageWorks\Exception\InvalidFilterException;
  */
 final readonly class FilterRecipe implements ImageFilter
 {
-	public const GROUPS     = ['look', 'duotone', 'effect'];
-	public const MAX_STEPS  = 12;
-	public const BLEND_MODES = ['normal', 'multiply', 'screen', 'overlay', 'soft-light'];
+	public const GROUPS         = ['look', 'duotone', 'effect'];
+	public const MAX_STEPS      = 12;
+	public const BLEND_MODES    = ['normal', 'multiply', 'screen', 'overlay', 'soft-light'];
 	public const LEAK_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top', 'bottom', 'left', 'right'];
 
 	/**
@@ -105,7 +105,7 @@ final readonly class FilterRecipe implements ImageFilter
 	{
 		$data = array_map(static fn (FilterStep $s): array => ['op' => $s->op, 'args' => $s->args], $this->steps);
 
-		return substr(sha1((string) json_encode($data)), 0, 8);
+		return substr(sha1((string)json_encode($data)), 0, 8);
 	}
 
 	private static function parseStep(string $name, mixed $raw): FilterStep
@@ -148,11 +148,11 @@ final readonly class FilterRecipe implements ImageFilter
 
 	private static function number(string $name, string $op, mixed $value, float $min, float $max): float
 	{
-		if ((!is_int($value) && !is_float($value)) || !is_finite((float) $value) || $value < $min || $value > $max) {
+		if ((!is_int($value) && !is_float($value)) || !is_finite((float)$value) || $value < $min || $value > $max) {
 			throw InvalidFilterException::forFilter($name, sprintf('%s needs a number from %s to %s', $op, $min, $max));
 		}
 
-		return (float) $value;
+		return (float)$value;
 	}
 
 	private static function hex(string $name, string $op, mixed $value): string

@@ -87,7 +87,7 @@ test('an unprefixed name is refused while the extensions other filters still reg
 });
 
 test('turning the capability off registers neither filter', function (): void {
-	$manager = bootImageFiltersFixture($this->container, false);
+	$manager  = bootImageFiltersFixture($this->container, false);
 	$registry = $this->container->get(ImageFilterRegistry::class);
 
 	expect($manager->getAllImageFilters())->toBe([])

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
-use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;

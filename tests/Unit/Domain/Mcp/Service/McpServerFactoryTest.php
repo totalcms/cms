@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Service;
 
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\Server;
 use Mcp\Server\Resource\SessionSubscriptionManager;
+use Mcp\Server\Server;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Subscription\InMemoryNotificationBus;
 use PHPUnit\Framework\TestCase;
