@@ -16,7 +16,6 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Seo\Data\OverlayPresets;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
-use TotalCMS\Support\Config;
 
 /**
  * What the overlay designer's record picker and presets need: the
@@ -43,7 +42,7 @@ readonly class OverlayPreviewOptions
 		private BuilderConfigService $builderConfig,
 		private AccessGuard $guard,
 		private EditionFeatureService $editions,
-		private Config $config,
+		private OverlayLayerSources $sources,
 	) {
 	}
 
@@ -53,7 +52,12 @@ readonly class OverlayPreviewOptions
 	 * A null actor (auth off) sees every collection and record. `layers`
 	 * says whether this edition draws overlays at all (Pro and above).
 	 *
-	 * @return array{layers:bool,collections:list<array{id:string,name:string}>,collection:string,objects:list<array{id:string,title:string,draft:bool}>,default:string,ownOverlay:bool,presets:list<array{id:string,overlay:array<string,mixed>}>}
+	 * The Layers tab's menus come along: `fields` are the collection's
+	 * properties a text layer can show, and `logos`, `fonts` and
+	 * `imageSources` fill the logo, font and photo controls
+	 * (OverlayLayerSources).
+	 *
+	 * @return array{layers:bool,collections:list<array{id:string,name:string}>,collection:string,objects:list<array{id:string,title:string,draft:bool}>,default:string,ownOverlay:bool,presets:list<array{id:string,overlay:array<string,mixed>}>,fields:list<array{path:string,label:string}>,logos:list<string>,fonts:list<string>,imageSources:list<array{id:string,name:string,images:list<array{path:string,label:string}>}>}
 	 */
 	public function for(?Actor $actor, string $collection, string $query = ''): array
 	{
@@ -62,15 +66,20 @@ readonly class OverlayPreviewOptions
 		$collection  = isset($byId[$collection]) ? $collection : (string)(array_key_first($byId) ?? '');
 		$meta        = $byId[$collection] ?? null;
 		$objects     = $collection === '' ? [] : $this->objectsOf($actor, $collection, $query);
+		$logos       = $this->sources->logos();
 
 		return [
-			'layers'      => $this->editions->can(EditionFeature::IMAGE_LAYERS),
-			'collections' => array_map(static fn (CollectionData $c): array => ['id' => $c->id, 'name' => $c->name], $collections),
-			'collection'  => $collection,
-			'objects'     => $objects,
-			'default'     => $this->defaultObject($collection, $objects),
-			'ownOverlay'  => $meta instanceof CollectionData && SocialImageBuilder::normalized(SeoSettings::json($meta->seo['imageOptions'] ?? null)) !== null,
-			'presets'     => OverlayPresets::all($this->firstLogo()),
+			'layers'       => $this->editions->can(EditionFeature::IMAGE_LAYERS),
+			'collections'  => array_map(static fn (CollectionData $c): array => ['id' => $c->id, 'name' => $c->name], $collections),
+			'collection'   => $collection,
+			'objects'      => $objects,
+			'default'      => $this->defaultObject($collection, $objects),
+			'ownOverlay'   => $meta instanceof CollectionData && SocialImageBuilder::normalized(SeoSettings::json($meta->seo['imageOptions'] ?? null)) !== null,
+			'presets'      => OverlayPresets::all($logos[0] ?? ''),
+			'fields'       => $meta instanceof CollectionData ? $this->sources->fields($meta->schema) : [],
+			'logos'        => $logos,
+			'fonts'        => $this->sources->fonts(),
+			'imageSources' => $this->sources->imageSources($actor),
 		];
 	}
 
@@ -157,25 +166,6 @@ readonly class OverlayPreviewOptions
 		}
 
 		return $objects[0]['id'] ?? '';
-	}
-
-	/** The first file in the watermarks gallery, for the logo preset. */
-	private function firstLogo(): string
-	{
-		$gallery = $this->config->imageworks['watermarksGallery'] ?? '';
-		if (!is_string($gallery) || $gallery === '') {
-			return '';
-		}
-
-		try {
-			$images = $this->objects->fetchObject('gallery', $gallery)->toArray()['gallery'] ?? [];
-		} catch (\Throwable) {
-			return '';
-		}
-
-		$first = is_array($images) ? (array_values($images)[0] ?? null) : null;
-
-		return is_array($first) && is_string($first['name'] ?? null) ? $first['name'] : '';
 	}
 
 	/** @param array<array-key,mixed> $entry */

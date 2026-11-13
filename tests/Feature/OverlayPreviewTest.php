@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Seo\Data\OverlayPresets;
 use TotalCMS\Domain\Seo\Data\SocialCardReason;
 use TotalCMS\Domain\Seo\Service\MetaBuilder;
+use TotalCMS\Domain\Seo\Service\OverlayLayerSources;
 use TotalCMS\Domain\Seo\Service\OverlayPreviewOptions;
 use TotalCMS\Domain\Seo\Service\OverlayPreviewer;
 use TotalCMS\Domain\Seo\Service\SeoContextFactory;
@@ -175,6 +176,44 @@ it('lists the collections and records to preview with', function (): void {
 		->and($options['default'])->toBe('hello')
 		->and($options['ownOverlay'])->toBeFalse()
 		->and(array_column($options['presets'], 'id'))->toContain('title-fade');
+});
+
+it('lists the fields a text layer can show, and leaves out the rest', function (): void {
+	$paths = array_column($this->picker->for(null, 'blog')['fields'], 'path');
+
+	expect($paths)->toContain('title', 'author', 'id', 'date')
+		->not->toContain('image', 'gallery');
+});
+
+it('walks into a card for the Insert field menu', function (): void {
+	$fields = $this->app->getContainer()->get(OverlayLayerSources::class)->fields('builder-page');
+	$byPath = array_column($fields, 'label', 'path');
+
+	expect($byPath)->toHaveKey('seo.title')
+		->and($byPath)->not->toHaveKey('seo')
+		->and($byPath)->not->toHaveKey('seo.image');
+});
+
+it('offers the image properties a photo layer can draw', function (): void {
+	$sources = array_column($this->picker->for(null, 'blog')['imageSources'], null, 'id');
+
+	expect($sources)->toHaveKey('blog')
+		->and(array_column($sources['blog']['images'], 'path'))->toBe(['image', 'gallery/first']);
+});
+
+it('lists the watermark logos and fonts', function (): void {
+	$c = $this->app->getContainer();
+	$c->get(CollectionFetcher::class)->fetchOrCreateReserved('gallery');
+	$c->get(ObjectSaver::class)->saveObject('gallery', ['id' => 'watermarks', 'gallery' => [
+		['name' => 'logo.png', 'size' => 10, 'width' => 100, 'height' => 100, 'mime' => 'image/png'],
+	]]);
+	$c->get(TotalCMS\Support\Config::class)->imageworks = ['watermarksGallery' => 'watermarks'] + $c->get(TotalCMS\Support\Config::class)->imageworks;
+
+	$options = $this->picker->for(null, 'blog');
+
+	expect($options['logos'])->toBe(['logo.png'])
+		->and(array_column($options['presets'], 'id'))->toContain('logo')
+		->and($options['fonts'])->toBeArray();
 });
 
 it('says when the collection has an overlay of its own', function (): void {

@@ -133,12 +133,18 @@ dialog.cms-modal.overlay-designer {
 		@media screen and (max-width: 60em) {
 			grid-template-columns : 1fr;
 			overflow-y            : auto;
+			padding               : 4px;
+			margin                : -4px;
 		}
 	}
 
 	.overlay-panes {
 		min-height : 0;
 		overflow-y : auto;
+		// Room inside the scroller for focus outlines, which it would clip;
+		// the negative margin keeps the content where it was.
+		padding    : 4px;
+		margin     : -4px;
 	}
 
 	.overlay-pane[hidden] { display : none; }
@@ -296,5 +302,244 @@ dialog.cms-modal.overlay-designer {
 		cursor     : pointer;
 		color      : oklch(var(--totalform-error));
 		text-decoration : underline;
+	}
+}
+
+//--------------------------------
+// Layers tab (javascript/totalform/overlay-designer/layers-panel.js)
+//--------------------------------
+
+dialog.cms-modal.overlay-designer {
+
+	.overlay-layers {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.75rem;
+	}
+
+	.overlay-layer-bar {
+		display     : flex;
+		align-items : center;
+		gap         : 0.75rem;
+
+		select { max-width : 14rem; }
+	}
+
+	.overlay-layer-max, .overlay-layer-empty, .overlay-layer-other {
+		margin    : 0;
+		font-size : 0.85rem;
+		color     : oklch(var(--totalform-help-color));
+	}
+
+	.overlay-layer-list {
+		list-style    : none;
+		margin        : 0;
+		padding       : 0;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+		overflow      : hidden;
+
+		&:empty { display : none; }
+	}
+
+	.overlay-layer {
+		display          : flex;
+		align-items      : center;
+		gap              : 0.6rem;
+		padding          : 0.45rem 0.6rem;
+		cursor           : pointer;
+		background-color : oklch(var(--totalform-background));
+
+		& + & { border-top : 1px solid oklch(var(--totalform-border-color)); }
+
+		&:hover { background-color : oklch(var(--totalform-icon-bg)); }
+
+		&.selected {
+			background-color : oklch(var(--totalform-accent) / 0.15);
+			box-shadow       : inset 3px 0 0 oklch(var(--totalform-accent));
+		}
+
+		&.hidden-layer .overlay-layer-name { opacity : 0.5; }
+
+		&:focus-visible { outline : 2px solid oklch(var(--totalform-accent)); outline-offset : -2px; }
+	}
+
+	// Mask icons share one recipe; each sets --overlay-icon.
+	.overlay-layer-handle, .overlay-layer-icon, .overlay-layer-eye, .overlay-layer-delete {
+		flex-shrink : 0;
+		width       : 1rem;
+		height      : 1rem;
+		background  : oklch(var(--totalform-darkgray));
+		mask        : var(--overlay-icon) center / contain no-repeat;
+	}
+
+	.overlay-layer-handle {
+		--overlay-icon : var(--icon-bars);
+		cursor         : grab;
+		opacity        : 0.6;
+	}
+
+	.overlay-layer-icon {
+		&.kind-fill  { --overlay-icon : var(--icon-paint-roller); }
+		&.kind-text  { --overlay-icon : var(--icon-text); }
+		&.kind-image { --overlay-icon : var(--icon-image); }
+		&.kind-logo  { --overlay-icon : var(--icon-copyright); }
+		&.kind-other { --overlay-icon : var(--icon-json); }
+	}
+
+	.overlay-layer-name {
+		flex          : 1;
+		min-width     : 0;
+		overflow      : hidden;
+		text-overflow : ellipsis;
+		white-space   : nowrap;
+		color         : oklch(var(--totalform-text-color));
+	}
+
+	.overlay-layer-eye, .overlay-layer-delete {
+		border : none;
+		padding: 0;
+		cursor : pointer;
+
+		&:hover { background : oklch(var(--totalform-accent)); }
+	}
+
+	.overlay-layer-eye {
+		--overlay-icon : var(--icon-eye);
+
+		&.off { --overlay-icon : var(--icon-hidden); }
+	}
+
+	.overlay-layer-delete {
+		--overlay-icon : var(--icon-trash);
+
+		&:hover { background : oklch(var(--totalform-error)); }
+	}
+
+	.overlay-layer-controls {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.75rem;
+
+		&:empty { display : none; }
+
+		h3 {
+			margin    : 0.25rem 0 0;
+			font-size : 1rem;
+		}
+	}
+
+	.overlay-control {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.3rem;
+		min-width      : 0;
+	}
+
+	.overlay-control-label {
+		font-size   : 0.85rem;
+		font-weight : 600;
+		color       : oklch(var(--totalform-label-color));
+	}
+
+	.overlay-control-pair {
+		display               : grid;
+		grid-template-columns : repeat(2, minmax(0, 1fr));
+		gap                   : 0.75rem;
+	}
+
+	.overlay-control-check {
+		flex-direction : row;
+		align-items    : center;
+		gap            : 0.5rem;
+	}
+
+	.overlay-size, .overlay-color, .overlay-range, .overlay-text-row {
+		display     : flex;
+		align-items : center;
+		gap         : 0.5rem;
+		min-width   : 0;
+	}
+
+	.overlay-size {
+		input  { flex : 1; min-width : 0; }
+		select { flex : 0 0 auto; width : auto; }
+	}
+
+	.overlay-color {
+		select { flex : 1; min-width : 0; }
+
+		// A round swatch: the browser's own inner frame and padding removed.
+		input[type="color"] {
+			flex          : 0 0 2rem;
+			width         : 2rem;
+			height        : 2rem;
+			padding       : 0;
+			border        : 1px solid oklch(var(--totalform-border-color));
+			border-radius : 50%;
+			background    : none;
+			overflow      : hidden;
+			cursor        : pointer;
+			appearance    : none;
+
+			&::-webkit-color-swatch-wrapper { padding : 0; }
+
+			&::-webkit-color-swatch {
+				border        : none;
+				border-radius : 50%;
+			}
+
+			&::-moz-color-swatch {
+				border        : none;
+				border-radius : 50%;
+			}
+		}
+	}
+
+	.overlay-range {
+		input  { flex : 1; }
+		output { min-width : 3em; text-align : right; font-variant-numeric : tabular-nums; }
+	}
+
+	.overlay-text-row {
+		.overlay-text   { flex : 1; min-width : 0; }
+		.overlay-insert { flex : 0 0 auto; width : auto; max-width : 12rem; }
+	}
+
+	// The nine ImageWorks positions as a 3×3 grid.
+	.overlay-position {
+		display               : grid;
+		grid-template-columns : repeat(3, 1.75rem);
+		gap                   : 3px;
+	}
+
+	.overlay-position-cell {
+		width            : 1.75rem;
+		aspect-ratio     : 1200 / 630;
+		height           : auto;
+		padding          : 0;
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : 3px;
+		background-color : oklch(var(--totalform-icon-bg));
+		cursor           : pointer;
+
+		&:hover { border-color : oklch(var(--totalform-accent)); }
+
+		&[aria-pressed="true"] {
+			background-color : oklch(var(--totalform-accent));
+			border-color     : oklch(var(--totalform-accent));
+		}
+	}
+
+	.overlay-photo {
+		display               : grid;
+		grid-template-columns : repeat(3, minmax(0, 1fr));
+		gap                   : 0.75rem;
+
+		.overlay-control-wide { grid-column : 1 / -1; }
+
+		@media screen and (max-width: 40em) {
+			grid-template-columns : 1fr;
+		}
 	}
 }

@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 import { fitOf, layerKind, marksOf, parseOverlay, serializeOverlay, summarize, withFit, withMarks } from '../../javascript/totalform/overlay-designer/overlay.js';
 import { LivePreview } from '../../javascript/totalform/overlay-designer/preview-client.js';
 import OverlayDesigner from '../../javascript/totalform/overlay-designer/designer.js';
+import { MAX_LAYERS, editorKind, formatSize, imagePath, insertPlaceholder, moveLayer, newLayer, otherKeys, parseImagePath, parseSize, previewMarks, withKey } from '../../javascript/totalform/overlay-designer/layers.js';
 
 //-----------------------------------------------
 // The share-image overlay designer: the overlay helpers, the live preview's
@@ -74,6 +75,60 @@ describe('overlay helpers', () => {
 	});
 });
 
+describe('layer helpers', () => {
+	test('reads and writes sizes in card units and pixels', () => {
+		expect(parseSize('7w')).toEqual({ value: '7', unit: 'w' });
+		expect(parseSize('32.5h')).toEqual({ value: '32.5', unit: 'h' });
+		expect(parseSize(40)).toEqual({ value: '40', unit: 'px' });
+		expect(parseSize('nonsense')).toEqual({ value: '', unit: 'w' });
+
+		expect(formatSize('7', 'w')).toBe('7w');
+		expect(formatSize('30', 'h')).toBe('30h');
+		expect(formatSize('40.4', 'px')).toBe(40);
+		expect(formatSize('', 'w')).toBeNull();
+	});
+
+	test('a key set to nothing is removed, and the rest of the layer kept', () => {
+		const layer = { ...TITLE, marktextstroke: 4 };
+
+		expect(withKey(layer, 'marktextsize', null)).toEqual({ marktext: '${socialTitle}', marktextstroke: 4 });
+		expect(withKey(layer, 'marktextcolor', 'ff0000').marktextstroke).toBe(4);
+	});
+
+	test('lists the keys a layer sets that its controls do not show', () => {
+		expect(otherKeys({ ...TITLE, marktextstroke: 4, marktextangle: 10 })).toEqual(['marktextstroke', 'marktextangle']);
+		expect(otherKeys(FADE)).toEqual([]);
+	});
+
+	test('a photo layer still being built is a photo layer, but not drawn', () => {
+		const photo = newLayer('image');
+
+		expect(editorKind(photo)).toBe('image');
+		expect(previewMarks([FADE, photo], new Set())).toEqual([FADE]);
+	});
+
+	test('the preview leaves out hidden layers', () => {
+		expect(previewMarks([FADE, TITLE], new Set([FADE]))).toEqual([TITLE]);
+	});
+
+	test('reads a photo path back into the builder, and writes it', () => {
+		expect(parseImagePath('team/${author}/photo')).toEqual({ collection: 'team', field: 'author', image: 'photo' });
+		expect(parseImagePath('team/jane/photo')).toBeNull();
+		expect(imagePath({ collection: 'team', field: 'author', image: 'gallery/first' })).toBe('team/${author}/gallery/first');
+		expect(imagePath({ collection: 'team', field: '', image: 'photo' })).toBe('');
+	});
+
+	test('inserts a placeholder over the selection', () => {
+		expect(insertPlaceholder('By ', 3, 3, 'author')).toEqual({ text: 'By ${author}', cursor: 12 });
+		expect(insertPlaceholder('Hello NAME!', 6, 10, 'title')).toEqual({ text: 'Hello ${title}!', cursor: 14 });
+	});
+
+	test('moves a layer in drawing order', () => {
+		expect(moveLayer(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']);
+		expect(moveLayer(['a', 'b'], 0, 5)).toEqual(['a', 'b']);
+	});
+});
+
 describe('LivePreview', () => {
 	test('drops an answer that arrives after a newer request', async () => {
 		const resolvers = [];
@@ -135,7 +190,7 @@ describe('OverlayDesigner', () => {
 		globalThis.fetch = vi.fn(async url => ({
 			ok   : true,
 			json : async () => (String(url).includes('options')
-				? { layers: true, collections: [{ id: 'blog', name: 'Blog' }], collection: 'blog', objects: [{ id: 'hello', title: 'Hello', draft: false }], default: 'hello', ownOverlay: false, presets: [] }
+				? { layers: true, collections: [{ id: 'blog', name: 'Blog' }], collection: 'blog', objects: [{ id: 'hello', title: 'Hello', draft: false }], default: 'hello', ownOverlay: false, presets: [], fields: [{ path: 'title', label: 'Title' }, { path: 'seo.title', label: 'SEO → Title' }], logos: ['logo.png'], fonts: [], imageSources: [{ id: 'team', name: 'Team', images: [{ path: 'photo', label: 'Photo' }] }] }
 				: { reason: 'drawn', message: 'Drawn', layer: null, asIs: false, image: 'data:image/jpeg;base64,AA==' }),
 		}));
 	});
@@ -193,5 +248,99 @@ describe('OverlayDesigner', () => {
 
 		expect(designer.applyButton.disabled).toBe(true);
 		expect(designer.activeTab).toBe('json');
+	});
+
+	test('opens on the Layers tab, top layer first', async () => {
+		const { designer } = build(stored);
+		await designer.open();
+
+		const names = [...document.querySelectorAll('.overlay-layer-name')].map(node => node.textContent);
+		expect(designer.activeTab).toBe('layers');
+		expect(names).toEqual(['title', 'fade']);
+	});
+
+	test('editing a layer keeps the keys it does not show, through Apply', async () => {
+		const { field, designer } = build(JSON.stringify({ marks: [{ ...TITLE, marktextstroke: 4 }] }));
+		await designer.open();
+
+		const text = document.querySelector('.overlay-text');
+		text.value = 'By ${author}';
+		text.dispatchEvent(new Event('input'));
+		designer.applyButton.click();
+
+		expect(JSON.parse(field.input.value)).toEqual({ marks: [{ marktext: 'By ${author}', marktextsize: '7w', marktextstroke: 4 }] });
+		expect(document.querySelector('.overlay-layer-other').textContent).toContain('marktextstroke');
+	});
+
+	test('the Insert field menu puts a placeholder at the cursor', async () => {
+		const { designer } = build(JSON.stringify({ marks: [{ marktext: 'Hi ' }] }));
+		await designer.open();
+
+		const text = document.querySelector('.overlay-text');
+		text.setSelectionRange(3, 3);
+		const menu = document.querySelector('.overlay-insert');
+		expect([...menu.querySelectorAll('option')].map(o => o.value)).toContain('seo.title');
+
+		menu.value = 'seo.title';
+		menu.dispatchEvent(new Event('change'));
+
+		expect(marksOf(designer.working)[0].marktext).toBe('Hi ${seo.title}');
+		expect(menu.value).toBe('');
+	});
+
+	test('a new fill goes underneath, anything else on top', async () => {
+		const { designer } = build(JSON.stringify({ marks: [TITLE] }));
+		await designer.open();
+
+		const add = document.querySelector('.overlay-layer-add');
+		add.value = 'fill';
+		add.dispatchEvent(new Event('change'));
+		add.value = 'logo';
+		add.dispatchEvent(new Event('change'));
+
+		expect(marksOf(designer.working).map(editorKind)).toEqual(['fill', 'text', 'logo']);
+		expect(marksOf(designer.working)[2].mark).toBe('logo.png');
+	});
+
+	test('stops adding at six layers', async () => {
+		const { designer } = build(JSON.stringify({ marks: Array.from({ length: MAX_LAYERS }, () => TITLE) }));
+		await designer.open();
+
+		expect(document.querySelector('.overlay-layer-add').disabled).toBe(true);
+	});
+
+	test('a hidden layer leaves the preview but stays in Apply', async () => {
+		const { field, designer } = build(stored);
+		await designer.open();
+
+		// The fade is the bottom row; hide it.
+		const rows = document.querySelectorAll('.overlay-layer');
+		rows[1].querySelector('.overlay-layer-eye').click();
+
+		expect(designer.previewBody().overlay.marks).toEqual([TITLE]);
+		designer.applyButton.click();
+		expect(JSON.parse(field.input.value).marks).toEqual([FADE, TITLE]);
+	});
+
+	test('deleting a layer removes it from the working copy', async () => {
+		const { designer } = build(stored);
+		await designer.open();
+
+		document.querySelector('.overlay-layer .overlay-layer-delete').click();
+
+		expect(marksOf(designer.working)).toEqual([FADE]);
+	});
+
+	test('the photo builder writes collection/${field}/image', async () => {
+		const { designer } = build(JSON.stringify({ marks: [newLayer('image')] }));
+		await designer.open();
+
+		const [field, collection] = document.querySelectorAll('.overlay-photo select');
+		field.value = 'title';
+		field.dispatchEvent(new Event('change'));
+		collection.value = 'team';
+		collection.dispatchEvent(new Event('change'));
+
+		expect(marksOf(designer.working)[0].markimage).toBe('team/${title}/photo');
 	});
 });

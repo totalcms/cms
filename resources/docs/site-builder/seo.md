@@ -371,8 +371,18 @@ The overlay is a list of [ImageWorks layers](docs/twig/imageworks#layered-marks)
 Open **Site SEO** and click **Add overlay…** beside **Social Image Overlay**. A dialog opens with your share image on the right, drawn on one of your own records:
 
 1. **Pick a preset.** Title on fade, Title and site name, Byline, Band, and Logo in the corner (offered once the **watermarks** gallery has a file). Each one shows its card on the record you are previewing.
-2. **Check it on other records.** **Preview with** switches the record, so you can see a long title, a short one and a light photo. The line under the preview says whether the card draws, or why it doesn't, in the same words as [Share Cards](docs/site-builder/share-cards).
-3. **Click Apply, then save the record.** Nothing is saved until you save the form. **Cancel** or Escape throws away what you did in the dialog.
+2. **Adjust it on the Layers tab.** The list runs from the top layer down, as in an image editor: drag a row to move it, click the eye to hide it from the preview while you work, or delete it. **Add layer** offers a Fill, Text, a Photo from a record, or a Logo, up to six layers. Select a layer to change it (see below).
+3. **Check it on other records.** **Preview with** switches the record, so you can see a long title, a short one and a light photo. The line under the preview says whether the card draws, or why it doesn't, in the same words as [Share Cards](docs/site-builder/share-cards).
+4. **Click Apply, then save the record.** Nothing is saved until you save the form. **Cancel** or Escape throws away what you did in the dialog.
+
+What each kind of layer offers:
+
+- **Fill:** a color (your own, or one of the photo's five palette colors), opacity, a fade that is solid at one edge and clear at the other, a size and a position. Put it under the text to keep white text readable on a light photo.
+- **Text:** the text, a size, a wrap width and a line limit (long titles step down in size to fit), alignment, colors, a font from the **watermark-fonts** depot, a position, padding and a lift off the edge. **Insert field…** puts a placeholder at the cursor: the share title, the site name or page path, or any text field of the record you are previewing, including fields inside cards (`${seo.title}`).
+- **Photo from a record:** pick the field on this record that holds another record's id, the collection that id points to, and the image. A post's author photo is `team/${author}/photo`. Turn on **Cut to a circle** for a profile photo.
+- **Logo:** a file from the watermarks gallery, with a size, opacity and position.
+
+Sizes take a unit: **% width** or **% height** of the card, or pixels at 1200×630. Percentages keep the card right at every size. A layer key the dialog has no control for (a text stroke or shadow, say) is kept, and listed under the layer's controls so it doesn't surprise you.
 
 **Crop** at the top of the dialog sets which part of the photo is kept (`fit`). **Remove overlay** clears it, so shares use the plain image again.
 

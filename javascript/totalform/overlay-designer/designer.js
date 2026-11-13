@@ -3,12 +3,15 @@ import tcmsConfirm from '../../confirm-dialog';
 import { t } from '../../i18n';
 import { FITS, fitOf, hasLayers, marksOf, parseOverlay, serializeOverlay, summarize, withFit, withMarks } from './overlay';
 import { LivePreview, fetchOptions, fetchPreview } from './preview-client';
+import LayersPanel from './layers-panel';
+import { previewMarks } from './layers';
 
 //-----------------------------------------------
 // The share-image overlay designer: a JSON field with
 // `"settings": {"designer": "socialOverlay"}` shows a one-line summary and a
 // Design button instead of a code editor. The button opens a dialog with
-// presets, the raw JSON and a live preview on a record the user picks.
+// presets, a layer editor, the raw JSON and a live preview on a record the
+// user picks.
 //
 // The field's textarea stays the value holder, so the JSON field's
 // getValue(), validate() and save are unchanged. The dialog edits a working
@@ -201,11 +204,14 @@ export default class OverlayDesigner {
 		this.jsonText  = parsed.ok ? serializeOverlay(this.working) : this.input.value;
 		this.jsonValid = parsed.ok;
 		this.discard   = false;
+		this.hidden    = new Set();
 
 		if (!this.dialog) this.buildDialog();
 		this.dialog.open();
 
-		this.showTab(parsed.ok ? 'presets' : 'json');
+		this.layers.selected = -1;
+		this.layers.render();
+		this.showTab(!parsed.ok ? 'json' : (hasLayers(this.working) ? 'layers' : 'presets'));
 		this.syncFit();
 		this.syncJson();
 		this.syncValidity(parsed.error);
@@ -217,6 +223,7 @@ export default class OverlayDesigner {
 			return;
 		}
 		this.syncPicker();
+		this.layers.render();
 		this.drawPresets();
 		this.drawNow();
 	}
@@ -242,7 +249,7 @@ export default class OverlayDesigner {
 		// Tabs.
 		this.tabs = {};
 		const tabList = element('nav', { className: 'overlay-tabs', role: 'tablist' });
-		for (const [name, label] of [['presets', t('overlay.tab.presets', {}, 'Presets')], ['json', t('overlay.tab.json', {}, 'JSON')]]) {
+		for (const [name, label] of [['presets', t('overlay.tab.presets', {}, 'Presets')], ['layers', t('overlay.tab.layers', {}, 'Layers')], ['json', t('overlay.tab.json', {}, 'JSON')]]) {
 			const tab = element('button', { type: 'button', role: 'tab', className: 'overlay-tab', text: label });
 			tab.addEventListener('click', () => this.showTab(name));
 			this.tabs[name] = tab;
@@ -255,8 +262,10 @@ export default class OverlayDesigner {
 		this.jsonError  = element('p', { className: 'overlay-json-error', hidden: true });
 		this.panes = {
 			presets : element('section', { className: 'overlay-pane', role: 'tabpanel' }, [this.presetGrid]),
+			layers  : element('section', { className: 'overlay-pane overlay-layers', role: 'tabpanel' }),
 			json    : element('section', { className: 'overlay-pane', role: 'tabpanel' }, [this.jsonHolder, this.jsonError]),
 		};
+		this.layers = new LayersPanel(this.panes.layers, this);
 
 		// Preview.
 		this.collectionSelect = element('select', { className: 'overlay-collection', hidden: this.scope === 'collection' });
@@ -337,12 +346,17 @@ export default class OverlayDesigner {
 		if (name === 'json') this.ensureJsonEditor();
 	}
 
-	/** After any edit that is not typed into the JSON tab. */
-	changed() {
+	/**
+	 * After any edit that is not typed into the JSON tab. The Layers tab
+	 * redraws itself for its own edits (so a control keeps its focus), and
+	 * is redrawn here for everyone else's.
+	 */
+	changed({ from = '' } = {}) {
 		this.jsonText = serializeOverlay(this.working);
 		this.syncJson();
 		this.syncFit();
 		this.markPreset();
+		if (from !== 'layers') this.layers.render();
 		this.drawSoon();
 	}
 
@@ -396,6 +410,7 @@ export default class OverlayDesigner {
 		this.working = parsed.overlay;
 		this.syncFit();
 		this.markPreset();
+		this.layers.render();
 		this.drawSoon();
 	}
 
@@ -403,6 +418,7 @@ export default class OverlayDesigner {
 		this.applyButton.disabled = !this.jsonValid;
 		this.fitSelect.disabled   = !this.jsonValid;
 		this.tabs.presets.disabled = !this.jsonValid;
+		this.tabs.layers.disabled  = !this.jsonValid;
 		this.jsonError.hidden      = this.jsonValid;
 		this.jsonError.textContent = this.jsonValid ? '' : t('overlay.json_invalid', { error: error || t('form.invalid_json', {}, 'Invalid JSON format.') }, `Invalid JSON: ${error}`);
 	}
@@ -457,7 +473,10 @@ export default class OverlayDesigner {
 		}
 
 		this.working = withMarks(this.working, structuredClone(preset.overlay.marks));
+		this.hidden.clear();
+		this.layers.selected = -1;
 		this.changed();
+		this.showTab('layers');
 	}
 
 	//-------------------------
@@ -515,13 +534,16 @@ export default class OverlayDesigner {
 
 	afterRecordChange() {
 		this.syncPicker();
+		// The Insert field menu lists the preview collection's fields.
+		this.layers.renderControls();
 		this.drawPresets();
 		this.drawNow();
 		this.loadThumb();
 	}
 
+	/** The working copy, less the layers hidden with the eye or not finished. */
 	previewBody() {
-		return { ...this.record, overlay: this.working, size: 'full' };
+		return { ...this.record, overlay: withMarks(this.working, previewMarks(marksOf(this.working), this.hidden ?? new Set())), size: 'full' };
 	}
 
 	drawNow() {
