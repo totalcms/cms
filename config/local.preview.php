@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Monolog\Level;
+use TotalCMS\Support\PreviewDataDir;
 
 // Stacks Preview Environment
 // echo "Stacks Preview Environment\n";
@@ -15,7 +16,10 @@ $settings['env'] = 'preview';
 // This file can exist in order to set a preview domain for the preview environment
 $previewDomainFile = __DIR__ . '/preview-domain';
 
-$settings['datadir'] = sys_get_temp_dir() . '/Stacks-TotalCMS/tcms-data';
+// The first temp folder this PHP can write to, else the preview's own tcms
+// folder (see PreviewDataDir: a PHP without $TMPDIR got /var/tmp, which the
+// RapidWeaver sandbox refuses, and Preview was blank).
+$settings['datadir'] = PreviewDataDir::resolve(dirname(__DIR__)) . '/tcms-data';
 if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 	$settings['datadir'] .= '-' . $_SERVER['DOMAIN'];
 } elseif (file_exists($previewDomainFile)) {
