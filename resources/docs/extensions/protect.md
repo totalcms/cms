@@ -66,6 +66,10 @@ Set in **Admin → Extensions → Protect**. These apply to every page with `pro
 | `promptTitle` | string | `"Enter passcode to view"` | Heading shown on the passcode form. |
 | `cookieHours` | number | `168` | How long a visitor stays unlocked after entering the passcode, in hours (168 = 7 days). Set to `0` for a session cookie that clears when the browser closes. |
 | `globalScope` | toggle | `false` | **Site-wide passcode.** Lock the whole site behind one shared passcode and a single unlock cookie instead of per-page locking. When on, every protected page uses the Default Passcode and per-page passcodes/`protectScope` groups are ignored — enter the code once and the whole site unlocks. |
+| `headerHtml` | code | none | **HTML Above the Form.** Shown inside the box, above the heading and the form: a logo, a welcome line, a contact link. Added exactly as written, so it can carry a `<style>` block to restyle the page. |
+| `footerHtml` | code | none | **HTML at the Bottom of the Page.** Shown at the bottom of the passcode page, below the box: a copyright line, links, a script. Added exactly as written. |
+
+Both HTML settings apply to every protected page, including pages gated with `protect_page()`. They go into the page unescaped, which is safe because only an admin can save extension settings. To restyle the page, target `.tcms-protect` (the box), `.tcms-protect-header` and `.tcms-protect-footer`.
 
 ## Per-page configuration
 

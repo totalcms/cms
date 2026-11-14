@@ -549,6 +549,55 @@ final class ProtectMiddlewareTest extends TestCase
 		$this->assertStringNotContainsString('Site Preview', $body);
 	}
 
+	// --- custom HTML around the form ---
+
+	public function testHeaderHtmlSitsAboveTheFormAndFooterHtmlAtTheBottom(): void
+	{
+		$middleware = new ProtectMiddleware(
+			self::TEST_SECRET,
+			defaultPasscode: '1234',
+			headerHtml: '<img src="logo.svg" alt="Acme">',
+			footerHtml: '<p>&copy; Acme</p>',
+		);
+
+		$response = $middleware->handle($this->get('/preview'), $this->page('preview', []));
+
+		$this->assertNotNull($response);
+		$body   = (string)$response->getBody();
+		$header = strpos($body, '<img src="logo.svg" alt="Acme">');
+		$footer = strpos($body, '<p>&copy; Acme</p>');
+		$this->assertIsInt($header, 'The header HTML is added as written');
+		$this->assertIsInt($footer, 'The footer HTML is added as written');
+		$this->assertLessThan((int)strpos($body, '<form'), $header);
+		$this->assertGreaterThan((int)strpos($body, '</form>'), $footer);
+		$this->assertLessThan((int)strpos($body, '</body>'), $footer);
+	}
+
+	public function testNoCustomHtmlLeavesNoEmptyWrappers(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, defaultPasscode: '1234', headerHtml: "  \n", footerHtml: '');
+
+		$response = $middleware->handle($this->get('/preview'), $this->page('preview', []));
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringNotContainsString('<div class="tcms-protect-header">', $body);
+		$this->assertStringNotContainsString('<footer', $body);
+	}
+
+	public function testCustomHtmlAlsoShowsWithTheError(): void
+	{
+		$middleware = new ProtectMiddleware(self::TEST_SECRET, defaultPasscode: '1234', headerHtml: '<b>Acme</b>', footerHtml: '<i>Call us</i>');
+
+		$response = $middleware->handle($this->post('/preview', ['passcode' => '0000']), $this->page('preview', []));
+
+		$this->assertNotNull($response);
+		$body = (string)$response->getBody();
+		$this->assertStringContainsString('Incorrect passcode.', $body);
+		$this->assertStringContainsString('<b>Acme</b>', $body);
+		$this->assertStringContainsString('<i>Call us</i>', $body);
+	}
+
 	// --- helpers ---
 
 	/** @param array<string,mixed> $data */

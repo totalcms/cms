@@ -35,6 +35,20 @@
 			"label": "Site-wide passcode",
 			"help": "Lock the whole site behind one shared passcode instead of locking each page separately. When on, every protected page uses the Default Passcode and a single unlock cookie — enter the code once and the whole site unlocks. Per-page passcodes and protectScope groups are ignored while this is on.",
 			"default": false
+		},
+		"headerHtml": {
+			"type": "string",
+			"field": "code",
+			"label": "HTML Above the Form",
+			"help": "Shown above the passcode form, inside the box: a logo, a welcome line, a contact link. Added as written, so it can hold <code>&lt;style&gt;</code> too. Applies to every protected page.",
+			"settings": { "mode": "html", "rows": 8 }
+		},
+		"footerHtml": {
+			"type": "string",
+			"field": "code",
+			"label": "HTML at the Bottom of the Page",
+			"help": "Shown at the bottom of the passcode page, below the box: a copyright line, links, a script. Added as written. Applies to every protected page.",
+			"settings": { "mode": "html", "rows": 8 }
 		}
 	}
 }

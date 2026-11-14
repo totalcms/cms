@@ -33,6 +33,10 @@ class Extension implements ExtensionInterface
 		// Site-wide mode: one shared passcode + cookie for every protected page.
 		$globalScope = (bool)$context->setting('globalScope', false);
 
+		// Admin-written HTML around the form: above it, and at the bottom of the page.
+		$headerHtml = (string)$context->setting('headerHtml', '');
+		$footerHtml = (string)$context->setting('footerHtml', '');
+
 		$storage = $context->storage();
 
 		$context->addContainerDefinition(
@@ -53,6 +57,8 @@ class Extension implements ExtensionInterface
 				),
 				$cookieTtl,
 				$globalScope,
+				$headerHtml,
+				$footerHtml,
 			),
 		);
 

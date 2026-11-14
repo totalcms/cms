@@ -62,6 +62,11 @@ class ProtectMiddleware implements PageMiddlewareInterface
 	 *        Site-wide mode: every protected page shares one scope cookie and the
 	 *        default passcode, so a single code unlocks the whole site. Per-page
 	 *        passcodes and `protectScope` groups are ignored while this is on.
+	 * @param string $headerHtml
+	 *        HTML shown above the form, inside the box. Added unescaped: only an
+	 *        admin can save extension settings, the same trust as a template.
+	 * @param string $footerHtml
+	 *        HTML shown at the bottom of the page, below the box. Added unescaped.
 	 */
 	public function __construct(
 		private readonly string $secret,
@@ -70,6 +75,8 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		private readonly ?\Closure $isAdmin = null,
 		private readonly int $cookieTtl = self::COOKIE_TTL,
 		private readonly bool $globalScope = false,
+		private readonly string $headerHtml = '',
+		private readonly string $footerHtml = '',
 	) {
 	}
 
@@ -281,6 +288,8 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		$numeric  = $passcode === '' || ctype_digit($passcode);
 		$keypad   = $numeric ? ' inputmode="numeric" pattern="[0-9]*"' : '';
 		$hint     = $numeric ? '0000' : 'Passcode';
+		$header   = trim($this->headerHtml) !== '' ? '<div class="tcms-protect-header">' . $this->headerHtml . '</div>' : '';
+		$footer   = trim($this->footerHtml) !== '' ? '<footer class="tcms-protect-footer">' . $this->footerHtml . '</footer>' : '';
 
 		$html = <<<HTML
 		<!DOCTYPE html>
@@ -292,8 +301,10 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		<title>{$title}</title>
 		<style>
 		*{margin:0;padding:0;box-sizing:border-box}
-		body{font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;color:#333}
-		.tcms-protect{text-align:center;padding:2rem;max-width:360px}
+		body{font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;min-height:100vh;background:#f5f5f5;color:#333}
+		.tcms-protect{text-align:center;padding:2rem;max-width:360px;margin:auto}
+		.tcms-protect-header{margin-bottom:1.5rem}
+		.tcms-protect-footer{text-align:center;padding:1rem;font-size:.875rem}
 		.tcms-protect h1{font-size:1.25rem;font-weight:600;margin-bottom:1.5rem}
 		.tcms-protect form{display:flex;flex-direction:column;gap:.75rem}
 		.tcms-protect input[type="text"]{font-size:1.5rem;text-align:center;letter-spacing:.5em;padding:.75rem 1rem;border:2px solid #ddd;border-radius:8px;outline:none;font-variant-numeric:tabular-nums}
@@ -305,6 +316,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		</head>
 		<body>
 		<div class="tcms-protect">
+		{$header}
 		<h1>{$title}</h1>
 		{$message}
 		<form method="post">
@@ -312,6 +324,7 @@ class ProtectMiddleware implements PageMiddlewareInterface
 		<button type="submit">Submit</button>
 		</form>
 		</div>
+		{$footer}
 		</body>
 		</html>
 		HTML;
