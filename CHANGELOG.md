@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.6.10] - Unreleased
+## [3.6.10] - 2026-11-13
 
 ### Security
 
