@@ -48,7 +48,12 @@ export default class DataVisualizer {
 		this.sizeCanvas();
 
 		try {
-			const { default: mermaid } = await import('mermaid');
+			// d3-transition adds selection.transition(), which Mermaid's node
+			// tooltips call on every mouseover and mouseout. Mermaid imports only
+			// `select` from d3, whose package says it has no side effects, so the
+			// bundle dropped it and leaving a node threw "transition is not a
+			// function" (TOTALCMS-DASHBOARD-63).
+			const [{ default: mermaid }] = await Promise.all([import('mermaid'), import('d3-transition')]);
 			mermaid.initialize({
 				startOnLoad : false,
 				theme       : this.prefersDark() ? 'dark' : 'default',

@@ -59,6 +59,9 @@
 				// isn't ours (TOTALCMS-DASHBOARD-61, -62, one site).
 				if (message.includes('Native protected file field')) return null;
 				if (errorName === 'ReferenceError' && message === "Can't find variable: await") return null;
+				// The same site's generated globals (`__releasesLive155`). Total CMS's
+				// own double-underscore globals all start with __tcms.
+				if (errorName === 'ReferenceError' && /(Can't find variable: |^)__(?!tcms)\w+( is not defined)?$/.test(message)) return null;
 				if (event.exception && event.exception.values) {
 					var frames = event.exception.values.flatMap(function(v) {
 						return (v.stacktrace && v.stacktrace.frames) || [];

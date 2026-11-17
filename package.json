@@ -66,6 +66,7 @@
     "awesomplete": "^1.1.7",
     "choices.js": "^11.2.4",
     "codemirror": "^6.0.2",
+    "d3-transition": "^3.0.2",
     "dompurify": "^3.4.17",
     "highlight.js": "^11.12.0",
     "htmx.org": "4.0.0-beta6",
