@@ -32,6 +32,14 @@ use function Sentry\flush;
 class CliApplication
 {
 	/**
+	 * Names of the commands extensions added, so a fatal error during one is
+	 * tagged as the extension's (see tagCommand()).
+	 *
+	 * @var array<string,true>
+	 */
+	private static array $extensionCommands = [];
+
+	/**
 	 * Write to stderr without assuming the CLI SAPI.
 	 *
 	 * STDIN/STDOUT/STDERR are defined only under `cli`, so a bare
@@ -219,6 +227,9 @@ class CliApplication
 					continue;
 				}
 				$app->addCommand($command);
+				if ($name !== null) {
+					self::$extensionCommands[$name] = true;
+				}
 			}
 		} catch (\Throwable $e) {
 			self::stderr("Warning: Failed to load extension commands: {$e->getMessage()}\n");
@@ -291,8 +302,10 @@ class CliApplication
 		configureScope(static function (Scope $scope) use ($command): void {
 			$scope->setTag('context', 'cli');
 
-			if ($command?->getName() !== null) {
-				$scope->setTag('command', $command->getName());
+			$name = $command?->getName();
+			if ($name !== null) {
+				$scope->setTag('command', $name);
+				$scope->setTag(SentryMiddleware::COMMAND_SOURCE_TAG, isset(self::$extensionCommands[$name]) ? 'extension' : 'core');
 			}
 		});
 	}

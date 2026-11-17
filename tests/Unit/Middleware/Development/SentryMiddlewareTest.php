@@ -51,7 +51,8 @@ final class SentryMiddlewareTest extends TestCase
 	 * $fromTotalCms is false: built here, it would otherwise come from a test
 	 * file, which the filter drops as a site's own script.
 	 */
-	private function filter(\Throwable $exception, bool $fromTotalCms = true): ?Event
+	/** @param array<string,string> $tags the scope's tags, as Sentry applies them before before_send */
+	private function filter(\Throwable $exception, bool $fromTotalCms = true, array $tags = []): ?Event
 	{
 		if ($fromTotalCms) {
 			(new \ReflectionProperty($exception, 'file'))->setValue($exception, PathResolver::packageRoot() . '/src/Domain/Fake/Thrower.php');
@@ -63,7 +64,10 @@ final class SentryMiddlewareTest extends TestCase
 
 		$method = new \ReflectionMethod(SentryMiddleware::class, 'filterEvent');
 
-		return $method->invoke(null, Event::createEvent(), EventHint::fromArray(['exception' => $exception]));
+		$event = Event::createEvent();
+		$event->setTags($tags);
+
+		return $method->invoke(null, $event, EventHint::fromArray(['exception' => $exception]));
 	}
 
 	public function testDropsAMissingTotalCmsClassEvenWhenItLoadsByFilterTime(): void
@@ -182,5 +186,37 @@ final class SentryMiddlewareTest extends TestCase
 		$exception = new \ErrorException('Allowed memory size of 134217728 bytes exhausted', 0, E_ERROR, PathResolver::packageRoot() . '/vendor/twig/twig/src/Environment.php', 10);
 
 		$this->assertInstanceOf(Event::class, $this->filter($exception, fromTotalCms: false));
+	}
+
+	public function testDropsACompiledContainerReadAtAnotherVersion(): void
+	{
+		// A cron run mid-update compiled the old container.php under the new
+		// version's name, then built a class from the new code (TOTAL-CMS-RS).
+		$exception = new \ArgumentCountError('Too few arguments to function TotalCMS\\Domain\\Twig\\Adapter\\SeoTwigAdapter::__construct(), 4 passed in /home/site/tcms/cache/container/CompiledContainer_dbcc39a5f5e6.php on line 504 and exactly 5 expected');
+
+		$this->assertNull($this->filter($exception));
+	}
+
+	public function testReportsAnArgumentCountErrorFromOurOwnCall(): void
+	{
+		$exception = new \ArgumentCountError('Too few arguments to function TotalCMS\\Domain\\Remover\\UploadRemover::__construct(), 4 passed in /home/site/tcms/src/Domain/Remover/RemoverFactory.php on line 40 and exactly 2 expected');
+
+		$this->assertInstanceOf(Event::class, $this->filter($exception));
+	}
+
+	public function testDropsAFatalErrorDuringAnExtensionCommand(): void
+	{
+		// A site's own command ran out of memory copying its data into T3
+		// (TOTAL-CMS-RW). The fatal has no trace; the tag says whose command it was.
+		$exception = new \ErrorException('Allowed memory size of 3221225472 bytes exhausted', 0, E_ERROR, PathResolver::packageRoot() . '/src/Domain/Property/Data/CodeData.php', 37);
+
+		$this->assertNull($this->filter($exception, tags: [SentryMiddleware::COMMAND_SOURCE_TAG => 'extension']));
+		$this->assertInstanceOf(Event::class, $this->filter($exception, tags: [SentryMiddleware::COMMAND_SOURCE_TAG => 'core']));
+	}
+
+	public function testReportsAnExceptionDuringAnExtensionCommand(): void
+	{
+		// Only fatals: a thrown exception has a trace, and the file rules decide.
+		$this->assertInstanceOf(Event::class, $this->filter(new \LogicException('a fault in the code'), tags: [SentryMiddleware::COMMAND_SOURCE_TAG => 'extension']));
 	}
 }

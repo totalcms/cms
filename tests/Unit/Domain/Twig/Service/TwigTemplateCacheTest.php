@@ -88,3 +88,18 @@ test('writing a string template prunes at most once an hour', function (): void 
 	expect(file_exists($first))->toBeFalse()
 		->and(compiledStrings($this->dir))->toHaveCount(2);
 });
+
+test('a cache folder that cannot be written still renders the page', function (): void {
+	// A full disk or quota made the cache write throw, and every page with it
+	// (TOTAL-CMS-RT, -RV). Twig runs the compiled source when no file loads.
+	// Under a plain file, the cache's folders can never be created.
+	$blocked = $this->dir . '/blocked';
+	@mkdir($this->dir, 0777, true);
+	touch($blocked);
+	expect(is_file($blocked))->toBeTrue();
+
+	$twig = new Environment(new ArrayLoader(['page.twig' => 'Still {{ n }}{# ' . $blocked . ' #}']), ['cache' => new TwigTemplateCache($blocked . '/cache')]);
+
+	expect($twig->render('page.twig', ['n' => 1]))->toBe('Still 1')
+		->and($twig->createTemplate('Inline {{ n }}' . $blocked)->render(['n' => 2]))->toBe('Inline 2' . $blocked);
+});

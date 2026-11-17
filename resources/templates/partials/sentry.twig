@@ -52,6 +52,13 @@
 				// A web-clipper extension rejecting a promise of its own, with no
 				// stack: Total CMS has no tabs API (TOTALCMS-DASHBOARD-60).
 				if (message.includes('no clipping info for given tab')) return null;
+				// A site's own field type on its object pages: Total CMS has no
+				// "native protected file field", and its scripts are modules, where
+				// `await` is a keyword and never a missing variable. Safari's
+				// ReferenceError for it comes from an inline script or handler that
+				// isn't ours (TOTALCMS-DASHBOARD-61, -62, one site).
+				if (message.includes('Native protected file field')) return null;
+				if (errorName === 'ReferenceError' && message === "Can't find variable: await") return null;
 				if (event.exception && event.exception.values) {
 					var frames = event.exception.values.flatMap(function(v) {
 						return (v.stacktrace && v.stacktrace.frames) || [];

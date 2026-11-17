@@ -42,6 +42,9 @@ class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
 
+	/** Tag CliApplication sets to 'extension' while an extension's command runs. */
+	public const COMMAND_SOURCE_TAG = 'command_source';
+
 	/** @var array<string,mixed> */
 	private const DEFAULT_OPTIONS = [
 		'dsn'                  => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
@@ -394,21 +397,9 @@ class SentryMiddleware implements MiddlewareInterface
 		$exception = $hint->exception;
 		$config    = self::$filterConfig;
 
-		// Drop exceptions thrown from third-party extension code. Extensions
-		// live at `tcms-data/extensions/{vendor}/{name}/` and are owned by
-		// their authors — T3 can't fix bugs in their code, so reporting them
-		// in T3's Sentry just adds noise. Match on the canonical Unix path
-		// segment plus the Windows variant for cross-platform installs.
+		// An extension's own code: its files, or a fatal during its CLI command.
 		$file = $exception->getFile();
-		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
-			return null;
-		}
-
-		// Site-specific extensions live at `<projectRoot>/extensions/` (see
-		// ExtensionDiscovery) and are the site's own code, same as the above.
-		// Bundled extensions under resources/extensions/ are ours and still report.
-		$projectExtensions = PathResolver::projectRoot() . DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR;
-		if ($projectExtensions !== DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR && str_starts_with($file, $projectExtensions)) {
+		if (self::raisedByAnExtension($event, $exception, $file)) {
 			return null;
 		}
 
@@ -487,6 +478,33 @@ class SentryMiddleware implements MiddlewareInterface
 	}
 
 	/**
+	 * True when the exception is an extension's to fix, not T3's.
+	 */
+	private static function raisedByAnExtension(Event $event, \Throwable $exception, string $file): bool
+	{
+		// Third-party extensions live at `tcms-data/extensions/{vendor}/{name}/`
+		// and are owned by their authors; T3 can't fix bugs in their code.
+		// Match the canonical Unix path segment plus the Windows variant.
+		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
+			return true;
+		}
+
+		// Site-specific extensions live at `<projectRoot>/extensions/` (see
+		// ExtensionDiscovery) and are the site's own code, same as the above.
+		// Bundled extensions under resources/extensions/ are ours and still report.
+		$projectExtensions = PathResolver::projectRoot() . DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR;
+		if ($projectExtensions !== DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR && str_starts_with($file, $projectExtensions)) {
+			return true;
+		}
+
+		// A fatal error (memory, time limit) while an extension's CLI command ran.
+		// A fatal carries no trace, so the file rules above can't place it, but
+		// the extension chose the workload (TOTAL-CMS-RW: a site command copying
+		// its data into T3 ran out of 3 GB). CliApplication tags the command.
+		return $exception instanceof \ErrorException && ($event->getTags()[self::COMMAND_SOURCE_TAG] ?? null) === 'extension';
+	}
+
+	/**
 	 * True when the exception says one of T3's own files could not be read at
 	 * the moment it was needed: a half-copied install, an upload or Stacks
 	 * export in flight, or a cron run landing while vendor/ is replaced.
@@ -521,6 +539,16 @@ class SentryMiddleware implements MiddlewareInterface
 		if ($exception instanceof NotNormalizableValueException
 			&& str_starts_with($exception->getMessage(), 'Could not denormalize object of type "TotalCMS\\')
 			&& str_ends_with($exception->getMessage(), 'no supporting normalizer found.')) {
+			return true;
+		}
+
+		// The compiled container calling a constructor with the wrong number of
+		// arguments. PHPStan checks every factory in config/container.php
+		// against its constructor, so the compiled copy and the class were read
+		// at different versions: a cron run mid-update compiled the old
+		// container.php under the new version's name (TOTAL-CMS-RS, jobs:process).
+		if ($exception instanceof \ArgumentCountError
+			&& preg_match('~ passed in \S*CompiledContainer_[0-9a-f]+\.php on line \d+~', $exception->getMessage()) === 1) {
 			return true;
 		}
 

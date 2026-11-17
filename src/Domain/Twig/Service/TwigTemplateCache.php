@@ -66,9 +66,24 @@ final class TwigTemplateCache extends FilesystemCache
 		}
 	}
 
+	/**
+	 * Save a compiled template, or skip saving it when the folder can't take it.
+	 *
+	 * The page renders either way: when the compiled file can't be loaded,
+	 * Twig's Environment::loadTemplate() runs the compiled source directly. A
+	 * cache that can't be written (full disk, quota, permissions) then costs a
+	 * compile per request instead of failing every page. On one host, tempnam()
+	 * returned false in a folder that passed is_writable(), and Twig handed that
+	 * false to file_put_contents(), which threw "Path must not be empty"
+	 * (TOTAL-CMS-RT, -RV): the whole admin was down.
+	 */
 	public function write(string $key, string $content): void
 	{
-		parent::write($key, $content);
+		try {
+			parent::write($key, $content);
+		} catch (\RuntimeException|\ValueError) {
+			return;
+		}
 
 		if ($this->isStringKey($key)) {
 			$this->pruneIfDue();
