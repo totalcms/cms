@@ -149,8 +149,12 @@
         vertical-align      : bottom;
     }
 
+    // z-index, as the box and label overlays have: unstacked, the tooltip paints
+    // in source order, and a formgrid can place a field after its neighbors in
+    // the source but below them on screen, so those neighbors covered it.
     .help {
 		position         : absolute;
+		z-index          : 10;
 		max-width        : clamp(200px, 50ch, 85vw);
 		margin           : 0;
 		background-color : oklch(var(--totalform-nearblack));
