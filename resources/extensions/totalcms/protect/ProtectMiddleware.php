@@ -37,6 +37,9 @@ use TotalCMS\TotalCMS;
  * The message is `<scope>:passcode` so a valid cookie for one scope
  * cannot be replayed against a different one.
  *
+ * Logging out expires every one of these cookies (AuthLogoutAction), so
+ * `cms.auth.logout()` locks the pages again. Keep the prefix in step with it.
+ *
  * Attaching this middleware to a page is what gates it. A passcode is an
  * optional unlock code, NOT a required on-switch: with no passcode configured
  * the page fails CLOSED (the public sees the prompt but can never enter a code

@@ -116,6 +116,16 @@ For an all-digit passcode the form uses `inputmode="numeric"`, so phones show a 
 
 The HMAC is deterministic per page + passcode — re-entering the code isn't needed within the TTL. Changing the passcode in page data automatically invalidates all existing cookies for that page.
 
+### Locking pages again
+
+Logging out clears every Protect cookie, so the visitor has to enter the passcode again. Give visitors a "lock" link with the same logout URL the admin uses:
+
+```twig
+<a href="{{ cms.auth.logout() }}">Lock this page</a>
+```
+
+`cms.auth.logout('/thanks')` sends the visitor to a page of your choice afterwards. This works for visitors who never signed in, and an operator who logs out of the admin locks their own Protect pages as well.
+
 ## Security notes
 
 This is **not** a replacement for T3's auth system. It's a convenience gate — appropriate for "keep casual visitors out" scenarios, not for protecting sensitive data. Specifically:
