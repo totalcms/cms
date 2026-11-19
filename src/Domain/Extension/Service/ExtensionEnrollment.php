@@ -119,10 +119,15 @@ final readonly class ExtensionEnrollment
 		// this line across an upgrade shows at a glance whether the enabled set
 		// shrank wholesale (state loss) versus an individual extension being
 		// disabled by the re-consent gate below.
+		//
+		// Debug, not info: this runs on every request, so at info it filled the
+		// extensions log with one identical line per page view. State loss itself
+		// still logs a warning from enrol(), and the re-consent gate logs its own;
+		// set the extension log level to debug to see this snapshot again.
 		$skippedDisabled = array_values(
 			array_diff(array_keys($discovered), array_keys($enabledManifests))
 		);
-		$this->logger->info(sprintf(
+		$this->logger->debug(sprintf(
 			'Extension load: discovered [%s]; enabled [%s]; skipped-disabled [%s].',
 			implode(', ', array_keys($discovered)),
 			implode(', ', array_keys($enabledManifests)),
