@@ -72,7 +72,7 @@ final class PasskeyServiceTest extends TestCase
 		]);
 
 		$this->objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with($collection, $userId)
 			->willReturn($userData);
 
@@ -131,7 +131,7 @@ final class PasskeyServiceTest extends TestCase
 			],
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 		$this->session->method('set');
 
 		$options = $this->service->generateRegistrationOptions($userId, $collection);
@@ -190,7 +190,7 @@ final class PasskeyServiceTest extends TestCase
 			'email' => 'admin@test.com',
 		]);
 
-		$this->objectFetcher->method('fetchObject')
+		$this->objectFetcher->method('fetchObjectFresh')
 			->with('auth', 'admin')
 			->willReturn($userData);
 
@@ -221,7 +221,7 @@ final class PasskeyServiceTest extends TestCase
 			],
 		]);
 
-		$this->objectFetcher->method('fetchObject')
+		$this->objectFetcher->method('fetchObjectFresh')
 			->with('auth', 'admin')
 			->willReturn($userData);
 
@@ -269,7 +269,7 @@ final class PasskeyServiceTest extends TestCase
 			],
 		]);
 
-		$this->objectFetcher->method('fetchObject')
+		$this->objectFetcher->method('fetchObjectFresh')
 			->with('auth', 'admin')
 			->willReturn($userData);
 
@@ -307,7 +307,7 @@ final class PasskeyServiceTest extends TestCase
 			'email' => 'admin@test.com',
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 
 		// Nothing to remove, so the user record is not written
 		$this->objectPatcher->expects($this->never())->method('patchObject');
@@ -326,7 +326,7 @@ final class PasskeyServiceTest extends TestCase
 			],
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 
 		// An unknown id leaves the record alone instead of re-saving it unchanged
 		$this->objectPatcher->expects($this->never())->method('patchObject');
@@ -343,7 +343,7 @@ final class PasskeyServiceTest extends TestCase
 			'passkeys' => 'invalid-string',
 		]);
 
-		$this->objectFetcher->method('fetchObject')
+		$this->objectFetcher->method('fetchObjectFresh')
 			->with('auth', 'admin')
 			->willReturn($userData);
 
@@ -363,7 +363,7 @@ final class PasskeyServiceTest extends TestCase
 			// No 'name' field
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 		$this->session->method('set');
 
 		$options = $this->service->generateRegistrationOptions('admin', 'auth');
@@ -382,7 +382,7 @@ final class PasskeyServiceTest extends TestCase
 			'passkeys' => [],
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 		$this->session->method('set');
 
 		$options = $this->service->generateRegistrationOptions('admin', 'auth');
@@ -404,7 +404,7 @@ final class PasskeyServiceTest extends TestCase
 			'passkeys' => [],
 		]);
 
-		$this->objectFetcher->method('fetchObject')->willReturn($userData);
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn($userData);
 		$this->session->method('set');
 
 		$options = $this->service->generateRegistrationOptions('admin', 'auth');

@@ -19,6 +19,13 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
+/**
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") three read paths are
+ * deliberate: cached (fetchObject), uncached for bulk index builds
+ * (fetchObjectFromDisk) and uncached but memoized per request for
+ * authentication (fetchObjectFresh). Folding them behind flags would hide
+ * which freshness a caller gets.
+ */
 class ObjectRepository extends StorageRepository
 {
 	/**
@@ -31,6 +38,15 @@ class ObjectRepository extends StorageRepository
 
 	/** @var array<string,?string> collection id → body property, for this request */
 	private array $bodyPropertyCache = [];
+
+	/**
+	 * Request-level memo for fetchObjectFresh(): contents read from disk in
+	 * this request. Kept apart from $requestCache, whose entries may have come
+	 * from the persistent cache.
+	 *
+	 * @var array<string,array<string,mixed>>
+	 */
+	private array $freshCache = [];
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
@@ -137,6 +153,28 @@ class ObjectRepository extends StorageRepository
 	}
 
 	/**
+	 * Fetch an object from disk once per request, never from the persistent
+	 * cache. For authentication and authorization: a hand edit to a user's
+	 * password, `active` flag or groups must apply on the next request, not
+	 * once a cached copy expires. Access checks load the signed-in user
+	 * hundreds of times per dashboard page, so the read is memoized for the
+	 * request; saves and deletes clear the memo.
+	 */
+	public function fetchObjectFresh(string $collection, string $id): ?ObjectData
+	{
+		$key = "object:{$collection}:{$id}";
+		if (!isset($this->freshCache[$key])) {
+			$contents = $this->readContents($collection, $id);
+			if ($contents === null) {
+				return null;
+			}
+			$this->freshCache[$key] = $contents;
+		}
+
+		return $this->buildObject($collection, $this->freshCache[$key]);
+	}
+
+	/**
 	 * Build an ObjectData from raw JSON contents, then hydrate any external
 	 * (file-backed) fields from their sidecar files.
 	 *
@@ -177,8 +215,8 @@ class ObjectRepository extends StorageRepository
 	 */
 	private function invalidateObjectCache(string $objectCacheKey, string $collection): void
 	{
-		// Remove from request cache (in-memory)
-		unset($this->requestCache[$objectCacheKey]);
+		// Remove from request caches (in-memory)
+		unset($this->requestCache[$objectCacheKey], $this->freshCache[$objectCacheKey]);
 
 		// Remove the specific object from persistent cache
 		$this->cacheManager->clearComputedData($objectCacheKey);
@@ -202,6 +240,11 @@ class ObjectRepository extends StorageRepository
 		foreach (array_keys($this->requestCache) as $key) {
 			if (str_starts_with($key, $prefix)) {
 				unset($this->requestCache[$key]);
+			}
+		}
+		foreach (array_keys($this->freshCache) as $key) {
+			if (str_starts_with($key, $prefix)) {
+				unset($this->freshCache[$key]);
 			}
 		}
 

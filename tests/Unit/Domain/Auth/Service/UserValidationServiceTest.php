@@ -58,7 +58,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'john-doe')
 			->willReturn($mockUser);
 
@@ -118,7 +118,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'jane-doe')
 			->willReturn($mockUser);
 
@@ -144,7 +144,7 @@ final class UserValidationServiceTest extends TestCase
 		$mockUser->expects($this->never())->method('toArray');
 		$mockUser->method('toArrayWithoutPasswords')->willReturn(['id' => 'jane-doe', 'email' => 'jane@example.com']);
 		$objectFetcher->method('existsObject')->willReturn(true);
-		$objectFetcher->method('fetchObject')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->willReturn($mockUser);
 
 		$result = (new UserValidationService($searcher, $objectFetcher, $config))->validateUserById('jane-doe', '', true);
 
@@ -218,7 +218,7 @@ final class UserValidationServiceTest extends TestCase
 			'groups' => ['admin'],
 		]);
 
-		$objectFetcher->method('fetchObject')
+		$objectFetcher->method('fetchObjectFresh')
 			->with('users', 'super-admin')
 			->willReturn($mockUser);
 
@@ -253,7 +253,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'editor-user')
 			->willReturn($mockUser);
 
@@ -284,7 +284,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'multi-user')
 			->willReturn($mockUser);
 
@@ -335,7 +335,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'admin-user')
 			->willReturn($mockUser);
 
@@ -367,7 +367,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'super-admin')
 			->willReturn($mockUser);
 
@@ -398,7 +398,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'regular-user')
 			->willReturn($mockUser);
 
@@ -449,7 +449,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(true);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('default-users', 'test-user')
 			->willReturn($mockUser);
 
@@ -479,7 +479,7 @@ final class UserValidationServiceTest extends TestCase
 		// there) — but existsObject/fetchObject must never even be consulted
 		// once the collection mismatch is detected.
 		$objectFetcher->expects($this->never())->method('existsObject');
-		$objectFetcher->expects($this->never())->method('fetchObject');
+		$objectFetcher->expects($this->never())->method('fetchObjectFresh');
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -504,7 +504,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('auth', 'shared-id')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('auth', 'shared-id')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('auth', 'shared-id')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -526,7 +526,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('auth', 'regular-user')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('auth', 'regular-user')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('auth', 'regular-user')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -548,7 +548,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('auth', 'shared-id')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('auth', 'shared-id')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('auth', 'shared-id')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -575,7 +575,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('users', 'editor-user')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('users', 'editor-user')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('users', 'editor-user')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -599,7 +599,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('users', 'groupless-user')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('users', 'groupless-user')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('users', 'groupless-user')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -637,7 +637,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('users', 'editor-user')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('users', 'editor-user')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('users', 'editor-user')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -660,7 +660,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$objectFetcher->method('existsObject')->with('users', 'member-user')->willReturn(true);
-		$objectFetcher->method('fetchObject')->with('users', 'member-user')->willReturn($mockUser);
+		$objectFetcher->method('fetchObjectFresh')->with('users', 'member-user')->willReturn($mockUser);
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -693,7 +693,7 @@ final class UserValidationServiceTest extends TestCase
 		$mockUser = $this->createMock(ObjectData::class);
 
 		$objectFetcher->expects($this->once())
-			->method('fetchObject')
+			->method('fetchObjectFresh')
 			->with('users', 'user-1')
 			->willReturn($mockUser);
 
@@ -718,7 +718,7 @@ final class UserValidationServiceTest extends TestCase
 			->willReturn(new Collection([]));
 
 		// And we should never try to fetch the object.
-		$objectFetcher->expects($this->never())->method('fetchObject');
+		$objectFetcher->expects($this->never())->method('fetchObjectFresh');
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 
@@ -758,7 +758,7 @@ final class UserValidationServiceTest extends TestCase
 			->with('members', 'email', 'a@b.test')  // ← uses 'members', not the default
 			->willReturn(new Collection([['id' => 'user-1']]));
 
-		$objectFetcher->method('fetchObject')->willReturn($this->createMock(ObjectData::class));
+		$objectFetcher->method('fetchObjectFresh')->willReturn($this->createMock(ObjectData::class));
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
 

@@ -80,7 +80,7 @@ class PasskeyService
 	 */
 	public function generateRegistrationOptions(string $userId, string $collection): array
 	{
-		$user       = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user       = $this->objectFetcher->fetchObjectFresh($collection, $userId)->toArray();
 		$rpEntity   = $this->getRpEntity();
 		$userEntity = $this->getUserEntity($user);
 
@@ -176,7 +176,7 @@ class PasskeyService
 		];
 
 		// Add to user's passkeys array
-		$user     = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user     = $this->objectFetcher->fetchObjectFresh($collection, $userId)->toArray();
 		$passkeys = $user['passkeys'] ?? [];
 		if (!is_array($passkeys)) {
 			$passkeys = [];
@@ -297,7 +297,7 @@ class PasskeyService
 	 */
 	public function listPasskeys(string $userId, string $collection): array
 	{
-		$user     = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user     = $this->objectFetcher->fetchObjectFresh($collection, $userId)->toArray();
 		$passkeys = $user['passkeys'] ?? [];
 		if (!is_array($passkeys)) {
 			return [];
@@ -327,7 +327,7 @@ class PasskeyService
 	 */
 	public function deletePasskey(string $userId, string $collection, string $credentialId): bool
 	{
-		$user     = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user     = $this->objectFetcher->fetchObjectFresh($collection, $userId)->toArray();
 		$passkeys = $user['passkeys'] ?? [];
 		if (!is_array($passkeys)) {
 			return false;
@@ -409,7 +409,7 @@ class PasskeyService
 			}
 
 			try {
-				$user = $this->objectFetcher->fetchObject($collection, (string)$indexEntry['id'])->toArray();
+				$user = $this->objectFetcher->fetchObjectFresh($collection, (string)$indexEntry['id'])->toArray();
 			} catch (\Throwable) {
 				continue;
 			}

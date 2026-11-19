@@ -46,6 +46,22 @@ readonly class ObjectFetcher
 	}
 
 	/**
+	 * Get a collection object from disk, read once per request and never from
+	 * the persistent cache. Authentication and authorization load users this
+	 * way, so a hand edit to a user file applies on the next request.
+	 */
+	public function fetchObjectFresh(string $collection, string $id): ObjectData
+	{
+		$object = $this->storage->fetchObjectFresh($collection, $id);
+
+		if (!$object instanceof ObjectData) {
+			throw new \UnexpectedValueException("Unable to fetch object $collection/$id");
+		}
+
+		return $object;
+	}
+
+	/**
 	 * get a collection object.
 	 */
 	public function existsObject(string $collection, string $id): bool

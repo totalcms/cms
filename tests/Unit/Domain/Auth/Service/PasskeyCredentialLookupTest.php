@@ -81,7 +81,7 @@ final class PasskeyCredentialLookupTest extends TestCase
 			$byId[(string)$user['id']] = $user;
 		}
 
-		$this->objectFetcher->method('fetchObject')->willReturnCallback(
+		$this->objectFetcher->method('fetchObjectFresh')->willReturnCallback(
 			function (string $collection, string $id) use ($byId): ObjectData {
 				if (!isset($byId[$id])) {
 					throw new \RuntimeException("no such object {$id}");
@@ -169,7 +169,7 @@ final class PasskeyCredentialLookupTest extends TestCase
 		$this->indexReader->method('fetchIndex')->willReturn(
 			new IndexData([['id' => 'broken'], ['id' => 'alice']])
 		);
-		$this->objectFetcher->method('fetchObject')->willReturnCallback(
+		$this->objectFetcher->method('fetchObjectFresh')->willReturnCallback(
 			function (string $collection, string $id): ObjectData {
 				if ($id === 'broken') {
 					throw new \RuntimeException('unreadable');
@@ -202,7 +202,7 @@ final class PasskeyCredentialLookupTest extends TestCase
 	public function testSkipsIndexEntriesWithNoId(): void
 	{
 		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([[], ['id' => 'alice']]));
-		$this->objectFetcher->method('fetchObject')->willReturn(
+		$this->objectFetcher->method('fetchObjectFresh')->willReturn(
 			$this->objectData(['id' => 'alice', 'passkeys' => [['credentialId' => 'cred-a']]])
 		);
 

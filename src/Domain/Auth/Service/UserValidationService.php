@@ -88,7 +88,7 @@ readonly class UserValidationService
 				return null;
 			}
 
-			return $this->objectFetcher->fetchObject($collection, $first['id']);
+			return $this->objectFetcher->fetchObjectFresh($collection, $first['id']);
 		} catch (\Exception) {
 			return null;
 		}
@@ -113,7 +113,7 @@ readonly class UserValidationService
 			throw new \Exception("User $userId does not exist");
 		}
 
-		$user = $this->objectFetcher->fetchObject($collection, $userId);
+		$user = $this->objectFetcher->fetchObjectFresh($collection, $userId);
 
 		return $withoutPasswords ? $user->toArrayWithoutPasswords() : $user->toArray();
 	}
@@ -191,7 +191,7 @@ readonly class UserValidationService
 		}
 
 		if ($this->objectFetcher->existsObject($defaultCollection, $userId)) {
-			$user = $this->objectFetcher->fetchObject($defaultCollection, $userId)->toArray();
+			$user = $this->objectFetcher->fetchObjectFresh($defaultCollection, $userId)->toArray();
 			if (in_array(self::ADMINGROUP, $user['groups'])) {
 				return true;
 			}
