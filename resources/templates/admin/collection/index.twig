@@ -3,8 +3,9 @@
 {% set schema = cms.schema.get(collection.schema) %}
 {% set labelPlural = collection.labelPlural|default('objects') %}
 {% set labelSingular = collection.labelSingular|default('Object') %}
-{# Use totalObjects from collection metadata - avoids loading full index #}
-{% set actualObjectCount = collection.totalObjects|default(0) %}
+{# Use totalObjects from collection metadata - avoids loading full index.
+   A member of an owned collection lists only their own objects, so count those. #}
+{% set actualObjectCount = cms.admin.collectionTable.visibleObjectCount(url.collection) ?? collection.totalObjects|default(0) %}
 {% set limit = cms.config('dashboard', 'pagination')|default(50) %}
 {% set sortField = collection.sortBy|default('id') %}
 {% set sortDir = collection.reverseSort ? 'desc' : 'asc' %}
@@ -23,7 +24,7 @@
 
 {% if actualObjectCount > 0 %}
 
-	{% set canBulkDelete = cms.auth.canAccessCollection(url.collection, 'delete') %}
+	{% set canBulkDelete = cms.admin.collectionTable.canBulkDelete(url.collection) %}
 	<div class="admin-table-wrapper{% if canBulkDelete %} bulk-enabled{% endif %}" data-collection="{{ url.collection }}" data-can-delete="{{ canBulkDelete ? '1' : '0' }}">
 		{% if canBulkDelete %}
 		<div class="bulk-action-bar">

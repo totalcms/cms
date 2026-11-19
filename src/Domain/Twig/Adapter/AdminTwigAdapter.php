@@ -21,6 +21,7 @@ use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer;
+use TotalCMS\Domain\Twig\Service\CollectionTableAccess;
 use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 use TotalCMS\Domain\Twig\Service\JobQueueRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -44,7 +45,8 @@ readonly class AdminTwigAdapter
 	 * `cms.admin.*` and keeps only the small helpers that need nothing more
 	 * than config, dev mode, the edition gates and the settings catalogue.
 	 * The public diagnostics services are addressed by templates directly
-	 * (`cms.admin.checker.*`, `cms.admin.logAnalyzer.*`, …).
+	 * (`cms.admin.checker.*`, `cms.admin.logAnalyzer.*`, …), as is the
+	 * collection table's access (`cms.admin.collectionTable.*`).
 	 */
 	public function __construct(
 		private Config $config,
@@ -62,6 +64,7 @@ readonly class AdminTwigAdapter
 		private JobQueueRenderer $jobQueue,
 		private BuilderTemplateRenderer $builderTemplates,
 		private AdminNavRegistry $nav,
+		public CollectionTableAccess $collectionTable,
 	) {
 	}
 

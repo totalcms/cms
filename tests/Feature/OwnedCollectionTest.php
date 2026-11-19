@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Session\SessionKeys;
 
 use function TotalCMS\Slim\Pest\deleteJson;
+use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\getJson;
 use function TotalCMS\Slim\Pest\patchJson;
 use function TotalCMS\Slim\Pest\post;
@@ -243,6 +244,23 @@ describe('list routes', function (): void {
 		signInAs($this->app, 'admin-user-test-com', 'auth');
 
 		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '2');
+	});
+
+	it('A\'s admin table counts only A\'s objects and offers no bulk delete', function (): void {
+		$html = (string)get('/admin/collections/portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('placeholder="Filter 1 ')
+			->and($html)->not->toContain('class="bulk-action-bar"')
+			->and($html)->toContain('data-can-delete="0"');
+	});
+
+	it('the admin table counts and bulk deletes everything for the admin', function (): void {
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+
+		$html = (string)get('/admin/collections/portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('placeholder="Filter 2 ')
+			->and($html)->toContain('class="bulk-action-bar"');
 	});
 });
 

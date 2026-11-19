@@ -99,6 +99,7 @@ use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
 use TotalCMS\Domain\Twig\Service\BuilderNavigation;
 use TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer;
 use TotalCMS\Domain\Twig\Service\CloneDialogRenderer;
+use TotalCMS\Domain\Twig\Service\CollectionTableAccess;
 use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GalleryRenderer;
@@ -622,6 +623,8 @@ function buildAdminTwigAdapter(
 		// The adapter tests never render the rail, so a bare ExtensionManager
 		// (no constructor run) is enough to satisfy the registry's dependency.
 		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor(), $collectionLister, (new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor()),
+		// The owned-collection table is covered end to end in OwnedCollectionTest.
+		(new ReflectionClass(CollectionTableAccess::class))->newInstanceWithoutConstructor(),
 	);
 }
 
