@@ -338,6 +338,38 @@ describe('property route on an own object', function (): void {
 	});
 });
 
+describe('admin table under a public read', function (): void {
+	beforeEach(function (): void {
+		alexCreatesASite($this->app);
+		samCreatesASite($this->app);
+
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+		patchJson('/api/collections/portfolio', ['publicOperations' => ['read']])->assertOk();
+	});
+
+	it('lists only the member\'s own objects', function (): void {
+		signInAs($this->app, 'editor-user-test-com', '');
+
+		$html = (string)get('/api/collections/portfolio/query?format=table&_collection=portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('alex-site')
+			->and($html)->not->toContain('sam-site');
+	});
+
+	it('lists every object for the admin', function (): void {
+		$html = (string)get('/api/collections/portfolio/query?format=table&_collection=portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('alex-site')
+			->and($html)->toContain('sam-site');
+	});
+
+	it('leaves the public listing open to a signed-out visitor', function (): void {
+		signOutOwned($this->app);
+
+		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '2');
+	});
+});
+
 describe('public create on an owned collection', function (): void {
 	beforeEach(function (): void {
 		alexCreatesASite($this->app);

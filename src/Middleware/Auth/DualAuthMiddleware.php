@@ -312,6 +312,14 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return array_intersect(['create', 'read'], $this->publicOperations($collectionId)) !== [];
 		}
 
+		// The admin collection table (`format=table`) always signs in, public
+		// Read or not, so the access middleware scopes it: on a collection with
+		// an Owner Property a member sees only their own objects. Taken as a
+		// public read it skipped that, and a member saw every object.
+		if (($request->getQueryParams()['format'] ?? '') === 'table') {
+			return false;
+		}
+
 		// Detect operation type from route
 		$operation = $this->operationDetector->detectPublicOperation($request);
 		if ($operation === null) {
