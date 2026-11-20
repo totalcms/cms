@@ -17,7 +17,6 @@ describe('a single property, as stored before Sort By took the syntax', function
 	it('sorts ascending', function (): void {
 		expect(tableSort('date'))->toBe('date:asc');
 	});
-
 });
 
 describe('the sort syntax', function (): void {

@@ -47,13 +47,13 @@ readonly class AuthLogoutAction
 		// GHSA-3wpr-fj3p-fgr2, finding 5).
 		$redirect = SameOriginRedirect::resolve($candidate, $request->getUri()->getHost(), '/');
 
-		return self::expireProtectCookies($request, $response)
+		return $this->expireProtectCookies($request, $response)
 			->withStatus(302)
 			->withHeader('Location', $redirect);
 	}
 
 	/** Expire every Protect unlock cookie the browser sent. */
-	private static function expireProtectCookies(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	private function expireProtectCookies(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$secure = $request->getUri()->getScheme() === 'https' ? '; Secure' : '';
 

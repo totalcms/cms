@@ -49,12 +49,12 @@ readonly class FoldReverseSortIntoSortByMigration implements MigrationInterface
 
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
 			$stored = $this->collectionRepository->fetchStoredMeta($collection->id);
-			if (filter_var($stored['reverseSort'] ?? false, FILTER_VALIDATE_BOOLEAN) !== true) {
+			if (!filter_var($stored['reverseSort'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
 				continue;
 			}
 
 			$sortBy = is_string($stored['sortBy'] ?? null) ? $stored['sortBy'] : '';
-			$sorted = self::reverse($sortBy);
+			$sorted = $this->reverse($sortBy);
 
 			$this->collectionSaver->patchCollection($collection->id, ['sortBy' => $sorted]);
 			$this->logger->info('Folded Reverse Sort into Sort By', [
@@ -74,7 +74,7 @@ readonly class FoldReverseSortIntoSortByMigration implements MigrationInterface
 	 * rule keeps the colon form (`title:desc:natural`), and `shuffle` stays as
 	 * it is. Nothing to sort by reverses the default, `id`.
 	 */
-	private static function reverse(string $sortBy): string
+	private function reverse(string $sortBy): string
 	{
 		$rules = SortRuleParser::parse($sortBy);
 		if ($rules === []) {

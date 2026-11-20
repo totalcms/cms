@@ -34,7 +34,7 @@ final class AuthLogoutActionTest extends TestCase
 			new PageData(['id' => 'clients', 'data' => ['passcode' => '8675']]),
 		);
 		self::assertNotNull($unlock);
-		[$pair] = explode(';', $unlock->getHeaderLine('Set-Cookie'), 2);
+		[$pair]         = explode(';', $unlock->getHeaderLine('Set-Cookie'), 2);
 		[$name, $value] = explode('=', $pair, 2);
 
 		$response = $this->logout(['PHPSESSID' => 'abc', $name => $value, 'tcms_protect_bad name' => 'x']);
