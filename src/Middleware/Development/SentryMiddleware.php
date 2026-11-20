@@ -157,6 +157,15 @@ class SentryMiddleware implements MiddlewareInterface
 			// hosting where crawler traffic fills the session directory. PHP
 			// could not give us a session; there is nothing for T3 to fix.
 			'Failed to start the session',
+			// session_start() found the session file but could not read it:
+			// the file belongs to another user, typically a site script run
+			// from the CLI against the web server's session folder
+			// (TOTAL-CMS-RZ). A hosting permission, not T3.
+			'Failed to read session data',
+			// Slim binds a closure middleware to the container, which PHP
+			// refuses for a `static` closure. T3 never adds one, so this is a
+			// site's own middleware in its index.php (TOTAL-CMS-RY).
+			'Cannot bind an instance to a static closure',
 			// Filesystem-level locking conflict — typically when the install
 			// lives on iCloud Drive / Dropbox / OneDrive where the sync daemon
 			// holds locks that conflict with PHP's file writes (EDEADLK).
