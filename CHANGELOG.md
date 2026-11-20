@@ -2,6 +2,30 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.11] - 2026-11-20
+
+### Added
+
+- **Logging out locks Protect pages again.** Logging out now clears every Protect cookie, so `cms.auth.logout()` works as a "Lock this page" link for visitors who only entered a passcode. An operator who logs out of the admin locks their own Protect pages as well. See [Locking pages again](https://docs.totalcms.co/extensions/protect#locking-pages-again)
+
+### Changed
+
+- **A collection's Sort By takes the sort syntax.** The admin table's default order is now a text field that takes the same sort as the query API: `-date` for newest first, `date:desc,title` to sort by several properties. It still suggests the schema's properties, and a single property set before keeps sorting as it did. A column click still sorts the table by that column alone. See [sortBy](https://docs.totalcms.co/collections/settings#sortby)
+- **Hand-edited user files apply at the next login.** A plain-text password typed into a user file to recover an account, `active: false` or a groups change used to be ignored for up to four hours, until the cached copy of the user expired or the cache was cleared. Login, passkeys and access checks now read the user from disk
+
+### Removed
+
+- **The collection Reverse Sort setting.** Put a `-` before a property in Sort By instead. Updating converts every collection that had Reverse Sort ticked, so its table keeps the same order: `date` becomes `-date`, and `-featured,title` becomes `featured,-title`. A `reverseSort` sent through the API, the CLI or a JumpStart file is ignored
+
+### Fixed
+
+- **On a collection with an Owner Property, a member's admin table lists only their own objects when Read is public.** With public Read on, the table loaded every object, so editors saw each other's posts. Public pages and Load More are unchanged
+- **The admin table of an owned collection counts only the member's objects.** The filter placeholder, the large-collection warning and the empty state used the collection's total, which told a member how many objects everyone else had. The bulk-delete bar no longer shows for a member limited to their own objects, since the server refuses them bulk delete
+- **Pages still render when the Twig cache folder can't be written.** A full disk or quota made every page fail with "Path must not be empty". Pages now render without saving the compiled template
+- **The object visualizer no longer throws an error when the mouse leaves a node**
+- **Help tooltips no longer hide behind neighboring fields**, such as toggles placed below them in a formgrid
+- **The extensions log no longer records a load summary on every request.** It filled the log with one identical line per page view
+
 ## [3.6.10] - 2026-11-13
 
 ### Security
