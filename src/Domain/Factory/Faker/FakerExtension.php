@@ -270,7 +270,7 @@ class FakerExtension extends Base
 			if (self::randomFloat(1, 0, 1) < 0.2) {
 				$words       = explode(' ', $itemText);
 				$pos         = self::numberBetween(0, max(0, count($words) - 2));
-				$words[$pos] = self::randomFloat(1, 0, 1) < 0.5 ? '<strong>' . $words[$pos] . '</strong>' : '<em>' . $words[$pos] . '</em>';
+				$words[$pos] = self::numberBetween(0, 1) === 1 ? '<strong>' . $words[$pos] . '</strong>' : '<em>' . $words[$pos] . '</em>';
 				$itemText    = implode(' ', $words);
 			}
 
