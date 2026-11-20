@@ -12,6 +12,7 @@ All notable changes to Total CMS will be documented in this file.
 
 - **A collection's Sort By takes the sort syntax.** The admin table's default order is now a text field that takes the same sort as the query API: `-date` for newest first, `date:desc,title` to sort by several properties. It still suggests the schema's properties, and a single property set before keeps sorting as it did. A column click still sorts the table by that column alone. See [sortBy](https://docs.totalcms.co/collections/settings#sortby)
 - **Hand-edited user files apply at the next login.** A plain-text password typed into a user file to recover an account, `active: false` or a groups change used to be ignored for up to four hours, until the cached copy of the user expired or the cache was cleared. Login, passkeys and access checks now read the user from disk
+- **Front-end libraries updated:** Tiptap 3.34.0, marked 18.2.1, DOMPurify 3.4.18 and Swagger UI 5.35.1
 
 ### Removed
 
@@ -25,6 +26,7 @@ All notable changes to Total CMS will be documented in this file.
 - **The object visualizer no longer throws an error when the mouse leaves a node**
 - **Help tooltips no longer hide behind neighboring fields**, such as toggles placed below them in a formgrid
 - **The extensions log no longer records a load summary on every request.** It filled the log with one identical line per page view
+- **A part-strength ImageWorks filter no longer makes images see-through on ImageMagick 6.** With `filtamt` below 100, an image that has transparency, such as a PNG, came back with its solid areas partly transparent. Servers on ImageMagick 7 or GD drew it correctly
 
 ## [3.6.10] - 2026-11-13
 
