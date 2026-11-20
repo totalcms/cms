@@ -82,6 +82,12 @@ final class StrengthBlend
 	 * Blend compose: with equal alpha on both sides it is an exact per-channel
 	 * mix and alpha is unchanged. A filter may still have touched alpha, so the
 	 * original's alpha is copied back over the result.
+	 *
+	 * The alpha goes back as a greyscale mask. CopyOpacity reads a source that
+	 * has an alpha channel differently by version: ImageMagick 7 copies the
+	 * alpha, but ImageMagick 6 uses the source's brightness, which turned an
+	 * opaque red pixel into alpha 54. Both read a mask with no alpha as its
+	 * brightness, so the extracted mask works on either.
 	 */
 	private static function imagick(\Imagick $base, \Imagick $over, int $amount): void
 	{
@@ -93,7 +99,11 @@ final class StrengthBlend
 			if ($base->getImageColorspace() !== $over->getImageColorspace()) {
 				$base->transformImageColorspace($over->getImageColorspace());
 			}
-			$alpha = $base->getImageAlphaChannel() ? $base->getImage() : null;
+			$alpha = null;
+			if ($base->getImageAlphaChannel()) {
+				$alpha = $base->getImage();
+				$alpha->setImageAlphaChannel(\Imagick::ALPHACHANNEL_EXTRACT);
+			}
 
 			$base->setImageArtifact('compose:args', (string)$amount);
 			$base->compositeImage($over, \Imagick::COMPOSITE_BLEND, 0, 0);
