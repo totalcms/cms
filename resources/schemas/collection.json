@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\nrequireBotProtection requireBotProtection\n---\ngroups accessCollection\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\nrequireBotProtection requireBotProtection\n---\ngroups accessCollection\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "name": {
 			"type"        : "string",
@@ -109,12 +109,12 @@
         "sortBy": {
 			"type"        : "string",
 			"label"       : "Sort By",
-			"help"        : "The default property to sort the collection by in the collection view.",
-			"field"       : "select",
-			"placeholder" : "Select a Property",
-			"options"     : [
-				"id"
-			]
+			"help"        : "The default sort for the collection view. A property, or several: <code>-date</code> sorts newest first, <code>date:desc,title</code> sorts by date and then by title.",
+			"field"       : "text",
+			"placeholder" : "id",
+			"settings"    : {
+				"propertyOptions" : { "source": "schemaProperties" }
+			}
         },
         "labelSingular": {
 			"type"        : "string",
@@ -122,12 +122,6 @@
 			"help"        : "Custom singular term for collection items (e.g. 'Post', 'Article'). Defaults to 'Object' if not set.",
 			"placeholder" : "Object",
 			"field"       : "text"
-        },
-        "reverseSort": {
-			"type"  : "boolean",
-			"label" : "Reverse Sort",
-			"help"  : "Sort in reverse order",
-			"field" : "checkbox"
         },
         "publicOperations": {
 			"type"  : "array",

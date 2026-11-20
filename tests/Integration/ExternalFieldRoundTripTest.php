@@ -49,7 +49,6 @@ function createWidgetsCollection(ContainerInterface $container): void
 	$collection->labelSingular      = '';
 	$collection->groups             = [];
 	$collection->sortBy             = 'id';
-	$collection->reverseSort        = false;
 	$collection->prettyUrl          = false;
 	$collection->queueRebuildOnSave = false;
 

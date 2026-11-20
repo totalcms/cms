@@ -159,6 +159,7 @@ use TotalCMS\Domain\Migration\Migration\ClearPublicReadOnSensitiveCollectionsMig
 use TotalCMS\Domain\Migration\Migration\EnableCollectionFeedsMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
+use TotalCMS\Domain\Migration\Migration\FoldReverseSortIntoSortByMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
 use TotalCMS\Domain\Migration\Migration\ProtectDataDirectoryMigration;
 use TotalCMS\Domain\Migration\Repository\MigrationStateRepository;
@@ -1000,6 +1001,13 @@ return [
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
 	),
 
+	FoldReverseSortIntoSortByMigration::class => fn (ContainerInterface $container): FoldReverseSortIntoSortByMigration => new FoldReverseSortIntoSortByMigration(
+		$container->get(CollectionLister::class),
+		$container->get(CollectionRepository::class),
+		$container->get(CollectionSaver::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
+	),
+
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			// First: protect the data folder before anything else writes to it.
@@ -1010,6 +1018,7 @@ return [
 			$container->get(BuilderPageSeoFieldsMigration::class),
 			$container->get(ClearPublicReadOnSensitiveCollectionsMigration::class),
 			$container->get(EnableCollectionFeedsMigration::class),
+			$container->get(FoldReverseSortIntoSortByMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),

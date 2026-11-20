@@ -34,8 +34,7 @@ class CollectionData
 	public string $description            = '';          // collection description
 	public string $labelPlural            = '';          // custom plural label for collection items
 	public string $labelSingular          = '';        // custom singular label for collection items
-	public string $sortBy                 = 'id';             // the property to sort the collection by
-	public bool $reverseSort              = false;         // reverse the sort order
+	public string $sortBy                 = 'id';             // the admin table's default sort, in the query's sort syntax (`-date,title`)
 	public bool $queueRebuildOnSave       = false;  // queue a rebuild of the collection
 	public bool $prettyUrl                = false;           // use pretty URLs for the collection
 	public bool $singleton                = false;           // collection holds exactly one object, edited directly (object id == collection id)
@@ -130,7 +129,6 @@ class CollectionData
 			'publicOperations'          => $this->publicOperations,
 			'requireBotProtection'      => $this->requireBotProtection,
 			'sortBy'                    => $this->sortBy,
-			'reverseSort'               => $this->reverseSort,
 			'prettyUrl'                 => $this->prettyUrl,
 			'singleton'                 => $this->singleton,
 			'format'                    => $this->format,

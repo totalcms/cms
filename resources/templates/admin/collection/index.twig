@@ -7,8 +7,12 @@
    A member of an owned collection lists only their own objects, so count those. #}
 {% set actualObjectCount = cms.admin.collectionTable.visibleObjectCount(url.collection) ?? collection.totalObjects|default(0) %}
 {% set limit = cms.config('dashboard', 'pagination')|default(50) %}
-{% set sortField = collection.sortBy|default('id') %}
-{% set sortDir = collection.reverseSort ? 'desc' : 'asc' %}
+{# The full starting sort (Sort By takes the query's sort syntax); the first
+   rule marks its column header. #}
+{% set tableSort = cms.admin.collectionTable.sort(collection.sortBy|default('id')) %}
+{% set firstRule = tableSort|split(',')|first|split(':') %}
+{% set sortField = firstRule[0] %}
+{% set sortDir = firstRule[1] %}
 
 {# Performance warning for large collections without queue rebuild enabled #}
 {% set performanceThreshold = 2500 %}
@@ -48,12 +52,12 @@
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#table-body-{{ url.collection }}"
 				hx-swap="innerHTML"
-				hx-vals='{"format":"table","limit":"{{ limit }}","_collection":"{{ url.collection }}","sort":"{{ sortField }}:{{ sortDir }}"}'
+				hx-vals='{"format":"table","limit":"{{ limit }}","_collection":"{{ url.collection }}","sort":"{{ tableSort }}"}'
 				autocomplete="off" />
 		</header>
 		<div class="admin-table-scroll">
 			<table class="admin-table" data-collection="{{ url.collection }}"
-				data-default-sort="{{ sortField }}" data-default-sort-dir="{{ sortDir }}"
+				data-default-sort="{{ sortField }}" data-default-sort-dir="{{ sortDir }}" data-sort="{{ tableSort }}"
 				data-api="{{ cms.api }}" data-limit="{{ limit }}">
 				<thead>
 					<tr>
@@ -77,7 +81,7 @@
 					</tr>
 				</thead>
 				<tbody id="table-body-{{ url.collection }}"
-					hx-get="{{ cms.api }}/collections/{{ url.collection }}/query?format=table&limit={{ limit }}&sort={{ sortField }}:{{ sortDir }}&_collection={{ url.collection }}"
+					hx-get="{{ cms.api }}/collections/{{ url.collection }}/query?format=table&limit={{ limit }}&sort={{ tableSort|url_encode }}&_collection={{ url.collection }}"
 					hx-trigger="load"
 					hx-swap="innerHTML">
 					<tr class="htmx-sentinel">

@@ -42,7 +42,7 @@ class CollectionUpdateCommand extends BaseCommand
 Change some of a collection's settings, keeping the rest.
 
   <info>tcms collection:update recipes --set ownerProperty=author</info>
-  <info>tcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true</info>
+  <info>tcms collection:update blog --set url=/blog/{id} --set sortBy=-date</info>
   <info>tcms collection:update blog --set mcp.access=authenticated</info>
 
 A --set value is read as JSON when it parses (true, 5, null, ["a","b"]) and
@@ -53,7 +53,7 @@ something else: --set 'labelSingular="2024"'. A dot reaches into a map, so
 Bigger changes can come as JSON, from a file or stdin, and --set is applied
 on top of it:
 
-  <info>echo '{"url":"/blog/{id}","sortBy":"date","reverseSort":true}' | tcms collection:update blog -</info>
+  <info>echo '{"url":"/blog/{id}","sortBy":"-date"}' | tcms collection:update blog -</info>
 
 These settings are maps that merge one key at a time, so send only the keys
 you change: properties, customProperties, formSettings, mcp, seo, sitemap,

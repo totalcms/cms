@@ -3968,20 +3968,9 @@
             "type": "string",
             "required": false,
             "default": "\"id\"",
-            "description": "The default property used to sort objects in the admin collection view.",
+            "description": "The default sort for the admin collection view. It takes the same syntax as the query API's [`sort` parameter](docs/apis/index-filter#sorting): one property, or several separated by commas, each with an optional direction. The field suggests the schema's properties.",
             "examples": [
-                "{\n    \"sortBy\": \"date\"\n}"
-            ],
-            "url": "https://docs.totalcms.co/collections/settings/"
-        },
-        {
-            "key": "reverseSort",
-            "type": "boolean",
-            "required": false,
-            "default": "false",
-            "description": "Reverses the default sort order (descending instead of ascending).",
-            "examples": [
-                "{\n    \"sortBy\": \"date\",\n    \"reverseSort\": true\n}"
+                "{\n    \"sortBy\": \"-date,title\"\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },
@@ -4171,7 +4160,7 @@
             "description": "**Read-only:** Yes",
             "examples": [
                 "{\n    \"updated\": \"2026-07-30T09:12:00+00:00\"\n}",
-                "{\n    \"id\": \"team\",\n    \"name\": \"Team Members\",\n    \"schema\": \"team\",\n    \"description\": \"Company team members and their profiles.\",\n\n    \"url\": \"/about/team\",\n    \"prettyUrl\": true,\n\n    \"category\": \"Content\",\n    \"labelPlural\": \"Team Members\",\n    \"labelSingular\": \"Team Member\",\n    \"sortBy\": \"lastName\",\n    \"reverseSort\": false,\n\n    \"groups\": [],\n    \"publicOperations\": [\"read\"],\n    \"ownerProperty\": \"owner\",\n\n    \"queueRebuildOnSave\": false,\n\n    \"manualSort\": {\n        \"position\": [\"ceo\", \"cfo\", \"cmo\", \"vp\", \"director\", \"manager\"],\n        \"department\": [\"executive\", \"engineering\", \"sales\"]\n    },\n\n    \"formSettings\": {\n        \"helpStyle\": \"tooltip\",\n        \"helpOnFocus\": true,\n        \"newActions\": [\n            {\"action\": \"redirect-object\", \"link\": \"/admin/collections/team/{id}\"}\n        ],\n        \"editActions\": [\n            {\"action\": \"refresh\"}\n        ]\n    },\n\n    \"properties\": {\n        \"position\": {\n            \"options\": [\n                {\"label\": \"CEO\", \"value\": \"ceo\"},\n                {\"label\": \"CFO\", \"value\": \"cfo\"},\n                {\"label\": \"CMO\", \"value\": \"cmo\"},\n                {\"label\": \"VP\", \"value\": \"vp\"},\n                {\"label\": \"Director\", \"value\": \"director\"},\n                {\"label\": \"Manager\", \"value\": \"manager\"},\n                {\"label\": \"Staff\", \"value\": \"staff\"}\n            ]\n        }\n    },\n\n    \"customProperties\": {},\n\n    \"count\": 24,\n    \"totalObjects\": 22,\n    \"lastUpdated\": \"2024-01-15T14:30:00+00:00\"\n}"
+                "{\n    \"id\": \"team\",\n    \"name\": \"Team Members\",\n    \"schema\": \"team\",\n    \"description\": \"Company team members and their profiles.\",\n\n    \"url\": \"/about/team\",\n    \"prettyUrl\": true,\n\n    \"category\": \"Content\",\n    \"labelPlural\": \"Team Members\",\n    \"labelSingular\": \"Team Member\",\n    \"sortBy\": \"lastName\",\n\n    \"groups\": [],\n    \"publicOperations\": [\"read\"],\n    \"ownerProperty\": \"owner\",\n\n    \"queueRebuildOnSave\": false,\n\n    \"manualSort\": {\n        \"position\": [\"ceo\", \"cfo\", \"cmo\", \"vp\", \"director\", \"manager\"],\n        \"department\": [\"executive\", \"engineering\", \"sales\"]\n    },\n\n    \"formSettings\": {\n        \"helpStyle\": \"tooltip\",\n        \"helpOnFocus\": true,\n        \"newActions\": [\n            {\"action\": \"redirect-object\", \"link\": \"/admin/collections/team/{id}\"}\n        ],\n        \"editActions\": [\n            {\"action\": \"refresh\"}\n        ]\n    },\n\n    \"properties\": {\n        \"position\": {\n            \"options\": [\n                {\"label\": \"CEO\", \"value\": \"ceo\"},\n                {\"label\": \"CFO\", \"value\": \"cfo\"},\n                {\"label\": \"CMO\", \"value\": \"cmo\"},\n                {\"label\": \"VP\", \"value\": \"vp\"},\n                {\"label\": \"Director\", \"value\": \"director\"},\n                {\"label\": \"Manager\", \"value\": \"manager\"},\n                {\"label\": \"Staff\", \"value\": \"staff\"}\n            ]\n        }\n    },\n\n    \"customProperties\": {},\n\n    \"count\": 24,\n    \"totalObjects\": 22,\n    \"lastUpdated\": \"2024-01-15T14:30:00+00:00\"\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },
@@ -4530,7 +4519,7 @@
                 }
             ],
             "examples": [
-                "tcms collection:update recipes --set ownerProperty=author\ntcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true\ntcms collection:update blog --set mcp.access=authenticated\ntcms collection:update products --set properties.price.label=Cost\necho '{\"seo\":{\"titleTemplate\":\"{title} | Recipes\"}}' | tcms collection:update recipes -"
+                "tcms collection:update recipes --set ownerProperty=author\ntcms collection:update blog --set url=/blog/{id} --set sortBy=-date\ntcms collection:update blog --set mcp.access=authenticated\ntcms collection:update products --set properties.price.label=Cost\necho '{\"seo\":{\"titleTemplate\":\"{title} | Recipes\"}}' | tcms collection:update recipes -"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

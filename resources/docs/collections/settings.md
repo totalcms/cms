@@ -299,13 +299,23 @@ Custom singular term for collection items.
 **Required:** No
 **Default:** `"id"`
 
-The default property used to sort objects in the admin collection view.
+The default sort for the admin collection view. It takes the same syntax as the query API's [`sort` parameter](docs/apis/index-filter#sorting): one property, or several separated by commas, each with an optional direction. The field suggests the schema's properties.
+
+| Sort By | Order |
+|---|---|
+| `title` | Title A-Z |
+| `-date` | Date, newest first |
+| `date:desc` | The same, in the colon format |
+| `date:desc,title:asc` | Newest first, then alphabetical by title |
+| `-price` | Price, high to low |
 
 ```json
 {
-    "sortBy": "date"
+    "sortBy": "-date,title"
 }
 ```
+
+A single property name, the only form earlier versions accepted, still works as before. The Reverse Sort setting is gone: updating converts a collection that had it ticked into the reversed Sort By (`date` becomes `-date`). Clicking a column header in the table sorts by that column alone. `shuffle` is ignored here. A property the schema doesn't have changes nothing.
 
 **Common sort properties:**
 - `id` - Alphabetical by ID
@@ -314,27 +324,10 @@ The default property used to sort objects in the admin collection view.
 - `onCreate` - By creation date
 - `onUpdate` - By last modified date
 
----
-
-### reverseSort
-
-**Type:** `boolean`
-**Required:** No
-**Default:** `false`
-
-Reverses the default sort order (descending instead of ascending).
-
-```json
-{
-    "sortBy": "date",
-    "reverseSort": true
-}
-```
-
 **Common patterns:**
-- `sortBy: "date", reverseSort: true` - Newest first
-- `sortBy: "title", reverseSort: false` - A-Z
-- `sortBy: "priority", reverseSort: false` - Lowest priority first
+- `-date` - Newest first
+- `title` - A-Z
+- `-featured,title` - Featured first, then A-Z
 
 ---
 
@@ -814,7 +807,6 @@ A fully configured collection metadata file:
     "labelPlural": "Team Members",
     "labelSingular": "Team Member",
     "sortBy": "lastName",
-    "reverseSort": false,
 
     "groups": [],
     "publicOperations": ["read"],

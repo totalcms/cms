@@ -277,7 +277,7 @@ Change some of an existing collection's settings, keeping the rest. The save val
 
 ```bash
 tcms collection:update recipes --set ownerProperty=author
-tcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true
+tcms collection:update blog --set url=/blog/{id} --set sortBy=-date
 tcms collection:update blog --set mcp.access=authenticated
 tcms collection:update products --set properties.price.label=Cost
 echo '{"seo":{"titleTemplate":"{title} | Recipes"}}' | tcms collection:update recipes -

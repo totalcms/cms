@@ -13,6 +13,9 @@ export default class AdminTable {
 		this.limit      = parseInt(this.table.dataset.limit, 10) || 50;
 		this.sortField  = this.table.dataset.defaultSort || 'id';
 		this.sortDir    = this.table.dataset.defaultSortDir || 'asc';
+		// The full sort sent to /query. It starts as the collection's Sort By,
+		// which can name several properties, and becomes the one clicked column.
+		this.sort       = this.table.dataset.sort || `${this.sortField}:${this.sortDir}`;
 		this.searchInput = wrapper.querySelector('input[type="search"]');
 
 		// Bulk selection state. Keyed by object id so it survives the HTMX
@@ -105,6 +108,7 @@ export default class AdminTable {
 		// Update stored sort
 		this.sortField = field;
 		this.sortDir = dir;
+		this.sort = `${field}:${dir}`;
 
 		// Build URL and fire HTMX request
 		this.refreshTable();
@@ -126,7 +130,7 @@ export default class AdminTable {
 		const params = new URLSearchParams({
 			format      : 'table',
 			limit       : this.limit.toString(),
-			sort        : `${this.sortField}:${this.sortDir}`,
+			sort        : this.sort,
 			_collection : this.collection,
 			_api        : this.api,
 		});
@@ -155,7 +159,7 @@ export default class AdminTable {
 		if (!this.searchInput) return;
 
 		const vals = JSON.parse(this.searchInput.getAttribute('hx-vals') || '{}');
-		vals.sort = `${this.sortField}:${this.sortDir}`;
+		vals.sort = this.sort;
 		this.searchInput.setAttribute('hx-vals', JSON.stringify(vals));
 
 		// Re-process the element so HTMX picks up the new hx-vals

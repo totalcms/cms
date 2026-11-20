@@ -7,14 +7,16 @@ namespace TotalCMS\Domain\Twig\Service;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorResolver;
+use TotalCMS\Domain\Collection\Utilities\SortRuleParser;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Support\Config;
 
 /**
- * What the admin collection table may show the signed-in user, behind
- * `cms.admin.collectionTable.*`. Both answers come from the rules the API
- * routes apply ({@see AccessGuard}), so the table never offers what the
- * server refuses or counts what it hides.
+ * What the admin collection table shows the signed-in user, behind
+ * `cms.admin.collectionTable.*`: its starting sort, and what it may list and
+ * offer. The access answers come from the rules the API routes apply
+ * ({@see AccessGuard}), so the table never offers what the server refuses or
+ * counts what it hides.
  *
  * On an owned collection a member's table lists only their own objects
  * (the `/query` route is scoped), and bulk delete is refused to them.
@@ -46,6 +48,30 @@ readonly class CollectionTableAccess
 		}
 
 		return $this->indexQuery->query($collection, ['limit' => '1'], $scope)->total;
+	}
+
+	/**
+	 * The table's starting `sort` for the `/query` route, from the collection's
+	 * Sort By, every rule with an explicit direction: `-date,title` gives
+	 * `date:desc,title:asc`.
+	 *
+	 * Sort By takes the query's sort syntax, so a single property stored before
+	 * it did (`date`) still reads as itself. `shuffle` is dropped: the table
+	 * would reshuffle on every page. Nothing left falls back to `id`.
+	 */
+	public function sort(string $sortBy): string
+	{
+		$rules = [];
+		foreach (SortRuleParser::parse($sortBy) as $rule) {
+			$property = $rule['property'] ?? '';
+			if (!is_string($property) || $property === '') {
+				continue;
+			}
+
+			$rules[] = $property . ':' . (($rule['reverse'] ?? false) === true ? 'desc' : 'asc') . (($rule['natural'] ?? false) === true ? ':natural' : '');
+		}
+
+		return $rules !== [] ? implode(',', $rules) : 'id:asc';
 	}
 
 	/**

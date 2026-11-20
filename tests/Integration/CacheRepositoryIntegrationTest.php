@@ -57,7 +57,6 @@ describe('Cache Repository Integration', function (): void {
 		$testCollection->labelSingular      = '';
 		$testCollection->groups             = [];
 		$testCollection->sortBy             = 'id';
-		$testCollection->reverseSort        = false;
 		$testCollection->prettyUrl          = false;
 		$testCollection->queueRebuildOnSave = false;
 		$collectionRepo->saveCollection($testCollection);
@@ -248,7 +247,6 @@ describe('Cache Repository Integration', function (): void {
 		$newCollection->labelSingular      = '';
 		$newCollection->groups             = [];
 		$newCollection->sortBy             = 'id';
-		$newCollection->reverseSort        = false;
 		$newCollection->prettyUrl          = false;
 		$newCollection->queueRebuildOnSave = false;
 

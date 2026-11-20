@@ -23,7 +23,7 @@ beforeEach(function (): void {
 	$container         = $this->app->getContainer();
 	$this->collections = $container->get(CollectionFetcher::class);
 	$this->collections->fetchOrCreateReserved('blog');
-	$container->get(CollectionSaver::class)->patchCollection('blog', ['sortBy' => 'title', 'reverseSort' => false, 'mcp' => ['access' => 'admin', 'description' => 'Posts']]);
+	$container->get(CollectionSaver::class)->patchCollection('blog', ['sortBy' => 'title', 'mcp' => ['access' => 'admin', 'description' => 'Posts']]);
 
 	$totalcms = $this->createMock(TotalCMS::class);
 	$totalcms->method('container')->willReturn($container);
@@ -35,14 +35,14 @@ beforeEach(function (): void {
 });
 
 test('--set changes one setting and keeps the rest', function (): void {
-	$this->tester->execute(['id' => 'blog', '--set' => ['sortBy=date', 'reverseSort=true']]);
+	$this->tester->execute(['id' => 'blog', '--set' => ['sortBy=-date,title', 'category=News']]);
 
 	expect($this->tester->getStatusCode())->toBe(0)
 		->and($this->tester->getDisplay())->toContain("Updated 'blog'");
 
 	$blog = $this->collections->fetchCollection('blog');
-	expect($blog?->sortBy)->toBe('date')
-		->and($blog?->reverseSort)->toBeTrue()
+	expect($blog?->sortBy)->toBe('-date,title')
+		->and($blog?->category)->toBe('News')
 		->and($blog?->mcp['description'] ?? null)->toBe('Posts');
 });
 

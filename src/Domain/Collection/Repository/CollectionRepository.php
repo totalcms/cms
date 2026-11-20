@@ -246,6 +246,25 @@ class CollectionRepository extends StorageRepository
 		}
 	}
 
+	/**
+	 * The collection's settings exactly as stored, including keys this version
+	 * no longer models, for a migration that reads a retired setting. Empty
+	 * when the file is missing or not a JSON object.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function fetchStoredMeta(string $collection): array
+	{
+		$file = $this->buildMetaPath($collection);
+		if (!$this->filesystem->fileExists($file)) {
+			return [];
+		}
+
+		$decoded = json_decode($this->filesystem->read($file), true);
+
+		return is_array($decoded) ? $decoded : [];
+	}
+
 	private function buildMetaPath(string $collection): string
 	{
 		return PathUtils::buildPath(collection: $collection, filename: self::META_FILE);

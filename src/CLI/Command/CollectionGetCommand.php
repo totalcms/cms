@@ -49,7 +49,6 @@ class CollectionGetCommand extends BaseCommand
 			'Description'   => $data['description'] ?? '',
 			'Objects'       => (string)($data['totalObjects'] ?? ''),
 			'Sort By'       => $data['sortBy'] ?? '',
-			'Reverse Sort'  => ($data['reverseSort'] ?? false) ? 'Yes' : 'No',
 			'Last Updated'  => $data['lastUpdated'] ?? '',
 		]);
 

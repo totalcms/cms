@@ -38,7 +38,6 @@ describe('Cache Invalidation Events', function (): void {
 		$testCollection->labelSingular      = '';
 		$testCollection->groups             = [];
 		$testCollection->sortBy             = 'id';
-		$testCollection->reverseSort        = false;
 		$testCollection->prettyUrl          = false;
 		$testCollection->queueRebuildOnSave = false;
 		$collectionRepo->saveCollection($testCollection);
@@ -101,7 +100,6 @@ describe('Cache Invalidation Events', function (): void {
 		$testCollection->labelSingular      = '';
 		$testCollection->groups             = [];
 		$testCollection->sortBy             = 'id';
-		$testCollection->reverseSort        = false;
 		$testCollection->prettyUrl          = false;
 		$testCollection->queueRebuildOnSave = false;
 		$collectionRepo->saveCollection($testCollection);
@@ -165,7 +163,6 @@ describe('Cache Invalidation Events', function (): void {
 		$newCollection->labelSingular      = '';
 		$newCollection->groups             = [];
 		$newCollection->sortBy             = 'id';
-		$newCollection->reverseSort        = false;
 		$newCollection->prettyUrl          = false;
 		$newCollection->queueRebuildOnSave = false;
 
@@ -207,7 +204,6 @@ describe('Cache Invalidation Events', function (): void {
 		$tempCollection->labelSingular      = '';
 		$tempCollection->groups             = [];
 		$tempCollection->sortBy             = 'id';
-		$tempCollection->reverseSort        = false;
 		$tempCollection->prettyUrl          = false;
 		$tempCollection->queueRebuildOnSave = false;
 		$collectionRepo->saveCollection($tempCollection);
@@ -323,7 +319,6 @@ describe('Cache Invalidation Events', function (): void {
 		$testCollection->labelSingular      = '';
 		$testCollection->groups             = [];
 		$testCollection->sortBy             = 'id';
-		$testCollection->reverseSort        = false;
 		$testCollection->prettyUrl          = false;
 		$testCollection->queueRebuildOnSave = false;
 		$collectionRepo->saveCollection($testCollection);

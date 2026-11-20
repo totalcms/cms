@@ -116,8 +116,7 @@ final class JumpStartExportReservedSchemaCollectionsTest extends TestCase
 		// rebuilt it with defaults and its url, sort and cards were lost.
 		$blog              = $this->collection('blog', 'blog', 'Journal');
 		$blog->url         = '/journal/{id}';
-		$blog->sortBy      = 'date';
-		$blog->reverseSort = true;
+		$blog->sortBy      = '-date';
 		$blog->feed        = ['enabled' => true];
 		$blog->count       = 42;
 		$blog->format      = CollectionData::FORMAT_MARKDOWN;
@@ -133,8 +132,7 @@ final class JumpStartExportReservedSchemaCollectionsTest extends TestCase
 		expect($entry['id'])->toBe('blog');
 		expect($entry['name'])->toBe('Journal');
 		expect($entry['url'])->toBe('/journal/{id}');
-		expect($entry['sortBy'])->toBe('date');
-		expect($entry['reverseSort'])->toBeTrue();
+		expect($entry['sortBy'])->toBe('-date');
 		expect($entry['feed'])->toBe(['enabled' => true]);
 
 		// Computed counters are the target's own, and the importer patches

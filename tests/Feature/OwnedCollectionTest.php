@@ -338,6 +338,32 @@ describe('property route on an own object', function (): void {
 	});
 });
 
+describe('admin table starting sort', function (): void {
+	beforeEach(function (): void {
+		alexCreatesASite($this->app);
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+	});
+
+	it('sends the full Sort By and marks its first column', function (): void {
+		patchJson('/api/collections/portfolio', ['sortBy' => '-draft,title'])->assertOk();
+
+		$html = (string)get('/admin/collections/portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('data-sort="draft:desc,title:asc"')
+			->and($html)->toContain('sort=draft%3Adesc%2Ctitle%3Aasc')
+			->and($html)->toContain('data-default-sort="draft" data-default-sort-dir="desc"');
+	});
+
+	it('reads a single property, as stored before Sort By took the syntax', function (): void {
+		patchJson('/api/collections/portfolio', ['sortBy' => 'title'])->assertOk();
+
+		$html = (string)get('/admin/collections/portfolio')->assertOk()->getBody();
+
+		expect($html)->toContain('data-sort="title:asc"')
+			->and($html)->toContain('data-default-sort="title" data-default-sort-dir="asc"');
+	});
+});
+
 describe('admin table under a public read', function (): void {
 	beforeEach(function (): void {
 		alexCreatesASite($this->app);

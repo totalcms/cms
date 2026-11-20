@@ -82,14 +82,6 @@ class CollectionForm extends TotalForm
 				$schemaField->disable();
 			}
 		}
-		$sortField = $this->fields['sortBy'];
-		if ($this->collectionData instanceof CollectionData && $sortField instanceof SelectField) {
-			$schema     = $this->services->schemaFetcher->fetchSchema($this->collectionData->schema);
-			$properties = $schema->properties;
-			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
-			$sortField->setOptions($options);
-		}
-
 		$this->hideRegistrationFields();
 
 		return parent::fieldContent();
