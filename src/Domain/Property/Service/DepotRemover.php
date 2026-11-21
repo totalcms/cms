@@ -40,6 +40,8 @@ class DepotRemover extends FileRemover
 
 		$updated = $this->updateObject($collection, $objectID, $property, $depot->transform());
 
+		// A file, or a folder with everything in it: to the trash when it is on.
+		$this->fileBackups?->setAside($collection, $objectID, $property, $subpath, $name);
 		$this->storage->deleteDirectory($collection, $objectID, $property, $name, $subpath);
 		$this->storage->deleteFile($collection, $objectID, $property, $name, $subpath);
 

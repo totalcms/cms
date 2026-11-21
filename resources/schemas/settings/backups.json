@@ -1,14 +1,15 @@
 {
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"title"       : "Backups",
-	"description" : "Every save keeps the version it replaced and every delete keeps the final state, so a bad edit or an accidental delete is one <code>tcms backup:restore</code> away. Records only — uploaded files and images are never copied, so the footprint stays the size of the JSON. Snapshots live in <code>tcms-data/.system/backups/</code> and survive application updates. This is an undo history, not a site backup: keep backing up <code>tcms-data/</code>.",
+	"description" : "Every save keeps the version it replaced and every delete keeps the final state, so a bad edit or an accidental delete is one <code>tcms backup:restore</code> away. Records only, unless you turn on the file settings below: then replaced and removed images and files are kept too, and a restore puts them back. Snapshots live in <code>tcms-data/.system/backups/</code> and survive application updates. This is an undo history, not a site backup: keep backing up <code>tcms-data/</code>.",
+	"formgrid"    : "---Object History---\nenable .\nkeep maxAgeDays\n---Uploaded Files---\nkeepImages keepFiles\ntrash maxFileSizeMB",
 	"type"        : "object",
 	"properties"  : {
 		"enable": {
 			"type"    : "boolean",
 			"field"   : "toggle",
 			"label"   : "Keep Object History",
-			"help"    : "Master switch. When off, saves and deletes write no snapshots. Existing snapshots are left in place and still restore. Sync's pre-overwrite snapshots are unaffected by this setting.",
+			"help"    : "Master switch. When off, saves and deletes write no snapshots and no files are kept. Existing snapshots are left in place and still restore. Sync's pre-overwrite snapshots are unaffected by this setting.",
 			"default" : true
 		},
 		"keep": {
@@ -25,11 +26,48 @@
 			"type"        : "number",
 			"field"       : "number",
 			"label"       : "Maximum Age (days)",
-			"help"        : "Snapshots older than this are pruned regardless of the count above — one busy afternoon of edits would otherwise evict last week's version, the one you actually wanted. Set to <code>0</code> to keep snapshots until the count limit alone removes them.",
+			"help"        : "Applies to snapshots and to uploaded files: a snapshot, a kept image or file, or anything in the trash is deleted once it is older than this, whatever the counts say. Without it, one busy afternoon of edits would evict last week's version, the one you actually wanted. Set to <code>0</code> to switch the age rule off: snapshots and kept images and files then stay until their count removes them, and the trash is emptied after 30 days.",
 			"placeholder" : "30",
 			"default"     : 30,
 			"min"         : 0,
 			"max"         : 3650
+		},
+		"keepImages": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Earlier Images per Field",
+			"help"        : "How many replaced or removed images each <code>image</code> field of an object keeps, so restoring a snapshot brings its image back. That includes an image field inside a card or a deck item, and a video's poster. <code>0</code> keeps none: a replaced image is deleted, as before. Each kept image is the full original, so this uses real disk space. Gallery pictures go to the trash instead.",
+			"placeholder" : "0",
+			"default"     : 0,
+			"min"         : 0,
+			"max"         : 50
+		},
+		"keepFiles": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Earlier Files per Field",
+			"help"        : "How many replaced or removed files each <code>file</code> field of an object keeps, including a file field inside a card or a deck item. <code>0</code> keeps none. Each kept file is the full original: with large downloads, a small number here can use a lot of disk. Depot files go to the trash instead.",
+			"placeholder" : "0",
+			"default"     : 0,
+			"min"         : 0,
+			"max"         : 50
+		},
+		"trash": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Trash for Galleries and Depots",
+			"help"    : "Keep the pictures removed from a gallery and the files and folders removed from a depot, so restoring a snapshot brings them back. There is no count: everything removed is kept until it is older than Maximum Age, then deleted. Deleting a large depot therefore holds its disk space for that long.",
+			"default" : false
+		},
+		"maxFileSizeMB": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Largest File Kept (MB)",
+			"help"        : "A file larger than this is never kept, by any of the three settings above: it is deleted when it is replaced or removed, as before. Set to <code>0</code> for no limit.",
+			"placeholder" : "100",
+			"default"     : 100,
+			"min"         : 0,
+			"max"         : 102400
 		}
 	}
 }

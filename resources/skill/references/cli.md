@@ -80,10 +80,16 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 
 ### Backups
 Every save keeps the version it replaced; every delete keeps the final state
-(records only, never files). Restore is an ordinary save and is itself undoable.
-- `backup:list <collection> <id>` — snapshots for one object, newest first
+(records only by default). Restore is an ordinary save and is itself undoable.
+`backups.keepImages` / `backups.keepFiles` (default 0) also keep the replaced or
+removed file of an `image` / `file` field (card and deck children included), and
+`backups.trash` keeps what is removed from a gallery or depot. A restore puts
+them back. Files over `backups.maxFileSizeMB` (100) are never kept.
+- `backup:list <collection> <id>` — snapshots for one object, newest first,
+  then any kept files
 - `backup:restore <collection> <id> <snapshot>` — put one back (`--latest` for
-  the newest; `--force` to skip the prompt). Recreates a deleted object
+  the newest; `--force` to skip the prompt). Recreates a deleted object. Lists
+  each file it put back and warns about a file the record names that is gone
 
 ### Schemas
 - `schema:list` — list all schemas

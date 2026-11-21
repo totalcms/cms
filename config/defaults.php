@@ -658,14 +658,26 @@ $settings['security'] = [
 
 // Object snapshot history. Every save keeps the record's pre-save state and
 // every delete keeps its final state, under tcms-data/.system/backups/objects/.
-// Records only — never uploaded files or images. Sync's pre-overwrite
+// Records only, unless the file settings say otherwise. `keepImages` and
+// `keepFiles` are how many earlier files every image / file field of an
+// object keeps when its file is replaced or removed, including a field inside
+// a card or a deck item; both start at 0 (off). `trash` keeps the files
+// removed from a gallery or a depot until they are `maxAgeDays` old (30 days
+// when that is 0). A kept file is the full original, so all of this costs
+// real disk; `maxFileSizeMB` is the largest file that is ever kept (0 for no
+// limit), and anything larger is deleted as before. Sync's pre-overwrite
 // snapshots land in the same tree. `keep` is per object; `maxAgeDays` prunes
-// regardless of count (0 disables the age rule). Editable under Settings →
-// Backups; restore with `tcms backup:list` / `tcms backup:restore`.
+// snapshots and kept files regardless of count (0 disables the age rule).
+// Editable under Settings → Backups; restore with `tcms backup:list` /
+// `tcms backup:restore`.
 $settings['backups'] = [
-	'enable'     => true,
-	'keep'       => 10,
-	'maxAgeDays' => 30,
+	'enable'        => true,
+	'keep'          => 10,
+	'maxAgeDays'    => 30,
+	'keepImages'    => 0,
+	'keepFiles'     => 0,
+	'trash'         => false,
+	'maxFileSizeMB' => 100,
 ];
 
 // Activity log: who changed, downloaded or called what, recorded from core

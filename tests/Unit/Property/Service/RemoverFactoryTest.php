@@ -64,6 +64,7 @@ class RemoverFactoryTest extends TestCase
 			$this->createMock(ObjectPatcher::class),
 			$this->createMock(ObjectFetcher::class),
 			$schemaFetcher,
+			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		);
 	}
 }

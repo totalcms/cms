@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -20,6 +21,7 @@ readonly class ObjectRemover
 		private ObjectUpdater $objectUpdater,
 		private EventDispatcher $eventDispatcher,
 		private ObjectWriteGate $gate,
+		private FileBackupStore $fileBackups,
 	) {
 	}
 
@@ -33,7 +35,22 @@ readonly class ObjectRemover
 		// an already-missing object is not an error here.
 		$previous = $this->storage->fetchObject($collection, $id);
 
+		// The object's folder goes with it. The file history keeps what the
+		// settings say of each property's files first, so restoring the record
+		// can bring them back.
+		$setAside = [];
+		if ($previous instanceof ObjectData && $this->fileBackups->active()) {
+			foreach ($previous->properties->keys() as $property) {
+				array_push($setAside, ...$this->fileBackups->setAside($collection, $id, (string)$property));
+			}
+		}
+
 		$status = $this->storage->deleteObject($collection, $id);
+
+		// The object is still there, so its files must be too.
+		if (!$status) {
+			$this->fileBackups->undo($setAside);
+		}
 
 		if ($status) {
 			$this->eventDispatcher->dispatch(CoreEvent::OBJECT_DELETED, new ObjectEventPayload($collection, $id, null, $previous));
@@ -58,6 +75,7 @@ readonly class ObjectRemover
 		// orphan on disk, which nothing references and which is recoverable.
 		$updated = $this->objectUpdater->updateObject($collection, $id, $objectData);
 
+		$this->fileBackups->setAside($collection, $id, $property);
 		$this->propStorage->deleteDirectory($collection, $id, $property);
 
 		return $updated;
@@ -103,6 +121,7 @@ readonly class ObjectRemover
 		// Record first, disk second — see deleteObjectProperty().
 		$updated = $this->objectUpdater->updateObject($collection, $id, $objectData);
 
+		$this->fileBackups->setAside($collection, $id, $parent, $path);
 		$this->propStorage->deleteDirectory($collection, $id, $parent, null, $path);
 
 		return $updated;

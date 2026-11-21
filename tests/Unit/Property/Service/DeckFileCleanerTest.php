@@ -35,6 +35,7 @@ final class DeckFileCleanerTest extends TestCase
 			$this->schemaFetcher,
 			$this->repository,
 			$loggerFactory,
+			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		);
 	}
 

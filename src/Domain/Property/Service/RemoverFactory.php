@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -16,6 +17,7 @@ readonly class RemoverFactory
 		private ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
+		private FileBackupStore $fileBackups,
 	) {
 	}
 
@@ -48,12 +50,15 @@ readonly class RemoverFactory
 		// the type system now guarantees what that runtime check used to guess
 		// at — and it could never fire anyway, because a wrong class blew up in
 		// the constructor above it.
-		return new $className(
+		$remover = new $className(
 			$this->storage,
 			$this->propFetcher,
 			$this->objectPatcher,
 			$this->objectFetcher
 		);
+		$remover->setFileBackups($this->fileBackups);
+
+		return $remover;
 	}
 
 	private function getPropertyType(string $collection, string $property): string

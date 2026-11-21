@@ -92,9 +92,21 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 		$m['indexNowJob'],
 		$config,
 		systemActors(),
+		$m['fileBackups'] ?? test()->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		$loggerFactory,
 	);
 }
+
+describe('JobRunner::maintenance', function (): void {
+	it('also clears kept files and trash past their age, so a site that uploads nothing still empties them', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('maintenance')->willReturn(['pruned' => 0, 'vacuumed' => false]);
+		$m['fileBackups'] = test()->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class);
+		$m['fileBackups']->expects(test()->once())->method('sweep')->willReturn(3);
+
+		expect(jobRunnerFrom($m)->maintenance())->toBe(['pruned' => 0, 'vacuumed' => false]);
+	});
+});
 
 describe('JobRunner::processNextJobWithDetails lifecycle', function (): void {
 	it('deletes a job that ran cleanly', function (): void {

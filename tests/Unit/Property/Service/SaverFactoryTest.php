@@ -62,6 +62,7 @@ class SaverFactoryTest extends TestCase
 			$this->mockLoggerFactory,
 			$this->createMock(Config::class),
 			$this->mockMetaResolver,
+			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		);
 	}
 

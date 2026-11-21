@@ -11,7 +11,9 @@ use TotalCMS\CLI\Formatter\TableHelper;
 
 /**
  * Show every snapshot kept for one object, newest first. The filename in the
- * first column is what `backup:restore` takes.
+ * first column is what `backup:restore` takes. The files kept for its image
+ * and file properties are listed under them: a restore puts back the one its
+ * snapshot names.
  */
 class BackupListCommand extends BaseCommand
 {
@@ -36,11 +38,14 @@ class BackupListCommand extends BaseCommand
 
 		$snapshots = $this->totalcms->backupStore()->listObjectSnapshots($collectionId, $objectId);
 
+		$files = $this->totalcms->fileBackupStore()->versions($collectionId, $objectId);
+
 		return $this->outputData($input, $output, [
 			'collection' => $collectionId,
 			'id'         => $objectId,
 			'live'       => $this->totalcms->objectFetcher()->existsObject($collectionId, $objectId),
 			'snapshots'  => $snapshots,
+			'files'      => $files,
 		]);
 	}
 
@@ -53,6 +58,9 @@ class BackupListCommand extends BaseCommand
 		$snapshots = is_array($data['snapshots'] ?? null) ? $data['snapshots'] : [];
 		$live      = (bool)($data['live'] ?? false);
 
+		/** @var list<array{property:string,path:string,name:string,size:int,at:string,trash:bool}> $files */
+		$files = is_array($data['files'] ?? null) ? $data['files'] : [];
+
 		$output->writeln('');
 
 		if ($snapshots === []) {
@@ -63,6 +71,7 @@ class BackupListCommand extends BaseCommand
 				$live ? '' : ' The object does not exist either.',
 			));
 			$output->writeln('');
+			$this->renderFiles($output, $files);
 
 			return;
 		}
@@ -90,11 +99,43 @@ class BackupListCommand extends BaseCommand
 
 		TableHelper::renderList($output, ['Snapshot', 'Taken', 'Format', 'Size', ''], $rows);
 		$output->writeln('');
+		$this->renderFiles($output, $files);
 		$output->writeln(sprintf(
 			'Restore one with: <comment>tcms backup:restore %s %s <snapshot></comment> (or <comment>--latest</comment>)',
 			(string)$data['collection'],
 			(string)$data['id'],
 		));
+		$output->writeln('');
+	}
+
+	/**
+	 * The files kept for the object: earlier images and files, and what is in
+	 * the trash of its galleries and depots. Silent when there are none, which
+	 * is every site that has not asked for them.
+	 *
+	 * @param list<array{property:string,path:string,name:string,size:int,at:string,trash:bool}> $files
+	 */
+	private function renderFiles(OutputInterface $output, array $files): void
+	{
+		if ($files === []) {
+			return;
+		}
+
+		$output->writeln(sprintf('<info>%d kept file%s</info> (a restore puts back the one its snapshot names)', count($files), count($files) === 1 ? '' : 's'));
+		$output->writeln('');
+
+		$rows = [];
+		foreach ($files as $file) {
+			$rows[] = [
+				rtrim($file['property'] . '/' . $file['path'], '/'),
+				$file['name'],
+				$file['at'] !== '' ? str_replace('T', ' ', substr($file['at'], 0, 19)) : '?',
+				$this->humanBytes($file['size']),
+				$file['trash'] ? 'trash' : '',
+			];
+		}
+
+		TableHelper::renderList($output, ['Field', 'File', 'Set aside', 'Size', ''], $rows);
 		$output->writeln('');
 	}
 

@@ -32,8 +32,9 @@ use TotalCMS\Support\Config;
  *   .system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}[-n].{json|md}
  *
  * It lives inside the data directory so backups stay with the content they
- * protect and survive application updates. Only the record is kept — never
- * uploaded files or images, which would multiply disk use with every edit.
+ * protect and survive application updates. Only the record is kept here. The
+ * file behind an image or file property is kept by {@see FileBackupStore},
+ * when its settings ask for it.
  *
  * Retention is count AND age: each item keeps its newest `keep` snapshots,
  * and anything older than `maxAgeDays` goes regardless. Count alone let one
@@ -58,21 +59,27 @@ class BackupStore
 
 	private readonly LoggerInterface $logger;
 
-	private readonly int $keep;
-
-	private readonly int $maxAgeDays;
-
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
 		private readonly ObjectRepository $objects,
 		LoggerFactory $loggerFactory,
-		?Config $config = null,
+		// Required on purpose. The container skips optional parameters, so while
+		// this was `?Config $config = null` the settings never arrived and every
+		// install ran on the defaults below.
+		private readonly Config $config,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Backups);
+	}
 
-		$settings         = $config->backups ?? [];
-		$this->keep       = max(1, (int)($settings['keep'] ?? self::DEFAULT_KEEP));
-		$this->maxAgeDays = max(0, (int)($settings['maxAgeDays'] ?? self::DEFAULT_MAX_AGE_DAYS));
+	/** Read when used, not when built: this store is built while the app boots. */
+	private function keep(): int
+	{
+		return max(1, (int)($this->config->backups['keep'] ?? self::DEFAULT_KEEP));
+	}
+
+	private function maxAgeDays(): int
+	{
+		return max(0, (int)($this->config->backups['maxAgeDays'] ?? self::DEFAULT_MAX_AGE_DAYS));
 	}
 
 	/**
@@ -294,12 +301,14 @@ class BackupStore
 	 */
 	private function prune(array $existingNewestFirst): void
 	{
-		$cutoff = $this->maxAgeDays > 0 ? time() - ($this->maxAgeDays * 86400) : null;
+		$keep   = $this->keep();
+		$maxAge = $this->maxAgeDays();
+		$cutoff = $maxAge > 0 ? time() - ($maxAge * 86400) : null;
 
 		foreach ($existingNewestFirst as $i => $path) {
 			// Position 0 is the previous newest; the fresh write sits above it,
 			// so the count limit leaves keep-1 of these alive.
-			$tooMany = $i >= $this->keep - 1;
+			$tooMany = $i >= $keep - 1;
 			$tooOld  = $cutoff !== null && $this->timestampOf($path) < $cutoff;
 
 			if ($tooMany || $tooOld) {
