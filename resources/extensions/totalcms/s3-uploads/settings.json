@@ -1,0 +1,105 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "S3 Uploads",
+	"description": "Connect the bucket that holds this site's large files. Editors upload straight from the browser to the bucket, so the bucket also needs CORS rules for this site: the Test Connection page prints them.",
+	"formgrid": "[[ Bucket\nendpoint region\nbucket addressing\n]]\n[[ Credentials\naccessKey secretKey\n]]\n[[ Files\nprefix\nvisibility signedUrlTtl\npublicBaseUrl\n]]",
+	"type": "object",
+	"properties": {
+		"endpoint": {
+			"type": "string",
+			"field": "text",
+			"label": "Endpoint",
+			"help": "Leave blank for Amazon S3. Cloudflare R2: <code>https://&lt;accountid&gt;.r2.cloudflarestorage.com</code>. Backblaze B2: <code>https://s3.&lt;region&gt;.backblazeb2.com</code>. Wasabi: <code>https://s3.&lt;region&gt;.wasabisys.com</code>. MinIO: your server URL.",
+			"default": ""
+		},
+		"region": {
+			"type": "string",
+			"field": "text",
+			"label": "Region",
+			"help": "The bucket's region, such as <code>us-east-1</code>. Cloudflare R2 uses <code>auto</code>.",
+			"default": "us-east-1"
+		},
+		"bucket": {
+			"type": "string",
+			"field": "text",
+			"label": "Bucket",
+			"help": "The bucket name.",
+			"default": ""
+		},
+		"addressing": {
+			"type": "string",
+			"field": "select",
+			"label": "Addressing",
+			"help": "Automatic suits almost every provider: the bucket goes in the hostname for Amazon S3, and in the path for a custom endpoint or a bucket name with a dot in it.",
+			"default": "auto",
+			"options": [
+				{
+					"value": "auto",
+					"label": "Automatic"
+				},
+				{
+					"value": "path",
+					"label": "Path style"
+				},
+				{
+					"value": "virtual",
+					"label": "Virtual-hosted style"
+				}
+			]
+		},
+		"accessKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Access Key",
+			"help": "A key that can reach this one bucket only. Never a root key.",
+			"default": ""
+		},
+		"secretKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Secret Key",
+			"help": "The secret for the access key. It stays on the server; the browser never sees it.",
+			"default": ""
+		},
+		"prefix": {
+			"type": "string",
+			"field": "text",
+			"label": "Prefix",
+			"help": "A folder inside the bucket for this site, such as <code>my-site/</code>. <strong>Give each install (production, staging, local) its own prefix</strong>: cleanup removes every file under the prefix that this install does not use. Do not change it once files exist.",
+			"default": ""
+		},
+		"visibility": {
+			"type": "string",
+			"field": "select",
+			"label": "Visibility",
+			"help": "Public: links point at the bucket or your CDN, and the bucket must allow public reads. Private: the bucket stays closed and every link is a signed URL that works for a limited time.",
+			"default": "public",
+			"options": [
+				{
+					"value": "public",
+					"label": "Public"
+				},
+				{
+					"value": "private",
+					"label": "Private"
+				}
+			]
+		},
+		"signedUrlTtl": {
+			"type": "integer",
+			"field": "number",
+			"label": "Signed Link Lifetime (seconds)",
+			"help": "How long a signed link works. From 60 seconds to 604800 (7 days).",
+			"default": 3600,
+			"minimum": 60,
+			"maximum": 604800
+		},
+		"publicBaseUrl": {
+			"type": "string",
+			"field": "text",
+			"label": "Public Base URL",
+			"help": "A CDN or custom domain in front of the bucket, such as <code>https://files.example.com</code>. Leave blank to use the bucket's own URL. Used with public visibility only.",
+			"default": ""
+		}
+	}
+}

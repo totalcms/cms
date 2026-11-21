@@ -651,6 +651,34 @@ function buildBuilderTwigAdapter(
 }
 
 /**
+ * The field types extensions have registered, to put back with
+ * restoreExtensionFieldTypes() after a test that boots an extension with
+ * field types of its own.
+ *
+ * TotalForm keeps them in process-wide statics that are only ever merged
+ * into. Under the parallel suite a worker runs several files in one process,
+ * so a type left behind shows up in whatever file runs next: the field-type
+ * menus in FormGoldenTest's snapshots grow an "Extension Fields" group and
+ * fail, but only on the runs where the two files share a worker.
+ *
+ * @return array{types: mixed, defaults: mixed}
+ */
+function snapshotExtensionFieldTypes(): array
+{
+	return [
+		'types'    => (new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldTypes'))->getValue(),
+		'defaults' => (new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldDefaultTypes'))->getValue(),
+	];
+}
+
+/** @param array{types: mixed, defaults: mixed} $snapshot from snapshotExtensionFieldTypes() */
+function restoreExtensionFieldTypes(array $snapshot): void
+{
+	(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldTypes'))->setValue(null, $snapshot['types']);
+	(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldDefaultTypes'))->setValue(null, $snapshot['defaults']);
+}
+
+/**
  * Build a `SeoContext` for MetaBuilder / JSON-LD tests without going through
  * the factory. Every field has a sensible blog-shaped default; pass only the
  * keys the case under test actually varies.

@@ -155,6 +155,12 @@ final readonly class PodcastFeedMapper
 				$podcast[$key] = $key === 'duration' ? (float)$episode[$key] : (int)$episode[$key];
 			}
 		}
+		// The browser measures an s3file's length when it uploads. Use it when
+		// the editor left the episode's own Duration empty.
+		$measured = is_array($episode['audio'] ?? null) ? ($episode['audio']['duration'] ?? null) : null;
+		if (!isset($podcast['duration']) && is_numeric($measured) && (float)$measured > 0) {
+			$podcast['duration'] = (float)$measured;
+		}
 		$art = $this->artwork($episodesCollection, $id, 'art', $episode['art'] ?? null);
 		if ($art !== '') {
 			$podcast['image'] = $art;
@@ -219,6 +225,19 @@ final readonly class PodcastFeedMapper
 	private function enclosure(string $episodesCollection, array $episode): ?array
 	{
 		$audio = $episode['audio'] ?? null;
+
+		// An s3file (the S3 Uploads extension): the value points at a file in
+		// a bucket. Its counted link is on this site, so it stays the same
+		// when the bucket or provider changes, and podcast apps keep an
+		// enclosure URL for years.
+		if (is_array($audio) && is_string($audio['key'] ?? null) && $audio['key'] !== '') {
+			return [
+				'url'    => "{$this->config->api}/api/ext/totalcms/s3-uploads/stream/" . rawurlencode($episodesCollection) . '/' . rawurlencode((string)($episode['id'] ?? '')) . '/audio',
+				'type'   => (string)($audio['mime'] ?? ''),
+				'length' => (int)($audio['size'] ?? 0),
+			];
+		}
+
 		if (is_array($audio) && ($audio['name'] ?? '') !== '') {
 			return [
 				'url'    => "{$this->config->api}/stream/{$episodesCollection}/" . ($episode['id'] ?? '') . '/audio',

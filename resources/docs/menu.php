@@ -275,6 +275,7 @@ $menu = [
 					['title' => 'Podcast',          'path' => 'extensions/podcast'],
 					['title' => 'Protect',          'path' => 'extensions/protect'],
 					['title' => 'Pushover',         'path' => 'extensions/pushover'],
+					['title' => 'S3 Uploads',       'path' => 'extensions/s3-uploads'],
 					['title' => 'Scheduled',        'path' => 'extensions/scheduled'],
 					['title' => 'Stock Photos',     'path' => 'extensions/stock-photos'],
 					['title' => 'WebMCP',           'path' => 'extensions/webmcp'],

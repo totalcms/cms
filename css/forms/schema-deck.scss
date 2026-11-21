@@ -356,6 +356,15 @@
 .array-type {
 	--schema-type-icon : var(--icon-table);
 }
+// A property stored as JSON whose field is not the core `json` field: an
+// extension's field type, such as `s3file`. Without this it showed the
+// question-mark fallback. `object` and `properties` are JSON objects too;
+// they appear on a few rows of the internal schemas.
+.json-type,
+.object-type,
+.properties-type {
+	--schema-type-icon : var(--icon-json);
+}
 
 
 .id-field {
@@ -630,7 +639,7 @@
 	--schema-icon : var(--icon-json);
 
 	// A JSON field's type is the field itself; the type icon would only ever
-	// be the question-mark fallback (`json`) or a redundant object mark.
+	// repeat the field's own icon (`json`) or be a redundant object mark.
 	&.json-type:after,
 	&.object-type:after {
 		display : none;

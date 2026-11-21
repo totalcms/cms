@@ -158,6 +158,31 @@ describe('PodcastFeedMapper items', function (): void {
 		expect($podcast['chapters'])->toBe(['url' => '/tcms/download/episodes/ep-1/chapters', 'type' => 'application/json+chapters']);
 	});
 
+	// An episode whose audio is an s3file (the S3 Uploads extension): the value
+	// is a pointer to a file in a bucket, not a file Total CMS can stream.
+	test('audio stored in an S3 bucket gets the counted S3 link, with the type and size from the pointer', function (): void {
+		$pointer = ['id' => '0a1b2c3d', 'key' => 'site/episodes/ep 1/audio/0a1b2c3d-ep1.mp3', 'name' => 'ep1.mp3', 'mime' => 'audio/mpeg', 'size' => 48211334, 'duration' => 2714.3];
+		$item    = mapPodcast(podcastShow(), [podcastEpisodeRow(['id' => 'ep-1', 'audio' => $pointer, 'duration' => 0, 'audioUrl' => 'https://cdn.example.com/ep.mp3'])])['items'][0];
+
+		expect($item['media'])->toBe(['url' => '/tcms/api/ext/totalcms/s3-uploads/stream/episodes/ep-1/audio', 'type' => 'audio/mpeg', 'length' => 48211334])
+			// The length the browser measured at upload fills in for an empty Duration field.
+			->and($item['podcast']['duration'])->toBe(2714.3);
+	});
+
+	test('the episode\'s own duration wins over the one measured at upload', function (): void {
+		$pointer = ['id' => '0a1b2c3d', 'key' => 'site/episodes/ep-1/audio/0a1b2c3d-ep1.mp3', 'name' => 'ep1.mp3', 'mime' => 'audio/mpeg', 'size' => 1, 'duration' => 2714.3];
+		$item    = mapPodcast(podcastShow(), [podcastEpisodeRow(['audio' => $pointer, 'duration' => 1800])])['items'][0];
+
+		expect($item['podcast']['duration'])->toBe(1800.0);
+	});
+
+	test('a core file with no measured duration adds none', function (): void {
+		$item = mapPodcast(podcastShow(), [podcastEpisodeRow(['duration' => 0])])['items'][0];
+
+		expect($item['podcast'])->not->toHaveKey('duration')
+			->and($item['media']['url'])->toBe('/tcms/stream/episodes/ep-1/audio');
+	});
+
 	test('maps the enclosure from the stream route and the stored file', function (): void {
 		$item = mapPodcast(podcastShow(), [podcastEpisodeRow()])['items'][0];
 

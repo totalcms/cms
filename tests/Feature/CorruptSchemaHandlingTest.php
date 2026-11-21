@@ -30,6 +30,13 @@ beforeEach(function (): void {
 	$this->fetcher = $this->app->getContainer()->get(SchemaFetcher::class);
 });
 
+// The broken file must not outlive the test. A worker runs several files in one
+// data folder, and the next one may render an admin page that lists every
+// schema: DemoModeTest failed that way, but only when it shared a worker.
+afterEach(function (): void {
+	@unlink(cmsDataDir() . '.schemas/camps.json');
+});
+
 it('answers false instead of throwing out of the existence check', function (): void {
 	expect($this->fetcher->schemaExists('camps'))->toBeFalse();
 });
