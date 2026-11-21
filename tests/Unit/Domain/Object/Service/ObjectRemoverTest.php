@@ -46,6 +46,7 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectUpdater,
 			$this->eventDispatcher,
 			systemWriteGate(),
+			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		);
 	}
 

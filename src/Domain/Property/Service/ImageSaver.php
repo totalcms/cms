@@ -41,6 +41,8 @@ class ImageSaver extends FileSaver
 			$this->createObject($collection, $objectID, $property);
 		}
 
+		$this->setAsideReplacedFile($collection, $objectID, $property, $subpath);
+
 		// Clean up existing files at this exact path (top-level or nested). Without
 		// the $subpath here, a card-nested image save would wipe siblings.
 		$this->storage->deleteDirectory($collection, $objectID, $property, null, $subpath);

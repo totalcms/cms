@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
@@ -48,6 +49,7 @@ readonly class JobRunner
 		private IndexNowJob $indexNowJob,
 		private Config $config,
 		private ActorContext $actors,
+		private FileBackupStore $fileBackups,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -537,10 +539,15 @@ readonly class JobRunner
 	{
 		$result = $this->jobRepository->maintenance($daysOld);
 
+		// The file history's age rule: kept files and trash past their age, for
+		// every object. It throttles itself to once a day and never throws.
+		$swept = $this->fileBackups->sweep();
+
 		$this->logger->info('Job queue maintenance completed', [
-			'pruned_jobs' => $result['pruned'],
-			'days_old'    => $daysOld,
-			'vacuumed'    => $result['vacuumed'],
+			'pruned_jobs'       => $result['pruned'],
+			'days_old'          => $daysOld,
+			'vacuumed'          => $result['vacuumed'],
+			'kept_files_swept'  => $swept,
 		]);
 
 		return $result;

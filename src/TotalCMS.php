@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Slim\ResponseEmitter;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Backup\Service\BackupStore;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Backup\Service\ObjectRestorer;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Builder\Exception\PageResponseException;
@@ -327,6 +328,11 @@ class TotalCMS
 	public function backupStore(): BackupStore
 	{
 		return $this->container->get(BackupStore::class);
+	}
+
+	public function fileBackupStore(): FileBackupStore
+	{
+		return $this->container->get(FileBackupStore::class);
 	}
 
 	public function objectRestorer(): ObjectRestorer

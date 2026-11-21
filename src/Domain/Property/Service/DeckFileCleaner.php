@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Property\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
@@ -31,6 +32,7 @@ readonly class DeckFileCleaner
 		private SchemaFetcher $schemaFetcher,
 		private PropertyRepository $repository,
 		LoggerFactory $loggerFactory,
+		private FileBackupStore $fileBackups,
 	) {
 		$this->logger = $loggerFactory
 			->channelLogger(LogChannel::DeckFileCleaner);
@@ -86,6 +88,9 @@ readonly class DeckFileCleaner
 			if (!$this->repository->directoryExists($collection, $objectId, $propertyName, $subpath)) {
 				return;
 			}
+			// The item is gone from the record: keep its images and files first,
+			// each by its own setting, so restoring the record brings them back.
+			$this->fileBackups->setAside($collection, $objectId, $propertyName, $subpath);
 			$this->repository->deleteDirectory($collection, $objectId, $propertyName, null, $subpath);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Failed to delete orphaned deck item directory', [
