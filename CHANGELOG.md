@@ -10,6 +10,10 @@ All notable changes to Total CMS will be documented in this file.
 - **`tcms s3:prune` and `tcms s3:stats`.** Find and remove files in the bucket that no object uses, and list download counts. A nightly automation runs the cleanup on live sites
 - **Podcast feeds use counted S3 links** for episodes whose audio is an `s3file`, and fill an empty Duration with the length measured at upload. See [Hosting audio in a bucket](https://docs.totalcms.co/extensions/podcast#hosting-audio-in-a-bucket)
 
+### Changed
+
+- **The Extensions page is a list you can search.** Every extension is one row with its own icon, what it does, its links and its Enable or Disable button, so a site with many extensions fits on one screen. A search box finds an extension by its name or by what it does, and a filter shows only the enabled ones, the disabled ones, or those that need attention
+
 ### Fixed
 
 - **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import

@@ -46,6 +46,35 @@ describe('S3FileField', function (): void {
 		expect(array_values($loose))->toBe([]);
 	});
 
+	test('a stored file is one row: its kind, an icon, and icon buttons that still say what they do', function () use ($build, $pointer): void {
+		$html = $build(['value' => $pointer]);
+
+		expect($html)->toContain('data-kind="doc"')
+			->and($html)->toContain('<span class="s3-icon" aria-hidden="true"></span>')
+			->and($html)->toMatch('#<a[^>]*class="s3-action s3-open"[^>]*title="Open"[^>]*><span class="s3-label">Open</span></a>#')
+			->and($html)->toMatch('#<button[^>]*class="s3-action s3-replace"[^>]*title="Replace"[^>]*><span class="s3-label">Replace</span></button>#')
+			->and($html)->toMatch('#<button[^>]*class="s3-action s3-remove"[^>]*title="Remove"#')
+			// One file has nothing to be reordered among.
+			->and($html)->not->toContain('s3-handle');
+	});
+
+	test('a file\'s kind comes from its type, and from its name when the type says nothing', function (string $name, string $mime, string $kind): void {
+		expect(S3FileField::kind($name, $mime))->toBe($kind);
+	})->with([
+		['photo.JPG', 'image/jpeg', 'image'],
+		['episode.mp3', 'audio/mpeg', 'audio'],
+		['clip.mov', 'video/quicktime', 'video'],
+		['brochure.pdf', 'application/pdf', 'doc'],
+		['notes.txt', 'text/plain', 'text'],
+		['prices.csv', 'text/csv', 'sheet'],
+		['deck.pptx', 'application/octet-stream', 'slides'],
+		['site.zip', 'application/zip', 'archive'],
+		['data.json', 'application/json', 'code'],
+		['photo.heic', 'application/octet-stream', 'image'],
+		['mystery', 'application/octet-stream', 'file'],
+		['', '', 'file'],
+	]);
+
 	test('an empty field shows the drop zone and an empty value', function () use ($build): void {
 		$html = $build(['settings' => ['rules' => ['size' => ['max' => 5000]]]]);
 

@@ -8,6 +8,8 @@
 
 {% set enabledExts = extensions|filter(e => e.enabled) %}
 {% set disabledExts = extensions|filter(e => not e.enabled) %}
+{# Something the operator should look at: a failure, a hold, or a slow or erroring extension. #}
+{% set attentionExts = extensions|filter(e => e.error or e.quarantined or e.updateDisabled or e.incompatibility or (e.errorCount ?? 0) > 0) %}
 
 <main class="dash-main-content" style="max-width:100%;">
 	<header style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
@@ -64,74 +66,465 @@
 		</div>
 		{% endif %}
 
-		{% if enabledExts|length > 0 %}
-		<h2 class="ext-group-heading">Enabled <span class="dash-badge muted sm">{{ enabledExts|length }}</span></h2>
-		<div class="dash-card-grid">
-			{% for ext in enabledExts %}
-				{{ _self.extensionCard(ext, cms, budgets, installed) }}
-			{% endfor %}
+		{# The search box and status filter. Hidden until extensions-list.js can
+		   drive them: without the script every row simply shows. #}
+		<div class="ext-toolbar" hidden>
+			<label class="ext-search-field">
+				<span class="ext-visually-hidden">Find an extension</span>
+				<input type="search" class="ext-search" placeholder="Find an extension…" autocomplete="off" spellcheck="false">
+			</label>
+			<div class="ext-filter" role="group" aria-label="Show">
+				<button type="button" data-show="all" aria-pressed="true">All <span class="ext-count">{{ extensions|length }}</span></button>
+				<button type="button" data-show="enabled" aria-pressed="false">Enabled <span class="ext-count">{{ enabledExts|length }}</span></button>
+				<button type="button" data-show="disabled" aria-pressed="false">Disabled <span class="ext-count">{{ disabledExts|length }}</span></button>
+				{% if attentionExts|length > 0 %}
+				<button type="button" data-show="attention" aria-pressed="false" class="ext-filter-attention">Needs attention <span class="ext-count">{{ attentionExts|length }}</span></button>
+				{% endif %}
+			</div>
 		</div>
-		{% endif %}
 
-		{% if disabledExts|length > 0 %}
-		<h2 class="ext-group-heading">Disabled <span class="dash-badge muted sm">{{ disabledExts|length }}</span></h2>
-		<div class="dash-card-grid">
-			{% for ext in disabledExts %}
-				{{ _self.extensionCard(ext, cms, budgets, installed) }}
-			{% endfor %}
-		</div>
+		{% for group in [{key: 'enabled', label: 'Enabled', items: enabledExts}, {key: 'disabled', label: 'Disabled', items: disabledExts}] %}
+		{% if group.items|length > 0 %}
+		<section class="ext-group" data-group="{{ group.key }}">
+			<h2 class="ext-group-heading">{{ group.label }} <span class="ext-count">{{ group.items|length }}</span></h2>
+			<ul class="ext-list">
+				{% for ext in group.items %}
+					{{ _self.extensionRow(ext, cms, budgets, installed) }}
+				{% endfor %}
+			</ul>
+		</section>
 		{% endif %}
+		{% endfor %}
+
+		<div class="ext-no-match" hidden>
+			<p>No extension matches <strong class="ext-no-match-term"></strong> here.</p>
+			<button type="button" class="btn btn-sm ext-clear">Show all extensions</button>
+		</div>
 		{% endif %}
 	</section>
 </main>
 
 <style>
+	/* ---------- The list: one row per extension ---------- */
+	.ext-section {
+		--ext-line   : oklch(var(--totalform-lightgray));
+		--ext-muted  : oklch(var(--totalform-darkgray));
+		--ext-text   : oklch(var(--totalform-text-color));
+		--ext-accent : oklch(var(--totalform-accent));
+		gap          : 1.25rem;
+	}
+	/* The admin gives lists and paragraphs in its main area a prose measure and
+	   a top margin. These are controls and rows, not prose. */
+	.ext-section .ext-list,
+	.ext-section .ext-row p,
+	.ext-section .ext-no-match p {
+		max-width : none;
+		margin    : 0;
+	}
+	.ext-visually-hidden {
+		position    : absolute;
+		width       : 1px;
+		height      : 1px;
+		overflow    : hidden;
+		clip-path   : inset(50%);
+		white-space : nowrap;
+	}
+
+	/* Search and status filter. */
+	.ext-toolbar {
+		display     : flex;
+		flex-wrap   : wrap;
+		gap         : 0.75rem 1rem;
+		align-items : center;
+	}
+	.ext-toolbar[hidden],
+	.ext-group[hidden],
+	.ext-row[hidden],
+	.ext-no-match[hidden] {
+		display : none;
+	}
+	.ext-search-field {
+		position  : relative;
+		flex      : 1 1 16rem;
+		max-width : 26rem;
+	}
+	.ext-search-field::before {
+		content          : "";
+		position         : absolute;
+		top              : 50%;
+		left             : 0.75rem;
+		width            : 1rem;
+		height           : 1rem;
+		translate        : 0 -50%;
+		background-color : var(--ext-muted);
+		mask             : var(--icon-search) center / contain no-repeat;
+		pointer-events   : none;
+	}
+	.ext-search {
+		width         : 100%;
+		height        : 2.5rem;
+		padding       : 0 0.75rem 0 2.25rem;
+		border        : 1px solid var(--ext-line);
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-purewhite));
+		color         : var(--ext-text);
+		font          : inherit;
+		font-size     : 0.9375rem;
+	}
+	.ext-search::placeholder {
+		color : var(--ext-muted);
+	}
+	.ext-search:focus-visible,
+	.ext-filter button:focus-visible,
+	.ext-row a:focus-visible,
+	.ext-row button:focus-visible {
+		outline        : 2px solid var(--ext-accent);
+		outline-offset : 2px;
+	}
+	.ext-filter {
+		display       : inline-flex;
+		padding       : 0.1875rem;
+		border        : 1px solid var(--ext-line);
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-purewhite));
+	}
+	.ext-filter button {
+		display       : inline-flex;
+		gap           : 0.4rem;
+		align-items   : center;
+		height        : 2rem;
+		padding       : 0 0.75rem;
+		border        : 0;
+		border-radius : calc(var(--totalform-radius) - 2px);
+		background    : transparent;
+		color         : var(--ext-muted);
+		font          : inherit;
+		font-size     : 0.875rem;
+		font-weight   : 500;
+		cursor        : pointer;
+		transition    : background-color 150ms ease-out, color 150ms ease-out;
+	}
+	.ext-filter button:hover {
+		color : var(--ext-text);
+	}
+	.ext-filter button[aria-pressed="true"] {
+		background : oklch(var(--totalform-nearwhite));
+		color      : var(--ext-text);
+	}
+	.ext-filter-attention .ext-count {
+		color : oklch(var(--totalform-warning));
+	}
+	.ext-count {
+		color                : var(--ext-muted);
+		font-size            : 0.8125rem;
+		font-weight          : 500;
+		font-variant-numeric : tabular-nums;
+	}
+
+	/* A group: its heading, then its rows in one bordered block. */
+	.ext-group {
+		display : grid;
+		gap     : 0.5rem;
+	}
 	.ext-group-heading {
 		display     : flex;
 		gap         : 0.5rem;
-		align-items : center;
-		margin      : 1.5rem 0 0;
-		font-size   : 1.1rem;
+		align-items : baseline;
+		margin      : 0;
+		font-size   : 0.9375rem;
 		font-weight : 600;
-		color       : oklch(var(--totalform-darkgray));
+		color       : var(--ext-muted);
 	}
-	.ext-group-heading:first-of-type {
-		margin-top : 0.5rem;
+	/* The rule between rows is the list's own color showing through a 1px gap,
+	   so it never doubles up at the top or bottom when the search hides rows. */
+	.ext-list {
+		display       : grid;
+		gap           : 1px;
+		padding       : 0;
+		border        : 1px solid var(--ext-line);
+		border-radius : var(--totalform-radius);
+		background    : var(--ext-line);
+		list-style    : none;
+		overflow      : hidden;
 	}
-	.ext-section {
-		--ext-description-lines : 3;
-		--ext-description-font  : 0.85rem;
-		--ext-description-lh    : 1.4;
+	.ext-row {
+		container-type : inline-size;
+		background     : oklch(var(--totalform-purewhite));
 	}
-	.ext-section .dash-card-grid {
-		gap : 1rem;
+	.ext-row-main {
+		display               : grid;
+		grid-template-columns : 2.25rem minmax(0, 1fr) auto auto auto;
+		grid-template-areas   : "mark text links meta actions";
+		gap                   : 0.25rem 1rem;
+		align-items           : center;
+		min-height            : 3.5rem;
+		padding               : 0.5rem 0.75rem 0.5rem 0.875rem;
+		transition            : background-color 150ms ease-out;
 	}
-	.ext-section .dash-card {
-		padding : 1rem;
-		gap     : 0.75rem;
+	.ext-row:hover .ext-row-main {
+		background : oklch(var(--totalform-nearwhite));
 	}
-	.ext-section .dash-card > header {
-		padding-bottom : 0.75rem;
+
+	/* The extension's mark: its own picture, or for a bundled extension an icon
+	   from the admin's set, since they all ship the same picture. Enabled marks
+	   take the accent; a disabled extension recedes. */
+	.ext-mark {
+		grid-area     : mark;
+		display       : grid;
+		place-items   : center;
+		width         : 2.25rem;
+		height        : 2.25rem;
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-accent) / 0.12);
+		color         : var(--ext-accent);
 	}
-	.ext-header-link {
-		display         : contents;
+	.ext-mark::before {
+		content          : "";
+		width            : 1.25rem;
+		height           : 1.25rem;
+		background-color : currentColor;
+		mask             : var(--ext-mark, var(--icon-extension)) center / contain no-repeat;
+	}
+	.ext-mark.is-image {
+		background : none;
+	}
+	.ext-mark.is-image::before {
+		content : none;
+	}
+	.ext-mark img {
+		width         : 2.25rem;
+		height        : 2.25rem;
+		border-radius : var(--totalform-radius);
+		object-fit    : contain;
+	}
+	.ext-row[data-status="disabled"] .ext-mark {
+		background : oklch(var(--totalform-text-color) / 0.07);
+		color      : var(--ext-muted);
+	}
+	.ext-row[data-status="disabled"] .ext-mark img {
+		filter  : grayscale(1);
+		opacity : 0.6;
+	}
+
+	.ext-row-text {
+		grid-area : text;
+		min-width : 0;
+	}
+	/* Three classes deep on purpose: the admin spaces a heading that is followed
+	   by a paragraph, and gives paragraphs a top margin. */
+	.ext-section .ext-row-text .ext-name,
+	.ext-section .ext-row-text .ext-description {
+		max-width : none;
+		margin    : 0;
+	}
+	.ext-name {
+		overflow      : hidden;
+		color         : var(--ext-text);
+		font-size     : 1rem;
+		font-weight   : 600;
+		line-height   : 1.3;
+		text-overflow : ellipsis;
+		white-space   : nowrap;
+	}
+	.ext-name a {
 		color           : inherit;
 		text-decoration : none;
 	}
-	.ext-header-link:hover h3 {
-		color : oklch(var(--totalform-accent));
+	.ext-name a:hover {
+		color : var(--ext-accent);
+	}
+	.ext-row[data-status="disabled"] .ext-name {
+		color : var(--ext-muted);
 	}
 	.ext-description {
-		margin             : 0.25rem 0 0;
-		color              : oklch(var(--totalform-darkgray));
-		font-size          : var(--ext-description-font);
-		line-height        : var(--ext-description-lh);
-		display            : -webkit-box;
-		-webkit-line-clamp : var(--ext-description-lines);
-		line-clamp         : var(--ext-description-lines);
-		-webkit-box-orient : vertical;
-		overflow           : hidden;
-		min-height         : calc(var(--ext-description-font) * var(--ext-description-lh) * var(--ext-description-lines));
+		overflow      : hidden;
+		color         : var(--ext-muted);
+		font-size     : 0.875rem;
+		line-height   : 1.4;
+		text-overflow : ellipsis;
+		white-space   : nowrap;
+	}
+	.ext-row-links {
+		grid-area : links;
+		display   : flex;
+		gap       : 0.875rem;
+		font-size : 0.875rem;
+	}
+	.ext-row-links a {
+		color                 : var(--ext-muted);
+		text-decoration       : underline;
+		text-decoration-color : oklch(var(--totalform-darkgray) / 0.45);
+		text-underline-offset : 0.2em;
+		white-space           : nowrap;
+	}
+	.ext-row-links a:hover {
+		color                 : var(--ext-accent);
+		text-decoration-color : currentColor;
+	}
+	.ext-row-meta {
+		grid-area            : meta;
+		min-width            : 8.5rem;
+		color                : var(--ext-muted);
+		font-size            : 0.8125rem;
+		font-variant-numeric : tabular-nums;
+		text-align           : right;
+		white-space          : nowrap;
+	}
+	.ext-row-actions {
+		grid-area       : actions;
+		display         : flex;
+		gap             : 0.375rem;
+		align-items     : center;
+		justify-content : flex-end;
+		/* Room for all three controls, so the columns line up from row to row. */
+		min-width       : 10.5rem;
+	}
+	.ext-section .ext-row-actions form {
+		display : flex;
+		margin  : 0;
+		padding : 0;
+	}
+	/* Disable is the quiet one, repeated down the page; Enable is the one to find. */
+	.ext-section .ext-row-actions .btn {
+		min-width     : 4.75rem;
+		height        : 2rem;
+		padding       : 0 0.75rem;
+		border        : 1px solid var(--ext-line);
+		border-radius : var(--totalform-radius);
+		background    : transparent;
+		color         : var(--ext-text);
+		font-size     : 0.875rem;
+		font-weight   : 500;
+		cursor        : pointer;
+		transition    : background-color 150ms ease-out, border-color 150ms ease-out;
+	}
+	.ext-section .ext-row-actions .btn:hover:not(:disabled) {
+		border-color : var(--ext-muted);
+		background   : oklch(var(--totalform-text-color) / 0.08);
+	}
+	.ext-section .ext-row-actions .btn-primary {
+		border-color : transparent;
+		background   : var(--ext-text);
+		color        : oklch(var(--totalform-purewhite));
+	}
+	.ext-section .ext-row-actions .btn-primary:hover:not(:disabled) {
+		border-color : transparent;
+		background   : var(--ext-accent);
+	}
+	.ext-section .ext-row-actions .btn:disabled {
+		color   : var(--ext-muted);
+		cursor  : not-allowed;
+		opacity : 0.6;
+	}
+	.ext-icon-button {
+		display       : grid;
+		place-items   : center;
+		width         : 2rem;
+		height        : 2rem;
+		padding       : 0;
+		border        : 0;
+		border-radius : var(--totalform-radius);
+		background    : transparent;
+		color         : var(--ext-muted);
+		cursor        : pointer;
+		transition    : background-color 150ms ease-out, color 150ms ease-out;
+	}
+	.ext-icon-button::before {
+		content          : "";
+		width            : 1.125rem;
+		height           : 1.125rem;
+		background-color : currentColor;
+		mask             : var(--ext-button-icon) center / contain no-repeat;
+	}
+	.ext-icon-button:hover {
+		background : oklch(var(--totalform-text-color) / 0.1);
+		color      : var(--ext-text);
+	}
+	.ext-icon-button.is-danger:hover {
+		background : oklch(var(--totalform-error) / 0.14);
+		color      : oklch(var(--totalform-error));
+	}
+
+	/* What needs the operator's eye sits under the row, in line with its text. */
+	.ext-row-notes {
+		display : grid;
+		gap     : 0.5rem;
+		padding : 0 0.75rem 0.75rem 4.125rem;
+	}
+	.ext-row-notes .warning-box {
+		margin : 0;
+	}
+	.ext-row-problem {
+		padding       : 0.5rem 0.75rem;
+		border        : 1px solid oklch(var(--totalform-error) / 0.35);
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-error) / 0.1);
+		color         : oklch(var(--totalform-error));
+		font-size     : 0.875rem;
+	}
+	.ext-row-problem.is-warning {
+		border-color : oklch(var(--totalform-warning) / 0.4);
+		background   : oklch(var(--totalform-warning) / 0.12);
+		color        : var(--ext-text);
+	}
+	.ext-row-problem ul {
+		max-width : none;
+		margin    : 0.25rem 0 0 1.1rem;
+		padding   : 0;
+	}
+	.ext-row.ext-installed .ext-row-main {
+		background : oklch(var(--totalform-accent) / 0.1);
+	}
+
+	.ext-no-match {
+		display       : grid;
+		justify-items : center;
+		gap           : 0.75rem;
+		padding       : 2.5rem 1rem;
+		border        : 1px dashed var(--ext-line);
+		border-radius : var(--totalform-radius);
+		color         : var(--ext-muted);
+		text-align    : center;
+	}
+
+	/* Narrower: the links and the version drop under the text; the controls stay
+	   at the right where the hand expects them. */
+	@container (max-width: 58rem) {
+		.ext-row-main {
+			grid-template-columns : 2.25rem minmax(0, 1fr) auto;
+			grid-template-areas   : "mark text actions" "mark links actions";
+			align-items           : start;
+		}
+		.ext-row-meta {
+			display : none;
+		}
+		.ext-row-actions {
+			align-self : center;
+			min-width  : 0;
+		}
+	}
+	@container (max-width: 34rem) {
+		.ext-row-main {
+			grid-template-columns : 2.25rem minmax(0, 1fr);
+			grid-template-areas   : "mark text" "mark links" "mark actions";
+		}
+		.ext-description {
+			white-space : normal;
+		}
+		.ext-row-actions {
+			justify-content : flex-start;
+		}
+		.ext-row-notes {
+			padding-left : 0.875rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ext-filter button,
+		.ext-row-main,
+		.ext-icon-button,
+		.ext-section .ext-row-actions .btn {
+			transition : none;
+		}
 	}
 	.ext-install-panel {
 		margin-bottom : 1rem;
@@ -303,146 +696,147 @@
 		margin        : 0.5rem 0 1rem;
 		padding       : 0.75rem 1rem;
 		border        : 1px solid oklch(var(--totalform-accent) / 0.5);
-		border-left   : 4px solid oklch(var(--totalform-accent));
 		border-radius : var(--totalform-radius);
 		background    : oklch(var(--totalform-accent) / 0.06);
 		color         : oklch(var(--totalform-text-color));
-	}
-	.ext-section .dash-card.ext-installed {
-		outline        : 2px solid oklch(var(--totalform-accent));
-		outline-offset : 2px;
 	}
 </style>
 
 
 {% endblock %}
 
-{% macro extensionCard(ext, cms, budgets, installed) %}
-<article id="ext-{{ ext.id|replace({'/': '-'}) }}" class="dash-card{% if ext.error %} error{% endif %}{% if ext.enabled %} accent{% endif %}{% if installed and installed.id == ext.id %} ext-installed{% endif %}">
-	<header>
-		{% if ext.hasSettings %}
-		<a href="{{ cms.dashboard }}/extensions/{{ ext.id }}/settings" class="ext-header-link">
+{% macro extensionRow(ext, cms, budgets, installed) %}
+{# Every bundled extension ships the same placeholder picture, so each gets a
+   mark from the admin's own icon set here. Drop an entry once that extension
+   has a picture of its own. Anything else shows its icon file. #}
+{% set marks = {
+	'totalcms/ab-split'       : 'flask',
+	'totalcms/algolia-search' : 'search',
+	'totalcms/client-help'    : 'help',
+	'totalcms/docs'           : 'docs',
+	'totalcms/geo-redirect'   : 'gps',
+	'totalcms/maintenance'    : 'tools',
+	'totalcms/podcast'        : 'rss',
+	'totalcms/protect'        : 'lock',
+	'totalcms/pushover'       : 'plane',
+	'totalcms/s3-uploads'     : 'upload',
+	'totalcms/scheduled'      : 'time',
+	'totalcms/stock-photos'   : 'camera',
+	'totalcms/webmcp'         : 'mcp',
+} %}
+{% set mark      = marks[ext.id] ?? null %}
+{% set author    = ext.author.name is defined and ext.author.name ? ext.author.name : '' %}
+{% set status    = ext.enabled ? 'enabled' : 'disabled' %}
+{% set attention = ext.error or ext.quarantined or ext.updateDisabled or ext.incompatibility or (ext.errorCount ?? 0) > 0 %}
+{% set overBudget = ext.health and budgets.perExtension > 0 and ext.health.avgMs > budgets.perExtension %}
+{% set origins   = {bundled: 'Bundled', composer: 'Composer', project: 'Project'} %}
+{% set originTitles = {bundled: 'Ships with Total CMS', composer: 'Installed by Composer', project: "Lives in the site's extensions/ directory"} %}
+{# Hide links to extension-owned routes (/ext/... and /admin/ext/...) while the
+   extension is disabled: those routes only exist while it is enabled, so the
+   link would 404. T3-provided and external URLs always show. #}
+{% set visibleLinks = ext.links|filter(link =>
+	ext.enabled
+	or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
+) %}
+<li id="ext-{{ ext.id|replace({'/': '-'}) }}" class="ext-row{% if installed and installed.id == ext.id %} ext-installed{% endif %}" data-status="{{ status }}" data-attention="{{ attention ? 'true' : 'false' }}" data-search="{{ (ext.name ~ ' ' ~ ext.id ~ ' ' ~ ext.description ~ ' ' ~ author)|e }}">
+	<div class="ext-row-main">
+		{% if mark %}
+		<span class="ext-mark" style="--ext-mark: var(--icon-{{ mark }});" aria-hidden="true"></span>
+		{% elseif ext.icon %}
+		<span class="ext-mark is-image" aria-hidden="true"><img src="{{ ext.icon|e('html_attr') }}" alt=""></span>
+		{% else %}
+		<span class="ext-mark" aria-hidden="true"></span>
 		{% endif %}
-			{% if ext.icon %}
-			<img src="{{ ext.icon|e('html_attr') }}" alt="" class="ext-icon">
-			{% endif %}
-			<div>
-				<h3>{{ ext.name|e }}</h3>
-				<p class="ext-description">{{ ext.description|e }}</p>
-			</div>
-		{% if ext.hasSettings %}
-		</a>
-		{% endif %}
-	</header>
 
-	<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">
-		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name|e }}{% endif %}</span>
-		<span class="dash-badge-group">
-			{#- Where the files live, when it is not the operator's own upload:
-			    those three cannot be removed here — the package, Composer or
-			    source control owns them. #}
-			{% if ext.origin == 'bundled' %}<span class="dash-badge muted sm" title="Ships with Total CMS">Bundled</span>{% endif %}
-			{% if ext.origin == 'composer' %}<span class="dash-badge muted sm" title="Installed by Composer">Composer</span>{% endif %}
-			{% if ext.origin == 'project' %}<span class="dash-badge muted sm" title="Lives in the site's extensions/ directory">Project</span>{% endif %}
-			<span class="dash-badge muted sm">v{{ ext.version|e }}</span>
-		</span>
-	</div>
+		<div class="ext-row-text">
+			<h3 class="ext-name">{% if ext.hasSettings %}<a href="{{ cms.dashboard }}/extensions/{{ ext.id }}/settings">{{ ext.name|e }}</a>{% else %}{{ ext.name|e }}{% endif %}</h3>
+			{% if ext.description %}<p class="ext-description" title="{{ ext.description|e }}">{{ ext.description|e }}</p>{% endif %}
+		</div>
 
-	{% include 'admin/partials/extension-health.twig' with {
-		health: ext.health,
-		errorCount: ext.errorCount,
-		extName: ext.name,
-		budgets: budgets,
-		always: false,
-	} only %}
-
-	{% if ext.error %}
-	<div style="background:oklch(var(--totalform-danger) / 0.1); color:oklch(var(--totalform-danger)); border:1px solid oklch(var(--totalform-danger) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
-		{{ ext.error|e }}
-	</div>
-	{% endif %}
-
-	{% include 'admin/partials/extension-quarantine-banner.twig' with {
-		quarantined: ext.quarantined,
-		quarantineReason: ext.quarantineReason,
-		extId: ext.id,
-	} only %}
-
-	{% include 'admin/partials/extension-update-banner.twig' with {
-		updateDisabled: ext.updateDisabled,
-		updateDisabledReason: ext.updateDisabledReason,
-		updateNewFindings: ext.updateNewFindings,
-		updateFindings: ext.updateFindings,
-		extId: ext.id,
-	} only %}
-
-	{% if ext.incompatibility %}
-	<div style="background:oklch(var(--totalform-warning) / 0.1); color:oklch(var(--totalform-warning)); border:1px solid oklch(var(--totalform-warning) / 0.3); border-radius:var(--totalform-radius); padding:0.5rem 0.75rem; font-size:0.8rem;">
-		<strong>Cannot be enabled:</strong>
-		<ul style="margin:0.25rem 0 0 1rem; padding:0;">
-			{% for reason in ext.incompatibility %}
-			<li>{{ reason|e }}</li>
-			{% endfor %}
-		</ul>
-	</div>
-	{% endif %}
-
-	{# Hide links to extension-owned routes (/ext/... and /admin/ext/...,
-	   e.g. /admin/ext/acme/starter/dashboard) when the extension is
-	   disabled — those routes only exist while it's enabled, so the
-	   link would 404. T3-provided URLs (/admin/docs, /admin/settings,
-	   etc.) and external URLs always show. #}
-	{% set visibleLinks = ext.links|filter(link =>
-		ext.enabled
-		or not (link.url starts with '/ext/' or link.url starts with '/admin/ext/')
-	) %}
-	{% if visibleLinks|length > 0 %}
-	<div class="dash-card-detail" style="grid-template-columns:auto 1fr;">
-		<strong>Links:</strong>
-		<div class="dash-badge-group">
+		<div class="ext-row-links">
 			{% for link in visibleLinks %}
 			{% set external = link.url starts with 'http://' or link.url starts with 'https://' %}
-			<a class="dash-badge" href="{{ link.url|e('html_attr') }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label|e }}</a>
+			<a href="{{ link.url|e('html_attr') }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label|e }}</a>
 			{% endfor %}
 		</div>
-	</div>
-	{% endif %}
 
-	<footer>
-		{% if ext.enabled %}
-		<span class="dash-status enabled">Enabled</span>
-		<div style="display:flex; gap:0.5rem; align-items:center;">
-			{% if ext.hasSettings %}
-			<a href="extensions/{{ ext.id }}/settings" class="dash-card-action edit" title="Settings" style="--icon-edit: var(--icon-cog);"></a>
-			{% endif %}
-			<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable" style="margin:0;">
-				{{ csrf_field() }}
-				<button type="submit" class="btn btn-sm">Disable</button>
-			</form>
+		{#- Where the files live, when it is not the operator's own upload: those
+		    three cannot be removed here. An uploaded extension names its author. #}
+		<div class="ext-row-meta">
+			{%- if origins[ext.origin] is defined -%}
+				<span title="{{ originTitles[ext.origin] }}{% if author %} · By {{ author|e('html_attr') }}{% endif %}">{{ origins[ext.origin] }}</span> ·
+			{%- elseif author -%}
+				<span>{{ author|e }}</span> ·
+			{%- endif %} v{{ ext.version|e }}
+		</div>
+
+		<div class="ext-row-actions">
+			{#- Remove comes first, so Settings and Disable sit in the same place on
+			    every row whether or not the extension can be removed. #}
 			{% if ext.origin == 'user' %}
-			<form class="simple-form totalform ext-remove-form" data-route="/extensions/{{ ext.id }}/remove" data-method="POST" data-api="{{ cms.api }}" data-refresh="true" data-ajax="true" data-confirm="Remove {{ ext.name|e('html_attr') }}? Its files are deleted; its settings and data are kept." style="margin:0;">
+			<form class="simple-form totalform ext-remove-form" data-route="/extensions/{{ ext.id }}/remove" data-method="POST" data-api="{{ cms.api }}" data-refresh="true" data-ajax="true" data-confirm="Remove {{ ext.name|e('html_attr') }}? Its files are deleted; its settings and data are kept.">
 				{{ csrf_field() }}
-				<button type="submit" class="btn btn-sm btn-danger" title="Remove this extension">Remove</button>
+				<button type="submit" class="ext-icon-button is-danger" style="--ext-button-icon: var(--icon-trash);" title="Remove {{ ext.name|e('html_attr') }}"><span class="ext-visually-hidden">Remove {{ ext.name|e }}</span></button>
 			</form>
+			{% endif %}
+			{% if ext.enabled %}
+				{% if ext.hasSettings %}
+				<a href="{{ cms.dashboard }}/extensions/{{ ext.id }}/settings" class="ext-icon-button" style="--ext-button-icon: var(--icon-cog);" title="Settings for {{ ext.name|e('html_attr') }}"><span class="ext-visually-hidden">Settings for {{ ext.name|e }}</span></a>
+				{% endif %}
+				<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/disable">
+					{{ csrf_field() }}
+					<button type="submit" class="btn btn-sm">Disable</button>
+				</form>
+			{% elseif ext.incompatibility %}
+				<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ')|e('html_attr') }}">Enable</button>
+			{% else %}
+				<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable">
+					{{ csrf_field() }}
+					<button type="submit" class="btn btn-sm btn-primary">Enable</button>
+				</form>
 			{% endif %}
 		</div>
-		{% else %}
-		<span class="dash-status disabled">Disabled</span>
+	</div>
+
+	{% if attention or overBudget %}
+	<div class="ext-row-notes">
+		{% include 'admin/partials/extension-health.twig' with {
+			health: ext.health,
+			errorCount: ext.errorCount,
+			extName: ext.name,
+			budgets: budgets,
+			always: false,
+		} only %}
+
+		{% if ext.error %}
+		<div class="ext-row-problem">{{ ext.error|e }}</div>
+		{% endif %}
+
+		{% include 'admin/partials/extension-quarantine-banner.twig' with {
+			quarantined: ext.quarantined,
+			quarantineReason: ext.quarantineReason,
+			extId: ext.id,
+		} only %}
+
+		{% include 'admin/partials/extension-update-banner.twig' with {
+			updateDisabled: ext.updateDisabled,
+			updateDisabledReason: ext.updateDisabledReason,
+			updateNewFindings: ext.updateNewFindings,
+			updateFindings: ext.updateFindings,
+			extId: ext.id,
+		} only %}
+
 		{% if ext.incompatibility %}
-		<button type="button" class="btn btn-sm" disabled title="Cannot be enabled: {{ ext.incompatibility|join('; ')|e('html_attr') }}">Enable</button>
-		{% else %}
-		<form method="post" action="{{ cms.dashboard }}/extensions/{{ ext.id }}/enable" style="margin:0;">
-			{{ csrf_field() }}
-			<button type="submit" class="btn btn-sm btn-primary">Enable</button>
-		</form>
+		<div class="ext-row-problem is-warning">
+			<strong>Cannot be enabled:</strong>
+			<ul>
+				{% for reason in ext.incompatibility %}
+				<li>{{ reason|e }}</li>
+				{% endfor %}
+			</ul>
+		</div>
 		{% endif %}
-		{% if ext.origin == 'user' %}
-		<form class="simple-form totalform ext-remove-form" data-route="/extensions/{{ ext.id }}/remove" data-method="POST" data-api="{{ cms.api }}" data-refresh="true" data-ajax="true" data-confirm="Remove {{ ext.name|e('html_attr') }}? Its files are deleted; its settings and data are kept." style="margin:0;">
-			{{ csrf_field() }}
-			<button type="submit" class="btn btn-sm btn-danger" title="Remove this extension">Remove</button>
-		</form>
-		{% endif %}
-		{% endif %}
-	</footer>
-</article>
+	</div>
+	{% endif %}
+</li>
 {% endmacro %}

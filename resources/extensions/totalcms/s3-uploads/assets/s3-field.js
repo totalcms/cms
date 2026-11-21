@@ -52,6 +52,36 @@ export function downloadsLabel(count, total) {
 	return all > current ? `${label} · ${all} all time` : label;
 }
 
+const KINDS = {
+	image   : ["jpg", "jpeg", "png", "gif", "webp", "svg", "avif", "heic", "heif", "tiff", "bmp", "psd", "raw"],
+	audio   : ["mp3", "wav", "aiff", "flac", "m4a", "ogg", "aac", "wma"],
+	video   : ["mp4", "m4v", "mov", "avi", "wmv", "mkv", "webm", "mpg", "mpeg"],
+	doc     : ["pdf", "doc", "docx", "odt", "rtf", "pages"],
+	text    : ["txt", "md", "markdown", "epub", "mobi"],
+	sheet   : ["csv", "xls", "xlsx", "ods", "numbers"],
+	slides  : ["ppt", "pptx", "key", "odp"],
+	archive : ["zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz", "dmg", "pkg", "iso"],
+	code    : ["html", "css", "js", "json", "xml", "php", "py", "yaml", "yml"],
+};
+
+/**
+ * What kind of file this is, for its icon. The type decides for media; the
+ * name's extension decides the rest. Same table as the server (S3Field::kind).
+ */
+export function fileKind(name, mime) {
+	const type = String(mime || "").toLowerCase();
+	for (const media of ["image", "audio", "video"]) {
+		if (type.startsWith(`${media}/`)) return media;
+	}
+
+	const text      = String(name || "");
+	const extension = text.includes(".") ? text.split(".").pop().toLowerCase() : "";
+	for (const [kind, extensions] of Object.entries(KINDS)) {
+		if (extensions.includes(extension)) return kind;
+	}
+	return "file";
+}
+
 /** "46 MB", "1.5 KB", "999 B": 1024 steps, one decimal unless it is zero. Same as the server. */
 export function formatSize(bytes) {
 	const units = ["B", "KB", "MB", "GB"];
@@ -518,6 +548,7 @@ export function defineS3FileField(TotalField) {
 			this.progress.hidden = !this.uploading;
 
 			text(".s3-name", file ? file.name : pointer?.name || "");
+			if (this.card) this.card.dataset.kind = file ? fileKind(file.name, file.type) : fileKind(pointer?.name, pointer?.mime);
 			text(".s3-size", formatSize(file ? file.size : pointer?.size || 0));
 			text(".s3-date", file ? (this.uploading ? "Uploading…" : failed ? "Not uploaded" : "Uploads when you save") : (pointer?.uploadedAt || "").slice(0, 10));
 			if (file) text(".s3-downloads", "");
@@ -887,6 +918,7 @@ export function defineS3DepotField(TotalField) {
 
 			card.dataset.fileId = file.id;
 			card.dataset.state  = "filled";
+			card.dataset.kind   = fileKind(file.name, file.mime);
 			card.draggable      = !this.readOnly;
 			set(".s3-name", file.name || "");
 			set(".s3-size", formatSize(file.size || 0));
@@ -921,6 +953,7 @@ export function defineS3DepotField(TotalField) {
 			job.element         = card;
 			card.dataset.fileId = "";
 			card.dataset.state  = job.state;
+			card.dataset.kind   = fileKind(job.file.name, job.file.type);
 			card.draggable      = false;
 			card.querySelector(".s3-name").textContent = job.file.name;
 			card.querySelector(".s3-size").textContent = formatSize(job.file.size);

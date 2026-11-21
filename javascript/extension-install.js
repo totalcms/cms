@@ -1,5 +1,6 @@
 import Dropzone from "@deltablot/dropzone";
 import { csrfHeaders } from "./csrf";
+import { initExtensionsList } from "./extensions-list";
 
 //-----------------------------------------------
 // Extensions page: install from a zip
@@ -201,6 +202,9 @@ function init() {
 
 	if (toggle && panel) setupToggle(toggle, panel, drop);
 	if (panel && drop) setupDropzone(panel, drop);
+
+	// The search box and status filter over the list (extensions-list.js).
+	initExtensionsList();
 
 	// After a fresh install with nothing to review, the page arrives with
 	// ?installed=vendor/name and that card highlighted.

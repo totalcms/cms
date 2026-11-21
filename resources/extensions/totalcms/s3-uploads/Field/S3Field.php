@@ -68,6 +68,19 @@ abstract class S3Field extends FormField
 		);
 	}
 
+	/** File name extensions by kind, for files whose type alone does not say. */
+	private const KINDS = [
+		'image'   => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif', 'heic', 'heif', 'tiff', 'bmp', 'psd', 'raw'],
+		'audio'   => ['mp3', 'wav', 'aiff', 'flac', 'm4a', 'ogg', 'aac', 'wma'],
+		'video'   => ['mp4', 'm4v', 'mov', 'avi', 'wmv', 'mkv', 'webm', 'mpg', 'mpeg'],
+		'doc'     => ['pdf', 'doc', 'docx', 'odt', 'rtf', 'pages'],
+		'text'    => ['txt', 'md', 'markdown', 'epub', 'mobi'],
+		'sheet'   => ['csv', 'xls', 'xlsx', 'ods', 'numbers'],
+		'slides'  => ['ppt', 'pptx', 'key', 'odp'],
+		'archive' => ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'dmg', 'pkg', 'iso'],
+		'code'    => ['html', 'css', 'js', 'json', 'xml', 'php', 'py', 'yaml', 'yml'],
+	];
+
 	protected function dropZone(bool $multiple = false): string
 	{
 		$choose = HTMLUtils::button($multiple ? 'Choose files' : 'Choose file', ['class' => 's3-choose']);
@@ -80,32 +93,82 @@ abstract class S3Field extends FormField
 	}
 
 	/**
-	 * One file's card: name, size, date, downloads, a progress bar and its buttons.
+	 * One file as a row: what kind of file it is, its name, date and downloads,
+	 * its size, a progress bar and its buttons. The buttons are icons; each
+	 * keeps its name as a tooltip and as text for screen readers.
 	 *
-	 * @param array<string,string|bool|null> $attributes extra attributes for the card element
+	 * @param array<string,string|bool|null> $attributes extra attributes for the row element
+	 * @param bool                           $replace    offer Replace: a single file has it, a file in a list is removed and added
+	 * @param bool                           $handle     show a grip to drag the row by, in a list that can be reordered
 	 */
-	protected function card(?Pointer $pointer, string $tag = 'div', array $attributes = [], bool $replace = true): string
+	protected function card(?Pointer $pointer, string $tag = 'div', array $attributes = [], bool $replace = true, bool $handle = false): string
 	{
+		$grip      = $handle ? HTMLUtils::element('span', '', ['class' => 's3-handle', 'aria-hidden' => 'true']) : '';
+		$icon      = HTMLUtils::element('span', '', ['class' => 's3-icon', 'aria-hidden' => 'true']);
 		$name      = HTMLUtils::element('strong', self::text($pointer->name ?? ''), ['class' => 's3-name']);
-		$size      = HTMLUtils::element('span', $pointer instanceof Pointer ? UploadRules::formatSize($pointer->size) : '', ['class' => 's3-size']);
 		$date      = HTMLUtils::element('span', self::text(self::day($pointer->uploadedAt ?? '')), ['class' => 's3-date']);
 		$downloads = HTMLUtils::element('span', '', ['class' => 's3-downloads']);
-		$details   = HTMLUtils::element('span', $size . $date . $downloads, ['class' => 's3-details']);
+		$details   = HTMLUtils::element('span', $date . $downloads, ['class' => 's3-details']);
 		$meta      = HTMLUtils::element('div', $name . $details, ['class' => 's3-meta']);
+		$size      = HTMLUtils::element('span', $pointer instanceof Pointer ? UploadRules::formatSize($pointer->size) : '', ['class' => 's3-size']);
 
 		$progress = HTMLUtils::element('progress', '', ['class' => 's3-progress', 'max' => '100', 'value' => '0', 'hidden' => true]);
 
 		$actions = HTMLUtils::element(
 			'div',
-			HTMLUtils::element('a', 'Open', ['class' => 's3-open button btn', 'target' => '_blank', 'rel' => 'noopener'])
-			. ($replace ? HTMLUtils::button('Replace', ['class' => 's3-replace']) : '')
-			. HTMLUtils::button('Remove', ['class' => 's3-remove'])
-			. HTMLUtils::button('Cancel', ['class' => 's3-cancel', 'hidden' => true])
-			. HTMLUtils::button('Try again', ['class' => 's3-retry', 'hidden' => true]),
+			self::action('a', 'open', 'Open', ['target' => '_blank', 'rel' => 'noopener'])
+			. ($replace ? self::action('button', 'replace', 'Replace') : '')
+			. self::action('button', 'remove', 'Remove')
+			. self::action('button', 'cancel', 'Cancel', ['hidden' => true])
+			. self::action('button', 'retry', 'Try again', ['hidden' => true]),
 			['class' => 's3-actions'],
 		);
 
-		return HTMLUtils::element($tag, $meta . $progress . $actions, ['class' => 's3-card'] + $attributes);
+		return HTMLUtils::element(
+			$tag,
+			$grip . $icon . $meta . $size . $progress . $actions,
+			['class' => 's3-card', 'data-kind' => self::kind($pointer->name ?? '', $pointer->mime ?? '')] + $attributes,
+		);
+	}
+
+	/**
+	 * What kind of file this is, for its icon: image, audio, video, doc, text,
+	 * sheet, slides, archive, code or file. The type decides for media; the
+	 * name's extension decides the rest, as the core file fields do. The
+	 * browser script has the same table (`fileKind`).
+	 */
+	public static function kind(string $name, string $mime): string
+	{
+		$mime = strtolower($mime);
+		foreach (['image', 'audio', 'video'] as $media) {
+			if (str_starts_with($mime, $media . '/')) {
+				return $media;
+			}
+		}
+
+		$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+		foreach (self::KINDS as $kind => $extensions) {
+			if (in_array($extension, $extensions, true)) {
+				return $kind;
+			}
+		}
+
+		return 'file';
+	}
+
+	/**
+	 * An icon button of a row. `button btn` is left off on purpose: those are
+	 * the admin's text-button styles.
+	 *
+	 * @param array<string,string|bool|null> $attributes
+	 */
+	private static function action(string $tag, string $name, string $label, array $attributes = []): string
+	{
+		return HTMLUtils::element(
+			$tag,
+			HTMLUtils::element('span', $label, ['class' => 's3-label']),
+			($tag === 'button' ? ['type' => 'button'] : []) + ['class' => 's3-action s3-' . $name, 'title' => $label] + $attributes,
+		);
 	}
 
 	/** The stored value as JSON for the hidden input; null when there is none. */

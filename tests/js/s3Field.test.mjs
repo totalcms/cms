@@ -4,6 +4,7 @@ import {
 	defineS3DepotField,
 	defineS3FileField,
 	downloadsLabel,
+	fileKind,
 	formatSize,
 	probeDuration,
 	putErrorMessage,
@@ -321,6 +322,21 @@ describe('S3FileField', () => {
 		expect(field.card.hidden).toBe(true);
 	});
 
+	test('fileKind names what a file is from its type, then its name, as the server does', () => {
+		expect(fileKind('photo.JPG', 'image/jpeg')).toBe('image');
+		expect(fileKind('episode.mp3', 'audio/mpeg')).toBe('audio');
+		expect(fileKind('clip.mov', 'video/quicktime')).toBe('video');
+		expect(fileKind('brochure.pdf', 'application/pdf')).toBe('doc');
+		expect(fileKind('notes.txt', 'text/plain')).toBe('text');
+		expect(fileKind('prices.csv', 'text/csv')).toBe('sheet');
+		expect(fileKind('deck.pptx', 'application/octet-stream')).toBe('slides');
+		expect(fileKind('site.zip', 'application/zip')).toBe('archive');
+		expect(fileKind('data.json', 'application/json')).toBe('code');
+		expect(fileKind('photo.heic', '')).toBe('image');
+		expect(fileKind('mystery', 'application/octet-stream')).toBe('file');
+		expect(fileKind(undefined, undefined)).toBe('file');
+	});
+
 	test('the downloads label adds the all-time total only when it says more than the count', () => {
 		expect(downloadsLabel(12, 12)).toBe('12 downloads');
 		expect(downloadsLabel(1, undefined)).toBe('1 download');
@@ -344,6 +360,7 @@ describe('S3FileField', () => {
 		expect(field.root.querySelector('.s3-size').textContent).toBe('46 MB');
 		expect(field.root.querySelector('.s3-date').textContent).toBe('2026-09-05');
 		expect(field.root.querySelector('.s3-downloads').textContent).toBe('12 downloads');
+		expect(field.card.dataset.kind).toBe('doc');
 		expect(open.pathname).toBe('/admin/ext/totalcms/s3-uploads/open');
 		expect(Object.fromEntries(open.searchParams)).toEqual({ collection: 'blog', id: 'post-1', property: 'brochure' });
 		expect(field.isUnsaved()).toBe(false);
@@ -748,6 +765,7 @@ describe('S3DepotField', () => {
 		expect(names(field)).toEqual(['second.pdf', 'first.pdf']);
 		expect(cards(field).map(card => card.dataset.fileId)).toEqual(['1a1b2c3d', '0a1b2c3d']);
 		expect(cards(field)[0].querySelector('.s3-name').textContent).toBe('second.pdf');
+		expect(cards(field).map(card => card.dataset.kind)).toEqual(['doc', 'doc']);
 		expect(cards(field)[0].querySelector('.s3-size').textContent).toBe('1.5 KB');
 		expect(Object.fromEntries(open.searchParams)).toEqual({ collection: 'docs', id: 'd1', property: 'files', file: '0a1b2c3d' });
 		expect(cards(field)[1].querySelector('.s3-downloads').textContent).toBe('7 downloads');
