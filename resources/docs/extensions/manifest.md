@@ -120,7 +120,7 @@ Minimum Total CMS edition required. The extension will not load on lower edition
 
 ### `icon`
 
-Relative path to an icon image displayed on the extension card in the admin UI. Supports PNG, JPG, GIF, WebP, and SVG formats. The file must be under 64KB. These icons are embedded inline onto the webpage. Please keep them as small as possible.
+Relative path to an icon image displayed on the extension's row in the admin UI. Supports PNG, JPG, GIF, WebP, and SVG formats. The file must be under 64KB. These icons are embedded inline onto the webpage. Please keep them as small as possible.
 
 ```json
 "icon": "icon.svg"

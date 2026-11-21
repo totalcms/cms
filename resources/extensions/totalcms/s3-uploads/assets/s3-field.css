@@ -30,135 +30,430 @@
 	pointer-events: none;
 }
 
+/*
+ * Both fields speak the core depot's language: one bordered panel, striped
+ * rows with a file-type icon and the size at the right, a drop target with the
+ * upload mark, and icon buttons. Colors and icons are the admin's own tokens.
+ */
 .s3-field {
+	--s3-line: oklch(var(--totalform-lightgray));
+	--s3-surface: oklch(var(--totalform-purewhite));
+	--s3-stripe: oklch(var(--totalform-nearwhite));
+	--s3-muted: oklch(var(--totalform-darkgray));
+	--s3-text: oklch(var(--totalform-text-color));
+	--s3-accent: oklch(var(--totalform-accent));
+	--s3-danger: oklch(var(--totalform-error));
+
 	display: grid;
 	gap: .5rem;
+	container-type: inline-size;
 }
 
-.s3-drop {
-	padding: 1.25rem 1rem;
-	border: 1px dashed oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	background: oklch(var(--totalform-nearwhite));
-	color: oklch(var(--totalform-darkgray));
-	text-align: center;
-}
-
-.s3-drop p {
-	margin: 0;
-}
-
-/* The whole field accepts a drop, so replacing a file needs no second target. */
-.s3-field.s3-dragover .s3-drop,
-.s3-field.s3-dragover .s3-card {
-	border-color: oklch(var(--totalform-accent));
-	background: oklch(var(--totalform-accent) / .08);
-}
-
-.s3-card {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	align-items: center;
-	gap: .5rem 1rem;
-	padding: .75rem 1rem;
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	background: oklch(var(--totalform-nearwhite));
-}
-
-/* `hidden` must win over the display values above. */
+/* `hidden` must win over the display values below. */
 .s3-field [hidden] {
 	display: none;
 }
 
-.s3-meta {
+/*
+ * The admin gives every paragraph and list in its main area a top margin and a
+ * 65ch measure, for prose. These are controls, not prose.
+ */
+.s3-field p,
+.s3-field .s3-list {
+	max-width: none;
+	margin: 0;
+}
+
+/* ---------- The drop target ---------- */
+
+.s3-drop {
 	display: grid;
-	gap: .15rem;
+	align-content: center;
+	justify-items: center;
+	gap: .625rem;
+	padding: 1.25rem 1rem;
+	border: 1px dashed var(--s3-line);
+	border-radius: var(--totalform-radius);
+	background: var(--s3-stripe);
+	color: var(--s3-muted);
+	font-size: .875rem;
+	text-align: center;
+	transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.s3-drop::before {
+	content: "";
+	width: 2rem;
+	height: 2rem;
+	background-color: var(--s3-muted);
+	mask: var(--icon-upload) center / contain no-repeat;
+	transition: background-color 150ms ease-out, translate 200ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.s3-drop p {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: .375rem .5rem;
+}
+
+/* The whole field accepts a drop, so replacing a file needs no second target. */
+.s3-field.s3-dragover .s3-drop,
+.s3-field.s3-dragover > .s3-card,
+.s3-field.s3-dragover .s3-panel {
+	border-color: var(--s3-accent);
+}
+
+.s3-field.s3-dragover .s3-drop {
+	background: oklch(var(--totalform-accent) / .1);
+	color: var(--s3-text);
+}
+
+.s3-field.s3-dragover .s3-drop::before {
+	background-color: var(--s3-accent);
+	translate: 0 -.1875rem;
+}
+
+/* ---------- One file: a row ---------- */
+
+.s3-card {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: .625rem;
+	min-height: 2.75rem;
+	padding: .25rem .375rem .25rem .75rem;
+	color: var(--s3-text);
+}
+
+/* A single file stands alone, so the row carries the panel's edge itself. */
+.s3-field > .s3-card {
+	border: 1px solid var(--s3-line);
+	border-radius: var(--totalform-radius);
+	background: var(--s3-surface);
+	overflow: hidden;
+}
+
+.s3-icon {
+	flex: none;
+	width: 1.125rem;
+	height: 1.125rem;
+	background-color: var(--s3-muted);
+	mask: var(--s3-kind, var(--icon-file)) center / contain no-repeat;
+}
+
+.s3-card[data-kind="image"] { --s3-kind: var(--icon-file-image); }
+.s3-card[data-kind="audio"] { --s3-kind: var(--icon-file-audio); }
+.s3-card[data-kind="video"] { --s3-kind: var(--icon-file-video); }
+.s3-card[data-kind="doc"] { --s3-kind: var(--icon-file-doc); }
+.s3-card[data-kind="text"] { --s3-kind: var(--icon-file-text); }
+.s3-card[data-kind="sheet"] { --s3-kind: var(--icon-file-chart); }
+.s3-card[data-kind="slides"] { --s3-kind: var(--icon-file-star); }
+.s3-card[data-kind="archive"] { --s3-kind: var(--icon-file-zip); }
+.s3-card[data-kind="code"] { --s3-kind: var(--icon-file-code); }
+
+.s3-meta {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: baseline;
+	gap: .75rem;
 	min-width: 0;
 }
 
 .s3-name {
+	flex: 0 1 auto;
+	min-width: 4ch;
 	overflow: hidden;
-	color: oklch(var(--totalform-text-color));
+	font-weight: 500;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .s3-details {
 	display: flex;
-	flex-wrap: wrap;
-	gap: .15rem .75rem;
-	color: oklch(var(--totalform-darkgray));
-	font-size: var(--totalform-help-size);
+	flex: 1 1 0;
+	gap: .75rem;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--s3-muted);
+	font-size: .8125rem;
+	white-space: nowrap;
 }
 
 .s3-details span:empty {
 	display: none;
 }
 
-.s3-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: .4rem;
-	justify-content: flex-end;
+.s3-size {
+	flex: none;
+	min-width: 4.25rem;
+	color: var(--s3-muted);
+	font-size: .8125rem;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
 }
 
-.s3-progress {
-	grid-column: 1 / -1;
-	width: 100%;
-	height: .4rem;
-	accent-color: oklch(var(--totalform-accent));
+.s3-downloads {
+	font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Icon buttons ---------- */
+
+.s3-actions {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: .125rem;
+}
+
+.s3-action {
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: 0;
+	border-radius: var(--totalform-radius);
+	background: transparent;
+	color: var(--s3-muted);
+	cursor: pointer;
+	transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.s3-action::before {
+	content: "";
+	width: 1.0625rem;
+	height: 1.0625rem;
+	background-color: currentColor;
+	mask: var(--s3-action-icon) center / contain no-repeat;
+}
+
+.s3-open { --s3-action-icon: var(--icon-external); }
+.s3-replace { --s3-action-icon: var(--icon-upload); }
+.s3-remove { --s3-action-icon: var(--icon-trash); }
+.s3-cancel { --s3-action-icon: var(--icon-close); }
+.s3-retry { --s3-action-icon: var(--icon-refresh); }
+
+.s3-action:hover {
+	background: oklch(var(--totalform-text-color) / .1);
+	color: var(--s3-text);
+}
+
+.s3-remove:hover,
+.s3-cancel:hover {
+	background: oklch(var(--totalform-error) / .14);
+	color: var(--s3-danger);
+}
+
+.s3-action:focus-visible,
+.s3-handle:focus-visible {
+	outline: 2px solid var(--s3-accent);
+	outline-offset: 1px;
+}
+
+/* The button's name, kept for screen readers; the icon and tooltip show it. */
+.s3-label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* ---------- Upload states ---------- */
+
+.s3-progress {
+	position: absolute;
+	inset: auto 0 0;
+	width: 100%;
+	height: 3px;
+	border: 0;
+	background: transparent;
+	appearance: none;
+}
+
+.s3-progress::-webkit-progress-bar {
+	background: oklch(var(--totalform-accent) / .2);
+}
+
+.s3-progress::-webkit-progress-value {
+	background: var(--s3-accent);
+	transition: inline-size 200ms ease-out;
+}
+
+.s3-progress::-moz-progress-bar {
+	background: var(--s3-accent);
+}
+
+/* Waiting for the form to be saved, or for its turn: there, but not yet real. */
+.s3-card[data-state="queued"] .s3-name,
+.s3-field[data-state="queued"] > .s3-card .s3-name {
+	color: var(--s3-muted);
+}
+
+.s3-card[data-state="failed"] .s3-icon,
+.s3-field[data-state="failed"] > .s3-card .s3-icon {
+	background-color: var(--s3-danger);
+	mask-image: var(--icon-error);
+}
+
+.s3-card[data-state="failed"] .s3-date,
+.s3-field[data-state="failed"] > .s3-card .s3-date {
+	color: var(--s3-danger);
+}
+
+.s3-field[data-state="failed"] > .s3-card {
+	border-color: var(--s3-danger);
+}
+
+/* ---------- Several files: the depot's panel ---------- */
+
+.s3-panel {
+	display: grid;
+	border: 1px solid var(--s3-line);
+	border-radius: var(--totalform-radius);
+	background: var(--s3-surface);
+	overflow: hidden;
+	transition: border-color 150ms ease-out;
+}
+
+.s3-panel .s3-drop {
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+}
+
+/* Empty, the depot is the same invitation as an empty single file. */
+.s3-depot[data-state="empty"] .s3-panel {
+	border-style: dashed;
+	background: var(--s3-stripe);
+}
+
+/* With files in it, the drop target is a strip above the list on a narrow form… */
+.s3-depot:not([data-state="empty"]) .s3-drop {
+	grid-auto-flow: column;
+	justify-content: center;
+	padding-block: .625rem;
+	border-bottom: 1px solid var(--s3-line);
+}
+
+.s3-depot:not([data-state="empty"]) .s3-drop::before {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.s3-list {
+	max-height: 27.5rem;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+.s3-list > .s3-card:nth-child(odd) {
+	background: var(--s3-stripe);
+}
+
+.s3-list > .s3-card:hover {
+	background: oklch(var(--totalform-accent) / .1);
+}
+
+.s3-list > .s3-card {
+	padding-left: .375rem;
+}
+
+/* The grip: shown on every row that can be moved, clearer on the one in hand. */
+.s3-handle {
+	flex: none;
+	width: 1rem;
+	height: 1.5rem;
+	background-color: oklch(var(--totalform-mediumgray));
+	mask: var(--icon-sort) center / .625rem no-repeat;
+	cursor: grab;
+	transition: background-color 150ms ease-out;
+}
+
+.s3-card:hover .s3-handle {
+	background-color: var(--s3-text);
+}
+
+.s3-card:active .s3-handle {
+	cursor: grabbing;
+}
+
+/* A row that cannot be moved (it is still uploading) keeps the column, not the grip. */
+.s3-card[draggable="false"] .s3-handle {
+	visibility: hidden;
+}
+
+/* …and a column beside it when there is room, as in the core depot. */
+@container (min-width: 40rem) {
+	.s3-depot:not([data-state="empty"]) .s3-panel {
+		grid-template-columns: minmax(0, 1fr) 11.5rem;
+	}
+
+	.s3-depot:not([data-state="empty"]) .s3-list {
+		grid-area: 1 / 1;
+	}
+
+	.s3-depot:not([data-state="empty"]) .s3-drop {
+		grid-area: 1 / 2;
+		grid-auto-flow: row;
+		padding-block: 1.25rem;
+		border-bottom: 0;
+		border-left: 1px solid var(--s3-line);
+	}
+
+	.s3-depot:not([data-state="empty"]) .s3-drop::before {
+		width: 2rem;
+		height: 2rem;
+	}
+
+	.s3-depot:not([data-state="empty"]) .s3-drop p {
+		flex-direction: column;
+	}
+}
+
+/* On a narrow form the name gets the line to itself and the rest sits under it. */
+@container (max-width: 30rem) {
+	.s3-meta {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0;
+	}
+
+	.s3-details {
+		flex: none;
+	}
+
+	.s3-card {
+		padding-block: .375rem;
+	}
+}
+
+/* ---------- Messages ---------- */
 
 .s3-notice,
 .s3-error {
-	margin: 0;
 	font-size: var(--totalform-help-size);
 }
 
 .s3-notice {
-	color: oklch(var(--totalform-darkgray));
+	color: var(--s3-muted);
 }
 
 .s3-error {
-	color: oklch(var(--totalform-error));
+	color: var(--s3-danger);
 }
 
-.s3-field[data-state="failed"] .s3-card {
-	border-color: oklch(var(--totalform-error));
-}
-
-@media (max-width: 480px) {
-	.s3-card {
-		grid-template-columns: minmax(0, 1fr);
+@media (prefers-reduced-motion: reduce) {
+	.s3-drop,
+	.s3-drop::before,
+	.s3-action,
+	.s3-handle,
+	.s3-panel,
+	.s3-progress::-webkit-progress-value {
+		transition: none;
 	}
-
-	.s3-actions {
-		justify-content: flex-start;
-	}
-}
-
-/* s3depot: the cards are a list the editor can reorder by dragging. */
-.s3-list {
-	display: grid;
-	gap: .5rem;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.s3-list:empty {
-	display: none;
-}
-
-.s3-list > li[draggable="true"] {
-	cursor: grab;
-}
-
-.s3-list > li[data-state="failed"] {
-	border-color: oklch(var(--totalform-error));
-}
-
-.s3-list > li[data-state="queued"] {
-	border-style: dashed;
 }

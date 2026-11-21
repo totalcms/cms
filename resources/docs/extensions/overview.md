@@ -60,7 +60,7 @@ Uploads require a signed-in admin browser session; API keys and OAuth tokens are
 
 **Dependencies.** An extension that uses Composer packages must ship its `vendor/` directory in the zip. The installer warns when a `composer.json` has requirements but no `vendor/autoload.php` is present; that is for the developer to fix by running `composer install --no-dev` before packaging.
 
-**Removing.** The **Remove** button on a user-installed extension's card (or `tcms extension:remove vendor/name`) deletes its files and keeps its settings and data, so a later reinstall picks up where it left off.
+**Removing.** The **Remove** button (the trash icon) on a user-installed extension's row (or `tcms extension:remove vendor/name`) deletes its files and keeps its settings and data, so a later reinstall picks up where it left off.
 
 ### Project Extensions
 

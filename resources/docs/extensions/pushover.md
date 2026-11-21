@@ -36,7 +36,7 @@ Open the extension's settings page from **Admin → Extensions** and enter your 
 
 ### 6. Test Your Configuration
 
-Use the **Test Notification** link on the extension's card in **Admin → Extensions** to send a test notification and verify everything is working.
+Use the **Test Notification** link on the extension's row in **Admin → Extensions** to send a test notification and verify everything is working.
 
 ## Form Action
 

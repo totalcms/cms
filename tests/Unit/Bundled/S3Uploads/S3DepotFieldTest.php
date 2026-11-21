@@ -41,6 +41,11 @@ describe('S3DepotField', function (): void {
 		$list  = substr($html, (int)strpos($html, '<ul class="s3-list">'), (int)strpos($html, '</ul>') - (int)strpos($html, '<ul class="s3-list">'));
 
 		expect(substr_count($list, '<li class="s3-card"'))->toBe(2)
+			// Each row can be picked up to reorder, and says what kind of file it is.
+			->and(substr_count($list, '<span class="s3-handle" aria-hidden="true"></span>'))->toBe(2)
+			->and(substr_count($list, 'data-kind="doc"'))->toBe(2)
+			// The list and the drop target sit in one panel, as in the core depot.
+			->and($html)->toMatch('#<div class="s3-panel">.*<ul class="s3-list">#s')
 			->and(strpos($list, 'data-file-id="1a1b2c3d"'))->toBeLessThan(strpos($list, 'data-file-id="0a1b2c3d"'))
 			->and($list)->toContain('Second &lt;b&gt;.pdf')
 			->and($list)->toContain('1.5 KB')

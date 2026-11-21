@@ -26,8 +26,8 @@ class S3DepotField extends S3Field
 		}
 
 		return $this->valueInput() . $this->wrap(
-			$this->dropZone(true)
-				. HTMLUtils::element('ul', $cards, ['class' => 's3-list'])
+			// The list and the drop target share one panel, as in the core depot.
+			HTMLUtils::element('div', $this->dropZone(true) . HTMLUtils::element('ul', $cards, ['class' => 's3-list']), ['class' => 's3-panel'])
 				// What the script copies for a file that is added in the browser.
 				. HTMLUtils::element('template', $this->item(null), ['class' => 's3-item-template']),
 			$pointers === [] ? 'empty' : 'filled',
@@ -37,6 +37,6 @@ class S3DepotField extends S3Field
 
 	private function item(?Pointer $pointer): string
 	{
-		return $this->card($pointer, 'li', ['data-file-id' => $pointer->id ?? '', 'draggable' => 'true'], false);
+		return $this->card($pointer, 'li', ['data-file-id' => $pointer->id ?? '', 'draggable' => 'true'], false, true);
 	}
 }
