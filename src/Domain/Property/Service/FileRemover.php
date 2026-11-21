@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
@@ -18,6 +19,15 @@ class FileRemover
 		protected ObjectPatcher $objectPatcher,
 		protected ObjectFetcher $objectFetcher,
 	) {
+	}
+
+	/** Where a removed file goes instead of being lost; null leaves removing as a plain delete. */
+	protected ?FileBackupStore $fileBackups = null;
+
+	/** Set by RemoverFactory: every remover is built with the same constructor. */
+	public function setFileBackups(FileBackupStore $fileBackups): void
+	{
+		$this->fileBackups = $fileBackups;
 	}
 
 	protected function fetchProperty(string $collection, string $objectID, string $property): PropertyData
@@ -76,6 +86,10 @@ class FileRemover
 		// record still names it. A refused save now changes nothing.
 		if (!array_is_list($files)) {
 			$updated = $this->updateObject($collection, $objectID, $property, []);
+
+			// The record is saved, so the file is now going for certain: the file
+			// history keeps it first, when the settings say so.
+			$this->fileBackups?->setAside($collection, $objectID, $property);
 			$this->storage->deleteFile($collection, $objectID, $property, $name);
 
 			return $updated;
@@ -92,6 +106,9 @@ class FileRemover
 		$files = array_values($files);
 
 		$updated = $this->updateObject($collection, $objectID, $property, $files);
+
+		// One picture out of a gallery: it goes to the trash when the trash is on.
+		$this->fileBackups?->setAside($collection, $objectID, $property, null, $name);
 		$this->storage->deleteFile($collection, $objectID, $property, $name);
 
 		return $updated;

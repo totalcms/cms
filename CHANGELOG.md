@@ -4,6 +4,14 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [3.6.12] - Unreleased
 
+### Added
+
+- **Backups can keep images and files.** New settings under Settings → Backups, all off until you turn them on. `keepImages` and `keepFiles` say how many earlier files each `image` or `file` field keeps when its file is replaced or removed, including a field inside a card or a deck item. `trash` keeps the pictures removed from a gallery and the files and folders removed from a depot until they are older than Maximum Age. `maxFileSizeMB` (100) is the largest file that is ever kept. `tcms backup:restore` then puts back the files its snapshot names and says which came back and which it could not find; `tcms backup:list` shows what is kept. Files past their age are cleared once a day by the job runner. See [Keeping Images and Files](https://docs.totalcms.co/operations/backups#keeping-images-and-files)
+
+### Changed
+
+- **The Backups and Authentication settings pages are grouped into sections.** Related settings sit together under a heading, two to a row, as on the MCP Server page. No setting changed
+
 ### Fixed
 
 - **An extension's schema no longer makes an install report itself corrupted.** When a custom schema had the same id as an extension's schema, every save could fail with "Total CMS installation has been corrupted ... missing from Bundle", including logging in to the admin. Installs that share a data folder and a cache hit it when one keeps a copy of the schema for an install without the extension. The integrity check now covers only the schemas Total CMS ships, and the extension's schema always comes before a custom copy.
@@ -11,6 +19,8 @@ All notable changes to Total CMS will be documented in this file.
 - **Deleting a gallery image never deletes the others.** The trash icon of an image whose upload had failed or not finished could remove every image in the gallery. It now removes that thumbnail only, and the API refuses (400) a delete under `/collections/` whose URL ends in a slash.
 - **Gallery uploads keep the right name.** When several files uploaded at once and the server had to rename them, a thumbnail could end up with another image's name until the page was reloaded. The upload response now says which name each file got (`meta.name`).
 - **A gallery no longer stores an image without a name.** Saving or reordering while an upload was running or had failed left a broken thumbnail behind.
+- **Backup settings take effect.** Snapshots per Object and Maximum Age under Settings → Backups were ignored: every site kept ten snapshots for 30 days whatever was set. A site that lowered either will see older snapshots pruned on the next save of each object
+
 
 ## [3.6.11] - 2026-11-20
 

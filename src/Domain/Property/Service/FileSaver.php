@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -26,6 +27,9 @@ class FileSaver
 	/** @var array<string,mixed> */
 	protected array $settings = [];
 
+	/** Where a replaced file goes instead of being lost; null leaves replacing as a plain delete. */
+	protected ?FileBackupStore $fileBackups = null;
+
 	public function __construct(
 		protected PropertyRepository $storage,
 		protected PropertyFetcher $propFetcher,
@@ -43,6 +47,22 @@ class FileSaver
 		$this->settings = $settings;
 	}
 
+	/** Set by SaverFactory, like the settings: every saver is built with the same constructor. */
+	public function setFileBackups(FileBackupStore $fileBackups): void
+	{
+		$this->fileBackups = $fileBackups;
+	}
+
+	/**
+	 * Hand the file this upload is about to replace to the file history, which
+	 * keeps it when the settings say so. `$subpath` is the slot inside a card
+	 * or a deck item, as it is for the delete that follows.
+	 */
+	protected function setAsideReplacedFile(string $collection, string $objectID, string $property, ?string $subpath): void
+	{
+		$this->fileBackups?->setAside($collection, $objectID, $property, $subpath);
+	}
+
 	public function save(
 		string $collection,
 		string $objectID,
@@ -54,6 +74,8 @@ class FileSaver
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);
 		}
+
+		$this->setAsideReplacedFile($collection, $objectID, $property, $subpath);
 
 		// Clean up existing files at this exact path (top-level or nested). Without
 		// $subpath, this would wipe the whole property dir — including sibling

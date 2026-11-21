@@ -31,6 +31,7 @@ describe('RemoverFactory', function (): void {
 			$this->objectPatcher,
 			$this->objectFetcher,
 			$this->schemaFetcher,
+			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
 		);
 	});
 

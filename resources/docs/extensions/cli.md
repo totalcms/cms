@@ -964,7 +964,7 @@ Every object save keeps the version it replaced and every delete keeps the final
 
 ### `backup:list`
 
-List the snapshots kept for one object, newest first. The `Snapshot` column is the filename `backup:restore` takes. A deleted object still lists — its history survives the delete.
+List the snapshots kept for one object, newest first. The `Snapshot` column is the filename `backup:restore` takes. A deleted object still lists — its history survives the delete. The files kept for the object (earlier images and files, and the trash of its galleries and depots) are listed under the snapshots, and under `files` with `--json`.
 
 ```bash
 tcms backup:list blog my-post
@@ -978,7 +978,7 @@ tcms backup:list blog my-post --json
 
 ### `backup:restore`
 
-Put a snapshot back as the live record. This is an ordinary save: the index rebuilds, listeners fire, and the state being replaced is snapshotted first — so a restore can itself be undone by restoring one entry back. Restoring a deleted object recreates it.
+Put a snapshot back as the live record. This is an ordinary save: the index rebuilds, listeners fire, and the state being replaced is snapshotted first — so a restore can itself be undone by restoring one entry back. Restoring a deleted object recreates it. Every file the snapshot names comes back when it was [kept](docs/operations/backups#keeping-images-and-files): image and file fields, those inside a card or a deck item, gallery pictures and depot files. The command lists each file it put back and warns about any it could not find.
 
 ```bash
 tcms backup:restore blog my-post my-post-20260919-091500.json

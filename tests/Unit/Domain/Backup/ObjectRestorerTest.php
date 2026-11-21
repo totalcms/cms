@@ -7,9 +7,17 @@ namespace Tests\Unit\Domain\Backup;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Backup\Service\BackupStore;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Backup\Service\ObjectRestorer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\DepotData;
+use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\GalleryData;
+use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\JsonData;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -27,18 +35,21 @@ final class ObjectRestorerTest extends TestCase
 	private MockObject $store;
 	private MockObject $updater;
 	private MockObject $schemaFetcher;
+	private MockObject $files;
 
 	protected function setUp(): void
 	{
 		$this->store         = $this->createMock(BackupStore::class);
 		$this->updater       = $this->createMock(ObjectUpdater::class);
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$this->files         = $this->createMock(FileBackupStore::class);
 
 		$this->restorer = new ObjectRestorer(
 			$this->store,
 			$this->updater,
 			new ObjectFileCodec(),
 			$this->schemaFetcher,
+			$this->files,
 		);
 	}
 
@@ -83,6 +94,81 @@ final class ObjectRestorerTest extends TestCase
 			->willReturn(new ObjectData('post-1', []));
 
 		$this->restorer->restore('posts', 'post-1', 'post-1-20240105-120000.md');
+	}
+
+	public function testAfterTheRecordIsRestoredEveryFileItNamesIsMadeToMatchIt(): void
+	{
+		// Record first, files second: a restore the save refuses must move nothing.
+		$order = [];
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"post-1"}');
+		$this->updater->method('updateObject')->willReturnCallback(function () use (&$order): ObjectData {
+			$order[] = 'record saved';
+
+			$image = fn (string $name, int $size = 0): array => ['name' => $name, 'mime' => 'image/jpeg', 'size' => $size, 'credit' => ['name' => 'Someone']];
+
+			return new ObjectData('post-1', [
+				'title'     => new JsonData('Hello'),
+				'cover'     => new ImageData(['name' => 'hero.jpg', 'size' => 48211]),
+				'pdf'       => new FileData(['name' => 'brochure.pdf', 'size' => 0]),
+				'empty'     => new ImageData([]),
+				'photos'    => new GalleryData([['name' => 'a.jpg', 'size' => 5], ['name' => 'b.jpg']]),
+				'downloads' => new DepotData(['files' => [
+					['name' => 'readme.txt', 'mime' => 'text/plain', 'size' => 9],
+					['name' => 'Price Lists', 'mime' => 'folder', 'files' => [
+						['name' => '2026', 'mime' => 'folder', 'files' => [['name' => 'a.pdf', 'mime' => 'application/pdf']]],
+					]],
+				]]),
+				// Cards and deck items are stored as plain arrays.
+				'lead' => new CardData(['name' => 'Alice', 'photo' => $image('alice.jpg', 7), 'reel' => ['url' => 'https://youtu.be/x', 'poster' => $image('poster.jpg')]]),
+				'team' => new DeckData([
+					'bob'   => ['id' => 'bob', 'name' => 'Bob', 'photo' => $image('bob.jpg'), 'cv' => ['name' => 'bob.pdf', 'mime' => 'application/pdf', 'size' => 3]],
+					'carol' => ['id' => 'carol', 'photo' => $image('')],
+				]),
+			]);
+		});
+		$this->files->method('reconcile')->willReturnCallback(function (string $collection, string $id, string $property, string $path, string $name, ?int $size) use (&$order): string {
+			$order[] = trim("{$property}/{$path}", '/') . ': ' . var_export($name, true) . ' ' . var_export($size, true);
+
+			return ['hero.jpg' => 'restored', 'brochure.pdf' => 'missing', 'bob.jpg' => 'restored', 'a.pdf' => 'missing'][$name] ?? ($name === '' ? 'none' : 'present');
+		});
+
+		$result = $this->restorer->restoreWithFiles('posts', 'post-1', 'post-1-20240105-120000.json');
+
+		expect($order)->toBe([
+			'record saved',
+			"cover: 'hero.jpg' 48211",
+			// A size of zero says nothing; the name alone decides.
+			"pdf: 'brochure.pdf' NULL",
+			"empty: '' NULL",
+			"photos: 'a.jpg' 5",
+			"photos: 'b.jpg' NULL",
+			"downloads: 'readme.txt' 9",
+			"downloads/Price Lists/2026: 'a.pdf' NULL",
+			// A file record is taken whole: the photographer's name inside it is not a file.
+			"lead/photo: 'alice.jpg' 7",
+			"lead/reel/poster: 'poster.jpg' NULL",
+			"team/bob/photo: 'bob.jpg' NULL",
+			"team/bob/cv: 'bob.pdf' 3",
+			"team/carol/photo: '' NULL",
+		])
+			// Only what the operator needs to know: what came back, and what could not.
+			->and($result['files'])->toBe([
+				['property' => 'cover', 'path' => '', 'file' => 'hero.jpg', 'outcome' => 'restored'],
+				['property' => 'pdf', 'path' => '', 'file' => 'brochure.pdf', 'outcome' => 'missing'],
+				['property' => 'downloads', 'path' => 'Price Lists/2026', 'file' => 'a.pdf', 'outcome' => 'missing'],
+				['property' => 'team', 'path' => 'bob/photo', 'file' => 'bob.jpg', 'outcome' => 'restored'],
+			])
+			->and($result['object']->id)->toBe('post-1');
+	}
+
+	public function testARestoreTheSaveRefusesMovesNoFiles(): void
+	{
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"post-1"}');
+		$this->updater->method('updateObject')->willThrowException(new \DomainException('refused'));
+		$this->files->expects($this->never())->method('reconcile');
+
+		$this->expectException(\DomainException::class);
+		$this->restorer->restoreWithFiles('posts', 'post-1', 'post-1-20240105-120000.json');
 	}
 
 	public function testTheIdArgumentWinsOverWhateverTheSnapshotSays(): void

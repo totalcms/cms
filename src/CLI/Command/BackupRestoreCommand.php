@@ -69,7 +69,7 @@ class BackupRestoreCommand extends BaseCommand
 		}
 
 		try {
-			$this->totalcms->objectRestorer()->restore($collectionId, $objectId, $snapshot);
+			$files = $this->totalcms->objectRestorer()->restoreWithFiles($collectionId, $objectId, $snapshot)['files'];
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, "Restore failed: {$e->getMessage()}");
 		}
@@ -80,6 +80,7 @@ class BackupRestoreCommand extends BaseCommand
 				'collection' => $collectionId,
 				'id'         => $objectId,
 				'snapshot'   => $snapshot,
+				'files'      => $files,
 			]));
 
 			return Command::SUCCESS;
@@ -93,6 +94,36 @@ class BackupRestoreCommand extends BaseCommand
 			$snapshot,
 		));
 
+		$this->reportFiles($output, $files);
+
 		return Command::SUCCESS;
+	}
+
+	/**
+	 * Say what happened to the record's images and files: which came back, and
+	 * which the record names but nothing kept. Silent when there is neither.
+	 *
+	 * @param list<array{property:string, path:string, file:string, outcome:'restored'|'missing'}> $files
+	 */
+	private function reportFiles(OutputInterface $output, array $files): void
+	{
+		$missing = false;
+		foreach ($files as $file) {
+			$field = rtrim($file['property'] . '/' . $file['path'], '/');
+			if ($file['outcome'] === 'restored') {
+				$output->writeln(sprintf('  %s: %s restored', $field, $file['file']));
+
+				continue;
+			}
+
+			$missing = true;
+			$output->writeln(sprintf('  <comment>%s: %s is missing</comment>', $field, $file['file']));
+		}
+		if ($missing) {
+			// The record is back and correct; only the file is not. Say why, and how to have it next time.
+			$output->writeln('');
+			$output->writeln('<comment>The record names a file that is not on disk and was not kept. Upload it again in the admin.</comment>');
+			$output->writeln('Files are kept only when Settings → Backups says so (<comment>keepImages</comment>, <comment>keepFiles</comment>, <comment>trash</comment>).');
+		}
 	}
 }

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -23,6 +24,7 @@ readonly class SaverFactory
 		private LoggerFactory $loggerFactory,
 		private Config $config,
 		private PropertyMetaResolver $metaResolver,
+		private FileBackupStore $fileBackups,
 	) {
 	}
 
@@ -78,6 +80,7 @@ readonly class SaverFactory
 		}
 
 		$saver->setSettings($settings);
+		$saver->setFileBackups($this->fileBackups);
 
 		return $saver;
 	}
