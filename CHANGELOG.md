@@ -2,6 +2,19 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.7.0] - Unreleased
+
+### Added
+
+- **S3 Uploads extension (Pro).** Store large files in your own Amazon S3, Cloudflare R2, Backblaze B2, Wasabi or MinIO bucket. Editors upload straight from the browser to the bucket, so upload size limits and script timeouts no longer apply. It adds the `s3file` and `s3depot` fields, download links on your own domain that count downloads, private buckets with signed links, and cleanup of replaced and deleted files. Its links are named as core's are: `/stream` shows the file and `/download` saves it and fires `file.downloaded`. See [S3 Uploads](https://docs.totalcms.co/extensions/s3-uploads)
+- **`tcms s3:prune` and `tcms s3:stats`.** Find and remove files in the bucket that no object uses, and list download counts. A nightly automation runs the cleanup on live sites
+- **Podcast feeds use counted S3 links** for episodes whose audio is an `s3file`, and fill an empty Duration with the length measured at upload. See [Hosting audio in a bucket](https://docs.totalcms.co/extensions/podcast#hosting-audio-in-a-bucket)
+
+### Fixed
+
+- **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import
+- **The schema editor shows the JSON icon for a property stored as JSON.** A property whose data type is `json` but whose field comes from an extension showed a question mark as its type icon
+
 ## [3.6.11] - 2026-11-20
 
 ### Added

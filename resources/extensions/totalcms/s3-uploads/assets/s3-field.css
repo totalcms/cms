@@ -1,0 +1,164 @@
+/*
+ * The s3file and s3depot fields: a drop zone, and a card per stored file.
+ *
+ * Every rule that names a field class is tied to `.form-field` and uses a child
+ * combinator. The schema editor puts the same `s3file-field` class on a
+ * property's row and dialog, with all of that property's options inside it; a
+ * looser rule restyles those too.
+ */
+
+.form-field.s3file-field > .form-group,
+.form-field.s3depot-field > .form-group {
+	display: block;
+}
+
+/*
+ * The input that carries the stored value is not for the editor to see or type
+ * in. It stays in the layout, as the core upload fields keep theirs, so the
+ * browser can still anchor a validation message to it.
+ */
+.form-field.s3file-field > .form-group > input[data-proxy],
+.form-field.s3depot-field > .form-group > input[data-proxy] {
+	display: block;
+	width: 100%;
+	height: 0;
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.s3-field {
+	display: grid;
+	gap: .5rem;
+}
+
+.s3-drop {
+	padding: 1.25rem 1rem;
+	border: 1px dashed oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+	color: oklch(var(--totalform-darkgray));
+	text-align: center;
+}
+
+.s3-drop p {
+	margin: 0;
+}
+
+/* The whole field accepts a drop, so replacing a file needs no second target. */
+.s3-field.s3-dragover .s3-drop,
+.s3-field.s3-dragover .s3-card {
+	border-color: oklch(var(--totalform-accent));
+	background: oklch(var(--totalform-accent) / .08);
+}
+
+.s3-card {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: .5rem 1rem;
+	padding: .75rem 1rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+}
+
+/* `hidden` must win over the display values above. */
+.s3-field [hidden] {
+	display: none;
+}
+
+.s3-meta {
+	display: grid;
+	gap: .15rem;
+	min-width: 0;
+}
+
+.s3-name {
+	overflow: hidden;
+	color: oklch(var(--totalform-text-color));
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.s3-details {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .15rem .75rem;
+	color: oklch(var(--totalform-darkgray));
+	font-size: var(--totalform-help-size);
+}
+
+.s3-details span:empty {
+	display: none;
+}
+
+.s3-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .4rem;
+	justify-content: flex-end;
+}
+
+.s3-progress {
+	grid-column: 1 / -1;
+	width: 100%;
+	height: .4rem;
+	accent-color: oklch(var(--totalform-accent));
+}
+
+.s3-notice,
+.s3-error {
+	margin: 0;
+	font-size: var(--totalform-help-size);
+}
+
+.s3-notice {
+	color: oklch(var(--totalform-darkgray));
+}
+
+.s3-error {
+	color: oklch(var(--totalform-error));
+}
+
+.s3-field[data-state="failed"] .s3-card {
+	border-color: oklch(var(--totalform-error));
+}
+
+@media (max-width: 480px) {
+	.s3-card {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.s3-actions {
+		justify-content: flex-start;
+	}
+}
+
+/* s3depot: the cards are a list the editor can reorder by dragging. */
+.s3-list {
+	display: grid;
+	gap: .5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.s3-list:empty {
+	display: none;
+}
+
+.s3-list > li[draggable="true"] {
+	cursor: grab;
+}
+
+.s3-list > li[data-state="failed"] {
+	border-color: oklch(var(--totalform-error));
+}
+
+.s3-list > li[data-state="queued"] {
+	border-style: dashed;
+}

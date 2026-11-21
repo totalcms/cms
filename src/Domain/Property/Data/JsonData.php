@@ -16,7 +16,7 @@ namespace TotalCMS\Domain\Property\Data;
  *            input isn't valid JSON. This keeps legacy data (which used to be
  *            stored as a JSON string) loadable; on next save it's written as
  *            a nested object.
- * - null   : empty value
+ * - null   : empty value, stored as ''
  */
 class JsonData extends PropertyData implements \Stringable
 {
@@ -43,7 +43,9 @@ class JsonData extends PropertyData implements \Stringable
 
 	public function transform(): mixed
 	{
-		return $this->data;
+		// A blank value is written as '' and never as null: the json property
+		// schema accepts the empty string, and null fails its validation.
+		return $this->data ?? '';
 	}
 
 	public function __toString(): string

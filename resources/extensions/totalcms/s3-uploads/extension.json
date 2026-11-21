@@ -1,0 +1,28 @@
+{
+	"id"              : "totalcms/s3-uploads",
+	"name"            : "S3 Uploads",
+	"description"     : "Store large files in your own S3-compatible bucket (Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO). Editors upload straight from the browser to the bucket, so file size and server limits no longer apply. Adds the s3file and s3depot field types, counted download links, private buckets and a nightly cleanup. Requires Pro.",
+	"icon"            : "icon.png",
+	"requires"        : {
+		"totalcms" : ">=3.6.11",
+		"php"      : ">=8.2"
+	},
+	"min_edition"     : "pro",
+	"entrypoint"      : "Extension.php",
+	"settings_schema" : "settings.json",
+	"author"          : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/s3-uploads"
+		},
+		{
+			"label" : "Bucket Setup",
+			"url"   : "/admin/ext/totalcms/s3-uploads/test"
+		}
+	]
+}

@@ -6390,6 +6390,13 @@
                     "url": "https://docs.totalcms.co/extensions/pushover/"
                 },
                 {
+                    "id": "totalcms/s3-uploads",
+                    "name": "S3 Uploads",
+                    "description": "Store large files in your own S3-compatible bucket (Amazon S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO). Editors upload straight from the browser to the bucket, so file size and server limits no longer apply. Adds the s3file and s3depot field types, counted download links, private buckets and a nightly cleanup. Requires Pro.",
+                    "version": "",
+                    "url": "https://docs.totalcms.co/extensions/s3-uploads/"
+                },
+                {
                     "id": "totalcms/scheduled",
                     "name": "Scheduled",
                     "description": "Time-window gating. Only renders a page between configured start and end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales.",
@@ -6457,6 +6464,10 @@
                 {
                     "label": "Pushover Notifications",
                     "url": "https://docs.totalcms.co/extensions/pushover/"
+                },
+                {
+                    "label": "S3 Uploads",
+                    "url": "https://docs.totalcms.co/extensions/s3-uploads/"
                 },
                 {
                     "label": "Scheduled",

@@ -1,0 +1,66 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<main class="dash-main-content" style="max-width:100%;">
+	<header>
+		<h1><a href="{{ cms.dashboard }}/extensions">Extensions</a> / <a href="{{ cms.dashboard }}/extensions/totalcms/s3-uploads/settings">S3 Uploads</a> / <span>Bucket Setup</span></h1>
+	</header>
+
+	<section class="dash-content-section" style="max-width:720px;">
+		{% if result is defined %}
+			<p class="{{ result.success ? 'cms-success' : 'cms-error' }}" role="alert">{{ result.message|e }}</p>
+		{% endif %}
+
+		{% if configured %}
+			<p>Check that Total CMS can reach <strong>{{ bucket|e }}</strong> with the saved settings. This lists one file under {{ prefix ? 'the prefix <code>' ~ prefix|e ~ '</code>' : 'the whole bucket' }}; it changes nothing.</p>
+
+			{{ cms.form.simple('ext/totalcms/s3-uploads/test', '', {
+				'method': 'POST',
+				'label': 'Test Connection',
+				'buttonClass': 'cms-secondary',
+				'ajax': false
+			}) }}
+
+			{% if not prefix %}
+				<div class="warning-box" role="status"><p>No prefix is set. Give each install (production, staging, local) its own prefix before uploading, so one install never cleans up another's files.</p></div>
+			{% endif %}
+		{% else %}
+			<p class="cms-error" role="alert">S3 Uploads is not set up yet. Add the bucket, region and both keys in the <a href="{{ cms.dashboard }}/extensions/totalcms/s3-uploads/settings">settings</a>, then come back.</p>
+		{% endif %}
+
+		<p>The snippets below are built from the saved settings. Copy each one and paste it at your storage provider as it is. Save a change to the bucket or prefix before you copy.</p>
+
+		{% if keyPolicy %}
+			<h2>Access key permissions</h2>
+			{% if amazon %}
+				<p>Attach this policy to the IAM user the access key belongs to: IAM → Users → the user → Add permissions → Create inline policy → JSON. It is not a bucket policy. It lets the key work {{ prefix ? 'only under <code>' ~ prefix|e ~ '</code>' : 'in the whole bucket, because no prefix is set' }}.</p>
+				<pre><code id="s3-key-policy">{{ keyPolicy|e }}</code></pre>
+				<p><button type="button" class="dash-button cms-clip-button" data-clip="#s3-key-policy">Copy policy</button></p>
+			{% else %}
+				<p>Give the key read, write, delete and list access to <strong>{{ bucket|e }}</strong> alone. On Cloudflare R2 that is an API token with <strong>Object Read &amp; Write</strong> for this bucket.</p>
+			{% endif %}
+		{% endif %}
+
+		<h2>Bucket CORS rules</h2>
+		<p>Editors upload straight from the browser to the bucket, so the bucket must allow this site. Add these rules to the bucket's CORS settings{{ amazon ? ' (the bucket → Permissions → Cross-origin resource sharing)' : '' }}. If editors use the admin on another address (a staging or local site), add that origin too.</p>
+		<pre><code id="s3-cors">{{ cors|e }}</code></pre>
+		<p><button type="button" class="dash-button cms-clip-button" data-clip="#s3-cors">Copy CORS rules</button></p>
+		<p>CORS cannot be tested from the server: only a browser is subject to it. If an upload fails with "blocked before it reached the bucket", these rules are missing or name a different origin.</p>
+
+		{% if visibility == 'public' %}
+			<h2>Public reads</h2>
+			<p>Visibility is set to Public, so download links point at the bucket itself. The bucket (or the CDN in front of it) must allow anyone to read files{{ prefix ? ' under <code>' ~ prefix|e ~ '</code>' : '' }}. If links answer 403, either allow public reads at the provider or switch Visibility to Private.</p>
+			{% if amazon and publicPolicy %}
+				<p>{{ cdn ? 'If your CDN reads the bucket with its own access, leave the bucket closed and skip this. Otherwise add' : 'Add' }} this as the bucket policy (the bucket → Permissions → Bucket policy), and turn off Block Public Access for the bucket, or Amazon refuses it.</p>
+				{% if not prefix %}
+					<div class="warning-box" role="status"><p>No prefix is set, so this policy makes every file in <strong>{{ bucket|e }}</strong> public, including files this site did not put there. Set a prefix first unless the bucket holds nothing else.</p></div>
+				{% endif %}
+				<pre><code id="s3-public-policy">{{ publicPolicy|e }}</code></pre>
+				<p><button type="button" class="dash-button cms-clip-button" data-clip="#s3-public-policy">Copy bucket policy</button></p>
+			{% endif %}
+		{% endif %}
+	</section>
+</main>
+
+{% endblock %}

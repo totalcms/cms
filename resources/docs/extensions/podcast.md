@@ -23,6 +23,16 @@ since: "3.6.0"
 
 Both answer `application/rss+xml` with five minutes of caching, and 404 with a message when the show has no record or names no episodes collection. The address the feed is served at is its own `self` link and the seed of the show's Podcast Index GUID; there is no field to fill in. Submit it to Apple Podcasts, Spotify and the open directories.
 
+## Hosting audio in a bucket
+
+Episode audio can live in your own S3-compatible bucket instead of on the site's server. Enable [S3 Uploads](docs/extensions/s3-uploads), make a custom schema from `podcast-episode`, and change its `audio` property to `"field": "s3file"` with `"type": "json"`.
+
+The feed then gives each episode a link on your own site that counts the download and sends the app to the bucket. The link stays the same if you move to another bucket or provider. The file's type and size come from the upload, and an empty Duration is filled with the length measured when the file was uploaded.
+
+Set the bucket's Visibility to **Public**. Podcast apps keep an episode's address for years, and a signed link to a private bucket would expire.
+
+If the episodes collection has access groups, also set `"protectedByCollection": false` in the `audio` property's settings. Files in a collection with groups are protected by default, and a podcast app would be sent to the login page instead of the audio.
+
 ## The Twig function
 
 ```twig

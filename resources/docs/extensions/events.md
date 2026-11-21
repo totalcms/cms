@@ -357,11 +357,13 @@ $context->addEventListener('access.denied', function (array $payload): void {
 
 Fired when a file is served as an attachment from a `/download/...` URL, after its protection (access groups, password) passed. Who downloaded it is the payload's `actor`; for a visitor who is not signed in that is `anonymous`. Inline streams from `/stream/...` do not fire it, since a media player makes many range requests for one play.
 
+The [S3 Uploads](docs/extensions/s3-uploads) extension fires it too, each time its own `/download` link counts a download; its `/stream` link does not. `subpath` is `''` for those.
+
 | Key | Type | Description |
 |---|---|---|
 | `collection` | `string` | The collection |
 | `id` | `string` | The object ID |
-| `property` | `string` | The file, depot or styled-text property |
+| `property` | `string` | The file, depot or styled-text property, or an `s3file` or `s3depot` property |
 | `filename` | `string` | The file name the download was saved as |
 | `subpath` | `string` | The depot subfolder, or `''` |
 | `protected` | `bool` | Whether the file is limited to access groups or a password |
