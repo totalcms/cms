@@ -46,6 +46,13 @@
 					<li class="relationships" style="display:none">
 						<a href="utils/object-visualizer?collection={{ collection.id }}&id={{ page }}">Relationships</a>
 					</li>
+					{# Show "Restore from Backup" only when editing an object (css in object.twig).
+					   The Backups utility checks ownership itself; this only hides a link that would be refused. #}
+					{% if page and cms.auth.canAccessUtil('backups') and cms.auth.canAccessCollection(collection.id, 'update') %}
+					<li class="restore-backup" style="display:none">
+						<a href="utils/backups?collection={{ collection.id|url_encode }}&id={{ page|url_encode }}">{{ t('collection.restore_backup') }}</a>
+					</li>
+					{% endif %}
 					{# Show "Impersonate User" only when editing an auth-collection object that is not itself a super-admin #}
 					{% if page and cms.auth.isSuperAdmin() and canImpersonateUsers and not cms.auth.isSuperAdmin(page) %}
 					<li class="impersonate" style="display:none">
@@ -61,6 +68,9 @@
 					{% endif %}
 					<li class="sitemap"><a href="collections/{{ collection.id }}/-sitemap">{{ t('collection.sitemap') }}</a></li>
 					<li class="feeds"><a href="collections/{{ collection.id }}/-feeds">{{ t('collection.feeds') }}</a></li>
+					{% if cms.auth.canAccessUtil('backups') and cms.auth.canAccessCollection(collection.id, 'update') %}
+						<li class="deleted-objects"><a href="utils/backups?collection={{ collection.id|url_encode }}">{{ t('collection.deleted_objects') }}</a></li>
+					{% endif %}
 					{% if cms.auth.canAccessCollection(collection.id, 'update') %}
 						<li class="reindex">{{ cms.admin.quickActionButton(t('collection.rebuild_index'), '/api/collections/' ~ collection.id ~ '/index', {method: 'put', reload: true}) }}</li>
 					{% endif %}

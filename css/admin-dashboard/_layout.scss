@@ -423,6 +423,7 @@ body {
 			&.share-cards { --collection-icon : var(--icon-file-image) }
 			&.jobqueue { --collection-icon : var(--icon-terminal) }
 			&.orphan-scanner { --collection-icon : var(--icon-search) }
+			&.backups { --collection-icon : var(--icon-time) }
 			&.access-groups { --collection-icon : var(--icon-group) }
 			&.import-alloy { --collection-icon : var(--icon-flask) }
 			&.import-rss { --collection-icon : var(--icon-rss) }

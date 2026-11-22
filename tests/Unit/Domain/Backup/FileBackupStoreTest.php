@@ -597,6 +597,40 @@ describe('FileBackupStore', function (): void {
 		});
 	});
 
+	describe('state: can a file a record names still be had, without moving anything', function (): void {
+		test('says live, kept, gone, or none for a place that holds no files', function (): void {
+			$store = ($this->make)();
+			($this->live)('image/hero.jpg', 'pixels');
+			($this->keep)('image', ($this->ago)(60), 'older.jpg');
+			($this->keep)('team', ($this->ago)(60), 'alice/photo/alice.jpg');
+			($this->keep)('downloads', ($this->ago)(60), 'Price Lists/a.pdf', area: 'trash');
+			$before = ($this->kept)('image');
+
+			expect($store->state('blog', 'post-1', 'image', '', 'hero.jpg', null))->toBe('live')
+				->and($store->state('blog', 'post-1', 'image', '', 'older.jpg', null))->toBe('kept')
+				->and($store->state('blog', 'post-1', 'image', '', 'never.jpg', null))->toBe('gone')
+				->and($store->state('blog', 'post-1', 'team', 'alice/photo', 'alice.jpg', null))->toBe('kept')
+				->and($store->state('blog', 'post-1', 'downloads', 'Price Lists', 'a.pdf', null))->toBe('kept')
+				->and($store->state('blog', 'post-1', 'title', '', 'x.txt', null))->toBe('none')
+				->and($store->state('blog', 'post-1', 'image', '', '', null))->toBe('none')
+				->and($store->state('blog', 'post-1', 'image', '', '../x.jpg', null))->toBe('gone')
+				// Asking changes nothing.
+				->and(($this->kept)('image'))->toBe($before)
+				->and(is_file("{$this->root}/blog/post-1/image/hero.jpg"))->toBeTrue();
+		});
+
+		test('a live file of the same name but another size is not the one meant', function (): void {
+			$store = ($this->make)();
+			($this->live)('pdf/brochure.pdf', 'the corrected one');
+			($this->keep)('pdf', ($this->ago)(60), 'brochure.pdf', 'original');
+
+			expect($store->state('blog', 'post-1', 'pdf', '', 'brochure.pdf', strlen('the corrected one')))->toBe('live')
+				->and($store->state('blog', 'post-1', 'pdf', '', 'brochure.pdf', strlen('original')))->toBe('kept')
+				// No kept file of that size: the live one is all there is.
+				->and($store->state('blog', 'post-1', 'pdf', '', 'brochure.pdf', 3))->toBe('live');
+		});
+	});
+
 	describe('safety', function (): void {
 		test('ids that could step outside the backup tree are refused', function (string $collection, string $id, string $property): void {
 			$store = ($this->make)(['keepFiles' => 5, 'keepImages' => 5, 'trash' => true]);

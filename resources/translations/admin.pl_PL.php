@@ -209,6 +209,8 @@ return [
 	'collection.rebuild_index'      => 'Przebuduj indeks',
 	'collection.sitemap'            => 'Mapa witryny',
 	'collection.feeds'              => 'Kanały RSS',
+	'collection.restore_backup'     => 'Przywróć z kopii zapasowej',
+	'collection.deleted_objects'    => 'Usunięte obiekty',
 	'collection.factory'            => 'Factory',
 
 	// ── Collection Home ─────────────────────────────────────────────────────
@@ -952,6 +954,7 @@ return [
 	'access_groups.util_license'           => 'Licencja',
 	'access_groups.util_logs'              => 'Analizator logów',
 	'access_groups.util_activity'          => 'Dziennik aktywności',
+	'access_groups.util_backups'           => 'Kopie zapasowe',
 	'access_groups.util_orphan_scanner'    => 'Skaner osieroconych plików',
 	'access_groups.util_pretty_url'        => 'Kreator Pretty URL',
 	'access_groups.util_setup'             => 'Konfiguracja projektu',

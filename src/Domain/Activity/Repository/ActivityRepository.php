@@ -83,6 +83,32 @@ class ActivityRepository
 	}
 
 	/**
+	 * What was recorded about one object, newest first: who saved it and when,
+	 * for the Backups utility, whose snapshots do not say.
+	 *
+	 * @return list<ActivityEntry>
+	 */
+	public function forObject(string $collection, string $objectId, int $limit = 500): array
+	{
+		if (!$this->dbExists()) {
+			return [];
+		}
+
+		$stmt = $this->getDb()->prepare('SELECT * FROM activity WHERE collection = :collection AND objectId = :objectId ORDER BY createdAt DESC, id DESC LIMIT :limit');
+		$stmt->bindValue(':collection', $collection);
+		$stmt->bindValue(':objectId', $objectId);
+		$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		$stmt->execute();
+
+		$entries = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$entries[] = ActivityEntry::fromRow($row);
+		}
+
+		return $entries;
+	}
+
+	/**
 	 * Every row the filter matches, newest first, one at a time — for the
 	 * CSV export, which ignores the page.
 	 *

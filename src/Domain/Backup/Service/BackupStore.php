@@ -166,6 +166,30 @@ class BackupStore
 	}
 
 	/**
+	 * The id of every object of a collection that has a history folder: live
+	 * ones that were edited, and deleted ones. Which is which is for the caller
+	 * to ask of the collection.
+	 *
+	 * @return list<string>
+	 */
+	public function listObjectIds(string $collection): array
+	{
+		if (!$this->isSafeSegment($collection)) {
+			return [];
+		}
+
+		$dir = sprintf('%s/objects/%s', self::BACKUP_ROOT, $collection);
+		if (!$this->filesystem->directoryExists($dir)) {
+			return [];
+		}
+
+		$ids = array_map(basename(...), $this->filesystem->listDirectories($dir));
+		sort($ids);
+
+		return $ids;
+	}
+
+	/**
 	 * Every snapshot of one object, newest first.
 	 *
 	 * @return list<array{file:string,path:string,at:string,format:string,bytes:int}>

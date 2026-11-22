@@ -193,6 +193,55 @@ class FileBackupStore
 	}
 
 	/**
+	 * Whether a file a record names can still be had, without moving anything:
+	 * what {@see reconcile()} would find, for a page that shows it first.
+	 *
+	 * - `live`: it is in the property now.
+	 * - `kept`: it is in the history or the trash, so a restore brings it back.
+	 * - `gone`: it is nowhere.
+	 * - `none`: no file is named, or this is not a place that holds files.
+	 *
+	 * @param string   $dir  the folder under the property the file sits in, `''` for the property's own
+	 * @param int|null $size the size the record names
+	 *
+	 * @return 'live'|'kept'|'gone'|'none'
+	 */
+	public function state(string $collection, string $id, string $property, string $dir, string $name, ?int $size): string
+	{
+		if ($name === '' || !$this->safe($collection, $id, $property)) {
+			return 'none';
+		}
+
+		try {
+			$base    = PathUtils::buildPath($collection, $id, $property);
+			$liveDir = PathUtils::buildPath($collection, $id, $property, null, $dir);
+			$dir     = trim(substr($liveDir, strlen($base)), '/');
+			$kind    = $this->kinds->kind($collection, $property, $dir);
+			if ($kind === null) {
+				return 'none';
+			}
+			if (!$this->safeSegment($name)) {
+				return 'gone';
+			}
+
+			$trash = $this->isTrash($kind);
+			$path  = $liveDir . '/' . $name;
+			$live  = $this->filesystem->fileExists($path);
+			if ($live && ($trash || $size === null || $this->filesystem->fileSize($path) === $size)) {
+				return 'live';
+			}
+
+			$kept = $this->tree->find($this->tree->propertyDir($collection, $id, $property, $trash), $dir, $name, $size, exact: $live);
+
+			return $kept !== null ? 'kept' : ($live ? 'live' : 'gone');
+		} catch (\Throwable $e) {
+			$this->logger->warning('File history could not be read', ['collection' => $collection, 'id' => $id, 'property' => $property, 'error' => $e->getMessage()]);
+
+			return 'gone';
+		}
+	}
+
+	/**
 	 * A gallery or a depot: bring the named file back from the trash when it is
 	 * not there. Nothing else in it is touched.
 	 *

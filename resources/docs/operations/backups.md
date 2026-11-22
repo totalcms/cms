@@ -1,6 +1,6 @@
 ---
 title: "Backups"
-description: "Total CMS keeps a snapshot history for every object: its state before each save and its final state on delete, and the images and files behind it when you ask. List and restore them from the CLI."
+description: "Total CMS keeps a snapshot history for every object: its state before each save and its final state on delete, and the images and files behind it when you ask. See what changed and restore it from the admin or the CLI."
 since: "3.6.0"
 related:
   - operations/sync
@@ -9,7 +9,7 @@ related:
 
 # Backups
 
-Every time an object is saved, Total CMS keeps the version it just replaced. Every time one is deleted, it keeps the final state. Undoing a bad edit — or getting a record back that someone deleted — is a single command, and no configuration is needed to turn it on.
+Every time an object is saved, Total CMS keeps the version it just replaced. Every time one is deleted, it keeps the final state. Undoing a bad edit — or getting a record back that someone deleted — is a click in the admin or a single command, and no configuration is needed to turn it on.
 
 This is a **record history**, not a site backup. Out of the box only the object's data is kept, not its uploaded images or files, because every kept file is a full copy's worth of disk. You can turn that on for images, files, galleries and depots: see [Keeping Images and Files](#keeping-images-and-files). Keep taking real backups of `tcms-data/`.
 
@@ -108,7 +108,51 @@ tcms-data/.system/backups/objects/{collection}/{id}/trash/{property}/{YYYYMMDD-H
 
 **Not kept:** files stored by the S3 Uploads extension. They live in your bucket; use the bucket's own versioning for those.
 
-## Listing Snapshots
+## Restoring in the Admin
+
+**Utilities → Backups** shows an object's history and puts a version back. There are three ways to it:
+
+- On an object's edit form, open the **⋯** menu and choose **Restore from Backup**. It opens that object's history.
+- On a collection, open the **⋯** menu and choose **Deleted Objects**. It lists the objects of that collection that were deleted and still have snapshots.
+- Open **Utilities → Backups** and pick a collection. Add an object ID to open one object's history.
+
+### An object's history
+
+Each row is one change: when it happened, who made it, and which fields it touched. **View** opens the row and shows each field's value before and after. Long text shows both versions in full. A password only says that it changed; its value is never shown.
+
+"Who" comes from the [Activity Log](docs/operations/activity). It reads *unknown* when the log is off, or when the entry is older than the log keeps.
+
+Below the history is a list of the files kept for the object: earlier images and files, and anything in the trash. It answers "where did my file go".
+
+### Putting a version back
+
+A snapshot holds the object as it was *before* a change. So **Restore** on a row puts the object back to how it was before that change.
+
+- **Restore** restores the whole object.
+- **Restore this field**, inside an opened row, restores one field and leaves the rest of the object as it is now. Use it to get an old image back without losing newer text. Inside a deck, the unit is the whole deck.
+
+Either one first shows what it will do: the fields that will change, the files that will come back, and the files that cannot come back because they were not kept. Nothing changes until you confirm.
+
+The version you replace is saved first, so a restore can be undone: it is the newest row afterwards.
+
+Restoring a user from the admin keeps the password that user has now. A snapshot holds the old one, and bringing it back would make an old password work again. (The CLI restores exactly what the snapshot holds.)
+
+### Deleted objects
+
+The list shows when each object was deleted, by whom, and how many snapshots and kept files it has. **Restore** brings the object back as it was when it was deleted. **History** opens its full history, so you can bring back an earlier version instead.
+
+### Who can use it
+
+Backups is a utility page, so access is granted per [access group](docs/auth/access-groups) like any other utility. Administrators always have it.
+
+On top of that, a user sees and restores only what they may already edit:
+
+- They need **update** on the collection. History shows old values of every field, so the right to read is not enough.
+- Bringing back a deleted object also needs **create**.
+- In a collection where members own their objects, a member sees only the history of their own. Its deleted objects are listed for administrators only.
+- A restore is an ordinary save, so every rule that applies to a save applies to it.
+
+## Listing Snapshots from the CLI
 
 ```bash
 tcms backup:list blog my-post
@@ -141,7 +185,7 @@ downloads/Price Lists  2025.pdf        2026-09-18 10:40:51  1.2 MB    trash
 
 You don't choose a file to restore. You restore a snapshot, and it brings back the file that snapshot names.
 
-## Restoring
+## Restoring from the CLI
 
 ```bash
 # A specific snapshot, from the list above
@@ -183,7 +227,8 @@ Both commands take `--json` for machine-readable output.
 
 ## Where It Fits
 
-- **Editing mistakes** — this feature. `backup:list`, pick the version, `backup:restore`.
+- **Editing mistakes** — this feature. In the admin: **Restore from Backup** on the object's ⋯ menu. From a terminal: `backup:list`, pick the version, `backup:restore`.
+- **A record deleted by mistake** — this feature. **Deleted Objects** on the collection's ⋯ menu, or `backup:restore`.
 - **The wrong image or file uploaded over the right one** — this feature, once `keepImages` or `keepFiles` is above zero.
 - **A gallery picture or a depot folder removed by mistake** — this feature, once `trash` is on.
 - **A sync that replaced the wrong thing** — also this feature; sync's pre-overwrite snapshots land in the same tree. See [Sync](docs/operations/sync#automatic-backups).
