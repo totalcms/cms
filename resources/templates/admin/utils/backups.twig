@@ -340,9 +340,9 @@
 					<h2 id="backups-compare-title">
 						What changed {{ day in ['Today', 'Yesterday'] ? day|lower : 'on ' ~ day }} at {{ o.at|date('g:i A') }}{% if o.who %} <span class="backups-muted">by {{ (o.who|split('/')|last)|e }}</span>{% endif %}
 					</h2>
-					<a class="dash-button transparent backups-dialog-close" href="{{ here }}">Close</a>
+					<a class="backups-dialog-close" href="{{ here }}" aria-label="Close" title="Close"></a>
 				</header>
-				<div class="backups-dialog-body">
+				<div class="backups-dialog-body" tabindex="-1">
 					{{ ui.changes(o.changes, 'Before', 'After', b.canRestore ? 'Restore brings this back' : '', (b.canRestore and b.live) ? here ~ '&restore=' ~ (o.file|url_encode) : '', true) }}
 				</div>
 				{% if b.canRestore %}
@@ -409,6 +409,9 @@
 		// removing the attribute closes it without a close event.
 		dialog.removeAttribute('open');
 		dialog.showModal();
+		// showModal() focuses the first control, which is the X. Focus goes to
+		// the comparison instead: nothing is ringed, and the arrow keys scroll it.
+		dialog.querySelector('.backups-dialog-body')?.focus();
 
 		dialog.addEventListener('close', () => {
 			history.replaceState(null, '', new URL(dialog.dataset.close, document.baseURI));

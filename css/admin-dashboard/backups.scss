@@ -308,14 +308,25 @@
 	// A dialog as wide as the admin's largest, so two versions of a long
 	// text can sit side by side. As tall as its content, up to the window.
 
-	dialog.backups-dialog {
+	// `.cms-modal` in the selector: the shared `.large` rule sets a max-height
+	// in a stylesheet loaded after this one, and an equal selector lost to it.
+	dialog.cms-modal.backups-dialog {
+		// A modal dialog is pinned top and bottom by the browser, and the shared
+		// modal moves the top to 50%, so `height: auto` meant half the window
+		// whatever was inside. Unpinned at the bottom, it is as tall as its content.
+		bottom     : auto;
 		height     : auto;
 		max-height : 88vh;
 		padding    : 0;
 		color      : oklch(var(--totalform-text-color));
 
+		// The shared modal aligns its children to the top of their rows, which
+		// leaves each as tall as its content. A long comparison then ran out of
+		// its row, the dialog scrolled instead of the body, and the footer rode
+		// over the text. Stretched, the body is held to its row and scrolls.
 		&[open] {
 			grid-template-rows : auto minmax(0, 1fr) auto;
+			align-items        : stretch;
 			gap                : 0;
 		}
 
@@ -358,16 +369,46 @@
 			font-weight : normal;
 		}
 
+		// An X, as the Site Builder's preview closes. It stays a link, so it
+		// still closes the comparison where scripts do not run.
 		.backups-dialog-close {
-			margin-left : auto;
-			padding     : 0.35rem 0.8rem;
-			font-size   : 0.85rem;
+			display         : inline-flex;
+			align-items     : center;
+			justify-content : center;
+			flex            : none;
+			width           : 2rem;
+			height          : 2rem;
+			margin-left     : auto;
+			border-radius   : var(--totalform-radius);
+			color           : oklch(var(--totalform-darkgray));
+			transition      : background-color 150ms ease, color 150ms ease;
+
+			&::before {
+				content          : "";
+				width            : 1.25rem;
+				height           : 1.25rem;
+				background-color : currentColor;
+				mask             : var(--icon-close) center / contain no-repeat;
+			}
+
+			&:hover {
+				background-color : oklch(var(--totalform-lightgray) / 0.4);
+				color            : oklch(var(--totalform-text-color));
+			}
+
+			&:focus-visible {
+				outline        : 2px solid oklch(var(--totalform-accent));
+				outline-offset : 2px;
+			}
 		}
 	}
 
 	.backups-dialog-body {
 		min-height : 0;
 		overflow-y : auto;
+		// It takes focus when the dialog opens, so the keys scroll it. It is
+		// not a control, and a ring around the whole comparison says nothing.
+		outline    : none;
 		padding    : 0.75rem 1.25rem 1.25rem;
 	}
 
