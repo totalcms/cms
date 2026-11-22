@@ -81,7 +81,8 @@ describe('the page', function (): void {
 	test('for an object, lists its history with what each change touched', function (): void {
 		$html = ($this->page)('collection=articles&id=one');
 
-		expect($html)->toContain('Articles / one')
+		expect($html)->toContain('<h2>one</h2>')
+			->toContain('utils/backups?collection=articles">Articles</a>')
 			->toContain('Edit object')
 			->toContain('What changed')
 			->toContain('Price')
@@ -89,13 +90,22 @@ describe('the page', function (): void {
 			->toContain('restore=' . urlencode(($this->snapshot)('articles', 'one')));
 	});
 
-	test('opening an entry shows before and after, and offers that one field', function (): void {
-		$html = ($this->page)('collection=articles&id=one&snapshot=' . urlencode(($this->snapshot)('articles', 'one', 1)));
+	test('comparing a change shows before and after in a dialog, and offers that one field', function (): void {
+		$file = ($this->snapshot)('articles', 'one', 1);
+		$html = ($this->page)('collection=articles&id=one&snapshot=' . urlencode($file));
 
-		expect($html)->toContain('Autumn Sale')
+		// Rendered open, so it shows without scripts; the page's script makes it modal.
+		expect($html)->toContain('<dialog id="backups-compare"')
+			->toContain('data-close="utils/backups?collection=articles&id=one"')
+			->toContain('Autumn Sale')
 			->toContain('Winter Sale')
+			->toContain('Restore brings this back')
 			->toContain('Restore this field')
-			->toContain('property=title');
+			->toContain('property=title')
+			->toContain('Restore everything to before this change')
+			// Every Compare link is a plain link to this same view.
+			->toContain('snapshot=' . urlencode($file) . '" data-compare')
+			->and(($this->page)('collection=articles&id=one'))->not->toContain('<dialog id="backups-compare"');
 	});
 
 	test('asking to restore shows what would change, with a form that posts it', function (): void {
@@ -103,7 +113,7 @@ describe('the page', function (): void {
 		$html = ($this->page)('collection=articles&id=one&restore=' . urlencode($file));
 
 		expect($html)->toContain('id="restore"')
-			->toContain('These fields will change')
+			->toContain('After the restore')
 			->toContain('action="utils/backups/restore"')
 			->toContain('name="csrf_token"')
 			->toContain('value="' . $file . '"')
@@ -120,7 +130,7 @@ describe('the page', function (): void {
 			expect($html)->not->toContain('$2y$')->not->toContain('Second-Password-2');
 		}
 
-		expect(($this->page)('collection=articles&id=one&snapshot=' . urlencode($file)))->toContain('changed (never shown)')
+		expect(($this->page)('collection=articles&id=one&snapshot=' . urlencode($file)))->toContain('The value is never shown')
 			->and(($this->page)('collection=articles&id=one&restore=' . urlencode($file)))->toContain('The password stays as it is now');
 	});
 
@@ -195,7 +205,7 @@ describe('restoring', function (): void {
 		$list = ($this->page)('collection=articles');
 		$file = ($this->snapshot)('articles', 'one');
 
-		expect($list)->toContain('Deleted objects in Articles')
+		expect($list)->toContain('<h2>Deleted objects</h2>')
 			->toContain('Winter Sale')
 			->toContain('restore=' . urlencode($file))
 			->and(($this->page)('collection=articles&id=one&restore=' . urlencode($file)))->toContain('Bring one back as it was when it was deleted?');
