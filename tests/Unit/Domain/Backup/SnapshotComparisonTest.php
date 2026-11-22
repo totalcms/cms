@@ -95,6 +95,12 @@ describe('SnapshotComparison', function (): void {
 		]);
 	});
 
+	test('a structured value is laid out over lines, which makes it long', function (): void {
+		$changes = ($this->compare)(['legacy' => ['key' => 'a', 'size' => 1]], ['legacy' => ['key' => 'b', 'size' => 2]]);
+
+		expect($changes[0])->toMatchArray(['kind' => 'long', 'before' => "{\n    \"key\": \"a\",\n    \"size\": 1\n}"]);
+	});
+
 	test('a secret field says only that it changed', function (): void {
 		$changes = ($this->compare)(['password' => '$2y$10$oldhash', 'apikey' => 'sk-old'], ['password' => '$2y$10$newhash', 'apikey' => 'sk-new']);
 
