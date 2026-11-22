@@ -274,7 +274,7 @@ final readonly class SnapshotComparison
 		return is_array($value) ? $value : [];
 	}
 
-	/** A value on one line: yes or no, a number, a comma list, or compact JSON. */
+	/** A value as text: yes or no, a number, a comma list, or JSON for anything structured. */
 	private function display(mixed $value): string
 	{
 		return match (true) {
@@ -283,7 +283,8 @@ final readonly class SnapshotComparison
 			is_scalar($value)                                       => (string)$value,
 			is_array($value) && array_is_list($value)
 				&& array_filter($value, is_scalar(...)) === $value  => implode(', ', array_map(strval(...), $value)),
-			default                                                 => (string)json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+			// Anything structured: laid out over lines, so two versions can be read against each other.
+			default                                                 => (string)json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
 		};
 	}
 }

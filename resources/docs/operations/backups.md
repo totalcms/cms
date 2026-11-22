@@ -118,7 +118,7 @@ tcms-data/.system/backups/objects/{collection}/{id}/trash/{property}/{YYYYMMDD-H
 
 ### An object's history
 
-Each row is one change: when it happened, who made it, and which fields it touched. **View** opens the row and shows each field's value before and after. Long text shows both versions in full. A password only says that it changed; its value is never shown.
+The history is newest first, under a heading for each day. Each row is one change: when it happened, who made it, and which fields it touched. **Compare** opens the change in a dialog and shows each field's value before and after, side by side. Long text shows both versions in full. A password only says that it changed; its value is never shown.
 
 "Who" comes from the [Activity Log](docs/operations/activity). It reads *unknown* when the log is off, or when the entry is older than the log keeps.
 
@@ -129,7 +129,7 @@ Below the history is a list of the files kept for the object: earlier images and
 A snapshot holds the object as it was *before* a change. So **Restore** on a row puts the object back to how it was before that change.
 
 - **Restore** restores the whole object.
-- **Restore this field**, inside an opened row, restores one field and leaves the rest of the object as it is now. Use it to get an old image back without losing newer text. Inside a deck, the unit is the whole deck.
+- **Restore this field**, beside a field in the Compare dialog, restores one field and leaves the rest of the object as it is now. Use it to get an old image back without losing newer text. Inside a deck, the unit is the whole deck.
 
 Either one first shows what it will do: the fields that will change, the files that will come back, and the files that cannot come back because they were not kept. Nothing changes until you confirm.
 
