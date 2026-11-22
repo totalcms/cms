@@ -55,6 +55,7 @@ readonly class AdminUtilsAction
 		'permissionMatrixData'   => null,
 		'securityReport'         => null,
 		'shareCards'             => null,
+		'backups'                => null,
 	];
 
 	public function __construct(

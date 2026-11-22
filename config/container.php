@@ -30,6 +30,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Action\Admin\Utils\AccessPageData;
 use TotalCMS\Action\Admin\Utils\ActivityPageData;
+use TotalCMS\Action\Admin\Utils\BackupsPageData;
 use TotalCMS\Action\Admin\Utils\ImportPageData;
 use TotalCMS\Action\Admin\Utils\JumpStartPageData;
 use TotalCMS\Action\Admin\Utils\OAuthPageData;
@@ -1422,6 +1423,7 @@ return [
 			'import-totalcms-one'   => $import,
 			'import-rss'            => $import,
 			'activity'              => $container->get(ActivityPageData::class),
+			'backups'               => $container->get(BackupsPageData::class),
 			'update'                => $container->get(UpdatePageData::class),
 			'server-checker'        => $container->get(ServerCheckerPageData::class),
 			'sync'                  => $container->get(SyncPageData::class),

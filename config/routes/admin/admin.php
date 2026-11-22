@@ -25,6 +25,7 @@ use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Action\Admin\BackupRestoreAction;
 use TotalCMS\Action\Admin\Builder\BuilderPreviewAction;
 use TotalCMS\Action\Admin\Builder\BuilderReorderAction;
 use TotalCMS\Action\Admin\ExtensionSettingsAction;
@@ -148,6 +149,9 @@ return function (App $app): void {
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
 		$group->post('/utils/update/backup/delete', UpdateBackupDeleteAction::class)->setName('admin-update-backup-delete')->add(AdminOnlyMiddleware::class);
+
+		// Utilities → Backups: restore an object from a snapshot. A plain form POST, answered with a redirect.
+		$group->post('/utils/{page:backups}/restore', BackupRestoreAction::class)->setName('admin-utils-backups-restore')->add(UtilsAccessMiddleware::class);
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);

@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Backup\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\CardData;
@@ -15,6 +16,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\FolderData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -50,6 +52,7 @@ readonly class ObjectRestorer
 		private ObjectFileCodec $codec,
 		private SchemaFetcher $schemaFetcher,
 		private FileBackupStore $files,
+		private ObjectFetcher $objects,
 	) {
 	}
 
@@ -76,9 +79,57 @@ readonly class ObjectRestorer
 	 *
 	 * @return array{object: ObjectData, files: list<array{property:string, path:string, file:string, outcome:'restored'|'missing'}>}
 	 *
+	 * @param string|null $property      restore this one top-level property and leave the rest of the record as it is now; the object must exist
+	 * @param bool        $keepPasswords keep the password the record has now. A snapshot of a user holds the old hash, and putting it back would make an old password work again. A deleted object has no current password, so it keeps the snapshot's.
+	 *
+	 * @throws \UnexpectedValueException when the snapshot is missing or cannot be decoded, or one property is asked of an object that does not exist
+	 */
+	public function restoreWithFiles(string $collection, string $id, string $file, ?string $property = null, bool $keepPasswords = false): array
+	{
+		$data = $this->read($collection, $id, $file);
+		$live = $this->objects->existsObject($collection, $id) ? $this->objects->fetchObject($collection, $id) : null;
+
+		if ($property !== null) {
+			if (!$live instanceof ObjectData) {
+				throw new \UnexpectedValueException("{$collection}/{$id} does not exist, so it can only be restored whole");
+			}
+			$data = [$property => $data[$property] ?? null] + $live->toArray();
+		} elseif ($keepPasswords && $live instanceof ObjectData) {
+			foreach ($live->properties as $key => $value) {
+				if ($value instanceof PasswordData) {
+					$data[(string)$key] = $value->transform();
+				}
+			}
+		}
+
+		// Record first, files second. The save can be refused, and a restore
+		// that changed nothing must not have moved any file.
+		$object = $this->updater->updateObject($collection, $id, $data);
+
+		$files = [];
+		foreach ($this->fileReferences($object) as [$referenced, $path, $name, $size]) {
+			if ($property !== null && $referenced !== $property) {
+				continue;
+			}
+			$outcome = $this->files->reconcile($collection, $id, $referenced, $path, $name, $size);
+			if ($outcome === 'restored' || $outcome === 'missing') {
+				$files[] = ['property' => $referenced, 'path' => $path, 'file' => $name, 'outcome' => $outcome];
+			}
+		}
+
+		return ['object' => $object, 'files' => $files];
+	}
+
+	/**
+	 * A snapshot as the record it holds, whatever format it was kept in.
+	 *
+	 * @param string $file a bare snapshot filename from BackupStore::listObjectSnapshots()
+	 *
+	 * @return array<string,mixed>
+	 *
 	 * @throws \UnexpectedValueException when the snapshot is missing or cannot be decoded
 	 */
-	public function restoreWithFiles(string $collection, string $id, string $file): array
+	public function read(string $collection, string $id, string $file): array
 	{
 		$contents = $this->store->readObjectSnapshot($collection, $id, $file);
 		if ($contents === null) {
@@ -90,19 +141,7 @@ readonly class ObjectRestorer
 		// A snapshot is authoritative about which record it belongs to.
 		$data['id'] = $id;
 
-		// Record first, files second. The save can be refused, and a restore
-		// that changed nothing must not have moved any file.
-		$object = $this->updater->updateObject($collection, $id, $data);
-
-		$files = [];
-		foreach ($this->fileReferences($object) as [$property, $path, $name, $size]) {
-			$outcome = $this->files->reconcile($collection, $id, $property, $path, $name, $size);
-			if ($outcome === 'restored' || $outcome === 'missing') {
-				$files[] = ['property' => $property, 'path' => $path, 'file' => $name, 'outcome' => $outcome];
-			}
-		}
-
-		return ['object' => $object, 'files' => $files];
+		return $data;
 	}
 
 	/**
