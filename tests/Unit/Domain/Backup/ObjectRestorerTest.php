@@ -18,7 +18,9 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\JsonData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
+use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -36,6 +38,7 @@ final class ObjectRestorerTest extends TestCase
 	private MockObject $updater;
 	private MockObject $schemaFetcher;
 	private MockObject $files;
+	private MockObject $objects;
 
 	protected function setUp(): void
 	{
@@ -43,6 +46,7 @@ final class ObjectRestorerTest extends TestCase
 		$this->updater       = $this->createMock(ObjectUpdater::class);
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$this->files         = $this->createMock(FileBackupStore::class);
+		$this->objects       = $this->createMock(ObjectFetcher::class);
 
 		$this->restorer = new ObjectRestorer(
 			$this->store,
@@ -50,6 +54,7 @@ final class ObjectRestorerTest extends TestCase
 			new ObjectFileCodec(),
 			$this->schemaFetcher,
 			$this->files,
+			$this->objects,
 		);
 	}
 
@@ -159,6 +164,80 @@ final class ObjectRestorerTest extends TestCase
 				['property' => 'team', 'path' => 'bob/photo', 'file' => 'bob.jpg', 'outcome' => 'restored'],
 			])
 			->and($result['object']->id)->toBe('post-1');
+	}
+
+	public function testReadGivesASnapshotAsTheRecordItHolds(): void
+	{
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"someone-else","title":"Old"}');
+
+		$this->assertSame(['id' => 'post-1', 'title' => 'Old'], $this->restorer->read('posts', 'post-1', 'post-1-20240105-120000.json'));
+	}
+
+	public function testOneFieldCanBeRestoredOnItsOwn(): void
+	{
+		// The rest of the record stays as it is now; only this field goes back,
+		// and only its files are looked at.
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"post-1","title":"Old title","cover":{"name":"hero.jpg","mime":"image/jpeg","size":5}}');
+		$this->objects->method('existsObject')->willReturn(true);
+		$this->objects->method('fetchObject')->willReturn(new ObjectData('post-1', [
+			'title' => new JsonData('New title'),
+			'cover' => new ImageData(['name' => 'banner.jpg']),
+			'pdf'   => new FileData(['name' => 'now.pdf']),
+		]));
+
+		$this->updater->expects($this->once())->method('updateObject')
+			->with('posts', 'post-1', $this->callback(fn (array $data): bool => $data['title'] === 'New title' && $data['cover']['name'] === 'hero.jpg' && $data['pdf']['name'] === 'now.pdf'))
+			->willReturn(new ObjectData('post-1', [
+				'cover' => new ImageData(['name' => 'hero.jpg', 'size' => 5]),
+				'pdf'   => new FileData(['name' => 'now.pdf']),
+			]));
+		$this->files->expects($this->once())->method('reconcile')->with('posts', 'post-1', 'cover', '', 'hero.jpg', 5)->willReturn('restored');
+
+		$result = $this->restorer->restoreWithFiles('posts', 'post-1', 'post-1-20240105-120000.json', property: 'cover');
+
+		$this->assertSame([['property' => 'cover', 'path' => '', 'file' => 'hero.jpg', 'outcome' => 'restored']], $result['files']);
+	}
+
+	public function testOneFieldOfADeletedObjectCannotBeRestored(): void
+	{
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"post-1","title":"Old"}');
+		$this->objects->method('existsObject')->willReturn(false);
+		$this->updater->expects($this->never())->method('updateObject');
+
+		$this->expectException(\UnexpectedValueException::class);
+		$this->restorer->restoreWithFiles('posts', 'post-1', 'post-1-20240105-120000.json', property: 'title');
+	}
+
+	public function testARestoreCanKeepThePasswordTheRecordHasNow(): void
+	{
+		// A snapshot of a user holds the old hash. Putting it back would make
+		// an old password work again.
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"joe","name":"Old name","password":"$2y$10$oldhash"}');
+		$this->objects->method('existsObject')->willReturn(true);
+		$current = password_hash('the password they use now', PASSWORD_BCRYPT);
+		$this->objects->method('fetchObject')->willReturn(new ObjectData('joe', [
+			'name'     => new JsonData('New name'),
+			'password' => new PasswordData($current),
+		]));
+
+		$this->updater->expects($this->once())->method('updateObject')
+			->with('auth', 'joe', ['id' => 'joe', 'name' => 'Old name', 'password' => $current])
+			->willReturn(new ObjectData('joe', []));
+
+		$this->restorer->restoreWithFiles('auth', 'joe', 'joe-20240105-120000.json', keepPasswords: true);
+	}
+
+	public function testADeletedUserComesBackWithThePasswordTheyHad(): void
+	{
+		// There is no current password to keep, and without one they could not sign in.
+		$this->store->method('readObjectSnapshot')->willReturn('{"id":"joe","password":"$2y$10$oldhash"}');
+		$this->objects->method('existsObject')->willReturn(false);
+
+		$this->updater->expects($this->once())->method('updateObject')
+			->with('auth', 'joe', ['id' => 'joe', 'password' => '$2y$10$oldhash'])
+			->willReturn(new ObjectData('joe', []));
+
+		$this->restorer->restoreWithFiles('auth', 'joe', 'joe-20240105-120000.json', keepPasswords: true);
 	}
 
 	public function testARestoreTheSaveRefusesMovesNoFiles(): void

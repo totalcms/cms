@@ -173,6 +173,16 @@ describe('BackupStore', function (): void {
 		expect(file_get_contents($dir . '/' . end($names)))->toBe('{"v":"new"}');
 	});
 
+	test('listObjectIds names every object of a collection that has a history folder', function (): void {
+		foreach (['blog/b-post', 'blog/a-post', 'news/other'] as $object) {
+			mkdir("{$this->tmpRoot}/.system/backups/objects/{$object}", 0755, true);
+		}
+
+		expect($this->service->listObjectIds('blog'))->toBe(['a-post', 'b-post'])
+			->and($this->service->listObjectIds('empty'))->toBe([])
+			->and($this->service->listObjectIds('../blog'))->toBe([]);
+	});
+
 	test('refuses ids that could escape the backup tree', function (): void {
 		$this->service->backupObject('../..', 'oops');
 		$this->service->backupObject('builder-pages', '../../../etc/passwd');

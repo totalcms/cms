@@ -1,0 +1,316 @@
+{# Utilities → Backups. Autoescape is off in this engine: every value that came
+   from a record, a file name or the query string is escaped with |e here. #}
+{% set b = backups %}
+{% set here = 'utils/backups?collection=' ~ (b.collection|url_encode) ~ '&id=' ~ (b.id|url_encode) %}
+{# With seconds: a burst of saves in one minute is otherwise a column of identical times. #}
+{% set when = 'D j M Y, g:i:s A' %}
+
+{% macro states(state) %}
+	{%- if state == 'kept' -%}<span class="dash-badge sm accent">kept</span>
+	{%- elseif state == 'live' -%}<span class="dash-badge sm">on disk</span>
+	{%- elseif state == 'gone' -%}<span class="dash-badge sm warning">not kept</span>
+	{%- endif -%}
+{% endmacro %}
+
+{% macro value(text) %}
+	{%- if text == '' -%}<span class="backups-empty">empty</span>{%- else -%}{{ text|e }}{%- endif -%}
+{% endmacro %}
+
+{# One changed field, as "before → after". `sides` names the two columns. #}
+{% macro change(c) %}
+	{% import _self as ui %}
+	{% if c.kind == 'secret' %}
+		<span class="backups-muted">changed (never shown)</span>
+	{% elseif c.kind == 'long' %}
+		<details class="backups-long">
+			<summary>Show both versions</summary>
+			<div class="backups-versions">
+				<div><h4>Before</h4><pre>{{ c.before|e }}</pre></div>
+				<div><h4>After</h4><pre>{{ c.after|e }}</pre></div>
+			</div>
+		</details>
+	{% elseif c.kind == 'files' %}
+		{% if c.removed is empty and c.added is empty %}
+			<span class="backups-muted">order or details changed</span>
+		{% endif %}
+		{% for file in c.removed %}
+			<div><span class="backups-sign">−</span> {{ (file.path ? file.path ~ '/' : '')|e }}{{ file.name|e }} {{ ui.states(file.state|default('')) }}</div>
+		{% endfor %}
+		{% for file in c.added %}
+			<div><span class="backups-sign">+</span> {{ (file.path ? file.path ~ '/' : '')|e }}{{ file.name|e }}</div>
+		{% endfor %}
+	{% else %}
+		{{ ui.value(c.before) }} {{ c.kind == 'file' ? ui.states(c.beforeState|default('')) }}
+		<span class="backups-arrow">→</span>
+		{{ ui.value(c.after) }}
+	{% endif %}
+{% endmacro %}
+
+{% import _self as ui %}
+
+<h1>Backups</h1>
+
+<section class="dash-content-section backups-util">
+
+	<p>Every save keeps the version it replaced, and every delete keeps the final state. Open an object to see what changed and when, and to put a version or a single field back. This is an undo history for records and their files, not a backup of the whole site.</p>
+
+	{% if b.notice %}
+		{% if b.notice.ok %}
+			<div class="info-box backups-notice">
+				<p>
+					<strong>{{ b.notice.created ? 'The object is back.' : (b.notice.property ? 'The field was restored.' : 'The object was restored.') }}</strong>
+					{% if not b.notice.created %}The version it replaced is the newest entry below, so this can be undone.{% endif %}
+				</p>
+				{% for file in b.notice.files %}
+					<p class="backups-file-result {{ file.outcome == 'missing' ? 'backups-missing' }}">
+						{{ file.property|e }}{{ file.path ? ('/' ~ file.path)|e }}: {{ file.file|e }}
+						{{ file.outcome == 'restored' ? 'came back' : 'could not come back: it is not on disk and was not kept. Upload it again.' }}
+					</p>
+				{% endfor %}
+			</div>
+		{% else %}
+			<div class="warning-box backups-notice"><p>{{ b.notice.error|default('The restore did not happen.')|e }}</p></div>
+		{% endif %}
+	{% endif %}
+
+	<form class="backups-pick totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="utils/backups">
+		<label><span>Collection</span>
+			<select name="collection">
+				<option value="">Choose…</option>
+				{% for cid, name in b.collections %}
+					<option value="{{ cid|e }}" {{ cid == b.collection ? 'selected' }}>{{ name|e }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<label><span>Object ID <span class="backups-optional">(optional)</span></span>
+			<input type="text" name="id" value="{{ b.id|e }}" placeholder="leave blank to list deleted objects" autocomplete="off">
+		</label>
+		<button class="dash-button transparent" type="submit">Open</button>
+	</form>
+
+	{% if b.view == 'denied' %}
+
+		<div class="warning-box"><p>There is no history here that you can open. The collection or object does not exist, or you may not edit it.</p></div>
+
+	{% elseif b.view == 'owned' %}
+
+		<div class="info-box"><p>In this collection each member sees only their own objects, so its deleted objects are listed for administrators. Enter an object ID above to open the history of one of yours.</p></div>
+
+	{% elseif b.view == 'collection' %}
+
+		<h2>Deleted objects in {{ b.collections[b.collection]|e }}</h2>
+
+		{% if b.deleted is empty %}
+			<div class="dash-empty-state"><em>No deleted object of this collection has a snapshot.</em></div>
+		{% else %}
+			<p class="backups-count">{{ b.total|number_format }} deleted {{ b.total == 1 ? 'object' : 'objects' }}{% if b.pages > 1 %} · page {{ b.page }} of {{ b.pages }}{% endif %}</p>
+			<div class="backups-table-wrap">
+				<table class="admin-table">
+					<thead>
+						<tr><th>Object</th><th>Deleted</th><th>By</th><th>Snapshots</th><th>Kept files</th><th></th></tr>
+					</thead>
+					<tbody>
+						{% for row in b.deleted %}
+							{% set link = 'utils/backups?collection=' ~ (b.collection|url_encode) ~ '&id=' ~ (row.id|url_encode) %}
+							<tr>
+								<td>
+									{% if row.title %}<strong>{{ row.title|e }}</strong><span class="backups-meta">{{ row.id|e }}</span>{% else %}<strong>{{ row.id|e }}</strong>{% endif %}
+								</td>
+								<td class="backups-when"><time datetime="{{ row.at|e }}">{{ row.at|date(when) }}</time></td>
+								<td>{{ row.who ? row.who|e : '<span class="backups-muted">unknown</span>' }}</td>
+								<td>{{ row.snapshots }}</td>
+								<td>{{ row.files ? row.files ~ ' (' ~ row.size ~ ')' : '<span class="backups-muted">none</span>' }}</td>
+								<td class="backups-actions">
+									<a class="dash-button transparent" href="{{ link }}">History</a>
+									{% if row.canRestore %}
+										<a class="dash-button" href="{{ link }}&restore={{ row.file|url_encode }}#restore">Restore</a>
+									{% endif %}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% if b.pages > 1 %}
+				<nav class="backups-pager">
+					{% if b.page > 1 %}<a class="dash-button transparent" href="utils/backups?collection={{ b.collection|url_encode }}&page={{ b.page - 1 }}">← Newer</a>{% endif %}
+					{% if b.page < b.pages %}<a class="dash-button transparent" href="utils/backups?collection={{ b.collection|url_encode }}&page={{ b.page + 1 }}">Older →</a>{% endif %}
+				</nav>
+			{% endif %}
+		{% endif %}
+
+	{% elseif b.view == 'object' %}
+
+		<header class="backups-object">
+			<h2>{{ b.collections[b.collection]|e }} / {{ b.id|e }}</h2>
+			{% if b.live %}
+				<a class="dash-button transparent" href="collections/{{ b.collection|url_encode }}/{{ b.id|url_encode }}">Edit object</a>
+			{% else %}
+				<span class="dash-badge warning">Deleted</span>
+			{% endif %}
+			<a class="backups-link" href="utils/backups?collection={{ b.collection|url_encode }}">Deleted objects in this collection</a>
+		</header>
+
+		{# ── The confirmation: what a restore would do, and the button that does it ── #}
+		{% if b.restoring %}
+			{% set r = b.restoring %}
+			{% set nothing = r.live and r.changes is empty and r.back is empty %}
+			<div class="backups-confirm" id="restore">
+				<h3>
+					{% if not r.live %}
+						Bring {{ b.id|e }} back as it was {{ r.event == 'deleted' ? 'when it was deleted' : 'before ' ~ r.at|date(when) }}?
+					{% elseif r.property %}
+						Restore {{ (r.changes is not empty ? (r.changes|first).label|split(' › ')|first : r.property)|e }} to how it was before {{ r.at|date(when) }}?
+					{% else %}
+						Restore {{ b.id|e }} to how it was before {{ r.at|date(when) }}?
+					{% endif %}
+				</h3>
+
+				{% if nothing %}
+					<p>Nothing would change: the object already matches this version.</p>
+				{% endif %}
+
+				{% if r.changes is not empty %}
+					<p class="backups-confirm-label">{{ r.changes|length == 1 ? 'This field will change' : 'These fields will change' }} (now → restored):</p>
+					<table class="backups-changes">
+						{% for c in r.changes %}
+							<tr><th>{{ c.label|e }}</th><td>{{ ui.change(c) }}</td></tr>
+						{% endfor %}
+					</table>
+				{% endif %}
+				{% if r.back is not empty %}
+					<p class="backups-confirm-label">{{ r.back|length == 1 ? 'This file will come back' : 'These files will come back' }}:</p>
+					<ul>{% for f in r.back %}<li>{{ f.property|e }}{{ f.path ? ('/' ~ f.path)|e }}: {{ f.name|e }}</li>{% endfor %}</ul>
+				{% endif %}
+				{% if r.lost is not empty %}
+					<p class="backups-confirm-label backups-missing">{{ r.lost|length == 1 ? 'This file cannot come back' : 'These files cannot come back' }} (not on disk, and not kept). The record will name a file that is missing, until you upload it again:</p>
+					<ul>{% for f in r.lost %}<li>{{ f.property|e }}{{ f.path ? ('/' ~ f.path)|e }}: {{ f.name|e }}</li>{% endfor %}</ul>
+				{% endif %}
+				{% if r.passwordKept %}
+					<p class="backups-muted">The password stays as it is now. This version had a different one.</p>
+				{% endif %}
+				{% if r.live and not nothing %}
+					<p class="backups-muted">The current version is saved first, so this can be undone.</p>
+				{% endif %}
+
+				<form class="backups-confirm-actions" method="post" action="utils/backups/restore">
+					{{ csrf_field() }}
+					<input type="hidden" name="collection" value="{{ b.collection|e }}">
+					<input type="hidden" name="id" value="{{ b.id|e }}">
+					<input type="hidden" name="snapshot" value="{{ r.file|e }}">
+					<input type="hidden" name="property" value="{{ r.property|e }}">
+					<a class="dash-button transparent" href="{{ here }}">Cancel</a>
+					{% if not nothing %}
+						<button class="dash-button" type="submit">{{ r.live ? 'Restore' : 'Bring it back' }}</button>
+					{% endif %}
+				</form>
+			</div>
+		{% endif %}
+
+		{# ── The history ── #}
+		{% if b.entries is empty %}
+			<div class="dash-empty-state">
+				<em>{{ b.live ? 'This object has no history yet. A snapshot is taken each time it is saved.' : 'There is no object with this ID, and no history of one.' }}</em>
+			</div>
+		{% else %}
+			{% if not b.keeping.enabled %}
+				<div class="warning-box"><p>Keep Object History is off in <a href="settings/backups">Settings → Backups</a>, so no new snapshots are being taken. The ones below were taken before it was turned off.</p></div>
+			{% endif %}
+			<div class="backups-table-wrap">
+				<table class="admin-table backups-history">
+					<thead>
+						<tr><th>When</th><th>Who</th><th>What changed</th><th></th></tr>
+					</thead>
+					<tbody>
+						{% for entry in b.entries %}
+							{% set isOpen = b.open and b.open.file == entry.file %}
+							<tr id="{{ isOpen ? 'entry' }}" class="{{ isOpen ? 'backups-open' }}">
+								<td class="backups-when"><time datetime="{{ entry.at|e }}">{{ entry.at|date(when) }}</time></td>
+								<td>{{ entry.who ? entry.who|e : '<span class="backups-muted">unknown</span>' }}</td>
+								<td>
+									{% if entry.event == 'deleted' %}
+										<span class="dash-badge sm warning">Deleted</span>
+									{% elseif entry.changed is empty %}
+										<span class="backups-muted">Nothing you would see</span>
+									{% else %}
+										{{ entry.changed|map(l => l|e)|join(', ') }}
+									{% endif %}
+								</td>
+								<td class="backups-actions">
+									{% if entry.event != 'deleted' and entry.changed is not empty %}
+										<a class="dash-button transparent" href="{{ isOpen ? here : here ~ '&snapshot=' ~ (entry.file|url_encode) ~ '#entry' }}">{{ isOpen ? 'Close' : 'View' }}</a>
+									{% endif %}
+									{% if b.canRestore %}
+										<a class="dash-button" href="{{ here }}&restore={{ entry.file|url_encode }}#restore" title="{{ entry.event == 'deleted' ? 'Bring the object back as it was when it was deleted' : 'Put the object back to how it was before this change' }}">Restore</a>
+									{% endif %}
+								</td>
+							</tr>
+							{% if isOpen %}
+								<tr class="backups-detail">
+									<td colspan="4">
+										<p class="backups-detail-title">Changed {{ entry.at|date(when) }}{{ entry.who ? ' by ' ~ entry.who|e }} (before → after):</p>
+										<table class="backups-changes">
+											{% set offered = [] %}
+											{% for c in b.open.changes %}
+												<tr>
+													<th>{{ c.label|e }}</th>
+													<td>{{ ui.change(c) }}</td>
+													<td class="backups-actions">
+														{% if b.canRestore and b.live and c.property not in offered %}
+															{% set offered = offered|merge([c.property]) %}
+															<a class="backups-link" href="{{ here }}&restore={{ entry.file|url_encode }}&property={{ c.property|url_encode }}#restore">Restore this field</a>
+														{% endif %}
+													</td>
+												</tr>
+											{% endfor %}
+										</table>
+									</td>
+								</tr>
+							{% endif %}
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			<p class="backups-muted">A snapshot holds the object as it was before a change. Restore puts it back to that.</p>
+		{% endif %}
+
+		{# ── The files kept for it ── #}
+		<h3>Kept files</h3>
+		{% if b.files is empty %}
+			<div class="dash-empty-state">
+				<em>
+					No image or file of this object is kept.
+					{% if not b.keeping.images and not b.keeping.files and not b.keeping.trash %}
+						Replaced and removed files are not being kept at all: turn that on in <a href="settings/backups">Settings → Backups</a>.
+					{% endif %}
+				</em>
+			</div>
+		{% else %}
+			<p class="backups-muted">Files come back when you restore the version or the field that named them.</p>
+			<div class="backups-table-wrap">
+				<table class="admin-table">
+					<thead>
+						<tr><th>Field</th><th>File</th><th>Set aside</th><th>Size</th><th></th></tr>
+					</thead>
+					<tbody>
+						{% for file in b.files %}
+							<tr>
+								<td>{{ file.property|e }}{{ file.path ? ('/' ~ file.path)|e }}</td>
+								<td>{{ file.name|e }}</td>
+								<td class="backups-when">{{ file.at ? file.at|date(when) : '' }}</td>
+								<td>{{ file.size }}</td>
+								<td>{{ file.trash ? '<span class="dash-badge sm">trash</span>' }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% endif %}
+
+	{% else %}
+
+		<p class="backups-muted">Choose a collection to list its deleted objects, or add an object ID to open one object's history. On an object's edit form, <strong>Restore from Backup</strong> in the ⋯ menu brings you straight here.</p>
+
+	{% endif %}
+
+</section>

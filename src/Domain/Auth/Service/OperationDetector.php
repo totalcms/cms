@@ -111,6 +111,7 @@ readonly class OperationDetector
 		'admin-utils-post',
 		'admin-utils-logs-download',
 		'admin-utils-activity-export',
+		'admin-utils-backups-restore', // a utility page's own grant is a yes or no; the restore's write is checked by BackupAccess and the write gate
 		'admin-utils-share-cards-cards',
 		'admin-builder',
 		'admin-builder-preview',
