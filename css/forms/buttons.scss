@@ -101,6 +101,8 @@ nav[popover]  {
 		&.clone { --action-icon : var(--icon-duplicate) }
 		&.download { --action-icon : var(--icon-download) }
 		&.object-download { --action-icon : var(--icon-download) }
+		// The clock the Backups utility has in the Utilities list.
+		&.restore-backup { --action-icon : var(--icon-time) }
 	}
 	// Menu items only: direct children of an li (links, the bulk-select
 	// buttons) or a form-wrapped button (Impersonate User). Deeper-nested
