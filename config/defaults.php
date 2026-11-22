@@ -680,6 +680,43 @@ $settings['backups'] = [
 	'maxFileSizeMB' => 100,
 ];
 
+// Commerce: a paid add-on on top of Pro (the `totalcms/commerce` entitlement).
+// Editable under Settings → Commerce; read through CommerceSettings, which
+// turns a missing or mistyped value into a safe one.
+//
+// Money-like values (`shippingFlatRate`, `shippingFreeOver`, a zone's rate) and
+// tax rates are decimal STRINGS, so "8.875" is never a float.
+$settings['commerce'] = [
+	'currency'             => 'USD',
+	'storeName'            => '',
+	'storeEmail'           => '',               // reply-to on receipts; where a new-order notice goes
+	'collections'          => ['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts'],
+	'customerCollection'   => '',               // auth collection for customer accounts; '' = guest checkout only
+	'providers'            => [],               // enabled payment provider ids, in the order checkout shows them
+	'orderNumberStart'     => 1001,
+	'orderNumberPrefix'    => '#',              // display only; the number is stored as an integer
+	'taxMode'              => 'none',           // none | exclusive | inclusive
+	'taxShipping'          => false,
+	'taxRates'             => [],               // [{country, region, rate, label}]; rate is a percent, e.g. "8.875"
+	'shippingMode'         => 'none',           // none | flat | zones
+	'shippingFlatRate'     => '0',
+	'shippingFreeOver'     => '',               // '' = never free
+	'shippingZones'        => [],               // [{id, label, countries[], regions[], rate, freeOver}]
+	'receiptMailer'        => 'commerce-receipt',
+	'downloadTtlHours'     => 72,
+	'downloadMaxCount'     => 5,
+	'pendingOrderTtlHours' => 24,
+	'cartMaxLines'         => 100,
+	'cartMaxQty'           => 99,
+	'checkoutAttributes'   => [],               // extra values checkout may take from the buyer, by name, e.g. ['licenseKey']
+	'returnPage'           => '',               // Site Builder page id for the order page; '' = the built-in page
+	'purchaseUrl'          => 'https://totalcms.co/commerce', // where a Pro site without the add-on is sent
+	'checkoutMode'         => 'hosted',         // hosted | embedded; embedded falls back to hosted when the provider cannot do it
+	'payPage'              => '',               // Site Builder page id for on-page checkout; '' = the built-in page
+	'grantableGroups'      => [],               // access group ids a product may grant its buyer; never the admin group
+	'paymentFailedMailer'  => 'commerce-payment-failed', // sent once for each failed renewal payment
+];
+
 // Activity log: who changed, downloaded or called what, recorded from core
 // events into tcms-data/.system/activity (SQLite) and shown under Utilities →
 // Activity. Anonymous downloads are never recorded; anonymous MCP tool calls

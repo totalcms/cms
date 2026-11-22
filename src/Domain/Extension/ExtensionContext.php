@@ -13,11 +13,13 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
+use TotalCMS\Domain\License\Service\ExtensionLicense;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
@@ -109,6 +111,9 @@ final class ExtensionContext
 	/** @var list<SearchProvider> */
 	private array $searchProviders = [];
 
+	/** @var list<array{resolver: PriceResolver, priority: int}> */
+	private array $priceResolvers = [];
+
 	/** @var list<array{prompt: Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
 	private array $registeredMcpPrompts = [];
 
@@ -128,6 +133,18 @@ final class ExtensionContext
 	public function extensionId(): string
 	{
 		return $this->manifest->id;
+	}
+
+	/**
+	 * Whether the site is licensed for this extension: the edition its
+	 * manifest asks for (`min_edition`), and the paid product it names
+	 * (`entitlement`), when it names one. Safe to call inside `register()`,
+	 * so a paid extension can register nothing on a site that has not bought
+	 * it.
+	 */
+	public function licensed(): bool
+	{
+		return $this->container->get(ExtensionLicense::class)->allows($this->manifest);
 	}
 
 	public function extensionPath(): string
@@ -443,6 +460,26 @@ final class ExtensionContext
 	public function getRegisteredSearchProviders(): array
 	{
 		return $this->searchProviders;
+	}
+
+	/**
+	 * Set a price that depends on who is buying: an upgrade price, a
+	 * member's price, a volume price. The resolver is asked for every cart
+	 * line and again at checkout, so what the buyer saw is what is charged.
+	 *
+	 * @param int $priority lower is asked first; the first resolver to name a price sets it
+	 */
+	public function addPriceResolver(PriceResolver $resolver, int $priority = 0): void
+	{
+		$this->priceResolvers[] = ['resolver' => $resolver, 'priority' => $priority];
+	}
+
+	/**
+	 * @return list<array{resolver: PriceResolver, priority: int}>
+	 */
+	public function getRegisteredPriceResolvers(): array
+	{
+		return $this->priceResolvers;
 	}
 
 	/**
@@ -926,6 +963,7 @@ final class ExtensionContext
 			'mcp:resources'      => 'MCP Resources',
 			'mcp:search'         => 'Search Provider',
 			'mcp:prompts'        => 'MCP Prompts',
+			'commerce:pricing'   => 'Commerce Pricing',
 		];
 	}
 
@@ -960,6 +998,7 @@ final class ExtensionContext
 		'mcp:resources'      => null,
 		'mcp:search'         => 'searchProviders',
 		'mcp:prompts'        => 'registeredMcpPrompts',
+		'commerce:pricing'   => 'priceResolvers',
 	];
 
 	/**

@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Ongedaan-maakgeschiedenis voor elke objectopslag en -verwijdering',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache-backendconfiguratie',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Je winkel: valuta, betalingen, btw, verzending en e-mails',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Configuratie van het beheerdersdashboard',
 	'settings.extensions'              => 'Extensies',

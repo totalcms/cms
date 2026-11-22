@@ -115,10 +115,18 @@ use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Slim\Test\TestResponse;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\ContainerFactory;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
+use Tests\Fakes\StubLicenseValidator;
+use TotalCMS\Domain\License\Service\EntitlementSource;
+use TotalCMS\Domain\License\Service\Entitlements;
+use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
+use Tests\Fakes\OpenCommerceGate;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
 
 $_SERVER['APP_ENV'] = 'test';
 
@@ -1468,4 +1476,121 @@ function imageFilterRegistry(?Config $config = null): ImageFilterRegistry
 	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 	return new ImageFilterRegistry($config, $loggerFactory);
+}
+
+/**
+ * An entitlement source that has exactly these products, for tests of
+ * anything that asks {@see Entitlements}.
+ *
+ * @param list<string> $products
+ */
+function fakeSource(array $products): EntitlementSource
+{
+	return new class($products) implements EntitlementSource {
+		/** @param list<string> $products */
+		public function __construct(private array $products)
+		{
+		}
+
+		public function has(string $productId): bool
+		{
+			return in_array($productId, $this->products, true);
+		}
+	};
+}
+
+/**
+ * The license as an entitlement source, over a license that carries these
+ * entitlements (as the license server sends them).
+ *
+ * @param list<mixed> $entitlements
+ */
+function licenseSource(array $entitlements, string $edition = 'pro'): LicenseEntitlementSource
+{
+	return new LicenseEntitlementSource(StubLicenseValidator::with($edition, $entitlements));
+}
+
+/** A license status over a Development license, or a Pro one. */
+function licenseStatus(bool $dev): LicenseStatus
+{
+	return new LicenseStatus(StubLicenseValidator::with($dev ? 'development' : 'pro'), testNullLoggerFactory());
+}
+
+/**
+ * Entitlements for a site whose license carries these products.
+ *
+ * @param list<mixed> $products
+ */
+function entitlements(array $products, bool $dev = false): Entitlements
+{
+	$license = licenseSource($products, $dev ? 'development' : 'pro');
+
+	return new Entitlements([$license], $license, licenseStatus($dev));
+}
+
+/** Entitlements for a site on a trial that is running, or one that has expired. */
+function trialEntitlements(bool $running = true): Entitlements
+{
+	$validator = StubLicenseValidator::trial($running);
+	$license   = new LicenseEntitlementSource($validator);
+
+	return new Entitlements([$license], $license, new LicenseStatus($validator, testNullLoggerFactory()));
+}
+
+/**
+ * Boot a site with a small catalog, the store on or off. Shared by the
+ * commerce Twig tests (a helper in one test file is invisible to another
+ * under --parallel).
+ */
+function bootCommerceStore(bool $open = true): void
+{
+	recursiveDelete(cmsDataDir());
+	restoreFixtures();
+	// The gate is swapped before the app is built, not after: `cms.cart` and
+	// `cms.commerce` are built while the app boots and keep the gate they were
+	// given. The override is process-wide, so it is put back at once; the
+	// container that was just built keeps the gate it was built with.
+	if ($open) {
+		ContainerFactory::override([CommerceGate::class => \DI\autowire(OpenCommerceGate::class)]);
+	}
+	$app = bootstrap();
+	ContainerFactory::override([CommerceGate::class => \DI\get(LicenseCommerceGate::class)]);
+	test()->setUpApp($app);
+	test()->commerceApp = $app;
+
+	// As a page request has it: a session (the forms carry its CSRF token)
+	// and a visitor who is nobody in particular.
+	$session = $app->getContainer()->get(PhpSession::class);
+	$session->isStarted() || $session->start();
+	$app->getContainer()->get(ActorContext::class)->set(Actor::anonymous());
+	$c = $app->getContainer();
+	$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
+
+	$save = fn (array $product) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $product);
+	$save(['id' => 'tee', 'title' => 'Tee <i>Shirt</i>', 'status' => 'active', 'price' => 15, 'category' => 'Clothing', 'variants' => [
+		'large' => ['id' => 'large', 'title' => 'Large', 'price' => 19.99],
+		'small' => ['id' => 'small', 'title' => 'Small'],
+		'gone'  => ['id' => 'gone', 'title' => 'Gone', 'active' => false],
+	]]);
+	$save(['id' => 'mug', 'title' => 'Mug', 'status' => 'active', 'price' => 12.5, 'category' => 'Kitchen']);
+	$save(['id' => 'print', 'title' => 'Print', 'status' => 'active', 'price' => 40, 'trackInventory' => true, 'stock' => 0]);
+	$save(['id' => 'draft-thing', 'title' => 'Draft Thing', 'status' => 'draft', 'price' => 5]);
+}
+
+/** Render a Twig string through the app bootCommerceStore() made. */
+function renderTwig(string $template, array $vars = []): string
+{
+	return test()->commerceApp->getContainer()->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class)->renderString($template, $vars);
+}
+
+/**
+ * Switch commerce on for a test app, whatever its license says: the test
+ * license is Pro with no paid product.
+ */
+function enableCommerce(App $app): void
+{
+	$container = $app->getContainer();
+	if ($container instanceof Container) {
+		$container->set(CommerceGate::class, new OpenCommerceGate());
+	}
 }

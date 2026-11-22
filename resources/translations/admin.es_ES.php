@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Historial para deshacer cada guardado y eliminación de objetos',
 	'settings.cache'                   => 'Caché',
 	'settings.cache_desc'              => 'Configuración del backend de caché',
+	'settings.commerce'                => 'Comercio',
+	'settings.commerce_desc'           => 'Tu tienda: moneda, pagos, impuestos, envíos y correos',
 	'settings.dashboard'               => 'Panel de control',
 	'settings.dashboard_desc'          => 'Configuración del panel de administración',
 	'settings.extensions'              => 'Extensiones',

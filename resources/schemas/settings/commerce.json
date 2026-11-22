@@ -1,0 +1,297 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Commerce Settings",
+	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
+	"formgrid": "---Store---\ncurrency storeName\nstoreEmail customerCollection\n---Payments---\nproviders providers\ncheckoutMode payPage\nreturnPage .\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxShipping\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty\npurchaseUrl purchaseUrl",
+	"type": "object",
+	"properties": {
+		"currency": {
+			"type": "string",
+			"field": "text",
+			"label": "Store Currency",
+			"help": "The three-letter code every price and order is in, such as <code>USD</code>, <code>EUR</code> or <code>GBP</code>. Choose it before the first order: changing it later does not convert existing prices or orders.",
+			"placeholder": "USD",
+			"default": "USD"
+		},
+		"storeName": {
+			"type": "string",
+			"field": "text",
+			"label": "Store Name",
+			"help": "Shown on receipts and at checkout. Leave empty to use the site name."
+		},
+		"storeEmail": {
+			"type": "string",
+			"field": "text",
+			"label": "Store Email",
+			"help": "The reply-to address on receipts, and where a notice goes when an order comes in.",
+			"placeholder": "shop@example.com"
+		},
+		"customerCollection": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer Accounts Collection",
+			"help": "The auth collection customers sign in to, so they can see their orders. Leave empty for guest checkout only.",
+			"placeholder": "Guest checkout only"
+		},
+		"providers": {
+			"type": "array",
+			"field": "multiselect",
+			"label": "Payment Providers",
+			"help": "The ways a buyer can pay, in the order checkout shows them. A provider appears here once its extension is enabled and set up.",
+			"options": []
+		},
+		"checkoutMode": {
+			"type": "string",
+			"field": "select",
+			"label": "Checkout",
+			"help": "Where the buyer pays. <strong>Provider's page</strong> sends them to the payment provider and brings them back. <strong>On this site</strong> shows the payment form on your own page; it is used when the chosen provider can do it, and the provider's page otherwise.",
+			"default": "hosted",
+			"options": [
+				{
+					"value": "hosted",
+					"label": "On the provider's page"
+				},
+				{
+					"value": "embedded",
+					"label": "On this site"
+				}
+			]
+		},
+		"orderNumberStart": {
+			"type": "number",
+			"field": "number",
+			"label": "First Order Number",
+			"help": "The number the first order gets. Raise it later to jump ahead; lowering it does nothing, because a number is never used twice.",
+			"placeholder": "1001",
+			"default": 1001,
+			"min": 1,
+			"max": 999999999
+		},
+		"orderNumberPrefix": {
+			"type": "string",
+			"field": "text",
+			"label": "Order Number Prefix",
+			"help": "Shown before an order number, as in <code>#1001</code>. For display only.",
+			"placeholder": "#",
+			"default": "#"
+		},
+		"taxMode": {
+			"type": "string",
+			"field": "select",
+			"label": "Tax",
+			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> adds it at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.",
+			"default": "none",
+			"options": [
+				{
+					"value": "none",
+					"label": "No tax"
+				},
+				{
+					"value": "exclusive",
+					"label": "Added to prices"
+				},
+				{
+					"value": "inclusive",
+					"label": "Included in prices"
+				}
+			]
+		},
+		"taxShipping": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Tax Shipping",
+			"help": "Charge tax on the shipping amount as well as on the goods.",
+			"default": false
+		},
+		"taxRates": {
+			"field": "deck",
+			"label": "Tax Rates",
+			"help": "One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-tax-rate.json"
+				}
+			}
+		},
+		"shippingMode": {
+			"type": "string",
+			"field": "select",
+			"label": "Shipping",
+			"help": "<strong>No shipping</strong> charges none. <strong>Flat rate</strong> charges one amount for every order. <strong>By zone</strong> charges by where the order ships.",
+			"default": "none",
+			"options": [
+				{
+					"value": "none",
+					"label": "No shipping"
+				},
+				{
+					"value": "flat",
+					"label": "Flat rate"
+				},
+				{
+					"value": "zones",
+					"label": "By zone"
+				}
+			]
+		},
+		"shippingFlatRate": {
+			"type": "string",
+			"field": "text",
+			"label": "Flat Rate",
+			"help": "The shipping charge for every order, in the store's currency, such as <code>4.95</code>.",
+			"placeholder": "0",
+			"default": "0"
+		},
+		"shippingFreeOver": {
+			"type": "string",
+			"field": "text",
+			"label": "Free Shipping Over",
+			"help": "Orders at or over this amount ship free. Leave empty for never.",
+			"placeholder": "50"
+		},
+		"shippingZones": {
+			"field": "deck",
+			"label": "Shipping Zones",
+			"help": "One row for each zone. An order ships at the rate of the first zone that covers its address.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json",
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json"
+				}
+			}
+		},
+		"receiptMailer": {
+			"type": "string",
+			"field": "select",
+			"label": "Receipt Email",
+			"help": "The mailer template sent when an order is paid, and for each renewal of a subscription.",
+			"placeholder": "commerce-receipt",
+			"settings": {
+				"relationalOptions": {
+					"collection": "mailer",
+					"label": "name",
+					"value": "id"
+				}
+			}
+		},
+		"paymentFailedMailer": {
+			"type": "string",
+			"field": "select",
+			"label": "Failed Payment Email",
+			"help": "The mailer template sent once when a subscription's renewal payment fails.",
+			"placeholder": "commerce-payment-failed",
+			"settings": {
+				"relationalOptions": {
+					"collection": "mailer",
+					"label": "name",
+					"value": "id"
+				}
+			}
+		},
+		"returnPage": {
+			"type": "string",
+			"field": "select",
+			"label": "Order Page",
+			"help": "The Site Builder page that shows an order after payment. Leave empty to use the built-in page.",
+			"placeholder": "The built-in page",
+			"settings": {
+				"relationalOptions": {
+					"collection": "builder-pages",
+					"label": "title",
+					"value": "id"
+				}
+			}
+		},
+		"payPage": {
+			"type": "string",
+			"field": "select",
+			"label": "Payment Page",
+			"help": "The Site Builder page that holds the payment form when checkout is on this site. Leave empty to use the built-in page.",
+			"placeholder": "The built-in page",
+			"settings": {
+				"relationalOptions": {
+					"collection": "builder-pages",
+					"label": "title",
+					"value": "id"
+				}
+			}
+		},
+		"downloadTtlHours": {
+			"type": "number",
+			"field": "number",
+			"label": "Download Link Lifetime (hours)",
+			"help": "How long a link to a purchased file works after the order is paid.",
+			"placeholder": "72",
+			"default": 72,
+			"min": 1,
+			"max": 8760
+		},
+		"downloadMaxCount": {
+			"type": "number",
+			"field": "number",
+			"label": "Downloads per Purchase",
+			"help": "How many times one purchased file can be downloaded.",
+			"placeholder": "5",
+			"default": 5,
+			"min": 1,
+			"max": 1000
+		},
+		"pendingOrderTtlHours": {
+			"type": "number",
+			"field": "number",
+			"label": "Abandoned Checkout Lifetime (hours)",
+			"help": "An order that was started and never paid is cancelled after this long.",
+			"placeholder": "24",
+			"default": 24,
+			"min": 1,
+			"max": 720
+		},
+		"cartMaxLines": {
+			"type": "number",
+			"field": "number",
+			"label": "Most Lines in a Cart",
+			"help": "The most different items one cart can hold.",
+			"placeholder": "100",
+			"default": 100,
+			"min": 1,
+			"max": 1000
+		},
+		"cartMaxQty": {
+			"type": "number",
+			"field": "number",
+			"label": "Most of One Item",
+			"help": "The highest quantity of one item in a cart.",
+			"placeholder": "99",
+			"default": 99,
+			"min": 1,
+			"max": 100000
+		},
+		"checkoutAttributes": {
+			"type": "array",
+			"field": "list",
+			"label": "Checkout Attributes",
+			"help": "Extra values checkout may take from the buyer, by name, such as <code>giftNote</code>. Anything not named here is dropped.",
+			"placeholder": "giftNote"
+		},
+		"grantableGroups": {
+			"type": "array",
+			"field": "multiselect",
+			"label": "Groups a Product May Grant",
+			"help": "A product can give its buyer an access group: a membership. Only the groups chosen here can be given, and the admin group never can. Leave empty and no product grants anything.",
+			"settings": {
+				"accessGroupOptions": true
+			}
+		},
+		"purchaseUrl": {
+			"type": "string",
+			"field": "text",
+			"label": "Add Commerce Link",
+			"help": "Where a Pro site without the Commerce add-on is sent to add it.",
+			"placeholder": "https://totalcms.co/commerce",
+			"default": "https://totalcms.co/commerce"
+		}
+	}
+}

@@ -10,6 +10,7 @@ use Mcp\Schema\Prompt;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -33,6 +34,7 @@ use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
 use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
+use TotalCMS\Domain\Extension\Service\Boot\PriceResolversStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
 use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
@@ -104,6 +106,7 @@ class ExtensionManager
 		ImageFiltersStep::class,
 		McpStep::class,
 		SearchProvidersStep::class,
+		PriceResolversStep::class,
 		TwigStep::class,
 		AssetsStep::class,
 	];
@@ -660,6 +663,27 @@ class ExtensionManager
 			$providers = $context->getRegisteredSearchProviders();
 			if ($providers !== []) {
 				$byExtension[$id] = $providers;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the price resolvers extensions registered, each
+	 * with its priority. Drained during boot() into the
+	 * PriceResolverRegistry. Gated by the `commerce:pricing` capability
+	 * permission.
+	 *
+	 * @return array<string,list<array{resolver: PriceResolver, priority: int}>>
+	 */
+	public function getAllPriceResolvers(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:pricing') as $id => $context) {
+			$resolvers = $context->getRegisteredPriceResolvers();
+			if ($resolvers !== []) {
+				$byExtension[$id] = $resolvers;
 			}
 		}
 

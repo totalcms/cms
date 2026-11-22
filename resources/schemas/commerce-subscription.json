@@ -1,0 +1,287 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-subscription.json",
+	"id": "commerce-subscription",
+	"type": "object",
+	"title": "Subscription",
+	"category": "Commerce",
+	"description": "A recurring agreement billed by the payment provider. It holds the snapshot every renewal order is built from. Only the commerce engine writes it.",
+	"required": [
+		"id"
+	],
+	"index": [
+		"id",
+		"status",
+		"email",
+		"customerId",
+		"provider",
+		"providerSubscriptionRef",
+		"recurringTotal",
+		"currency",
+		"interval",
+		"currentPeriodEnd",
+		"cancelAtPeriodEnd",
+		"needsAttention",
+		"created"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "A random id.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${uid-32}",
+				"readonly": true
+			}
+		},
+		"status": {
+			"type": "string",
+			"field": "text",
+			"label": "Status",
+			"help": "pending, trialing, active, past_due, paused or canceled.",
+			"serverOnly": true
+		},
+		"email": {
+			"type": "string",
+			"field": "text",
+			"label": "Email",
+			"help": "Where receipts and failed-payment notices go.",
+			"serverOnly": true
+		},
+		"customerCollection": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer Collection",
+			"help": "The auth collection of the subscriber's account. Empty for a guest.",
+			"serverOnly": true
+		},
+		"customerId": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer ID",
+			"help": "The subscriber's account. Empty for a guest.",
+			"serverOnly": true
+		},
+		"currency": {
+			"type": "string",
+			"field": "text",
+			"label": "Currency",
+			"help": "The three-letter code every amount here is in.",
+			"serverOnly": true
+		},
+		"provider": {
+			"type": "string",
+			"field": "text",
+			"label": "Payment Provider",
+			"help": "The provider that bills it.",
+			"serverOnly": true
+		},
+		"providerSubscriptionRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Subscription",
+			"help": "The provider's subscription id. Set when the first payment is confirmed.",
+			"serverOnly": true
+		},
+		"providerCustomerRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Customer",
+			"help": "The provider's customer id, for the card-update page.",
+			"serverOnly": true
+		},
+		"originOrderId": {
+			"type": "string",
+			"field": "text",
+			"label": "First Order",
+			"help": "The order that started the subscription.",
+			"serverOnly": true
+		},
+		"lastOrderId": {
+			"type": "string",
+			"field": "text",
+			"label": "Latest Order",
+			"help": "The most recent order for it.",
+			"serverOnly": true
+		},
+		"lines": {
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"field": "deck",
+			"label": "Lines",
+			"help": "The recurring lines only, as they were at checkout. A line's discount here is the discount that repeats: 0 unless the code applies to every payment.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-line-item.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-line-item.json"
+				}
+			},
+			"serverOnly": true
+		},
+		"interval": {
+			"type": "string",
+			"field": "text",
+			"label": "Interval",
+			"help": "day, week, month or year.",
+			"serverOnly": true
+		},
+		"intervalCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Interval Count",
+			"help": "How many intervals between payments.",
+			"serverOnly": true
+		},
+		"recurringSubtotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Recurring Subtotal",
+			"help": "The lines added up for one period, in minor units.",
+			"serverOnly": true
+		},
+		"recurringDiscount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Recurring Discount",
+			"help": "The discount that repeats each period, in minor units.",
+			"serverOnly": true
+		},
+		"recurringTax": {
+			"type": "integer",
+			"field": "number",
+			"label": "Recurring Tax",
+			"help": "The tax for one period, in minor units.",
+			"serverOnly": true
+		},
+		"recurringTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Recurring Total",
+			"help": "What the provider charges each period, in minor units. Every renewal is checked against it.",
+			"serverOnly": true
+		},
+		"taxMode": {
+			"type": "string",
+			"field": "text",
+			"label": "Tax Mode",
+			"help": "none, exclusive or inclusive, as it was at checkout.",
+			"serverOnly": true
+		},
+		"taxLines": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Tax Lines",
+			"help": "The tax by rate for one period: [{label, rate, amount}].",
+			"serverOnly": true
+		},
+		"billingAddress": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"field": "card",
+			"label": "Billing Address",
+			"help": "The subscriber's billing address.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-address.json",
+			"serverOnly": true
+		},
+		"discountCode": {
+			"type": "string",
+			"field": "text",
+			"label": "Discount Code",
+			"help": "The code used at checkout, in uppercase.",
+			"serverOnly": true
+		},
+		"attributes": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Checkout Attributes",
+			"help": "The first order's checkout attributes. Every renewal order gets a copy, so code finds the same values on a renewal as on the first purchase.",
+			"serverOnly": true
+		},
+		"metadata": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Metadata",
+			"help": "The first order's metadata, copied to every renewal order.",
+			"serverOnly": true
+		},
+		"trialEndsAt": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Trial Ends",
+			"help": "When the free trial ends. Empty for no trial.",
+			"serverOnly": true
+		},
+		"currentPeriodEnd": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Current Period Ends",
+			"help": "When the paid period ends and the next payment is due.",
+			"serverOnly": true
+		},
+		"cancelAtPeriodEnd": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Cancels at Period End",
+			"help": "The subscriber has cancelled; it stays active until the period ends.",
+			"default": false,
+			"serverOnly": true
+		},
+		"canceledAt": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Canceled",
+			"help": "When it ended.",
+			"serverOnly": true
+		},
+		"renewalCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Renewals",
+			"help": "How many renewal payments have been taken.",
+			"default": 0,
+			"serverOnly": true
+		},
+		"needsAttention": {
+			"type": "string",
+			"field": "text",
+			"label": "Needs Attention",
+			"help": "Empty, or why a person should look: amount_mismatch or grant_failed.",
+			"serverOnly": true
+		},
+		"lastFailedInvoiceRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Last Failed Invoice",
+			"help": "The provider invoice the last failed-payment email was sent for, so retries of one invoice send one email.",
+			"serverOnly": true
+		},
+		"flags": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Flags",
+			"help": "Marks for work already done: createdDispatched, canceledDispatched.",
+			"serverOnly": true
+		},
+		"accessToken": {
+			"type": "string",
+			"field": "hidden",
+			"label": "Access Token",
+			"help": "A random secret that signs the guest manage, cancel and card-update links.",
+			"serverOnly": true
+		},
+		"created": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Created",
+			"help": "When the subscription was started.",
+			"serverOnly": true
+		},
+		"updated": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Updated",
+			"help": "When it last changed.",
+			"serverOnly": true
+		}
+	}
+}

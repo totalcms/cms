@@ -29,6 +29,7 @@ enum LogChannel: string
 	case Backups           = 'backups';
 	case IndexNow          = 'indexnow';
 	case Cache             = 'cachemanager';
+	case Commerce          = 'commerce';
 	case DataViews         = 'dataviews';
 	case ViewBuilder       = 'viewbuilder';
 	case DeckCompatibility = 'deckcompatibility';
@@ -118,6 +119,7 @@ enum LogChannel: string
 			self::Backups,
 			self::IndexNow,
 			self::Cache,
+			self::Commerce,
 			self::DataViews,
 			self::ViewBuilder,
 			self::DeckCompatibility,

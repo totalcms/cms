@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Historia cofania każdego zapisu i usunięcia obiektu',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Konfiguracja backendów cache',
+	'settings.commerce'                => 'Sklep',
+	'settings.commerce_desc'           => 'Twój sklep: waluta, płatności, podatki, wysyłka i e-maile',
 	'settings.dashboard'               => 'Pulpit',
 	'settings.dashboard_desc'          => 'Konfiguracja pulpitu administracyjnego',
 	'settings.extensions'              => 'Rozszerzenia',

@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Activity\Listener;
 
 use TotalCMS\Domain\Activity\Data\ActivityEntry;
 use TotalCMS\Domain\Activity\Service\ActivityRecorder;
+use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Object\Data\ObjectData;
 
@@ -19,6 +20,8 @@ use TotalCMS\Domain\Object\Data\ObjectData;
  *  - `collection.updated` when only the index or metadata moved
  *    (`configChanged: false`) — that fires on every object save.
  *  - downloads by visitors who are not signed in.
+ *  - the store writing its own records: a cart is saved on every change a
+ *    customer makes to it.
  */
 final readonly class ActivityListener
 {
@@ -51,6 +54,7 @@ final readonly class ActivityListener
 
 	public function __construct(
 		private ActivityRecorder $recorder,
+		private StoreRecords $storeRecords,
 	) {
 	}
 
@@ -59,6 +63,10 @@ final readonly class ActivityListener
 	 */
 	public function handle(string $event, array $payload): void
 	{
+		if ($this->storeRecords->isOwnWrite($event, $payload)) {
+			return;
+		}
+
 		$actor  = is_array($payload['actor'] ?? null) ? $payload['actor'] : [];
 		$fields = $this->fieldsFor($event, $payload, $actor);
 

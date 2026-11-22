@@ -29,6 +29,17 @@ class SchemaData
 		'blogdown',
 		'code',
 		'color',
+		'commerce-address',
+		'commerce-cart',
+		'commerce-discount',
+		'commerce-line-item',
+		'commerce-order',
+		'commerce-product',
+		'commerce-shipping-zone',
+		'commerce-subscription',
+		'commerce-tax-rate',
+		'commerce-transaction',
+		'commerce-variant',
 		'date',
 		'dataviews',
 		'depot',
@@ -61,6 +72,40 @@ class SchemaData
 		'url',
 		'video',
 	];
+
+	/**
+	 * The schemas Commerce ships. Their collections are created by
+	 * `tcms commerce:install`, not by Setup Default Collections.
+	 *
+	 * @var list<string>
+	 */
+	public const COMMERCE_SCHEMAS = [
+		'commerce-product', 'commerce-variant', 'commerce-order', 'commerce-line-item', 'commerce-address',
+		'commerce-transaction', 'commerce-cart', 'commerce-discount', 'commerce-subscription',
+	];
+
+	/**
+	 * The rows of Settings → Commerce: schemas a deck there is made of.
+	 *
+	 * @var list<string>
+	 */
+	public const COMMERCE_SETTINGS_SCHEMAS = ['commerce-tax-rate', 'commerce-shipping-zone'];
+
+	/**
+	 * Written only by the commerce engine: nobody writes these through the
+	 * ordinary API or admin, and the public never reads them.
+	 *
+	 * @var list<string>
+	 */
+	public const COMMERCE_PRIVATE_SCHEMAS = ['commerce-order', 'commerce-transaction', 'commerce-cart', 'commerce-subscription'];
+
+	/**
+	 * Staff write these like any collection, but the public never reads them:
+	 * a readable discounts collection would list every code.
+	 *
+	 * @var list<string>
+	 */
+	public const COMMERCE_SECRET_SCHEMAS = ['commerce-discount'];
 
 	/**
 	 * Reserved schemas that "Setup Default Collections" provisions a collection
@@ -159,6 +204,25 @@ class SchemaData
 	public static function isSystemCollection(string $id): bool
 	{
 		return in_array($id, self::SYSTEM_COLLECTIONS, true);
+	}
+
+	/**
+	 * Whether the schema is part of Commerce. A site without the Commerce
+	 * add-on is not shown these (see SchemaLister).
+	 */
+	public static function isCommerceSchema(string $schema): bool
+	{
+		return in_array($schema, self::COMMERCE_SCHEMAS, true) || in_array($schema, self::COMMERCE_SETTINGS_SCHEMAS, true);
+	}
+
+	/**
+	 * Whether objects on this schema are written by the site alone: the
+	 * store's orders, transactions, carts and subscriptions. The one place
+	 * that says so; the access guard and the route guard both ask it.
+	 */
+	public static function isSystemOnly(string $schema): bool
+	{
+		return in_array($schema, self::COMMERCE_PRIVATE_SCHEMAS, true);
 	}
 
 	public const PROPERTY_TYPES = [

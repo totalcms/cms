@@ -47,7 +47,7 @@ readonly class PasskeyLoginAction
 
 			// Mirror LoginService: dispatch user.login so listeners (audit, webhooks,
 			// extensions) see passkey logins the same as password logins.
-			$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload((string)$user['id']));
+			$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload((string)$user['id'], (string)$collection));
 
 			// Set up session (mirrors AuthLoginSubmitAction)
 			$this->session->destroy();

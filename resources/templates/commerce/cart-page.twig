@@ -1,0 +1,63 @@
+{#
+	The whole cart, with a quantity and a remove button on every line. Each
+	form posts with HTMX and gets this partial back; without JavaScript the
+	same forms post normally and the browser comes back to this page.
+
+	cart, notices, base  as in cart-widget.twig
+	csrf                 the hidden token field, for a browser that sends no Origin
+#}
+<div id="cart-page" class="commerce-cart commerce-cart-page" hx-get="{{ base|e }}/commerce/cart?part=page" hx-trigger="cart-updated from:body" hx-swap="outerHTML">
+	{% for notice in notices %}
+		<p class="commerce-cart-notice" role="status">{{ notice|e }}</p>
+	{% endfor %}
+	{% if cart.lines is empty %}
+		<p class="commerce-cart-empty">Your cart is empty.</p>
+	{% else %}
+		<table class="commerce-cart-table">
+			<thead>
+				<tr>
+					<th scope="col">Item</th>
+					<th scope="col">Price</th>
+					<th scope="col">Quantity</th>
+					<th scope="col">Total</th>
+					<th scope="col"><span class="visually-hidden">Remove</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for line in cart.lines %}
+					<tr data-line="{{ line.lineKey|e }}">
+						<td class="commerce-cart-title">
+							{% if line.image %}<img src="{{ line.image|e }}" alt="" width="64" height="64" loading="lazy">{% endif %}
+							{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}
+						</td>
+						<td class="commerce-cart-price">{{ line.unitPrice.amount|money(line.unitPrice.currency) }}</td>
+						<td class="commerce-cart-qty">
+							<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML">
+								{{ csrf|raw }}
+								<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+								<label class="visually-hidden" for="qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
+								<input id="qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
+								<button type="submit">Update</button>
+							</form>
+						</td>
+						<td class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}</td>
+						<td class="commerce-cart-remove">
+							<form method="post" action="{{ base|e }}/commerce/cart/remove" hx-post="{{ base|e }}/commerce/cart/remove?part=page" hx-target="#cart-page" hx-swap="outerHTML">
+								{{ csrf|raw }}
+								<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+								<button type="submit" aria-label="Remove {{ line.title|e }}">Remove</button>
+							</form>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<th scope="row" colspan="3">Subtotal</th>
+					<td class="commerce-cart-subtotal" colspan="2">{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</td>
+				</tr>
+			</tfoot>
+		</table>
+		<p class="commerce-cart-note">Shipping and tax are worked out at checkout.</p>
+	{% endif %}
+</div>

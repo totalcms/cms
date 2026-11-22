@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Automation\Service;
 
+use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Object\Data\ObjectData;
 
 /**
@@ -14,12 +15,17 @@ use TotalCMS\Domain\Object\Data\ObjectData;
  *
  * Runs reactively and async — the originating action is never blocked or
  * aborted by an automation.
+ *
+ * The store writing its own records (a cart, an order) starts nothing: an
+ * automation that matches every object change would otherwise run on every
+ * change to every cart. The store's own events are what to listen for.
  */
 final readonly class AutomationEventSubscriber
 {
 	public function __construct(
 		private AutomationResolver $resolver,
 		private AutomationQueue $queue,
+		private StoreRecords $storeRecords,
 	) {
 	}
 
@@ -28,6 +34,10 @@ final readonly class AutomationEventSubscriber
 	 */
 	public function handle(string $event, array $payload): void
 	{
+		if ($this->storeRecords->isOwnWrite($event, $payload)) {
+			return;
+		}
+
 		$collection = (string)($payload['collection'] ?? '');
 		$snapshot   = $this->snapshot($payload);
 

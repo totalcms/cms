@@ -198,6 +198,21 @@ readonly class LicenseStatus
 	}
 
 	/**
+	 * A trial that is still running: the license is a trial and it validates.
+	 * An expired trial is a trial too, but it is no longer valid.
+	 */
+	public function isRunningTrial(): bool
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+
+			return $license->trial && $license->valid;
+		} catch (\Exception) {
+			return false;
+		}
+	}
+
+	/**
 	 * Check if license is a development license.
 	 */
 	public function isDevelopment(): bool

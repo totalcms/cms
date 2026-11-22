@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Verlauf zum Rückgängigmachen für jedes Speichern und Löschen von Objekten',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache-Backend-Konfiguration',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Ihr Shop: Währung, Zahlungen, Steuern, Versand und E-Mails',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Admin-Dashboard-Konfiguration',
 	'settings.extensions'              => 'Erweiterungen',

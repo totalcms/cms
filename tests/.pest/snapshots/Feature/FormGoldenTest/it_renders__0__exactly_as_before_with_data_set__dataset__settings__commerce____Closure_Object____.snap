@@ -1,0 +1,126 @@
+<style>
+#form-ID-container {
+	container-type: inline-size;
+}
+#form-ID {
+	grid-template-areas:
+		'section-header-1'
+		'currency'
+		'storeName'
+		'storeEmail'
+		'customerCollection'
+		'section-header-2'
+		'providers'
+		'checkoutMode'
+		'payPage'
+		'returnPage'
+		'section-header-3'
+		'orderNumberStart'
+		'orderNumberPrefix'
+		'pendingOrderTtlHours'
+		'checkoutAttributes'
+		'section-header-4'
+		'taxMode'
+		'taxShipping'
+		'taxRates'
+		'section-header-5'
+		'shippingMode'
+		'shippingFlatRate'
+		'shippingFreeOver'
+		'shippingZones'
+		'section-header-6'
+		'receiptMailer'
+		'paymentFailedMailer'
+		'section-header-7'
+		'downloadTtlHours'
+		'downloadMaxCount'
+		'grantableGroups'
+		'section-header-8'
+		'cartMaxLines'
+		'cartMaxQty'
+		'purchaseUrl';
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#form-ID {
+		grid-template-areas:
+			'section-header-1  .'
+			'currency storeName'
+			'storeEmail customerCollection'
+			'section-header-2  .'
+			'providers providers'
+			'checkoutMode payPage'
+			'returnPage .'
+			'section-header-3  .'
+			'orderNumberStart orderNumberPrefix'
+			'pendingOrderTtlHours .'
+			'checkoutAttributes checkoutAttributes'
+			'section-header-4  .'
+			'taxMode taxShipping'
+			'taxRates taxRates'
+			'section-header-5  .'
+			'shippingMode .'
+			'shippingFlatRate shippingFreeOver'
+			'shippingZones shippingZones'
+			'section-header-6  .'
+			'receiptMailer paymentFailedMailer'
+			'section-header-7  .'
+			'downloadTtlHours downloadMaxCount'
+			'grantableGroups grantableGroups'
+			'section-header-8  .'
+			'cartMaxLines cartMaxQty'
+			'purchaseUrl purchaseUrl';
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+</style><div id="form-ID-container"><form id="form-ID" class="totalform help-on-hover help-box formgrid" data-method="POST" data-api="/api" data-route="/admin/settings/commerce"><h3 class="form-grid-section-header" style="grid-area: section-header-1;" data-section-fields="currency storeName storeEmail customerCollection">Store</h3><h3 class="form-grid-section-header" style="grid-area: section-header-2;" data-section-fields="providers checkoutMode payPage returnPage">Payments</h3><h3 class="form-grid-section-header" style="grid-area: section-header-3;" data-section-fields="orderNumberStart orderNumberPrefix pendingOrderTtlHours checkoutAttributes">Orders</h3><h3 class="form-grid-section-header" style="grid-area: section-header-4;" data-section-fields="taxMode taxShipping taxRates">Tax</h3><h3 class="form-grid-section-header" style="grid-area: section-header-5;" data-section-fields="shippingMode shippingFlatRate shippingFreeOver shippingZones">Shipping</h3><h3 class="form-grid-section-header" style="grid-area: section-header-6;" data-section-fields="receiptMailer paymentFailedMailer">Email</h3><h3 class="form-grid-section-header" style="grid-area: section-header-7;" data-section-fields="downloadTtlHours downloadMaxCount grantableGroups">Digital Products and Memberships</h3><h3 class="form-grid-section-header" style="grid-area: section-header-8;" data-section-fields="cartMaxLines cartMaxQty purchaseUrl">Limits</h3><div class="form-field text-field " data-type="text" style="--grid-area: currency;"><label for="field-UID">Store Currency</label><div class="form-group"><input type="text" id="field-UID" name="currency" placeholder="USD" aria-describedby="help-UID" value="USD" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The three-letter code every price and order is in, such as <code>USD</code>, <code>EUR</code> or <code>GBP</code>. Choose it before the first order: changing it later does not convert existing prices or orders.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: storeName;"><label for="field-UID">Store Name</label><div class="form-group"><input type="text" id="field-UID" name="storeName" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Shown on receipts and at checkout. Leave empty to use the site name.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: storeEmail;"><label for="field-UID">Store Email</label><div class="form-group"><input type="text" id="field-UID" name="storeEmail" placeholder="shop@example.com" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The reply-to address on receipts, and where a notice goes when an order comes in.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: customerCollection;"><label for="field-UID">Customer Accounts Collection</label><div class="form-group"><input type="text" id="field-UID" name="customerCollection" placeholder="Guest checkout only" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The auth collection customers sign in to, so they can see their orders. Leave empty for guest checkout only.</p></div><div class="form-field multiselect-field " data-type="multiselect" style="--grid-area: providers;"><label for="field-UID">Payment Providers</label><div class="form-group"><select id="field-UID" name="providers" multiple aria-describedby="help-UID"></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The ways a buyer can pay, in the order checkout shows them. A provider appears here once its extension is enabled and set up.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: checkoutMode;"><label for="field-UID">Checkout</label><div class="form-group"><select id="field-UID" name="checkoutMode" aria-describedby="help-UID"><option value="hosted" selected>On the provider&#039;s page</option><option value="embedded">On this site</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">Where the buyer pays. <strong>Provider's page</strong> sends them to the payment provider and brings them back. <strong>On this site</strong> shows the payment form on your own page; it is used when the chosen provider can do it, and the provider's page otherwise.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: orderNumberStart;"><label for="field-UID">First Order Number</label><div class="form-group"><input type="number" id="field-UID" name="orderNumberStart" inputmode="numeric" placeholder="1001" aria-describedby="help-UID" value="1001" min="1" max="999999999" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The number the first order gets. Raise it later to jump ahead; lowering it does nothing, because a number is never used twice.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: orderNumberPrefix;"><label for="field-UID">Order Number Prefix</label><div class="form-group"><input type="text" id="field-UID" name="orderNumberPrefix" placeholder="#" aria-describedby="help-UID" value="#" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Shown before an order number, as in <code>#1001</code>. For display only.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: taxMode;"><label for="field-UID">Tax</label><div class="form-group"><select id="field-UID" name="taxMode" aria-describedby="help-UID"><option value="none" selected>No tax</option><option value="exclusive">Added to prices</option><option value="inclusive">Included in prices</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID"><strong>No tax</strong> charges none. <strong>Added to prices</strong> adds it at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.</p></div><div class="form-field toggle-field " data-type="toggle" style="--grid-area: taxShipping;"><label for="field-UID">Tax Shipping</label><div class="form-group"><div class="switch"><input id="field-UID" name="taxShipping" type="checkbox" aria-describedby="help-UID"/><label for="field-UID" aria-hidden="true">Tax Shipping</label></div></div><p class="help" id="help-UID">Charge tax on the shipping amount as well as on the goods.</p></div><div class="form-field deck-field " data-type="deck" style="--grid-area: taxRates;" data-settings="{&quot;schemaref&quot;:&quot;https:\/\/www.totalcms.co\/schemas\/commerce-tax-rate.json&quot;}"><label for="field-UID">Tax Rates</label><div class="form-group"><input id="field-UID" type="text" name="taxRates" value="taxRates" data-proxy="true"/><template class="deck-template"><div class="deck-item deck-item-" data-deck-label-pattern="${id}"><button type="button" class="button btn deck-item-label sort-handle"></button><button type="button" class="button btn edit" title="Edit  item"></button><button type="button" class="button btn duplicate" title="Duplicate  item"></button><button type="button" class="button btn trash" title="Delete  item"></button><dialog class="cms-modal small"><section class="scroller"><style>
+#formgrid-ID-container {
+	container-type: inline-size;
+}
+#formgrid-ID {
+	grid-template-areas:
+		'id'
+		'country'
+		'region'
+		'rate'
+		'label';
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#formgrid-ID {
+		grid-template-areas:
+			'id'
+			'country'
+			'region'
+			'rate'
+			'label';
+		grid-template-columns: repeat(1, 1fr);
+	}
+}
+</style><div id="formgrid-ID-container"><div id="formgrid-ID" class="formgrid"><div class="form-field id-field " data-type="id" style="--grid-area: id;"><label for="field-UID">Rate ID</label><div class="form-group"><input type="text" id="field-UID" name="id" required placeholder="us-ny" autocomplete="off" data-1p-ignore data-lpignore="true" autocapitalize="off"/><div class="form-group-icon"></div></div></div><div class="form-field text-field " data-type="text" style="--grid-area: country;"><label for="field-UID">Country</label><div class="form-group"><input type="text" id="field-UID" name="country" placeholder="US" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Two-letter country code, such as <code>US</code>. Leave empty for a rate that applies everywhere.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: region;"><label for="field-UID">Region</label><div class="form-group"><input type="text" id="field-UID" name="region" placeholder="NY" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">State or province code, such as <code>NY</code>. Leave empty for the whole country.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: rate;"><label for="field-UID">Rate (%)</label><div class="form-group"><input type="text" id="field-UID" name="rate" required placeholder="8.875" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The percentage, such as <code>8.875</code>.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: label;"><label for="field-UID">Label</label><div class="form-group"><input type="text" id="field-UID" name="label" placeholder="Sales tax" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">What the buyer sees on the order, such as <em>Sales tax</em> or <em>VAT</em>.</p></div></div></div></section><section><button type="button" class="button btn close">Close</button></section></dialog></div></template><button type="button" title="Add Item" class="button btn cms-add"></button></div><p class="help" id="help-UID">One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: shippingMode;"><label for="field-UID">Shipping</label><div class="form-group"><select id="field-UID" name="shippingMode" aria-describedby="help-UID"><option value="none" selected>No shipping</option><option value="flat">Flat rate</option><option value="zones">By zone</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID"><strong>No shipping</strong> charges none. <strong>Flat rate</strong> charges one amount for every order. <strong>By zone</strong> charges by where the order ships.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: shippingFlatRate;"><label for="field-UID">Flat Rate</label><div class="form-group"><input type="text" id="field-UID" name="shippingFlatRate" placeholder="0" aria-describedby="help-UID" value="0" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The shipping charge for every order, in the store's currency, such as <code>4.95</code>.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: shippingFreeOver;"><label for="field-UID">Free Shipping Over</label><div class="form-group"><input type="text" id="field-UID" name="shippingFreeOver" placeholder="50" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Orders at or over this amount ship free. Leave empty for never.</p></div><div class="form-field deck-field " data-type="deck" style="--grid-area: shippingZones;" data-settings="{&quot;schemaref&quot;:&quot;https:\/\/www.totalcms.co\/schemas\/commerce-shipping-zone.json&quot;}"><label for="field-UID">Shipping Zones</label><div class="form-group"><input id="field-UID" type="text" name="shippingZones" value="shippingZones" data-proxy="true"/><template class="deck-template"><div class="deck-item deck-item-" data-deck-label-pattern="${id}"><button type="button" class="button btn deck-item-label sort-handle"></button><button type="button" class="button btn edit" title="Edit  item"></button><button type="button" class="button btn duplicate" title="Duplicate  item"></button><button type="button" class="button btn trash" title="Delete  item"></button><dialog class="cms-modal small"><section class="scroller"><style>
+#formgrid-ID-container {
+	container-type: inline-size;
+}
+#formgrid-ID {
+	grid-template-areas:
+		'id'
+		'label'
+		'countries'
+		'regions'
+		'rate'
+		'freeOver';
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#formgrid-ID {
+		grid-template-areas:
+			'id'
+			'label'
+			'countries'
+			'regions'
+			'rate'
+			'freeOver';
+		grid-template-columns: repeat(1, 1fr);
+	}
+}
+</style><div id="formgrid-ID-container"><div id="formgrid-ID" class="formgrid"><div class="form-field id-field " data-type="id" style="--grid-area: id;"><label for="field-UID">Zone ID</label><div class="form-group"><input type="text" id="field-UID" name="id" required placeholder="europe" autocomplete="off" data-1p-ignore data-lpignore="true" autocapitalize="off"/><div class="form-group-icon"></div></div></div><div class="form-field text-field " data-type="text" style="--grid-area: label;"><label for="field-UID">Label</label><div class="form-group"><input type="text" id="field-UID" name="label" placeholder="Europe" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">What the buyer sees at checkout.</p></div><div class="form-field list-field " data-type="list" style="--grid-area: countries;"><label for="field-UID">Countries</label><div class="form-group"><select id="field-UID" name="countries" multiple size="1" aria-describedby="help-UID"></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">Two-letter country codes this zone covers.</p></div><div class="form-field list-field " data-type="list" style="--grid-area: regions;"><label for="field-UID">Regions</label><div class="form-group"><select id="field-UID" name="regions" multiple size="1" aria-describedby="help-UID"></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">State or province codes, to narrow the zone inside its countries. Leave empty for the whole of each country.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: rate;"><label for="field-UID">Rate</label><div class="form-group"><input type="text" id="field-UID" name="rate" required placeholder="12.00" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The shipping charge in the store's currency, such as <code>12.00</code>.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: freeOver;"><label for="field-UID">Free Over</label><div class="form-group"><input type="text" id="field-UID" name="freeOver" placeholder="100" aria-describedby="help-UID" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Orders at or over this amount ship free in this zone. Leave empty for never.</p></div></div></div></section><section><button type="button" class="button btn close">Close</button></section></dialog></div></template><button type="button" title="Add Item" class="button btn cms-add"></button></div><p class="help" id="help-UID">One row for each zone. An order ships at the rate of the first zone that covers its address.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: receiptMailer;" data-settings="{&quot;relationalOptions&quot;:{&quot;collection&quot;:&quot;mailer&quot;,&quot;label&quot;:&quot;name&quot;,&quot;value&quot;:&quot;id&quot;}}"><label for="field-UID">Receipt Email</label><div class="form-group"><select id="field-UID" name="receiptMailer" aria-describedby="help-UID"><option value class="placeholder" disabled>commerce-receipt</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The mailer template sent when an order is paid, and for each renewal of a subscription.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: paymentFailedMailer;" data-settings="{&quot;relationalOptions&quot;:{&quot;collection&quot;:&quot;mailer&quot;,&quot;label&quot;:&quot;name&quot;,&quot;value&quot;:&quot;id&quot;}}"><label for="field-UID">Failed Payment Email</label><div class="form-group"><select id="field-UID" name="paymentFailedMailer" aria-describedby="help-UID"><option value class="placeholder" disabled>commerce-payment-failed</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The mailer template sent once when a subscription's renewal payment fails.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: returnPage;" data-settings="{&quot;relationalOptions&quot;:{&quot;collection&quot;:&quot;builder-pages&quot;,&quot;label&quot;:&quot;title&quot;,&quot;value&quot;:&quot;id&quot;}}"><label for="field-UID">Order Page</label><div class="form-group"><select id="field-UID" name="returnPage" aria-describedby="help-UID"><option value class="placeholder" disabled selected>The built-in page</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The Site Builder page that shows an order after payment. Leave empty to use the built-in page.</p></div><div class="form-field select-field " data-type="select" style="--grid-area: payPage;" data-settings="{&quot;relationalOptions&quot;:{&quot;collection&quot;:&quot;builder-pages&quot;,&quot;label&quot;:&quot;title&quot;,&quot;value&quot;:&quot;id&quot;}}"><label for="field-UID">Payment Page</label><div class="form-group"><select id="field-UID" name="payPage" aria-describedby="help-UID"><option value class="placeholder" disabled selected>The built-in page</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The Site Builder page that holds the payment form when checkout is on this site. Leave empty to use the built-in page.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: downloadTtlHours;"><label for="field-UID">Download Link Lifetime (hours)</label><div class="form-group"><input type="number" id="field-UID" name="downloadTtlHours" inputmode="numeric" placeholder="72" aria-describedby="help-UID" value="72" min="1" max="8760" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">How long a link to a purchased file works after the order is paid.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: downloadMaxCount;"><label for="field-UID">Downloads per Purchase</label><div class="form-group"><input type="number" id="field-UID" name="downloadMaxCount" inputmode="numeric" placeholder="5" aria-describedby="help-UID" value="5" min="1" max="1000" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">How many times one purchased file can be downloaded.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: pendingOrderTtlHours;"><label for="field-UID">Abandoned Checkout Lifetime (hours)</label><div class="form-group"><input type="number" id="field-UID" name="pendingOrderTtlHours" inputmode="numeric" placeholder="24" aria-describedby="help-UID" value="24" min="1" max="720" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">An order that was started and never paid is cancelled after this long.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: cartMaxLines;"><label for="field-UID">Most Lines in a Cart</label><div class="form-group"><input type="number" id="field-UID" name="cartMaxLines" inputmode="numeric" placeholder="100" aria-describedby="help-UID" value="100" min="1" max="1000" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The most different items one cart can hold.</p></div><div class="form-field number-field " data-type="number" style="--grid-area: cartMaxQty;"><label for="field-UID">Most of One Item</label><div class="form-group"><input type="number" id="field-UID" name="cartMaxQty" inputmode="numeric" placeholder="99" aria-describedby="help-UID" value="99" min="1" max="100000" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The highest quantity of one item in a cart.</p></div><div class="form-field list-field " data-type="list" style="--grid-area: checkoutAttributes;"><label for="field-UID">Checkout Attributes</label><div class="form-group"><select id="field-UID" name="checkoutAttributes" multiple size="1" aria-describedby="help-UID"></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">Extra values checkout may take from the buyer, by name, such as <code>giftNote</code>. Anything not named here is dropped.</p></div><div class="form-field multiselect-field " data-type="multiselect" style="--grid-area: grantableGroups;" data-settings="{&quot;accessGroupOptions&quot;:true}"><label for="field-UID">Groups a Product May Grant</label><div class="form-group"><select id="field-UID" name="grantableGroups" multiple aria-describedby="help-UID"><option value="admin">admin</option><option value="blogger">blogger</option><option value="default">default</option><option value="editor">editor</option><option value="limited-blogger">limited-blogger</option><option value="viewer">viewer</option><option value="schema-editor">schema-editor</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">A product can give its buyer an access group: a membership. Only the groups chosen here can be given, and the admin group never can. Leave empty and no product grants anything.</p></div><div class="form-field text-field " data-type="text" style="--grid-area: purchaseUrl;"><label for="field-UID">Add Commerce Link</label><div class="form-group"><input type="text" id="field-UID" name="purchaseUrl" placeholder="https://totalcms.co/commerce" aria-describedby="help-UID" value="https://totalcms.co/commerce" autocomplete="nofill"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">Where a Pro site without the Commerce add-on is sent to add it.</p></div><div class="form-inline-fields"><button type="submit" class="button btn cms-save cms-button">Save Settings</button></div></form></div>

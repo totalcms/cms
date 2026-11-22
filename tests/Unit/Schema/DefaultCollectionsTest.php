@@ -28,6 +28,17 @@ final class DefaultCollectionsTest extends TestCase
 	 */
 	private const EXCLUDED = [
 		'automation-trigger' => 'embedded in automations via schemaref',
+		'commerce-address'   => 'embedded in commerce-order and commerce-subscription via schemaref',
+		'commerce-cart'      => 'provisioned by CommerceInstaller',
+		'commerce-discount'  => 'provisioned by CommerceInstaller',
+		'commerce-line-item' => 'embedded in commerce-order and commerce-subscription via schemaref',
+		'commerce-order'     => 'provisioned by CommerceInstaller',
+		'commerce-product'   => 'provisioned by CommerceInstaller',
+		'commerce-shipping-zone' => 'a row of Settings → Commerce, embedded via schemaref',
+		'commerce-subscription' => 'provisioned by CommerceInstaller',
+		'commerce-tax-rate'  => 'a row of Settings → Commerce, embedded via schemaref',
+		'commerce-transaction' => 'provisioned by CommerceInstaller',
+		'commerce-variant'   => 'embedded in commerce-product via schemaref',
 		'mcp-collection'     => 'embedded in collection + dataviews via schemaref',
 		'mcp-prompt-arg'     => 'embedded in mcp-prompt via schemaref',
 		'mcp-property'       => 'embedded sub-object, never standalone',

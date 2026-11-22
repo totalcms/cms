@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Search\Listener;
 
 use Monolog\Level;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Search\Service\SearchProvider;
@@ -19,7 +20,9 @@ use TotalCMS\Support\Config;
  * index()/delete() methods. Skips when:
  *   - the active provider is 'text' (IndexBuilder already handles it)
  *   - indexOnSave is disabled (operator-managed bulk imports)
- *   - the active provider isn't registered (no-op silently).
+ *   - the active provider isn't registered (no-op silently)
+ *   - the collection holds the store's own records (orders, carts), which
+ *     are not content and must not reach an outside search service.
  *
  * Index failures are caught and enqueued as `search.reindex` jobs for
  * eventual retry. Content saves are never blocked by provider outages.
@@ -33,6 +36,7 @@ readonly class ContentChangeListener
 		private JobQueuer $jobs,
 		LoggerFactory $loggerFactory,
 		private Config $config,
+		private StoreRecords $storeRecords,
 	) {
 		// Inject LoggerFactory (autowirable) rather than the bare
 		// Psr\Log\LoggerInterface, which has no concrete container binding —
@@ -66,7 +70,7 @@ readonly class ContentChangeListener
 		$object     = $payload['object'] ?? [];
 		$object     = $object instanceof ObjectData ? $object->toArray() : (array)$object;
 
-		if ($collection === '' || $objectId === '') {
+		if ($collection === '' || $objectId === '' || $this->storeRecords->holds($collection)) {
 			return;
 		}
 
@@ -102,7 +106,7 @@ readonly class ContentChangeListener
 		$collection = (string)($payload['collection'] ?? '');
 		$objectId   = (string)($payload['id'] ?? '');
 
-		if ($collection === '' || $objectId === '') {
+		if ($collection === '' || $objectId === '' || $this->storeRecords->holds($collection)) {
 			return;
 		}
 

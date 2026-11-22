@@ -962,6 +962,18 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * The access groups a product may grant its buyer.
+	 * Used for propertyOptions: "grantableGroups" — the product form's
+	 * access-group select offers these and nothing else.
+	 *
+	 * @return list<string>
+	 */
+	public function grantableGroupOptions(): array
+	{
+		return $this->optionSources()->grantableGroupOptions();
+	}
+
+	/**
 	 * Get the property names defined on the current collection's object schema.
 	 * Used for propertyOptions: "schemaProperties" in schema settings — useful
 	 * when a field needs to reference a property of the collection being edited

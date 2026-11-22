@@ -6132,6 +6132,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6206,6 +6207,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6262,6 +6264,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6318,6 +6321,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6459,6 +6463,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6523,6 +6528,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6570,6 +6576,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6633,6 +6640,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6680,6 +6688,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6780,6 +6789,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6834,6 +6844,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6898,6 +6909,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6963,6 +6975,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7016,6 +7029,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7087,6 +7101,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7162,6 +7177,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7235,6 +7251,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7297,6 +7314,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7376,6 +7394,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7440,6 +7459,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7515,6 +7535,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7586,6 +7607,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7666,6 +7688,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7736,6 +7759,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7818,6 +7842,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7908,6 +7933,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7988,6 +8014,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8068,6 +8095,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8150,6 +8178,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8240,6 +8269,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8328,6 +8358,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8418,6 +8449,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8506,6 +8538,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8577,6 +8610,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8665,6 +8699,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8738,6 +8773,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -10220,6 +10256,7 @@
                 "x-tcms-action": "ImportCsvAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10277,6 +10314,7 @@
                 "x-tcms-action": "ImportDeckCsvAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10334,6 +10372,7 @@
                 "x-tcms-action": "ImportDeckJsonAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10391,6 +10430,7 @@
                 "x-tcms-action": "ImportFactoryAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10448,6 +10488,7 @@
                 "x-tcms-action": "ImportJsonAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -12937,6 +12978,223 @@
                 "x-tcms-action": "AutomationWebhookAction",
                 "x-tcms-middleware": [
                     "AutomationWebhookMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart": {
+            "get": {
+                "operationId": "commerce-cart",
+                "tags": [
+                    "commerce"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart",
+                "x-tcms-action": "CartViewAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/add": {
+            "post": {
+                "operationId": "commerce-cart-add",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/add",
+                "x-tcms-action": "CartAddAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/attributes": {
+            "post": {
+                "operationId": "commerce-cart-attributes",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/attributes",
+                "x-tcms-action": "CartAttributesAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/clear": {
+            "post": {
+                "operationId": "commerce-cart-clear",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/clear",
+                "x-tcms-action": "CartClearAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/remove": {
+            "post": {
+                "operationId": "commerce-cart-remove",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/remove",
+                "x-tcms-action": "CartRemoveAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/update": {
+            "post": {
+                "operationId": "commerce-cart-update",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/update",
+                "x-tcms-action": "CartUpdateAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
                 ]
             }
         },

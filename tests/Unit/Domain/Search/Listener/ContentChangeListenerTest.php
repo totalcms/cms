@@ -7,6 +7,9 @@ namespace Tests\Unit\Domain\Search\Listener;
 use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -38,6 +41,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+			$this->storeRecords(),
 		);
 
 		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
@@ -60,6 +64,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'text', 'indexOnSave' => true]),
+			$this->storeRecords(),
 		);
 
 		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
@@ -79,6 +84,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => false]),
+			$this->storeRecords(),
 		);
 
 		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
@@ -108,6 +114,7 @@ final class ContentChangeListenerTest extends TestCase
 			$jobs,
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+			$this->storeRecords(),
 		);
 
 		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
@@ -134,6 +141,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+			$this->storeRecords(),
 		);
 
 		$listener->onObjectDeleted((new ObjectEventPayload('blog', 'post-1'))->toArray());
@@ -168,6 +176,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+			$this->storeRecords(),
 		);
 
 		$dispatcher = new EventDispatcher(new NullLogger());
@@ -180,6 +189,51 @@ final class ContentChangeListenerTest extends TestCase
 		$dispatcher->dispatch('object.deleted', new ObjectEventPayload('blog', 'post-1', null, new ObjectData('post-1', [])));
 
 		$this->assertSame(['index:blog/post-1', 'index:blog/post-1', 'delete:blog/post-1'], $seen);
+	}
+
+	/**
+	 * Orders and carts are the store's bookkeeping, and they hold buyers'
+	 * names and addresses: they must never be pushed to a search service.
+	 */
+	public function testSkipsACollectionOfStoreRecords(): void
+	{
+		$provider = $this->makeProvider(
+			'algolia',
+			indexCallback: fn () => $this->fail('A store record must not be indexed'),
+			deleteCallback: fn () => $this->fail('A store record was never indexed, so there is nothing to delete'),
+		);
+		$registry = new SearchProviderRegistry();
+		$registry->register($provider);
+		$listener = new ContentChangeListener(
+			$registry,
+			$this->createMock(JobQueuer::class),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
+			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+			$this->storeRecords(['orders' => 'commerce-order']),
+		);
+
+		$listener->onObjectSaved((new ObjectEventPayload('orders', 'order-1', new ObjectData('order-1', [])))->toArray());
+		$listener->onObjectDeleted((new ObjectEventPayload('orders', 'order-1', null, new ObjectData('order-1', [])))->toArray());
+
+		$this->assertTrue(true);
+	}
+
+	/** @param array<string,string> $schemas collection id => the schema it is on */
+	private function storeRecords(array $schemas = []): StoreRecords
+	{
+		$collections = $this->createMock(CollectionFetcher::class);
+		$collections->method('fetchCollection')->willReturnCallback(static function (string $id) use ($schemas): ?CollectionData {
+			if (!isset($schemas[$id])) {
+				return null;
+			}
+			$collection         = new CollectionData();
+			$collection->id     = $id;
+			$collection->schema = $schemas[$id];
+
+			return $collection;
+		});
+
+		return new StoreRecords($collections);
 	}
 
 	private function makeProvider(

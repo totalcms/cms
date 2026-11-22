@@ -1,0 +1,109 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-variant.json",
+	"id": "commerce-variant",
+	"type": "object",
+	"title": "Variant",
+	"category": "Commerce",
+	"description": "One purchasable option of a product. Stored as a deck item; the deck key is the variant id.",
+	"formgrid": "title id\nprice sku\nstock active\ninterval intervalCount\nimage image\noptions options",
+	"required": [
+		"id",
+		"title"
+	],
+	"index": [
+		"id",
+		"title",
+		"sku",
+		"price",
+		"stock",
+		"active"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "Variant ID",
+			"help": "Carts and order lines name the variant by this id. Do not change it once the variant has sold.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type": "string",
+			"field": "text",
+			"label": "Title",
+			"help": "Shown to buyers, such as \"Large / Red\" or \"Yearly\"."
+		},
+		"options": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Option Values",
+			"help": "What this variant is, for your own templates. Example: {\"size\":\"L\",\"color\":\"red\"}."
+		},
+		"sku": {
+			"type": "string",
+			"field": "text",
+			"label": "SKU",
+			"help": "Your own stock code for this variant."
+		},
+		"price": {
+			"type": "number",
+			"field": "price",
+			"label": "Price",
+			"help": "Leave empty, or 0, to use the product's price."
+		},
+		"stock": {
+			"type": "integer",
+			"field": "number",
+			"label": "Stock",
+			"help": "How many of this variant are left, when the product tracks inventory.",
+			"default": 0
+		},
+		"image": {
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"field": "image",
+			"label": "Image",
+			"help": "Shown when this variant is chosen."
+		},
+		"active": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Available",
+			"help": "Turn off to stop selling this variant without deleting it.",
+			"default": true
+		},
+		"interval": {
+			"type": "string",
+			"field": "select",
+			"label": "Billed Every",
+			"help": "Subscriptions only. Leave empty to use the product's interval. This is how one membership offers a monthly and a yearly plan.",
+			"options": [
+				{
+					"value": "day",
+					"label": "Day"
+				},
+				{
+					"value": "week",
+					"label": "Week"
+				},
+				{
+					"value": "month",
+					"label": "Month"
+				},
+				{
+					"value": "year",
+					"label": "Year"
+				}
+			],
+			"placeholder": "Same as the product"
+		},
+		"intervalCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Interval Count",
+			"help": "Subscriptions only. Leave empty, or 0, to use the product's."
+		}
+	}
+}

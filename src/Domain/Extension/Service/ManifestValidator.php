@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Extension\Service;
 
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Data\Entitlement;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Support\Version;
 
@@ -54,6 +55,11 @@ final readonly class ManifestValidator
 		$validEditions = ['lite', 'standard', 'pro'];
 		if ($manifest->minEdition !== '' && !in_array($manifest->minEdition, $validEditions, true)) {
 			return "Invalid min_edition '{$manifest->minEdition}': must be one of lite, standard, pro";
+		}
+
+		// A paid product is named by its id in the store.
+		if ($manifest->entitlement !== '' && preg_match(Entitlement::PRODUCT_PATTERN, $manifest->entitlement) !== 1) {
+			return "Invalid entitlement '{$manifest->entitlement}': must be vendor/name";
 		}
 
 		return null;

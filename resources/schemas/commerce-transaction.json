@@ -1,0 +1,113 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-transaction.json",
+	"id": "commerce-transaction",
+	"type": "object",
+	"title": "Transaction",
+	"category": "Commerce",
+	"description": "The payment ledger. One object for each provider event that moved money. Added to, never changed or deleted.",
+	"required": [
+		"id"
+	],
+	"index": [
+		"id",
+		"orderId",
+		"provider",
+		"type",
+		"status",
+		"amount",
+		"currency",
+		"providerEventId",
+		"created"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "A random id.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${uid-32}",
+				"readonly": true
+			}
+		},
+		"orderId": {
+			"type": "string",
+			"field": "text",
+			"label": "Order",
+			"help": "The order this belongs to.",
+			"serverOnly": true
+		},
+		"provider": {
+			"type": "string",
+			"field": "text",
+			"label": "Payment Provider",
+			"help": "The provider that reported it.",
+			"serverOnly": true
+		},
+		"type": {
+			"type": "string",
+			"field": "text",
+			"label": "Type",
+			"help": "checkout_created, payment, payment_failed, refund, dispute or dispute_closed.",
+			"serverOnly": true
+		},
+		"status": {
+			"type": "string",
+			"field": "text",
+			"label": "Status",
+			"help": "succeeded, failed or pending.",
+			"serverOnly": true
+		},
+		"amount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Amount",
+			"help": "In minor units. Always positive; the type says which way the money moved.",
+			"serverOnly": true
+		},
+		"currency": {
+			"type": "string",
+			"field": "text",
+			"label": "Currency",
+			"help": "The three-letter code the amount is in.",
+			"serverOnly": true
+		},
+		"providerRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Reference",
+			"help": "The payment, refund or dispute id at the provider.",
+			"serverOnly": true
+		},
+		"providerEventId": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Event",
+			"help": "The provider's id for the event, so one event is recorded once.",
+			"serverOnly": true
+		},
+		"actor": {
+			"type": "string",
+			"field": "text",
+			"label": "Actor",
+			"help": "webhook:{provider}, or user:{collection}/{id} for a refund made by staff.",
+			"serverOnly": true
+		},
+		"summary": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Summary",
+			"help": "A small normalized part of the provider's event. Never card data, never the whole raw body.",
+			"serverOnly": true
+		},
+		"created": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Created",
+			"help": "When it was recorded.",
+			"serverOnly": true
+		}
+	}
+}

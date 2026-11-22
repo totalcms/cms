@@ -6,6 +6,7 @@ use Faker\Generator;
 use Odan\Session\FlashInterface;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Collection\Utilities\ManualSorter;
+use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\Locale\CountryNames;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -32,6 +33,7 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		private readonly PhpSession $session,
 		private readonly CSRFTokenManager $csrfManager,
 		private readonly TranslationService $translator,
+		private readonly MoneyFilter $money,
 	) {
 	}
 
@@ -92,6 +94,10 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		// IntlExtension is loaded, its own registration replaces this one.
 		// Not is_safe: an unknown code comes back as given.
 		$filters[] = new TwigFilter('country_name', CountryNames::name(...));
+
+		// Needs the store's currency and the site's locale, which a static
+		// filter cannot reach.
+		$filters[] = new TwigFilter('money', $this->money);
 
 		return $filters;
 	}

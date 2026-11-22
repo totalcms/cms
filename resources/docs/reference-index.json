@@ -1105,6 +1105,76 @@
             "url": "https://docs.totalcms.co/site-builder/twig/"
         },
         {
+            "name": "cms.cart.addButton",
+            "signature": "addButton(string $productId, array $options = []): string",
+            "description": "An \"Add to cart\" button for a product.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.attribute",
+            "signature": "attribute(string $key): string",
+            "description": "A line of text the buyer gave at the cart, such as a gift note, or ''.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.count",
+            "signature": "count(): int",
+            "description": "How many items are in the cart, counting quantities.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.isEmpty",
+            "signature": "isEmpty(): bool",
+            "description": "",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.lines",
+            "signature": "lines(): array",
+            "description": "The cart's lines. Every amount is a whole number of minor units of `currency`.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.notices",
+            "signature": "notices(): array",
+            "description": "What changed since the buyer last looked, such as a product that was removed. Each is given once: print them where the buyer will see them.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.page",
+            "signature": "page(): string",
+            "description": "The full cart, with a quantity and a remove button on every line (`id=\"cart-page\"`).",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.subtotal",
+            "signature": "subtotal(): int",
+            "description": "The lines added up, in minor units, before discount, shipping and tax.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.variantPicker",
+            "signature": "variantPicker(string $productId, array $options = []): string",
+            "description": "An add form with a choice of the product's variants and a quantity. For a product without variants it is the form without the choice.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.widget",
+            "signature": "widget(): string",
+            "description": "The mini cart (`id=\"cart-widget\"`). It reloads itself when the cart changes.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.collection.byCategory",
             "signature": "byCategory(): array",
             "description": "Get collections grouped by their category.",
@@ -1276,6 +1346,62 @@
                 "{% set validation = cms.collection.validateUrlTemplateFields('blog') %}\n{% if validation.notIndexed|length > 0 %}\n    <p>Warning: fields not indexed: {{ validation.notIndexed|join(', ') }}</p>\n{% endif %}\n{% if validation.notRequired|length > 0 %}\n    <p>Warning: fields not required: {{ validation.notRequired|join(', ') }}</p>\n{% endif %}\n{% if validation.prettyUrlDisabled %}\n    <p>Warning: pretty URLs are disabled</p>\n{% endif %}"
             ],
             "url": "https://docs.totalcms.co/twig/collections/"
+        },
+        {
+            "name": "cms.commerce.currency",
+            "signature": "currency(): string",
+            "description": "The store's currency, as a three-letter code.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.enabled",
+            "signature": "enabled(): bool",
+            "description": "Whether the store is switched on for this site.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.format",
+            "signature": "format(mixed $amount, ?string $currency = null): string",
+            "description": "An amount in minor units written for a person, in the store currency unless another is named.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.inStock",
+            "signature": "inStock(string $productId, string $variantId = ''): bool",
+            "description": "Whether a product (or one variant of it) can be bought now. A product with variants and none named is in stock when any of them is.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.price",
+            "signature": "price(string $productId, string $variantId = ''): ?array",
+            "description": "What a product costs this buyer, or null when they cannot see it. With no variant named it is the product's own price.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.product",
+            "signature": "product(string $id): ?array",
+            "description": "One product, with every field it has, or null. A visitor gets active products only; staff also get drafts and archived ones, to preview a page.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.products",
+            "signature": "products(array $options = []): array",
+            "description": "Active products, with the options of `cms.collection.query()`: filter, sort, search, limit, page. Whatever the filter says about status, only active products are listed.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.providers",
+            "signature": "providers(): array",
+            "description": "The payment providers a buyer can choose from.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
         },
         {
             "name": "cms.config",
@@ -5636,6 +5762,13 @@
                 "permission": null
             },
             {
+                "name": "licensed",
+                "signature": "licensed(): bool",
+                "description": "Whether the site is licensed for this extension: the edition its manifest asks for (`min_edition`), and the paid product it names (`entitlement`), when it names one. Safe to call inside `register()`, so a paid extension can register nothing on a site that has not bought it.",
+                "phase": "register",
+                "permission": null
+            },
+            {
                 "name": "extensionPath",
                 "signature": "extensionPath(): string",
                 "description": "",
@@ -5751,6 +5884,13 @@
                 "name": "registerSearchProvider",
                 "signature": "registerSearchProvider(SearchProvider $provider): void",
                 "description": "Register a search provider. The extension is responsible for the provider's full lifecycle (index, query, delete) and any external dependencies (API clients, vector stores, etc.). Provider ids must be unique across all extensions + the built-in 'text' provider; the registrar logs + skips on collisions during boot.",
+                "phase": "register",
+                "permission": null
+            },
+            {
+                "name": "addPriceResolver",
+                "signature": "addPriceResolver(PriceResolver $resolver, int $priority = 0): void",
+                "description": "Set a price that depends on who is buying: an upgrade price, a member's price, a volume price. The resolver is asked for every cart line and again at checkout, so what the buyer saw is what is charged.",
                 "phase": "register",
                 "permission": null
             },
@@ -5984,7 +6124,8 @@
                 "name": "user.login",
                 "description": "Fired after a user successfully logs in.",
                 "payload": {
-                    "user": "string"
+                    "user": "string",
+                    "collection": "string"
                 }
             },
             {
@@ -6146,6 +6287,10 @@
             {
                 "id": "mcp:prompts",
                 "description": "MCP Prompts"
+            },
+            {
+                "id": "commerce:pricing",
+                "description": "Commerce Pricing"
             }
         ],
         "manifest_fields": [
@@ -6233,6 +6378,11 @@
                 "field": "composer_package",
                 "required": false,
                 "description": "The Composer package name (`acme/thing`) when the extension was installed by Composer as a package of type `totalcms-extension` into `vendor/`. Empty otherwise. Such an extension is code Composer owns: it can be disabled but not removed here \u2014 `composer remove` does that. Set by ExtensionDiscovery \u2014 not declared in the manifest JSON."
+            },
+            {
+                "field": "entitlement",
+                "required": false,
+                "description": "Declared in the manifest JSON as `entitlement`: the paid product (`vendor/name` in the store) a site must own to use the extension, on top of `min_edition`. Empty for an extension that is not sold. See ExtensionLicense."
             }
         ],
         "editions": [

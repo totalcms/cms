@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Cronologia per annullare ogni salvataggio ed eliminazione di oggetti',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Configurazione del backend della cache',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Il tuo negozio: valuta, pagamenti, tasse, spedizioni ed email',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Configurazione della dashboard di amministrazione',
 	'settings.extensions'              => 'Estensioni',

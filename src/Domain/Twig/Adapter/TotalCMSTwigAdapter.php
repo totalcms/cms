@@ -70,6 +70,8 @@ class TotalCMSTwigAdapter
 		public UtilsTwigAdapter $utils,
 		public SeoTwigAdapter $seo,
 		public BadgeTwigAdapter $badge,
+		public CartTwigAdapter $cart,
+		public CommerceTwigAdapter $commerce,
 		private readonly ?\Closure $twigEngineFactory = null,
 	) {
 		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);

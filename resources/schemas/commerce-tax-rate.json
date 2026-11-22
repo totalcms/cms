@@ -1,0 +1,50 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
+	"id": "commerce-tax-rate",
+	"title": "Commerce Tax Rate",
+	"description": "One row of the store's tax table",
+	"category": "Internal",
+	"type": "object",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"factory": "uid",
+			"label": "Rate ID",
+			"placeholder": "us-ny"
+		},
+		"country": {
+			"type": "string",
+			"field": "text",
+			"label": "Country",
+			"help": "Two-letter country code, such as <code>US</code>. Leave empty for a rate that applies everywhere.",
+			"placeholder": "US"
+		},
+		"region": {
+			"type": "string",
+			"field": "text",
+			"label": "Region",
+			"help": "State or province code, such as <code>NY</code>. Leave empty for the whole country.",
+			"placeholder": "NY"
+		},
+		"rate": {
+			"type": "string",
+			"field": "text",
+			"label": "Rate (%)",
+			"help": "The percentage, such as <code>8.875</code>.",
+			"placeholder": "8.875"
+		},
+		"label": {
+			"type": "string",
+			"field": "text",
+			"label": "Label",
+			"help": "What the buyer sees on the order, such as <em>Sales tax</em> or <em>VAT</em>.",
+			"placeholder": "Sales tax"
+		}
+	},
+	"required": [
+		"id",
+		"rate"
+	]
+}

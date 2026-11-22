@@ -27,6 +27,8 @@ readonly class LicenseData
 		public ?string $allowedVersion = null,
 		public bool $registered = true,
 		public int $timestamp = 0,
+		/** @var list<Entitlement> Paid products this license carries beyond its edition. */
+		public array $entitlements = [],
 	) {
 	}
 
@@ -71,6 +73,7 @@ readonly class LicenseData
 			allowedVersion      : $response['allowedVersion'] ?? null,
 			registered          : filter_var($response['registered'] ?? true, FILTER_VALIDATE_BOOLEAN),
 			timestamp           : time(),
+			entitlements        : Entitlement::listFrom($response['entitlements'] ?? null),
 		);
 	}
 
@@ -96,6 +99,7 @@ readonly class LicenseData
 			allowedVersion     : $data['allowedVersion'] ?? null,
 			registered         : (bool)($data['registered'] ?? true),
 			timestamp          : (int)($data['timestamp'] ?? 0),
+			entitlements       : Entitlement::listFrom($data['entitlements'] ?? null),
 		);
 	}
 
@@ -129,6 +133,7 @@ readonly class LicenseData
 			'allowedVersion'     => $this->allowedVersion,
 			'registered'         => $this->registered,
 			'timestamp'          => $this->timestamp,
+			'entitlements'       => array_map(static fn (Entitlement $entitlement): array => $entitlement->toArray(), $this->entitlements),
 		];
 	}
 }

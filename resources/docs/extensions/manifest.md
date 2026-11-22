@@ -118,6 +118,31 @@ Minimum Total CMS edition required. The extension will not load on lower edition
 "min_edition": "pro"
 ```
 
+### `entitlement`
+
+For a paid extension: the id of the product a site must own to use it, in the store's `vendor/name` form. Leave it out for an extension that is not sold.
+
+```json
+"min_edition": "pro",
+"entitlement": "acme/thing-pro"
+```
+
+It works together with `min_edition`. A site is licensed for the extension when its edition is high enough **and** its license carries the product. A Development license passes both, so you can build against a paid extension without buying it.
+
+Total CMS does not stop an unlicensed extension from loading. The extension asks, and decides what to offer:
+
+```php
+public function register(ExtensionContext $context): void
+{
+	if (!$context->licensed()) {
+		return; // register nothing on a site that has not bought it
+	}
+	// ...
+}
+```
+
+`$context->licensed()` is safe to call inside `register()`. An extension with no `entitlement` is licensed by its `min_edition` alone.
+
 ### `icon`
 
 Relative path to an icon image displayed on the extension's row in the admin UI. Supports PNG, JPG, GIF, WebP, and SVG formats. The file must be under 64KB. These icons are embedded inline onto the webpage. Please keep them as small as possible.

@@ -199,6 +199,14 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'xmlrpc-collection',
 		'xmlrpc-collection-discovery',
 		'xmlrpc-discovery',
+		// Storefront cart routes: public, behind the commerce gate, the CSRF
+		// check and a per-address limit. No access group decides them.
+		'commerce-cart',
+		'commerce-cart-add',
+		'commerce-cart-attributes',
+		'commerce-cart-clear',
+		'commerce-cart-remove',
+		'commerce-cart-update',
 	];
 
 	$unaccounted = array_values(array_diff(array_keys($routeNames), $mapped, $exempt));

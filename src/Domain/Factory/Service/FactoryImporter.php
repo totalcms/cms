@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
@@ -12,6 +13,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
@@ -48,6 +50,7 @@ class FactoryImporter
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly PropertyRepository $propertyRepository,
 		private readonly DataViewFilter $dataViewFilter,
+		private readonly ObjectWriteGate $gate,
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
@@ -341,6 +344,10 @@ class FactoryImporter
 	/** @param array<string,string> $defs */
 	public function import(string $collection, int $quantity = 1, array $defs = []): int
 	{
+		// Objects are stored without ObjectSaver (see below), so the gate is
+		// asked here: the factory may not fill the store's own records.
+		$this->gate->requireWritable($collection, '', Operation::Import);
+
 		$importCount = 0;
 
 		// Get definitions from collection and merge with user provided definitions

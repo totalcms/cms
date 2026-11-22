@@ -7,6 +7,7 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
+use TotalCMS\Middleware\Commerce\CommerceCollectionGuardMiddleware;
 use TotalCMS\Middleware\Access\ImportAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
@@ -15,11 +16,11 @@ use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/import', function (RouteCollectorProxy $group): void {
-		$group->post('/collections/{collection}/factory', Import\ImportFactoryAction::class)->setName('import-factory')->add(CollectionAccessMiddleware::class);
-		$group->post('/collections/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv')->add(CollectionAccessMiddleware::class);
-		$group->post('/collections/{collection}/deck/csv', Import\ImportDeckCsvAction::class)->setName('import-deck-csv')->add(CollectionAccessMiddleware::class);
-		$group->post('/collections/{collection}/deck/json', Import\ImportDeckJsonAction::class)->setName('import-deck-json')->add(CollectionAccessMiddleware::class);
-		$group->post('/collections/{collection}/json', Import\ImportJsonAction::class)->setName('import-json')->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/factory', Import\ImportFactoryAction::class)->setName('import-factory')->add(CommerceCollectionGuardMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv')->add(CommerceCollectionGuardMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/deck/csv', Import\ImportDeckCsvAction::class)->setName('import-deck-csv')->add(CommerceCollectionGuardMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/deck/json', Import\ImportDeckJsonAction::class)->setName('import-deck-json')->add(CommerceCollectionGuardMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/json', Import\ImportJsonAction::class)->setName('import-json')->add(CommerceCollectionGuardMiddleware::class)->add(CollectionAccessMiddleware::class);
 		$group->post('/wordpress-analyze', Import\ImportWordpressAnalyzeAction::class)->setName('import-wordpress-analyze')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
 		$group->post('/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress')->add(ImportAccessMiddleware::class)->add(RssImportEditionMiddleware::class);
 

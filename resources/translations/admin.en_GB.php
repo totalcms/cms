@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Undo history for every object save and delete',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache backend configuration',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Your store: currency, payments, tax, shipping and emails',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Admin dashboard configuration',
 	'settings.extensions'              => 'Extensions',

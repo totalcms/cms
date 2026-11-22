@@ -41,6 +41,9 @@ use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Activity\Listener\ActivityListener;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
@@ -72,6 +75,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Commerce\Cart\CartLoginListener;
+use TotalCMS\Domain\Commerce\Cart\CartService;
+use TotalCMS\Domain\Commerce\Cart\CartStore;
+use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -105,6 +112,9 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\Export\AccessGroupExport;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\Entitlements;
+use TotalCMS\Domain\License\Service\ExtensionLicense;
+use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -223,7 +233,9 @@ use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BadgeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CartTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\FeedTwigAdapter;
@@ -658,7 +670,23 @@ return [
 		new UtilsTwigAdapter(),
 		$container->get(SeoTwigAdapter::class),
 		new BadgeTwigAdapter(),
+		$container->get(CartTwigAdapter::class),
+		$container->get(CommerceTwigAdapter::class),
 		// Lazy: the engine's `cms` global is this adapter.
+		fn (): TwigEngine => $container->get(TwigEngine::class),
+	),
+
+	// Spelled out for the lazy engine: `cms.cart` renders the cart partials,
+	// and the engine's `cms` global holds this adapter.
+	CartTwigAdapter::class => fn (ContainerInterface $container): CartTwigAdapter => new CartTwigAdapter(
+		$container->get(CommerceGate::class),
+		$container->get(CartService::class),
+		$container->get(CartStore::class),
+		$container->get(PricingContextFactory::class),
+		$container->get(ProductCatalog::class),
+		$container->get(SessionInterface::class),
+		$container->get(CSRFTokenManager::class),
+		$container->get(Config::class),
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 	),
 
@@ -849,6 +877,11 @@ return [
 		$dispatcher->listen('object.updated', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 
+		// CartLoginListener — joins the cart a visitor started to the cart
+		// stored for the customer they sign in as. It must run on the event:
+		// the password and passkey logins destroy the session right after it.
+		$dispatcher->listen(CoreEvent::USER_LOGIN, $lazy(CartLoginListener::class, '__invoke'));
+
 		// ActivityListener — records who changed, downloaded or was refused
 		// what, for Utilities → Activity. Priority 100 = after the core
 		// listeners; it only writes a row, so order among the 100s is moot.
@@ -882,6 +915,25 @@ return [
 	// -------------------------------------------------------------------------
 	// Extensions
 	// -------------------------------------------------------------------------
+
+	// Commerce asks one gate everywhere: Pro, and the Commerce add-on on the license.
+	CommerceGate::class => \DI\get(LicenseCommerceGate::class),
+
+	// Paid products. Entitlements asks every source in its list; the license is
+	// the first, and the marketplace client adds another. Neither class can be
+	// autowired: one takes a list, the other a closure.
+	Entitlements::class => fn (ContainerInterface $container): Entitlements => new Entitlements(
+		[$container->get(LicenseEntitlementSource::class)],
+		$container->get(LicenseEntitlementSource::class),
+		$container->get(LicenseStatus::class),
+	),
+
+	// The manifests are read when first asked for, not here: discovery scans the disk.
+	ExtensionLicense::class => fn (ContainerInterface $container): ExtensionLicense => new ExtensionLicense(
+		fn (): array => $container->get(ExtensionDiscovery::class)->discover(),
+		$container->get(EditionFeatureService::class),
+		$container->get(Entitlements::class),
+	),
 
 	ExtensionDiscovery::class => function (ContainerInterface $container): ExtensionDiscovery {
 		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);

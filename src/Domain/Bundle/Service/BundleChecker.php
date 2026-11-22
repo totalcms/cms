@@ -70,7 +70,8 @@ class BundleChecker
 
 	private function compareLocalBundle(): bool
 	{
-		$schemas = $this->schemaLister->listReservedSchemas();
+		// Every schema file that ships, including the ones a site is not shown.
+		$schemas = $this->schemaLister->listShippedSchemas();
 		foreach ($schemas as $schema) {
 			$schemaPath = SchemaRepository::defaultSchemaDir() . "{$schema->id}.json";
 			$bundlePath = "resources/schemas/{$schema->id}.json";

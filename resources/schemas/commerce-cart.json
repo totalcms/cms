@@ -1,0 +1,96 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-cart.json",
+	"id": "commerce-cart",
+	"type": "object",
+	"title": "Cart",
+	"category": "Commerce",
+	"description": "A saved cart: a signed-in customer's cart, or a cart that reached checkout. It holds no prices.",
+	"required": [
+		"id"
+	],
+	"index": [
+		"id",
+		"customerId",
+		"email",
+		"status",
+		"orderId",
+		"updated"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "A random id.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${uid-32}",
+				"readonly": true
+			}
+		},
+		"customerCollection": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer Collection",
+			"help": "The auth collection of the cart's owner. Empty for a guest.",
+			"serverOnly": true
+		},
+		"customerId": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer ID",
+			"help": "The cart's owner. Empty for a guest.",
+			"serverOnly": true
+		},
+		"email": {
+			"type": "string",
+			"field": "text",
+			"label": "Email",
+			"help": "The email given at checkout.",
+			"serverOnly": true
+		},
+		"items": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Items",
+			"help": "What is in the cart: [{productId, variantId, qty}]. Never a price.",
+			"serverOnly": true
+		},
+		"attributes": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Checkout Attributes",
+			"help": "The extra values the buyer gave, before they are filtered onto the order.",
+			"serverOnly": true
+		},
+		"discountCode": {
+			"type": "string",
+			"field": "text",
+			"label": "Discount Code",
+			"help": "The code only, never an amount.",
+			"serverOnly": true
+		},
+		"status": {
+			"type": "string",
+			"field": "text",
+			"label": "Status",
+			"help": "active, checkout or converted.",
+			"serverOnly": true
+		},
+		"orderId": {
+			"type": "string",
+			"field": "text",
+			"label": "Order",
+			"help": "The order this cart became.",
+			"serverOnly": true
+		},
+		"updated": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Updated",
+			"help": "When the cart last changed.",
+			"serverOnly": true
+		}
+	}
+}

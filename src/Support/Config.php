@@ -90,6 +90,9 @@ class Config
 	public array $security = [];
 	/** @var array<string,mixed> Object snapshot history — see BackupStore. */
 	public array $backups = [];
+
+	/** @var array<string,mixed> */
+	public array $commerce = [];
 	/** @var array<string,mixed> Activity log — see ActivityRecorder. */
 	public array $activity = [];
 	/** @var array<string,mixed> `tcms push` / `tcms pull` remote — see SyncConfig. */
@@ -184,6 +187,7 @@ class Config
 		$this->isHttps            = (bool)($this->rawSettings['is_https'] ?? false);
 		$this->security           = is_array($this->rawSettings['security'] ?? null) ? $this->rawSettings['security'] : [];
 		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
+		$this->commerce           = is_array($this->rawSettings['commerce'] ?? null) ? $this->rawSettings['commerce'] : [];
 		$this->activity           = is_array($this->rawSettings['activity'] ?? null) ? $this->rawSettings['activity'] : [];
 		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];
 

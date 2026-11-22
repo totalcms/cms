@@ -8,12 +8,23 @@ use Illuminate\Support\Collection;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\OidAllocator;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\DateFieldResetter;
 use TotalCMS\Domain\Object\Service\ObjectCloner;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class ObjectClonerTest extends TestCase
 {
@@ -42,7 +53,21 @@ final class ObjectClonerTest extends TestCase
 			$this->dateFieldResetter,
 			$this->eventDispatcher,
 			$this->oids,
+			$this->openGate(),
 		);
+	}
+
+	/** The real gate, as the system: these tests are about the copy, not who may make it. */
+	private function openGate(): ObjectWriteGate
+	{
+		$actors = new ActorContext();
+		$actors->set(Actor::system());
+		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => true, 'collection' => 'auth'];
+		$loggers      = $this->createMock(LoggerFactory::class);
+		$guard        = new AccessGuard($this->createMock(SchemaFetcher::class), $this->createMock(ObjectFetcher::class), $this->createMock(OwnerPropertyResolver::class), $config, $loggers);
+
+		return new ObjectWriteGate($actors, $this->eventDispatcher, $guard, new AccessDenials($loggers, new OAuthActivityLogger(new NullLogger()), $this->eventDispatcher));
 	}
 
 	public function testACloneAdvancesTheLifetimeCount(): void

@@ -253,6 +253,7 @@ Fired after a user successfully logs in.
 | Key | Type | Description |
 |---|---|---|
 | `user` | `string` | User ID or email |
+| `collection` | `string` | The auth collection the user signed in to |
 
 ```php
 $context->addEventListener('user.login', function (array $payload): void {

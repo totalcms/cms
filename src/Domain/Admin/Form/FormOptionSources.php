@@ -10,6 +10,7 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
@@ -28,6 +29,10 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
  * the arguments named on the call; nothing reads form state. The TotalForm
  * methods of the same names are thin pass-throughs that fill in the form's
  * own collection where a caller leaves it out.
+ *
+ * One method for each named source, so the count grows with the sources.
+ *
+ * @SuppressWarnings("PHPMD.TooManyMethods")
  */
 final readonly class FormOptionSources
 {
@@ -249,6 +254,17 @@ final readonly class FormOptionSources
 		}
 
 		return $this->services->pageMiddlewareRegistry->availableNames();
+	}
+
+	/**
+	 * The access groups Settings → Commerce lets a product grant. Read from
+	 * the settings each time, so a change there shows on the next form.
+	 *
+	 * @return list<string>
+	 */
+	public function grantableGroupOptions(): array
+	{
+		return (new CommerceSettings($this->services->config))->grantableGroups();
 	}
 
 	/**
