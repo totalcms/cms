@@ -47,6 +47,9 @@ class FakePaymentProvider implements PaymentProvider
 
 	private bool $failNextCheckout = false;
 
+	/** What the provider answers when asked whether a checkout was paid. Nothing unless a test says. */
+	public ?\Closure $fetch = null;
+
 	public function __construct(
 		private readonly bool $signatureValid = true,
 		private readonly string $id = 'fake',
@@ -118,7 +121,7 @@ class FakePaymentProvider implements PaymentProvider
 
 	public function fetchPayment(string $providerSessionRef): ?PaymentEvent
 	{
-		return null;
+		return $this->fetch instanceof \Closure ? ($this->fetch)($providerSessionRef) : null;
 	}
 
 	public function refund(RefundRequest $request): RefundResult

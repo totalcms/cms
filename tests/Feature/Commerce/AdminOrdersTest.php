@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
+use TotalCMS\Domain\Commerce\Service\RefundService;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 
@@ -218,6 +222,66 @@ describe('one order', function (): void {
 			->and(str_contains(($this->page)($this->paid), 'Run fulfillment again'))->toBe($offered)
 			->and(($this->page)($this->paid))->toContain('Send the receipt again');
 	})->with([['boss', true], ['keeper', false]]);
+
+	// A refund is asked for, and the provider confirms it a moment later. The
+	// page that asked would otherwise go on showing the order as it was.
+	describe('while a refund is on its way', function (): void {
+		beforeEach(function (): void {
+			signInAs($this->app, 'boss', 'auth');
+			$this->ask     = fn () => $this->c->get(RefundService::class)->request($this->paid->id(), 500, '', false, new Actor(ActorKind::Admin, 'boss', 'auth'));
+			$this->confirm = fn () => $this->c->get(PaymentEventProcessor::class)->process(commercePaymentEvent(PaymentEventType::Refunded, $this->paid->id(), 500, 'evt_refund'));
+			$this->asking  = 'hx-trigger="load delay:2s"';
+		});
+
+		it('the page says so and asks again by itself, until the provider confirms', function (): void {
+			$before = ($this->page)($this->paid);
+			($this->ask)();
+			$waiting = ($this->page)($this->paid);
+			($this->confirm)();
+			$after = ($this->page)($this->paid);
+
+			expect($before)->not->toContain($this->asking)
+				->and($waiting)->toContain('hx-get="commerce/orders/' . $this->paid->id() . '?part=body&amp;n=1"', $this->asking, 'hx-swap="outerHTML"', 'A refund of $5.00 is on its way')
+				->and($after)->not->toContain($this->asking)->not->toContain('is on its way')
+				->and($after)->toContain('Part refunded');
+		});
+
+		it('the reason staff gave is shown with the request, in the order\'s money history', function (): void {
+			$this->c->get(RefundService::class)->request($this->paid->id(), 500, 'Arrived <b>damaged</b>', false, new Actor(ActorKind::Admin, 'boss', 'auth'));
+
+			expect(($this->page)($this->paid))->toContain('Reason: Arrived &lt;b&gt;damaged&lt;/b&gt;');
+		});
+
+		it('a request for the order alone is answered with the order alone', function (): void {
+			($this->ask)();
+
+			$part = (string)get('/admin/commerce/orders/' . $this->paid->id() . '?part=body&n=3', ['HX-Request' => 'true'])->getBody();
+
+			expect($part)->toContain('id="commerce-order"', '?part=body&amp;n=4"')
+				->not->toContain('<html', '<head');
+		});
+
+		it('it gives up asking after a while, and still says the refund is on its way', function (): void {
+			($this->ask)();
+
+			$part = (string)get('/admin/commerce/orders/' . $this->paid->id() . '?part=body&n=15', ['HX-Request' => 'true'])->getBody();
+
+			expect($part)->not->toContain($this->asking)
+				->and($part)->toContain('A refund of $5.00 is on its way');
+		});
+	});
+
+	// A site with authentication switched off has no users: whoever opens the
+	// admin can do everything in it, and its routes already let them. The
+	// page must offer what the routes allow.
+	it('offers everything on a site with authentication switched off', function (): void {
+		$unpaid       = ($this->order)(['mug' => 1], paid: false);
+		$config       = $this->app->getContainer()->get(Config::class);
+		$config->auth = ['enable' => false] + $config->auth;
+
+		expect(($this->page)($unpaid))->toContain('Cancel this order')
+			->and(($this->page)($this->paid))->toContain('Run fulfillment again');
+	});
 
 	it('offers a super admin, and nobody else, to accept a payment held for review, and says what was paid', function (string $user, bool $offered): void {
 		// The provider says $10.00 was paid for a mug that costs more.

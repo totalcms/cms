@@ -17,7 +17,9 @@
 	providerLabel  the payment provider's name
 	can          {refund, fulfill, receipt, refulfill, cancel, accept}: what this user may do to this order now
 	held         what the provider says was paid for an order held for review, formatted; '' for any other order
-	refund       {left, leftFormatted, step}: what can still be refunded
+	refund       {left, leftFormatted, step}: what can still be refunded;
+	             {pending, pendingFormatted}: asked for and not yet confirmed
+	polls        how often the order has asked for itself again (0 at first)
 	noteMax      the longest note, in characters
 	notice       what an action just did, or nothing
 	error        why an action was refused, or nothing
@@ -35,7 +37,10 @@
 {# Every form here posts with HTMX and puts the answer, the order redrawn, in place of the order. #}
 {% macro post(order, action) %}method="post" action="commerce/orders/{{ order.id|e }}/{{ action }}" hx-post="commerce/orders/{{ order.id|e }}/{{ action }}" hx-target="#commerce-order" hx-swap="outerHTML"{% endmacro %}
 
-<div id="commerce-order" class="commerce-order-wrap">
+{# While a refund is on its way the order asks for itself again every two seconds, and gives up after ten tries. #}
+{% set polls = polls ?? 0 %}
+<div id="commerce-order" class="commerce-order-wrap"
+	{%- if refund.pending > 0 and polls < 10 %} hx-get="commerce/orders/{{ order.id|e }}?part=body&amp;n={{ polls + 1 }}" hx-trigger="load delay:2s" hx-swap="outerHTML"{% endif %}>
 	<header class="commerce-order-header">
 		<a class="commerce-back" href="commerce/orders">Orders</a>
 		<div class="commerce-order-title">
@@ -54,6 +59,9 @@
 
 	<section class="dash-content-section commerce-order-body">
 		{# What an action just did, or why it was refused. #}
+		{% if refund.pending > 0 %}
+			<div class="info-box commerce-order-waiting" role="status"><p>A refund of {{ refund.pendingFormatted|e }} is on its way. This order shows it once {{ providerLabel|e }} confirms it.</p></div>
+		{% endif %}
 		{% if error ?? '' %}
 			<div class="warning-box commerce-order-refused" role="alert"><p>{{ error|e }}</p></div>
 		{% elseif notice ?? '' %}

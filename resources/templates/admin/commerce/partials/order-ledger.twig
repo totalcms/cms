@@ -27,6 +27,7 @@
 						<td>
 							{{ row.label|e }}
 							{% if row.statusText %}<span class="commerce-sub">{{ row.statusText|e }}</span>{% endif %}
+							{% if row.reason %}<span class="commerce-sub">Reason: {{ row.reason|e }}</span>{% endif %}
 						</td>
 						<td class="commerce-num">{{ row.amount|money(row.currency ?: order.currency) }}</td>
 						<td>{{ row.actor|e }}</td>

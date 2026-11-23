@@ -359,16 +359,44 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	/** @param array<array-key,mixed> $dispute a Dispute. It names the payment, not the order. */
 	private function dispute(string $eventId, PaymentEventType $type, array $dispute): PaymentEvent
 	{
+		$payment = $this->text($dispute, 'payment_intent');
+
 		return new PaymentEvent(
 			provider: self::ID,
 			eventId: $eventId,
 			type: $type,
-			orderId: '',
+			// A new dispute can reach the store before the payment event that
+			// lets it find the order by the payment, so its order is looked up.
+			// A dispute that is closing is long after: the payment finds it.
+			orderId: $type === PaymentEventType::Disputed ? $this->orderOf($payment) : '',
 			amount: $this->money($dispute, 'amount'),
 			providerRef: $this->text($dispute, 'id'),
-			providerPaymentRef: $this->text($dispute, 'payment_intent'),
+			providerPaymentRef: $payment,
 			summary: array_filter(['reason' => $this->text($dispute, 'reason'), 'status' => $this->text($dispute, 'status')]),
 		);
+	}
+
+	/**
+	 * The order a payment was taken for: checkout writes its id on the
+	 * payment (`payment_intent_data.metadata`). '' for a payment another
+	 * system took on the same Stripe account, or when Stripe cannot be asked;
+	 * the store then looks for the order by the payment, as it always has.
+	 */
+	private function orderOf(string $paymentIntent): string
+	{
+		if ($paymentIntent === '') {
+			return '';
+		}
+
+		try {
+			$intent = $this->client->get('/payment_intents/' . rawurlencode($paymentIntent));
+		} catch (ProviderException) {
+			return '';
+		}
+
+		$metadata = is_array($intent['metadata'] ?? null) ? $intent['metadata'] : [];
+
+		return $this->text($metadata, 'orderId');
 	}
 
 	/** @param array<array-key,mixed> $object */

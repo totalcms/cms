@@ -298,3 +298,15 @@ describe('in the admin', function (): void {
 			->and(($this->refund)(['amount' => '1.00'])->getStatusCode())->toBe(409);
 	});
 });
+
+// What the order page watches for: money asked back that the provider has
+// not yet said went back.
+it('knows how much has been asked back and is not yet confirmed', function (): void {
+	expect($this->refunds->pending(($this->fresh)()))->toBe(0);
+
+	$this->refunds->request($this->order->id(), 1000, '', false, $this->boss);
+	expect($this->refunds->pending(($this->fresh)()))->toBe(1000);
+
+	($this->confirm)(1000, 'evt_refund_1');
+	expect($this->refunds->pending(($this->fresh)()))->toBe(0);
+});

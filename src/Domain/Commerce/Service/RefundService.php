@@ -101,19 +101,27 @@ final readonly class RefundService
 			return 0;
 		}
 
+		return max(0, $this->paid($order) - $order->refundedTotal() - $this->pending($order));
+	}
+
+	/**
+	 * How much has been asked back and not yet confirmed by the provider,
+	 * in minor units.
+	 *
+	 * The ledger keeps every request, confirmed or not, so what is still on
+	 * its way is what was asked for beyond what has been confirmed. A refund
+	 * made at the provider itself is confirmed without a request, and can
+	 * make this come out low; the provider then refuses anything beyond what
+	 * is really left.
+	 */
+	public function pending(OrderData $order): int
+	{
 		$asked = 0;
 		foreach ($this->requests($order) as $line) {
 			$asked += ($line['status'] ?? '') === self::PENDING && is_numeric($line['amount'] ?? null) ? (int)$line['amount'] : 0;
 		}
 
-		// The ledger keeps every request, confirmed or not, so what is still
-		// on its way is what was asked for beyond what has been confirmed. A
-		// refund made at the provider itself is confirmed without a request,
-		// and can make this come out low; the provider then refuses anything
-		// beyond what is really left.
-		$onItsWay = max(0, $asked - $order->refundedTotal());
-
-		return max(0, $this->paid($order) - $order->refundedTotal() - $onItsWay);
+		return max(0, $asked - $order->refundedTotal());
 	}
 
 	/**

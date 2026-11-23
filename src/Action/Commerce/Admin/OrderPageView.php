@@ -16,6 +16,7 @@ use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\RefundService;
 use TotalCMS\Domain\Money\Money;
+use TotalCMS\Support\Config;
 
 /**
  * What an order's page in the admin shows, worked out in one place: the
@@ -36,6 +37,7 @@ final readonly class OrderPageView
 		private PaymentProviderRegistry $providers,
 		private RefundService $refunds,
 		private MoneyFilter $money,
+		private Config $config,
 	) {
 	}
 
@@ -59,27 +61,14 @@ final readonly class OrderPageView
 			];
 		}
 
-		$ledger = [];
-		foreach ($this->ledger->forOrder($order->id()) as $row) {
-			$type   = is_string($row['type'] ?? null) ? $row['type'] : '';
-			$status = is_string($row['status'] ?? null) ? $row['status'] : '';
-			// A refund staff asked for is its own line, beside the one the
-			// provider's webhook writes when the money has gone back. It
-			// stays as written, so it says what happened to the request.
-			$asked    = $type === 'refund' && !str_starts_with((string)($row['actor'] ?? ''), 'webhook:');
-			$ledger[] = [
-				'label'      => $asked ? 'Refund requested' : $this->labels->ledger($type),
-				'statusText' => $asked ? ($status === 'failed' ? 'refused by the provider' : 'taken by the provider') : str_replace('_', ' ', $status),
-			] + $row;
-		}
-
-		$left = $this->refunds->refundable($order);
+		$left    = $this->refunds->refundable($order);
+		$pending = $this->refunds->pending($order);
 		$held = $order->paymentStatus() === 'review' ? $order->heldMoney() : null;
 
 		return [
 			'order'       => $order,
 			'lines'       => $lines,
-			'ledger'      => $ledger,
+			'ledger'      => $this->history($order),
 			'payment'     => $this->labels->payment($order->paymentStatus()),
 			'fulfillment' => $this->labels->fulfillment($order->fulfillmentStatus(), $holds),
 			'attention'   => ['label' => $this->labels->attention($reason), 'help' => $this->labels->attentionHelp($reason)],
@@ -93,11 +82,43 @@ final readonly class OrderPageView
 				'leftFormatted' => ($this->money)($left, $order->currency()),
 				// The smallest amount the currency has: 0.01, or 1 where it has no cents.
 				'step'          => Money::of(1, $order->currency())->toDecimal(),
+				// Asked for and not yet confirmed by the provider: while there
+				// is some, the page asks again by itself.
+				'pending'          => $pending,
+				'pendingFormatted' => ($this->money)($pending, $order->currency()),
 			],
 			'can'         => $this->allowed($order, $toDo, $left),
 			// What the provider says it was paid, for an order held for review.
 			'held'        => $held instanceof Money ? ($this->money)($held->amount(), $held->currency()) : '',
 		];
+	}
+
+
+	/**
+	 * The order's money history, each line with what to call it.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function history(OrderData $order): array
+	{
+		$ledger = [];
+		foreach ($this->ledger->forOrder($order->id()) as $row) {
+			$type   = is_string($row['type'] ?? null) ? $row['type'] : '';
+			$status = is_string($row['status'] ?? null) ? $row['status'] : '';
+			// A refund staff asked for is its own line, beside the one the
+			// provider's webhook writes when the money has gone back. It
+			// stays as written, so it says what happened to the request.
+			$asked    = $type === 'refund' && !str_starts_with((string)($row['actor'] ?? ''), 'webhook:');
+			$summary  = is_array($row['summary'] ?? null) ? $row['summary'] : [];
+			$ledger[] = [
+				'label'      => $asked ? 'Refund requested' : $this->labels->ledger($type),
+				'statusText' => $asked ? ($status === 'failed' ? 'refused by the provider' : 'taken by the provider') : str_replace('_', ' ', $status),
+				// Why staff asked for the refund, as they typed it.
+				'reason'     => $asked && is_string($summary['reason'] ?? null) ? $summary['reason'] : '',
+			] + $row;
+		}
+
+		return $ledger;
 	}
 
 	/**
@@ -113,7 +134,10 @@ final readonly class OrderPageView
 	private function allowed(OrderData $order, int $toDo, int $left): array
 	{
 		$holds = $order->holdsPayment();
-		$super = $this->actors->current()->isTrusted();
+		// On a site with authentication switched off there are no users: the
+		// routes let whoever opens the admin do everything (BaseAccessMiddleware),
+		// so the page offers everything.
+		$super = !$this->config->authEnabled() || $this->actors->current()->isTrusted();
 
 		return [
 			'refund'    => $super && $left > 0 && $this->refunds->available($order),

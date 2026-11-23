@@ -316,6 +316,40 @@ describe('when Stripe says no', function (): void {
 });
 
 describe('reading a webhook', function (): void {
+	// A dispute names the payment, not the order, and it can reach the store
+	// before the payment event that would let the store find the order by it.
+	// The order's id is on the payment at Stripe, where checkout put it.
+	it('reads the order of a new dispute from the payment at Stripe', function (): void {
+		$http = new RecordingHttpClient(new HttpResponse(200, (string)json_encode(['id' => 'pi_3A1', 'metadata' => ['orderId' => ORDER_ID, 'orderNumber' => '1001']])));
+
+		$event = stripeProvider($http)->parseWebhook(stripeWebhook('charge.dispute.created'));
+
+		expect($event->orderId)->toBe(ORDER_ID)
+			->and($event->type)->toBe(PaymentEventType::Disputed)
+			->and($http->requests)->toHaveCount(1)
+			->and($http->requests[0]['method'])->toBe('GET')
+			->and($http->requests[0]['url'])->toBe(StripeClient::BASE . '/payment_intents/pi_3A1');
+	});
+
+	it('names no order for a dispute of a payment the store did not take, or when Stripe cannot be asked', function (HttpResponse ...$answers): void {
+		$event = stripeProvider(new RecordingHttpClient(...$answers))->parseWebhook(stripeWebhook('charge.dispute.created'));
+
+		expect($event->orderId)->toBe('')
+			->and($event->providerPaymentRef)->toBe('pi_3A1');
+	})->with([
+		"another system's payment" => [new HttpResponse(200, '{"id":"pi_3A1","metadata":{}}')],
+		'Stripe is unreachable'    => [],
+		'Stripe refuses'           => [new HttpResponse(404, '{"error":{"message":"No such payment_intent"}}')],
+	]);
+
+	it('does not ask Stripe about a dispute that is closing: by then the order is found by its payment', function (string $fixture): void {
+		$http = new RecordingHttpClient();
+
+		stripeProvider($http)->parseWebhook(stripeWebhook($fixture));
+
+		expect($http->requests)->toBe([]);
+	})->with(['charge.dispute.closed.won', 'charge.dispute.closed.lost']);
+
 	it('reads each event the store uses', function (string $fixture, PaymentEventType $type, string $orderId, int $amount, string $ref, string $paymentRef): void {
 		$event = stripeProvider(new RecordingHttpClient())->parseWebhook(stripeWebhook($fixture));
 

@@ -52,6 +52,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
 use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
 use TotalCMS\Domain\Commerce\Order\TaxCalculator;
+use TotalCMS\Domain\Commerce\Payment\PaymentCatchUp;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
@@ -962,11 +963,13 @@ return [
 	CommerceGate::class => \DI\get(LicenseCommerceGate::class),
 
 	// Which part of the store handles which kind of provider event. The
-	// processor is fetched when an event arrives, not when the router is built.
+	// handler is fetched when an event arrives, not when the router is built.
+	// A payment event goes through PaymentCatchUp, which first makes sure the
+	// store knows about the payment a refund or a dispute is about.
 	ProviderEventRouter::class => function (ContainerInterface $container): ProviderEventRouter {
 		$router = new ProviderEventRouter();
 		$router->handle(PaymentEvent::class, static function (PaymentEvent $event) use ($container): void {
-			$container->get(PaymentEventProcessor::class)->process($event);
+			$container->get(PaymentCatchUp::class)->process($event);
 		});
 
 		return $router;

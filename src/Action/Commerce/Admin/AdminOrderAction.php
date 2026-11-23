@@ -36,6 +36,15 @@ final readonly class AdminOrderAction
 			return $this->twig->template($response->withStatus(404), 'admin/404.twig', ['url' => ['page' => '404'] + $url]);
 		}
 
+		// The order asking for itself again, while it waits for a refund to
+		// be confirmed: it gets the order alone, and how often it has asked.
+		$query = $request->getQueryParams();
+		if ($request->getHeaderLine('HX-Request') === 'true' && ($query['part'] ?? '') === 'body') {
+			$polls = is_numeric($query['n'] ?? null) ? max(0, (int)$query['n']) : 0;
+
+			return $this->twig->template($response, 'admin/commerce/partials/order-body.twig', ['polls' => $polls] + $this->view->of($order));
+		}
+
 		return $this->twig->template($response, 'admin/commerce/order.twig', ['url' => $url] + $this->view->of($order));
 	}
 }
