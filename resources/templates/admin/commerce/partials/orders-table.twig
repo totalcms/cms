@@ -1,0 +1,70 @@
+{#
+	The orders table, with its count and its pager. The whole of what a
+	filter request from the orders page is answered with.
+
+	rows     list of {order, payment, fulfillment, attention}
+	total    how many orders match
+	page     the page shown, of `pages`
+	filters  the filters in force
+	query    the filters as a query string
+	prefix   what goes in front of an order number
+#}
+<div id="commerce-orders-table" class="commerce-orders-table">
+	<p class="commerce-count">{{ total|number_format }} {{ total == 1 ? 'order' : 'orders' }}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+
+	{% if rows is empty %}
+		<div class="dash-empty-state">
+			<em>{{ filters is empty ? 'No orders yet. They appear here as buyers check out.' : 'No orders match these filters.' }}</em>
+		</div>
+	{% else %}
+		<div class="commerce-table-wrap">
+			<table class="admin-table">
+				<thead>
+					<tr>
+						<th>Order</th>
+						<th>Placed</th>
+						<th>Customer</th>
+						<th class="commerce-num">Total</th>
+						<th>Payment</th>
+						<th>Fulfillment</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in rows %}
+						{% set order = row.order %}
+						<tr{% if row.attention %} class="commerce-attention"{% endif %}>
+							<td class="commerce-order-number">
+								<a href="commerce/orders/{{ order.id|e }}">{{ prefix|e }}{{ order.number }}</a>
+								{% if order.isRenewal %}<span class="dash-badge sm muted">Renewal</span>{% endif %}
+								{% if row.attention %}<span class="dash-badge sm warning">{{ row.attention|e }}</span>{% endif %}
+							</td>
+							<td class="commerce-when">
+								{% if order.created %}<time datetime="{{ order.created|e }}">{{ order.created|date('M j, Y') }}</time>{% endif %}
+							</td>
+							<td class="commerce-customer"><span class="dash-truncate" title="{{ order.email|e }}">{{ order.email|e }}</span></td>
+							<td class="commerce-num">
+								{{ order.grandTotal|money(order.currency) }}
+								{% if order.refundedTotal > 0 %}<span class="commerce-sub">{{ (0 - order.refundedTotal)|money(order.currency) }} refunded</span>{% endif %}
+							</td>
+							<td><span class="dash-badge sm {{ row.payment.tone }}">{{ row.payment.label|e }}</span></td>
+							<td><span class="dash-badge sm {{ row.fulfillment.tone }}">{{ row.fulfillment.label|e }}</span></td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		{% if pages > 1 %}
+			<nav class="commerce-pager" aria-label="Pages of orders">
+				{% if page > 1 %}
+					<a class="dash-button transparent" href="commerce/orders?{{ (query ? query ~ '&' : '')|e }}page={{ page - 1 }}">Newer</a>
+				{% else %}
+					<span></span>
+				{% endif %}
+				{% if page < pages %}
+					<a class="dash-button transparent" href="commerce/orders?{{ (query ? query ~ '&' : '')|e }}page={{ page + 1 }}">Older</a>
+				{% endif %}
+			</nav>
+		{% endif %}
+	{% endif %}
+</div>

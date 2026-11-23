@@ -974,6 +974,19 @@ final class GrainFilter implements ImageFilter
 - **In the admin**, your looks and duotones get their own row in the ImageWorks tool's filter strip, titled with your extension's `name` from `extension.json`. They are still picked one at a time along with the core looks. Your `effect` filters join the Extras row, where they stack on top of a look.
 - An admin can switch the **Image Filters** capability off. The extension's filters are then unregistered, and their names drop out of URLs silently, serving the unfiltered image.
 
+## Commerce
+
+On a site with [Commerce](docs/commerce/overview), an extension can add a way to pay, set a price that depends on the buyer, refuse a checkout, and write its own data on an order:
+
+```php
+$context->addPaymentProvider($provider);
+$context->addPriceResolver($resolver, priority: 10);
+$context->addCheckoutValidator($validator);
+$context->addOrderBuildingListener($listener);
+```
+
+Each is described, with examples, in [Commerce Events and Extensions](docs/commerce/events-and-extensions). They show in the extension's permissions as **Payment Provider**, **Checkout Validator** and **Commerce Pricing**.
+
 ## Agent Skill
 
 An extension can teach coding agents how to use it. Ship a `skill/` directory next to `extension.json`, in the layout the core skill uses:

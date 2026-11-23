@@ -359,6 +359,10 @@ class TotalCMSTwigAdapter
 		$names = static fn (mixed $list): array => is_array($list) ? array_values(array_filter($list, is_string(...))) : [];
 
 		$except = array_merge($names($this->config->frontendAssets['except'] ?? []), $names($options['except'] ?? []));
+		// The cart's script and styles are of no use to a site without Commerce.
+		if (!$this->commerce->available()) {
+			$except[] = 'commerce';
+		}
 
 		if ($except === []) {
 			return $this->frontendAssetsList;

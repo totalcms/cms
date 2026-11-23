@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Backup\Listener;
 
 use TotalCMS\Domain\Backup\Service\BackupStore;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Support\Config;
 
 /**
@@ -22,13 +25,15 @@ use TotalCMS\Support\Config;
  * nothing. Import-time writes never reach here at all — the dispatcher
  * suppresses `object.updated` for a collection mid-import.
  *
- * Off switch is `backups.enable` in settings.
+ * Off switch is `backups.enable` in settings. A store's carts are never
+ * snapshotted ({@see SchemaData::keepsNoHistory()}).
  */
 readonly class ObjectBackupListener
 {
 	public function __construct(
 		private BackupStore $store,
 		private Config $config,
+		private CollectionFetcher $collections,
 	) {
 	}
 
@@ -56,11 +61,29 @@ readonly class ObjectBackupListener
 			return;
 		}
 
+		$collection = (string)($payload['collection'] ?? '');
+		if (!$this->keepsHistory($collection)) {
+			return;
+		}
+
 		$this->store->snapshotObject(
-			(string)($payload['collection'] ?? ''),
+			$collection,
 			(string)($payload['id'] ?? ''),
 			$previous->toArray(),
 		);
+	}
+
+	/**
+	 * Whether records of this collection are worth keeping copies of. It is
+	 * the collection's schema that says, not its name. A collection that is
+	 * gone keeps them: its records are being deleted, and their last state
+	 * is what a restore needs.
+	 */
+	private function keepsHistory(string $collection): bool
+	{
+		$found = $this->collections->fetchCollection($collection);
+
+		return !SchemaData::keepsNoHistory($found instanceof CollectionData ? $found->schema : '');
 	}
 
 	private function enabled(): bool

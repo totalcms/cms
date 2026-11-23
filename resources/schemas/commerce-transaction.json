@@ -50,7 +50,7 @@
 			"type": "string",
 			"field": "text",
 			"label": "Type",
-			"help": "checkout_created, payment, payment_failed, refund, dispute or dispute_closed.",
+			"help": "checkout_created, payment, payment_failed, payment_accepted, refund, dispute or dispute_closed.",
 			"serverOnly": true
 		},
 		"status": {

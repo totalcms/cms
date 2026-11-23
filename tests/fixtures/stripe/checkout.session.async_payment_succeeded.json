@@ -1,0 +1,19 @@
+{
+	"id": "evt_1AsyncOk",
+	"object": "event",
+	"livemode": false,
+	"type": "checkout.session.async_payment_succeeded",
+	"data": {
+		"object": {
+			"id": "cs_test_a2",
+			"object": "checkout.session",
+			"amount_total": 3998,
+			"currency": "usd",
+			"client_reference_id": "0123456789abcdef0123456789abcdef",
+			"metadata": { "orderId": "0123456789abcdef0123456789abcdef" },
+			"payment_intent": "pi_3A2",
+			"payment_status": "paid",
+			"status": "complete"
+		}
+	}
+}

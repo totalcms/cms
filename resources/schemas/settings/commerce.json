@@ -37,8 +37,10 @@
 			"type": "array",
 			"field": "multiselect",
 			"label": "Payment Providers",
-			"help": "The ways a buyer can pay, in the order checkout shows them. A provider appears here once its extension is enabled and set up.",
-			"options": []
+			"help": "The ways a buyer can pay, in the order checkout shows them. A provider appears here once its extension is enabled, and is offered to buyers once it has its keys.",
+			"settings": {
+				"propertyOptions": "paymentProviders"
+			}
 		},
 		"checkoutMode": {
 			"type": "string",

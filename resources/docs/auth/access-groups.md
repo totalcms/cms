@@ -200,6 +200,7 @@ Simple `true`/`false` for features without granular control:
 - **`mailer`** - Access to mailer/email functionality
 - **`playground`** - Access to Twig playground
 - **`dataviews`** - Access to Data Views
+- **`commerce`** - Access to the store's orders, on a site with [Commerce](docs/commerce/overview): see orders, mark items as sent, keep notes, resend a receipt. Refunds and cancelling stay with super admins. Groups saved before this permission existed read as `false`, and no built-in group has it except `admin`
 - **`docs`** - Access to documentation
 - **`inlineEdit`** - May edit values in place (the pencil in collection tables). Also requires `update` on the collection, and the site-wide **Settings → Dashboard → Inline Editing** switch. Groups saved before this permission existed read as `true`, so nothing changes on upgrade
 

@@ -1,0 +1,75 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Stripe Payments",
+	"description": "Your Stripe keys. Add a webhook endpoint in the Stripe dashboard that points at /commerce/webhook/stripe on this site, then switch Stripe on in Settings → Commerce.",
+	"type": "object",
+	"properties": {
+		"mode": {
+			"type": "string",
+			"field": "select",
+			"label": "Mode",
+			"help": "Test mode takes no real money: use it with Stripe's test cards until your store works end to end. Live mode charges real cards.",
+			"default": "test",
+			"options": [
+				{
+					"value": "test",
+					"label": "Test"
+				},
+				{
+					"value": "live",
+					"label": "Live"
+				}
+			]
+		},
+		"testPublishableKey": {
+			"type": "string",
+			"field": "text",
+			"label": "Test Publishable Key",
+			"help": "Starts with <code>pk_test_</code>. Needed only when your store takes payment on its own page (Settings → Commerce → Checkout). Without it the buyer pays on Stripe's page. It is the one Stripe key a web page may hold: it lets the page show Stripe's form and nothing else.",
+			"default": ""
+		},
+		"testSecretKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Test Secret Key",
+			"help": "Starts with <code>sk_test_</code>. From the Stripe dashboard, under Developers → API keys, with test mode on.",
+			"default": ""
+		},
+		"testWebhookSecret": {
+			"type": "string",
+			"field": "secret",
+			"label": "Test Webhook Signing Secret",
+			"help": "Starts with <code>whsec_</code>. Shown when you add the webhook endpoint in test mode. Stripe signs every event with it, and an event without a good signature is refused.",
+			"default": ""
+		},
+		"livePublishableKey": {
+			"type": "string",
+			"field": "text",
+			"label": "Live Publishable Key",
+			"help": "Starts with <code>pk_live_</code>. Needed only when your store takes payment on its own page (Settings → Commerce → Checkout). Without it the buyer pays on Stripe's page. It is the one Stripe key a web page may hold.",
+			"default": ""
+		},
+		"liveSecretKey": {
+			"type": "string",
+			"field": "secret",
+			"label": "Live Secret Key",
+			"help": "Starts with <code>sk_live_</code>. A restricted key (<code>rk_live_</code>) works too, if it may write Checkout Sessions and Refunds.",
+			"default": ""
+		},
+		"liveWebhookSecret": {
+			"type": "string",
+			"field": "secret",
+			"label": "Live Webhook Signing Secret",
+			"help": "Starts with <code>whsec_</code>. The live endpoint has its own secret, different from the test one.",
+			"default": ""
+		},
+		"statementDescriptor": {
+			"type": "string",
+			"field": "text",
+			"label": "Statement Descriptor Suffix",
+			"help": "Optional. A short name added after your Stripe account's own on the buyer's card statement, such as your store's name. Up to 22 letters, digits and spaces.",
+			"default": "",
+			"maxLength": 22
+		}
+	}
+}

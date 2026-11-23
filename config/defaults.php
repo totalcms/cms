@@ -668,6 +668,7 @@ $settings['security'] = [
 // limit), and anything larger is deleted as before. Sync's pre-overwrite
 // snapshots land in the same tree. `keep` is per object; `maxAgeDays` prunes
 // snapshots and kept files regardless of count (0 disables the age rule).
+// A store's carts keep no snapshots: one is saved on every change to it.
 // Editable under Settings → Backups; restore with `tcms backup:list` /
 // `tcms backup:restore`.
 $settings['backups'] = [

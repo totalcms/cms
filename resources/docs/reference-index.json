@@ -765,6 +765,13 @@
             "url": "https://docs.totalcms.co/auth/twig/"
         },
         {
+            "name": "cms.auth.canAccessCommerce",
+            "signature": "canAccessCommerce(): bool",
+            "description": "Whether this user may see the store's orders. Says nothing about whether the site has a store.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/auth/twig/"
+        },
+        {
             "name": "cms.auth.canAccessDataViews",
             "signature": "canAccessDataViews(): bool",
             "description": "Check if the user can access data views.",
@@ -1119,9 +1126,37 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.cart.checkoutForm",
+            "signature": "checkoutForm(array $options = []): string",
+            "description": "The checkout form: the buyer's email, where it ships if anything does, and how they pay. Nothing for an empty cart, or one nobody can pay for.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.cart.count",
             "signature": "count(): int",
             "description": "How many items are in the cart, counting quantities.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.discount",
+            "signature": "discount(): ?array",
+            "description": "The discount code on the cart, worked out against it now, or null for none. `amount` is in minor units; it is 0 for a free-shipping code.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.discountForm",
+            "signature": "discountForm(): string",
+            "description": "The discount code field, or the code on the cart with a button to take it off.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.drawer",
+            "signature": "drawer(array $options = []): string",
+            "description": "The slide-out cart (`<dialog id=\"cart-drawer\">`). Put it once on a page, with `cms.cart.toggle()` wherever the button belongs. It needs the `commerce` front-end assets, which `cms.assetsHead()` and `cms.assetsBody()` include.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
@@ -1157,6 +1192,20 @@
             "name": "cms.cart.subtotal",
             "signature": "subtotal(): int",
             "description": "The lines added up, in minor units, before discount, shipping and tax.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.toggle",
+            "signature": "toggle(array $options = []): string",
+            "description": "The button that opens the drawer, with the count of what is in the cart.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.cart.total",
+            "signature": "total(): int",
+            "description": "The subtotal less the discount, in minor units, before shipping and tax.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
@@ -1348,6 +1397,13 @@
             "url": "https://docs.totalcms.co/twig/collections/"
         },
         {
+            "name": "cms.commerce.available",
+            "signature": "available(): bool",
+            "description": "Whether this site has Commerce at all. True on a store that is still being set up and cannot sell yet; `enabled()` says whether it can.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.commerce.currency",
             "signature": "currency(): string",
             "description": "The store's currency, as a three-letter code.",
@@ -1355,9 +1411,23 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.commerce.dashboard",
+            "signature": "dashboard(): ?array",
+            "description": "The store's numbers for the admin home page, or null. It answers only on a site with Commerce and for a signed-in user who may see orders: in a public template it is always null.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.embed",
+            "signature": "embed(array $order, string $token = ''): string",
+            "description": "The payment form for an order that is waiting to be paid on the store's own page, for a custom pay page. Nothing for any other order, and nothing without the order's signed link: what the form is mounted with belongs to that one buyer.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.commerce.enabled",
             "signature": "enabled(): bool",
-            "description": "Whether the store is switched on for this site.",
+            "description": "Whether the store can sell: Commerce is on for this site, and there is at least one way to pay that is switched on and has its keys.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
@@ -1372,6 +1442,20 @@
             "name": "cms.commerce.inStock",
             "signature": "inStock(string $productId, string $variantId = ''): bool",
             "description": "Whether a product (or one variant of it) can be bought now. A product with variants and none named is in stock when any of them is.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.order",
+            "signature": "order(string $orderId, string $token): ?array",
+            "description": "One order, for someone holding its link (the `t` its pages carry). Without the order's secret, staff notes, or anything else not theirs.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.orders",
+            "signature": "orders(int $limit = 20): array",
+            "description": "The signed-in customer's orders, newest first. None for a guest.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
@@ -2089,6 +2173,13 @@
             "name": "cms.license.isOffline",
             "signature": "isOffline(): bool",
             "description": "Check if the current license is an offline license.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/edition/"
+        },
+        {
+            "name": "cms.license.isRunningTrial",
+            "signature": "isRunningTrial(): bool",
+            "description": "A trial that is still running: the license is a trial and it validates. An expired trial is a trial too, but it is no longer valid.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/edition/"
         },
@@ -5895,6 +5986,27 @@
                 "permission": null
             },
             {
+                "name": "addOrderBuildingListener",
+                "signature": "addOrderBuildingListener(callable $listener, int $priority = 0): void",
+                "description": "Write metadata on an order while it is being built: who sold a line, which campaign the order came from. The listener is given an `OrderDraftMetadata` to write to and the priced `OrderDraft` to read; it cannot change a price. If it throws, the checkout stops.",
+                "phase": "register",
+                "permission": null
+            },
+            {
+                "name": "addCheckoutValidator",
+                "signature": "addCheckoutValidator(CheckoutValidator $validator): void",
+                "description": "Refuse a checkout the store should not take: a license key that does not match, a product this buyer may not have. The validator sees the order the server built, before any payment is asked for, and returns the reason to show the buyer, or null to allow it. It cannot change the order. If it throws, the checkout is refused.",
+                "phase": "register",
+                "permission": null
+            },
+            {
+                "name": "addPaymentProvider",
+                "signature": "addPaymentProvider(PaymentProvider $provider): void",
+                "description": "Add a way to pay. The store's owner switches it on in Settings \u2192 Commerce, and a buyer is offered it once it has its keys (`isConfigured()`). Nothing is registered on a site without Commerce.",
+                "phase": "register",
+                "permission": null
+            },
+            {
                 "name": "registerMcpPrompt",
                 "signature": "registerMcpPrompt(Prompt $prompt, callable $handler, string $access = 'admin'): void",
                 "description": "Register a code-defined MCP prompt. Use when the extension ships the prompt as PHP code rather than relying on operator-authored objects in the mcp-prompt collection. The prompt appears in `prompts/list` and is callable via `prompts/get` on the MCP server.",
@@ -6291,6 +6403,14 @@
             {
                 "id": "commerce:pricing",
                 "description": "Commerce Pricing"
+            },
+            {
+                "id": "commerce:payments",
+                "description": "Payment Provider"
+            },
+            {
+                "id": "commerce:checkout",
+                "description": "Checkout Validator"
             }
         ],
         "manifest_fields": [
@@ -6561,6 +6681,13 @@
                     "url": "https://docs.totalcms.co/extensions/stock-photos/"
                 },
                 {
+                    "id": "totalcms/stripe",
+                    "name": "Stripe Payments",
+                    "description": "Take payments in your store with Stripe. Buyers pay on Stripe's own checkout page, and the store marks an order paid only when Stripe's signed webhook says so.",
+                    "version": "",
+                    "url": "https://docs.totalcms.co/extensions/stripe/"
+                },
+                {
                     "id": "totalcms/webmcp",
                     "name": "WebMCP",
                     "description": "Make your forms callable by a browser AI agent, and hand it the MCP server's read tools inside the visitor's own session, through the WebMCP origin trial in Chrome 149+. Read tools need the Standard edition or above (they are the MCP server's). Experimental: the spec is still moving, and this extension tracks it.",
@@ -6626,6 +6753,10 @@
                 {
                     "label": "Stock Photos",
                     "url": "https://docs.totalcms.co/extensions/stock-photos/"
+                },
+                {
+                    "label": "Stripe Payments",
+                    "url": "https://docs.totalcms.co/extensions/stripe/"
                 },
                 {
                     "label": "WebMCP",

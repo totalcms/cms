@@ -10,6 +10,7 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
@@ -254,6 +255,21 @@ final readonly class FormOptionSources
 		}
 
 		return $this->services->pageMiddlewareRegistry->availableNames();
+	}
+
+	/**
+	 * Every payment provider an extension has registered, for the store's
+	 * owner to switch on. One that has no keys yet is listed too: switching
+	 * it on is how the owner says they mean to set it up.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function paymentProviderOptions(): array
+	{
+		return array_map(
+			static fn (PaymentProvider $provider): array => ['value' => $provider->id(), 'label' => $provider->label()],
+			$this->services->paymentProviders?->all() ?? [],
+		);
 	}
 
 	/**

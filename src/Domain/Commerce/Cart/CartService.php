@@ -6,9 +6,9 @@ namespace TotalCMS\Domain\Commerce\Cart;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
-use TotalCMS\Domain\Commerce\Pricing\PricingService;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
@@ -22,6 +22,11 @@ use TotalCMS\Factory\LoggerFactory;
  * It holds product ids and quantities. Whether a product may be bought and
  * what it costs are asked of the catalog every time, so the cart cannot go
  * stale and nothing a browser sends sets a price.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") one method per thing a
+ *                                                buyer or the checkout does
+ *                                                to a cart; they share the
+ *                                                rules for storing it
  */
 final readonly class CartService
 {
@@ -32,10 +37,11 @@ final readonly class CartService
 	public function __construct(
 		private CartStore $store,
 		private ProductCatalog $catalog,
-		private PricingService $pricing,
 		private CommerceSettings $settings,
 		private CartRepository $carts,
 		private CurrentCustomer $customer,
+		private DiscountService $discounts,
+		private CartPricer $pricer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Commerce);
@@ -154,6 +160,68 @@ final readonly class CartService
 		return $this->store->items();
 	}
 
+	/** The discount code on the cart, in capitals, or '' for none. The cart keeps the code and never an amount. */
+	public function discountCode(): string
+	{
+		$this->sync();
+
+		return $this->store->discountCode();
+	}
+
+	/**
+	 * Check every line against the stock there is now. Advisory, like the
+	 * check when a line is added: two buyers can both pass it for the last one.
+	 *
+	 * @throws CommerceException `out_of_stock`, or what the catalog says of a product that has gone
+	 */
+	public function verifyStock(): void
+	{
+		foreach ($this->items() as $item) {
+			$this->check($this->catalog->purchasable($item->productId, $item->variantId), $item->variantId, $item->qty);
+		}
+	}
+
+	/**
+	 * A name for this cart that is the same every time it is checked out,
+	 * so a second checkout can find the order the first one started. The
+	 * cart is stored to get it, whoever the buyer is; if it cannot be
+	 * stored, the session stands in.
+	 */
+	public function checkoutKey(): string
+	{
+		$this->sync();
+		$customer = $this->customer->get();
+
+		try {
+			$this->write($customer['collection'] ?? '', $customer['id'] ?? '');
+		} catch (\Throwable $e) {
+			$this->logger->warning('A cart could not be stored for checkout', ['error' => $e->getMessage()]);
+		}
+
+		return $this->store->cartId() ?? $this->store->sessionKey();
+	}
+
+	/** The name checkoutKey() gave this cart, or '' when it has not been checked out. */
+	public function cartKey(): string
+	{
+		return $this->store->cartId() ?? '';
+	}
+
+	/** The cart is at checkout for this order. Never fails the request. */
+	public function markCheckout(string $orderId): void
+	{
+		$cartId = $this->store->cartId();
+		if ($cartId === null) {
+			return;
+		}
+
+		try {
+			$this->carts->markCheckout($cartId, $orderId);
+		} catch (\Throwable $e) {
+			$this->logger->warning('A cart could not be marked as at checkout', ['cartId' => $cartId, 'error' => $e->getMessage()]);
+		}
+	}
+
 	/**
 	 * Join this session's cart to the cart stored for a customer, and keep the
 	 * result in both. Quantities of the same line are added, up to the most a
@@ -196,61 +264,58 @@ final readonly class CartService
 	public function view(PricingContext $ctx): CartView
 	{
 		$this->sync();
-		$items    = $this->store->items();
-		$lines    = [];
-		$notices  = [];
-		$subtotal = Money::zero($ctx->currency);
-		$count    = 0;
+		$priced  = $this->pricer->price($this->store->items(), $ctx);
+		$notices = $priced['notices'];
+		$lines   = $priced['lines'];
+		$dropped = $notices !== [];
 
-		foreach ($items as $key => $item) {
-			$product = $this->catalog->product($item->productId);
-			if (!$this->sellable($product, $item->variantId)) {
-				$notices[] = $this->goneNotice($product);
-				unset($items[$key]);
-
-				continue;
+		// The code is worked out again every time. A cart that stopped
+		// qualifying loses it, and the buyer is told why, once. An empty cart
+		// keeps its code for when something is put in it again.
+		$discount = null;
+		$code     = $this->store->discountCode();
+		if ($code !== '' && $lines !== []) {
+			try {
+				$discount = $this->discounts->resolveLines($code, $priced['discountLines'], $priced['subtotal'], '');
+				$lines    = array_map(static fn (CartLineView $line): CartLineView => $line->withDiscount($discount->lineAmounts[$line->lineKey] ?? 0), $lines);
+			} catch (CommerceException $e) {
+				$this->store->setDiscountCode('');
+				$notices[] = $e->getMessage();
+				$dropped   = true;
 			}
-
-			$variant = $product->variants[$item->variantId] ?? null;
-			$unit    = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx);
-			$total   = $unit->unitPrice->multiply($item->qty);
-
-			$lines[]  = new CartLineView($key, $product->id, $item->variantId, $product->title, $variant->title ?? '', $product->image, $item->qty, $unit->unitPrice, $total, $unit->source);
-			$subtotal = $subtotal->add($total);
-			$count += $item->qty;
 		}
 
-		if ($notices !== []) {
-			$this->store->put($items);
+		if ($dropped) {
+			$this->store->put($priced['items']);
 			$this->persist();
 		}
 
-		return new CartView($lines, $count, $subtotal, $notices);
+		return new CartView($lines, $priced['count'], $priced['subtotal'], $notices, $discount);
 	}
 
 	/**
-	 * The catalog's own answer, without the exception: a cart being looked
-	 * at must not fail because one product was archived.
+	 * Put a discount code on the cart. It is checked against the cart as it
+	 * is now, and kept only if it can be used. The cart keeps the code and
+	 * never an amount.
 	 *
-	 * @phpstan-assert-if-true ProductView $product
+	 * @throws CommerceException `discount_invalid`, `discount_minimum` or `discount_no_items`
 	 */
-	private function sellable(?ProductView $product, string $variantId): bool
+	public function applyDiscount(string $code, PricingContext $ctx): void
 	{
-		if (!$product instanceof ProductView || !$product->isActive()) {
-			return false;
-		}
-		if (!$product->hasVariants) {
-			return $variantId === '';
-		}
+		$this->sync();
+		$priced = $this->pricer->price($this->store->items(), $ctx);
+		// Who the buyer is is not known at the cart; checkout checks the per-customer limit.
+		$applied = $this->discounts->resolveLines($code, $priced['discountLines'], $priced['subtotal'], '');
 
-		return isset($product->variants[$variantId]) && $product->variants[$variantId]->active;
+		$this->store->setDiscountCode($applied->code);
+		$this->persist();
 	}
 
-	private function goneNotice(?ProductView $product): string
+	public function removeDiscount(): void
 	{
-		return $product instanceof ProductView && $product->title !== ''
-			? "{$product->title} is no longer available and was removed from your cart."
-			: 'An item is no longer available and was removed from your cart.';
+		$this->sync();
+		$this->store->setDiscountCode('');
+		$this->persist();
 	}
 
 	/**

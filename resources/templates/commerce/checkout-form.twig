@@ -1,0 +1,54 @@
+{#
+	The checkout form: who is buying, where it goes and how they pay. It
+	posts to the store, which builds the order itself. Nothing here is a
+	price, and one added to it by hand is not read.
+
+	With HTMX it posts in place: a refusal is written into the form, and
+	success sends the browser to the payment page, or, when the store takes
+	payment on its own page, puts the payment form where this form was.
+	Without JavaScript it posts normally and is redirected.
+
+	providers  the ways to pay that can take this cart: [{id, label}]
+	ships      whether anything in the cart has to be sent
+	email      the buyer's email, when they are signed in
+	label      the button's text
+	class      an extra class for the form
+	base, csrf as in cart-page.twig
+#}
+<form id="commerce-checkout-form" class="commerce-checkout-form{% if class %} {{ class|e }}{% endif %}" method="post" action="{{ base|e }}/commerce/checkout" hx-post="{{ base|e }}/commerce/checkout" hx-target="find .commerce-checkout-notice" hx-swap="innerHTML">
+	{{ csrf|raw }}
+	<div class="commerce-checkout-notice" aria-live="polite"></div>
+	<p class="commerce-checkout-field">
+		<label for="commerce-checkout-email">Email</label>
+		<input id="commerce-checkout-email" type="email" name="email" value="{{ email|e }}" autocomplete="email" required>
+	</p>
+	{% if ships %}
+		<fieldset class="commerce-checkout-address">
+			<legend>Shipping address</legend>
+			{% for field, text in {name: 'Full name', line1: 'Address', line2: 'Address line 2', city: 'City', region: 'State or region', postalCode: 'Postal code'} %}
+				<p class="commerce-checkout-field">
+					<label for="commerce-checkout-{{ field|e }}">{{ text|e }}</label>
+					<input id="commerce-checkout-{{ field|e }}" type="text" name="shippingAddress[{{ field|e }}]" maxlength="200"{% if field != 'line2' and field != 'region' %} required{% endif %}>
+				</p>
+			{% endfor %}
+			<p class="commerce-checkout-field">
+				<label for="commerce-checkout-country">Country</label>
+				<input id="commerce-checkout-country" type="text" name="shippingAddress[country]" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" autocomplete="country" placeholder="US" required>
+			</p>
+		</fieldset>
+	{% endif %}
+	{% if providers|length > 1 %}
+		<fieldset class="commerce-checkout-providers">
+			<legend>Pay with</legend>
+			{% for provider in providers %}
+				<label><input type="radio" name="provider" value="{{ provider.id|e }}"{% if loop.first %} checked{% endif %}> {{ provider.label|e }}</label>
+			{% endfor %}
+		</fieldset>
+	{% else %}
+		{% for provider in providers %}
+			<input type="hidden" name="provider" value="{{ provider.id|e }}">
+			<p class="commerce-checkout-provider">Pay with {{ provider.label|e }}</p>
+		{% endfor %}
+	{% endif %}
+	<button type="submit" class="commerce-checkout-submit">{{ label|e }}</button>
+</form>

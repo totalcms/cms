@@ -12,6 +12,7 @@ use TotalCMS\Domain\Commerce\Cart\CartLineView;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -36,7 +37,22 @@ use TotalCMS\Support\Config;
 final readonly class CartResponder
 {
 	/** The cart partials a request may ask for, and their templates. */
-	private const PARTS = ['widget' => 'commerce/cart-widget.twig', 'page' => 'commerce/cart-page.twig'];
+	private const PARTS = [
+		'widget'   => 'commerce/cart-widget.twig',
+		'page'     => 'commerce/cart-page.twig',
+		'discount' => 'commerce/discount-form.twig',
+		'drawer'   => 'commerce/cart-drawer-body.twig',
+		'count'    => 'commerce/cart-count.twig',
+	];
+
+	/**
+	 * "Swap nothing": the caller changes the cart and leaves showing it to
+	 * the cart pieces on the page, which reload themselves on `cart-updated`.
+	 */
+	private const NONE = 'none';
+
+	/** Parts that have nowhere to print a notice, so must not use one up. */
+	private const SILENT = ['count'];
 
 	/** Keys a cart request has no use for. Seeing one means a client is trying to set a price. */
 	private const PRICE_KEYS = ['price', 'amount', 'total', 'unitPrice'];
@@ -88,7 +104,10 @@ final readonly class CartResponder
 	{
 		$part = $this->part($request);
 		if ($part === null) {
-			return $this->error($response, 'part_invalid', 'Ask for the cart as "widget" or "page".', 422);
+			return $this->error($response, 'part_invalid', 'Ask for the cart as "widget", "page", "drawer", "count", "discount" or "none".', 422);
+		}
+		if ($part === self::NONE) {
+			return $changed ? $response->withHeader('HX-Trigger', 'cart-updated') : $response;
 		}
 
 		if ($part !== '') {
@@ -131,6 +150,15 @@ final readonly class CartResponder
 	{
 		$part = $this->part($request);
 
+		// Nothing is swapped, so the reason is kept for the carts on the page,
+		// which are told to reload. This announcement is safe on a refusal:
+		// it answers a POST, never the reload it causes.
+		if ($part === self::NONE) {
+			$this->flash($e->getMessage());
+
+			return $response->withHeader('X-Commerce-Error', $e->errorCode)->withHeader('HX-Trigger', 'cart-updated');
+		}
+
 		// A page shows the cart with the reason in it. The status stays 200 so
 		// HTMX swaps it in; a script that needs the code reads the header.
 		if ($part !== null && $part !== '') {
@@ -146,10 +174,22 @@ final readonly class CartResponder
 		return $response->withStatus(303)->withHeader('Location', $this->back($request));
 	}
 
+	/** Something to tell the buyer the next time a cart is shown, once. */
+	public function flash(string $message): void
+	{
+		$this->session->getFlash()->add(self::FLASH, $message);
+	}
+
 	/** A refusal for a script, in the shape every API error has, with a code to match on. */
 	private function error(ResponseInterface $response, string $code, string $message, int $status): ResponseInterface
 	{
 		return $this->json->json($response, ['error' => ['code' => $code, 'message' => $message]], $status);
+	}
+
+	/** Who is buying, for a cart action that needs to price the cart. */
+	public function context(): PricingContext
+	{
+		return $this->contexts->current();
 	}
 
 	private function view(): CartView
@@ -168,13 +208,14 @@ final readonly class CartResponder
 			return $request->getHeaderLine('HX-Request') === 'true' ? 'widget' : '';
 		}
 
-		return is_string($asked) && isset(self::PARTS[$asked]) ? $asked : null;
+		return is_string($asked) && (isset(self::PARTS[$asked]) || $asked === self::NONE) ? $asked : null;
 	}
 
 	/** @param list<string> $notices more to say than the cart's own notices */
 	private function html(ResponseInterface $response, string $part, CartView $cart, array $notices = []): ResponseInterface
 	{
-		$flash = $this->session->getFlash()->get(self::FLASH);
+		// Reading a notice uses it up, so only a part that prints notices reads them.
+		$flash = in_array($part, self::SILENT, true) ? [] : $this->session->getFlash()->get(self::FLASH);
 
 		return $this->twig->template($response->withHeader('Content-Type', 'text/html; charset=utf-8'), self::PARTS[$part], [
 			'cart'    => $cart,
@@ -194,6 +235,9 @@ final readonly class CartResponder
 		return [
 			'count'    => $cart->count,
 			'subtotal' => $cart->subtotal->amount(),
+			// What the code takes off, worked out now. The cart itself keeps only the code.
+			'discount' => $cart->discount === null ? null : ['code' => $cart->discount->code, 'type' => $cart->discount->type, 'amount' => $cart->discount->amount],
+			'total'    => $cart->total->amount(),
 			'currency' => $cart->subtotal->currency(),
 			'lines'    => array_map(static fn (CartLineView $line): array => [
 				'lineKey'      => $line->lineKey,
@@ -204,14 +248,16 @@ final readonly class CartResponder
 				'image'        => $line->image,
 				'qty'          => $line->qty,
 				'unitPrice'    => $line->unitPrice->amount(),
-				'lineTotal'    => $line->lineTotal->amount(),
-				'priceSource'  => $line->priceSource,
+				'lineTotal'     => $line->lineTotal->amount(),
+				'discountTotal' => $line->discountTotal,
+				'priceSource'   => $line->priceSource,
 			], $cart->lines),
 			'notices'  => $cart->notices,
 		];
 	}
 
-	private function wantsJson(ServerRequestInterface $request): bool
+	/** Whether the caller is a script that reads JSON, not a page. */
+	public function wantsJson(ServerRequestInterface $request): bool
 	{
 		return $request->getMethod() === 'GET'
 			|| str_contains($request->getHeaderLine('Accept'), 'application/json')
@@ -222,7 +268,7 @@ final readonly class CartResponder
 	 * Where a plain form came from, if that is a page of this site. Anything
 	 * else goes to the home page: a redirect must never leave the site.
 	 */
-	private function back(ServerRequestInterface $request): string
+	public function back(ServerRequestInterface $request): string
 	{
 		$referer = $request->getHeaderLine('Referer');
 		$from    = parse_url($referer);

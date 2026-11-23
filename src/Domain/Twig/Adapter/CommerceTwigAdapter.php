@@ -6,28 +6,50 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Order\CustomerOrders;
+use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
+use TotalCMS\Domain\Commerce\Service\CheckoutService;
+use TotalCMS\Domain\Commerce\Service\CommerceDashboardView;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\TemplateQuery;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 /**
  * `cms.commerce`: the store's catalog and prices in a site's own templates.
  *
  * A visitor sees active products only. With the store switched off there is
  * nothing to show, and nothing here throws on a public page.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") each public method is a
+ *                                                function a template calls
+ *                                                as `cms.commerce.…`
  */
 final readonly class CommerceTwigAdapter
 {
 	private const STATUS = 'status';
 
+	/**
+	 * @param \Closure(): CheckoutService $checkout lazy: checkout is only needed by a pay page
+	 * @param \Closure(): TwigEngine      $twig     lazy: the engine's `cms` global holds this adapter
+	 * @param \Closure(): CommerceDashboardView $dashboard lazy: only the admin home page asks
+	 *
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") one adapter answers every
+	 *                                                  `cms.commerce.…` call, and each
+	 *                                                  argument is a service one of them needs
+	 */
 	public function __construct(
 		private CommerceGate $gate,
+		private PaymentProviderRegistry $providers,
 		private CommerceSettings $settings,
 		private ProductCatalog $catalog,
 		private PricingService $pricing,
@@ -35,11 +57,27 @@ final readonly class CommerceTwigAdapter
 		private TemplateQuery $query,
 		private ActorContext $actors,
 		private MoneyFilter $money,
+		private CustomerOrders $orders,
+		private \Closure $checkout,
+		private \Closure $twig,
+		private \Closure $dashboard,
 	) {
 	}
 
-	/** Whether the store is switched on for this site. */
+	/**
+	 * Whether the store can sell: Commerce is on for this site, and there is
+	 * at least one way to pay that is switched on and has its keys.
+	 */
 	public function enabled(): bool
+	{
+		return $this->gate->allowed() && $this->providers->enabled() !== [];
+	}
+
+	/**
+	 * Whether this site has Commerce at all. True on a store that is still
+	 * being set up and cannot sell yet; `enabled()` says whether it can.
+	 */
+	public function available(): bool
 	{
 		return $this->gate->allowed();
 	}
@@ -150,13 +188,74 @@ final readonly class CommerceTwigAdapter
 	}
 
 	/**
+	 * One order, for someone holding its link (the `t` its pages carry).
+	 * Without the order's secret, staff notes, or anything else not theirs.
+	 *
+	 * @return array<string,mixed>|null null when the link does not open that order
+	 */
+	public function order(string $orderId, string $token): ?array
+	{
+		return $this->orders->byLink($orderId, $token);
+	}
+
+	/**
+	 * The signed-in customer's orders, newest first. None for a guest.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	public function orders(int $limit = 20): array
+	{
+		return $this->gate->allowed() ? $this->orders->mine($limit) : [];
+	}
+
+	/**
+	 * The payment form for an order that is waiting to be paid on the store's
+	 * own page, for a custom pay page. Nothing for any other order, and
+	 * nothing without the order's signed link: what the form is mounted with
+	 * belongs to that one buyer.
+	 *
+	 * @param array<mixed> $order the order the pay page was given
+	 * @param string       $token the `token` the pay page was given
+	 */
+	public function embed(array $order, string $token = ''): string
+	{
+		$id    = $order['id'] ?? '';
+		$found = is_string($id) && $id !== '' && $this->gate->allowed() ? $this->orders->opened($id, $token) : null;
+		$embed = $found instanceof OrderData ? ($this->checkout)()->embedFor($found) : null;
+		if (!$embed instanceof EmbeddedCheckout) {
+			return '';
+		}
+
+		return ($this->twig)()->render('commerce/checkout-embedded.twig', ['embed' => ['moduleUrl' => $embed->moduleUrl, 'config' => $embed->config]]);
+	}
+
+	/**
+	 * The store's numbers for the admin home page, or null. It answers only
+	 * on a site with Commerce and for a signed-in user who may see orders:
+	 * in a public template it is always null.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function dashboard(): ?array
+	{
+		return ($this->dashboard)()->forCurrentUser();
+	}
+
+	/**
 	 * The payment providers a buyer can choose from.
 	 *
 	 * @return list<array{id: string, label: string}>
 	 */
 	public function providers(): array
 	{
-		return [];
+		if (!$this->gate->allowed()) {
+			return [];
+		}
+
+		return array_map(
+			static fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label()],
+			$this->providers->forCart(false),
+		);
 	}
 
 	/** An amount in minor units written for a person, in the store currency unless another is named. */

@@ -3,7 +3,8 @@
 	form posts with HTMX and gets this partial back; without JavaScript the
 	same forms post normally and the browser comes back to this page.
 
-	cart, notices, base  as in cart-widget.twig
+	cart, notices, base  as in cart-widget.twig. cart.discount is the code on
+	                     the cart, worked out now, or null
 	csrf                 the hidden token field, for a browser that sends no Origin
 #}
 <div id="cart-page" class="commerce-cart commerce-cart-page" hx-get="{{ base|e }}/commerce/cart?part=page" hx-trigger="cart-updated from:body" hx-swap="outerHTML">
@@ -56,8 +57,20 @@
 					<th scope="row" colspan="3">Subtotal</th>
 					<td class="commerce-cart-subtotal" colspan="2">{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</td>
 				</tr>
+				{% if cart.discount %}
+					<tr>
+						<th scope="row" colspan="3">Discount <small>{{ cart.discount.code|e }}</small></th>
+						<td class="commerce-cart-discount" colspan="2">{% if cart.discount.freeShipping %}Free shipping{% else %}{{ (0 - cart.discountTotal.amount)|money(cart.subtotal.currency) }}{% endif %}</td>
+					</tr>
+					<tr>
+						<th scope="row" colspan="3">Total</th>
+						<td class="commerce-cart-grand" colspan="2"><strong>{{ cart.total.amount|money(cart.total.currency) }}</strong></td>
+					</tr>
+				{% endif %}
 			</tfoot>
 		</table>
+		{# The page's own notices are printed above; the form keeps its own for a code it refuses. #}
+		{% include 'commerce/discount-form.twig' with {notices: [], amount: false} %}
 		<p class="commerce-cart-note">Shipping and tax are worked out at checkout.</p>
 	{% endif %}
 </div>

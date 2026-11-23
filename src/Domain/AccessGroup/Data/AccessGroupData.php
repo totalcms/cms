@@ -59,6 +59,8 @@ readonly class AccessGroupData
 			'mailer'     => false,
 			'playground' => true,
 			'dataviews'  => false,
+			// A store's orders hold buyers' names, addresses and payments.
+			'commerce'   => false,
 			'docs'       => true,
 			'inlineEdit' => true,
 			'utils'      => [

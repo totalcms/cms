@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Tests\Fakes\OpenCommerceGate;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\Nav\NavEntry;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Commerce\Order\OrderQuery;
+use TotalCMS\Domain\Commerce\Service\CommerceNav;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -37,6 +40,7 @@ describe('AdminNavRegistry', function (): void {
 			$this->extensions,
 			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
 			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
+			closedCommerceNav(),
 		);
 	});
 
@@ -55,6 +59,7 @@ describe('AdminNavRegistry', function (): void {
 			$extensions,
 			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
 			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
+			closedCommerceNav(),
 		);
 
 		$ids = array_map(fn (NavEntry $e): string => $e->id, $registry->items());
@@ -69,6 +74,27 @@ describe('AdminNavRegistry', function (): void {
 		expect($ids)->toBe(['collections', 'schemas', 'dataviews', 'builder', 'mailer', 'automations', 'playground', 'utils', 'extensions', 'settings', 'docs'])
 			->and($this->registry->items()[0]->label)->toBe('T:nav.collections')
 			->and($this->registry->items()[0]->url)->toBe('collections');
+	});
+
+	test('a site with a store has Orders first, above Collections, and a site without has no such entry', function (): void {
+		$translator = $this->createMock(TranslationService::class);
+		$translator->method('trans')->willReturnArgument(0);
+		$store = new AdminNavRegistry(
+			(new ReflectionClass(AuthTwigAdapter::class))->newInstanceWithoutConstructor(),
+			(new ReflectionClass(EditionTwigAdapter::class))->newInstanceWithoutConstructor(),
+			$translator,
+			$this->config,
+			$this->extensions,
+			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
+			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
+			new CommerceNav(new OpenCommerceGate(), (new ReflectionClass(OrderQuery::class))->newInstanceWithoutConstructor()),
+		);
+		$ids = array_map(fn (NavEntry $e): string => $e->id, $store->items());
+
+		expect(array_slice($ids, 0, 3))->toBe(['commerce', 'collections', 'schemas'])
+			->and(array_column($store->options(), 'value'))->toContain('commerce')
+			->and(array_map(fn (NavEntry $e): string => $e->id, $this->registry->items()))->not->toContain('commerce')
+			->and(array_column($this->registry->options(), 'value'))->not->toContain('commerce');
 	});
 
 	test('an extension item gets a stable id from its extension and url', function (): void {
@@ -121,6 +147,7 @@ describe('AdminNavRegistry', function (): void {
 			$extensions,
 			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
 			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
+			closedCommerceNav(),
 		);
 
 		$items = $registry->extensionSettingsItems();

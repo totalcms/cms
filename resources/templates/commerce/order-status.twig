@@ -1,0 +1,67 @@
+{#
+	The built-in order page: what a buyer sees after paying, and from the link
+	in their receipt. A store can use a Site Builder page of its own instead
+	(Settings → Commerce → Order page), which is given the same variables.
+
+	Autoescape is off in this app, so every value from the order is escaped.
+
+	order, token, base, polls, waiting  as in order-status-poll.twig
+#}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>Order {{ order.number|e }}</title>
+	<style>
+		body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; color: #1c1c1c; background: #f6f6f4; }
+		main { box-sizing: border-box; width: min(40rem, 100% - 2rem); margin: clamp(1rem, 6vw, 3rem) auto; padding: clamp(1rem, 5vw, 2rem); background: #fff; border-radius: 0.5rem; }
+		h1 { margin-top: 0; font-size: 1.5rem; }
+		table { width: 100%; border-collapse: collapse; }
+		th, td { padding: 0.5rem 0; text-align: left; border-bottom: 1px solid #e5e5e0; }
+		td:last-child, th:last-child { text-align: right; }
+		tfoot th, tfoot td { border-bottom: 0; }
+		.commerce-order-message { padding: 0.75rem 1rem; background: #f6f6f4; border-radius: 0.375rem; }
+		@media (prefers-color-scheme: dark) {
+			body { color: #ececec; background: #161616; }
+			main { background: #222; }
+			th, td { border-color: #3a3a3a; }
+			.commerce-order-message { background: #161616; }
+		}
+	</style>
+</head>
+<body>
+<main class="commerce-order">
+	<h1>Order {{ order.number|e }}</h1>
+	{% include 'commerce/order-status-poll.twig' %}
+	<table class="commerce-order-lines">
+		<thead>
+			<tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Total</th></tr>
+		</thead>
+		<tbody>
+			{% for line in order.lines %}
+				<tr>
+					<td>{{ line.title|e }}</td>
+					<td>{{ line.qty|e }}</td>
+					<td>{{ line.lineTotal|money(order.currency) }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+		<tfoot>
+			{% if order.discountTotal > 0 %}
+				<tr><th scope="row" colspan="2">Discount</th><td>{{ (0 - order.discountTotal)|money(order.currency) }}</td></tr>
+			{% endif %}
+			{% if order.shippingTotal > 0 %}
+				<tr><th scope="row" colspan="2">Shipping</th><td>{{ order.shippingTotal|money(order.currency) }}</td></tr>
+			{% endif %}
+			{% if order.taxTotal > 0 %}
+				<tr><th scope="row" colspan="2">Tax{% if order.taxMode == 'inclusive' %} (included){% endif %}</th><td>{{ order.taxTotal|money(order.currency) }}</td></tr>
+			{% endif %}
+			<tr><th scope="row" colspan="2">Total</th><td><strong>{{ order.grandTotal|money(order.currency) }}</strong></td></tr>
+		</tfoot>
+	</table>
+</main>
+{{ cms.assetsBody({except: ['forms', 'content', 'gallery']}) }}
+</body>
+</html>

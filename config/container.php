@@ -41,9 +41,31 @@ use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
+use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
+use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
+use TotalCMS\Domain\Commerce\Order\InventoryApplier;
+use TotalCMS\Domain\Commerce\Order\NoShippingCalculator;
+use TotalCMS\Domain\Commerce\Order\NoTaxCalculator;
+use TotalCMS\Domain\Commerce\Order\NullDownloadIssuer;
+use TotalCMS\Domain\Commerce\Order\NullInventoryApplier;
+use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
+use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
+use TotalCMS\Domain\Commerce\Order\TaxCalculator;
+use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Service\CheckoutService;
+use TotalCMS\Domain\Commerce\Service\CommerceDashboardView;
+use TotalCMS\Domain\Commerce\Order\CustomerOrders;
+use TotalCMS\Domain\Query\Service\TemplateQuery;
+use TotalCMS\Domain\Commerce\Pricing\PricingService;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Activity\Listener\ActivityListener;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
@@ -648,6 +670,7 @@ return [
 		actors                  : $container->get(ActorContext::class),
 		mailers                 : $container->get(MailerFetcher::class),
 		uploads                 : $container->get(PublicUploadPolicy::class),
+		paymentProviders        : $container->get(PaymentProviderRegistry::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
@@ -688,6 +711,25 @@ return [
 		$container->get(CSRFTokenManager::class),
 		$container->get(Config::class),
 		fn (): TwigEngine => $container->get(TwigEngine::class),
+		$container->get(PaymentProviderRegistry::class),
+		$container->get(MoneyFilter::class),
+	),
+
+	// Spelled out for the same reason, and so checkout is built only when a pay page asks.
+	CommerceTwigAdapter::class => fn (ContainerInterface $container): CommerceTwigAdapter => new CommerceTwigAdapter(
+		$container->get(CommerceGate::class),
+		$container->get(PaymentProviderRegistry::class),
+		$container->get(CommerceSettings::class),
+		$container->get(ProductCatalog::class),
+		$container->get(PricingService::class),
+		$container->get(PricingContextFactory::class),
+		$container->get(TemplateQuery::class),
+		$container->get(ActorContext::class),
+		$container->get(MoneyFilter::class),
+		$container->get(CustomerOrders::class),
+		fn (): CheckoutService => $container->get(CheckoutService::class),
+		fn (): TwigEngine => $container->get(TwigEngine::class),
+		fn (): CommerceDashboardView => $container->get(CommerceDashboardView::class),
 	),
 
 	// HttpClientInterface → GuzzleHttpClient. Interface binding (autowiring can't
@@ -918,6 +960,45 @@ return [
 
 	// Commerce asks one gate everywhere: Pro, and the Commerce add-on on the license.
 	CommerceGate::class => \DI\get(LicenseCommerceGate::class),
+
+	// Which part of the store handles which kind of provider event. The
+	// processor is fetched when an event arrives, not when the router is built.
+	ProviderEventRouter::class => function (ContainerInterface $container): ProviderEventRouter {
+		$router = new ProviderEventRouter();
+		$router->handle(PaymentEvent::class, static function (PaymentEvent $event) use ($container): void {
+			$container->get(PaymentEventProcessor::class)->process($event);
+		});
+
+		return $router;
+	},
+
+	// What else happens once when an order is paid, beside stock, downloads
+	// and the receipt. Each is fetched when it runs, not when this is built.
+	SideEffectRunner::class => function (ContainerInterface $container): SideEffectRunner {
+		$effects = new SideEffectRunner();
+
+		// A code's use is counted when its order is paid, and only for an
+		// order a buyer checked out: a renewal never counts.
+		$effects->register('discountCounted', static function (OrderData $order) use ($container): ?OrderData {
+			if (!$order->isRenewal() && $order->discountCode() !== '') {
+				$container->get(DiscountRepository::class)->recordUse($order->discountCode());
+			}
+
+			return null;
+		});
+
+		return $effects;
+	},
+
+	// How an order's tax and shipping are worked out. Until the tax and
+	// shipping settings are built, nothing is charged for either.
+	TaxCalculator::class      => \DI\get(NoTaxCalculator::class),
+	ShippingCalculator::class => \DI\get(NoShippingCalculator::class),
+
+	// What a paid order does to stock and to its digital lines. Neither is
+	// built yet, so a paid order changes no stock and issues no links.
+	InventoryApplier::class => \DI\get(NullInventoryApplier::class),
+	DownloadIssuer::class   => \DI\get(NullDownloadIssuer::class),
 
 	// Paid products. Entitlements asks every source in its list; the license is
 	// the first, and the marketplace client adds another. Neither class can be

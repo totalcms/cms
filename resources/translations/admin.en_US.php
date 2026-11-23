@@ -938,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
+	'access_groups.feature_commerce'       => 'Commerce Orders',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Inline Editing',
 	'access_groups.utils_access'           => 'Utils Access Level',
@@ -1730,4 +1731,7 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'No layers yet: shares use the plain image.',
 	'overlay_preview.reason.no-record'       => 'This record can\'t be read, so there is nothing to preview.',
 	'overlay_preview.reason.needs-pro'       => 'Pro edition: below Pro, shares use the plain image, shown here.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Orders',
 ];

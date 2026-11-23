@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Admin\Nav;
 
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Commerce\Service\CommerceNav;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -36,6 +37,9 @@ readonly class AdminNavRegistry
 {
 	public const SETTING = 'moreMenu';
 
+	/** The id of the store's entry, the one with a count beside it. */
+	private const COMMERCE = 'commerce';
+
 	public function __construct(
 		private AuthTwigAdapter $auth,
 		private EditionTwigAdapter $edition,
@@ -47,6 +51,7 @@ readonly class AdminNavRegistry
 		private ExtensionManager $extensions,
 		private CollectionLister $collections,
 		private CollectionEditionService $collectionEditions,
+		private CommerceNav $commerce,
 	) {
 	}
 
@@ -76,6 +81,12 @@ readonly class AdminNavRegistry
 			new NavEntry('settings', $t('nav.settings'), 'settings', 'admin', null, 'var(--icon-cog)', 'nav config configuration'),
 			new NavEntry('docs', $t('nav.docs'), 'docs', 'docs', null, 'var(--icon-docs)', 'nav documentation help'),
 		];
+		// A site without Commerce has no Orders entry anywhere: not on the
+		// rail, and not among the choices of the More menu setting.
+		if ($this->commerce->open()) {
+			array_unshift($head, new NavEntry(self::COMMERCE, $t('commerce.orders'), 'commerce', 'commerce', null, 'var(--icon-orders)', 'nav orders store shop sales commerce'));
+		}
+
 		$extension = array_map(self::fromExtension(...), $this->extensions->getAllAdminNavItems());
 
 		return [...$head, ...$extension, ...$tail];
@@ -107,7 +118,10 @@ readonly class AdminNavRegistry
 	 */
 	public function visible(): array
 	{
-		return array_values(array_filter($this->items(), $this->allows(...)));
+		$entries = array_values(array_filter($this->items(), $this->allows(...)));
+
+		// Counted only for someone who will see it: the count opens orders.
+		return array_map(fn (NavEntry $entry): NavEntry => $entry->id === self::COMMERCE ? $entry->withBadge($this->commerce->attention()) : $entry, $entries);
 	}
 
 	/**
@@ -213,6 +227,8 @@ readonly class AdminNavRegistry
 			'schemas:read'           => $this->auth->canAccessSchemasOperation('read'),
 			'schemas:create'         => $this->auth->canAccessSchemasOperation('create'),
 			'dataviews'              => $this->auth->canAccessDataViews(),
+			// The entry is only listed on a site with a store; this is whether this user may see its orders.
+			'commerce'               => $this->commerce->open() && $this->auth->canAccessCommerce(),
 			'builder'                => $this->auth->canAccessBuilder(),
 			'mailer'                 => $this->auth->canAccessMailer(),
 			'playground'             => $this->auth->canAccessPlayground(),

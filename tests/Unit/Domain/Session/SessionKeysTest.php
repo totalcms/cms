@@ -34,6 +34,7 @@ final class SessionKeysTest extends TestCase
 			'COMMERCE_CART'             => 'totalcms.commerce.cart',
 			'COMMERCE_CART_OWNER'       => 'totalcms.commerce.cartOwner',
 			'COMMERCE_PRICE_NOTED'      => 'totalcms.commerce.priceNoted',
+			'COMMERCE_CHECKOUT_FROM'    => 'totalcms.commerce.checkoutFrom',
 		], $this->keys());
 	}
 

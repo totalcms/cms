@@ -6,6 +6,7 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Backup\Service\BackupStore;
 use TotalCMS\Domain\Collection\Service\CollectionRemover;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Cart\CartItem;
@@ -18,6 +19,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Support\Config;
 
 /*
@@ -60,6 +62,19 @@ beforeEach(function (): void {
 	$this->annsCart = fn (int $qty = 1): string => $this->repo->save(null, [
 		'customerCollection' => 'members', 'customerId' => 'ann', 'status' => 'active', 'items' => [['productId' => 'mug', 'variantId' => '', 'qty' => $qty]], 'attributes' => ['giftNote' => 'From before'],
 	]);
+});
+
+test('a stored cart keeps no backup copies, however often it changes, while the store\'s other records do', function (): void {
+	$backups = $this->c->get(BackupStore::class);
+	$this->c->get(ObjectUpdater::class)->updateObject('products', 'mug', ['title' => 'Mug, renamed'] + $this->c->get(ObjectFetcher::class)->fetchObject('products', 'mug')->toArray());
+	$stored = ($this->annsCart)(1);
+	($this->signedIn)();
+	$this->cart->add('mug', '', 2);
+	$this->cart->add('tee', 'large', 1);
+
+	expect(($this->storedCarts)()[$stored]['items'])->toHaveCount(2)
+		->and($backups->listObjectIds('carts'))->toBe([])
+		->and($backups->listObjectIds('products'))->toBe(['mug']);
 });
 
 describe('signing in', function (): void {

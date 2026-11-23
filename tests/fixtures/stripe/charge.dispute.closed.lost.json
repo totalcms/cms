@@ -1,0 +1,17 @@
+{
+	"id": "evt_1DisputeClosed_lost",
+	"object": "event",
+	"livemode": false,
+	"type": "charge.dispute.closed",
+	"data": {
+		"object": {
+			"id": "dp_1A",
+			"object": "dispute",
+			"amount": 3998,
+			"currency": "usd",
+			"charge": "ch_3A1",
+			"payment_intent": "pi_3A1",
+			"status": "lost"
+		}
+	}
+}

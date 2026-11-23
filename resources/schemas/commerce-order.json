@@ -159,7 +159,7 @@
 			"type": "string",
 			"field": "text",
 			"label": "Needs Attention",
-			"help": "Empty, or why a person should look: amount_mismatch, oversold, fulfillment_incomplete, refund_failed or disputed.",
+			"help": "Empty, or why a person should look: amount_mismatch, paid_after_expiry, oversold, fulfillment_incomplete, refund_failed or disputed.",
 			"serverOnly": true
 		},
 		"currency": {

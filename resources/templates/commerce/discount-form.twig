@@ -1,0 +1,30 @@
+{#
+	The discount code field, or the code that is on the cart with a button to
+	take it off. It posts with HTMX and gets itself back, and every cart on
+	the page then reloads; without JavaScript it posts normally and the
+	browser comes back to this page.
+
+	cart     the buyer's cart, priced now. cart.discount is the code on it, or null
+	notices  why a code was refused
+	amount   false to leave out what the code takes off, where the totals beside it already say
+	base, csrf  as in cart-page.twig
+#}
+<div class="commerce-discount">
+	{% if cart.discount %}
+		<form class="commerce-discount-applied" method="post" action="{{ base|e }}/commerce/cart/discount/remove" hx-post="{{ base|e }}/commerce/cart/discount/remove?part=discount" hx-target="closest .commerce-discount" hx-swap="outerHTML">
+			{{ csrf|raw }}
+			<span class="commerce-discount-code">Code <strong>{{ cart.discount.code|e }}</strong>{% if amount is not defined or amount %}{% if cart.discount.freeShipping %}: free shipping{% else %}: {{ (0 - cart.discount.amount)|money(cart.subtotal.currency) }}{% endif %}{% endif %}</span>
+			<button type="submit" aria-label="Remove the code {{ cart.discount.code|e }}">Remove</button>
+		</form>
+	{% else %}
+		<form class="commerce-discount-form" method="post" action="{{ base|e }}/commerce/cart/discount" hx-post="{{ base|e }}/commerce/cart/discount?part=discount" hx-target="closest .commerce-discount" hx-swap="outerHTML">
+			{{ csrf|raw }}
+			<label for="commerce-discount-code">Discount code</label>
+			<input id="commerce-discount-code" type="text" name="code" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+			<button type="submit">Apply</button>
+		</form>
+	{% endif %}
+	{% for notice in notices %}
+		<p class="commerce-cart-notice" role="alert">{{ notice|e }}</p>
+	{% endfor %}
+</div>

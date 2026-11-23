@@ -23,6 +23,11 @@
 				</li>
 			{% endfor %}
 		</ul>
-		<p class="commerce-cart-subtotal">Subtotal <strong>{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</strong></p>
+		{% if cart.discount %}
+			<p class="commerce-cart-discount">Code {{ cart.discount.code|e }} <span>{% if cart.discount.freeShipping %}Free shipping{% else %}{{ (0 - cart.discountTotal.amount)|money(cart.subtotal.currency) }}{% endif %}</span></p>
+			<p class="commerce-cart-subtotal">Total <strong>{{ cart.total.amount|money(cart.total.currency) }}</strong></p>
+		{% else %}
+			<p class="commerce-cart-subtotal">Subtotal <strong>{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</strong></p>
+		{% endif %}
 	{% endif %}
 </div>

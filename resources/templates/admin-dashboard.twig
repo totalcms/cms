@@ -80,6 +80,7 @@
                     {% for entry in navMenu.rail %}
                     <li class="menu-item{% if _self.navActive(entry, url) %} active{% endif %}">
                         {{ _self.navLink(entry) }}
+                        {% if entry.badge %}<span class="nav-badge" title="{{ entry.badge }} need attention">{{ entry.badge }}</span>{% endif %}
                     </li>
                     {% endfor %}
                     {% if navMenu.more is not empty %}

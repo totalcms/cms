@@ -47,6 +47,11 @@ final readonly class ActivityListener
 		CoreEvent::CACHE_CLEARED,
 		CoreEvent::ACCESS_DENIED,
 		CoreEvent::FILE_DOWNLOADED,
+		CoreEvent::ORDER_CREATED,
+		CoreEvent::ORDER_PAID,
+		CoreEvent::ORDER_FULFILLED,
+		CoreEvent::ORDER_REFUNDED,
+		CoreEvent::ORDER_DISPUTED,
 	];
 
 	/** Most changed field names listed in an update's summary. */
@@ -138,6 +143,19 @@ final readonly class ActivityListener
 				'detail'     => [
 					'property'  => $this->str($payload, 'property'),
 					'protected' => ($payload['protected'] ?? false) === true,
+				],
+			],
+			// What happened to an order, in the store's own terms. The writes
+			// behind it are not recorded: these are.
+			CoreEvent::ORDER_CREATED, CoreEvent::ORDER_PAID, CoreEvent::ORDER_FULFILLED, CoreEvent::ORDER_REFUNDED, CoreEvent::ORDER_DISPUTED => [
+				'collection' => $collection,
+				'objectId'   => $this->str($payload, 'orderId'),
+				'level'      => $event === CoreEvent::ORDER_DISPUTED ? ActivityEntry::LEVEL_WARNING : ActivityEntry::LEVEL_INFO,
+				'summary'    => sprintf('Order %d', (int)($payload['orderNumber'] ?? 0)),
+				'detail'     => [
+					'amount'        => (int)($payload['amount'] ?? 0),
+					'currency'      => $this->str($payload, 'currency'),
+					'paymentStatus' => $this->str($payload, 'paymentStatus'),
 				],
 			],
 			default => [],

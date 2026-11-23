@@ -1,0 +1,13 @@
+{#
+	The button that opens the cart drawer, with how many items are in the
+	cart. The count reloads itself when the cart changes.
+
+	cart   the buyer's cart
+	label  the button's text
+	class  an extra class for the button
+	base   the path Total CMS is served under
+#}
+<button type="button" class="cart-toggle{% if class %} {{ class|e }}{% endif %}" data-cart-toggle aria-controls="cart-drawer" aria-haspopup="dialog">
+	<span class="cart-toggle-label">{{ label|e }}</span>
+	<span id="cart-count" class="cart-count" aria-live="polite" hx-get="{{ base|e }}/commerce/cart?part=count" hx-trigger="cart-updated from:body" hx-swap="innerHTML">{% include 'commerce/cart-count.twig' %}</span>
+</button>

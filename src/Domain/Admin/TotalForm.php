@@ -962,6 +962,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * The payment providers installed on this site.
+	 * Used for propertyOptions: "paymentProviders" — Settings → Commerce.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function paymentProviderOptions(): array
+	{
+		return $this->optionSources()->paymentProviderOptions();
+	}
+
+	/**
 	 * The access groups a product may grant its buyer.
 	 * Used for propertyOptions: "grantableGroups" — the product form's
 	 * access-group select offers these and nothing else.

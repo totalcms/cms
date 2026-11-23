@@ -938,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
+	'access_groups.feature_commerce'       => 'Zamówienia Commerce',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Edycja w miejscu',
 	'access_groups.utils_access'           => 'Poziom dostępu do narzędzi',
@@ -1730,4 +1731,7 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Brak warstw: udostępnienia używają zwykłego obrazu.',
 	'overlay_preview.reason.no-record'       => 'Nie można odczytać tego rekordu, więc nie ma czego pokazać.',
 	'overlay_preview.reason.needs-pro'       => 'Edycja Pro: poniżej Pro udostępnienia używają zwykłego obrazu, pokazanego tutaj.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Zamówienia',
 ];

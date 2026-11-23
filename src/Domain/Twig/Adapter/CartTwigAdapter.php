@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\SessionInterface;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Cart\CartLineView;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
@@ -13,6 +15,7 @@ use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -29,6 +32,14 @@ use TotalCMS\Support\Config;
  * mode, and a cart remembered here would be shown to the next visitor.
  * What must survive from one call to the next (a notice that a product was
  * removed) is kept in the visitor's own session until it is shown.
+ *
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods") each public method is a
+ *                                                function a template calls
+ *                                                as `cms.cart.…`
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList") it draws on each part
+ *                                                  of the store a template
+ *                                                  can show: cart, catalog,
+ *                                                  providers, prices
  */
 final readonly class CartTwigAdapter
 {
@@ -48,6 +59,8 @@ final readonly class CartTwigAdapter
 		private CSRFTokenManager $csrf,
 		private Config $config,
 		private \Closure $twig,
+		private PaymentProviderRegistry $providers,
+		private MoneyFilter $money,
 	) {
 	}
 
@@ -65,7 +78,7 @@ final readonly class CartTwigAdapter
 	/**
 	 * The cart's lines. Every amount is a whole number of minor units of `currency`.
 	 *
-	 * @return list<array{lineKey: string, productId: string, variantId: string, title: string, variantTitle: string, image: string, qty: int, unitPrice: int, lineTotal: int, currency: string, url: string}>
+	 * @return list<array{lineKey: string, productId: string, variantId: string, title: string, variantTitle: string, image: string, qty: int, unitPrice: int, lineTotal: int, discountTotal: int, currency: string, url: string}>
 	 */
 	public function lines(): array
 	{
@@ -79,6 +92,7 @@ final readonly class CartTwigAdapter
 			'qty'          => $line->qty,
 			'unitPrice'    => $line->unitPrice->amount(),
 			'lineTotal'    => $line->lineTotal->amount(),
+			'discountTotal' => $line->discountTotal,
 			'currency'     => $line->lineTotal->currency(),
 			'url'          => $this->catalog->url($line->productId),
 		], $this->view()->lines ?? []);
@@ -88,6 +102,39 @@ final readonly class CartTwigAdapter
 	public function subtotal(): int
 	{
 		return $this->view()?->subtotal->amount() ?? 0;
+	}
+
+	/**
+	 * The discount code on the cart, worked out against it now, or null for
+	 * none. `amount` is in minor units; it is 0 for a free-shipping code.
+	 *
+	 * @return array{code: string, type: string, amount: int, formatted: string}|null
+	 */
+	public function discount(): ?array
+	{
+		$view = $this->view();
+		if (!$view instanceof CartView || $view->discount === null) {
+			return null;
+		}
+
+		return [
+			'code'      => $view->discount->code,
+			'type'      => $view->discount->type,
+			'amount'    => $view->discount->amount,
+			'formatted' => ($this->money)($view->discountTotal->amount(), $view->discountTotal->currency()),
+		];
+	}
+
+	/** The subtotal less the discount, in minor units, before shipping and tax. */
+	public function total(): int
+	{
+		return $this->view()?->total->amount() ?? 0;
+	}
+
+	/** The discount code field, or the code on the cart with a button to take it off. */
+	public function discountForm(): string
+	{
+		return $this->partial('commerce/discount-form.twig');
 	}
 
 	/**
@@ -114,7 +161,8 @@ final readonly class CartTwigAdapter
 	/**
 	 * An "Add to cart" button for a product.
 	 *
-	 * @param array<mixed> $options variant, qty, label, target (the selector to swap, default `#cart-widget`), class
+	 * @param array<mixed> $options variant, qty, label, class, target (a selector to swap the cart widget
+	 *                              into; without one the form swaps nothing and the carts on the page reload)
 	 */
 	public function addButton(string $productId, array $options = []): string
 	{
@@ -157,10 +205,88 @@ final readonly class CartTwigAdapter
 		return $this->partial('commerce/cart-widget.twig');
 	}
 
+	/**
+	 * The slide-out cart (`<dialog id="cart-drawer">`). Put it once on a
+	 * page, with `cms.cart.toggle()` wherever the button belongs. It needs
+	 * the `commerce` front-end assets, which `cms.assetsHead()` and
+	 * `cms.assetsBody()` include.
+	 *
+	 * @param array<mixed> $options side (right | left), title, checkoutUrl, openOnAdd (default true), class
+	 */
+	public function drawer(array $options = []): string
+	{
+		return $this->partial('commerce/cart-drawer.twig', [
+			'side'        => $this->option($options, 'side') === 'left' ? 'left' : 'right',
+			'title'       => $this->option($options, 'title') ?: 'Your cart',
+			'checkoutUrl' => $this->option($options, 'checkoutUrl') ?: '/checkout',
+			'openOnAdd'   => ($options['openOnAdd'] ?? true) !== false,
+			'class'       => $this->option($options, 'class'),
+		]);
+	}
+
+	/**
+	 * The button that opens the drawer, with the count of what is in the cart.
+	 *
+	 * @param array<mixed> $options label (default "Cart"), class
+	 */
+	public function toggle(array $options = []): string
+	{
+		return $this->partial('commerce/cart-toggle.twig', [
+			'label' => $this->option($options, 'label') ?: 'Cart',
+			'class' => $this->option($options, 'class'),
+		], notices: false);
+	}
+
 	/** The full cart, with a quantity and a remove button on every line (`id="cart-page"`). */
 	public function page(): string
 	{
 		return $this->partial('commerce/cart-page.twig');
+	}
+
+	/**
+	 * The checkout form: the buyer's email, where it ships if anything does,
+	 * and how they pay. Nothing for an empty cart, or one nobody can pay for.
+	 *
+	 * @param array<mixed> $options label (the button's text), class
+	 */
+	public function checkoutForm(array $options = []): string
+	{
+		$view = $this->view();
+		if (!$view instanceof CartView || $view->lines === []) {
+			return '';
+		}
+
+		$providers = array_map(
+			static fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label()],
+			$this->providers->forCart(false),
+		);
+		// A cart that costs nothing needs no way to pay, whether its products
+		// are free or a discount code took the whole price off.
+		if ($providers === [] && !$view->total->isZero()) {
+			return '';
+		}
+
+		return ($this->twig)()->render('commerce/checkout-form.twig', [
+			'providers' => $providers,
+			'ships'     => $this->ships($view),
+			'email'     => '',
+			'label'     => $this->option($options, 'label') ?: 'Continue to payment',
+			'class'     => $this->option($options, 'class'),
+			'base'      => $this->config->api,
+			'csrf'      => $this->csrf->getTokenField(),
+		]);
+	}
+
+	/** Whether anything in the cart has to be sent somewhere. */
+	private function ships(CartView $view): bool
+	{
+		foreach ($view->lines as $line) {
+			if ($this->catalog->product($line->productId)?->requiresShipping === true) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -182,16 +308,22 @@ final readonly class CartTwigAdapter
 		return $view;
 	}
 
-	private function partial(string $template): string
+	/**
+	 * One of the cart's partials, rendered with the cart as it is now.
+	 *
+	 * @param array<string,mixed> $with    what this partial takes beside the cart
+	 * @param bool                $notices false for a partial with nowhere to print a notice: reading one uses it up
+	 */
+	private function partial(string $template, array $with = [], bool $notices = true): string
 	{
 		$view = $this->view();
 		if (!$view instanceof CartView) {
 			return '';
 		}
 
-		return ($this->twig)()->render($template, [
+		return ($this->twig)()->render($template, $with + [
 			'cart'    => $view,
-			'notices' => array_values(array_filter($this->session->getFlash()->get(self::FLASH), is_string(...))),
+			'notices' => $notices ? array_values(array_filter($this->session->getFlash()->get(self::FLASH), is_string(...))) : [],
 			'base'    => $this->config->api,
 			'csrf'    => $this->csrf->getTokenField(),
 		]);
@@ -209,7 +341,8 @@ final readonly class CartTwigAdapter
 			'productId' => $product->id,
 			'qty'       => is_int($qty) && $qty > 0 ? $qty : 1,
 			'label'     => $this->option($options, 'label') ?: 'Add to cart',
-			'target'    => $this->option($options, 'target') ?: '#cart-widget',
+			// No target: the form swaps nothing, and every cart on the page reloads itself.
+			'target'    => $this->option($options, 'target'),
 			'class'     => $this->option($options, 'class'),
 			'base'      => $this->config->api,
 			'csrf'      => $this->csrf->getTokenField(),

@@ -9,12 +9,13 @@
 	qty        the quantity: a fixed hidden value when showQty is false, the field's starting value when true
 	showQty    show a quantity field
 	label      the button's text
-	target     the selector HTMX swaps the answer into
+	target     the selector HTMX swaps the answer into; '' to swap nothing and
+	           let the carts on the page reload themselves
 	class      extra classes for the form
 	base       the path Total CMS is served under
 	csrf       the hidden token field
 #}
-<form class="commerce-add-form{% if class %} {{ class|e }}{% endif %}" method="post" action="{{ base|e }}/commerce/cart/add" hx-post="{{ base|e }}/commerce/cart/add" hx-target="{{ target|e }}" hx-swap="outerHTML">
+<form class="commerce-add-form{% if class %} {{ class|e }}{% endif %}" method="post" action="{{ base|e }}/commerce/cart/add" {% if target %}hx-post="{{ base|e }}/commerce/cart/add" hx-target="{{ target|e }}" hx-swap="outerHTML"{% else %}hx-post="{{ base|e }}/commerce/cart/add?part=none" hx-swap="none"{% endif %}>
 	{{ csrf|raw }}
 	<input type="hidden" name="productId" value="{{ productId|e }}">
 	{% if variants is not empty %}

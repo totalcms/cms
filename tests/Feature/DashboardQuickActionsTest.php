@@ -37,6 +37,7 @@ beforeEach(function (): void {
 		$this->c->get(ExtensionManager::class),
 		$this->c->get(CollectionLister::class),
 		$this->c->get(CollectionEditionService::class),
+		closedCommerceNav(),
 	);
 });
 

@@ -1,0 +1,28 @@
+{#
+	Where an order's payment stands. While the provider has not said, it asks
+	again every three seconds, and gives up asking after a minute.
+
+	order    the order, as its buyer may see it
+	token    the order's signed link, which every request for it must carry
+	base     the path Total CMS is served under ('' at the site root)
+	polls    how many times this has asked already
+	waiting  whether to ask again
+#}
+<div id="commerce-order-status" class="commerce-order-status commerce-order-{{ order.paymentStatus|e }}"
+	{%- if waiting %} hx-get="{{ base|e }}/commerce/order/{{ order.id|e }}/status?t={{ token|url_encode }}&amp;n={{ polls + 1 }}" hx-trigger="load delay:3s" hx-swap="outerHTML"{% endif %}>
+	{% if order.paymentStatus in ['paid', 'partially_refunded'] %}
+		<p class="commerce-order-message" role="status"><strong>Payment received.</strong> Thank you. A receipt is on its way to {{ order.email|e }}.</p>
+	{% elseif order.paymentStatus == 'pending' and waiting %}
+		<p class="commerce-order-message" role="status">Confirming your payment…</p>
+	{% elseif order.paymentStatus == 'pending' %}
+		<p class="commerce-order-message" role="status">Confirming your payment is taking longer than usual. You do not need to pay again: we will email {{ order.email|e }} as soon as it is confirmed.</p>
+	{% elseif order.paymentStatus == 'failed' %}
+		<p class="commerce-order-message" role="alert">Your payment did not go through, and nothing was charged. You can try again from your cart.</p>
+	{% elseif order.paymentStatus == 'expired' %}
+		<p class="commerce-order-message" role="status">This order was not completed, and nothing was charged.</p>
+	{% elseif order.paymentStatus == 'refunded' %}
+		<p class="commerce-order-message" role="status">This order has been refunded.</p>
+	{% else %}
+		<p class="commerce-order-message" role="status">Your payment is being checked. We will email {{ order.email|e }} as soon as it is confirmed.</p>
+	{% endif %}
+</div>

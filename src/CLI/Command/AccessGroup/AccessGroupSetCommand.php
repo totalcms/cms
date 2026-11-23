@@ -36,7 +36,7 @@ The definition:
       "utils":           {"all": false, "allowed": ["cache"]},
       "settings":        {"all": false, "allowed": []},
       "extensions":      {"all": true},
-      "dataviews": false, "builder": false, "mailer": false,
+      "dataviews": false, "commerce": false, "builder": false, "mailer": false,
       "playground": false, "docs": true, "inlineEdit": true
     }
   }

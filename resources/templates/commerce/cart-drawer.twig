@@ -1,0 +1,25 @@
+{#
+	The slide-out cart: a native dialog that the toggle opens. Its body
+	reloads itself when the cart changes. The header and the checkout link
+	stay put, so what the page's template asked for (the title, where
+	checkout is) does not have to travel with every reload.
+
+	cart, notices, base, csrf  as in cart-page.twig
+	side         right | left
+	title        the drawer's heading
+	checkoutUrl  where the Checkout link goes
+	openOnAdd    open the drawer whenever the cart changes
+	class        an extra class for the dialog
+#}
+<dialog id="cart-drawer" class="cart-drawer{% if class %} {{ class|e }}{% endif %}" data-side="{{ side|e }}" data-open-on-add="{{ openOnAdd ? 'true' : 'false' }}" aria-labelledby="cart-drawer-title">
+	<header class="cart-drawer-header">
+		<h2 id="cart-drawer-title" class="cart-drawer-title">{{ title|e }}</h2>
+		<button type="button" class="cart-drawer-close" data-cart-close aria-label="Close the cart">Close</button>
+	</header>
+	<div id="cart-drawer-body" class="cart-drawer-body" hx-get="{{ base|e }}/commerce/cart?part=drawer" hx-trigger="cart-updated from:body" hx-swap="innerHTML">
+		{% include 'commerce/cart-drawer-body.twig' %}
+	</div>
+	<footer class="cart-drawer-footer">
+		<a class="cart-drawer-checkout" href="{{ checkoutUrl|e }}">Checkout</a>
+	</footer>
+</dialog>

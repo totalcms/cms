@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Tests\Fakes\ClosedCommerceGate;
+use TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
@@ -49,7 +51,19 @@ function makeAdapter(string $api = '/api', ?string $base = null, bool $xmlrpcEna
 	$localeProp = $ref->getProperty('locale');
 	$localeProp->setValue($adapter, test()->createMock(LocaleTwigAdapter::class));
 
+	// The cart's assets are left out on a site without Commerce, which is what this adapter is.
+	$ref->getProperty('commerce')->setValue($adapter, commerceWithoutTheAddOn());
+
 	return $adapter;
+}
+
+/** `cms.commerce` on a site without Commerce: its gate is closed. */
+function commerceWithoutTheAddOn(): CommerceTwigAdapter
+{
+	$commerce = (new ReflectionClass(CommerceTwigAdapter::class))->newInstanceWithoutConstructor();
+	(new ReflectionProperty(CommerceTwigAdapter::class, 'gate'))->setValue($commerce, new ClosedCommerceGate());
+
+	return $commerce;
 }
 
 /** @return list<FrontendAsset> */
@@ -135,7 +149,11 @@ test('unknown names in the except list are ignored', function (): void {
 	$adapter = withExcept(makeAdapter('/api'), ['not-a-feature']);
 	(new CoreFrontendAssetRegistrar())->register($adapter);
 
-	$expected = count((new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue());
+	// Every core asset but the cart's: this adapter is a site without Commerce.
+	$expected = count(array_filter(
+		(new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue(),
+		static fn (array $asset): bool => $asset['name'] !== 'commerce',
+	));
 	// Script tags with a src: the inline globals script the forms feature
 	// brings along is not an asset.
 	$emitted  = substr_count($adapter->assetsHead(), '<link rel="stylesheet"') + preg_match_all('/<script[^>]* src=/', $adapter->assetsBody());
@@ -304,6 +322,7 @@ test('assetsHead emits no xmlrpc hint when the adapter has no config at all', fu
 	// config set (uninitialized readonly typed property) must not fatal.
 	$ref     = new ReflectionClass(TotalCMSTwigAdapter::class);
 	$adapter = $ref->newInstanceWithoutConstructor();
+	$ref->getProperty('commerce')->setValue($adapter, commerceWithoutTheAddOn());
 
 	$ref->getProperty('frontendAssetsList')->setValue($adapter, []);
 	$ref->getProperty('adminAssetsList')->setValue($adapter, []);

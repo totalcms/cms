@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Backup\Listener\ObjectBackupListener;
 use TotalCMS\Domain\Backup\Service\BackupStore;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -33,7 +35,17 @@ final class ObjectBackupListenerTest extends TestCase
 		$this->config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->dispatcher = new EventDispatcher(new NullLogger());
 
-		$listener = new ObjectBackupListener($this->store, $this->config);
+		// Two collections: "posts" on a schema of the site's own, and a store's carts.
+		$collections = $this->createMock(CollectionFetcher::class);
+		$collections->method('fetchCollection')->willReturnCallback(static function (string $id): ?CollectionData {
+			$collection         = new CollectionData();
+			$collection->id     = $id;
+			$collection->schema = $id === 'baskets' ? 'commerce-cart' : 'post';
+
+			return $id === 'gone' ? null : $collection;
+		});
+
+		$listener = new ObjectBackupListener($this->store, $this->config, $collections);
 		$this->dispatcher->listen('object.updated', $listener->onObjectUpdated(...));
 		$this->dispatcher->listen('object.deleted', $listener->onObjectDeleted(...));
 	}
@@ -75,6 +87,34 @@ final class ObjectBackupListenerTest extends TestCase
 		$this->store->expects($this->never())->method('snapshotObject');
 
 		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('posts', 'post-1'));
+	}
+
+	public function testACartKeepsNoHistoryWhateverItsCollectionIsCalled(): void
+	{
+		// A cart changes with every click and is priced again from the catalog
+		// each time it is read: an old copy of one is of no use to anyone.
+		$this->store->expects($this->never())->method('snapshotObject');
+
+		$previous = new ObjectData('cart-1', []);
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('baskets', 'cart-1', $previous, $previous));
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('baskets', 'cart-1', null, $previous));
+	}
+
+	public function testACollectionOnlyNamedCartsKeepsItsHistory(): void
+	{
+		$previous = new ObjectData('cart-1', []);
+		$this->store->expects($this->once())->method('snapshotObject')->with('carts', 'cart-1', $previous->toArray());
+
+		$this->dispatcher->dispatch('object.updated', new ObjectEventPayload('carts', 'cart-1', $previous, $previous));
+	}
+
+	public function testARecordOfACollectionThatIsGoneIsStillKept(): void
+	{
+		// Deleting a collection deletes its objects; their last state is what a restore needs.
+		$previous = new ObjectData('post-1', []);
+		$this->store->expects($this->once())->method('snapshotObject');
+
+		$this->dispatcher->dispatch('object.deleted', new ObjectEventPayload('gone', 'post-1', null, $previous));
 	}
 
 	public function testDisabledInSettingsWritesNothing(): void

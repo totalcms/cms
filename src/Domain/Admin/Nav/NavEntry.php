@@ -11,7 +11,7 @@ namespace TotalCMS\Domain\Admin\Nav;
  * core entry (`collections`), `ext:{extensionId}:{slug}` for an extension's.
  * `icon` is a CSS value for a core entry (`var(--icon-collections)`) and the
  * raw SVG an extension registered for its own; the template tells them apart
- * with {@see isExtension()}.
+ * with {@see isExtension()}. `badge` is a count shown beside the icon, 0 for none.
  */
 final readonly class NavEntry
 {
@@ -24,7 +24,14 @@ final readonly class NavEntry
 		public string $icon = '',
 		public string $keywords = 'nav',
 		public string $extensionId = '',
+		public int $badge = 0,
 	) {
+	}
+
+	/** The same entry with a count beside its icon: how many things on that page need someone. */
+	public function withBadge(int $count): self
+	{
+		return new self($this->id, $this->label, $this->url, $this->permission, $this->edition, $this->icon, $this->keywords, $this->extensionId, max(0, $count));
 	}
 
 	public function isExtension(): bool

@@ -938,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
+	'access_groups.feature_commerce'       => 'Commerce-bestellingen',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Inline bewerken',
 	'access_groups.utils_access'           => 'Toegangsniveau voor hulpmiddelen',
@@ -1730,4 +1731,7 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Nog geen lagen: bij delen wordt de gewone afbeelding gebruikt.',
 	'overlay_preview.reason.no-record'       => 'Dit record kan niet worden gelezen, dus er is niets te tonen.',
 	'overlay_preview.reason.needs-pro'       => 'Pro-editie: onder Pro wordt bij delen de gewone afbeelding gebruikt, die hier staat.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Bestellingen',
 ];

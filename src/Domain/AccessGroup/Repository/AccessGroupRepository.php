@@ -49,6 +49,7 @@ class AccessGroupRepository extends StorageRepository
 			'mailer'     => true,
 			'playground' => true,
 			'dataviews'  => true,
+			'commerce'   => true,
 			'docs'       => true,
 			'inlineEdit' => true,
 			'utils'      => [
@@ -91,6 +92,7 @@ class AccessGroupRepository extends StorageRepository
 			'mailer'     => true,
 			'playground' => false,
 			'dataviews'  => false,
+			'commerce'   => false,
 			'docs'       => true,
 			'inlineEdit' => true,
 			'utils'      => [
@@ -133,6 +135,7 @@ class AccessGroupRepository extends StorageRepository
 			'mailer'     => false,
 			'playground' => false,
 			'dataviews'  => false,
+			'commerce'   => false,
 			'docs'       => true,
 			'inlineEdit' => false,
 			'utils'      => [
@@ -175,6 +178,7 @@ class AccessGroupRepository extends StorageRepository
 			'mailer'     => false,
 			'playground' => false,
 			'dataviews'  => false,
+			'commerce'   => false,
 			'docs'       => true,
 			'inlineEdit' => false,
 			'utils'      => [

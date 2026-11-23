@@ -1,0 +1,12 @@
+{#
+	One order: what was bought, what it came to, who bought it, and every
+	movement of the money. Everything on it is in partials/order-body.twig,
+	which is also what an action on the order is answered with.
+#}
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<main class="dash-main-content commerce-admin commerce-order" style="max-width:100%;">
+	{% include 'admin/commerce/partials/order-body.twig' %}
+</main>
+{% endblock %}

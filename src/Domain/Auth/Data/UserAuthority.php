@@ -214,6 +214,16 @@ final class UserAuthority
 	}
 
 	/**
+	 * Boolean access to the store's admin pages: orders, and with them the
+	 * buyers' names, addresses and payments. A group saved before the grant
+	 * existed has no key, and does not have it.
+	 */
+	public function canCommerce(): bool
+	{
+		return $this->remember('commerce', fn (): bool => $this->groupGrantsBooleanPermission('commerce'));
+	}
+
+	/**
 	 * Boolean access to the Twig playground. Mirrors AccessControlService::canAccessPlayground().
 	 */
 	public function canPlayground(): bool

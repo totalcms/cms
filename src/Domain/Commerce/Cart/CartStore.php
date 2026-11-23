@@ -161,4 +161,16 @@ final readonly class CartStore
 	{
 		return ['v' => self::VERSION, 'items' => [], 'attributes' => [], 'cartId' => null, 'discountCode' => ''];
 	}
+
+	/**
+	 * A name for this visitor's session that says nothing about it, for a
+	 * cart that could not be stored. With no session there is nothing to
+	 * name, so the answer is new every time and matches no other cart.
+	 */
+	public function sessionKey(): string
+	{
+		$id = (string)session_id();
+
+		return $id === '' ? 'none-' . bin2hex(random_bytes(12)) : 'session-' . substr(hash('sha256', $id), 0, 24);
+	}
 }

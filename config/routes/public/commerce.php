@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Commerce\CheckoutCancelAction;
+use TotalCMS\Action\Commerce\CheckoutPayAction;
+use TotalCMS\Action\Commerce\CheckoutReturnAction;
+use TotalCMS\Action\Commerce\CheckoutStartAction;
+use TotalCMS\Action\Commerce\OrderStatusAction;
+use TotalCMS\Action\Commerce\CommerceWebhookAction;
 use TotalCMS\Action\Commerce\CartAddAction;
 use TotalCMS\Action\Commerce\CartAttributesAction;
 use TotalCMS\Action\Commerce\CartClearAction;
+use TotalCMS\Action\Commerce\CartDiscountAction;
+use TotalCMS\Action\Commerce\CartDiscountRemoveAction;
 use TotalCMS\Action\Commerce\CartRemoveAction;
 use TotalCMS\Action\Commerce\CartUpdateAction;
 use TotalCMS\Action\Commerce\CartViewAction;
 use TotalCMS\Middleware\Commerce\CartRateLimitMiddleware;
+use TotalCMS\Middleware\Commerce\CheckoutRateLimitMiddleware;
 use TotalCMS\Middleware\Commerce\CommerceEditionMiddleware;
+use TotalCMS\Middleware\Commerce\DiscountRateLimitMiddleware;
+use TotalCMS\Middleware\Commerce\WebhookRateLimitMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
@@ -35,4 +46,42 @@ return function (App $app): void {
 		->add(CSRFProtectionMiddleware::class)
 		->add(CommerceEditionMiddleware::class)
 		->add(CartRateLimitMiddleware::class);
+
+	// Trying a code is the one place a visitor can guess codes: its own, tight limit.
+	$app->post('/commerce/cart/discount', CartDiscountAction::class)->setName('commerce-cart-discount')
+		->add(NoCacheMiddleware::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(CommerceEditionMiddleware::class)
+		->add(DiscountRateLimitMiddleware::class);
+	$app->post('/commerce/cart/discount/remove', CartDiscountRemoveAction::class)->setName('commerce-cart-discount-remove')
+		->add(NoCacheMiddleware::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(CommerceEditionMiddleware::class)
+		->add(CartRateLimitMiddleware::class);
+
+	// Starting a checkout makes an order and calls the payment provider, so
+	// it has a much tighter limit of its own.
+	$app->post('/commerce/checkout', CheckoutStartAction::class)->setName('commerce-checkout')
+		->add(NoCacheMiddleware::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(CommerceEditionMiddleware::class)
+		->add(CheckoutRateLimitMiddleware::class);
+
+	// The buyer's own pages for one order. Each is opened by the order's
+	// signed link (`?t=`) and by nothing else.
+	$app->group('/commerce', function (RouteCollectorProxy $group): void {
+		$group->get('/return/{orderId}', CheckoutReturnAction::class)->setName('commerce-return');
+		$group->get('/cancel/{orderId}', CheckoutCancelAction::class)->setName('commerce-cancel');
+		$group->get('/pay/{orderId}', CheckoutPayAction::class)->setName('commerce-pay');
+		$group->get('/order/{orderId}/status', OrderStatusAction::class)->setName('commerce-order-status');
+	})->add(NoCacheMiddleware::class)
+		->add(CommerceEditionMiddleware::class)
+		->add(CartRateLimitMiddleware::class);
+
+	// Where a payment provider reports to the store. No session, no CSRF
+	// token and no gate: what it has is a signature, and a store whose
+	// add-on has lapsed must still hear about money it already took.
+	$app->post('/commerce/webhook/{provider}', CommerceWebhookAction::class)->setName('commerce-webhook')
+		->add(NoCacheMiddleware::class)
+		->add(WebhookRateLimitMiddleware::class);
 };

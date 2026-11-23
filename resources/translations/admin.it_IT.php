@@ -938,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Playground Twig',
 	'access_groups.feature_dataviews'      => 'Viste dati',
+	'access_groups.feature_commerce'       => 'Ordini Commerce',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Modifica in linea',
 	'access_groups.utils_access'           => 'Livello di accesso alle utilità',
@@ -1730,4 +1731,7 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Ancora nessun livello: le condivisioni usano l\'immagine semplice.',
 	'overlay_preview.reason.no-record'       => 'Impossibile leggere questo record, quindi non c\'è niente da visualizzare.',
 	'overlay_preview.reason.needs-pro'       => 'Edizione Pro: sotto Pro le condivisioni usano l\'immagine semplice, mostrata qui.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Ordini',
 ];

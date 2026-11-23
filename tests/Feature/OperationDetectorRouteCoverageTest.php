@@ -205,8 +205,19 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'commerce-cart-add',
 		'commerce-cart-attributes',
 		'commerce-cart-clear',
+		'commerce-cart-discount',
+		'commerce-cart-discount-remove',
 		'commerce-cart-remove',
 		'commerce-cart-update',
+		// Checkout and the buyer's own order pages: the same gate and limits;
+		// the order pages are opened by the order's signed link.
+		'commerce-cancel',
+		'commerce-checkout',
+		'commerce-order-status',
+		'commerce-pay',
+		'commerce-return',
+		// A payment provider's webhook: opened by its signature, not by a login.
+		'commerce-webhook',
 	];
 
 	$unaccounted = array_values(array_diff(array_keys($routeNames), $mapped, $exempt));

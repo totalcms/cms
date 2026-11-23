@@ -38,6 +38,11 @@ final class CoreEvent
 	public const CACHE_CLEARED      = 'cache.cleared';
 	public const ACCESS_DENIED      = 'access.denied';
 	public const FILE_DOWNLOADED    = 'file.downloaded';
+	public const ORDER_CREATED      = 'order.created';
+	public const ORDER_PAID         = 'order.paid';
+	public const ORDER_FULFILLED    = 'order.fulfilled';
+	public const ORDER_REFUNDED     = 'order.refunded';
+	public const ORDER_DISPUTED     = 'order.disputed';
 
 	/**
 	 * Every core event, in a sensible display order.
@@ -67,6 +72,11 @@ final class CoreEvent
 		self::CACHE_CLEARED,
 		self::ACCESS_DENIED,
 		self::FILE_DOWNLOADED,
+		self::ORDER_CREATED,
+		self::ORDER_PAID,
+		self::ORDER_FULFILLED,
+		self::ORDER_REFUNDED,
+		self::ORDER_DISPUTED,
 	];
 
 	/**

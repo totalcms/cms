@@ -44,6 +44,9 @@ final class SessionKeys
 	/** Set once a cart request has sent a price, so the log notes it once per session. */
 	public const COMMERCE_PRICE_NOTED = 'totalcms.commerce.priceNoted';
 
+	/** The page of this site a checkout was started from, to bring the buyer back to if they give up. */
+	public const COMMERCE_CHECKOUT_FROM = 'totalcms.commerce.checkoutFrom';
+
 	// Security Keys (Note: CSRF uses its own SESSION_KEY constant)
 	// public const CSRF_TOKENS = '_csrf'; // Managed by CSRFTokenManager
 

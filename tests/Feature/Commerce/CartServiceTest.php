@@ -9,7 +9,6 @@ use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
-use TotalCMS\Domain\Commerce\Pricing\PricingService;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
@@ -47,7 +46,7 @@ beforeEach(function (): void {
 
 	$this->session = new MemorySession();
 	$this->store   = new CartStore($this->session);
-	$this->cart    = new CartService($this->store, $this->c->get(ProductCatalog::class), $this->c->get(PricingService::class), $this->c->get(CommerceSettings::class), $this->c->get(CartRepository::class), $this->c->get(CurrentCustomer::class), $this->c->get(LoggerFactory::class));
+	$this->cart    = new CartService($this->store, $this->c->get(ProductCatalog::class), $this->c->get(CommerceSettings::class), $this->c->get(CartRepository::class), $this->c->get(CurrentCustomer::class), $this->c->get(\TotalCMS\Domain\Commerce\Discount\DiscountService::class), $this->c->get(\TotalCMS\Domain\Commerce\Cart\CartPricer::class), $this->c->get(LoggerFactory::class));
 	$this->usd     = new PricingContext('USD', null, null, []);
 
 	$this->setting = function (array $settings): void {

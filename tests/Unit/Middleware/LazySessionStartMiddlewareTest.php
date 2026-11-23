@@ -119,6 +119,44 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		];
 	}
 
+	/**
+	 * A payment provider's webhook and a purchased file's link are not a
+	 * visitor's pages: no session is opened and no cookie is set for them.
+	 */
+	#[DataProvider('commercePathsWithoutASession')]
+	public function testSkipsSessionForTheStoresMachineRoutes(string $path, string $scriptName): void
+	{
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->expects($this->once())->method('handle')->willReturn($response);
+
+		$this->session->expects($this->never())->method('start');
+		$this->session->expects($this->never())->method('save');
+
+		$this->middleware->process($this->createRequest($path, $scriptName), $this->handler);
+	}
+
+	/** @return array<string,array{string,string}> */
+	public static function commercePathsWithoutASession(): array
+	{
+		return [
+			'webhook'            => ['/commerce/webhook/stripe', '/index.php'],
+			'webhook, sub-path'  => ['/mysite/commerce/webhook/stripe', '/mysite/index.php'],
+			'download'           => ['/commerce/download/some.signed.token', '/index.php'],
+		];
+	}
+
+	public function testTheRestOfTheStoreKeepsItsSession(): void
+	{
+		// The cart lives in the session, and so does the CSRF token checkout needs.
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->expects($this->once())->method('handle')->willReturn($response);
+
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->once())->method('start');
+
+		$this->middleware->process($this->createRequest('/commerce/cart/add'), $this->handler);
+	}
+
 	public function testStartsSessionForOtherApiPaths(): void
 	{
 		// Only the asset routes are sessionless; the rest of the API keeps its

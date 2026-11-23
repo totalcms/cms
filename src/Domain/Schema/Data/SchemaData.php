@@ -225,6 +225,17 @@ class SchemaData
 		return in_array($schema, self::COMMERCE_PRIVATE_SCHEMAS, true);
 	}
 
+	/**
+	 * Whether objects on this schema are left out of object backups. A
+	 * store's cart is saved on every change a signed-in customer makes to
+	 * it, and is priced again from the catalog each time it is read: an old
+	 * copy of one is of no use, and keeping them only fills the disk.
+	 */
+	public static function keepsNoHistory(string $schema): bool
+	{
+		return $schema === 'commerce-cart';
+	}
+
 	public const PROPERTY_TYPES = [
 		'array',
 		'boolean',

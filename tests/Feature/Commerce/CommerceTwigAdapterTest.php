@@ -97,9 +97,20 @@ describe('the catalog', function (): void {
 			->toBe('ynynnn');
 	});
 
-	test('providers() is empty until a payment provider is set up', function (): void {
-		expect(($this->twig)('{{ cms.commerce.providers()|length }}'))->toBe('0');
+	test('providers() lists the ways to pay that are switched on and set up', function (): void {
+		expect(($this->twig)('{% for p in cms.commerce.providers() %}{{ p.id }}={{ p.label }};{% endfor %}'))->toBe('fake=Fake Pay;');
 	});
+
+	test('a store with no way to pay is not open', function (string $why): void {
+		if ($why === 'switched off') {
+			$config           = $this->c->get(Config::class);
+			$config->commerce = ['providers' => []] + $config->commerce;
+		} else {
+			$this->fakeProvider->configured = false;
+		}
+
+		expect(($this->twig)('{{ cms.commerce.enabled() ? "on" : "off" }}|{{ cms.commerce.providers()|length }}'))->toBe('off|0');
+	})->with(['switched off', 'no keys']);
 });
 
 test('with the store switched off, there is nothing to show and nothing breaks', function (): void {

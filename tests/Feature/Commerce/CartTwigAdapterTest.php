@@ -63,7 +63,7 @@ describe('the forms', function (): void {
 	test('addButton() is a form that posts to the cart, for HTMX and without it', function (): void {
 		$html = ($this->twig)("{{ cms.cart.addButton('mug') }}");
 
-		expect($html)->toContain('<form', 'method="post"', 'action="/commerce/cart/add"', 'hx-post="/commerce/cart/add"', 'hx-target="#cart-widget"', 'name="csrf_token"', 'name="productId" value="mug"', 'Add to cart')
+		expect($html)->toContain('<form', 'method="post"', 'action="/commerce/cart/add"', 'hx-post="/commerce/cart/add?part=none"', 'hx-swap="none"', 'name="csrf_token"', 'name="productId" value="mug"', 'Add to cart')
 			->and($html)->not->toContain('<select');
 	});
 

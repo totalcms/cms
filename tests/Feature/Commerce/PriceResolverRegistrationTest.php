@@ -6,6 +6,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Order\OrderBuildingRegistry;
+use TotalCMS\Domain\Commerce\Order\OrderDraft;
+use TotalCMS\Domain\Commerce\Order\Totals;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolverRegistry;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
@@ -89,6 +92,16 @@ describe('ExtensionContext', function (): void {
 			]);
 	});
 
+	test('an order-building listener is part of the same capability', function (): void {
+		$context  = priceResolverContext();
+		$listener = static function (): void {
+		};
+		$context->addOrderBuildingListener($listener, 7);
+
+		expect($context->getCapabilities())->toHaveKey('commerce:pricing')
+			->and($context->getRegisteredOrderBuildingListeners())->toBe([['listener' => $listener, 'priority' => 7]]);
+	});
+
 	test('the capability has a name an admin can read', function (): void {
 		expect(ExtensionContext::capabilityKeys())->toContain('commerce:pricing')
 			->and(ExtensionContext::capabilityLabels()['commerce:pricing'])->toBe('Commerce Pricing');
@@ -115,9 +128,19 @@ describe('a booted site', function (): void {
 			->and($priced->source)->toBe('fixture-price');
 	});
 
+	test('runs its order-building listener on every order built', function (): void {
+		bootWithPriceResolverExtension(true);
+		$draft = new OrderDraft('USD', 'a@example.com', [], new Totals(0, 0, 0, 0, 0, [], null, [], 'none'), null, null, []);
+
+		expect($this->app->getContainer()->get(OrderBuildingRegistry::class)->run($draft)->metadata)->toBe(['fixture' => 'built']);
+	});
+
 	test('does not ask it once an admin switches the capability off', function (): void {
 		bootWithPriceResolverExtension(false);
-		$c = $this->app->getContainer();
+		$c     = $this->app->getContainer();
+		$draft = new OrderDraft('USD', 'a@example.com', [], new Totals(0, 0, 0, 0, 0, [], null, [], 'none'), null, null, []);
+
+		expect($c->get(OrderBuildingRegistry::class)->run($draft)->metadata)->toBe([]);
 
 		expect($c->get(ExtensionManager::class)->getAllPriceResolvers())->toBe([])
 			->and($c->get(PriceResolverRegistry::class)->ordered())->toBe([]);

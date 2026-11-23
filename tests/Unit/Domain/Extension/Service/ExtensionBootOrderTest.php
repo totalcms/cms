@@ -12,6 +12,7 @@ use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
+use TotalCMS\Domain\Extension\Service\Boot\PaymentProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\PriceResolversStep;
 use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
@@ -34,6 +35,7 @@ test('bootAll runs the wiring steps in the documented order', function (): void 
 		McpStep::class,
 		SearchProvidersStep::class,
 		PriceResolversStep::class,
+		PaymentProvidersStep::class,
 		TwigStep::class,
 		AssetsStep::class,
 	]);

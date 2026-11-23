@@ -377,6 +377,20 @@ $context->addEventListener('file.downloaded', function (array $payload): void {
 });
 ```
 
+### `order.created`, `order.paid`, `order.fulfilled`, `order.refunded`, `order.disputed`
+
+Fired by a store, on a site with [Commerce](docs/commerce/overview), as an order moves: a checkout is started, the payment provider confirms the payment, everything is delivered, a refund is confirmed, the buyer disputes the payment.
+
+All five carry the same payload: the order's ID and number, its totals in minor units, the buyer's email, and its lines. The full list, and how to write a listener that is safe to run twice, is in [Commerce Events and Extensions](docs/commerce/events-and-extensions).
+
+```php
+$context->addEventListener('order.paid', function (array $payload): void {
+    // e.g. issue a license for $payload['email']
+});
+```
+
+Listen for these, not for `object.updated` on the orders collection: they say what happened to the order, and each fires once for it.
+
 ## Listener Isolation
 
 Each listener is wrapped in a try/catch. If your listener throws:

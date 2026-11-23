@@ -688,6 +688,7 @@ class FormField
 			'pages'               => $this->form->pageListForBuilder(),
 			'pageMiddleware'      => $this->form->pageMiddlewareList(),
 			'grantableGroups'     => $this->form->grantableGroupOptions(),
+			'paymentProviders'    => $this->form->paymentProviderOptions(),
 			'navItems'            => $this->form->adminNavItemList(),
 			'quickActions'        => $this->form->quickActionList(),
 			'schemaProperties'    => $this->form->schemaPropertyKeys(),

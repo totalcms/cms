@@ -42,6 +42,10 @@ final class CoreFrontendAssetRegistrar extends CoreAssetRegistrar
 		// leaves the global undefined, breaking any code that calls htmx as a
 		// global (e.g. `htmx.ajax(...)` in admin-table.js).
 		['name' => 'htmx',       'path' => 'htmx.min.js',    'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
+		// The storefront: the cart drawer and the on-page checkout loader.
+		// Left out at render time on a site without Commerce.
+		['name' => 'commerce',   'path' => 'commerce.css',   'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'commerce',   'path' => 'commerce.js',    'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 	];
 
 	/**

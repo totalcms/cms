@@ -84,7 +84,9 @@ final readonly class CartRepository
 			}
 
 			return $this->lock->withLock("{$carts}/{$cartId}", function () use ($carts, $cartId, $fields): string {
-				$stored = $this->objects->fetchObjectFresh($carts, $cartId)->toArray();
+				// From the file, not this request's first read of it: another
+				// request may have changed the cart while this one waited.
+				$stored = $this->objects->fetchObjectFromDisk($carts, $cartId)->toArray();
 				$this->updater->updateObject($carts, $cartId, $fields + $stored);
 
 				return $cartId;
