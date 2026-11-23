@@ -25,15 +25,17 @@
 	{% if ships %}
 		<fieldset class="commerce-checkout-address">
 			<legend>Shipping address</legend>
+			{# What each field is, in the browser's own words. Without it a browser or a password manager does not know which part of an address to put where. #}
+			{% set fills = {name: 'name', line1: 'address-line1', line2: 'address-line2', city: 'address-level2', region: 'address-level1', postalCode: 'postal-code'} %}
 			{% for field, text in {name: 'Full name', line1: 'Address', line2: 'Address line 2', city: 'City', region: 'State or region', postalCode: 'Postal code'} %}
 				<p class="commerce-checkout-field">
 					<label for="commerce-checkout-{{ field|e }}">{{ text|e }}</label>
-					<input id="commerce-checkout-{{ field|e }}" type="text" name="shippingAddress[{{ field|e }}]" maxlength="200"{% if field != 'line2' and field != 'region' %} required{% endif %}>
+					<input id="commerce-checkout-{{ field|e }}" type="text" name="shippingAddress[{{ field|e }}]" maxlength="200" autocomplete="shipping {{ fills[field]|e }}"{% if field != 'line2' and field != 'region' %} required{% endif %}>
 				</p>
 			{% endfor %}
 			<p class="commerce-checkout-field">
 				<label for="commerce-checkout-country">Country</label>
-				<input id="commerce-checkout-country" type="text" name="shippingAddress[country]" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" autocomplete="country" placeholder="US" required>
+				<input id="commerce-checkout-country" type="text" name="shippingAddress[country]" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" autocomplete="shipping country" placeholder="US" required>
 			</p>
 		</fieldset>
 	{% endif %}

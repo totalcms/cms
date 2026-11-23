@@ -429,6 +429,26 @@ describe('in a template', function (): void {
 		expect($html)->toContain('action="/commerce/checkout"', 'name="email"', 'name="provider"', 'value="fake"', 'Fake Pay', 'name="shippingAddress[country]"', 'name="csrf_token"');
 	});
 
+	// A browser or a password manager fills an address field only when the
+	// field says which part of the address it is.
+	it('tells the browser what each address field is, so it can be filled in', function (string $field, string $token): void {
+		($this->add)('mug');
+		($this->open)();
+		$html = renderTwig('{{ cms.cart.checkoutForm() }}');
+
+		preg_match('/<input[^>]*name="shippingAddress\[' . $field . '\]"[^>]*>/', $html, $input);
+
+		expect($input[0] ?? '')->toContain('autocomplete="' . $token . '"');
+	})->with([
+		['name', 'shipping name'],
+		['line1', 'shipping address-line1'],
+		['line2', 'shipping address-line2'],
+		['city', 'shipping address-level2'],
+		['region', 'shipping address-level1'],
+		['postalCode', 'shipping postal-code'],
+		['country', 'shipping country'],
+	]);
+
 	it('asks for no address when nothing ships', function (): void {
 		($this->add)('sample');
 		($this->open)();
