@@ -95,6 +95,16 @@ describe('the forms', function (): void {
 		expect($widget)->toContain('id="cart-widget"', 'hx-trigger="cart-updated from:body"', 'Tee &lt;i&gt;Shirt&lt;/i&gt;', '$19.99')
 			->and($page)->toContain('id="cart-page"', 'hx-post="/commerce/cart/update?part=page"', 'name="csrf_token"', '$19.99');
 	});
+	// As in the slide-out cart: a quantity saves itself when it changes, and
+	// the Update button is only for a browser with no JavaScript.
+	test('a quantity on the cart page saves itself when it is changed', function (): void {
+		$this->cart->add('tee', 'large', 1);
+
+		$page = ($this->twig)('{{ cms.cart.page() }}');
+
+		expect($page)->toContain('hx-post="/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML" hx-trigger="change, submit"')
+			->toContain('<noscript><button type="submit">Update</button></noscript>');
+	});
 });
 
 test('with the store switched off, the cart is empty and every form is nothing', function (): void {

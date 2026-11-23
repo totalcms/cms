@@ -99,6 +99,26 @@ To build a cart of your own, read it yourself:
 <p>Subtotal: {{ cms.cart.subtotal()|money }}</p>
 ```
 
+### Styling the cart page and the checkout form
+
+The page they are on is your own Site Builder page. You decide what is on it and where: the cart beside the checkout form, or one above the other.
+
+What `cms.cart.page()` and `cms.cart.checkoutForm()` print comes with a plain layout. The cart is a table that turns into stacked lines where it has little room. The form puts each field on a row, and pairs the short ones (city with region, postal code with country) where there is room. Both use your site's font and text color.
+
+To match your design, set any of these on the page, or on whatever the cart and the form are inside:
+
+```css
+.shop {
+	--commerce-accent: #b4442c;       /* the pay button */
+	--commerce-on-accent: #fff;       /* the text on it */
+	--commerce-border: #d9d2c5;       /* field and table lines */
+	--commerce-radius: 0.75rem;       /* fields and buttons */
+	--commerce-field-bg: #fff;        /* inside a field */
+}
+```
+
+For anything more, write your own CSS for their classes, such as `.commerce-cart-table`, `.commerce-checkout-field` and `.commerce-checkout-submit`. Every built-in rule is one class deep, so a rule of yours for the same thing wins without `!important`.
+
 ## Checkout
 
 `cms.cart.checkoutForm()` prints the form that starts a checkout: the buyer's email, a shipping address if anything in the cart ships, and how they pay. It prints nothing for an empty cart, or when nobody can pay yet.
