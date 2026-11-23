@@ -532,7 +532,9 @@ describe('the extension', function (): void {
 		expect($providers)->toHaveCount(1)
 			->and($providers[0]->id())->toBe('stripe')
 			->and($providers[0]->isConfigured())->toBe($ready)
-			->and($context->getCapabilities())->toBe(['commerce:payments' => true]);
+			// Both whatever the settings say: a capability gained later, once the
+			// keys are in, would start switched off on that site.
+			->and($context->getCapabilities())->toBe(['cli:commands' => true, 'commerce:payments' => true]);
 	})->with([
 		'nothing set'                 => [[], false],
 		'test mode, test keys'        => [['mode' => 'test', 'testSecretKey' => STRIPE_KEY, 'testWebhookSecret' => STRIPE_SECRET], true],

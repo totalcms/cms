@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Bundled\Stripe;
 
+use TotalCMS\Bundled\Stripe\Command\ListenCommand;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 
@@ -13,6 +16,8 @@ use TotalCMS\Support\HttpClientInterface;
 require_once __DIR__ . '/StripeClient.php';
 require_once __DIR__ . '/StripeWebhookVerifier.php';
 require_once __DIR__ . '/StripeProvider.php';
+require_once __DIR__ . '/StripeCli.php';
+require_once __DIR__ . '/Command/ListenCommand.php';
 
 /**
  * Stripe as a payment provider for the store.
@@ -58,6 +63,16 @@ class Extension implements ExtensionInterface
 			// Asked when a checkout needs it: the site's config does not exist
 			// yet while extensions register.
 			static fn (): string => $context->get(Config::class)->api . '/api/ext/totalcms/stripe/assets/embed.js?v=' . (int)@filemtime($module),
+		));
+
+		// Registered whatever the settings say: a capability an enabled
+		// extension gains later starts switched off. With no test key it
+		// says what is missing and starts nothing.
+		$context->addCommand(new ListenCommand(
+			static fn (): ExtensionSettingsManager => $context->get(ExtensionSettingsManager::class),
+			static fn (): Config => $context->get(Config::class),
+			static fn (): CommerceSettings => $context->get(CommerceSettings::class),
+			new StripeCli(),
 		));
 	}
 

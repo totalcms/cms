@@ -31,7 +31,9 @@ tcms extension:enable totalcms/stripe
 
 ### 2. Add your test keys
 
-Open the extension's settings from **Admin → Extensions**. Leave **Mode** on **Test** and paste your **Test Secret Key**. It starts with `sk_test_` and is in the Stripe dashboard under **Developers → API keys**, with test mode on.
+Open the extension's settings from **Admin → Extensions**. Leave **Mode** on **Test** and paste your **Test Secret Key**. It starts with `sk_test_` and is in the Stripe dashboard under **Developers → API keys**.
+
+Test keys come from a Stripe **sandbox**, which you open from the account menu at the top of the dashboard. Some accounts have a **Test mode** switch in its place. Either way the keys start with `sk_test_` and `pk_test_`, and nothing you do with them touches your live account or its payments.
 
 ### 3. Add the webhook endpoint
 
@@ -42,6 +44,8 @@ https://example.com/commerce/webhook/stripe
 ```
 
 If Total CMS runs in a subfolder, put the folder first, such as `https://example.com/cms/commerce/webhook/stripe`.
+
+When Stripe asks which **API version** the endpoint uses, choose the latest one. Stripe writes each event in the endpoint's version, and its default is your account's own, which on an older account can be years behind what Total CMS reads. The choice belongs to this endpoint only: it changes nothing else on your account.
 
 Send these events to it:
 
@@ -107,17 +111,65 @@ Total CMS does not limit where scripts come from. If your server or a template a
 | `connect-src` | `https://api.stripe.com` `https://checkout.stripe.com` |
 | `img-src` | `https://*.stripe.com` |
 
-## Working on a local site
+## Testing on a local site
 
-Stripe cannot reach a site on your own computer, so webhooks need forwarding. The [Stripe CLI](https://docs.stripe.com/stripe-cli) does this:
+Stripe tells your store that a payment went through by calling its webhook address. It cannot call a site on your own computer, such as one at a `.test` address or on `localhost`. Stripe's own command line tool forwards the events to your site instead, and `tcms stripe:listen` runs that tool for you.
+
+### What you need
+
+- The [Stripe CLI](https://docs.stripe.com/stripe-cli), installed.
+- The extension enabled, in **Test** mode, with a **Test Secret Key**: steps 1 and 2 of [Setup](#setup).
+- **Stripe** ticked under **Payment Providers**: step 4.
+
+Skip step 3. A local site needs no webhook endpoint in the Stripe dashboard, and you paste no signing secret.
+
+### Start listening
+
+Give the command the address you open the site at, and leave it running:
 
 ```bash
-stripe listen --all-snapshot --forward-to https://example.test/commerce/webhook/stripe
+tcms stripe:listen --url=https://example.test
 ```
 
-The CLI asks which events to forward. `--all-snapshot` sends every event of the kind Total CMS reads; the ones it has no use for are answered and ignored.
+It does three things:
 
-It prints a signing secret for the session. Use that as your **Test Webhook Signing Secret** while it runs.
+1. **It starts the Stripe CLI with your site's own test key.** The CLI then hears the same Stripe account the site charges, and not whichever account `stripe login` last chose.
+2. **It saves the secret the Stripe CLI signs with** as your **Test Webhook Signing Secret**. Your site believes only events signed with it.
+3. **It forwards every event to your site** until you stop it with Ctrl-C. Events arrive in Stripe's current API version, whatever your account's own is.
+
+It works with test keys only, and it never shows a key or a secret.
+
+| Option | What it does |
+|---|---|
+| `--url=…` | The address of your site, with its folder if Total CMS runs in one, such as `https://example.test/cms`. Without it, the command uses the address the site was last opened at in a browser. A site on `localhost` or an IP address always needs it, and so does any site just after its cache was cleared. |
+| `--check` | Sets everything up and reports, without forwarding anything. |
+| `--skip-verify` | Does not check the site's certificate. Use it when the Stripe CLI reports a certificate error for your local address. |
+
+### Make a test purchase
+
+1. Add a product to your cart and check out with an email address you can read.
+2. Pay with the test card `4242 4242 4242 4242`, any future expiry date, any CVC and any postal code.
+
+When it works:
+
+- **The order page** changes from "Confirming your payment…" to "Payment received", a second or two after you pay.
+- **The terminal** shows a line for each event, each ending in `[200]`. The store acts on `checkout.session.completed` and answers the others without using them.
+- **The order** is under **Orders** in the admin as **Paid**.
+- **The receipt** is sent the next time the job runner runs. On a local site, run `tcms jobs:process` to send it. See [Receipts](docs/commerce/setup#receipts).
+
+To test payment on your own page, set **Checkout** to **On this site** and buy again. See [Taking payment on your own page](#taking-payment-on-your-own-page).
+
+### If something goes wrong
+
+| What you see | What to do |
+|---|---|
+| The order page stays on "Confirming your payment…" and the terminal shows no event | The command is not running, or it was started before you changed the Test Secret Key. Start it again. |
+| Event lines end in `[400]` | The signature did not match. Stop the command and start it again: it saves the right secret each time it starts. |
+| The Stripe CLI reports a certificate error | Add `--skip-verify`. |
+| "The command line does not know this site's address" | Add `--url` with the address you open the site at. This happens on `localhost`, and on any site after `tcms cache:clear` until it is opened in a browser again. |
+| "The Stripe extension is in Live mode" | The command is for test payments. Set **Mode** to **Test**. |
+| `tcms` says there are no commands in the `stripe` namespace | The extension is not enabled, or **CLI Commands** is switched off for it under **Admin → Extensions**. |
+| The order is paid and no receipt arrives | Run `tcms jobs:process`, and check that the site's email settings are filled in. |
 
 ## When a payment does not match
 
