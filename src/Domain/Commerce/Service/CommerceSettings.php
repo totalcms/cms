@@ -52,12 +52,16 @@ final readonly class CommerceSettings
 		return preg_match('/^[A-Z]{3}\z/', $currency) === 1 ? $currency : self::DEFAULT_CURRENCY;
 	}
 
+	/**
+	 * What the store calls itself on a receipt. A store with no name of its
+	 * own goes by the site's, so a receipt always says who it is from.
+	 */
 	public function storeName(): string
 	{
-		return $this->text('storeName');
+		return $this->text('storeName') ?: $this->config->displayName();
 	}
 
-	/** The reply-to on receipts, and where a new-order notice goes. */
+	/** The address a buyer's reply to a receipt goes to. Empty when the store has none. */
 	public function storeEmail(): string
 	{
 		return $this->text('storeEmail');

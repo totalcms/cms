@@ -30,7 +30,7 @@ Choose it before your first order. Every price and every order is in this one cu
 
 ## 3. Connect a payment provider
 
-A payment provider is an extension. Enable one, give it its keys, then choose it under **Payment Providers** in **Settings → Commerce**.
+A payment provider is an extension. Enable one, give it its keys, then tick it under **Payment Providers** in **Settings → Commerce**.
 
 The [Stripe extension](docs/extensions/stripe) ships with Total CMS. Its page walks through keys, the webhook and a test purchase.
 
@@ -65,10 +65,10 @@ These are under **Settings → Commerce**.
 | Setting | What it does |
 |---|---|
 | **Store Currency** | The currency of every price and order. |
-| **Store Name** | Shown on receipts and at checkout. Empty uses the site's name. |
-| **Store Email** | The reply-to address on receipts. |
+| **Store Name** | The name receipts come from: their sender name, and in their subject and text. Empty uses the site's name. |
+| **Store Email** | Where a buyer's reply to a receipt goes, and the address the receipt says to write to. Empty sends replies to the address your site sends email from. |
 | **Customer Accounts Collection** | The auth collection customers sign in to, so they can see their orders. Empty means guest checkout only. |
-| **Payment Providers** | The ways a buyer can pay, in the order checkout shows them. |
+| **Payment Providers** | The ways a buyer can pay: tick each one to offer. Checkout lists them in the order shown here. |
 | **Checkout** | Where the buyer pays: the provider's page, or this site. |
 | **First Order Number** | The number your first order gets. Default `1001`. A number is never used twice. |
 | **Order Number Prefix** | Shown before an order number, as in `#1001`. |
@@ -83,9 +83,11 @@ The settings for tax, shipping, downloads and subscriptions are for features tha
 
 ## Receipts
 
-`tcms commerce:install` adds a mailer template called `commerce-receipt`. It is your receipt unless you choose another under **Receipt Email**. Edit it under **Mailer** like any other template. It is sent once when an order is paid.
+`tcms commerce:install` adds a mailer template called `commerce-receipt`. It is your receipt unless you choose another under **Receipt Email**. Edit it under **Mailer** like any other template. It is sent once when an order is paid. It comes from your **Store Name** and a reply to it goes to your **Store Email**. In the template the order is `data`, as in `{{ data.number }}`. Any template, yours or an email's, can print the two settings with `cms.commerce.storeName()` and `cms.commerce.storeEmail()`.
 
 Receipts go out through your site's email settings. If email is not set up, no receipt is sent.
+
+A receipt is put in the site's job queue when the order is paid, and the job runner sends it. A site with no job runner takes payments and never sends a receipt, so set one up before you sell: see [Cron URLs](docs/operations/cron-urls). On a local site, run `tcms jobs:process` by hand to send what is waiting.
 
 ## Stacks sites
 

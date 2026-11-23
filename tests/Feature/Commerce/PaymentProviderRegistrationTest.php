@@ -84,8 +84,11 @@ test('Settings → Commerce offers every installed provider, by its name', funct
 	])->and((new FormOptionSources(formServices()))->paymentProviderOptions())->toBe([]);
 });
 
-test('the providers setting takes its choices from the registry', function (): void {
+test('the providers setting is a checklist that takes its choices from the registry', function (): void {
 	$schema = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/resources/schemas/settings/commerce.json'), true);
 
-	expect($schema['properties']['providers']['settings']['propertyOptions'] ?? null)->toBe('paymentProviders');
+	// A box to tick per provider: with two or three to choose from, each one
+	// and whether it is on can be seen without opening a list.
+	expect($schema['properties']['providers']['field'] ?? null)->toBe('checklist')
+		->and($schema['properties']['providers']['settings']['propertyOptions'] ?? null)->toBe('paymentProviders');
 });

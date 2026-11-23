@@ -38,7 +38,9 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 	$shipped        = $this->c->get(CommerceSettings::class);
 	$fallback       = new CommerceSettings($bare);
 
-	foreach (['currency', 'storeName', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'purchaseUrl', 'grantableGroups', 'enabledProviders'] as $accessor) {
+	// The store name is not here: left empty it is the site's own name, which
+	// CommerceSettingsTest pins.
+	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'purchaseUrl', 'grantableGroups', 'enabledProviders'] as $accessor) {
 		expect($shipped->{$accessor}())->toBe($fallback->{$accessor}(), $accessor);
 	}
 });
@@ -64,7 +66,11 @@ test('the settings form renders with a field for each setting an operator choose
 
 	$html = (string)get('/admin/settings/commerce')->assertOk()->getBody();
 
-	foreach (['currency', 'storeName', 'storeEmail', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
+	// The providers are a box to tick for each one installed, and this site
+	// has none: the field is there, with nothing in it to name.
+	expect($html)->toContain('data-type="checklist" style="--grid-area: providers;');
+
+	foreach (['currency', 'storeName', 'storeEmail', 'customerCollection', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
 		expect($html)->toContain('name="' . $field . '"', $field);
 	}
 });

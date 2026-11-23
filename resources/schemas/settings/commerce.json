@@ -17,13 +17,13 @@
 			"type": "string",
 			"field": "text",
 			"label": "Store Name",
-			"help": "Shown on receipts and at checkout. Leave empty to use the site name."
+			"help": "The name receipts come from: it is their sender name, and it is in their subject and text. Leave empty to use the site name."
 		},
 		"storeEmail": {
 			"type": "string",
 			"field": "text",
 			"label": "Store Email",
-			"help": "The reply-to address on receipts, and where a notice goes when an order comes in.",
+			"help": "Where a buyer's reply to a receipt goes. The receipt also shows it as the address to write to. Leave empty and replies go to the address your site sends email from.",
 			"placeholder": "shop@example.com"
 		},
 		"customerCollection": {
@@ -35,10 +35,15 @@
 		},
 		"providers": {
 			"type": "array",
-			"field": "multiselect",
+			"items": {
+				"type": "string"
+			},
+			"field": "checklist",
 			"label": "Payment Providers",
-			"help": "The ways a buyer can pay, in the order checkout shows them. A provider appears here once its extension is enabled, and is offered to buyers once it has its keys.",
+			"help": "The ways a buyer can pay. Checkout lists them in the order shown here. A provider appears here once its extension is enabled, and is offered to buyers once it has its keys.",
+			"default": [],
 			"settings": {
+				"fieldGrid": "250px",
 				"propertyOptions": "paymentProviders"
 			}
 		},

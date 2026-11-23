@@ -7,7 +7,8 @@ import { initCartDrawer, mountEmbeddedCheckout } from '../../javascript/commerce
 // flip `open` the way a browser does.
 //-----------------------------------------------
 
-function page({ openOnAdd = 'true' } = {}) {
+/** Put a page with a drawer in the document, without wiring it. */
+function body({ openOnAdd = 'true' } = {}) {
 	document.body.innerHTML = `
 		<button type="button" id="toggle" data-cart-toggle aria-controls="cart-drawer">Cart</button>
 		<button type="button" id="add">Add to cart</button>
@@ -19,6 +20,12 @@ function page({ openOnAdd = 'true' } = {}) {
 	const dialog = document.getElementById('cart-drawer');
 	dialog.showModal = vi.fn(() => { dialog.open = true; });
 	dialog.close     = vi.fn(() => { dialog.open = false; dialog.dispatchEvent(new Event('close')); });
+
+	return dialog;
+}
+
+function page(options = {}) {
+	const dialog = body(options);
 	initCartDrawer(document);
 
 	return dialog;
@@ -77,6 +84,16 @@ describe('cart drawer', () => {
 		expect(dialog.close).toHaveBeenCalledTimes(1);
 	});
 
+	// A dialog gives focus to the first control inside it, which here is the
+	// close button: it would be ringed every time the cart opens.
+	test('puts focus on the drawer itself when it opens, not on its close button', () => {
+		const dialog = page();
+
+		click('toggle');
+
+		expect(document.activeElement).toBe(dialog);
+	});
+
 	test('returns focus to the toggle on close', () => {
 		const dialog = page();
 		const toggle = document.getElementById('toggle');
@@ -97,6 +114,30 @@ describe('cart drawer', () => {
 		dialog.close();
 
 		expect(document.activeElement).toBe(add);
+	});
+
+	// HTMX swaps the whole body when the visitor goes Back or Forward, and a
+	// site may do the same with hx-boost. The drawer on the page is then a new
+	// element, and nothing runs the script again.
+	test('opens the drawer that is on the page now, after the body was replaced', () => {
+		const first = page();
+		const now   = body();
+
+		click('toggle');
+
+		expect(now.showModal).toHaveBeenCalledTimes(1);
+		expect(first.showModal).not.toHaveBeenCalled();
+	});
+
+	test('opens on cart-updated and closes from the button after the body was replaced', () => {
+		page();
+		const now = body();
+
+		changed();
+		expect(now.showModal).toHaveBeenCalledTimes(1);
+
+		click('close');
+		expect(now.close).toHaveBeenCalledTimes(1);
 	});
 
 	test('does nothing on a page without a drawer', () => {

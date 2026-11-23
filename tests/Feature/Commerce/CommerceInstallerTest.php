@@ -11,10 +11,13 @@ use TotalCMS\Domain\Commerce\Data\InstallReport;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\Mailer\Service\EmailSender;
+use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 use TotalCMS\TotalCMS;
 
 /*
@@ -121,20 +124,94 @@ test('the receipt email is installed, addressed to the buyer', function (): void
 	commerceInstall();
 	$mailer = $this->c->get(MailerFetcher::class)->fetchMailer('commerce-receipt')->toArray();
 
-	expect($mailer['subject'])->toBe('Your order {{ object.number }}')
-		->and($mailer['to'])->toBe('{{ object.email }}')
-		->and($mailer['bodyHtml'])->toContain('|money(object.currency)', 'cms.commerce.downloads(object)', "object.kind == 'renewal'", 'object.discountCode')
-		->and($mailer['bodyText'])->toContain('|money(object.currency)');
+	expect($mailer['subject'])->toBe('Your order {{ data.number }} from {{ cms.commerce.storeName() }}')
+		->and($mailer['fromName'])->toBe('{{ cms.commerce.storeName() }}')
+		->and($mailer['replyTo'])->toBe('{{ cms.commerce.storeEmail() }}')
+		->and($mailer['to'])->toBe('{{ data.email }}')
+		->and($mailer['bodyHtml'])->toContain('|money(data.currency)', 'cms.commerce.downloads(data)', "data.kind == 'renewal'", 'data.discountCode')
+		->and($mailer['bodyText'])->toContain('|money(data.currency)');
+});
+
+// The mailer hands a template its record as `data`. A receipt that looked for
+// the order under any other name was addressed to nobody, and failed to send.
+test('a receipt sent through the mailer is addressed to the buyer and shows the order', function (): void {
+	commerceInstall();
+	$sent   = [];
+	$sender = $this->createMock(EmailSender::class);
+	$sender->method('send')->willReturnCallback(function (array $email) use (&$sent): OperationResult {
+		$sent[] = $email;
+
+		return OperationResult::success('sent');
+	});
+	$this->c->set(EmailSender::class, $sender);
+	$config           = $this->c->get(Config::class);
+	$config->commerce = ['storeName' => 'Larkspur & Co', 'storeEmail' => 'shop@larkspur.example'] + $config->commerce;
+
+	$result = $this->c->get(EmailService::class)->sendEmail('commerce-receipt', [
+		'id'            => 'order-1',
+		'number'        => 1001,
+		'kind'          => 'checkout',
+		'email'         => 'buyer@example.com',
+		'currency'      => 'USD',
+		'lines'         => ['l1' => ['title' => 'Kiambu <AA>', 'qty' => 2, 'lineTotal' => 4400]],
+		'subtotal'      => 4400,
+		'discountCode'  => 'WELCOME10',
+		'discountTotal' => 440,
+		'shippingTotal' => 500,
+		'taxTotal'      => 0,
+		'grandTotal'    => 4460,
+		'paidAt'        => '2026-11-23T11:51:27-08:00',
+	]);
+
+	expect($result->success)->toBeTrue()
+		->and($sent)->toHaveCount(1)
+		->and($sent[0]['to'])->toBe('buyer@example.com')
+		->and($sent[0]['subject'])->toBe('Your order 1001 from Larkspur & Co')
+		// The receipt comes from the store, and a reply goes to the store.
+		->and($sent[0]['fromName'])->toBe('Larkspur & Co')
+		->and($sent[0]['replyTo'])->toBe('shop@larkspur.example')
+		->and($sent[0]['bodyHtml'])->toContain('Larkspur &amp; Co has received your payment', 'dated November 23, 2026', 'reply to this email', 'mailto:shop@larkspur.example')
+		->and($sent[0]['bodyText'])->toContain('Larkspur & Co has received your payment', 'dated November 23, 2026', 'shop@larkspur.example')
+		->and($sent[0]['bodyHtml'])->toContain('Thank you for your order', 'Kiambu &lt;AA&gt; &times; 2', '$44.00', 'Discount (WELCOME10)', '-$4.40', '$5.00', '$44.60')
+		->not->toContain('{{', '{%', 'Tax', 'Your downloads')
+		->and($sent[0]['bodyText'])->toContain('Kiambu <AA> x 2: $44.00', 'Total: $44.60')
+		->not->toContain('{{', '{%');
 });
 
 test('the failed payment email is installed, with the link to fix the payment', function (): void {
 	commerceInstall();
 	$mailer = $this->c->get(MailerFetcher::class)->fetchMailer('commerce-payment-failed')->toArray();
 
-	expect($mailer['subject'])->toBe('Your payment for {{ object.lines|first.title }} did not go through')
-		->and($mailer['to'])->toBe('{{ object.email }}')
-		->and($mailer['bodyHtml'])->toContain('cms.commerce.subscriptionUrl(object)')
-		->and($mailer['bodyText'])->toContain('cms.commerce.subscriptionUrl(object)');
+	expect($mailer['subject'])->toBe('Your payment for {{ data.lines|first.title }} did not go through')
+		->and($mailer['to'])->toBe('{{ data.email }}')
+		->and($mailer['bodyHtml'])->toContain('cms.commerce.subscriptionUrl(data)')
+		->and($mailer['bodyText'])->toContain('cms.commerce.subscriptionUrl(data)');
+});
+
+test('a store with no email of its own sends a receipt with no reply-to', function (): void {
+	commerceInstall();
+	$sent   = [];
+	$sender = $this->createMock(EmailSender::class);
+	$sender->method('send')->willReturnCallback(function (array $email) use (&$sent): OperationResult {
+		$sent[] = $email;
+
+		return OperationResult::success('sent');
+	});
+	$this->c->set(EmailSender::class, $sender);
+
+	$this->c->get(EmailService::class)->sendEmail('commerce-receipt', ['number' => 1002, 'email' => 'buyer@example.com', 'currency' => 'USD', 'lines' => [], 'grandTotal' => 0]);
+
+	expect($sent[0]['replyTo'])->toBe('')
+		->and($sent[0]['fromName'])->not->toBe('')
+		->and($sent[0]['bodyHtml'])->toContain('reply to this email')->not->toContain('mailto:', 'dated');
+});
+
+test('the failed payment email comes from the store too', function (): void {
+	commerceInstall();
+	$mailer = $this->c->get(MailerFetcher::class)->fetchMailer('commerce-payment-failed')->toArray();
+
+	expect($mailer['fromName'])->toBe('{{ cms.commerce.storeName() }}')
+		->and($mailer['replyTo'])->toBe('{{ cms.commerce.storeEmail() }}');
 });
 
 test('everything a template prints from an order is escaped', function (string $id): void {

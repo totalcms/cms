@@ -11,30 +11,48 @@
 
 const TOGGLE = '[data-cart-toggle]';
 const CLOSE  = '[data-cart-close]';
-const READY  = 'cartDrawerReady';
+const DRAWER = '#cart-drawer';
+
+/** The documents whose drawer is wired, so that asking again adds nothing. */
+const wired = new WeakSet();
 
 /**
- * Wire the cart drawer in `root`, if there is one. Safe to call again: a
- * drawer is wired once.
+ * Wire the cart drawer of `root`. Safe to call again: a document is wired
+ * once.
+ *
+ * Every listener is on the document and finds the drawer when it is needed.
+ * HTMX replaces the whole body when the visitor goes Back or Forward (and a
+ * site may do the same with hx-boost), without running this script again:
+ * the drawer on the page is then a new element, and one found when the page
+ * loaded would no longer be in it.
  *
  * @param {Document} root
  */
 export function initCartDrawer(root = document) {
-	const dialog = root.querySelector('#cart-drawer');
-	if (!dialog || dialog.dataset[READY] === 'true') {
+	if (wired.has(root)) {
 		return;
 	}
-	dialog.dataset[READY] = 'true';
+	wired.add(root);
+
+	const drawer = () => root.querySelector(DRAWER);
 
 	// What had focus when the drawer opened, to give it back when it closes.
 	let opener = null;
 
 	const open = (from) => {
-		if (dialog.open) {
+		const dialog = drawer();
+		if (!dialog || dialog.open) {
 			return;
 		}
 		opener = from;
 		dialog.showModal();
+		// A dialog gives focus to the first control inside it. Here that is the
+		// close button, which would be ringed every time the cart opens, so
+		// focus goes to the drawer itself: Tab then reaches the button first.
+		if (!dialog.hasAttribute('tabindex')) {
+			dialog.tabIndex = -1;
+		}
+		dialog.focus();
 	};
 
 	root.addEventListener('click', (event) => {
@@ -50,24 +68,29 @@ export function initCartDrawer(root = document) {
 		}
 		// The dialog fills its own box, so a click that lands on the dialog
 		// itself, and not on anything inside it, landed on the backdrop.
-		if (target.closest(CLOSE) || target === dialog) {
+		const dialog = drawer();
+		if (dialog && (target === dialog || (target.closest(CLOSE) && dialog.contains(target)))) {
 			dialog.close();
 		}
 	});
 
 	// Esc closes a dialog without going through the code above; `close` is
-	// the one event every way of closing ends in.
-	dialog.addEventListener('close', () => {
+	// the one event every way of closing ends in. It does not bubble, so it
+	// is caught on its way down.
+	root.addEventListener('close', (event) => {
+		if (!(event.target instanceof Element) || !event.target.matches(DRAWER)) {
+			return;
+		}
 		if (opener instanceof HTMLElement && opener.isConnected) {
 			opener.focus();
 		}
 		opener = null;
-	});
+	}, true);
 
-	// Every change to the cart is announced on the body (the server sends
+	// Every change to the cart is announced on the page (the server sends
 	// `HX-Trigger: cart-updated`). Opening on it is how "added to cart" shows.
-	root.body.addEventListener('cart-updated', () => {
-		if (dialog.dataset.openOnAdd === 'true') {
+	root.addEventListener('cart-updated', () => {
+		if (drawer()?.dataset.openOnAdd === 'true') {
 			open(root.activeElement);
 		}
 	});

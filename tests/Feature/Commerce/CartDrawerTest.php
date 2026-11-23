@@ -52,6 +52,17 @@ describe('the drawer', function (): void {
 			->toContain('href="/checkout"');
 	});
 
+	it('closes with an X button that is named for a screen reader', function (): void {
+		$html = renderTwig('{{ cms.cart.drawer() }}');
+
+		preg_match('/<button[^>]*data-cart-close[^>]*>(.*?)<\/button>/s', $html, $button);
+
+		expect($button[0] ?? '')->toContain('aria-label="Close the cart"')
+			->and($button[1] ?? '')->toContain('<svg')
+			->toContain('aria-hidden="true"')
+			->not->toContain('Close');
+	});
+
 	it('takes its options, and escapes them', function (): void {
 		$html = renderTwig('{{ cms.cart.drawer({title: "Bag <b>", checkoutUrl: "/pay?a=1&b=2", openOnAdd: false, class: "mine", side: "sideways"}) }}');
 

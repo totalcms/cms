@@ -2,9 +2,11 @@
 	"active": true,
 	"name": "Commerce: Failed Payment",
 	"category": "Commerce",
-	"description": "Sent once when a subscription's renewal payment fails. `object` is the subscription.",
-	"to": "{{ object.email }}",
-	"subject": "Your payment for {{ object.lines|first.title }} did not go through",
-	"bodyHtml": "<h1>Your payment did not go through</h1>\n<p>We could not take the payment of {{ object.recurringTotal|money(object.currency) }} for {{ (object.lines|first).title|e }}.</p>\n<p>Please update your payment method to keep your subscription.</p>\n<p><a href=\"{{ cms.commerce.subscriptionUrl(object)|e('html_attr') }}\">Update your payment method</a></p>\n",
-	"bodyText": "Your payment did not go through\n\nWe could not take the payment of {{ object.recurringTotal|money(object.currency) }} for {{ (object.lines|first).title }}.\n\nPlease update your payment method to keep your subscription:\n{{ cms.commerce.subscriptionUrl(object) }}\n"
+	"description": "Sent once when a subscription's renewal payment fails. `data` is the subscription.",
+	"fromName": "{{ cms.commerce.storeName() }}",
+	"to": "{{ data.email }}",
+	"replyTo": "{{ cms.commerce.storeEmail() }}",
+	"subject": "Your payment for {{ data.lines|first.title }} did not go through",
+	"bodyHtml": "<h1>Your payment did not go through</h1>\n<p>We could not take the payment of {{ data.recurringTotal|money(data.currency) }} for {{ (data.lines|first).title|e }}.</p>\n<p>Please update your payment method to keep your subscription.</p>\n<p><a href=\"{{ cms.commerce.subscriptionUrl(data)|e('html_attr') }}\">Update your payment method</a></p>\n",
+	"bodyText": "Your payment did not go through\n\nWe could not take the payment of {{ data.recurringTotal|money(data.currency) }} for {{ (data.lines|first).title }}.\n\nPlease update your payment method to keep your subscription:\n{{ cms.commerce.subscriptionUrl(data) }}\n"
 }

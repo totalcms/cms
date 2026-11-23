@@ -59,7 +59,7 @@ Stripe then shows a **signing secret** that starts with `whsec_`. Paste it into 
 
 ### 4. Switch Stripe on in your store
 
-Open **Settings → Commerce** and choose **Stripe** under **Payment Providers**. Stripe is offered to buyers once it is chosen there and both test values are filled in.
+Open **Settings → Commerce** and tick **Stripe** under **Payment Providers**. Stripe is offered to buyers once it is ticked there and both test values are filled in.
 
 ### 5. Make a test purchase
 
@@ -112,14 +112,16 @@ Total CMS does not limit where scripts come from. If your server or a template a
 Stripe cannot reach a site on your own computer, so webhooks need forwarding. The [Stripe CLI](https://docs.stripe.com/stripe-cli) does this:
 
 ```bash
-stripe listen --forward-to https://example.test/commerce/webhook/stripe
+stripe listen --all-snapshot --forward-to https://example.test/commerce/webhook/stripe
 ```
+
+The CLI asks which events to forward. `--all-snapshot` sends every event of the kind Total CMS reads; the ones it has no use for are answered and ignored.
 
 It prints a signing secret for the session. Use that as your **Test Webhook Signing Secret** while it runs.
 
 ## When a payment does not match
 
-Total CMS compares what Stripe says was paid with the order's total. If the amount or the currency is different, the order is not fulfilled. It is set to **review**, and Total CMS logs a warning. You decide whether to refund it or honor it.
+Total CMS compares what Stripe says was paid with the order's total. If the amount or the currency is different, the order is not fulfilled. It is set to **In review**, and Total CMS logs a warning. A super admin then accepts the payment on the order's page, or you refund it at Stripe and the order closes by itself. See [Orders in review](docs/commerce/orders#orders-in-review).
 
 The same happens when a buyer pays for a checkout the store had already given up on, for example an old payment page left open in another tab.
 

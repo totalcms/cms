@@ -88,6 +88,18 @@ final readonly class CommerceTwigAdapter
 		return $this->settings->currency();
 	}
 
+	/** What the store calls itself: its own name, or the site's when it has none. */
+	public function storeName(): string
+	{
+		return $this->settings->storeName();
+	}
+
+	/** The address buyers can write to, or '' when the store has none. */
+	public function storeEmail(): string
+	{
+		return $this->settings->storeEmail();
+	}
+
 	/**
 	 * Active products, with the options of `cms.collection.query()`: filter,
 	 * sort, search, limit, page. Whatever the filter says about status, only

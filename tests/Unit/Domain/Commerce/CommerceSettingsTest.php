@@ -11,8 +11,10 @@ use TotalCMS\Support\Config;
 beforeEach(function (): void {
 	/** @param array<string,mixed> $commerce */
 	$this->settings = function (array $commerce = []): CommerceSettings {
-		$config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->commerce = $commerce;
+		$config            = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->commerce  = $commerce;
+		$config->dashboard = [];
+		$config->domain    = 'shop.example';
 
 		return new CommerceSettings($config);
 	};
@@ -41,7 +43,7 @@ it('has a working default for everything', function (): void {
 		->and($s->shippingZones())->toBe([])
 		->and($s->receiptMailer())->toBe('commerce-receipt')
 		->and($s->paymentFailedMailer())->toBe('commerce-payment-failed')
-		->and($s->storeName())->toBe('')
+		->and($s->storeName())->toBe('shop.example')
 		->and($s->storeEmail())->toBe('')
 		->and($s->downloadTtlHours())->toBe(72)
 		->and($s->downloadMaxCount())->toBe(5)
@@ -171,4 +173,20 @@ it('drops anything that is not a plain name from a list of names', function (): 
 
 	expect($s->enabledProviders())->toBe(['stripe', 'paypal'])
 		->and($s->checkoutAttributes())->toBe(['licenseKey']);
+});
+
+// A receipt always says who it is from: a store that has not been named
+// goes by the site's own name.
+it('uses the site name as the store name until the store has its own', function (): void {
+	$config            = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->dashboard = [];
+	$config->domain    = 'shop.example';
+	$config->siteName  = 'Larkspur Roastery';
+	$config->commerce  = [];
+
+	expect((new CommerceSettings($config))->storeName())->toBe('Larkspur Roastery');
+
+	$config->commerce = ['storeName' => ' Larkspur Shop '];
+
+	expect((new CommerceSettings($config))->storeName())->toBe('Larkspur Shop');
 });

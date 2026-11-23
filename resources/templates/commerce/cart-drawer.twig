@@ -14,7 +14,9 @@
 <dialog id="cart-drawer" class="cart-drawer{% if class %} {{ class|e }}{% endif %}" data-side="{{ side|e }}" data-open-on-add="{{ openOnAdd ? 'true' : 'false' }}" aria-labelledby="cart-drawer-title">
 	<header class="cart-drawer-header">
 		<h2 id="cart-drawer-title" class="cart-drawer-title">{{ title|e }}</h2>
-		<button type="button" class="cart-drawer-close" data-cart-close aria-label="Close the cart">Close</button>
+		<button type="button" class="cart-drawer-close" data-cart-close aria-label="Close the cart">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+		</button>
 	</header>
 	<div id="cart-drawer-body" class="cart-drawer-body" hx-get="{{ base|e }}/commerce/cart?part=drawer" hx-trigger="cart-updated from:body" hx-swap="innerHTML">
 		{% include 'commerce/cart-drawer-body.twig' %}

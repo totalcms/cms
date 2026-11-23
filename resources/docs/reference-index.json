@@ -1488,6 +1488,20 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.commerce.storeEmail",
+            "signature": "storeEmail(): string",
+            "description": "The address buyers can write to, or '' when the store has none.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.storeName",
+            "signature": "storeName(): string",
+            "description": "What the store calls itself: its own name, or the site's when it has none.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.config",
             "signature": "config(string $key, ?string $setting = null): mixed",
             "description": "",
