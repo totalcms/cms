@@ -79,7 +79,7 @@
 			"type": "string",
 			"field": "radio",
 			"label": "Tax",
-			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> adds it at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.",
+			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> and <strong>Included in prices</strong> use your own tax rates, below: the first adds the tax at checkout, the second treats your prices as already including it. <strong>Worked out by the payment provider</strong> leaves it to Stripe Tax, which finds the exact rate for the buyer's address and adds it when they pay. That needs Stripe Tax set up in your Stripe account: run <code>tcms stripe:tax</code> to check. Orders paid with a provider that cannot work out tax carry none.",
 			"default": "none",
 			"options": [
 				{
@@ -93,6 +93,10 @@
 				{
 					"value": "inclusive",
 					"label": "Included in prices"
+				},
+				{
+					"value": "provider",
+					"label": "Worked out by the payment provider"
 				}
 			]
 		},
@@ -105,8 +109,11 @@
 			"settings": {
 				"visibility": {
 					"watch": "taxMode",
-					"value": "none",
-					"operator": "!="
+					"value": [
+						"exclusive",
+						"inclusive"
+					],
+					"operator": "in"
 				}
 			}
 		},
@@ -124,8 +131,11 @@
 			"settings": {
 				"visibility": {
 					"watch": "taxMode",
-					"value": "none",
-					"operator": "!="
+					"value": [
+						"exclusive",
+						"inclusive"
+					],
+					"operator": "in"
 				}
 			}
 		},

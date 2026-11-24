@@ -273,7 +273,7 @@ final readonly class CartTwigAdapter
 			'ships'     => $ships = $this->ships($view),
 			// Tax goes by where the buyer is. An order that ships says so with
 			// its address; one that does not has to be asked.
-			'taxed'     => !$ships && $this->tax->mode() !== TaxCalculator::NONE,
+			'taxed'     => !$ships && in_array($this->tax->mode(), TaxCalculator::OWN, true),
 			'email'     => '',
 			'label'     => $this->option($options, 'label') ?: 'Continue to payment',
 			'class'     => $this->option($options, 'class'),

@@ -31,7 +31,7 @@ final class FakeSubscriptionProvider extends FakePaymentProvider implements Subs
 
 	public function capabilities(): ProviderCapabilities
 	{
-		return new ProviderCapabilities(embedded: $this->embedded, subscriptions: true, billingPortal: true);
+		return new ProviderCapabilities(embedded: $this->embedded, subscriptions: true, billingPortal: true, tax: $this->tax);
 	}
 
 	public function createCheckout(CheckoutRequest $request): CheckoutSession

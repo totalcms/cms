@@ -39,6 +39,9 @@ class FakePaymentProvider implements PaymentProvider
 
 	public bool $configured = true;
 
+	/** Whether it can work out the tax on an order itself. */
+	public bool $tax = false;
+
 	/** @var list<string> currencies it takes; empty = all */
 	public array $currencies = [];
 
@@ -68,7 +71,7 @@ class FakePaymentProvider implements PaymentProvider
 
 	public function capabilities(): ProviderCapabilities
 	{
-		return new ProviderCapabilities();
+		return new ProviderCapabilities(tax: $this->tax);
 	}
 
 	public function isConfigured(): bool

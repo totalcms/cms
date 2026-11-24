@@ -177,6 +177,31 @@ Total CMS compares what Stripe says was paid with the order's total. If the amou
 
 The same happens when a buyer pays for a checkout the store had already given up on, for example an old payment page left open in another tab.
 
+## Stripe Tax
+
+Stripe can work out the tax on each order for you: the exact rate for the buyer's address, added when they pay. Set **Tax** to **Worked out by the payment provider** in **Settings → Commerce**. [Tax](docs/commerce/tax#let-stripe-work-out-the-tax) explains how an order is taxed this way.
+
+Stripe Tax is a paid Stripe service, and it is set up in your Stripe account: your head office address under **Tax**, and a registration for each place you collect tax under **Tax → Registrations**. Test mode has its own settings and registrations.
+
+Check it from the command line:
+
+```bash
+tcms stripe:tax
+```
+
+```text
+Stripe Tax, checked with the test key
+  ✓ Stripe Tax is set up
+  ✓ Tax is collected in 2 places
+  ✓ Settings → Commerce → Tax leaves the tax to the payment provider
+
+Ready: Stripe works out the tax on an order paid with Stripe.
+```
+
+When something is missing it says what, and exits with an error. Until it is fixed a buyer can still pay, but is charged no tax.
+
+For an order that ships, Total CMS gives Stripe the shipping address by creating a customer in your Stripe account with that address. Stripe then taxes the order by where it is going.
+
 ## Refunds and disputes
 
 Refund a payment in the Stripe dashboard, and Stripe tells your site. The order shows as partly or fully refunded, and the refund is added to the order's transactions.
@@ -195,6 +220,7 @@ A dispute flags the order so you can respond to it at Stripe. When Stripe closes
 | **Live Secret Key** | Starts with `sk_live_`. A restricted key (`rk_live_`) works if it may write Checkout Sessions and Refunds. |
 | **Live Webhook Signing Secret** | Starts with `whsec_`. From the live webhook endpoint. |
 | **Statement Descriptor Suffix** | Optional. Up to 22 characters added after your Stripe account's name on the buyer's card statement. |
+| **Stripe Tax: Your Prices** | Used only with [Stripe Tax](#stripe-tax). **Tax is added on top** charges your price plus the tax. **Prices include tax** charges your price and counts the tax as part of it. |
 
 Your secret keys and webhook secrets are stored on your server and sent only to Stripe. They never appear in a page, a log or an error message. A publishable key is made to be seen: it appears in the page that shows Stripe's form, and can do nothing but show it.
 

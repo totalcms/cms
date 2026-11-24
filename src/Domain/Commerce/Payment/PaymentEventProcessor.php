@@ -194,6 +194,8 @@ final readonly class PaymentEventProcessor
 			[],
 			$held['subscriptionRef'] ?? '',
 			$held['customerRef'] ?? '',
+			$order->heldAmount('tax'),
+			$order->heldAmount('orderTotal'),
 		);
 	}
 
@@ -238,6 +240,7 @@ final readonly class PaymentEventProcessor
 		if ($transition->paymentStatus === 'paid' && $order->paidAt() === '') {
 			$changes['paidAt']             = date(DATE_ATOM);
 			$changes['providerPaymentRef'] = $event->providerPaymentRef !== '' ? $event->providerPaymentRef : $order->providerPaymentRef();
+			$changes += $order->taxFromPayment($event->amount->amount(), $event->orderTotal !== null ? $event->tax?->amount() : null);
 		}
 
 		$flags                       = $order->flags();
@@ -259,7 +262,7 @@ final readonly class PaymentEventProcessor
 	 * kept as the provider reported it, so staff can accept it later. A
 	 * refund while the order waits is counted off what is held.
 	 *
-	 * @return array<string,int|string>|null
+	 * @return array<string,int|string|null>|null
 	 */
 	private function held(OrderData $order, PaymentEvent $event, Transition $transition): ?array
 	{
@@ -272,6 +275,9 @@ final readonly class PaymentEventProcessor
 				'currency'        => $event->amount->currency(),
 				'subscriptionRef' => $event->subscriptionRef,
 				'customerRef'     => $event->customerRef,
+				// Kept so that accepting the payment later still gives the order its tax.
+				'tax'             => $event->tax?->amount(),
+				'orderTotal'      => $event->orderTotal?->amount(),
 			];
 		}
 

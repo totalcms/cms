@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Payment;
 
+use TotalCMS\Domain\Commerce\Order\Address;
 use TotalCMS\Domain\Money\Money;
 
 /**
@@ -35,6 +36,10 @@ final readonly class CheckoutRequest
 	 * @param Money|null                $recurringTotal      subscription mode: what each later period must cost
 	 * @param string                    $subscriptionId      the engine's subscription id, for the provider's metadata
 	 * @param string                    $providerCustomerRef the buyer's existing customer at the provider, to reuse
+	 * @param bool                      $providerTax         the store left the tax to the provider: work it out, add it to `total`, and
+	 *                                                       report it on the paid event ({@see PaymentEvent::$tax}). Only asked of a
+	 *                                                       provider whose capabilities say it can
+	 * @param Address|null              $shipTo              with `providerTax`: where the order ships, to tax it by. Null when nothing ships
 	 */
 	public function __construct(
 		public string $orderId,
@@ -55,6 +60,8 @@ final readonly class CheckoutRequest
 		public ?Money $recurringTax = null,
 		public string $subscriptionId = '',
 		public string $providerCustomerRef = '',
+		public bool $providerTax = false,
+		public ?Address $shipTo = null,
 	) {
 	}
 }

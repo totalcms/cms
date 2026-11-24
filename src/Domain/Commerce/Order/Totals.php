@@ -37,4 +37,10 @@ final readonly class Totals
 		public ?array $discountLine = null,
 	) {
 	}
+
+	/** The same totals, said to be taxed another way. No amount is touched. */
+	public function withTaxMode(string $mode): self
+	{
+		return new self(...['taxMode' => $mode] + get_object_vars($this));
+	}
 }

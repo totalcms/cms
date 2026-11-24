@@ -39,7 +39,7 @@ final readonly class TableTaxCalculator implements TaxCalculator
 	public function needsRegion(string $country): bool
 	{
 		$country = strtoupper(trim($country));
-		if ($country === '' || $this->mode() === self::NONE) {
+		if ($country === '' || !in_array($this->mode(), self::OWN, true)) {
 			return false;
 		}
 
@@ -55,7 +55,8 @@ final readonly class TableTaxCalculator implements TaxCalculator
 	public function calculate(array $lines, int $shipping, ?Address $address, string $currency): array
 	{
 		$nothing = ['lines' => array_fill_keys(array_keys($lines), 0), 'shipping' => 0, 'taxLines' => []];
-		$rate    = $this->mode() === self::NONE || !$address instanceof Address ? null : $this->rateFor($address);
+		// When the payment provider works the tax out, the table is not used.
+		$rate    = !in_array($this->mode(), self::OWN, true) || !$address instanceof Address ? null : $this->rateFor($address);
 		if ($rate === null) {
 			return $nothing;
 		}

@@ -93,6 +93,12 @@ final readonly class CheckoutService
 		$free     = $draft->totals->grandTotal === 0 && !$draft->hasRecurringLine();
 		$provider = $free ? null : $this->provider($input->provider, $draft);
 
+		// The tax is left to the provider only when this one can work it out.
+		// With one that cannot, or nothing to pay, the order has no tax.
+		if ($draft->totals->taxMode === TaxCalculator::PROVIDER && $provider?->capabilities()->tax !== true) {
+			$draft = $draft->withTaxMode(TaxCalculator::NONE);
+		}
+
 		$refusal = $this->validators->refusal($draft, $ctx);
 		if ($refusal !== null) {
 			throw CommerceException::checkoutInvalid($refusal);
@@ -135,7 +141,8 @@ final readonly class CheckoutService
 	 */
 	private function requireWhere(OrderDraft $draft, CheckoutInput $input): void
 	{
-		$taxed = $this->tax->mode() !== TaxCalculator::NONE;
+		// A provider that works the tax out asks the buyer where they are itself.
+		$taxed = in_array($this->tax->mode(), TaxCalculator::OWN, true);
 		if (!$draft->ships() && !$taxed) {
 			return;
 		}
@@ -251,7 +258,7 @@ final readonly class CheckoutService
 			orderNumber: $order->number(),
 			total: $order->grandTotalMoney(),
 			lines: array_values(array_map(
-				static fn (OrderLineDraft $line): CheckoutLineSummary => new CheckoutLineSummary($line->title, $line->qty, Money::of($line->unitPrice, $draft->currency), Money::of($line->discountTotal, $draft->currency), $zero),
+				static fn (OrderLineDraft $line): CheckoutLineSummary => new CheckoutLineSummary($line->title, $line->qty, Money::of($line->unitPrice, $draft->currency), Money::of($line->discountTotal, $draft->currency), $zero, taxable: $line->taxable),
 				$draft->lines,
 			)),
 			shipping: Money::of($draft->totals->shippingTotal, $draft->currency),
@@ -264,6 +271,8 @@ final readonly class CheckoutService
 			metadata: $metadata,
 			idempotencyKey: 'checkout-' . $order->id(),
 			uiMode: $uiMode,
+			providerTax: $order->taxMode() === TaxCalculator::PROVIDER,
+			shipTo: $order->taxMode() === TaxCalculator::PROVIDER && $draft->ships() ? $draft->shippingAddress : null,
 		);
 	}
 

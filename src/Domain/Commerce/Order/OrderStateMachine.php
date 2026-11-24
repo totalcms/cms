@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Commerce\Order;
 
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
+use TotalCMS\Domain\Money\Money;
 
 /**
  * Every rule about what an order becomes, in one place.
@@ -138,7 +139,11 @@ final readonly class OrderStateMachine
 			return Transition::ignored($order, 'not_pending');
 		}
 
-		if ($event->amount->amount() !== $order->grandTotal() || $event->amount->currency() !== $order->currency()) {
+		// What the buyer was to pay for the order itself. An order whose tax
+		// was left to the provider is checked against what the provider was
+		// asked for: what it charged may hold its tax on top.
+		$forOrder = $order->taxMode() === TaxCalculator::PROVIDER && $event->tax instanceof Money && $event->orderTotal instanceof Money ? $event->orderTotal : $event->amount;
+		if ($forOrder->amount() !== $order->grandTotal() || $forOrder->currency() !== $order->currency() || $event->amount->currency() !== $order->currency()) {
 			return Transition::to($order, ['paymentStatus' => self::REVIEW, 'needsAttention' => 'amount_mismatch'], [SideEffect::AdminNotice]);
 		}
 

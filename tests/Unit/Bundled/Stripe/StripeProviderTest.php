@@ -6,12 +6,15 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Tester\CommandTester;
 use Tests\Fakes\RecordingHttpClient;
 use Tests\Fakes\RecordingLogger;
+use TotalCMS\Bundled\Stripe\Command\TaxCommand;
 use TotalCMS\Bundled\Stripe\Extension;
 use TotalCMS\Bundled\Stripe\StripeClient;
 use TotalCMS\Bundled\Stripe\StripeProvider;
 use TotalCMS\Bundled\Stripe\StripeWebhookVerifier;
+use TotalCMS\Domain\Commerce\Order\Address;
 use TotalCMS\Domain\Commerce\Payment\CheckoutLineSummary;
 use TotalCMS\Domain\Commerce\Payment\CheckoutRequest;
 use TotalCMS\Domain\Commerce\Payment\CheckoutSession;
@@ -20,6 +23,7 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\ProviderException;
 use TotalCMS\Domain\Commerce\Payment\RefundRequest;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
@@ -532,6 +536,272 @@ describe('asking Stripe where a payment stands', function (): void {
 	});
 });
 
+/*
+ * Stripe Tax: the store leaves the tax to Stripe. Stripe finds out where the
+ * buyer is, adds the tax on its page, and says how much on the session.
+ */
+describe('leaving the tax to Stripe', function (): void {
+	beforeEach(function (): void {
+		$this->taxed = static fn (array $with = []): CheckoutRequest => stripeCheckout(null, 3998, ['providerTax' => true] + $with);
+		$this->shipTo = new Address(name: 'Ada Buyer', line1: '1 Main St', line2: 'Apt 2', city: 'Boise', region: 'ID', postalCode: '83702', country: 'US');
+	});
+
+	it('says it can work out tax', function (): void {
+		expect(stripeProvider(new RecordingHttpClient())->capabilities()->tax)->toBeTrue();
+	});
+
+	it('switches Stripe\'s tax on, and says the tax goes on top of each price', function (): void {
+		$http = new RecordingHttpClient(stripeSession());
+		stripeProvider($http)->createCheckout(($this->taxed)());
+		$form = stripeForm($http);
+
+		expect($form['automatic_tax'])->toBe(['enabled' => 'true'])
+			->and($form['line_items'][0]['price_data'])->toBe(['currency' => 'usd', 'unit_amount' => '1999', 'product_data' => ['name' => 'Tee'], 'tax_behavior' => 'exclusive'])
+			// Still the order's total before tax, and the same buyer.
+			->and($form['customer_email'])->toBe('buyer@example.com')
+			->and($form)->not->toHaveKey('customer');
+	});
+
+	it('says the prices already hold the tax when the store says so', function (): void {
+		$http     = new RecordingHttpClient(stripeSession());
+		$provider = new StripeProvider(new StripeClient(static fn (): HttpClientInterface => $http, STRIPE_KEY), STRIPE_KEY, STRIPE_SECRET, '', new NullLogger(), taxBehavior: 'inclusive');
+		$provider->createCheckout(($this->taxed)());
+
+		expect(stripeForm($http)['line_items'][0]['price_data']['tax_behavior'])->toBe('inclusive');
+	});
+
+	it('marks shipping as shipping, which is taxed by its own rules', function (): void {
+		$http = new RecordingHttpClient(stripeSession());
+		stripeProvider($http)->createCheckout(stripeCheckout(null, 3998 + 500, ['providerTax' => true, 'shipping' => Money::of(500, 'USD')]));
+		$shipping = stripeForm($http)['line_items'][1]['price_data'];
+
+		expect($shipping['product_data'])->toBe(['name' => 'Shipping', 'tax_code' => 'txcd_92010001'])
+			->and($shipping['tax_behavior'])->toBe('exclusive');
+	});
+
+	it('tells Stripe a product the store does not tax is not taxable', function (): void {
+		$http  = new RecordingHttpClient(stripeSession());
+		$usd   = static fn (int $amount): Money => Money::of($amount, 'USD');
+		$lines = [new CheckoutLineSummary('Tee', 1, $usd(1999), $usd(0), $usd(0)), new CheckoutLineSummary('Gift Card', 1, $usd(2000), $usd(0), $usd(0), taxable: false)];
+		stripeProvider($http)->createCheckout(stripeCheckout($lines, 3999, ['providerTax' => true]));
+		$items = stripeForm($http)['line_items'];
+
+		expect($items[0]['price_data']['product_data'])->toBe(['name' => 'Tee'])
+			->and($items[1]['price_data']['product_data'])->toBe(['name' => 'Gift Card', 'tax_code' => 'txcd_00000000']);
+	});
+
+	it('leaves all of that off a checkout the store taxed itself', function (): void {
+		$http = new RecordingHttpClient(stripeSession());
+		stripeProvider($http)->createCheckout(stripeCheckout(null, 3998 + 500, ['shipping' => Money::of(500, 'USD')]));
+		$form = stripeForm($http);
+
+		expect($form)->not->toHaveKey('automatic_tax')
+			->and($form['line_items'][1]['price_data'])->toBe(['currency' => 'usd', 'unit_amount' => '500', 'product_data' => ['name' => 'Shipping']]);
+	});
+
+	describe('an order that ships', function (): void {
+		it('gives Stripe the address it ships to, as a customer, so the tax is for where it is going', function (): void {
+			$http = new RecordingHttpClient(new HttpResponse(200, (string)json_encode(['id' => 'cus_A1'])), stripeSession());
+			stripeProvider($http)->createCheckout(($this->taxed)(['shipTo' => $this->shipTo]));
+
+			$customer = stripeForm($http, 0);
+			$session  = stripeForm($http, 1);
+
+			expect($http->requests[0]['url'])->toBe('https://api.stripe.com/v1/customers')
+				->and($customer)->toBe([
+					'email'    => 'buyer@example.com',
+					'name'     => 'Ada Buyer',
+					'shipping' => ['name' => 'Ada Buyer', 'address' => ['line1' => '1 Main St', 'line2' => 'Apt 2', 'city' => 'Boise', 'state' => 'ID', 'postal_code' => '83702', 'country' => 'US']],
+					'metadata' => ['orderId' => ORDER_ID],
+				])
+				->and(stripeHeaders($http, 0))->toContain('Idempotency-Key: checkout-' . ORDER_ID . '-customer')
+				->and($session['customer'])->toBe('cus_A1')
+				// The billing address Stripe may ask for is kept on that customer.
+				->and($session['customer_update'])->toBe(['address' => 'auto'])
+				->and($session)->not->toHaveKey('customer_email')
+				->and($session['automatic_tax'])->toBe(['enabled' => 'true']);
+		});
+
+		it('names the customer by the email when the address has no name', function (): void {
+			$http = new RecordingHttpClient(new HttpResponse(200, (string)json_encode(['id' => 'cus_A1'])), stripeSession());
+			stripeProvider($http)->createCheckout(($this->taxed)(['shipTo' => new Address(country: 'US', region: 'ID')]));
+			$customer = stripeForm($http, 0);
+
+			expect($customer)->not->toHaveKey('name')
+				->and($customer['shipping'])->toBe(['name' => 'buyer@example.com', 'address' => ['state' => 'ID', 'country' => 'US']]);
+		});
+	});
+
+	describe('when Stripe will not start the checkout with tax', function (): void {
+		// Stripe Tax not set up, a setting the account lacks: the buyer must
+		// not be the one who finds out. The sale goes ahead without tax and
+		// the owner is told in the log.
+		it('starts it without, under a key of its own, and says so in the log', function (): void {
+			$logger = new RecordingLogger();
+			$http   = new RecordingHttpClient(
+				new HttpResponse(400, (string)json_encode(['error' => ['type' => 'invalid_request_error', 'code' => 'stripe_tax_inactive', 'message' => 'no']])),
+				stripeSession(),
+			);
+			$session = stripeProvider($http, logger: $logger)->createCheckout(($this->taxed)());
+			$second  = stripeForm($http, 1);
+
+			expect($session->providerSessionRef)->toBe('cs_test_a1')
+				->and($second)->not->toHaveKey('automatic_tax')
+				->and($second['line_items'][0]['price_data'])->not->toHaveKey('tax_behavior')
+				->and($second['customer_email'])->toBe('buyer@example.com')
+				->and(stripeHeaders($http, 1))->toContain('Idempotency-Key: checkout-' . ORDER_ID . '-notax')
+				->and($logger->records)->toHaveCount(1)
+				->and($logger->records[0]['level'])->toBe('warning')
+				->and($logger->records[0]['context'])->toBe(['orderId' => ORDER_ID, 'code' => 'stripe_tax_inactive']);
+		});
+
+		it('does the same when the customer for the address cannot be made', function (): void {
+			$http = new RecordingHttpClient(new HttpResponse(400, (string)json_encode(['error' => ['type' => 'invalid_request_error']])), stripeSession());
+			stripeProvider($http)->createCheckout(($this->taxed)(['shipTo' => $this->shipTo]));
+
+			expect($http->requests)->toHaveCount(2)
+				->and($http->requests[1]['url'])->toBe('https://api.stripe.com/v1/checkout/sessions')
+				->and(stripeForm($http, 1))->not->toHaveKey('customer');
+		});
+
+		it('does not take "Stripe could not be reached" as a no: that checkout fails, as any would', function (): void {
+			$http = new RecordingHttpClient();
+
+			expect(fn () => stripeProvider($http)->createCheckout(($this->taxed)()))->toThrow(ProviderException::class)
+				->and($http->requests)->toHaveCount(1);
+		});
+	});
+
+	describe('a paid session', function (): void {
+		beforeEach(function (): void {
+			$this->session = static fn (array $with): HttpResponse => new HttpResponse(200, (string)json_encode($with + [
+				'id' => 'cs_test_a1', 'payment_status' => 'paid', 'status' => 'complete', 'currency' => 'usd', 'client_reference_id' => ORDER_ID, 'payment_intent' => 'pi_3A1',
+			]));
+		});
+
+		it('carries the tax Stripe worked out and the total the store had asked for', function (): void {
+			$http  = new RecordingHttpClient(($this->session)(['amount_subtotal' => 3998, 'amount_total' => 4238, 'automatic_tax' => ['enabled' => true, 'status' => 'complete'], 'total_details' => ['amount_tax' => 240, 'amount_discount' => 0, 'amount_shipping' => 0]]));
+			$event = stripeProvider($http)->fetchPayment('cs_test_a1');
+
+			expect($event?->amount->amount())->toBe(4238)
+				->and($event?->tax?->amount())->toBe(240)
+				->and($event?->tax?->currency())->toBe('USD')
+				->and($event?->orderTotal?->amount())->toBe(3998);
+		});
+
+		it('carries a tax of nothing when Stripe worked out none', function (): void {
+			$http  = new RecordingHttpClient(($this->session)(['amount_subtotal' => 3998, 'amount_total' => 3998, 'automatic_tax' => ['enabled' => true, 'status' => 'complete'], 'total_details' => ['amount_tax' => 0]]));
+			$event = stripeProvider($http)->fetchPayment('cs_test_a1');
+
+			expect($event?->tax?->amount())->toBe(0)
+				->and($event?->orderTotal?->amount())->toBe(3998);
+		});
+
+		it('says nothing of tax for a session Stripe was not asked to tax', function (): void {
+			$http  = new RecordingHttpClient(($this->session)(['amount_subtotal' => 3998, 'amount_total' => 3998, 'automatic_tax' => ['enabled' => false, 'status' => null], 'total_details' => ['amount_tax' => 0]]));
+			$event = stripeProvider($http)->fetchPayment('cs_test_a1');
+
+			expect($event?->tax)->toBeNull()
+				->and($event?->orderTotal)->toBeNull();
+		});
+	});
+
+	describe('whether Stripe Tax is ready', function (): void {
+		it('is ready when Stripe says its settings are active, and counts the places tax is collected', function (): void {
+			$http = new RecordingHttpClient(
+				new HttpResponse(200, (string)json_encode(['object' => 'tax.settings', 'status' => 'active', 'status_details' => ['active' => []]])),
+				new HttpResponse(200, (string)json_encode(['object' => 'list', 'data' => [['id' => 'taxreg_1'], ['id' => 'taxreg_2']], 'has_more' => false])),
+			);
+			$status = stripeProvider($http)->taxStatus();
+
+			expect($status)->toBe(['ready' => true, 'missing' => [], 'registrations' => 2, 'error' => ''])
+				->and($http->methods())->toBe(['GET', 'GET'])
+				->and($http->requests[0]['url'])->toBe('https://api.stripe.com/v1/tax/settings')
+				->and($http->requests[1]['url'])->toBe('https://api.stripe.com/v1/tax/registrations?status=active&limit=100');
+		});
+
+		it('says what Stripe is still missing', function (): void {
+			$http = new RecordingHttpClient(
+				new HttpResponse(200, (string)json_encode(['status' => 'pending', 'status_details' => ['pending' => ['missing_fields' => ['head_office']]]])),
+				new HttpResponse(200, (string)json_encode(['data' => []])),
+			);
+
+			expect(stripeProvider($http)->taxStatus())->toBe(['ready' => false, 'missing' => ['head_office'], 'registrations' => 0, 'error' => '']);
+		});
+
+		it('says so when Stripe cannot be asked', function (): void {
+			expect(stripeProvider(new RecordingHttpClient())->taxStatus())->toBe(['ready' => false, 'missing' => [], 'registrations' => 0, 'error' => 'network']);
+		});
+	});
+});
+
+/*
+ * `tcms stripe:tax`: the owner finds out what Stripe Tax is missing, so a
+ * buyer never does.
+ */
+describe('tcms stripe:tax', function (): void {
+	beforeEach(function (): void {
+		$this->run = function (array $responses, string $taxMode = 'provider', string $key = STRIPE_KEY): CommandTester {
+			$http             = new RecordingHttpClient(...$responses);
+			$config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+			$config->commerce = ['taxMode' => $taxMode];
+			$tester           = new CommandTester(new TaxCommand(stripeProvider($http, $key), static fn (): CommerceSettings => new CommerceSettings($config)));
+			$tester->execute([]);
+			$this->http = $http;
+
+			return $tester;
+		};
+		$this->settings      = static fn (array $settings): HttpResponse => new HttpResponse(200, (string)json_encode($settings));
+		$this->active        = ($this->settings)(['status' => 'active', 'status_details' => ['active' => []]]);
+		$this->registrations = static fn (int $count): HttpResponse => new HttpResponse(200, (string)json_encode(['data' => array_fill(0, $count, ['id' => 'taxreg'])]));
+	});
+
+	it('says Stripe Tax is ready when it is', function (): void {
+		$tester = ($this->run)([$this->active, ($this->registrations)(2)]);
+
+		expect($tester->getStatusCode())->toBe(0)
+			->and($tester->getDisplay())->toContain('test key', 'Stripe Tax is set up', 'collected in 2 places', 'Ready');
+	});
+
+	it('names what Stripe still needs, in plain words', function (): void {
+		$tester = ($this->run)([($this->settings)(['status' => 'pending', 'status_details' => ['pending' => ['missing_fields' => ['head_office']]]]), ($this->registrations)(1)]);
+
+		expect($tester->getStatusCode())->toBe(1)
+			->and($tester->getDisplay())->toContain('not set up', 'your head office address')
+			->and($tester->getDisplay())->not->toContain('Ready');
+	});
+
+	it('warns that with no registration Stripe works out no tax', function (): void {
+		$tester = ($this->run)([$this->active, ($this->registrations)(0)]);
+
+		expect($tester->getStatusCode())->toBe(1)
+			->and($tester->getDisplay())->toContain('collected nowhere', 'Registrations');
+	});
+
+	it('says when the store is not set to leave the tax to the provider', function (): void {
+		$tester = ($this->run)([$this->active, ($this->registrations)(1)], 'exclusive');
+
+		expect($tester->getStatusCode())->toBe(0)
+			->and($tester->getDisplay())->toContain('Settings → Commerce → Tax', 'is not');
+	});
+
+	it('says so when Stripe cannot be asked, and never shows the key', function (): void {
+		$tester = ($this->run)([]);
+
+		expect($tester->getStatusCode())->toBe(1)
+			->and($tester->getDisplay())->toContain('could not be asked')
+			->and($tester->getDisplay())->not->toContain(STRIPE_KEY);
+	});
+
+	it('asks nothing of Stripe without a secret key', function (): void {
+		$tester = ($this->run)([], 'provider', '');
+
+		expect($tester->getStatusCode())->toBe(1)
+			->and($tester->getDisplay())->toContain('No Stripe secret key')
+			->and($this->http->requests)->toBe([]);
+	});
+});
+
 describe('the extension', function (): void {
 	beforeEach(function (): void {
 		/**
@@ -603,6 +873,25 @@ describe('the extension', function (): void {
 		'with it'                 => [['testPublishableKey' => STRIPE_PUBLIC], true],
 	]);
 
+	it('hands the provider how the store\'s prices stand to Stripe\'s tax', function (array $settings, string $behavior): void {
+		$context = ($this->context)($settings + ['testSecretKey' => STRIPE_KEY, 'testWebhookSecret' => STRIPE_SECRET]);
+		(new Extension())->register($context);
+		$provider = $context->getRegisteredPaymentProviders()[0];
+
+		expect((new ReflectionProperty($provider, 'taxBehavior'))->getValue($provider))->toBe($behavior);
+	})->with([
+		'by default, the tax goes on top' => [[], 'exclusive'],
+		'prices that include tax'         => [['taxBehavior' => 'inclusive'], 'inclusive'],
+		'anything else is "on top"'       => [['taxBehavior' => 'sideways'], 'exclusive'],
+	]);
+
+	it('ships the command that checks Stripe Tax', function (): void {
+		$context = ($this->context)([]);
+		(new Extension())->register($context);
+
+		expect(array_map(static fn ($command): string => (string)$command->getName(), $context->getRegisteredCommands()))->toContain('stripe:tax', 'stripe:listen');
+	});
+
 	it('points the page at its own module, under the path the site is served from', function (): void {
 		$context = ($this->context)(['mode' => 'test', 'testSecretKey' => STRIPE_KEY, 'testWebhookSecret' => STRIPE_SECRET, 'testPublishableKey' => STRIPE_PUBLIC]);
 		(new Extension())->register($context);
@@ -627,7 +916,7 @@ describe('the extension', function (): void {
 			->and($manifest['min_edition'])->toBe('pro')
 			->and($manifest['entitlement'])->toBe('totalcms/commerce')
 			->and(is_file($dir . '/' . $manifest['icon']))->toBeTrue()
-			->and(array_keys($settings))->toBe(['mode', 'testPublishableKey', 'testSecretKey', 'testWebhookSecret', 'livePublishableKey', 'liveSecretKey', 'liveWebhookSecret', 'statementDescriptor'])
+			->and(array_keys($settings))->toBe(['mode', 'testPublishableKey', 'testSecretKey', 'testWebhookSecret', 'livePublishableKey', 'liveSecretKey', 'liveWebhookSecret', 'statementDescriptor', 'taxBehavior'])
 			->and($settings['testPublishableKey']['field'])->toBe('text')
 			->and($settings['livePublishableKey']['field'])->toBe('text');
 		foreach (['testSecretKey', 'testWebhookSecret', 'liveSecretKey', 'liveWebhookSecret'] as $key) {

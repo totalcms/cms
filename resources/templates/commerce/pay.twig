@@ -58,6 +58,9 @@
 			<tr><th scope="row">Total</th><td><strong>{{ order.grandTotal|money(order.currency) }}</strong></td></tr>
 		</tfoot>
 	</table>
+	{% if order.taxMode == 'provider' %}
+		<p class="commerce-pay-tax">Tax is worked out when you pay, from your address, and added to this total if any is due.</p>
+	{% endif %}
 	{% include 'commerce/checkout-embedded.twig' %}
 	<noscript><p>Paying on this page needs JavaScript. Turn it on and reload, or go back to your cart.</p></noscript>
 	<p class="commerce-pay-back"><a href="{{ cancelUrl|e }}">Back to your cart</a></p>

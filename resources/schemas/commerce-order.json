@@ -260,7 +260,7 @@
 			"type": "string",
 			"field": "text",
 			"label": "Tax Mode",
-			"help": "none, exclusive or inclusive, as it was when the order was built.",
+			"help": "none, exclusive or inclusive. An order whose tax is left to the payment provider says provider until it is paid, then takes one of the three from the payment.",
 			"serverOnly": true
 		},
 		"taxLines": {

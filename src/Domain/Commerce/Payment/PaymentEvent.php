@@ -24,6 +24,13 @@ final readonly class PaymentEvent implements ProviderEvent
 	 * @param array<string,scalar> $summary            a few plain facts for the ledger; never card data
 	 * @param string               $subscriptionRef    the provider's subscription id, on the first payment of a subscription
 	 * @param string               $customerRef        the provider's customer id
+	 * @param Money|null           $tax                on a paid event, the tax the provider worked out itself, when the store
+	 *                                                 asked it to ({@see CheckoutRequest::$providerTax}); it is part of $amount.
+	 *                                                 Null when the provider worked out none
+	 * @param Money|null           $orderTotal         with $tax: the total the store asked for, as the provider has it. The
+	 *                                                 order is checked against this, since $amount may hold tax on top of it
+	 *
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") a value object: every field is one fact about the payment, named
 	 */
 	public function __construct(
 		public string $provider,
@@ -36,6 +43,8 @@ final readonly class PaymentEvent implements ProviderEvent
 		public array $summary = [],
 		public string $subscriptionRef = '',
 		public string $customerRef = '',
+		public ?Money $tax = null,
+		public ?Money $orderTotal = null,
 	) {
 	}
 

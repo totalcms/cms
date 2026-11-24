@@ -226,7 +226,10 @@ final readonly class OrderData
 	 * on the order once staff accept the payment, so a refund never asks
 	 * for more than was paid. Null for an order that was never in review.
 	 *
-	 * @return array{provider: string, paymentRef: string, amount: int, currency: string, subscriptionRef: string, customerRef: string}|null
+	 * `tax` and `orderTotal` are there when the provider worked the tax out
+	 * itself: the tax inside `amount`, and the total the store had asked for.
+	 *
+	 * @return array{provider: string, paymentRef: string, amount: int, currency: string, subscriptionRef: string, customerRef: string, tax: int|null, orderTotal: int|null}|null
 	 */
 	public function heldPayment(): ?array
 	{
@@ -234,7 +237,8 @@ final readonly class OrderData
 		if (!is_array($held)) {
 			return null;
 		}
-		$text = static fn (string $key): string => is_string($held[$key] ?? null) ? $held[$key] : '';
+		$text   = static fn (string $key): string => is_string($held[$key] ?? null) ? $held[$key] : '';
+		$amount = static fn (string $key): ?int => is_numeric($held[$key] ?? null) ? max(0, (int)$held[$key]) : null;
 
 		return [
 			'provider'        => $text('provider'),
@@ -243,6 +247,8 @@ final readonly class OrderData
 			'currency'        => $text('currency'),
 			'subscriptionRef' => $text('subscriptionRef'),
 			'customerRef'     => $text('customerRef'),
+			'tax'             => $amount('tax'),
+			'orderTotal'      => $amount('orderTotal'),
 		];
 	}
 
@@ -252,6 +258,43 @@ final readonly class OrderData
 		$held = $this->heldPayment();
 
 		return $held === null || $held['currency'] === '' ? null : Money::of($held['amount'], $held['currency']);
+	}
+
+	/** The tax (`tax`) or the store's own total (`orderTotal`) of a held payment the provider taxed itself; null otherwise. */
+	public function heldAmount(string $key): ?Money
+	{
+		$amount = $this->heldPayment()[$key] ?? null;
+
+		return is_int($amount) ? Money::of($amount, $this->currency()) : null;
+	}
+
+	/**
+	 * What changes on an order that left its tax to the provider, now that
+	 * it is paid: it takes its tax and its total from the payment, and from
+	 * here on reads like an order the store taxed itself. With no tax from
+	 * the provider it is an order with none.
+	 *
+	 * @param int      $charged what the provider charged, tax and all
+	 * @param int|null $tax     the tax the provider worked out, or null when it worked out none
+	 *
+	 * @return array<string,mixed> nothing for an order the store taxed itself
+	 */
+	public function taxFromPayment(int $charged, ?int $tax): array
+	{
+		if ($this->taxMode() !== TaxCalculator::PROVIDER) {
+			return [];
+		}
+		if ($tax === null || $tax <= 0) {
+			return ['taxMode' => TaxCalculator::NONE];
+		}
+
+		return [
+			'taxTotal'   => $tax,
+			'grandTotal' => $charged,
+			// Charged more than was asked for: the tax went on top.
+			'taxMode'    => $charged > $this->grandTotal() ? TaxCalculator::EXCLUSIVE : TaxCalculator::INCLUSIVE,
+			'taxLines'   => [['label' => 'Tax', 'rate' => '', 'amount' => $tax]],
+		];
 	}
 
 	/**
@@ -265,7 +308,7 @@ final readonly class OrderData
 		return $held !== null && $held['currency'] === $this->currency() ? min($this->grandTotal(), $held['amount']) : $this->grandTotal();
 	}
 
-	/** none | exclusive | inclusive */
+	/** none | exclusive | inclusive, or provider while an order whose tax is left to the payment provider waits to be paid */
 	public function taxMode(): string
 	{
 		return $this->text('taxMode');

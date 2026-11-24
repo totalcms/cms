@@ -109,10 +109,13 @@ final readonly class CommerceSettings
 		return is_string($prefix) ? $prefix : '#';
 	}
 
-	/** `none`, `exclusive` (tax is added to prices) or `inclusive` (prices include it). */
+	/**
+	 * `none`, `exclusive` (tax is added to prices), `inclusive` (prices
+	 * include it), or `provider` (the payment provider works it out).
+	 */
 	public function taxMode(): string
 	{
-		return $this->oneOf('taxMode', ['none', 'exclusive', 'inclusive']);
+		return $this->oneOf('taxMode', ['none', 'exclusive', 'inclusive', 'provider']);
 	}
 
 	public function taxShipping(): bool

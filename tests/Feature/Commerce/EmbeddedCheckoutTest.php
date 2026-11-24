@@ -95,6 +95,15 @@ it('gives a script what it needs to mount the form itself', function (): void {
 		->and($json)->not->toHaveKey('redirectUrl');
 });
 
+it('tells the buyer on the pay page that tax comes at payment, when it is left to the provider', function (): void {
+	$config              = $this->c->get(Config::class);
+	$config->commerce    = ['taxMode' => 'provider'] + $config->commerce;
+	$this->embeds->tax   = true;
+	($this->buy)();
+
+	expect((string)get(($this->pay)(($this->only)()))->getBody())->toContain('Tax is worked out when you pay');
+});
+
 describe('the pay page', function (): void {
 	beforeEach(function (): void {
 		($this->buy)();
@@ -109,6 +118,10 @@ describe('the pay page', function (): void {
 			->and($html)->toContain('data-commerce-embed', 'data-module="/fake/embed.js"', 'Order 1001', '$12.50', '/assets/commerce.js', "/commerce/cancel/{$this->order->id()}?t=")
 			->and($html)->not->toContain('htmx')
 			->and(html_entity_decode($html))->toContain('"clientSecret":"secret_' . $this->order->id() . '"');
+	});
+
+	it('says nothing of tax when the store works out its own', function (): void {
+		expect((string)get(($this->pay)($this->order))->getBody())->not->toContain('Tax is worked out when you pay');
 	});
 
 	it('reuses the stored session on reload', function (): void {

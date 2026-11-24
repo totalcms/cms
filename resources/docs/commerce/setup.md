@@ -73,7 +73,7 @@ These are under **Settings → Commerce**.
 | **Receipt Email** | The mailer template sent when an order is paid. Empty uses `commerce-receipt`. |
 | **Order Page** | A Site Builder page that shows an order after payment. Empty uses the built-in page. |
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
-| **Tax**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and at what rate where. See [Tax](docs/commerce/tax). |
+| **Tax**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax: from your own table of rates, or worked out by Stripe Tax. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |

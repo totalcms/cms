@@ -187,7 +187,7 @@ describe('the settings form', function (): void {
 	})->with(['checkoutMode', 'taxMode', 'shippingMode']);
 
 	// A setting that does nothing with the choice made above it is not shown.
-	test('the tax and shipping settings show only what the choice above them uses', function (string $name, string $watch, string $operator, string $value): void {
+	test('the tax and shipping settings show only what the choice above them uses', function (string $name, string $watch, string $operator, string|array $value): void {
 		$schema     = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/resources/schemas/settings/commerce.json'), true);
 		$visibility = $schema['properties'][$name]['settings']['visibility'] ?? null;
 
@@ -195,12 +195,17 @@ describe('the settings form', function (): void {
 			// And the form is told, so it can show and hide the field as the choice changes.
 			->and(($this->field)($name))->toContain('&quot;visibility&quot;');
 	})->with([
-		'Tax Shipping, when tax is charged'  => ['taxShipping', 'taxMode', '!=', 'none'],
-		'Tax Rates, when tax is charged'     => ['taxRates', 'taxMode', '!=', 'none'],
+		// Not when the payment provider works the tax out: it uses neither.
+		'Tax Shipping, when the store works out the tax' => ['taxShipping', 'taxMode', 'in', ['exclusive', 'inclusive']],
+		'Tax Rates, when the store works out the tax'    => ['taxRates', 'taxMode', 'in', ['exclusive', 'inclusive']],
 		'Flat Rate, for a flat rate'         => ['shippingFlatRate', 'shippingMode', '==', 'flat'],
 		'Free Shipping Over, for a flat rate' => ['shippingFreeOver', 'shippingMode', '==', 'flat'],
 		'Shipping Zones, by zone'            => ['shippingZones', 'shippingMode', '==', 'zones'],
 	]);
+
+	test('tax can be left to the payment provider', function (): void {
+		expect(($this->field)('taxMode'))->toContain('value="provider"', 'Worked out by the payment provider');
+	});
 
 	test('an amount of money is a price field', function (string $name): void {
 		expect(($this->field)($name))->toContain('data-type="price"');
