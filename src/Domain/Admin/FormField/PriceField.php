@@ -15,6 +15,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  *
  * Settings (all optional):
  *   - currency: ISO code (USD/EUR/…). Default: derived from the resolved locale.
+ *               `store` is the currency the store sells in (Settings → Commerce).
  *   - decimals: fraction digits. Default: the currency's standard (USD 2, JPY 0).
  *   - locale:   BCP-47 tag. Default: the site i18n default.
  */
@@ -22,6 +23,9 @@ class PriceField extends FormField
 {
 	protected string $defaultInputType = 'text';
 	protected string $defaultFieldType = 'price';
+
+	/** The `currency` setting that means the store's own, as it is compared. */
+	private const STORE_CURRENCY = 'STORE';
 
 	private string $currencySymbol = '';
 
@@ -106,6 +110,11 @@ class PriceField extends FormField
 	private function resolveCurrency(string $locale): string
 	{
 		$explicit = isset($this->settings['currency']) ? strtoupper(trim((string)$this->settings['currency'])) : '';
+		// "store": the currency the store sells in (Settings → Commerce), for a
+		// price that is charged. The admin's language says nothing about that.
+		if ($explicit === self::STORE_CURRENCY) {
+			return $this->form->storeCurrency();
+		}
 		if ($explicit !== '') {
 			return $explicit;
 		}

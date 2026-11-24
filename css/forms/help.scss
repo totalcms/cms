@@ -38,9 +38,8 @@
             border-bottom-right-radius: 0;
         }
         &:has(:focus) .help {
-			opacity      : 1;
-			box-shadow   : 0 1px 2px oklch(var(--totalform-shadow));
-			border-color : oklch(var(--totalform-border-color));
+			opacity    : 1;
+			box-shadow : 0 1px 2px oklch(var(--totalform-shadow));
     	}
     }
     &.help-on-hover .form-field:not(.card-field):not(.deck-field):hover {
@@ -59,7 +58,14 @@
         right               : 0;
         z-index             : 10;
         margin              : 0;
-        border              : 1px solid oklch(var(--totalform-border-color));
+        // Three sides have a color of their own: a field that has been changed
+        // or has an error recolors its border, and the help beside it is
+        // neither. The top side is the exception. The box hangs from the
+        // field's bottom edge and lies on that line, so it takes the field's
+        // color there and the two read as one line, whatever state the field
+        // is in.
+        border              : 1px solid oklch(var(--totalform-help-border, var(--totalform-lightgray)));
+        border-top-color    : oklch(var(--totalform-border-color));
         padding             : 0.5rem 1.625rem;
         border-radius       : 2px 0 var(--totalform-radius) var(--totalform-radius);
         transform           : translateY(calc(100% - 1px));
@@ -70,6 +76,25 @@
 	.toggle-field, .checkbox-field, .checklist-field, .radio-field, .color-field {
 		.help {
 			border-radius : var(--totalform-radius);
+		}
+	}
+	// A deck and a deck table have no bottom edge for the help to hang from
+	// either. `>` keeps this to their own help: a field inside one of their
+	// items keeps the corners of a help that is attached.
+	.deck-field, .deckTable-field {
+		> .help {
+			border-radius : var(--totalform-radius);
+		}
+	}
+	// A field with no box of its own has no edge for the help to lie on: its
+	// help is a box by itself, one color all round. `>` keeps this to the
+	// field's own help, and off the help of a bordered field inside a card.
+	.toggle-field, .checkbox-field, .checklist-field, .radio-field, .color-field, .range-field,
+	.image-field, .gallery-field, .file-field, .depot-field, .depotDrop-field,
+	.deck-field, .deckTable-field, .card-field,
+	.properties-field, .schemaProperties-field, .customProperties-field {
+		> .help {
+			border-top-color : oklch(var(--totalform-help-border, var(--totalform-lightgray)));
 		}
 	}
 }

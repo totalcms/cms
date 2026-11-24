@@ -1404,6 +1404,15 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * The three-letter code of the currency the store sells in — what a
+	 * price field set to `currency: "store"` shows.
+	 */
+	public function storeCurrency(): string
+	{
+		return $this->optionSources()->storeCurrency();
+	}
+
+	/**
 	 * Return the locale registry as `{value, label}` options — feeds
 	 * `propertyOptions: "locales"` on select / list / multiselect fields.
 	 *
@@ -1423,6 +1432,17 @@ class TotalForm implements \Stringable
 	public function countryList(): array
 	{
 		return $this->optionSources()->countryList();
+	}
+
+	/**
+	 * Return every currency in use today as `{value, label}` options — feeds
+	 * `propertyOptions: "currencies"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function currencyList(): array
+	{
+		return $this->optionSources()->currencyList();
 	}
 
 	/**

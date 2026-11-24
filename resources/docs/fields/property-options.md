@@ -34,6 +34,7 @@ Instead of `true` (scan the current collection), set `propertyOptions` to a name
 | `"pageMiddleware"` | Names of all registered page middleware (built-in and extension-provided). |
 | `"locales"` | Available locale codes (BCP 47), as value/label pairs. |
 | `"countries"` | Every country: the ISO 3166-1 alpha-2 code (`US`) as the value and its name in the site's locale as the label. Show the stored code as a name with the [`country_name`](docs/twig/localization#country-names) filter. |
+| `"currencies"` | Every currency in use today: the ISO 4217 code (`USD`) as the value and its name in the site's locale, with the code, as the label (`US Dollar (USD)`). Currencies that are no longer used are left out. |
 
 ```json
 {
