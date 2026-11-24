@@ -129,6 +129,91 @@ describe('the first payment', function (): void {
 	});
 });
 
+describe('when something goes wrong halfway', function (): void {
+	it('finishes what a failed attempt left undone, when the provider tells it again', function (): void {
+		($this->route)(($this->firstPayment)());
+		$this->heard = [];
+		// The email cannot be queued the first time it is tried.
+		$notifier = new class($this->c->get(TotalCMS\Domain\JobQueue\Service\JobQueuer::class), $this->c->get(TotalCMS\Domain\Commerce\Service\CommerceSettings::class)) extends TotalCMS\Domain\Commerce\Subscription\PaymentFailedNotifier {
+			public int $tries = 0;
+
+			public function notify(SubscriptionData $subscription): void
+			{
+				if (++$this->tries === 1) {
+					throw new RuntimeException('The queue is down.');
+				}
+				parent::notify($subscription);
+			}
+		};
+		$c = $this->c;
+		$c->set(TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor::class, new TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor(
+			$c->get(SubscriptionRepository::class),
+			$c->get(TotalCMS\Domain\Commerce\Subscription\SubscriptionStateMachine::class),
+			$c->get(RenewalOrderFactory::class),
+			$c->get(OrderRepository::class),
+			fn () => $c->get(TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor::class),
+			$c->get(TotalCMS\Domain\Commerce\Access\AccessGrantService::class),
+			$notifier,
+			$c->get(TotalCMS\Domain\Commerce\Order\OrderFulfillment::class),
+			$c->get(TotalCMS\Domain\Commerce\Subscription\SubscriptionEvents::class),
+			$c->get(TotalCMS\Factory\LoggerFactory::class),
+		));
+		$failed = ($this->event)(T::PaymentFailed, ['providerInvoiceRef' => 'in_2']);
+
+		expect(fn () => ($this->route)($failed))->toThrow(RuntimeException::class);
+		$between = [($this->kept)()->status(), count(($this->emailsFor)($this->subId)), count($this->heard)];
+		// The provider was not answered, so it sends the same event again.
+		($this->route)($failed);
+		($this->route)($failed);
+
+		expect($between)->toBe(['past_due', 0, 0])
+			->and(($this->emailsFor)($this->subId))->toHaveCount(1)
+			->and(($this->named)(CoreEvent::SUBSCRIPTION_PAST_DUE))->toHaveCount(1);
+	});
+
+	it('begins the subscription after all when a checkout the buyer left is paid, and staff accept it', function (): void {
+		$first = $this->origin;
+		// The buyer goes back and starts again: the first checkout is given up on.
+		post('/commerce/checkout', ['provider' => 'fake-sub', 'email' => 'a@example.com'], ['Accept' => 'application/json']);
+		$gaveUp = ($this->kept)()->status();
+		// Then they pay on the page of the first one, which the provider never closed.
+		($this->route)(($this->firstPayment)());
+		$held = [$this->orders->find($first->id())->paymentStatus(), ($this->kept)()->status()];
+
+		$this->c->get(TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor::class)->accept($first->id(), 'boss');
+		$sub = ($this->kept)();
+
+		expect($gaveUp)->toBe('canceled')
+			->and($held)->toBe(['review', 'canceled'])
+			->and($sub->status())->toBe('active')
+			->and($sub->providerSubscriptionRef())->toBe('sub_1')
+			->and($sub->providerCustomerRef())->toBe('cus_1')
+			->and($sub->canceledAt())->toBe('')
+			->and(($this->named)(CoreEvent::SUBSCRIPTION_CREATED))->toHaveCount(1);
+	});
+
+	it('says so when a period is paid for a subscription whose first payment is still held', function (): void {
+		post('/commerce/checkout', ['provider' => 'fake-sub', 'email' => 'a@example.com'], ['Accept' => 'application/json']);
+		($this->route)(($this->firstPayment)());
+
+		($this->route)(($this->renewal)());
+		$sub = ($this->kept)();
+
+		expect(($this->renewalOrder)())->toBeNull()
+			->and($sub->status())->toBe('canceled')
+			->and($sub->needsAttention())->toBe('renewal_before_start');
+	});
+
+	it('still ends for good when the provider ends it', function (): void {
+		($this->route)(($this->firstPayment)());
+		($this->route)(($this->event)(T::Canceled));
+
+		($this->route)(($this->firstPayment)('evt_late'));
+
+		expect(($this->kept)()->status())->toBe('canceled');
+	});
+});
+
 describe('a period paid', function (): void {
 	beforeEach(function (): void {
 		($this->route)(($this->firstPayment)());

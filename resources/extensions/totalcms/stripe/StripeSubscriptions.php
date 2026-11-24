@@ -59,7 +59,9 @@ final readonly class StripeSubscriptions
 		$currency = strtoupper($this->text($invoice, 'currency'));
 		$taxed    = is_array($invoice['automatic_tax'] ?? null) && ($invoice['automatic_tax']['enabled'] ?? false) === true;
 		$tax      = $this->taxOf($invoice);
-		$before   = is_int($invoice['total_excluding_tax'] ?? null) ? $invoice['total_excluding_tax'] : $this->int($invoice, 'total') - $tax;
+		// What the store asked for: the total, less the tax Stripe added on
+		// top. Tax that is part of the store's own prices stays in.
+		$before   = $this->int($invoice, 'total') - $this->taxOf($invoice, 'exclusive');
 
 		return new SubscriptionEvent(
 			provider: StripeProvider::ID,
@@ -260,12 +262,19 @@ final readonly class StripeSubscriptions
 		return $this->text($metadata, 'subscriptionId');
 	}
 
-	/** @param array<array-key,mixed> $invoice */
-	private function taxOf(array $invoice): int
+	/**
+	 * The tax on an invoice: all of it, or only what is of one kind
+	 * (`exclusive`: added on top of the prices; `inclusive`: part of them).
+	 *
+	 * @param array<array-key,mixed> $invoice
+	 */
+	private function taxOf(array $invoice, string $behavior = ''): int
 	{
 		$tax = 0;
 		foreach (is_array($invoice['total_taxes'] ?? null) ? $invoice['total_taxes'] : [] as $entry) {
-			$tax += is_array($entry) ? $this->int($entry, 'amount') : 0;
+			if (is_array($entry) && ($behavior === '' || ($entry['tax_behavior'] ?? '') === $behavior)) {
+				$tax += $this->int($entry, 'amount');
+			}
 		}
 
 		return $tax;

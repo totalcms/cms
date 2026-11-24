@@ -67,7 +67,11 @@ To show or hide part of a page:
 2. They add the membership to the cart and check out.
 3. When the payment is confirmed, they are in the group. This takes a few seconds.
 
-A guest who tries to check out with a membership in the cart is told to sign in or create an account first. Nothing is charged.
+A guest with a membership in the cart is shown a note in place of the checkout form: sign in first. Nothing is charged. To add a link to your own sign-up page beside the sign-in link, name it on the form:
+
+```twig
+{{ cms.cart.checkoutForm({registerUrl: '/register'}) }}
+```
 
 ## When access is given and taken away
 

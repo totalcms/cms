@@ -262,6 +262,28 @@ final readonly class CartService
 	}
 
 	/**
+	 * Whether the cart holds something that is added to an account, such as
+	 * a membership, while nobody is signed in to one. Checkout refuses such
+	 * a cart, so a page can say so before the buyer fills in a form.
+	 */
+	public function needsAccount(): bool
+	{
+		if ($this->customer->get() !== null) {
+			return false;
+		}
+
+		$grantable = $this->settings->grantableGroups();
+		foreach ($this->store->items() as $item) {
+			$group = $this->catalog->product($item->productId)->accessGroup ?? '';
+			if ($group !== '' && in_array($group, $grantable, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * The cart priced for this buyer, from the catalog as it is now. A line
 	 * whose product or variant can no longer be bought is taken out of the
 	 * cart and named in the notices, once.

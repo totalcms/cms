@@ -134,6 +134,40 @@ describe('who can buy a membership', function (): void {
 	});
 });
 
+describe('the checkout form, with a membership in the cart', function (): void {
+	it('tells a guest to sign in instead of asking them to pay, with a way to sign in and to join', function (): void {
+		postJson('/commerce/cart/add', ['productId' => 'course', 'variantId' => '', 'qty' => 1]);
+		$this->c->get(ActorContext::class)->set(Actor::anonymous());
+
+		$html = html_entity_decode(renderTwig('{{ cms.cart.checkoutForm({registerUrl: "/join"}) }}'));
+
+		expect($html)->toContain('commerce-checkout-account', '/admin/login/customers', 'href="/join"')
+			->and($html)->not->toContain('name="email"')
+			->and($html)->not->toContain('commerce-checkout-submit');
+	});
+
+	it('names no page to join on when the site gave none', function (): void {
+		postJson('/commerce/cart/add', ['productId' => 'course', 'variantId' => '', 'qty' => 1]);
+		$this->c->get(ActorContext::class)->set(Actor::anonymous());
+
+		expect(renderTwig('{{ cms.cart.checkoutForm() }}'))->toContain('commerce-checkout-account')->not->toContain('commerce-checkout-register');
+	});
+
+	it('is the ordinary form for a customer who is signed in', function (): void {
+		postJson('/commerce/cart/add', ['productId' => 'course', 'variantId' => '', 'qty' => 1]);
+		$this->c->get(ActorContext::class)->set(new Actor(TotalCMS\Domain\Auth\Data\ActorKind::Member, 'pat', 'customers'));
+
+		expect(renderTwig('{{ cms.cart.checkoutForm() }}'))->toContain('name="email"')->not->toContain('commerce-checkout-account');
+	});
+
+	it('is the ordinary form for a guest whose cart gives no group', function (string $productId): void {
+		postJson('/commerce/cart/add', ['productId' => $productId, 'variantId' => '', 'qty' => 1]);
+		$this->c->get(ActorContext::class)->set(Actor::anonymous());
+
+		expect(renderTwig('{{ cms.cart.checkoutForm() }}'))->toContain('name="email"')->not->toContain('commerce-checkout-account');
+	})->with(['a group the store does not allow' => ['backroom'], 'the admin group' => ['throne']]);
+});
+
 describe('a product paid for once', function (): void {
 	it('puts its buyer in the group when it is paid, and marks the line delivered', function (): void {
 		$order = ($this->buy)('course');

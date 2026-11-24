@@ -26,6 +26,9 @@ final readonly class SubscriptionData
 	public const PAUSED   = 'paused';
 	public const CANCELED = 'canceled';
 
+	/** The flag on one that was given up on before it began. */
+	private const NEVER_BEGAN = 'neverBegan';
+
 	/** The statuses in which the subscriber has what they pay for. A late payer keeps it while the provider retries the card. */
 	public const LIVE = [self::TRIALING, self::ACTIVE, self::PAST_DUE];
 
@@ -267,6 +270,39 @@ final readonly class SubscriptionData
 	public function withFlag(string $flag): self
 	{
 		return $this->with(['flags' => [$flag => true] + $this->flags()]);
+	}
+
+	/**
+	 * Whether it was given up on before it ever began: the order that was
+	 * to start it expired, or its checkout could not be started. Such a
+	 * one can still begin, if that order turns out to have been paid.
+	 */
+	public function neverBegan(): bool
+	{
+		return $this->status() === self::CANCELED && $this->hasFlag(self::NEVER_BEGAN);
+	}
+
+	/**
+	 * The fields that give up on one that has not begun.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function givenUp(string $at): array
+	{
+		return ['status' => self::CANCELED, 'canceledAt' => $at, 'flags' => [self::NEVER_BEGAN => true] + $this->flags()];
+	}
+
+	/**
+	 * Its flags, without the one that says it never began.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function flagsOnceBegun(): array
+	{
+		$flags = $this->flags();
+		unset($flags[self::NEVER_BEGAN]);
+
+		return $flags;
 	}
 
 	/** @param array<string,mixed> $changes */

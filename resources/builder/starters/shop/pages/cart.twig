@@ -16,7 +16,8 @@
 	<aside class="panel">
 		<h2>Checkout</h2>
 		{# The checkout form: email, address when something ships, the order's totals, and the ways to pay. It prints nothing while the cart is empty or no payment provider is ready. #}
-		{% set form = cms.cart.checkoutForm() %}
+		{# registerUrl: where someone without an account makes one. A cart with a membership in it asks a guest to sign in first, and links there. #}
+		{% set form = cms.cart.checkoutForm({registerUrl: '/register'}) %}
 		{% if form %}
 			{{ form|raw }}
 		{% elseif cms.cart.isEmpty() %}

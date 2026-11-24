@@ -31,6 +31,7 @@ final readonly class SubscriptionPageView
 	/** Why a subscription needs someone → [a few words for the list, a sentence for its page]. */
 	private const ATTENTION = [
 		'amount_mismatch' => ['Payment mismatch', 'A renewal payment did not match what this subscription is billed at. Nothing was delivered for it. Check the payment at the provider, then accept or refund it on its order.'],
+		'renewal_before_start' => ['Renewal not recorded', 'The provider took a renewal payment before this subscription\'s first order was accepted here, so that payment has no order. Accept or refund the first order, then check the payment at the provider.'],
 		'grant_failed'    => ['Access not granted', 'The subscriber could not be given the access they pay for: their account is missing. Once it exists, check this subscription with the provider.'],
 	];
 

@@ -220,7 +220,7 @@ final readonly class CheckoutService
 		}
 
 		$this->subscriptions->withLock($subscriptionId, static fn (SubscriptionData $subscription): SubscriptionData => $subscription->status() === SubscriptionData::PENDING
-			? $subscription->with(['status' => SubscriptionData::CANCELED, 'canceledAt' => date(DATE_ATOM)])
+			? $subscription->with($subscription->givenUp(date(DATE_ATOM)))
 			: $subscription);
 	}
 

@@ -29,12 +29,19 @@ final readonly class SubscriptionStateMachine
 	 */
 	public function activate(SubscriptionData $subscription, string $providerSubscriptionRef, string $providerCustomerRef, int $now): SubscriptionTransition
 	{
-		if ($subscription->status() !== SubscriptionData::PENDING) {
+		// One given up on before it began can begin after all: its buyer
+		// paid on a checkout they had left, and staff took the payment.
+		$revived = $subscription->neverBegan();
+		if ($subscription->status() !== SubscriptionData::PENDING && !$revived) {
 			return SubscriptionTransition::ignored($subscription, 'not_pending');
 		}
 
-		$trial   = $subscription->trialDays();
-		$changes = ['providerSubscriptionRef' => $providerSubscriptionRef, 'providerCustomerRef' => $providerCustomerRef];
+		$trial = $subscription->trialDays();
+		// Only what the payment said: an event without the provider's names leaves the ones on record.
+		$changes = array_filter(['providerSubscriptionRef' => $providerSubscriptionRef, 'providerCustomerRef' => $providerCustomerRef], static fn (string $ref): bool => $ref !== '');
+		if ($revived) {
+			$changes += ['canceledAt' => '', 'flags' => $subscription->flagsOnceBegun()];
+		}
 		if ($trial > 0) {
 			$changes['trialEndsAt'] = date(DATE_ATOM, $now + $trial * self::DAY);
 		}
@@ -45,9 +52,13 @@ final readonly class SubscriptionStateMachine
 	/** The order that was to start it was given up on: it never begins, and nobody is told. */
 	public function originCanceled(SubscriptionData $subscription): SubscriptionTransition
 	{
-		return $subscription->status() === SubscriptionData::PENDING
-			? SubscriptionTransition::to($subscription, SubscriptionData::CANCELED, ['canceledAt' => date(DATE_ATOM)])
-			: SubscriptionTransition::ignored($subscription, 'not_pending');
+		if ($subscription->status() !== SubscriptionData::PENDING) {
+			return SubscriptionTransition::ignored($subscription, 'not_pending');
+		}
+
+		$fields = $subscription->givenUp(date(DATE_ATOM));
+
+		return SubscriptionTransition::to($subscription, SubscriptionData::CANCELED, array_diff_key($fields, ['status' => 1]));
 	}
 
 	public function apply(SubscriptionData $subscription, SubscriptionEvent $event, int $now): SubscriptionTransition

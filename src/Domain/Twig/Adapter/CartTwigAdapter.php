@@ -262,13 +262,30 @@ final readonly class CartTwigAdapter
 	 * The checkout form: the buyer's email, where it ships if anything does,
 	 * and how they pay. Nothing for an empty cart, or one nobody can pay for.
 	 *
-	 * @param array<mixed> $options label (the button's text), class
+	 * A cart that needs an account its visitor is not signed in to gets a
+	 * note saying so in its place, with a link to sign in.
+	 *
+	 * @param array<mixed> $options label (the button's text), class, registerUrl (the site's page for
+	 *                              making an account, linked from that note)
 	 */
 	public function checkoutForm(array $options = []): string
 	{
 		$view = $this->view();
 		if (!$view instanceof CartView || $view->lines === []) {
 			return '';
+		}
+
+		// Something in the cart is added to an account, and nobody is signed
+		// in to one. Checkout would refuse, so the buyer is told before they
+		// fill anything in.
+		if ($this->cart->needsAccount()) {
+			$customers = $this->config->commerce['customerCollection'] ?? '';
+
+			return ($this->twig)()->render('commerce/checkout-account.twig', [
+				'collection'  => is_string($customers) ? $customers : '',
+				'registerUrl' => $this->option($options, 'registerUrl'),
+				'class'       => $this->option($options, 'class'),
+			]);
 		}
 
 		$providers = array_map(

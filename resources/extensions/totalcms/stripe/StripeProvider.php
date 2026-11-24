@@ -524,9 +524,12 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider, Subscri
 			$items[] = $item('Shipping', 1, $request->shipping->amount(), $taxed ? self::SHIPPING_TAX_CODE : '');
 		}
 
-		// The store's own tax. The part due every period is billed every
-		// period, beside the plan; the rest is due once.
-		$again = $plan instanceof Recurrence ? min($request->tax->amount(), $request->recurringTax?->amount() ?? 0) : 0;
+		// The store's own tax. What is due every period is billed every
+		// period, beside the plan, in full; anything more is due once. When a
+		// code makes the first payment's tax less than a period's, the items
+		// come to more than the first payment and the coupon takes the
+		// difference off ({@see firstPaymentCoupon()}).
+		$again = $plan instanceof Recurrence ? ($request->recurringTax?->amount() ?? 0) : 0;
 		if ($again > 0) {
 			$items[] = $item('Tax', 1, $again, '', $plan);
 		}
@@ -598,7 +601,9 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider, Subscri
 			subscriptionRef: $this->text($session, 'subscription'),
 			customerRef: $this->text($session, 'customer'),
 			tax: $taxed ? $this->money(['amount_tax' => $details['amount_tax'] ?? 0, 'currency' => $session['currency'] ?? ''], 'amount_tax') : null,
-			orderTotal: $taxed ? $this->money($session, 'amount_subtotal') : null,
+			// What the items came to, less a coupon's cut: Stripe counts its
+			// subtotal before discounts.
+			orderTotal: $taxed ? $this->money(['total' => max(0, (int)($session['amount_subtotal'] ?? 0) - (int)($details['amount_discount'] ?? 0)), 'currency' => $session['currency'] ?? ''], 'total') : null,
 		);
 	}
 

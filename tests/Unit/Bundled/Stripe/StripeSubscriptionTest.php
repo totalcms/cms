@@ -230,6 +230,19 @@ describe('starting a subscription', function (): void {
 			->and($items[3]['price_data'])->not->toHaveKey('recurring');
 	});
 
+	it('bills every period\'s tax in full, and lets the coupon cover a first payment that is taxed on less', function (): void {
+		// 100.00 a month at 10%, with 10% off the first payment only:
+		// 90.00 + 9.00 now, then 100.00 + 10.00 every month.
+		$http = new RecordingHttpClient(subsJson(['id' => 'co_1']), subsSession());
+		subsProvider($http)->createCheckout(subsCheckout([new CheckoutLineSummary('Club', 1, subsUsd(10000), subsUsd(1000), subsUsd(0), new Recurrence('month'))], 9900, 11000, ['tax' => subsUsd(900), 'recurringTax' => subsUsd(1000)]));
+		$items = subsForm($http, 1)['line_items'];
+
+		expect(subsForm($http, 0)['amount_off'])->toBe('1100')
+			->and($items)->toHaveCount(2)
+			->and($items[0]['price_data'])->toMatchArray(['unit_amount' => '10000', 'recurring' => ['interval' => 'month', 'interval_count' => '1']])
+			->and($items[1]['price_data'])->toMatchArray(['unit_amount' => '1000', 'recurring' => ['interval' => 'month', 'interval_count' => '1']]);
+	});
+
 	it('charges shipping once, with the first payment', function (): void {
 		$http = new RecordingHttpClient(subsSession());
 		subsProvider($http)->createCheckout(subsCheckout([subsTee(), subsClub()], 3499, 1000, ['shipping' => subsUsd(500)]));
@@ -322,6 +335,24 @@ describe('what Stripe tells the store', function (): void {
 		expect($event->amount?->amount())->toBe(1060)
 			->and($event->tax?->amount())->toBe(60)
 			->and($event->orderTotal?->amount())->toBe(1000);
+	});
+
+	it('checks a period at prices that hold the tax against the whole of what was paid', function (): void {
+		$event = subsProvider(new RecordingHttpClient(subsInvoice('in_2Inclusive')))->parseWebhook(subsWebhook('invoice-paid-cycle-inclusive'));
+
+		// The store's price is 12.00 with the tax in it: that is what every period must cost.
+		expect($event->amount?->amount())->toBe(1200)
+			->and($event->tax?->amount())->toBe(200)
+			->and($event->orderTotal?->amount())->toBe(1200);
+	});
+
+	it('reads what the store asked for on a first payment Stripe taxed and a coupon cut', function (): void {
+		$event = subsProvider(new RecordingHttpClient(subsInvoice('in_1First')))->parseWebhook(subsWebhook('subscription-session-completed-taxed-discount'));
+
+		// 100.00, less 10.00 off the first payment, plus Stripe's 5.40 of tax.
+		expect($event->amount->amount())->toBe(9540)
+			->and($event->tax?->amount())->toBe(540)
+			->and($event->orderTotal?->amount())->toBe(9000);
 	});
 
 	it('ignores the first invoice of a subscription: the checkout\'s own event covers it', function (): void {

@@ -61,6 +61,19 @@ describe('beginning', function (): void {
 			->and($this->machine->originCanceled(sub('active'))->applied)->toBeFalse();
 	});
 
+	it('begins after all when the order it was given up with turns out to be paid', function (): void {
+		$gaveUp = $this->machine->originCanceled(sub('pending'));
+		$after  = sub('pending')->with($gaveUp->fields());
+
+		$t = $this->machine->activate($after, 'sub_1', 'cus_1', SUB_NOW);
+
+		expect($after->status())->toBe('canceled')
+			->and($t->applied)->toBeTrue()
+			->and($t->status)->toBe('active')
+			->and($t->changes['canceledAt'])->toBe('')
+			->and($after->with($t->fields())->neverBegan())->toBeFalse();
+	});
+
 	it('hears nothing but its first payment, or its end, before it has begun', function (T $type): void {
 		$t = $this->machine->apply(sub('pending'), subEvent($type, ['amount' => Money::of(1000, 'USD'), 'status' => 'active']), SUB_NOW);
 

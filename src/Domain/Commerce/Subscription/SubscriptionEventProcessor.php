@@ -35,8 +35,9 @@ use TotalCMS\Factory\LoggerFactory;
  * listeners and its refunds are the same code as a first purchase's.
  *
  * Like an order's events, a provider's are told more than once and a
- * request can die halfway. Each thing done leaves a mark, and a second
- * telling does only what has no mark yet.
+ * request can die halfway. What a change calls for is written down with
+ * the change, under the same lock, and crossed off as it is done. A second
+ * telling changes nothing and finishes what is still written down.
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects") it sits where orders,
  *                                                  subscriptions, access and
@@ -49,6 +50,9 @@ final readonly class SubscriptionEventProcessor
 
 	/** Where a subscription keeps the events it has told listeners of: flags.told[key] = true. */
 	private const TOLD = 'told';
+
+	/** Where a subscription keeps what a change called for and is not done yet: flags.owed[key] = {effect, ref, orderId}. */
+	private const OWED = 'owed';
 
 	private LoggerInterface $logger;
 
@@ -80,8 +84,16 @@ final readonly class SubscriptionEventProcessor
 
 		$id      = $found->id();
 		$orderId = '';
-		if ($event->type === SubscriptionEventType::Renewed && $found->status() !== SubscriptionData::CANCELED && $found->status() !== SubscriptionData::PENDING) {
-			$orderId = $this->renewalOrder($found, $event);
+		if ($event->type === SubscriptionEventType::Renewed) {
+			if ($found->status() === SubscriptionData::PENDING || $found->neverBegan()) {
+				// The provider is billing a subscription the store has not begun:
+				// its first payment is held, or was never told. No order is made
+				// for money the store cannot place, and a person is told.
+				return $this->beforeStart($found, $event);
+			}
+			if ($found->status() !== SubscriptionData::CANCELED) {
+				$orderId = $this->renewalOrder($found, $event);
+			}
 		}
 
 		$transition = SubscriptionTransition::none('unprocessed');
@@ -98,7 +110,9 @@ final readonly class SubscriptionEventProcessor
 				return $subscription;
 			}
 
-			$changed = $subscription->with($transition->fields());
+			// What the change calls for is written down with it: if this
+			// request dies before it is done, the next one finishes it.
+			$changed = $this->owe($subscription->with($transition->fields()), $transition->effects, $event->providerInvoiceRef, $orderId);
 
 			return $orderId === '' ? $changed : $this->mark($changed->with(['lastOrderId' => $orderId]), self::RENEWALS, $orderId);
 		});
@@ -106,9 +120,18 @@ final readonly class SubscriptionEventProcessor
 		if (!$transition->applied && $transition->reason !== 'duplicate') {
 			$this->logger->info('A subscription event changed nothing', ['event' => $event->eventKey(), 'type' => $event->type->value, 'subscriptionId' => $id, 'reason' => $transition->reason]);
 		}
-		$this->finish($id, $event, $transition, $orderId);
+		$this->settle($id);
 
 		return $transition;
+	}
+
+	/** A period paid for a subscription that has not begun: flagged for a person, once. */
+	private function beforeStart(SubscriptionData $subscription, SubscriptionEvent $event): SubscriptionTransition
+	{
+		$this->logger->error('A renewal was paid at the provider for a subscription whose first payment the store has not accepted', ['subscriptionId' => $subscription->id(), 'invoice' => $event->providerInvoiceRef]);
+		$this->subscriptions->withLock($subscription->id(), static fn (SubscriptionData $fresh): SubscriptionData => $fresh->needsAttention() === '' ? $fresh->with(['needsAttention' => 'renewal_before_start']) : $fresh);
+
+		return SubscriptionTransition::ignored($subscription, 'not_begun');
 	}
 
 	/**
@@ -171,7 +194,8 @@ final readonly class SubscriptionEventProcessor
 					? $this->machine->activate($subscription, $event->subscriptionRef, $event->customerRef, time())
 					: $this->machine->originCanceled($subscription);
 
-				return $transition->applied ? $subscription->with(array_filter($transition->fields(), static fn (mixed $value): bool => $value !== '') + ['needsAttention' => $transition->needsAttention]) : $subscription;
+				// A held payment that is accepted clears what the wait for it flagged.
+				return $transition->applied ? $subscription->with(['needsAttention' => $subscription->needsAttention() === 'renewal_before_start' ? '' : $transition->needsAttention] + $transition->fields()) : $subscription;
 			});
 		}
 
@@ -209,26 +233,59 @@ final readonly class SubscriptionEventProcessor
 		return $order->id();
 	}
 
-	/** Do what the change called for, each thing once. */
-	private function finish(string $id, SubscriptionEvent $event, SubscriptionTransition $transition, string $orderId): void
+	/**
+	 * Write down what a change calls for, on the subscription the change is
+	 * saved with. Making or holding a renewal's order is not written down:
+	 * that was done before the subscription changed.
+	 *
+	 * @param list<SubscriptionEffect> $effects
+	 */
+	private function owe(SubscriptionData $subscription, array $effects, string $invoiceRef, string $orderId): SubscriptionData
 	{
-		$effects = $transition->effects;
-		// A period already counted: the listeners may still be owed their word.
-		if ($transition->reason === 'duplicate' && $orderId !== '') {
-			$effects = [SubscriptionEffect::DispatchRenewed];
+		$flags = $subscription->flags();
+		$owed  = is_array($flags[self::OWED] ?? null) ? $flags[self::OWED] : [];
+		foreach ($effects as $effect) {
+			if ($effect === SubscriptionEffect::RenewalOrder || $effect === SubscriptionEffect::RenewalReview) {
+				continue;
+			}
+			$owed[$effect->value . ':' . ($orderId !== '' ? $orderId : $invoiceRef)] = ['effect' => $effect->value, 'ref' => $invoiceRef, 'orderId' => $orderId];
 		}
 
-		foreach ($effects as $effect) {
-			match ($effect) {
-				SubscriptionEffect::SyncAccess         => $this->syncAccess($id),
-				SubscriptionEffect::PaymentFailedEmail => $this->notifyFailed($id),
-				SubscriptionEffect::DispatchPastDue    => $this->tell($id, $effect->value . ':' . $event->providerInvoiceRef, CoreEvent::SUBSCRIPTION_PAST_DUE),
-				SubscriptionEffect::DispatchCanceled   => $this->tell($id, $effect->value, CoreEvent::SUBSCRIPTION_CANCELED),
-				SubscriptionEffect::DispatchRenewed    => $this->renewed($id, $orderId),
-				// The order was made and paid, or held, before the subscription changed.
-				default                                => null,
-			};
+		return $owed === [] ? $subscription : $subscription->with(['flags' => [self::OWED => $owed] + $flags]);
+	}
+
+	/**
+	 * Do everything written down for a subscription, crossing each thing
+	 * off once it is done. One that fails stays written down, and the
+	 * failure goes back to the provider, which tells the event again.
+	 */
+	private function settle(string $id): void
+	{
+		$owed = $this->subscriptions->find($id)?->flags()[self::OWED] ?? [];
+		foreach (is_array($owed) ? $owed : [] as $key => $entry) {
+			if (is_array($entry)) {
+				$this->perform($id, SubscriptionEffect::tryFrom((string)($entry['effect'] ?? '')), (string)($entry['ref'] ?? ''), (string)($entry['orderId'] ?? ''));
+			}
+			$this->subscriptions->withLock($id, function (SubscriptionData $fresh) use ($key): SubscriptionData {
+				$flags = $fresh->flags();
+				$left  = is_array($flags[self::OWED] ?? null) ? $flags[self::OWED] : [];
+				unset($left[$key]);
+
+				return $fresh->with(['flags' => [self::OWED => $left] + $flags]);
+			});
 		}
+	}
+
+	private function perform(string $id, ?SubscriptionEffect $effect, string $invoiceRef, string $orderId): void
+	{
+		match ($effect) {
+			SubscriptionEffect::SyncAccess         => $this->syncAccess($id),
+			SubscriptionEffect::PaymentFailedEmail => $this->notifyFailed($id),
+			SubscriptionEffect::DispatchPastDue    => $this->tell($id, $effect->value . ':' . $invoiceRef, CoreEvent::SUBSCRIPTION_PAST_DUE),
+			SubscriptionEffect::DispatchCanceled   => $this->tell($id, $effect->value, CoreEvent::SUBSCRIPTION_CANCELED),
+			SubscriptionEffect::DispatchRenewed    => $this->renewed($id, $orderId),
+			default                                => null,
+		};
 	}
 
 	/** Tell the listeners a period was paid, once its order really is. */

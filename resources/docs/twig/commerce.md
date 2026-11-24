@@ -80,7 +80,7 @@ Each prints HTML. See [Cart and Checkout](docs/commerce/cart-and-checkout) for h
 | `widget()` | The mini cart. |
 | `page()` | The full cart. |
 | `discountForm()` | The discount code box. |
-| `checkoutForm(options)` | The checkout form. Options: `label`, `class`. |
+| `checkoutForm(options)` | The checkout form. Options: `label`, `class`, and `registerUrl`: your page for making an account. A guest whose cart holds a [membership](docs/commerce/memberships) gets a note to sign in first in place of the form, with a link there. |
 
 ```twig
 {{ cms.cart.addButton(product.id, {label: 'Buy now', qty: 2, class: 'button primary'}) }}
