@@ -1,0 +1,29 @@
+{% extends 'layouts/default.twig' %}
+
+{#
+	A members-only page. It has the `auth` feature switched on, Access
+	Collection set to `customers`, and Access Groups set to `members`. Total CMS
+	sends a visitor who is not signed in to sign in, and refuses one who is
+	signed in but not a member. Nothing in this template checks: the page's
+	settings do.
+
+	A customer is in `members` while their membership is paid for. Total CMS
+	adds and removes the group itself.
+#}
+{% block content %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>Members</h1>
+		<p>Welcome. This page is for members only.</p>
+	</div>
+</section>
+
+<section class="container section narrow members-only">
+	<div class="prose">
+		<h2>You are in</h2>
+		<p>Replace this with what your members pay for: articles, downloads, videos, a price list. To protect another page the same way, open it in Site Builder, switch on <em>auth</em> under Features, and choose <em>members</em> under Access Groups.</p>
+		<p>To protect a whole collection, see Access Groups in the admin: give the <em>members</em> group read access to it.</p>
+		<p><a href="/account">Your account</a> is where you manage your membership.</p>
+	</div>
+</section>
+{% endblock %}

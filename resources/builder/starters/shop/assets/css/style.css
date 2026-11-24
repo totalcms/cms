@@ -1,0 +1,430 @@
+/* Shop starter — your site's stylesheet.
+ * Edit me freely. Cache-busted automatically by cms.builder.css() in your layout.
+ *
+ * Change the colors here and the whole site follows, the cart and the
+ * checkout form included.
+ */
+
+:root {
+	--ink     : #1d1b16;
+	--muted   : #6b665c;
+	--paper   : #fffdf8;
+	--wash    : #f4efe4;
+	--line    : #e4dccb;
+	--accent  : #b4442c;
+	--accent-2: #8f3320;
+	--on-accent: #fff;
+
+	--font    : -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif;
+	--radius  : 12px;
+}
+
+*, *::before, *::after {
+	box-sizing : border-box;
+}
+
+body {
+	margin         : 0;
+	background     : var(--paper);
+	color          : var(--ink);
+	font-family    : var(--font);
+	font-size      : 1.0625rem;
+	line-height    : 1.6;
+	min-height     : 100vh;
+	display        : flex;
+	flex-direction : column;
+}
+
+main {
+	flex : 1;
+}
+
+h1, h2, h3 {
+	margin         : 0 0 0.5em;
+	line-height    : 1.15;
+	letter-spacing : -0.02em;
+	text-wrap      : balance;
+}
+
+p {
+	margin : 0 0 1em;
+}
+
+a {
+	color                 : var(--accent);
+	text-underline-offset : 0.2em;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+	outline        : 3px solid var(--accent);
+	outline-offset : 2px;
+}
+
+code {
+	font-size     : 0.88em;
+	background    : var(--wash);
+	padding       : 0.1em 0.35em;
+	border-radius : 4px;
+}
+
+img {
+	display   : block;
+	max-width : 100%;
+	height    : auto;
+}
+
+.container {
+	width  : min(1160px, 100% - 2.5rem);
+	margin : 0 auto;
+}
+
+.narrow {
+	max-width : 44rem;
+}
+
+.section {
+	padding-block : clamp(1.5rem, 5vw, 3rem);
+}
+
+/* Buttons. The cart's own buttons take the same look further down. */
+.button {
+	display         : inline-block;
+	background      : var(--accent);
+	color           : var(--on-accent);
+	font            : inherit;
+	font-weight     : 700;
+	text-decoration : none;
+	padding         : 0.75rem 1.4rem;
+	border          : 0;
+	border-radius   : 10px;
+	cursor          : pointer;
+}
+
+.button:hover {
+	background : var(--accent-2);
+}
+
+.button.ghost {
+	background : transparent;
+	color      : var(--accent);
+	box-shadow : inset 0 0 0 2px var(--accent);
+}
+
+/* Nav */
+.site-nav {
+	border-bottom : 1px solid var(--line);
+	padding       : 1rem 0;
+}
+
+.site-nav .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	align-items     : center;
+	gap             : 0.75rem 2rem;
+}
+
+.site-name {
+	color           : var(--ink);
+	font-weight     : 800;
+	font-size       : 1.2rem;
+	letter-spacing  : -0.02em;
+	text-decoration : none;
+}
+
+.site-nav ul {
+	list-style  : none;
+	display     : flex;
+	flex-wrap   : wrap;
+	align-items : center;
+	gap         : 0.5rem 1.5rem;
+	margin      : 0;
+	padding     : 0;
+}
+
+.site-nav ul a {
+	color           : var(--muted);
+	text-decoration : none;
+	font-weight     : 600;
+}
+
+.site-nav ul a:hover,
+.site-nav ul a[aria-current="page"] {
+	color : var(--ink);
+}
+
+/* Page heads */
+.masthead {
+	background    : var(--wash);
+	padding-block : clamp(2.5rem, 8vw, 5rem);
+}
+
+.masthead.slim {
+	padding-block : clamp(1.5rem, 5vw, 2.75rem);
+}
+
+.masthead h1 {
+	font-size : clamp(2rem, 5vw, 3.25rem);
+}
+
+.masthead p {
+	max-width : 40rem;
+	color     : var(--muted);
+	font-size : 1.15rem;
+}
+
+.masthead.not-found {
+	text-align : center;
+}
+
+.masthead.not-found p {
+	margin-inline : auto;
+}
+
+/* Product grid */
+.grid {
+	display               : grid;
+	grid-template-columns : repeat(auto-fill, minmax(15rem, 1fr));
+	gap                   : 1.5rem;
+}
+
+.card {
+	display        : flex;
+	flex-direction : column;
+	background     : #fff;
+	border         : 1px solid var(--line);
+	border-radius  : var(--radius);
+	overflow       : hidden;
+}
+
+.card-body {
+	display        : flex;
+	flex-direction : column;
+	flex           : 1;
+	padding        : 1rem 1.1rem 1.2rem;
+}
+
+.card h3 {
+	font-size : 1.15rem;
+}
+
+.card h3 a {
+	color           : inherit;
+	text-decoration : none;
+}
+
+.meta {
+	margin         : 0 0 0.35rem;
+	color          : var(--muted);
+	font-size      : 0.8rem;
+	font-weight    : 600;
+	letter-spacing : 0.06em;
+	text-transform : uppercase;
+}
+
+/* A product's photo, or its first letter until it has one. */
+.product-photo {
+	display         : grid;
+	place-items     : center;
+	aspect-ratio    : 4 / 3;
+	background      : var(--wash);
+	color           : var(--line);
+	font-size       : 4rem;
+	font-weight     : 800;
+	text-decoration : none;
+}
+
+.product-photo.large {
+	aspect-ratio  : 1;
+	border-radius : var(--radius);
+	overflow      : hidden;
+	font-size     : 8rem;
+}
+
+.product-photo img {
+	width      : 100%;
+	height     : 100%;
+	object-fit : cover;
+}
+
+.price {
+	margin-top : auto;
+}
+
+.price s {
+	color : var(--muted);
+}
+
+.price small {
+	color : var(--muted);
+}
+
+.price.large {
+	font-size : 1.5rem;
+}
+
+.soldout {
+	color       : var(--muted);
+	font-weight : 700;
+}
+
+/* One product */
+.product-detail {
+	display               : grid;
+	grid-template-columns : repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+	gap                   : clamp(1.5rem, 5vw, 3.5rem);
+	align-items           : start;
+}
+
+.buy {
+	margin-block : 1.5rem;
+}
+
+.facts {
+	margin     : 0 0 1.5rem;
+	border-top : 1px solid var(--line);
+}
+
+.facts div {
+	display         : flex;
+	justify-content : space-between;
+	gap             : 1rem;
+	padding         : 0.6rem 0;
+	border-bottom   : 1px solid var(--line);
+}
+
+.facts dt {
+	color : var(--muted);
+}
+
+.facts dd {
+	margin     : 0;
+	text-align : right;
+}
+
+/* Cart and checkout, side by side where there is room. */
+.cart-layout {
+	display               : grid;
+	grid-template-columns : repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+	gap                   : 1.5rem;
+	align-items           : start;
+}
+
+.panel {
+	background    : #fff;
+	border        : 1px solid var(--line);
+	border-radius : var(--radius);
+	padding       : clamp(1rem, 3vw, 1.5rem);
+}
+
+.callout {
+	background    : var(--wash);
+	border-radius : var(--radius);
+	padding       : clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Orders and subscriptions on the account page */
+.list {
+	width           : 100%;
+	border-collapse : collapse;
+}
+
+.list th,
+.list td {
+	padding        : 0.65rem 0.75rem 0.65rem 0;
+	text-align     : left;
+	vertical-align : top;
+	border-bottom  : 1px solid var(--line);
+}
+
+.list th {
+	color     : var(--muted);
+	font-size : 0.85rem;
+}
+
+.prose h2 {
+	margin-top : 2rem;
+}
+
+.prose li {
+	margin-bottom : 0.5rem;
+}
+
+/* The store's own pieces take the site's colors.
+ * The cart, its buttons and the checkout form are printed by Total CMS
+ * (cms.cart.*). These are the handles it gives you. */
+.cart-drawer {
+	--cart-drawer-bg        : var(--paper);
+	--cart-drawer-color     : var(--ink);
+	--cart-drawer-accent    : var(--accent);
+	--cart-drawer-on-accent : var(--on-accent);
+	--cart-drawer-radius    : var(--radius);
+}
+
+.commerce-add-form button,
+.commerce-checkout-submit,
+.commerce-cart-toggle {
+	font          : inherit;
+	font-weight   : 700;
+	border        : 0;
+	border-radius : 10px;
+	cursor        : pointer;
+}
+
+.commerce-add-form button,
+.commerce-checkout-submit {
+	background : var(--accent);
+	color      : var(--on-accent);
+	padding    : 0.7rem 1.3rem;
+}
+
+.commerce-add-form button:hover,
+.commerce-checkout-submit:hover {
+	background : var(--accent-2);
+}
+
+.commerce-checkout-form input,
+.commerce-checkout-form select,
+.commerce-add-form select,
+.commerce-add-form input {
+	font          : inherit;
+	padding       : 0.55rem 0.7rem;
+	border        : 1px solid var(--line);
+	border-radius : 8px;
+	background    : #fff;
+	color         : var(--ink);
+	max-width     : 100%;
+}
+
+/* Footer */
+.site-footer {
+	margin-top : clamp(2rem, 6vw, 4rem);
+	border-top : 1px solid var(--line);
+	padding    : 1.5rem 0;
+	color      : var(--muted);
+	font-size  : 0.95rem;
+}
+
+.site-footer .container {
+	display         : flex;
+	flex-wrap       : wrap;
+	justify-content : space-between;
+	gap             : 0.75rem 2rem;
+}
+
+.site-footer ul {
+	list-style : none;
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : 0.5rem 1.5rem;
+	margin     : 0;
+	padding    : 0;
+}
+
+.site-footer p {
+	margin : 0;
+}

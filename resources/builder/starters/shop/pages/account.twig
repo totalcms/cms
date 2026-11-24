@@ -1,0 +1,69 @@
+{% extends 'layouts/default.twig' %}
+
+{#
+	Only a signed-in customer reaches this page: it has the `auth` feature
+	switched on, with Access Collection set to `customers`. Anyone else is
+	sent to sign in first.
+#}
+{% block content %}
+{% set user = cms.auth.userData() %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>Your account</h1>
+		<p>{{ user.name|default(user.email|default(''))|e }} · <a href="{{ cms.auth.logout('/')|e('html_attr') }}">Sign out</a></p>
+	</div>
+</section>
+
+<section class="container section">
+	<h2>Subscriptions</h2>
+	{# cms.commerce.subscriptions() is this customer's own, newest first. `url` is the signed address of the page where they cancel or change their card. #}
+	{% set subscriptions = cms.commerce.subscriptions() %}
+	{% if subscriptions %}
+		<table class="list">
+			<thead><tr><th>Plan</th><th>Price</th><th>Status</th><th></th></tr></thead>
+			<tbody>
+				{% for subscription in subscriptions %}
+					<tr>
+						<td>{{ (subscription.lines|first).title|e }}</td>
+						<td>{{ subscription.recurringTotal|money(subscription.currency) }} every {{ subscription.intervalCount > 1 ? subscription.intervalCount ~ ' ' ~ subscription.interval ~ 's' : subscription.interval }}</td>
+						<td>{{ subscription.cancelAtPeriodEnd and subscription.status != 'canceled' ? 'Ends with this period' : subscription.status|replace({'_': ' '})|capitalize|e }}</td>
+						<td><a href="{{ subscription.url|e('html_attr') }}">Manage</a></td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p>You have no subscriptions. <a href="/shop/membership">Become a member</a>.</p>
+	{% endif %}
+</section>
+
+<section class="container section">
+	<h2>Orders</h2>
+	{# cms.commerce.orders() is this customer's own, newest first. cms.commerce.orderUrl() is not needed here: each order carries what a page may show. #}
+	{% set orders = cms.commerce.orders(25) %}
+	{% if orders %}
+		<table class="list">
+			<thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th></tr></thead>
+			<tbody>
+				{% for order in orders %}
+					<tr>
+						<td>#{{ order.number|e }}</td>
+						<td>{{ order.created|date('M j, Y') }}</td>
+						<td>
+							{% for line in order.lines %}{{ line.qty|e }} × {{ line.title|e }}{% if not loop.last %}, {% endif %}{% endfor %}
+							{# A download bought on this order, with a fresh link each time the page is opened. #}
+							{% for download in cms.commerce.downloads(order) %}
+								<br>{% if download.url %}<a href="{{ download.url|e('html_attr') }}">Download {{ download.fileName|e }}</a>{% else %}{{ download.fileName|e }} (no downloads left){% endif %}
+							{% endfor %}
+						</td>
+						<td>{{ order.grandTotal|money(order.currency) }}</td>
+						<td>{{ order.paymentStatus|replace({'_': ' '})|capitalize|e }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p>You have not ordered anything yet. <a href="/shop">Visit the shop</a>.</p>
+	{% endif %}
+</section>
+{% endblock %}

@@ -25,7 +25,7 @@ class BuilderInitCommand extends BaseCommand
 		$this
 			->setName('builder:init')
 			->setDescription('Initialize a Site Builder project from a starter template')
-			->addArgument('starter', InputArgument::OPTIONAL, 'Starter template name (e.g., business, blog, portfolio, minimal)')
+			->addArgument('starter', InputArgument::OPTIONAL, 'Starter template name (e.g., business, blog, portfolio, shop, minimal)')
 			->addOption('list', 'l', InputOption::VALUE_NONE, 'List available starters')
 			->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing templates')
 			->addOption('frontend', null, InputOption::VALUE_NONE, 'Also install and build the Vite asset pipeline (equivalent to running tcms builder:frontend)')

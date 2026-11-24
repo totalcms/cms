@@ -1,0 +1,334 @@
+{
+	"name": "Shop Starter",
+	"description": "Pages for a store, six sample products, a customers collection visitors can sign up to, and a members group a subscription gives: everything the shop starter needs to sell from the first minute.",
+	"version": "1.0.0",
+	"accessGroups": [
+		{
+			"id": "members",
+			"description": "Paying members. Opens the members-only pages, and nothing else.",
+			"operations": [],
+			"permissions": {
+				"collectionsMeta": {
+					"operations": [],
+					"all": false,
+					"allowed": []
+				},
+				"collections": {
+					"operations": [],
+					"all": false,
+					"allowed": []
+				},
+				"schemas": {
+					"operations": [],
+					"all": false,
+					"allowed": []
+				},
+				"builder": false,
+				"mailer": false,
+				"playground": false,
+				"dataviews": false,
+				"commerce": false,
+				"docs": false,
+				"inlineEdit": false,
+				"utils": {
+					"all": false,
+					"allowed": []
+				},
+				"settings": {
+					"all": false,
+					"allowed": []
+				},
+				"extensions": {
+					"all": false,
+					"allowed": []
+				}
+			}
+		}
+	],
+	"collections": {
+		"custom": [
+			{
+				"id": "customers",
+				"schema": "auth",
+				"name": "Customers",
+				"publicRegistration": true
+			}
+		]
+	},
+	"objects": [
+		{
+			"collection": "builder-pages",
+			"id": "home",
+			"data": {
+				"id": "home",
+				"title": "Home",
+				"route": "/",
+				"template": "index",
+				"draft": false,
+				"nav": false,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "shop",
+			"data": {
+				"id": "shop",
+				"title": "Shop",
+				"route": "/shop",
+				"template": "shop/index",
+				"draft": false,
+				"nav": true,
+				"data": {}
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "product",
+			"data": {
+				"id": "product",
+				"title": "Product",
+				"route": "/shop/{id}",
+				"template": "shop/product",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "members",
+			"data": {
+				"id": "members",
+				"title": "Members",
+				"route": "/members",
+				"template": "members",
+				"draft": false,
+				"nav": true,
+				"data": {},
+				"middleware": [
+					"auth"
+				],
+				"accessCollection": "customers",
+				"accessGroups": [
+					"members"
+				],
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "cart",
+			"data": {
+				"id": "cart",
+				"title": "Cart",
+				"route": "/cart",
+				"template": "cart",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "register",
+			"data": {
+				"id": "register",
+				"title": "Create an account",
+				"route": "/register",
+				"template": "register",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "account",
+			"data": {
+				"id": "account",
+				"title": "Account",
+				"route": "/account",
+				"template": "account",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"middleware": [
+					"auth"
+				],
+				"accessCollection": "customers",
+				"accessGroups": [],
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "readme",
+			"data": {
+				"id": "readme",
+				"title": "Getting Started",
+				"route": "/readme",
+				"template": "readme",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "builder-pages",
+			"id": "not-found",
+			"data": {
+				"id": "not-found",
+				"title": "Page not found",
+				"route": "/404",
+				"template": "404",
+				"draft": false,
+				"nav": false,
+				"data": {},
+				"status": 404,
+				"sitemap": false
+			}
+		},
+		{
+			"collection": "products",
+			"id": "canvas-tote",
+			"data": {
+				"id": "canvas-tote",
+				"title": "Canvas Tote",
+				"status": "active",
+				"type": "physical",
+				"price": 24,
+				"taxable": true,
+				"requiresShipping": true,
+				"category": "Bags",
+				"description": "<p>A heavy cotton tote with long handles. Holds a week of groceries, or a weekend away.</p>",
+				"billing": "once",
+				"sku": "SHOP-TOTE",
+				"weight": 320
+			}
+		},
+		{
+			"collection": "products",
+			"id": "enamel-mug",
+			"data": {
+				"id": "enamel-mug",
+				"title": "Enamel Mug",
+				"status": "active",
+				"type": "physical",
+				"price": 16,
+				"taxable": true,
+				"requiresShipping": true,
+				"category": "Kitchen",
+				"description": "<p>A steel mug with a speckled enamel coat. This sample counts its stock: there are 25, and each sale takes one away.</p>",
+				"billing": "once",
+				"sku": "SHOP-MUG",
+				"weight": 180,
+				"trackInventory": true,
+				"stock": 25
+			}
+		},
+		{
+			"collection": "products",
+			"id": "classic-tee",
+			"data": {
+				"id": "classic-tee",
+				"title": "Classic Tee",
+				"status": "active",
+				"type": "physical",
+				"price": 28,
+				"taxable": true,
+				"requiresShipping": true,
+				"category": "Clothing",
+				"description": "<p>A soft cotton tee in three sizes. This sample shows variants: the buyer chooses a size, and each size has its own SKU.</p>",
+				"billing": "once",
+				"sku": "SHOP-TEE",
+				"weight": 200,
+				"variants": {
+					"small": {
+						"id": "small",
+						"title": "Small",
+						"sku": "SHOP-TEE-S",
+						"price": 0,
+						"stock": 0,
+						"active": true
+					},
+					"medium": {
+						"id": "medium",
+						"title": "Medium",
+						"sku": "SHOP-TEE-M",
+						"price": 0,
+						"stock": 0,
+						"active": true
+					},
+					"large": {
+						"id": "large",
+						"title": "Large",
+						"sku": "SHOP-TEE-L",
+						"price": 0,
+						"stock": 0,
+						"active": true
+					}
+				}
+			}
+		},
+		{
+			"collection": "products",
+			"id": "sticker-pack",
+			"data": {
+				"id": "sticker-pack",
+				"title": "Sticker Pack",
+				"status": "active",
+				"type": "physical",
+				"price": 6,
+				"taxable": true,
+				"requiresShipping": true,
+				"category": "Extras",
+				"description": "<p>Five vinyl stickers. Small enough to add to any order.</p>",
+				"billing": "once",
+				"sku": "SHOP-STICKERS",
+				"weight": 20
+			}
+		},
+		{
+			"collection": "products",
+			"id": "field-guide",
+			"data": {
+				"id": "field-guide",
+				"title": "Field Guide (PDF)",
+				"status": "active",
+				"type": "digital",
+				"price": 12,
+				"taxable": true,
+				"requiresShipping": false,
+				"category": "Guides",
+				"description": "<p>A short guide, delivered as a download. This sample is a digital product: upload your file in its Download field, and buyers get a link to it when they pay.</p>",
+				"billing": "once",
+				"sku": "SHOP-GUIDE"
+			}
+		},
+		{
+			"collection": "products",
+			"id": "membership",
+			"data": {
+				"id": "membership",
+				"title": "Membership",
+				"status": "active",
+				"type": "digital",
+				"price": 10,
+				"taxable": true,
+				"requiresShipping": false,
+				"category": "Membership",
+				"description": "<p>Billed every month until you cancel. Members can open the members-only page. This sample is a subscription that gives an access group.</p>",
+				"billing": "recurring",
+				"sku": "SHOP-MEMBER",
+				"interval": "month",
+				"intervalCount": 1,
+				"accessGroup": "members"
+			}
+		}
+	]
+}

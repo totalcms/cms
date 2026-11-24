@@ -17,6 +17,8 @@ A product can put its buyer in an [access group](docs/auth/access-groups). Pages
 - Sold as a **subscription**, the buyer is in the group while the subscription runs.
 - Sold **once**, the buyer is in the group unless the order is fully refunded.
 
+The [shop starter](docs/site-builder/starters#shop) sets all of this up for you, with a sample membership. To add a membership to a site you already have, follow the steps below.
+
 ## Set it up
 
 ### 1. Give customers a place to sign in

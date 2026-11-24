@@ -66,6 +66,10 @@ Commerce adds these collections. You edit products and discount codes like any o
 - **Free trials** on a subscription.
 - **Subscriptions with PayPal.** A cart with a subscription in it is offered Stripe only.
 
+## Start with a working store
+
+`tcms builder:init shop` scaffolds a whole store: a shop, product pages, a cart and checkout, customer accounts, and a membership that works. See [Starter Templates](docs/site-builder/starters#shop).
+
 ## Next
 
 1. [Set up your store](docs/commerce/setup)

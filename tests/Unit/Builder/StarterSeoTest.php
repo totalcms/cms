@@ -5,12 +5,12 @@ declare(strict_types=1);
 use TotalCMS\Support\PathResolver;
 
 /**
- * The four bundled starters are the reference implementation of `cms.seo` —
+ * The bundled starters are the reference implementation of `cms.seo` —
  * every new Site Builder site inherits its `<head>` from them. A starter that
  * still hand-rolls `<title>` would emit two of them alongside `head()`.
  */
 $startersDir = PathResolver::packageRoot() . '/resources/builder/starters';
-$starters    = ['blog', 'business', 'minimal', 'portfolio'];
+$starters    = ['blog', 'business', 'minimal', 'portfolio', 'shop'];
 
 it('renders the head through cms.seo in every starter layout', function (string $starter) use ($startersDir): void {
 	$layout = file_get_contents("{$startersDir}/{$starter}/layouts/default.twig");

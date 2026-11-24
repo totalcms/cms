@@ -1,0 +1,42 @@
+{#
+	One product in a grid. `row` is a row from cms.commerce.products(): it
+	holds only the fields in the collection's index, so the whole product
+	(its photos and variants) is fetched by id.
+
+	A price is never read from the product's own field here: cms.commerce.price()
+	gives what this buyer pays, as checkout will work it out.
+#}
+{% set product = cms.commerce.product(row.id) %}
+{% if product %}
+{% set price = cms.commerce.price(product.id) %}
+{% set photo = product.images|default([])|first %}
+<article class="card product-card">
+	<a class="product-photo" href="/shop/{{ product.id|e }}">
+		{% if photo %}
+			<img src="{{ cms.media.galleryPath(product, photo.name, {w: 720, h: 540, fit: 'crop', fm: 'webp'}, {collection: 'products', property: 'images'})|e('html_attr') }}" alt="{{ photo.alt|default(product.title)|e }}" loading="lazy">
+		{% else %}
+			{# No photo yet: add one to the product's Images field. #}
+			<span aria-hidden="true">{{ product.title|first|upper|e }}</span>
+		{% endif %}
+	</a>
+	<div class="card-body">
+		<p class="meta">{{ product.category|e }}{% if product.type == 'digital' and product.billing != 'recurring' %} · Download{% endif %}</p>
+		<h3><a href="/shop/{{ product.id|e }}">{{ product.title|e }}</a></h3>
+		<p class="price">
+			{% if price %}
+				{% if price.listAmount > price.amount %}<s>{{ price.listFormatted|e }}</s> {% endif %}
+				<strong>{{ price.formatted|e }}</strong>
+				{% if price.billing == 'recurring' %}<small>every {{ price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval }}</small>{% endif %}
+				{% if product.variants is not empty %}<small>and up</small>{% endif %}
+			{% endif %}
+		</p>
+		{% if not cms.commerce.inStock(product.id) %}
+			<p class="soldout">Sold out</p>
+		{% elseif product.variants is not empty %}
+			<p><a class="button ghost" href="/shop/{{ product.id|e }}">Choose an option</a></p>
+		{% else %}
+			{{ cms.cart.addButton(product.id) }}
+		{% endif %}
+	</div>
+</article>
+{% endif %}

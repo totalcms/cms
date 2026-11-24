@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
+use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
@@ -26,6 +27,7 @@ readonly class StarterService
 		private TemplateMigrationService $templateMigration,
 		private JumpStartImporter $jumpStartImporter,
 		private BuilderOrderService $pageOrder,
+		private CommerceStarterSetup $commerce,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Builder);
@@ -88,6 +90,16 @@ readonly class StarterService
 		// non-empty on a fresh install and would refuse every first scaffold.
 		if (!$force && $this->templateLister->listBuilderTemplates('pages', true) !== []) {
 			return OperationResult::failure('Templates already exist. Use --force to overwrite.');
+		}
+
+		// A starter for a store needs the store: its collections, and the
+		// settings its pages rely on. A site without Commerce is told why,
+		// and nothing is copied.
+		if (in_array('commerce', $manifest->requires, true)) {
+			$refusal = $this->commerce->prepare();
+			if ($refusal !== '') {
+				return OperationResult::failure($refusal);
+			}
 		}
 
 		// Copy template files

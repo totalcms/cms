@@ -1,0 +1,53 @@
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>You're up and running</h1>
+		<p>This is the <strong>shop</strong> starter: a store with products, a cart, checkout, customer accounts and a membership.</p>
+	</div>
+</section>
+
+<section class="container section narrow">
+	<div class="prose">
+		<h2>Three things to do first</h2>
+		<ol>
+			<li><strong>Add a way to pay.</strong> In the admin, open Extensions and enable Stripe. Add your test keys, then tick Stripe under Settings → Commerce → Payment Providers. Until then the cart works and checkout says no way to pay is set up. <a target="_blank" rel="noopener" href="/admin/docs/extensions/stripe">Stripe setup</a></li>
+			<li><strong>Listen for Stripe on a local site.</strong> Stripe cannot reach a site on your own computer. Run <code>tcms stripe:listen --url=https://your-site.test</code> while you test, or an order stays "Confirming your payment".</li>
+			<li><strong>Buy something.</strong> Use Stripe's test card <code>4242 4242 4242 4242</code>, any future date and any three digits.</li>
+		</ol>
+
+		<h2>What you have</h2>
+		<ul>
+			<li><a href="/shop">The shop</a> and a page for each product, at <code>/shop/{id}</code></li>
+			<li><a href="/cart">The cart</a>, which also holds the checkout form, and a cart that slides in from the side</li>
+			<li><a href="/register">A sign-up page</a> and <a href="/account">an account page</a> with the customer's orders and subscriptions</li>
+			<li><a href="/members">A members-only page</a></li>
+			<li>Six sample products under Collections → Products: one with sizes, one download, and a membership</li>
+		</ul>
+
+		<h2>What was set up for you</h2>
+		<ul>
+			<li>A <strong>customers</strong> collection, where your customers' accounts are kept. Visitors may sign up to it. It is separate from your own admin users.</li>
+			<li>A <strong>members</strong> access group. It lets someone open the members-only pages and nothing else.</li>
+			<li>Two store settings, under Settings → Commerce: <em>Customer Accounts Collection</em> is <code>customers</code>, and <em>Groups a Product May Grant</em> is <code>members</code>. If you had already chosen either, yours was kept.</li>
+		</ul>
+
+		<h2>How the membership works</h2>
+		<p>The <em>Membership</em> product is billed every month and gives the <em>members</em> group. When a customer's first payment is confirmed they are put in that group, and <a href="/members">the members page</a> opens for them. When their subscription ends they are taken out of it. You do not manage the group by hand.</p>
+		<p>A customer must be signed in to buy it, because it is added to their account.</p>
+		<p><a target="_blank" rel="noopener" href="/admin/docs/commerce/memberships">Memberships</a> · <a target="_blank" rel="noopener" href="/admin/docs/commerce/subscriptions">Subscriptions</a></p>
+
+		<h2>Make it yours</h2>
+		<ol>
+			<li><strong>Replace the products.</strong> Edit or delete the samples under Collections → Products. Give each one a photo in its Images field.</li>
+			<li><strong>The download.</strong> The <em>Field Guide</em> is a digital product with no file yet. Upload one in its Download field, or buyers get nothing to download.</li>
+			<li><strong>Tax and shipping.</strong> Both are off. Turn them on under Settings → Commerce.</li>
+			<li><strong>Colors.</strong> The first lines of <code>css/style.css</code> are the site's colors. Change them there and the whole site follows.</li>
+			<li><strong>Sign-ups.</strong> Anyone can create a customer account. New accounts get no access until they buy a membership. To make new customers confirm their email first, open the customers collection's settings and switch on Require Email Verification.</li>
+		</ol>
+
+		<p>When you no longer need this page, delete it in Site Builder.</p>
+	</div>
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>Shop</h1>
+		<p>Everything here goes through the cart and checkout. Prices, tax and shipping are worked out by the store, never by the page.</p>
+	</div>
+</section>
+
+<section class="container section">
+	{% set products = cms.commerce.products({sort: 'title', limit: 48}).objects %}
+	<div class="grid">
+		{% for row in products %}
+			{% include 'partials/product-card.twig' %}
+		{% else %}
+			<p>Nothing is for sale right now.</p>
+		{% endfor %}
+	</div>
+</section>
+{% endblock %}

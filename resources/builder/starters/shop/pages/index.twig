@@ -1,0 +1,31 @@
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="masthead">
+	<div class="container">
+		<h1>{{ page.data.hero|default('Good things, made well')|e }}</h1>
+		<p>{{ page.data.lede|default('This is your new shop. Six sample products are for sale: swap them for your own under Collections → Products.')|e }}</p>
+		<p><a class="button" href="/shop">Visit the shop</a> <a class="button ghost" href="/readme">How this site works</a></p>
+	</div>
+</section>
+
+<section class="container section">
+	<h2>New in the shop</h2>
+	{# The four newest products. cms.commerce.products() takes the options of cms.collection.query(). #}
+	<div class="grid">
+		{% for row in cms.commerce.products({sort: 'created:desc', limit: 4}).objects %}
+			{% include 'partials/product-card.twig' %}
+		{% else %}
+			<p>Nothing is for sale yet. Add a product under Collections → Products.</p>
+		{% endfor %}
+	</div>
+</section>
+
+<section class="container section">
+	<div class="callout">
+		<h2>Become a member</h2>
+		<p>Members get a page of their own. It is a working example of a membership: a subscription that opens a part of your site to the people who pay for it.</p>
+		<p><a class="button" href="/shop/membership">See the membership</a></p>
+	</div>
+</section>
+{% endblock %}

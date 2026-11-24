@@ -1,0 +1,30 @@
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>Your cart</h1>
+	</div>
+</section>
+
+<section class="container section cart-layout">
+	{# The full cart: a quantity and a remove button on every line, and a box for a discount code. It reloads itself when the cart changes. #}
+	<div class="panel">
+		{{ cms.cart.page() }}
+	</div>
+
+	<aside class="panel">
+		<h2>Checkout</h2>
+		{# The checkout form: email, address when something ships, the order's totals, and the ways to pay. It prints nothing while the cart is empty or no payment provider is ready. #}
+		{% set form = cms.cart.checkoutForm() %}
+		{% if form %}
+			{{ form|raw }}
+		{% elseif cms.cart.isEmpty() %}
+			<p>Your cart is empty. <a href="/shop">Visit the shop</a>.</p>
+		{% else %}
+			<p><strong>No way to pay is set up yet.</strong></p>
+			<p>Enable the Stripe extension, add its test keys, and tick Stripe under Settings → Commerce. See <a href="/readme">How this site works</a>.</p>
+		{% endif %}
+	</aside>
+</section>
+{% endblock %}

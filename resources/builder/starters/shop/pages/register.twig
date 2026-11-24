@@ -1,0 +1,30 @@
+{% extends 'layouts/default.twig' %}
+
+{% block content %}
+<section class="masthead slim">
+	<div class="container">
+		<h1>Create an account</h1>
+		<p>An account keeps your orders in one place, and is where a membership is added.</p>
+	</div>
+</section>
+
+<section class="container section narrow">
+	{% if cms.auth.userLoggedIn('customers') %}
+		<p>You are signed in. <a href="/account">Go to your account</a>.</p>
+	{% else %}
+		{# A sign-up form for the customers collection. Fields a visitor may not set, such as their groups, are left out, and the new customer is signed in when it is saved. #}
+		<div class="panel">
+			{% set form = cms.form.builder('customers', {
+				register: true,
+				botProtection: true,
+				newActions: [{action: 'redirect', link: '/account'}]
+			}) %}
+			{% do form.addField('name') %}
+			{% do form.addField('email') %}
+			{% do form.addField('password', {field: 'password'}) %}
+			{{ form.build() }}
+		</div>
+		<p>Already have an account? <a href="{{ cms.auth.login('customers', '/account')|e('html_attr') }}">Sign in</a>.</p>
+	{% endif %}
+</section>
+{% endblock %}
