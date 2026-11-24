@@ -49,6 +49,17 @@ use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\InventoryApplier;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
+use TotalCMS\Domain\Commerce\Access\AccessGrantService;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionEvent;
+use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEvents;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionStateMachine;
+use TotalCMS\Domain\Commerce\Subscription\RenewalOrderFactory;
+use TotalCMS\Domain\Commerce\Subscription\PaymentFailedNotifier;
+use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Order\OrderFulfillment;
 use TotalCMS\Domain\Commerce\Order\TableShippingCalculator;
 use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
 use TotalCMS\Domain\Commerce\Order\TableTaxCalculator;
@@ -733,7 +744,10 @@ return [
 		$container->get(MoneyFilter::class),
 		$container->get(CustomerOrders::class),
 		$container->get(DownloadLinks::class),
+		$container->get(CustomerSubscriptions::class),
 		fn (): CheckoutService => $container->get(CheckoutService::class),
+		// Lazy, and through the cart's own adapter: it prices the cart once for the page.
+		fn (): CartTwigAdapter => $container->get(CartTwigAdapter::class),
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 		fn (): CommerceDashboardView => $container->get(CommerceDashboardView::class),
 	),
@@ -976,9 +990,29 @@ return [
 		$router->handle(PaymentEvent::class, static function (PaymentEvent $event) use ($container): void {
 			$container->get(PaymentCatchUp::class)->process($event);
 		});
+		// A provider's word about a subscription: a period paid, a charge failed, the end.
+		$router->handle(SubscriptionEvent::class, static function (SubscriptionEvent $event) use ($container): void {
+			$container->get(SubscriptionEventProcessor::class)->process($event);
+		});
 
 		return $router;
 	},
+
+	// Built by hand: it pays a renewal's order through the payment
+	// processor, and the payment processor comes back to it afterward, so
+	// one of the two has to be fetched late.
+	SubscriptionEventProcessor::class => fn (ContainerInterface $container): SubscriptionEventProcessor => new SubscriptionEventProcessor(
+		$container->get(SubscriptionRepository::class),
+		$container->get(SubscriptionStateMachine::class),
+		$container->get(RenewalOrderFactory::class),
+		$container->get(OrderRepository::class),
+		fn (): PaymentEventProcessor => $container->get(PaymentEventProcessor::class),
+		$container->get(AccessGrantService::class),
+		$container->get(PaymentFailedNotifier::class),
+		$container->get(OrderFulfillment::class),
+		$container->get(SubscriptionEvents::class),
+		$container->get(LoggerFactory::class),
+	),
 
 	// What else happens once when an order is paid, beside stock, downloads
 	// and the receipt. Each is fetched when it runs, not when this is built.
@@ -993,6 +1027,12 @@ return [
 			}
 
 			return null;
+		});
+
+		// After any payment event for an order: a subscription that begins
+		// with the order, and the access groups the order gives its buyer.
+		$effects->after(static function (string $orderId, PaymentEvent $event) use ($container): void {
+			$container->get(SubscriptionEventProcessor::class)->afterOrderEvent($orderId, $event);
 		});
 
 		return $effects;

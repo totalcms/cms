@@ -24,6 +24,8 @@ final readonly class SubscriptionEvent implements ProviderEvent
 	 * @param string               $providerInvoiceRef Renewed, PaymentFailed: the provider's invoice id
 	 * @param string               $providerPaymentRef Renewed: the payment to refund against
 	 * @param array<string,scalar> $summary
+	 * @param Money|null           $tax                Renewed: the tax the provider worked out itself, when the store left it to the provider; part of $amount
+	 * @param Money|null           $orderTotal         with $tax: what the period costs before that tax, which the renewal is checked against
 	 */
 	public function __construct(
 		public string $provider,
@@ -38,6 +40,8 @@ final readonly class SubscriptionEvent implements ProviderEvent
 		public string $providerInvoiceRef = '',
 		public string $providerPaymentRef = '',
 		public array $summary = [],
+		public ?Money $tax = null,
+		public ?Money $orderTotal = null,
 	) {
 	}
 

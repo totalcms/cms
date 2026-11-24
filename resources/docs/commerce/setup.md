@@ -80,7 +80,7 @@ These are under **Settings → Commerce**.
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |
 
-The settings for subscriptions and memberships are for features that are [not in this version yet](docs/commerce/overview#not-in-this-version-yet).
+**Groups a Product May Grant** and **Failed Payment Email** are for [memberships](docs/commerce/memberships) and [subscriptions](docs/commerce/subscriptions).
 
 ## Receipts
 

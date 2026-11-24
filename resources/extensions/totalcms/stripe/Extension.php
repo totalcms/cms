@@ -16,6 +16,7 @@ use TotalCMS\Support\HttpClientInterface;
 // Sibling classes are loaded by hand: a bundled extension has no autoloader.
 require_once __DIR__ . '/StripeClient.php';
 require_once __DIR__ . '/StripeWebhookVerifier.php';
+require_once __DIR__ . '/StripeSubscriptions.php';
 require_once __DIR__ . '/StripeProvider.php';
 require_once __DIR__ . '/StripeCli.php';
 require_once __DIR__ . '/Command/ListenCommand.php';

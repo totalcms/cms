@@ -1,0 +1,181 @@
+{#
+	Everything the admin shows of one subscription. Redrawn whole when staff
+	cancel it or check it with the provider.
+
+	Autoescape is off in this app, so everything a buyer typed is escaped.
+
+	subscription   the SubscriptionData
+	status         {label, tone}
+	plan           what its lines are called
+	monthly        what it is worth a month, minor units
+	groups         the access groups it gives its subscriber
+	attention      {label, help}: why it needs someone, or both ''
+	payments       list of {order, payment: {label, tone}}, newest first
+	prefix         what goes in front of an order number
+	providerLabel  the payment provider's name
+	can            {cancel, sync}: what the subscription's state allows; the buttons are a super admin's
+	error, notice  why an action was refused, or what it did
+#}
+{% macro post(subscription, action) %}method="post" action="commerce/subscriptions/{{ subscription.id|e }}/{{ action }}" hx-post="commerce/subscriptions/{{ subscription.id|e }}/{{ action }}" hx-target="#commerce-subscription" hx-swap="outerHTML"{% endmacro %}
+{% set every = subscription.intervalCount > 1 ? subscription.intervalCount ~ ' ' ~ subscription.interval ~ 's' : subscription.interval %}
+<div id="commerce-subscription" class="commerce-order-wrap">
+	<header class="commerce-order-header">
+		<a class="commerce-back" href="commerce/subscriptions">Subscriptions</a>
+		<div class="commerce-order-title">
+			<h1>{{ plan|e }}</h1>
+			<div class="dash-badge-group">
+				<span class="dash-badge {{ status.tone }}">{{ status.label|e }}</span>
+			</div>
+		</div>
+		<p class="commerce-order-meta">
+			{{ subscription.recurringTotal|money(subscription.currency) }} every {{ every|e }}
+			{% if subscription.created %} · started <time datetime="{{ subscription.created|e }}">{{ subscription.created|date('M j, Y') }}</time>{% endif %}
+		</p>
+	</header>
+
+	<section class="dash-content-section commerce-order-body">
+		{% if error ?? '' %}
+			<div class="warning-box commerce-notice commerce-order-refused" role="alert"><p>{{ error|e }}</p></div>
+		{% elseif notice ?? '' %}
+			<div class="info-box commerce-notice commerce-order-done" role="status"><p>{{ notice|e }}</p></div>
+		{% endif %}
+
+		{% if attention.label %}
+			<div class="warning-box commerce-attention commerce-order-attention" role="status">
+				<p><strong>{{ attention.label|e }}.</strong> {{ attention.help|e }}</p>
+			</div>
+		{% endif %}
+
+		<div class="commerce-order-grid">
+			<div class="commerce-order-main">
+				<section class="dash-card commerce-items">
+					<h2>Billed every {{ every|e }}</h2>
+					<div class="commerce-table-wrap">
+						<table class="admin-table">
+							<thead>
+								<tr><th>Item</th><th class="commerce-num">Qty</th><th class="commerce-num">Price</th><th class="commerce-num">Total</th></tr>
+							</thead>
+							<tbody>
+								{% for line in subscription.lines %}
+									<tr>
+										<td>
+											{{ line.title|e }}
+											{% if line.sku ?? '' %}<span class="commerce-sub">SKU {{ line.sku|e }}</span>{% endif %}
+											{% if line.accessGroup ?? '' %}<span class="commerce-sub">Gives access group {{ line.accessGroup|e }}</span>{% endif %}
+										</td>
+										<td class="commerce-num">{{ line.qty|e }}</td>
+										<td class="commerce-num">{{ line.unitPrice|money(subscription.currency) }}</td>
+										<td class="commerce-num">{{ line.lineTotal|money(subscription.currency) }}</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					<dl class="commerce-totals">
+						<div><dt>Subtotal</dt><dd>{{ subscription.recurringSubtotal|money(subscription.currency) }}</dd></div>
+						{% if subscription.recurringDiscount > 0 %}
+							<div><dt>Discount{% if subscription.discountCode %} ({{ subscription.discountCode|e }}){% endif %}</dt><dd>{{ (0 - subscription.recurringDiscount)|money(subscription.currency) }}</dd></div>
+						{% endif %}
+						{% if subscription.taxMode == 'provider' %}
+							<div><dt>Tax</dt><dd>Worked out by {{ providerLabel|e }} on each payment</dd></div>
+						{% elseif subscription.recurringTax > 0 %}
+							<div><dt>Tax{% if subscription.taxMode == 'inclusive' %} (included){% endif %}</dt><dd>{{ subscription.recurringTax|money(subscription.currency) }}</dd></div>
+						{% endif %}
+						<div class="commerce-total"><dt>Every {{ every|e }}</dt><dd>{{ subscription.recurringTotal|money(subscription.currency) }}</dd></div>
+					</dl>
+				</section>
+
+				<section class="dash-card commerce-subscription-payments">
+					<h2>Payments</h2>
+					{% if payments is empty %}
+						<p><em>No payment has been made for this subscription yet.</em></p>
+					{% else %}
+						<div class="commerce-table-wrap">
+							<table class="admin-table">
+								<thead>
+									<tr><th>Order</th><th>Placed</th><th class="commerce-num">Total</th><th>Payment</th></tr>
+								</thead>
+								<tbody>
+									{% for row in payments %}
+										<tr class="commerce-subscription-payment">
+											<td class="commerce-order-number">
+												<a href="commerce/orders/{{ row.order.id|e }}">{{ prefix|e }}{{ row.order.number }}</a>
+												{% if row.order.isRenewal %}<span class="dash-badge sm muted">Renewal</span>{% else %}<span class="dash-badge sm muted">First payment</span>{% endif %}
+											</td>
+											<td class="commerce-when">{% if row.order.created %}<time datetime="{{ row.order.created|e }}">{{ row.order.created|date('M j, Y') }}</time>{% endif %}</td>
+											<td class="commerce-num">{{ row.order.grandTotal|money(row.order.currency) }}</td>
+											<td><span class="dash-badge sm {{ row.payment.tone }}">{{ row.payment.label|e }}</span></td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					{% endif %}
+				</section>
+			</div>
+
+			<aside class="commerce-order-side">
+				<section class="dash-card">
+					<h2>Subscriber</h2>
+					<dl class="commerce-facts">
+						<div><dt>Email</dt><dd>{{ subscription.email|e }}</dd></div>
+						{% if subscription.customerId %}
+							<div><dt>Account</dt><dd>{{ subscription.customerId|e }} <span class="commerce-sub">in {{ subscription.customerCollection|e }}</span></dd></div>
+						{% else %}
+							<div><dt>Account</dt><dd>None: bought as a guest</dd></div>
+						{% endif %}
+						{% if groups %}
+							<div><dt>Access</dt><dd>{{ groups|join(', ')|e }}</dd></div>
+						{% endif %}
+					</dl>
+				</section>
+
+				<section class="dash-card">
+					<h2>Billing</h2>
+					<dl class="commerce-facts">
+						<div><dt>Worth</dt><dd>{{ monthly|money(subscription.currency) }} a month</dd></div>
+						{% if subscription.trialEndsAt and subscription.status == 'trialing' %}
+							<div><dt>Trial ends</dt><dd>{{ subscription.trialEndsAt|date('M j, Y') }}</dd></div>
+						{% endif %}
+						{% if subscription.status == 'canceled' %}
+							<div><dt>Ended</dt><dd>{% if subscription.canceledAt %}{{ subscription.canceledAt|date('M j, Y') }}{% else %}Yes{% endif %}</dd></div>
+						{% elseif subscription.currentPeriodEnd %}
+							<div><dt>{{ subscription.cancelAtPeriodEnd ? 'Ends' : 'Next payment' }}</dt><dd>{{ subscription.currentPeriodEnd|date('M j, Y') }}</dd></div>
+						{% endif %}
+						<div><dt>Payments so far</dt><dd>{{ subscription.renewalCount + 1 }}</dd></div>
+						<div><dt>{{ providerLabel|e }}</dt><dd>{% if subscription.providerSubscriptionRef %}<code>{{ subscription.providerSubscriptionRef|e }}</code>{% else %}Not started{% endif %}</dd></div>
+						{% if subscription.providerCustomerRef %}
+							<div><dt>Customer there</dt><dd><code>{{ subscription.providerCustomerRef|e }}</code></dd></div>
+						{% endif %}
+					</dl>
+				</section>
+
+				{% if cms.auth.isAdmin() and (can.cancel or can.sync) %}
+					<section class="dash-card commerce-order-actions">
+						<h2>Actions</h2>
+						{% if can.sync %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'sync') }}>
+								<button class="dash-button transparent" type="submit">Check with {{ providerLabel|e }}</button>
+								<p class="commerce-quiet">Asks {{ providerLabel|e }} where this subscription stands and puts this page, and the subscriber's access, right. For when something looks out of date.</p>
+							</form>
+						{% endif %}
+						{% if can.cancel and not subscription.cancelAtPeriodEnd %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }}>
+								<input type="hidden" name="when" value="period_end">
+								<button class="dash-button transparent" type="submit">Cancel at end of period</button>
+								<p class="commerce-quiet">The subscriber keeps what they have paid for, and is not charged again.</p>
+							</form>
+						{% endif %}
+						{% if can.cancel %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }} hx-confirm="Cancel this subscription now? The subscriber loses what it gives them at once. Nothing is refunded.">
+								<input type="hidden" name="when" value="now">
+								<button class="dash-button transparent danger" type="submit">Cancel now</button>
+								<p class="commerce-quiet">Ends it at once. Nothing is refunded: refund a payment on its order.</p>
+							</form>
+						{% endif %}
+					</section>
+				{% endif %}
+			</aside>
+		</div>
+	</section>
+</div>

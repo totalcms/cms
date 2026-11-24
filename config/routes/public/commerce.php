@@ -12,6 +12,9 @@ use TotalCMS\Action\Commerce\CheckoutStartAction;
 use TotalCMS\Action\Commerce\OrderStatusAction;
 use TotalCMS\Action\Commerce\CommerceDownloadAction;
 use TotalCMS\Action\Commerce\CommerceWebhookAction;
+use TotalCMS\Action\Commerce\SubscriptionBillingAction;
+use TotalCMS\Action\Commerce\SubscriptionCancelAction;
+use TotalCMS\Action\Commerce\SubscriptionViewAction;
 use TotalCMS\Action\Commerce\CartAddAction;
 use TotalCMS\Action\Commerce\CartAttributesAction;
 use TotalCMS\Action\Commerce\CartClearAction;
@@ -24,6 +27,7 @@ use TotalCMS\Middleware\Commerce\CartRateLimitMiddleware;
 use TotalCMS\Middleware\Commerce\CheckoutRateLimitMiddleware;
 use TotalCMS\Middleware\Commerce\CommerceEditionMiddleware;
 use TotalCMS\Middleware\Commerce\DiscountRateLimitMiddleware;
+use TotalCMS\Middleware\Commerce\SubscriptionOwnerMiddleware;
 use TotalCMS\Middleware\Commerce\WebhookRateLimitMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
@@ -91,6 +95,19 @@ return function (App $app): void {
 	// A buyer's file. The token in the address is their right to it, so
 	// there is no session and no gate: goods already paid for stay
 	// downloadable on a store whose add-on has lapsed.
+	// A subscriber's own page. Not behind the store check: someone who is
+	// still being charged can see and stop it whatever the store's license
+	// says. The owner check runs before CSRF, so a stranger learns nothing.
+	$app->group('/commerce/subscription/{id}', function (RouteCollectorProxy $group): void {
+		$group->get('', SubscriptionViewAction::class)->setName('commerce-subscription');
+		$group->get('/billing', SubscriptionBillingAction::class)->setName('commerce-subscription-billing');
+		$group->post('/cancel', SubscriptionCancelAction::class)->setName('commerce-subscription-cancel')
+			->add(CSRFProtectionMiddleware::class)
+			->add(CheckoutRateLimitMiddleware::class);
+	})->add(SubscriptionOwnerMiddleware::class)
+		->add(NoCacheMiddleware::class)
+		->add(CartRateLimitMiddleware::class);
+
 	$app->get('/commerce/download/{token}', CommerceDownloadAction::class)->setName('commerce-download')
 		->add(NoCacheMiddleware::class)
 		->add(CartRateLimitMiddleware::class);

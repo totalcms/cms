@@ -17,7 +17,7 @@
 				{% if line.image %}<img class="cart-drawer-image" src="{{ line.image|e }}" alt="" width="56" height="56" loading="lazy">{% endif %}
 				<div class="cart-drawer-item">
 					<span class="commerce-cart-title">{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}</span>
-					<span class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}</span>
+					<span class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</span>
 				</div>
 				<div class="cart-drawer-controls">
 					<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=none" hx-swap="none" hx-trigger="change, submit">

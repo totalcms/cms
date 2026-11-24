@@ -37,6 +37,29 @@ final class SideEffectRunner
 		$this->effects[$flag] = $run;
 	}
 
+	/** @var list<callable(string, PaymentEvent): void> */
+	private array $after = [];
+
+	/**
+	 * Something to do after every payment event for an order has been dealt
+	 * with, whatever it was and whether or not it changed anything. It runs
+	 * with no lock held, so it may read and change the order, and may tell
+	 * listeners. It must cope with being run again for the same event.
+	 *
+	 * @param callable(string, PaymentEvent): void $run given the order's id and the event
+	 */
+	public function after(callable $run): void
+	{
+		$this->after[] = $run;
+	}
+
+	public function finish(string $orderId, PaymentEvent $event): void
+	{
+		foreach ($this->after as $run) {
+			$run($orderId, $event);
+		}
+	}
+
 	/** @return list<string> the flags, in the order their effects run */
 	public function flags(): array
 	{

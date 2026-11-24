@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Service;
 
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
 
 /**
@@ -15,6 +16,7 @@ final readonly class CommerceNav
 	public function __construct(
 		private CommerceGate $gate,
 		private OrderQuery $orders,
+		private SubscriptionQuery $subscriptions,
 	) {
 	}
 
@@ -24,11 +26,11 @@ final readonly class CommerceNav
 		return $this->gate->allowed();
 	}
 
-	/** How many orders need someone. Never breaks a page: a store that cannot be read counts as none. */
+	/** How many orders and subscriptions need someone. Never breaks a page: a store that cannot be read counts as none. */
 	public function attention(): int
 	{
 		try {
-			return $this->orders->attentionCount();
+			return $this->orders->attentionCount() + $this->subscriptions->attentionCount();
 		} catch (\Throwable) {
 			return 0;
 		}

@@ -17,6 +17,10 @@ use TotalCMS\Action\Commerce\Admin\AdminOrderReceiptAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderRefundAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderRefulfillAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrdersAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionCancelAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionsAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionSyncAction;
 use TotalCMS\Action\Admin\AdminCellAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
@@ -184,6 +188,12 @@ return function (App $app): void {
 			$commerce->post('/orders/{id}/cancel', AdminOrderCancelAction::class)->setName('admin-commerce-order-cancel')->add(AdminOnlyMiddleware::class);
 			$commerce->post('/orders/{id}/accept', AdminOrderAcceptAction::class)->setName('admin-commerce-order-accept')->add(AdminOnlyMiddleware::class);
 			$commerce->post('/orders/{id}/refulfill', AdminOrderRefulfillAction::class)->setName('admin-commerce-order-refulfill')->add(AdminOnlyMiddleware::class);
+
+			$commerce->get('/subscriptions', AdminSubscriptionsAction::class)->setName('admin-commerce-subscriptions');
+			$commerce->get('/subscriptions/{id}', AdminSubscriptionAction::class)->setName('admin-commerce-subscription');
+			// Ending one, or taking the provider's word for where it stands, is for a super admin.
+			$commerce->post('/subscriptions/{id}/cancel', AdminSubscriptionCancelAction::class)->setName('admin-commerce-subscription-cancel')->add(AdminOnlyMiddleware::class);
+			$commerce->post('/subscriptions/{id}/sync', AdminSubscriptionSyncAction::class)->setName('admin-commerce-subscription-sync')->add(AdminOnlyMiddleware::class);
 		})->add(CommerceEditionMiddleware::class)->add(CommerceAccessMiddleware::class);
 
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);

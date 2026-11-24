@@ -202,6 +202,41 @@ When something is missing it says what, and exits with an error. Until it is fix
 
 For an order that ships, Total CMS gives Stripe the shipping address by creating a customer in your Stripe account with that address. Stripe then taxes the order by where it is going.
 
+## Subscriptions
+
+Stripe can bill the store's [subscriptions](docs/commerce/subscriptions). Stripe holds the schedule and charges the card each period. Total CMS records each payment as an order.
+
+### Add four events to your webhook endpoint
+
+| Event | What Total CMS does with it |
+|---|---|
+| `invoice.paid` | Makes an order for a renewal payment and marks it paid |
+| `invoice.payment_failed` | Shows the subscription as **Payment due** and emails the subscriber once |
+| `customer.subscription.updated` | Records a change: paused, resumed, or set to end with the period |
+| `customer.subscription.deleted` | Ends the subscription and takes away what it gave |
+
+Add them to the same endpoint as the others, for test mode and for live mode.
+
+### Switch on the customer portal
+
+The **Update your card** button on a subscriber's page opens Stripe's customer portal. In the Stripe dashboard, open **Settings → Billing → Customer portal** and activate it. Without it the button is not shown.
+
+In the portal's settings you choose what a customer may do there. Let them update their payment method. If you let them cancel there too, the store hears about it and the subscription ends the same way.
+
+### Turn off Stripe's failed-payment emails
+
+Total CMS sends its own email when a renewal fails. In **Settings → Billing → Subscriptions and emails**, turn off the emails Stripe sends about failed payments, or your subscribers get two.
+
+How many times Stripe retries a failed card, and what it does when every retry fails, is set on the same page. Choose **cancel the subscription** as the last step, so a subscriber who never pays loses access.
+
+### What it costs
+
+Stripe charges a fee for Stripe Billing on top of its card fee. See Stripe's pricing page for the current rate.
+
+### Test a renewal
+
+A renewal happens a period after the first payment, so to see one in test mode use a Stripe **test clock**: make the subscription with a test customer on a test clock, then advance the clock past the period's end. Card `4000 0000 0000 0341` attaches and then fails when charged, which shows you a failed renewal.
+
 ## Refunds and disputes
 
 Refund a payment in the Stripe dashboard, and Stripe tells your site. The order shows as partly or fully refunded, and the refund is added to the order's transactions.
@@ -217,7 +252,7 @@ A dispute flags the order so you can respond to it at Stripe. When Stripe closes
 | **Test Secret Key** | Starts with `sk_test_`. |
 | **Test Webhook Signing Secret** | Starts with `whsec_`. From the test webhook endpoint. |
 | **Live Publishable Key** | Starts with `pk_live_`. Needed only to take payment on your own page. |
-| **Live Secret Key** | Starts with `sk_live_`. A restricted key (`rk_live_`) works if it may write Checkout Sessions and Refunds. |
+| **Live Secret Key** | Starts with `sk_live_`. A restricted key (`rk_live_`) works if it may write Checkout Sessions and Refunds. For subscriptions it must also write Subscriptions, Coupons and Customer portal sessions, and read Invoices. |
 | **Live Webhook Signing Secret** | Starts with `whsec_`. From the live webhook endpoint. |
 | **Statement Descriptor Suffix** | Optional. Up to 22 characters added after your Stripe account's name on the buyer's card statement. |
 
@@ -225,4 +260,4 @@ Your secret keys and webhook secrets are stored on your server and sent only to 
 
 ## If your Commerce add-on lapses
 
-Your store stops offering checkout, but Stripe's webhooks are still heard. A payment that was already in progress is still recorded, and so is a later refund or dispute of an old order.
+Your store stops offering checkout, but Stripe's webhooks are still heard. A payment that was already in progress is still recorded, and so is a later refund or dispute of an old order. Subscriptions keep running at Stripe: renewals are still recorded, and a subscriber can still open their page and cancel.

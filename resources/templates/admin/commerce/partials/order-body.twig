@@ -50,6 +50,7 @@
 				<span class="dash-badge {{ fulfillment.tone }}">{{ fulfillment.label|e }}</span>
 				{% if order.isRenewal %}<span class="dash-badge muted">Renewal</span>{% endif %}
 			</div>
+			{% if order.subscriptionId %}<a class="dash-button transparent" href="commerce/subscriptions/{{ order.subscriptionId|e }}">{{ order.isRenewal ? 'Its subscription' : 'The subscription it started' }}</a>{% endif %}
 		</div>
 		<p class="commerce-order-meta">
 			{% if order.created %}Placed <time datetime="{{ order.created|e }}">{{ order.created|date('M j, Y \\a\\t H:i') }}</time>{% endif %}

@@ -1161,6 +1161,13 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.cart.hasSubscription",
+            "signature": "hasSubscription(): bool",
+            "description": "Whether the cart holds a plan: something billed again every period.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.cart.isEmpty",
             "signature": "isEmpty(): bool",
             "description": "",
@@ -1505,6 +1512,27 @@
             "name": "cms.commerce.storeName",
             "signature": "storeName(): string",
             "description": "What the store calls itself: the site's name, set in Settings \u2192 General.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.subscription",
+            "signature": "subscription(string $subscriptionId, string $token = ''): ?array",
+            "description": "One subscription, for the customer it belongs to or for someone holding its link (the `t` its page carries): its status, lines, `recurringTotal`, `interval`, `currentPeriodEnd`, `cancelAtPeriodEnd`, `url` (its signed page) and `orders` (the payments made for it).",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.subscriptionUrl",
+            "signature": "subscriptionUrl(mixed $record): string",
+            "description": "The signed address of a subscription's own page, where its subscriber cancels and changes their card. For a mailer: give it `data`, the whole subscription, or the whole order of one of its payments. For a page: give it a subscription this object handed you. '' for anything else.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.subscriptions",
+            "signature": "subscriptions(): array",
+            "description": "The signed-in customer's subscriptions, newest first, each as subscription() gives it, without its payments. None for a guest.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },

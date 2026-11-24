@@ -12,6 +12,7 @@ use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\StorefrontPage;
+use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
@@ -35,6 +36,7 @@ final readonly class OrderPage
 		private CommerceSettings $settings,
 		private Config $config,
 		private DownloadLinks $downloads,
+		private CustomerSubscriptions $subscriptions,
 	) {
 	}
 
@@ -73,6 +75,8 @@ final readonly class OrderPage
 
 		return [
 			'order'   => $this->downloads->forBuyer($order),
+			// For an order that is a payment on a subscription: where its buyer manages that.
+			'subscriptionUrl' => $this->subscriptions->urlForOrder($order),
 			'token'   => $this->token($request),
 			'base'    => $this->config->api,
 			'polls'   => $polls,

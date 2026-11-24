@@ -36,7 +36,8 @@ $context->addEventListener('order.paid', function (array $payload): void {
 | `orderId` | `string` | The order's ID |
 | `orderNumber` | `int` | The number buyers see |
 | `collection` | `string` | The collection orders are kept in |
-| `kind` | `string` | `checkout` |
+| `kind` | `string` | `checkout`, or `renewal` for a later payment on a subscription |
+| `subscriptionId` | `string` | The subscription this order belongs to, or `''` |
 | `paymentStatus` | `string` | As it is now |
 | `fulfillmentStatus` | `string` | As it is now |
 | `currency` | `string` | Three-letter code |
@@ -50,7 +51,7 @@ $context->addEventListener('order.paid', function (array $payload): void {
 | `provider` | `string` | The payment provider's ID |
 | `providerPaymentRef` | `string` | The payment's ID at the provider |
 | `transactionId` | `string` | The line in the order's payments this event belongs to |
-| `lines` | `array` | The order's lines, by line ID: `productId`, `variantId`, `sku`, `title`, `type`, `qty`, `unitPrice`, `lineTotal`, `discountTotal`, `meta`, `metadata`, `fulfillmentStatus` |
+| `lines` | `array` | The order's lines, by line ID: `productId`, `variantId`, `sku`, `title`, `type`, `qty`, `unitPrice`, `lineTotal`, `discountTotal`, `billing` (`once` or `recurring`), `accessGroup`, `meta`, `metadata`, `fulfillmentStatus` |
 | `attributes` | `array` | What the buyer gave at checkout, such as a gift note |
 | `metadata` | `array` | What your own code wrote on the order |
 | `actor` | `array` | [Who caused the event](docs/extensions/events#who-caused-the-event) |
@@ -60,6 +61,38 @@ A listener is never given the buyer's link to the order, or anything that could 
 ### Write listeners that can run twice
 
 An admin can choose **Run fulfillment again** on an order, which sends `order.paid` a second time. So a listener must give the same result the second time: check whether you already did the work for this `orderId`. For `order.refunded`, check `transactionId`.
+
+## Subscription events
+
+| Event | When |
+|---|---|
+| `subscription.created` | The first payment was confirmed. Fires after that order's `order.paid`. |
+| `subscription.renewed` | A later period was paid. Fires after that renewal order's `order.paid`. |
+| `subscription.past_due` | A renewal charge failed. Once for each failed invoice. |
+| `subscription.canceled` | The subscription ended for good. |
+
+Every renewal is an order, so `order.paid` fires for each period too, with `kind` set to `renewal`. A listener that delivers something for every payment can listen to `order.paid` alone.
+
+| Key | Type | Description |
+|---|---|---|
+| `subscriptionId` | `string` | The subscription's ID |
+| `collection` | `string` | The collection subscriptions are kept in |
+| `status` | `string` | `trialing`, `active`, `past_due`, `paused` or `canceled` |
+| `email` | `string` | The subscriber's email |
+| `customer` | `?array` | `{collection, id}` for a signed-in customer, `null` for a guest |
+| `currency` | `string` | Three-letter code |
+| `recurringTotal` | `int` | What every period costs, in minor units |
+| `interval` | `string` | `day`, `week`, `month` or `year` |
+| `intervalCount` | `int` | How many intervals make one period |
+| `currentPeriodEnd` | `?string` | When the period paid for ends, ISO 8601 |
+| `cancelAtPeriodEnd` | `bool` | The subscriber has canceled, and it ends with the period |
+| `renewalCount` | `int` | How many periods have been paid after the first |
+| `orderId` | `string` | The first order for `subscription.created`, the renewal order for `subscription.renewed`, `''` otherwise |
+| `provider` | `string` | The payment provider's ID |
+| `lines` | `array` | The lines billed every period, by line ID: `productId`, `variantId`, `sku`, `title`, `qty`, `unitPrice`, `lineTotal`, `discountTotal`, `meta`, `metadata`, `accessGroup` |
+| `actor` | `array` | [Who caused the event](docs/extensions/events#who-caused-the-event) |
+
+A provider can send the same news twice. Each of these events is sent once for the thing it is about: once per subscription for `created` and `canceled`, once per renewal order for `renewed`, once per failed invoice for `past_due`.
 
 ## Deliver something when an order is paid
 
@@ -96,6 +129,8 @@ A provider implements `TotalCMS\Domain\Commerce\Payment\PaymentProvider`: it sta
 The store's owner switches the provider on under **Settings → Commerce**. Its webhook address is `/commerce/webhook/{id}`, where `{id}` is what your provider's `id()` returns.
 
 The bundled Stripe extension (`resources/extensions/totalcms/stripe`) is a complete example.
+
+A provider that can bill a subscription also implements `TotalCMS\Domain\Commerce\Payment\SubscriptionProvider`: it cancels a subscription when asked, says where one stands, and gives the address of a page where the buyer changes their card. It turns its own webhooks about a subscription into `SubscriptionEvent`s. Until a provider does, a cart with a subscription in it does not offer that provider.
 
 ### A price that depends on the buyer
 

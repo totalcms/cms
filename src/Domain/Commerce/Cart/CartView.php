@@ -40,4 +40,10 @@ final readonly class CartView
 	{
 		return $this->lines === [];
 	}
+
+	/** Whether the cart holds a plan: something billed again every period. */
+	public function hasSubscription(): bool
+	{
+		return array_filter($this->lines, static fn (CartLineView $line): bool => $line->billing === 'recurring') !== [];
+	}
 }

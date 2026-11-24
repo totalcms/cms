@@ -189,7 +189,7 @@ describe('starting a checkout', function (): void {
 			->toThrow(fn (ProviderException $e) => expect($e->providerCode)->toBe('unsupported'))
 			->and($http->requests)->toBe([]);
 	})->with([
-		'a subscription'       => [['mode' => 'subscription']],
+		'saving a card only'   => [['mode' => 'setup']],
 		'a form of its own'    => [['uiMode' => 'elements']],
 	]);
 
@@ -476,7 +476,7 @@ describe('being ready', function (): void {
 			->and($provider->supportsCurrency('usd'))->toBeTrue()
 			->and($provider->supportsCurrency('dollars'))->toBeFalse()
 			->and($provider->capabilities()->refunds)->toBeTrue()
-			->and($provider->capabilities()->subscriptions)->toBeFalse()
+			->and($provider->capabilities()->subscriptions)->toBeTrue()
 			// Without a publishable key it takes payment on Stripe's own page.
 			->and($provider->capabilities()->embedded)->toBeFalse()
 			->and($provider)->toBeInstanceOf(EmbeddedCheckoutProvider::class);

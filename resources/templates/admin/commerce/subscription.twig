@@ -1,0 +1,13 @@
+{#
+	One subscription: what it bills, who for, where it stands and every
+	payment made for it. Everything on it is in
+	partials/subscription-body.twig, which is also what an action on the
+	subscription is answered with.
+#}
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<main class="dash-main-content commerce-admin commerce-order" style="max-width:100%;">
+	{% include 'admin/commerce/partials/subscription-body.twig' %}
+</main>
+{% endblock %}

@@ -1,0 +1,140 @@
+{#
+	The built-in subscription page: what a subscriber pays for and when, the
+	payments made so far, and the ways to cancel and to change their card. It
+	is where the links in a subscriber's emails lead.
+
+	Autoescape is off in this app, so every value from the subscription is escaped.
+
+	subscription  what the subscriber may see of it: {id, status, lines, interval, intervalCount,
+	              recurringTotal, recurringTax, currency, currentPeriodEnd, trialEndsAt,
+	              cancelAtPeriodEnd, canceledAt, url, orders: [{number, created, grandTotal,
+	              currency, paymentStatus, kind, url}]}; amounts in minor units
+	csrf          the hidden field the cancel form posts
+	cancelUrl     where the cancel form posts; '' when there is nothing to cancel
+	billingUrl    where the subscriber changes their card; '' when the provider has no such page
+	requested     the subscriber has just asked to cancel
+	problem       the provider would not cancel just now
+#}
+{% set every = subscription.intervalCount > 1 ? subscription.intervalCount ~ ' ' ~ subscription.interval ~ 's' : subscription.interval %}
+{% set words = {pending: 'Starting', trialing: 'Free trial', active: 'Active', past_due: 'Payment due', paused: 'Paused', canceled: 'Canceled'} %}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>Your subscription</title>
+	<style>
+		body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; color: #1c1c1c; background: #f6f6f4; }
+		main { box-sizing: border-box; width: min(40rem, 100% - 2rem); margin: clamp(1rem, 6vw, 3rem) auto; padding: clamp(1rem, 5vw, 2rem); background: #fff; border-radius: 0.5rem; }
+		h1 { margin: 0 0 0.25rem; font-size: 1.5rem; }
+		h2 { margin: 1.75rem 0 0.5rem; font-size: 1.125rem; }
+		table { width: 100%; border-collapse: collapse; }
+		th, td { padding: 0.5rem 0; text-align: left; border-bottom: 1px solid #e5e5e0; }
+		td:last-child, th:last-child { text-align: right; }
+		tfoot th, tfoot td { border-bottom: 0; }
+		.commerce-subscription-status { margin: 0 0 1.25rem; }
+		.commerce-subscription-status strong { display: inline-block; padding: 0.125rem 0.625rem; background: #ecece8; border-radius: 1rem; font-size: 0.875rem; }
+		.commerce-subscription-message { padding: 0.75rem 1rem; background: #f6f6f4; border-radius: 0.375rem; }
+		.commerce-subscription-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1.75rem; }
+		.commerce-subscription-actions form { margin: 0; }
+		.commerce-subscription-actions a, .commerce-subscription-actions button { display: inline-block; padding: 0.625rem 1rem; font: inherit; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 0.375rem; text-decoration: none; cursor: pointer; }
+		.commerce-subscription-actions a { color: #fff; background: #1c1c1c; border-color: #1c1c1c; }
+		.commerce-subscription-actions small { flex-basis: 100%; opacity: 0.7; }
+		@media (prefers-color-scheme: dark) {
+			body { color: #ececec; background: #161616; }
+			main { background: #222; }
+			th, td { border-color: #3a3a3a; }
+			.commerce-subscription-status strong { background: #333; }
+			.commerce-subscription-message { background: #161616; }
+			.commerce-subscription-actions a { color: #161616; background: #ececec; border-color: #ececec; }
+		}
+	</style>
+</head>
+<body>
+<main class="commerce-subscription">
+	<h1>Your subscription</h1>
+	<p class="commerce-subscription-status">
+		<strong>{{ (words[subscription.status] ?? subscription.status)|e }}</strong>
+		{{ subscription.recurringTotal|money(subscription.currency) }} every {{ every|e }}
+	</p>
+
+	{% if problem %}
+		<p class="commerce-subscription-message commerce-subscription-problem" role="alert">We could not cancel your subscription just now. Nothing has changed. Please try again in a moment.</p>
+	{% elseif requested and subscription.status != 'canceled' and not subscription.cancelAtPeriodEnd %}
+		<p class="commerce-subscription-message commerce-subscription-requested" role="status">We have asked for your subscription to be canceled. This page will say so as soon as it is confirmed, usually within a minute.</p>
+	{% endif %}
+
+	{% if subscription.status == 'canceled' %}
+		<p class="commerce-subscription-message">This subscription has ended{% if subscription.canceledAt %} on {{ subscription.canceledAt|date('F j, Y')|e }}{% endif %}. You will not be charged for it again.</p>
+	{% elseif subscription.cancelAtPeriodEnd %}
+		<p class="commerce-subscription-message commerce-subscription-ending">Your subscription is canceled{% if subscription.currentPeriodEnd %} and ends on {{ subscription.currentPeriodEnd|date('F j, Y')|e }}{% endif %}. You keep what it gives you until then, and you will not be charged again.</p>
+	{% elseif subscription.status == 'past_due' %}
+		<p class="commerce-subscription-message commerce-subscription-due" role="alert">Your last payment did not go through. Please update your card to keep your subscription.</p>
+	{% elseif subscription.status == 'trialing' and subscription.trialEndsAt %}
+		<p class="commerce-subscription-message">Your free trial ends on {{ subscription.trialEndsAt|date('F j, Y')|e }}. Your first payment is taken then.</p>
+	{% elseif subscription.status == 'pending' %}
+		<p class="commerce-subscription-message">We are waiting for your first payment to be confirmed.</p>
+	{% elseif subscription.currentPeriodEnd %}
+		<p class="commerce-subscription-message">Your next payment of {{ subscription.recurringTotal|money(subscription.currency) }} is on {{ subscription.currentPeriodEnd|date('F j, Y')|e }}.</p>
+	{% endif %}
+
+	<table class="commerce-subscription-lines">
+		<thead>
+			<tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Every {{ every|e }}</th></tr>
+		</thead>
+		<tbody>
+			{% for line in subscription.lines %}
+				<tr>
+					<td>{{ line.title|e }}</td>
+					<td>{{ line.qty|e }}</td>
+					<td>{{ line.lineTotal|money(subscription.currency) }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+		<tfoot>
+			{% if subscription.recurringDiscount > 0 %}
+				<tr><th scope="row" colspan="2">Discount</th><td>{{ (0 - subscription.recurringDiscount)|money(subscription.currency) }}</td></tr>
+			{% endif %}
+			{% if subscription.recurringTax > 0 %}
+				<tr><th scope="row" colspan="2">Tax{% if subscription.taxMode == 'inclusive' %} (included){% endif %}</th><td>{{ subscription.recurringTax|money(subscription.currency) }}</td></tr>
+			{% endif %}
+			<tr><th scope="row" colspan="2">Total{% if subscription.taxMode == 'provider' %} before tax{% endif %}</th><td><strong>{{ subscription.recurringTotal|money(subscription.currency) }}</strong></td></tr>
+		</tfoot>
+	</table>
+
+	{% if subscription.orders %}
+		<h2>Payments</h2>
+		<table class="commerce-subscription-orders">
+			<thead>
+				<tr><th scope="col">Order</th><th scope="col">Date</th><th scope="col">Total</th></tr>
+			</thead>
+			<tbody>
+				{% for order in subscription.orders %}
+					<tr class="commerce-subscription-order">
+						<td><a href="{{ order.url|e('html_attr') }}">{{ order.number|e }}</a>{% if order.paymentStatus != 'paid' %} <small>({{ order.paymentStatus|replace({'_': ' '})|e }})</small>{% endif %}</td>
+						<td>{{ order.created|date('F j, Y')|e }}</td>
+						<td>{{ order.grandTotal|money(order.currency) }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% endif %}
+
+	{% if billingUrl or cancelUrl %}
+		<div class="commerce-subscription-actions">
+			{% if billingUrl %}
+				<a href="{{ billingUrl|e('html_attr') }}">Update your card</a>
+			{% endif %}
+			{% if cancelUrl %}
+				<form method="post" action="{{ cancelUrl|e('html_attr') }}">
+					{{ csrf|raw }}
+					<button type="submit">Cancel subscription</button>
+				</form>
+				<small>Canceling stops the next payment. You keep what you have paid for until the end of the period.</small>
+			{% endif %}
+		</div>
+	{% endif %}
+</main>
+</body>
+</html>

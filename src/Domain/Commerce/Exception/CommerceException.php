@@ -37,6 +37,59 @@ final class CommerceException extends \RuntimeException
 		return new self('variant_required', 422, 'Choose an option for this product.');
 	}
 
+	/** Something in the order is given to an account, and nobody is signed in to one. */
+	public static function accountRequired(): self
+	{
+		return new self('account_required', 401, 'Sign in or create an account to buy this: it is added to your account.');
+	}
+
+	/** The buyer's account is gone, or could not be written: they were not given the group they bought. */
+	public static function grantFailed(): self
+	{
+		return new self('grant_failed', 500, 'The account could not be given access.');
+	}
+
+	public static function subscriptionNotFound(): self
+	{
+		return new self('subscription_not_found', 404, 'That subscription does not exist.');
+	}
+
+	/** Nothing to cancel: it has not begun, or it has already ended. */
+	public static function subscriptionNotLive(): self
+	{
+		return new self('subscription_not_live', 409, 'That subscription is not running, so there is nothing to cancel.');
+	}
+
+	/** The provider would not cancel, or could not be asked. The subscription is as it was. */
+	public static function subscriptionCancelFailed(): self
+	{
+		return new self('provider_error', 502, 'The subscription could not be canceled just now. Nothing has changed; please try again.');
+	}
+
+	/** The provider could not say where a subscription stands. The store's record is as it was. */
+	public static function subscriptionSyncFailed(): self
+	{
+		return new self('provider_error', 502, 'The payment provider could not be asked about this subscription just now. Nothing has changed.');
+	}
+
+	/** A plan that ships: a provider bills a period, it does not send a parcel each time. */
+	public static function subscriptionShips(): self
+	{
+		return new self('subscription_ships', 422, 'A subscription cannot be a product that ships.');
+	}
+
+	/** No way to pay that is switched on can bill a subscription. */
+	public static function subscriptionUnavailable(): self
+	{
+		return new self('subscription_unavailable', 503, 'Subscriptions cannot be bought here right now.');
+	}
+
+	/** Two plans billed on different periods cannot be one subscription. */
+	public static function subscriptionIntervalMismatch(): self
+	{
+		return new self('subscription_interval_mismatch', 422, 'Your cart already has a subscription billed on another schedule. Check out with that one first.');
+	}
+
 	public static function variantInvalid(): self
 	{
 		return new self('variant_invalid', 422, 'That option is not available for this product.');

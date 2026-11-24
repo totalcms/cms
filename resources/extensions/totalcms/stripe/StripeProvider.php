@@ -18,8 +18,11 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\ProviderCapabilities;
 use TotalCMS\Domain\Commerce\Payment\ProviderEvent;
 use TotalCMS\Domain\Commerce\Payment\ProviderException;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Payment\RefundRequest;
 use TotalCMS\Domain\Commerce\Payment\RefundResult;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionEvent;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionProvider;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Webhook\RawBody;
 use TotalCMS\Domain\Webhook\WebhookVerifier;
@@ -30,13 +33,16 @@ use TotalCMS\Domain\Webhook\WebhookVerifier;
  * tells the store how it went.
  *
  * The store hands this one number, the order's total, and this makes sure
- * Stripe's page comes to exactly that before it asks for one.
+ * Stripe's page comes to exactly that before it asks for one. For a
+ * subscription it hands a second, what every later period costs, and this
+ * makes sure of that too. What Stripe says of a subscription afterward is
+ * read by {@see StripeSubscriptions}.
  *
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity") one provider, one class:
  *                                                    the branches are Stripe's
  *                                                    event types
  */
-final readonly class StripeProvider implements EmbeddedCheckoutProvider
+final readonly class StripeProvider implements EmbeddedCheckoutProvider, SubscriptionProvider
 {
 	public const ID = 'stripe';
 
@@ -57,6 +63,13 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	/** The reasons Stripe takes for a refund. Any other is sent as the buyer's request, with the words in metadata. */
 	private const REFUND_REASONS = ['duplicate', 'fraudulent', 'requested_by_customer'];
 
+	private const SUBSCRIPTION = 'subscription';
+
+	/** The longest name Stripe takes for a coupon. */
+	private const COUPON_NAME = 40;
+
+	private StripeSubscriptions $subscriptions;
+
 	/**
 	 * @param string                    $publishableKey the key a page may hold; needed only to take payment on the store's own page
 	 * @param (\Closure(): string)|null $moduleUrl      where the page imports this extension's embed.js from; asked when a checkout needs it
@@ -72,6 +85,7 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 		private string $publishableKey = '',
 		private ?\Closure $moduleUrl = null,
 	) {
+		$this->subscriptions = new StripeSubscriptions($client, $logger);
 	}
 
 	public function id(): string
@@ -91,7 +105,7 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	 */
 	public function capabilities(): ProviderCapabilities
 	{
-		return new ProviderCapabilities(embedded: preg_match('/^pk_(test|live)_[A-Za-z0-9]+\z/', $this->publishableKey) === 1, tax: true);
+		return new ProviderCapabilities(embedded: preg_match('/^pk_(test|live)_[A-Za-z0-9]+\z/', $this->publishableKey) === 1, subscriptions: true, billingPortal: true, tax: true);
 	}
 
 	/** Ready when the secret key and the webhook secret are filled in. */
@@ -113,19 +127,17 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 
 	public function createCheckout(CheckoutRequest $request): CheckoutSession
 	{
-		if ($request->mode !== 'payment' || !in_array($request->uiMode, ['hosted', 'embedded'], true)) {
+		if (!in_array($request->mode, ['payment', self::SUBSCRIPTION], true) || !in_array($request->uiMode, ['hosted', 'embedded'], true)) {
 			throw new ProviderException('Stripe is not set up for that kind of checkout yet.', 'unsupported');
 		}
 
-		$sum = array_sum(array_map(static fn (array $item): int => $item['price_data']['unit_amount'] * $item['quantity'], $this->items($request, false)));
-		if ($sum !== $request->total->amount()) {
-			// The buyer must never be asked for anything but the order's total.
-			throw new ProviderException("The items for order {$request->orderNumber} come to {$sum}, not the order's total of {$request->total->amount()}.", 'total_mismatch');
-		}
+		// Made before anything is asked of Stripe: the buyer must never be
+		// asked for anything but what the store worked out.
+		$coupon = $this->firstPaymentCoupon($request, $this->checked($request));
 
 		if ($request->providerTax) {
 			try {
-				return $this->open($request, true);
+				return $this->open($request, true, null, $coupon);
 			} catch (ProviderException $e) {
 				// Stripe out of reach is not Stripe saying no to tax.
 				if ($e->providerCode === 'network') {
@@ -138,10 +150,82 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 			}
 
 			// A key of its own: Stripe answers a key it has seen with its first answer.
-			return $this->open($request, false, $request->idempotencyKey . '-notax');
+			return $this->open($request, false, $request->idempotencyKey . '-notax', $coupon);
 		}
 
-		return $this->open($request, false);
+		return $this->open($request, false, null, $coupon);
+	}
+
+	/**
+	 * Hold the items to the store's numbers, before Stripe hears of them.
+	 * What the items come to is the first payment. For an order paid once
+	 * that must be the order's total. For a subscription it may be more,
+	 * when a code takes something off the first payment only; it is never
+	 * less, and the items billed again must come to exactly what every
+	 * later period costs.
+	 *
+	 * @return int how much the items come to above the order's total: what a coupon must take off the first payment
+	 *
+	 * @throws ProviderException `total_mismatch`
+	 */
+	private function checked(CheckoutRequest $request): int
+	{
+		$items = $this->items($request, false);
+		$cost  = static fn (array $item): int => $item['price_data']['unit_amount'] * $item['quantity'];
+		$first = array_sum(array_map($cost, $items));
+		$total = $request->total->amount();
+
+		if ($request->mode !== self::SUBSCRIPTION) {
+			if ($first !== $total) {
+				throw new ProviderException("The items for order {$request->orderNumber} come to {$first}, not the order's total of {$total}.", 'total_mismatch');
+			}
+
+			return 0;
+		}
+
+		$again = array_filter($items, static fn (array $item): bool => isset($item['price_data']['recurring']));
+		$every = array_sum(array_map($cost, $again));
+		if ($again === [] || $every !== $request->recurringTotal?->amount()) {
+			throw new ProviderException("The recurring items for order {$request->orderNumber} come to {$every}, not what every period costs.", 'total_mismatch');
+		}
+		if ($first < $total) {
+			throw new ProviderException("The items for order {$request->orderNumber} come to {$first}, less than the order's total of {$total}.", 'total_mismatch');
+		}
+
+		return $first - $total;
+	}
+
+	/**
+	 * A code that takes something off a plan's first payment only cannot be
+	 * written into the plan's price, which is charged again every period.
+	 * It is a coupon Stripe uses once, for exactly the difference.
+	 *
+	 * @return string the coupon's id, or '' when the items already come to the total
+	 *
+	 * @throws ProviderException
+	 */
+	private function firstPaymentCoupon(CheckoutRequest $request, int $amountOff): string
+	{
+		if ($amountOff <= 0) {
+			return '';
+		}
+
+		$code   = $request->metadata['discountCode'] ?? '';
+		$coupon = $this->client->post('/coupons', [
+			'amount_off'      => $amountOff,
+			'currency'        => strtolower($request->total->currency()),
+			'duration'        => 'once',
+			'max_redemptions' => 1,
+			'name'            => mb_substr($code !== '' ? $code : "Order {$request->orderNumber}", 0, self::COUPON_NAME),
+			'metadata'        => ['orderId' => $request->orderId],
+		], 'coupon-' . $request->orderId);
+
+		$id = $this->text($coupon, 'id');
+		if ($id === '') {
+			throw new ProviderException('Stripe answered without a coupon.', 'invalid_response');
+		}
+
+		return $id;
 	}
 
 	/**
@@ -149,7 +233,7 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	 *
 	 * @param bool $taxed have Stripe work the tax out and add it (Stripe Tax)
 	 */
-	private function open(CheckoutRequest $request, bool $taxed, ?string $idempotencyKey = null): CheckoutSession
+	private function open(CheckoutRequest $request, bool $taxed, ?string $idempotencyKey = null, string $coupon = ''): CheckoutSession
 	{
 		$onPage = $request->uiMode === 'embedded';
 
@@ -165,13 +249,18 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 			? ['ui_mode' => 'embedded_page', 'return_url' => $request->returnUrl]
 			: ['ui_mode' => 'hosted_page', 'success_url' => $request->successUrl, 'cancel_url' => $request->cancelUrl];
 
+		// A subscription has no one payment to describe. What Stripe is told
+		// instead goes on the subscription, and from there onto every invoice.
+		$about = $request->mode === self::SUBSCRIPTION
+			? ['subscription_data' => ['metadata' => ['subscriptionId' => $request->subscriptionId, 'orderId' => $request->orderId, 'orderNumber' => (string)$request->orderNumber]]]
+			: ['payment_intent_data' => $intent];
+
 		$session = $this->client->post('/checkout/sessions', [
-			'mode'                => 'payment',
+			'mode'                => $request->mode,
 			'client_reference_id' => $request->orderId,
 			'metadata'            => $this->metadata($request),
-			'payment_intent_data' => $intent,
 			'line_items'          => $this->items($request, $taxed),
-		] + $this->buyer($request, $taxed) + ($taxed ? ['automatic_tax' => ['enabled' => true]] : []) + $where, $idempotencyKey ?? $request->idempotencyKey);
+		] + $about + ($coupon !== '' ? ['discounts' => [['coupon' => $coupon]]] : []) + $this->buyer($request, $taxed) + ($taxed ? ['automatic_tax' => ['enabled' => true]] : []) + $where, $idempotencyKey ?? $request->idempotencyKey);
 
 		$id = $this->text($session, 'id');
 		if ($onPage) {
@@ -201,12 +290,19 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	 */
 	private function buyer(CheckoutRequest $request, bool $taxed): array
 	{
+		$known  = $request->providerCustomerRef;
 		$shipTo = $taxed ? $request->shipTo : null;
 		if (!$shipTo instanceof Address || $shipTo->country === '') {
-			return ['customer_email' => $request->email];
+			// A buyer Stripe already knows keeps their one customer there,
+			// so their card and their invoices stay in one place.
+			return match (true) {
+				$known === '' => ['customer_email' => $request->email],
+				$taxed        => ['customer' => $known, 'customer_update' => ['address' => 'auto']],
+				default       => ['customer' => $known],
+			};
 		}
 
-		$customer = $this->client->post('/customers', array_filter(['email' => $request->email, 'name' => $shipTo->name]) + [
+		$customer = $this->client->post($known === '' ? '/customers' : '/customers/' . rawurlencode($known), array_filter(['email' => $request->email, 'name' => $shipTo->name]) + [
 			'shipping' => [
 				'name'    => $shipTo->name !== '' ? $shipTo->name : $request->email,
 				'address' => array_filter([
@@ -270,7 +366,7 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 		return match ($type) {
 			// Completed and paid: a card. Completed and not yet paid: a bank
 			// payment, whose own event says later how it went.
-			'checkout.session.completed'               => $this->text($object, 'payment_status') === 'paid' ? $this->session($id, PaymentEventType::Paid, $object) : null,
+			'checkout.session.completed'               => $this->settled($object) ? $this->session($id, PaymentEventType::Paid, $object) : null,
 			'checkout.session.async_payment_succeeded' => $this->session($id, PaymentEventType::Paid, $object),
 			'checkout.session.async_payment_failed'    => $this->session($id, PaymentEventType::Failed, $object),
 			'checkout.session.expired'                 => $this->session($id, PaymentEventType::Expired, $object),
@@ -281,8 +377,40 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 				'lost'  => $this->dispute($id, PaymentEventType::DisputeLost, $object),
 				default => null,
 			},
-			default => null,
+			'invoice.paid'                  => $this->subscriptions->invoicePaid($id, $object),
+			'invoice.payment_failed'        => $this->subscriptions->invoiceFailed($id, $object),
+			'customer.subscription.updated' => $this->subscriptions->updated($id, $object),
+			'customer.subscription.deleted' => $this->subscriptions->deleted($id, $object),
+			default                         => null,
 		};
+	}
+
+	/**
+	 * Whether a completed checkout is paid for. A subscription whose first
+	 * payment comes to nothing has nothing to pay, and has still begun.
+	 *
+	 * @param array<array-key,mixed> $session
+	 */
+	private function settled(array $session): bool
+	{
+		$status = $this->text($session, 'payment_status');
+
+		return $status === 'paid' || ($status === 'no_payment_required' && $this->text($session, 'mode') === self::SUBSCRIPTION);
+	}
+
+	public function cancelSubscription(string $providerSubscriptionRef, bool $atPeriodEnd): void
+	{
+		$this->subscriptions->cancel($providerSubscriptionRef, $atPeriodEnd);
+	}
+
+	public function fetchSubscription(string $providerSubscriptionRef): ?SubscriptionEvent
+	{
+		return $this->subscriptions->fetch($providerSubscriptionRef);
+	}
+
+	public function billingPortalUrl(string $providerCustomerRef, string $returnUrl): string
+	{
+		return $this->subscriptions->portalUrl($providerCustomerRef, $returnUrl);
 	}
 
 	public function fetchPayment(string $providerSessionRef): ?PaymentEvent
@@ -293,16 +421,17 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 
 		try {
 			$session = $this->client->get('/checkout/sessions/' . rawurlencode($providerSessionRef));
+
+			// Not one of Stripe's event ids: a name of its own for "what the session says now".
+			return match (true) {
+				$this->text($session, 'status') === 'complete' && $this->settled($session) => $this->session("session-{$providerSessionRef}-paid", PaymentEventType::Paid, $session),
+				$this->text($session, 'payment_status') === 'paid'                         => $this->session("session-{$providerSessionRef}-paid", PaymentEventType::Paid, $session),
+				$this->text($session, 'status') === 'expired'                              => $this->session("session-{$providerSessionRef}-expired", PaymentEventType::Expired, $session),
+				default                                                                    => null,
+			};
 		} catch (ProviderException) {
 			return null;
 		}
-
-		// Not one of Stripe's event ids: a name of its own for "what the session says now".
-		return match (true) {
-			$this->text($session, 'payment_status') === 'paid' => $this->session("session-{$providerSessionRef}-paid", PaymentEventType::Paid, $session),
-			$this->text($session, 'status') === 'expired'      => $this->session("session-{$providerSessionRef}-expired", PaymentEventType::Expired, $session),
-			default                                            => null,
-		};
 	}
 
 	/**
@@ -362,30 +491,47 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	 * does not tax says so. Any other names no tax code: Stripe uses the
 	 * account's own.
 	 *
-	 * @return list<array{quantity: int, price_data: array{currency: string, unit_amount: int, product_data: array<string,string>, tax_behavior?: string}}>
+	 * @return list<array{quantity: int, price_data: array{currency: string, unit_amount: int, product_data: array<string,string>, recurring?: array{interval: string, interval_count: int}, tax_behavior?: string}}>
 	 */
 	private function items(CheckoutRequest $request, bool $taxed): array
 	{
 		$currency = strtolower($request->total->currency());
 		// The tax goes on top of the store's prices, or the prices already hold it: the store says which.
 		$behavior = $taxed ? ['tax_behavior' => $request->taxIncluded ? 'inclusive' : 'exclusive'] : [];
-		$item     = static fn (string $name, int $quantity, int $unitAmount, string $taxCode = ''): array => [
+		$item     = static fn (string $name, int $quantity, int $unitAmount, string $taxCode = '', ?Recurrence $every = null): array => [
 			'quantity'   => $quantity,
-			'price_data' => ['currency' => $currency, 'unit_amount' => $unitAmount, 'product_data' => ['name' => $name] + ($taxCode !== '' ? ['tax_code' => $taxCode] : [])] + $behavior,
+			'price_data' => ['currency' => $currency, 'unit_amount' => $unitAmount, 'product_data' => ['name' => $name] + ($taxCode !== '' ? ['tax_code' => $taxCode] : [])]
+				+ ($every instanceof Recurrence ? ['recurring' => ['interval' => $every->interval, 'interval_count' => $every->intervalCount]] : [])
+				+ $behavior,
 		];
 
 		$code  = static fn (CheckoutLineSummary $line): string => $taxed && !$line->taxable ? self::NOT_TAXABLE_CODE : '';
-		$items = array_map(
-			static fn (CheckoutLineSummary $line): array => $line->discount->isZero()
-				? $item($line->title, $line->qty, $line->unitAmount->amount(), $code($line))
-				: $item("{$line->qty} × {$line->title}", 1, $line->unitAmount->multiply($line->qty)->subtract($line->discount)->amount(), $code($line)),
-			$request->lines,
-		);
+		$plan  = null;
+		$items = [];
+		foreach ($request->lines as $line) {
+			// A line billed again is priced at what every period costs: only
+			// a discount that repeats comes off it. One that is for the first
+			// payment alone is a coupon ({@see firstPaymentCoupon()}).
+			$every = $request->mode === self::SUBSCRIPTION ? $line->recurrence : null;
+			$off   = $every instanceof Recurrence ? $line->recurringDiscount : $line->discount;
+			$plan ??= $every;
+
+			$items[] = $off->isZero()
+				? $item($line->title, $line->qty, $line->unitAmount->amount(), $code($line), $every)
+				: $item("{$line->qty} × {$line->title}", 1, $line->unitAmount->multiply($line->qty)->subtract($off)->amount(), $code($line), $every);
+		}
 		if (!$request->shipping->isZero()) {
 			$items[] = $item('Shipping', 1, $request->shipping->amount(), $taxed ? self::SHIPPING_TAX_CODE : '');
 		}
-		if (!$request->tax->isZero()) {
-			$items[] = $item('Tax', 1, $request->tax->amount());
+
+		// The store's own tax. The part due every period is billed every
+		// period, beside the plan; the rest is due once.
+		$again = $plan instanceof Recurrence ? min($request->tax->amount(), $request->recurringTax?->amount() ?? 0) : 0;
+		if ($again > 0) {
+			$items[] = $item('Tax', 1, $again, '', $plan);
+		}
+		if ($request->tax->amount() > $again) {
+			$items[] = $item('Tax', 1, $request->tax->amount() - $again);
 		}
 
 		return $items;
@@ -418,7 +564,11 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 		return $kept;
 	}
 
-	/** @param array<array-key,mixed> $session a Checkout Session */
+	/**
+	 * @param array<array-key,mixed> $session a Checkout Session
+	 *
+	 * @throws ProviderException when a subscription's first payment cannot be read from its invoice
+	 */
 	private function session(string $eventId, PaymentEventType $type, array $session): PaymentEvent
 	{
 		$metadata = is_array($session['metadata'] ?? null) ? $session['metadata'] : [];
@@ -429,6 +579,13 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 		$taxed   = is_array($session['automatic_tax'] ?? null) && ($session['automatic_tax']['enabled'] ?? false) === true;
 		$details = is_array($session['total_details'] ?? null) ? $session['total_details'] : [];
 
+		// A subscription's first payment is its first invoice's: the session
+		// names no payment of its own.
+		$payment = $this->text($session, 'payment_intent');
+		if ($payment === '' && $type === PaymentEventType::Paid && $this->text($session, 'mode') === self::SUBSCRIPTION) {
+			$payment = $this->subscriptions->paymentOf($this->text($session, 'invoice'));
+		}
+
 		return new PaymentEvent(
 			provider: self::ID,
 			eventId: $eventId,
@@ -436,8 +593,9 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 			orderId: $orderId !== '' ? $orderId : $this->text($metadata, 'orderId'),
 			amount: $this->money($session, 'amount_total'),
 			providerRef: $this->text($session, 'id'),
-			providerPaymentRef: $this->text($session, 'payment_intent'),
+			providerPaymentRef: $payment,
 			summary: array_filter(['paymentStatus' => $this->text($session, 'payment_status'), 'status' => $this->text($session, 'status')]),
+			subscriptionRef: $this->text($session, 'subscription'),
 			customerRef: $this->text($session, 'customer'),
 			tax: $taxed ? $this->money(['amount_tax' => $details['amount_tax'] ?? 0, 'currency' => $session['currency'] ?? ''], 'amount_tax') : null,
 			orderTotal: $taxed ? $this->money($session, 'amount_subtotal') : null,

@@ -22,6 +22,9 @@ final class FakeSubscriptionProvider extends FakePaymentProvider implements Subs
 	/** @var list<array{ref: string, atPeriodEnd: bool}> */
 	public array $cancellations = [];
 
+	/** @var array<string,SubscriptionEvent> where each subscription stands, by the provider's name for it */
+	public array $subscriptions = [];
+
 	private bool $failNextCancel = false;
 
 	public function __construct(bool $signatureValid = true, private readonly bool $embedded = true, string $id = 'fake-sub')
@@ -61,7 +64,7 @@ final class FakeSubscriptionProvider extends FakePaymentProvider implements Subs
 
 	public function fetchSubscription(string $providerSubscriptionRef): ?SubscriptionEvent
 	{
-		return null;
+		return $this->subscriptions[$providerSubscriptionRef] ?? null;
 	}
 
 	public function billingPortalUrl(string $providerCustomerRef, string $returnUrl): string

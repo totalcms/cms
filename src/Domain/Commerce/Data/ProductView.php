@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Data;
 
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Property\Data\PriceData;
 
 /**
@@ -19,12 +21,20 @@ final readonly class ProductView
 	public const TYPE_DIGITAL  = 'digital';
 	public const TYPE_PHYSICAL = 'physical';
 
+	public const BILLING_ONCE      = 'once';
+	public const BILLING_RECURRING = 'recurring';
+
 	/**
 	 * @param float                     $price            as the price field holds it; the pricing service turns it into minor units
 	 * @param bool                      $requiresShipping always false for a digital product
 	 * @param array<string,mixed>       $meta             fulfillment data, copied onto each order line
 	 * @param array<string,VariantView> $variants         keyed by variant id
 	 * @param string                    $image            the main image's URL, or ''
+	 * @param string                    $billing          `once`, or `recurring` for a plan: billed again every interval until it is cancelled
+	 * @param string                    $interval         for a plan: day, week, month or year; '' otherwise
+	 * @param int                       $intervalCount    for a plan: billed every this many intervals; 0 otherwise
+	 * @param int                       $trialDays        for a plan: free days before the first payment
+	 * @param string                    $accessGroup      the access group its buyer is given, or ''
 	 *
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") One parameter for each thing a product is; built by fromObject().
 	 */
@@ -45,6 +55,11 @@ final readonly class ProductView
 		public bool $hasVariants,
 		public array $variants,
 		public string $image,
+		public string $billing = self::BILLING_ONCE,
+		public string $interval = '',
+		public int $intervalCount = 0,
+		public int $trialDays = 0,
+		public string $accessGroup = '',
 	) {
 	}
 
@@ -60,7 +75,8 @@ final readonly class ProductView
 		$type     = $text('type', self::TYPE_PHYSICAL) === self::TYPE_DIGITAL ? self::TYPE_DIGITAL : self::TYPE_PHYSICAL;
 		$price    = $object['price'] ?? 0;
 		$meta     = $object['meta'] ?? [];
-		$variants = self::variants($object['variants'] ?? []);
+		$variants  = self::variants($object['variants'] ?? []);
+		$recurring = $text('billing', self::BILLING_ONCE) === self::BILLING_RECURRING;
 
 		return new self(
 			id: $text('id'),
@@ -79,7 +95,37 @@ final readonly class ProductView
 			hasVariants: $variants !== [],
 			variants: $variants,
 			image: $image,
+			billing: $recurring ? self::BILLING_RECURRING : self::BILLING_ONCE,
+			interval: $recurring ? $text('interval', 'month') : '',
+			intervalCount: $recurring ? (is_numeric($object['intervalCount'] ?? null) ? (int)$object['intervalCount'] : 1) : 0,
+			accessGroup: $text('accessGroup'),
 		);
+	}
+
+	/** A plan: billed again every interval until it is cancelled. */
+	public function isRecurring(): bool
+	{
+		return $this->billing === self::BILLING_RECURRING;
+	}
+
+	/**
+	 * How often the product, or this variant of it, is billed: the
+	 * variant's own interval and count where it has them, the product's
+	 * otherwise. Null for a product paid for once.
+	 *
+	 * @throws CommerceException `product_unavailable` for a period no provider can bill
+	 */
+	public function recurrence(?VariantView $variant = null): ?Recurrence
+	{
+		if (!$this->isRecurring()) {
+			return null;
+		}
+
+		try {
+			return new Recurrence($variant->interval ?? $this->interval, $variant->intervalCount ?? $this->intervalCount, $this->trialDays);
+		} catch (\InvalidArgumentException) {
+			throw CommerceException::productUnavailable();
+		}
 	}
 
 	public function isActive(): bool

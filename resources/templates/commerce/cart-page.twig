@@ -31,7 +31,7 @@
 							{% if line.image %}<img src="{{ line.image|e }}" alt="" width="64" height="64" loading="lazy">{% endif %}
 							<span class="commerce-cart-name">{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}</span>
 						</td>
-						<td class="commerce-cart-price">{{ line.unitPrice.amount|money(line.unitPrice.currency) }}</td>
+						<td class="commerce-cart-price">{{ line.unitPrice.amount|money(line.unitPrice.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</td>
 						<td class="commerce-cart-qty">
 							{# As in the drawer: a quantity saves itself when it changes. The button is for a browser with no JavaScript. #}
 							<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML" hx-trigger="change, submit">

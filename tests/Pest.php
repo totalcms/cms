@@ -1651,6 +1651,44 @@ function commercePaidEvent(string $orderId = 'order-1', int $amount = 3998, stri
 }
 
 /**
+ * A plan in the bootCommerceStore() site: a digital product billed every
+ * month, at $priceMinor cents, unless $fields says otherwise.
+ *
+ * @param array<string,mixed> $fields
+ */
+function seedPlan(string $id, int $priceMinor = 1000, array $fields = []): void
+{
+	$c = test()->commerceApp->getContainer();
+	$c->get(\TotalCMS\Domain\Auth\Service\ActorContext::class)->runAs(\TotalCMS\Domain\Auth\Data\Actor::system(), fn () => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $fields + [
+		'id'               => $id,
+		'title'            => ucfirst($id),
+		'status'           => 'active',
+		'type'             => 'digital',
+		'requiresShipping' => false,
+		'price'            => $priceMinor / 100,
+		'billing'          => 'recurring',
+		'interval'         => 'month',
+		'intervalCount'    => 1,
+	]));
+}
+
+/**
+ * Give the bootCommerceStore() site a provider that can bill a
+ * subscription, `fake-sub`, beside the plain `fake`, and offer both.
+ */
+function enableSubscriptions(): \Tests\Fakes\FakeSubscriptionProvider
+{
+	$c        = test()->commerceApp->getContainer();
+	$provider = new \Tests\Fakes\FakeSubscriptionProvider(true, false);
+	$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register($provider);
+	$config           = $c->get(Config::class);
+	$config->commerce = ['providers' => ['fake', 'fake-sub']] + $config->commerce;
+	test()->subProvider = $provider;
+
+	return $provider;
+}
+
+/**
  * A discount code in the bootCommerceStore() site: 15% off unless $fields
  * says otherwise. Written as the store, so `usedCount` can be set.
  *
@@ -1725,5 +1763,6 @@ function closedCommerceNav(): \TotalCMS\Domain\Commerce\Service\CommerceNav
 	return new \TotalCMS\Domain\Commerce\Service\CommerceNav(
 		new \Tests\Fakes\ClosedCommerceGate(),
 		(new ReflectionClass(\TotalCMS\Domain\Commerce\Order\OrderQuery::class))->newInstanceWithoutConstructor(),
+		(new ReflectionClass(\TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery::class))->newInstanceWithoutConstructor(),
 	);
 }

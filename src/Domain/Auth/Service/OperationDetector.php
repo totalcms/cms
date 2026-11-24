@@ -141,6 +141,8 @@ readonly class OperationDetector
 		'admin-dataviews',
 		'admin-commerce',
 		'admin-commerce-order',
+		'admin-commerce-subscriptions',
+		'admin-commerce-subscription',
 		'export-object-zip',
 		'report-fields',
 		'report-csv',
@@ -163,6 +165,8 @@ readonly class OperationDetector
 		'admin-commerce-order-accept',
 		'admin-commerce-order-refund',
 		'admin-commerce-order-refulfill',
+		'admin-commerce-subscription-cancel',
+		'admin-commerce-subscription-sync',
 		'collection-patch',     // Collection metadata
 		'collection-reindex',
 		'object-update',

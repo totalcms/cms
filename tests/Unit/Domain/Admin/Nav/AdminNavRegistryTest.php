@@ -8,6 +8,7 @@ use TotalCMS\Domain\Admin\Nav\NavEntry;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
 use TotalCMS\Domain\Commerce\Service\CommerceNav;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
@@ -87,7 +88,7 @@ describe('AdminNavRegistry', function (): void {
 			$this->extensions,
 			(new ReflectionClass(CollectionLister::class))->newInstanceWithoutConstructor(),
 			(new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(),
-			new CommerceNav(new OpenCommerceGate(), (new ReflectionClass(OrderQuery::class))->newInstanceWithoutConstructor()),
+			new CommerceNav(new OpenCommerceGate(), (new ReflectionClass(OrderQuery::class))->newInstanceWithoutConstructor(), (new ReflectionClass(SubscriptionQuery::class))->newInstanceWithoutConstructor()),
 		);
 		$ids = array_map(fn (NavEntry $e): string => $e->id, $store->items());
 

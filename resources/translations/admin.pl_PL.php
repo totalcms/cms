@@ -1734,4 +1734,5 @@ return [
 
 	// Commerce: the store's admin pages
 	'commerce.orders' => 'Zamówienia',
+	'commerce.subscriptions' => 'Subskrypcje',
 ];

@@ -9,6 +9,8 @@ use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
@@ -42,6 +44,7 @@ final readonly class CartService
 		private CurrentCustomer $customer,
 		private DiscountService $discounts,
 		private CartPricer $pricer,
+		private PaymentProviderRegistry $providers,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Commerce);
@@ -69,6 +72,8 @@ final readonly class CartService
 		if (!isset($items[$key]) && count($items) >= $this->settings->cartMaxLines()) {
 			throw CommerceException::cartFull($this->settings->cartMaxLines());
 		}
+
+		$this->checkPlan($product, $variantId, $items);
 
 		$wanted = ($items[$key]->qty ?? 0) + $qty;
 		$this->check($product, $variantId, $wanted);
@@ -316,6 +321,38 @@ final readonly class CartService
 		$this->sync();
 		$this->store->setDiscountCode('');
 		$this->persist();
+	}
+
+	/**
+	 * A plan can go in the cart only when a way to pay can bill one, and
+	 * only beside plans billed on the same period: a provider makes one
+	 * subscription of a checkout, and a subscription has one period.
+	 *
+	 * @param array<string,CartItem> $items what is in the cart now
+	 *
+	 * @throws CommerceException `subscription_unavailable` or `subscription_interval_mismatch`
+	 */
+	private function checkPlan(ProductView $product, string $variantId, array $items): void
+	{
+		$every = $product->recurrence($product->variants[$variantId] ?? null);
+		if (!$every instanceof Recurrence) {
+			return;
+		}
+		if ($this->providers->forCart(true) === []) {
+			throw CommerceException::subscriptionUnavailable();
+		}
+
+		foreach ($items as $item) {
+			$other = $this->catalog->product($item->productId);
+			try {
+				$theirs = $other?->recurrence($other->variants[$item->variantId] ?? null);
+			} catch (CommerceException) {
+				continue;
+			}
+			if ($theirs instanceof Recurrence && $theirs != $every) {
+				throw CommerceException::subscriptionIntervalMismatch();
+			}
+		}
 	}
 
 	/**

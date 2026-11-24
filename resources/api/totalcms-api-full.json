@@ -1817,6 +1817,194 @@
                 ]
             }
         },
+        "/admin/commerce/subscriptions": {
+            "get": {
+                "operationId": "admin-commerce-subscriptions",
+                "tags": [
+                    "admin"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions",
+                "x-tcms-action": "AdminSubscriptionsAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}": {
+            "get": {
+                "operationId": "admin-commerce-subscription",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}",
+                "x-tcms-action": "AdminSubscriptionAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}/cancel": {
+            "post": {
+                "operationId": "admin-commerce-subscription-cancel",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}/cancel",
+                "x-tcms-action": "AdminSubscriptionCancelAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}/sync": {
+            "post": {
+                "operationId": "admin-commerce-subscription-sync",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}/sync",
+                "x-tcms-action": "AdminSubscriptionSyncAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
         "/admin/dataviews": {
             "get": {
                 "operationId": "admin-dataviews.0",
@@ -14014,6 +14202,118 @@
                 "x-tcms-middleware": [
                     "NoCacheMiddleware",
                     "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}": {
+            "get": {
+                "operationId": "commerce-subscription",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}",
+                "x-tcms-action": "SubscriptionViewAction",
+                "x-tcms-middleware": [
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}/billing": {
+            "get": {
+                "operationId": "commerce-subscription-billing",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}/billing",
+                "x-tcms-action": "SubscriptionBillingAction",
+                "x-tcms-middleware": [
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}/cancel": {
+            "post": {
+                "operationId": "commerce-subscription-cancel",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}/cancel",
+                "x-tcms-action": "SubscriptionCancelAction",
+                "x-tcms-middleware": [
+                    "CheckoutRateLimitMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
                     "CartRateLimitMiddleware"
                 ]
             }

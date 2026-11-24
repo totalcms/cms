@@ -99,7 +99,18 @@ final readonly class CartTwigAdapter
 			'discountTotal' => $line->discountTotal,
 			'currency'     => $line->lineTotal->currency(),
 			'url'          => $this->catalog->url($line->productId),
+			// How the line is billed: `once`, or `recurring` every `intervalCount` `interval`s.
+			'billing'       => $line->billing,
+			'interval'      => $line->interval,
+			'intervalCount' => $line->intervalCount,
+			'trialDays'     => $line->trialDays,
 		], $this->view()->lines ?? []);
+	}
+
+	/** Whether the cart holds a plan: something billed again every period. */
+	public function hasSubscription(): bool
+	{
+		return $this->view()?->hasSubscription() ?? false;
 	}
 
 	/** The lines added up, in minor units, before discount, shipping and tax. */
@@ -262,7 +273,7 @@ final readonly class CartTwigAdapter
 
 		$providers = array_map(
 			fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label(), 'worksOutTax' => $this->providers->worksOutTax($provider)],
-			$this->providers->forCart(false),
+			$this->providers->forCart($view->hasSubscription()),
 		);
 		// The store works out the tax for an order paid with any provider
 		// that does not work it out itself, and for one that costs nothing.

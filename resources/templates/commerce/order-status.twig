@@ -6,6 +6,7 @@
 	Autoescape is off in this app, so every value from the order is escaped.
 
 	order, token, base, polls, waiting  as in order-status-poll.twig
+	subscriptionUrl                     for a payment on a subscription: the signed address of its page; '' otherwise
 #}
 <!doctype html>
 <html lang="en">
@@ -67,6 +68,9 @@
 			<tr><th scope="row" colspan="2">Total</th><td><strong>{{ order.grandTotal|money(order.currency) }}</strong></td></tr>
 		</tfoot>
 	</table>
+	{% if subscriptionUrl %}
+		<p class="commerce-order-subscription"><a href="{{ subscriptionUrl|e('html_attr') }}">Manage your subscription</a></p>
+	{% endif %}
 </main>
 {{ cms.assetsBody({except: ['forms', 'content', 'gallery']}) }}
 </body>

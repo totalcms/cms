@@ -39,6 +39,9 @@ A product's own `price` field is different: it is written as you typed it (`19.9
 | `providers()` | The ways to pay: a list of `{id, label}`. |
 | `order(orderId, token)` | One order, for someone holding its signed link, or `null`. |
 | `orders(limit)` | The signed-in customer's orders, newest first. Empty for a guest. |
+| `subscriptions()` | The signed-in customer's [subscriptions](docs/commerce/subscriptions), newest first. Each has `status`, `lines`, `recurringTotal`, `interval`, `intervalCount`, `currentPeriodEnd`, `cancelAtPeriodEnd` and `url`, its signed page. Empty for a guest. |
+| `subscription(id, token)` | One subscription, for the customer it belongs to or for someone holding its signed link. Also has `orders`, the payments made for it. `null` when it is not theirs. |
+| `subscriptionUrl(subscription)` | The signed address of a subscription's own page. In a mailer, give it `data`. |
 | `embed(order, token)` | The payment form for an order, on [your own payment page](docs/commerce/cart-and-checkout#paying-on-your-own-page). |
 | `format(amount, currency)` | The same as the `money` filter. |
 

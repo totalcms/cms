@@ -203,6 +203,8 @@ $menu = [
 			['title' => 'Shipping',               'path' => 'commerce/shipping'],
 			['title' => 'Cart and Checkout',      'path' => 'commerce/cart-and-checkout'],
 			['title' => 'Digital Delivery',       'path' => 'commerce/digital-delivery'],
+			['title' => 'Subscriptions',          'path' => 'commerce/subscriptions'],
+			['title' => 'Memberships',            'path' => 'commerce/memberships'],
 			['title' => 'Orders',                 'path' => 'commerce/orders'],
 			['title' => 'Events and Extensions',  'path' => 'commerce/events-and-extensions'],
 		],

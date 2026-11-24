@@ -148,16 +148,15 @@ it('asks the provider to send the event again when handling it fails, and handle
 		->and(($this->lines)())->toHaveCount(1);
 });
 
-it('ignores a kind of event nothing handles yet, and does not remember it', function (): void {
+it('answers an event about a subscription it has never heard of as handled: sending it again will not help', function (): void {
 	$event = new SubscriptionEvent('fake', 'evt_s1', SubscriptionEventType::Renewed, 'sub-1', 'sub_ref');
 	$this->fake->queueEvent($event);
 	$this->fake->queueEvent($event);
 	$first = ($this->hook)();
 	$again = ($this->hook)();
 
-	expect(($this->json)($first))->toBe(['ignored' => true])
-		// Not a duplicate: when something does handle it, a retry must reach it.
-		->and(($this->json)($again))->toBe(['ignored' => true]);
+	expect(($this->json)($first))->toBe(['ok' => true])
+		->and(($this->json)($again))->toBe(['duplicate' => true]);
 });
 
 it('answers an event for an order it has never heard of as handled: sending it again will not help', function (): void {

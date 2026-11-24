@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Cart;
 
 use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Discount\DiscountLine;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
@@ -53,13 +56,24 @@ final readonly class CartPricer
 			$unit    = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx);
 			$total   = $unit->unitPrice->multiply($item->qty);
 
-			$lines[]         = new CartLineView($key, $product->id, $item->variantId, $product->title, $variant->title ?? '', $product->image, $item->qty, $unit->unitPrice, $total, $unit->source);
+			$every           = $this->recurrence($product, $variant);
+			$lines[]         = new CartLineView($key, $product->id, $item->variantId, $product->title, $variant->title ?? '', $product->image, $item->qty, $unit->unitPrice, $total, $unit->source, 0, $product->billing, $every->interval ?? '', $every->intervalCount ?? 0, $every->trialDays ?? 0);
 			$discountLines[] = new DiscountLine($key, $product->id, $product->category, $total->amount(), false, false);
 			$subtotal        = $subtotal->add($total);
 			$count += $item->qty;
 		}
 
 		return ['lines' => $lines, 'discountLines' => $discountLines, 'items' => $items, 'subtotal' => $subtotal, 'count' => $count, 'notices' => $notices];
+	}
+
+	/** How often a line is billed; null for one paid for once, or a plan whose period cannot be billed. */
+	private function recurrence(ProductView $product, ?VariantView $variant): ?Recurrence
+	{
+		try {
+			return $product->recurrence($variant);
+		} catch (CommerceException) {
+			return null;
+		}
 	}
 
 	private function sellable(ProductView $product, string $variantId): bool

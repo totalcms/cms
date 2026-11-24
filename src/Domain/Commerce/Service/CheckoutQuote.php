@@ -21,6 +21,9 @@ final readonly class CheckoutQuote
 	 * @param bool   $taxAtPayment  the payment provider works the tax out, when the buyer pays
 	 * @param bool   $taxPending    the store charges tax by its own rates and does not know where the buyer is yet
 	 * @param string $problem       why this order cannot be checked out as it stands, in the buyer's words; '' when it can
+	 * @param int    $recurringTotal for a cart with a plan: what is charged every period after the first payment; 0 otherwise
+	 * @param string $interval      for a cart with a plan: day, week, month or year
+	 * @param int    $intervalCount for a cart with a plan: every this many intervals
 	 *
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") a value object: every field is one line of the totals a buyer is shown
 	 */
@@ -40,6 +43,9 @@ final readonly class CheckoutQuote
 		public bool $taxPending,
 		public int $total,
 		public string $problem = '',
+		public int $recurringTotal = 0,
+		public string $interval = '',
+		public int $intervalCount = 0,
 	) {
 	}
 
@@ -67,6 +73,9 @@ final readonly class CheckoutQuote
 			taxPending: $storeTaxes && !$knowsWhere,
 			total: $totals->grandTotal,
 			problem: $problem,
+			recurringTotal: $draft->subscription->totals->grandTotal ?? 0,
+			interval: $draft->subscription->recurrence->interval ?? '',
+			intervalCount: $draft->subscription->recurrence->intervalCount ?? 0,
 		);
 	}
 

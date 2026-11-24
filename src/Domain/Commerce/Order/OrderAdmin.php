@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
@@ -32,6 +33,7 @@ final readonly class OrderAdmin
 		private ReceiptQueuer $receipts,
 		private PaymentEventProcessor $payments,
 		private DownloadIssuer $downloads,
+		private SubscriptionEventProcessor $access,
 	) {
 	}
 
@@ -155,6 +157,8 @@ final readonly class OrderAdmin
 		// What the store delivers itself comes first: a download whose file
 		// was added to the product after the order was paid.
 		$this->orders->withLock($id, fn (OrderData $order): OrderData => $this->fulfillment->settle($this->downloads->issue($order)));
+		// And a group the buyer could not be given the first time.
+		$this->access->syncFor($this->orders->find($id) ?? throw CommerceException::orderNotFound());
 		$this->fulfillment->announce($id);
 		$this->fulfillment->redispatchPaid($id);
 

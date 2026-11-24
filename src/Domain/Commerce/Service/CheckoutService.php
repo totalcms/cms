@@ -33,6 +33,10 @@ use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Payment\ProviderException;
 use TotalCMS\Domain\Commerce\Payment\TransactionLedger;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Factory\LogChannel;
@@ -70,6 +74,7 @@ final readonly class CheckoutService
 		private TransactionLedger $ledger,
 		private PaymentEventProcessor $processor,
 		private TaxCalculator $tax,
+		private SubscriptionRepository $subscriptions,
 		private CommerceSettings $settings,
 		private Config $config,
 		LoggerFactory $loggerFactory,
@@ -108,12 +113,21 @@ final readonly class CheckoutService
 			throw CommerceException::checkoutInvalid($refusal);
 		}
 		$this->cart->verifyStock();
+		$this->requireAccount($draft);
 
 		$cartKey = $this->cart->checkoutKey();
 		$this->cancelStalePending($cartKey);
 		$order = $this->orders->create($draft->withMetadata(['cartKey' => $cartKey] + $draft->metadata, []), $provider?->id() ?? self::FREE);
 
-		$start = $provider instanceof PaymentProvider ? $this->toProvider($order, $draft, $provider) : $this->paidForNothing($order);
+		// The part billed again every period waits, pending, for this order's payment.
+		$subscription = null;
+		if ($draft->subscription instanceof SubscriptionDraft) {
+			$subscription = $this->subscriptions->createPending($draft->subscription, $order);
+			// The order says which subscription it started, now that there is one.
+			$order        = $this->orders->withLock($order->id(), static fn (OrderData $fresh): OrderData => $fresh->with(['subscriptionId' => $subscription->id()]));
+		}
+
+		$start = $provider instanceof PaymentProvider ? $this->toProvider($order, $draft, $provider, $subscription) : $this->paidForNothing($order);
 		$this->cart->markCheckout($order->id());
 
 		return $start;
@@ -163,6 +177,7 @@ final readonly class CheckoutService
 		$cancelled = 0;
 		foreach ($this->orders->pendingForCart($cartKey) as $stale) {
 			$this->cancel($stale->id());
+			$this->cancelPendingSubscription($stale->subscriptionId());
 			$cancelled++;
 		}
 
@@ -193,6 +208,41 @@ final readonly class CheckoutService
 		}
 	}
 
+	/**
+	 * The subscription an order was to start will never start: its order was
+	 * given up on. Only one still waiting is closed; nobody is told, because
+	 * nothing ever began.
+	 */
+	public function cancelPendingSubscription(string $subscriptionId): void
+	{
+		if ($subscriptionId === '' || !$this->subscriptions->exists($subscriptionId)) {
+			return;
+		}
+
+		$this->subscriptions->withLock($subscriptionId, static fn (SubscriptionData $subscription): SubscriptionData => $subscription->status() === SubscriptionData::PENDING
+			? $subscription->with(['status' => SubscriptionData::CANCELED, 'canceledAt' => date(DATE_ATOM)])
+			: $subscription);
+	}
+
+	/**
+	 * A line that gives its buyer an access group gives it to an account,
+	 * so somebody has to be signed in to one.
+	 *
+	 * @throws CommerceException `account_required`
+	 */
+	private function requireAccount(OrderDraft $draft): void
+	{
+		if ($draft->customerId !== '') {
+			return;
+		}
+
+		foreach ($draft->lines as $line) {
+			if ($line->accessGroup !== '') {
+				throw CommerceException::accountRequired();
+			}
+		}
+	}
+
 	/** @throws CommerceException when the provider cannot take this order */
 	private function provider(string $id, OrderDraft $draft): PaymentProvider
 	{
@@ -205,14 +255,15 @@ final readonly class CheckoutService
 		throw CommerceException::checkoutUnavailable();
 	}
 
-	private function toProvider(OrderData $order, OrderDraft $draft, PaymentProvider $provider): CheckoutStart
+	private function toProvider(OrderData $order, OrderDraft $draft, PaymentProvider $provider, ?SubscriptionData $subscription = null): CheckoutStart
 	{
 		$this->events->dispatch(CoreEvent::ORDER_CREATED, $order, $order->grandTotal());
 
 		try {
-			$session = $provider->createCheckout($this->request($order, $draft, $this->uiModeFor($provider)));
+			$session = $provider->createCheckout($this->request($order, $draft, $this->uiModeFor($provider), $subscription));
 		} catch (ProviderException $e) {
 			$this->cancel($order->id());
+			$this->cancelPendingSubscription($order->subscriptionId());
 			// The provider's code, never its message: that can quote the request.
 			$this->logger->error('A payment provider could not start a checkout; the order was cancelled', ['provider' => $provider->id(), 'orderId' => $order->id(), 'code' => $e->providerCode]);
 
@@ -280,10 +331,12 @@ final readonly class CheckoutService
 		return new CheckoutStart($order, $this->url('return', $order));
 	}
 
-	private function request(OrderData $order, OrderDraft $draft, string $uiMode): CheckoutRequest
+	private function request(OrderData $order, OrderDraft $draft, string $uiMode, ?SubscriptionData $subscription = null): CheckoutRequest
 	{
-		$zero     = Money::zero($draft->currency);
-		$metadata = ['orderId' => $order->id(), 'orderNumber' => (string)$order->number()];
+		$again    = $draft->subscription;
+		// The code is told to the provider by name, never as an amount: what
+		// it takes off is already in the totals.
+		$metadata = ['orderId' => $order->id(), 'orderNumber' => (string)$order->number()] + array_filter(['discountCode' => $order->discountCode()]);
 		foreach ($draft->metadata as $key => $value) {
 			if (is_scalar($value) && !isset($metadata[$key])) {
 				$metadata[$key] = (string)$value;
@@ -295,7 +348,16 @@ final readonly class CheckoutService
 			orderNumber: $order->number(),
 			total: $order->grandTotalMoney(),
 			lines: array_values(array_map(
-				static fn (OrderLineDraft $line): CheckoutLineSummary => new CheckoutLineSummary($line->title, $line->qty, Money::of($line->unitPrice, $draft->currency), Money::of($line->discountTotal, $draft->currency), $zero, taxable: $line->taxable),
+				static fn (OrderLineDraft $line): CheckoutLineSummary => new CheckoutLineSummary(
+					$line->title,
+					$line->qty,
+					Money::of($line->unitPrice, $draft->currency),
+					Money::of($line->discountTotal, $draft->currency),
+					// What the code takes off this line on every later payment.
+					Money::of($again?->lines[$line->lineId]->discountTotal ?? 0, $draft->currency),
+					$line->isRecurring() ? new Recurrence($line->interval, $line->intervalCount, $line->trialDays) : null,
+					$line->taxable,
+				),
 				$draft->lines,
 			)),
 			shipping: Money::of($draft->totals->shippingTotal, $draft->currency),
@@ -307,11 +369,32 @@ final readonly class CheckoutService
 			returnUrl: $uiMode === 'embedded' ? $this->url('return', $order) : '',
 			metadata: $metadata,
 			idempotencyKey: 'checkout-' . $order->id(),
+			mode: $again instanceof SubscriptionDraft ? 'subscription' : 'payment',
 			uiMode: $uiMode,
+			recurringTotal: $again instanceof SubscriptionDraft ? Money::of($again->totals->grandTotal, $draft->currency) : null,
+			recurringTax: $again instanceof SubscriptionDraft ? Money::of($again->totals->taxMode === TaxCalculator::EXCLUSIVE ? $again->totals->taxTotal : 0, $draft->currency) : null,
+			subscriptionId: $subscription?->id() ?? '',
+			providerCustomerRef: $subscription instanceof SubscriptionData ? $this->knownCustomer($subscription) : '',
 			providerTax: $order->taxMode() === TaxCalculator::PROVIDER,
 			shipTo: $order->taxMode() === TaxCalculator::PROVIDER && $draft->ships() ? $draft->shippingAddress : null,
 			taxIncluded: $this->tax->mode() === TaxCalculator::INCLUSIVE,
 		);
+	}
+
+	/**
+	 * The buyer's customer at this provider, from a subscription they had
+	 * before, so the provider keeps one customer for one person. '' for a
+	 * guest, or a first subscription.
+	 */
+	private function knownCustomer(SubscriptionData $new): string
+	{
+		foreach ($this->subscriptions->forCustomer($new->customerCollection(), $new->customerId()) as $earlier) {
+			if ($earlier->provider() === $new->provider() && $earlier->providerCustomerRef() !== '') {
+				return $earlier->providerCustomerRef();
+			}
+		}
+
+		return '';
 	}
 
 	private function cancel(string $orderId): void

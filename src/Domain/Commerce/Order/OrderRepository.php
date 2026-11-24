@@ -40,7 +40,7 @@ final readonly class OrderRepository
 	 * Store a draft as a new order: pending, unpaid, with its number and the
 	 * secret that signs its links.
 	 */
-	public function create(OrderDraft $draft, string $provider): OrderData
+	public function create(OrderDraft $draft, string $provider, string $subscriptionId = ''): OrderData
 	{
 		$totals = $draft->totals;
 		$lines  = [];
@@ -61,7 +61,7 @@ final readonly class OrderRepository
 			'email'                => $draft->email,
 			'customerCollection'   => $draft->customerCollection,
 			'customerId'           => $draft->customerId,
-			'subscriptionId'       => '',
+			'subscriptionId'       => $subscriptionId,
 			'lines'                => $lines,
 			'subtotal'             => $totals->subtotal,
 			'discountTotal'        => $totals->discountTotal,
@@ -92,6 +92,42 @@ final readonly class OrderRepository
 		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($orders, $data));
 
 		return $this->find($data['id']) ?? new OrderData($data);
+	}
+
+	/**
+	 * The order for one period of a subscription. Its id is worked out from
+	 * the provider's invoice, so the same invoice is always the same order.
+	 *
+	 * @param array<string,mixed> $fields what the subscription says of it: lines, totals, the subscriber
+	 */
+	public function createRenewal(string $id, array $fields): OrderData
+	{
+		$now  = date(DATE_ATOM);
+		$data = $fields + [
+			'id'                   => $id,
+			'number'               => $this->numberer->next(),
+			'kind'                 => OrderData::KIND_RENEWAL,
+			'status'               => 'open',
+			'paymentStatus'        => 'pending',
+			'fulfillmentStatus'    => 'unfulfilled',
+			'needsAttention'       => '',
+			'refundedTotal'        => 0,
+			'shippingTotal'        => 0,
+			'shippingLine'         => [],
+			'shippingAddress'      => [],
+			'discountLine'         => [],
+			'providerPaymentRef'   => '',
+			'providerClientSecret' => '',
+			'flags'                => [],
+			'accessToken'          => bin2hex(random_bytes(32)),
+			'created'              => $now,
+			'updated'              => $now,
+		];
+
+		$orders = $this->collection();
+		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($orders, $data));
+
+		return $this->find($id) ?? new OrderData($data);
 	}
 
 	public function exists(string $id): bool

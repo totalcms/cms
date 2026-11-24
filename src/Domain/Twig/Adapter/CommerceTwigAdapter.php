@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\CustomerOrders;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
@@ -21,6 +22,8 @@ use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Query\Service\TemplateQuery;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -34,6 +37,11 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  * @SuppressWarnings("PHPMD.TooManyPublicMethods") each public method is a
  *                                                function a template calls
  *                                                as `cms.commerce.…`
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") the one door templates
+ *                                                  have to the store: each
+ *                                                  function reaches another
+ *                                                  part of it, and does no
+ *                                                  work of its own
  */
 final readonly class CommerceTwigAdapter
 {
@@ -60,7 +68,9 @@ final readonly class CommerceTwigAdapter
 		private MoneyFilter $money,
 		private CustomerOrders $orders,
 		private DownloadLinks $downloadLinks,
+		private CustomerSubscriptions $subscriptions,
 		private \Closure $checkout,
+		private \Closure $cart,
 		private \Closure $twig,
 		private \Closure $dashboard,
 	) {
@@ -138,7 +148,7 @@ final readonly class CommerceTwigAdapter
 	 * What a product costs this buyer, or null when they cannot see it. With
 	 * no variant named it is the product's own price.
 	 *
-	 * @return array{amount: int, listAmount: int, currency: string, formatted: string, listFormatted: string, source: string}|null
+	 * @return array{amount: int, listAmount: int, currency: string, formatted: string, listFormatted: string, source: string, billing: string, interval: string, intervalCount: int, trialDays: int}|null
 	 */
 	public function price(string $productId, string $variantId = ''): ?array
 	{
@@ -154,6 +164,13 @@ final readonly class CommerceTwigAdapter
 
 		$priced = $this->pricing->unitPrice($product, $variant, 1, $this->contexts->current());
 
+		try {
+			$every = $product->recurrence($variant);
+		} catch (CommerceException) {
+			// A plan billed on a period no provider can bill is not for sale.
+			return null;
+		}
+
 		return [
 			'amount'        => $priced->unitPrice->amount(),
 			'listAmount'    => $priced->listPrice->amount(),
@@ -161,6 +178,11 @@ final readonly class CommerceTwigAdapter
 			'formatted'     => ($this->money)($priced->unitPrice->amount(), $priced->unitPrice->currency()),
 			'listFormatted' => ($this->money)($priced->listPrice->amount(), $priced->listPrice->currency()),
 			'source'        => $priced->source,
+			// How it is billed: `once`, or `recurring` every `intervalCount` `interval`s.
+			'billing'       => $product->billing,
+			'interval'      => $every->interval ?? '',
+			'intervalCount' => $every->intervalCount ?? 0,
+			'trialDays'     => $every->trialDays ?? 0,
 		];
 	}
 
@@ -258,6 +280,75 @@ final readonly class CommerceTwigAdapter
 	}
 
 	/**
+	 * The signed-in customer's subscriptions, newest first, each as
+	 * {@see subscription()} gives it, without its payments. None for a guest.
+	 *
+	 * Not behind the store check, like the subscription's own page: someone
+	 * who is still being charged can always see what for.
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	public function subscriptions(): array
+	{
+		return $this->subscriptions->mine();
+	}
+
+	/**
+	 * One subscription, for the customer it belongs to or for someone
+	 * holding its link (the `t` its page carries): its status, lines,
+	 * `recurringTotal`, `interval`, `currentPeriodEnd`, `cancelAtPeriodEnd`,
+	 * `url` (its signed page) and `orders` (the payments made for it).
+	 *
+	 * @return array<string,mixed>|null null when it is not theirs to see
+	 */
+	public function subscription(string $subscriptionId, string $token = ''): ?array
+	{
+		return $this->subscriptions->byLink($subscriptionId, $token);
+	}
+
+	/**
+	 * The signed address of a subscription's own page, where its subscriber
+	 * cancels and changes their card. For a mailer: give it `data`, the
+	 * whole subscription, or the whole order of one of its payments. For a
+	 * page: give it a subscription this object handed you. '' for anything else.
+	 */
+	public function subscriptionUrl(mixed $record): string
+	{
+		if (!is_array($record)) {
+			return '';
+		}
+		// One this object handed out already carries its address.
+		if (is_string($record['url'] ?? null) && !isset($record['accessToken']) && isset($record['recurringTotal'])) {
+			$mine = $this->subscriptions->byLink(is_string($record['id'] ?? null) ? $record['id'] : '', $this->linkToken($record['url']));
+
+			return is_array($mine) ? (string)$mine['url'] : '';
+		}
+
+		$id     = $record['id'] ?? '';
+		$secret = $record['accessToken'] ?? '';
+		if (!is_string($id) || !is_string($secret)) {
+			return '';
+		}
+
+		$subscription = $this->subscriptions->bySecret($id, $secret);
+		if ($subscription instanceof SubscriptionData) {
+			return $this->subscriptions->url($subscription);
+		}
+
+		$order = $this->orders->bySecret($id, $secret);
+
+		return $order instanceof OrderData ? $this->subscriptions->urlForOrder($order) : '';
+	}
+
+	/** The `t` a signed address carries. */
+	private function linkToken(string $url): string
+	{
+		parse_str((string)parse_url($url, PHP_URL_QUERY), $query);
+
+		return is_string($query['t'] ?? null) ? $query['t'] : '';
+	}
+
+	/**
 	 * The order an array is, when the array is the whole of it: it carries
 	 * the order's secret, which only the store's own record does. An "order"
 	 * a page made up from what a visitor sent does not.
@@ -318,7 +409,8 @@ final readonly class CommerceTwigAdapter
 
 		return array_map(
 			static fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label()],
-			$this->providers->forCart(false),
+			// A cart with a plan in it can be paid for only by a provider that bills subscriptions.
+			$this->providers->forCart(($this->cart)()->hasSubscription()),
 		);
 	}
 

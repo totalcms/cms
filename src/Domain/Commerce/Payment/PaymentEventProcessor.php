@@ -169,6 +169,9 @@ final readonly class PaymentEventProcessor
 		foreach ($effects as $effect) {
 			$this->run($orderId, $event, $effect);
 		}
+		// What other parts of the store do about the order now: a
+		// subscription that begins with it, a group it gives its buyer.
+		$this->extras->finish($orderId, $event);
 		$this->fulfillment->announce($orderId);
 
 		return $transition;

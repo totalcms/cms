@@ -14,6 +14,8 @@ final readonly class VariantView
 	/**
 	 * @param float|null          $price   null when the variant has no price of its own (empty or 0) and the product's applies
 	 * @param array<string,mixed> $options what the variant is, such as ['size' => 'L']
+	 * @param string|null         $interval      for a plan: how often this variant is billed, when not as the product is
+	 * @param int|null            $intervalCount for a plan: every how many of them, when not as the product is
 	 */
 	public function __construct(
 		public string $id,
@@ -24,6 +26,8 @@ final readonly class VariantView
 		public bool $active,
 		public array $options,
 		public string $image,
+		public ?string $interval = null,
+		public ?int $intervalCount = null,
 	) {
 	}
 
@@ -44,6 +48,8 @@ final readonly class VariantView
 			active: filter_var($item['active'] ?? true, FILTER_VALIDATE_BOOLEAN),
 			options: is_array($options) ? $options : [],
 			image: '',
+			interval: is_string($item['interval'] ?? null) && trim($item['interval']) !== '' ? trim($item['interval']) : null,
+			intervalCount: is_numeric($item['intervalCount'] ?? null) && (int)$item['intervalCount'] > 0 ? (int)$item['intervalCount'] : null,
 		);
 	}
 

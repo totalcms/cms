@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
+
 /**
  * An order the server has built and priced, not yet stored or paid.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList") a value object: every field is one fact about the order, named
  */
 final readonly class OrderDraft
 {
@@ -13,6 +17,7 @@ final readonly class OrderDraft
 	 * @param array<string,OrderLineDraft>     $lines      keyed l1, l2, … in cart order
 	 * @param array<string,string>             $attributes the checkout attributes the settings allow
 	 * @param array<string,mixed>              $metadata   written by order-building listeners
+	 * @param SubscriptionDraft|null           $subscription the part of the order that is billed again every period; null when nothing in it is
 	 */
 	public function __construct(
 		public string $currency,
@@ -25,6 +30,7 @@ final readonly class OrderDraft
 		public array $metadata = [],
 		public string $customerCollection = '',
 		public string $customerId = '',
+		public ?SubscriptionDraft $subscription = null,
 	) {
 	}
 
@@ -52,14 +58,18 @@ final readonly class OrderDraft
 			$updated[$id] = isset($lines[$id]) ? $line->withMetadata($lines[$id]) : $line;
 		}
 
-		return new self($this->currency, $this->email, $updated, $this->totals, $this->shippingAddress, $this->billingAddress, $this->attributes, $order, $this->customerCollection, $this->customerId);
+		return new self($this->currency, $this->email, $updated, $this->totals, $this->shippingAddress, $this->billingAddress, $this->attributes, $order, $this->customerCollection, $this->customerId, $this->subscription);
 	}
 
 	/** The same order with its tax left to the payment provider: none of the store's own on it. */
 	public function leftToProvider(): self
 	{
-		$lines = array_map(static fn (OrderLineDraft $line): OrderLineDraft => $line->withTax(0), $this->lines);
+		$untaxed = static fn (OrderLineDraft $line): OrderLineDraft => $line->withTax(0);
+		// What is billed each period is left to the provider as well.
+		$again   = $this->subscription instanceof SubscriptionDraft
+			? new SubscriptionDraft($this->subscription->recurrence, array_map($untaxed, $this->subscription->lines), $this->subscription->totals->leftToProvider(), $this->subscription->discountCode)
+			: null;
 
-		return new self($this->currency, $this->email, $lines, $this->totals->leftToProvider(), $this->shippingAddress, $this->billingAddress, $this->attributes, $this->metadata, $this->customerCollection, $this->customerId);
+		return new self($this->currency, $this->email, array_map($untaxed, $this->lines), $this->totals->leftToProvider(), $this->shippingAddress, $this->billingAddress, $this->attributes, $this->metadata, $this->customerCollection, $this->customerId, $again);
 	}
 }

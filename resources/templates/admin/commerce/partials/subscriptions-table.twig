@@ -1,0 +1,70 @@
+{#
+	The subscriptions table, with its count and its pager. The whole of what
+	a filter request from the subscriptions page is answered with.
+
+	rows     list of {subscription, plan, status: {label, tone}, attention}
+	total    how many subscriptions match
+	page     the page shown, of `pages`
+	filters  the filters in force
+	query    the filters as a query string
+#}
+<div id="commerce-subscriptions-table" class="commerce-orders-table">
+	<p class="commerce-count">{{ total|number_format }} {{ total == 1 ? 'subscription' : 'subscriptions' }}{% if pages > 1 %} · page {{ page }} of {{ pages }}{% endif %}</p>
+
+	{% if rows is empty %}
+		<div class="dash-empty-state">
+			<em>{{ filters is empty ? 'No subscriptions yet. They appear here when a buyer checks out with a recurring product.' : 'No subscriptions match these filters.' }}</em>
+		</div>
+	{% else %}
+		<div class="commerce-table-wrap">
+			<table class="admin-table">
+				<thead>
+					<tr>
+						<th>Subscriber</th>
+						<th>Plan</th>
+						<th class="commerce-num">Amount</th>
+						<th>Status</th>
+						<th>Next payment</th>
+						<th>Started</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in rows %}
+						{% set s = row.subscription %}
+						<tr{% if row.attention %} class="commerce-attention"{% endif %}>
+							<td class="commerce-customer">
+								<a href="commerce/subscriptions/{{ s.id|e }}"><span class="dash-truncate" title="{{ s.email|e }}">{{ s.email|e }}</span></a>
+								{% if row.attention %}<span class="dash-badge sm warning">{{ row.attention|e }}</span>{% endif %}
+							</td>
+							<td>{{ row.plan|e }}</td>
+							<td class="commerce-num">
+								{{ s.recurringTotal|money(s.currency) }}
+								<span class="commerce-sub">every {{ s.intervalCount > 1 ? s.intervalCount ~ ' ' ~ s.interval ~ 's' : s.interval }}</span>
+							</td>
+							<td><span class="dash-badge sm {{ row.status.tone }}">{{ row.status.label|e }}</span></td>
+							<td class="commerce-when">
+								{% if s.isLive and not s.cancelAtPeriodEnd and s.currentPeriodEnd %}<time datetime="{{ s.currentPeriodEnd|e }}">{{ s.currentPeriodEnd|date('M j, Y') }}</time>{% endif %}
+							</td>
+							<td class="commerce-when">
+								{% if s.created %}<time datetime="{{ s.created|e }}">{{ s.created|date('M j, Y') }}</time>{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		{% if pages > 1 %}
+			<nav class="commerce-pager" aria-label="Pages of subscriptions">
+				{% if page > 1 %}
+					<a class="dash-button transparent" href="commerce/subscriptions?{{ (query ? query ~ '&' : '')|e }}page={{ page - 1 }}">Newer</a>
+				{% else %}
+					<span></span>
+				{% endif %}
+				{% if page < pages %}
+					<a class="dash-button transparent" href="commerce/subscriptions?{{ (query ? query ~ '&' : '')|e }}page={{ page + 1 }}">Older</a>
+				{% endif %}
+			</nav>
+		{% endif %}
+	{% endif %}
+</div>

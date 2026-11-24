@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
 use TotalCMS\Domain\Commerce\Cart\CartItem;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Discount\DiscountService;
@@ -11,6 +14,7 @@ use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Money\Money;
 
@@ -28,6 +32,7 @@ final readonly class OrderBuilder
 		private TotalsCalculator $totals,
 		private OrderBuildingRegistry $listeners,
 		private DiscountService $discounts,
+		private CommerceSettings $settings,
 	) {
 	}
 
@@ -73,6 +78,7 @@ final readonly class OrderBuilder
 			attributes: $input->attributes,
 			customerCollection: (string)$ctx->customerCollection,
 			customerId: (string)$ctx->customerId,
+			subscription: $this->subscription($lines, $input, $ctx->currency, $discount),
 		));
 	}
 
@@ -81,6 +87,7 @@ final readonly class OrderBuilder
 		$product = $this->catalog->purchasable($item->productId, $item->variantId);
 		$variant = $item->variantId === '' ? null : ($product->variants[$item->variantId] ?? null);
 		$priced  = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx);
+		$every   = $product->recurrence($variant);
 
 		return new OrderLineDraft(
 			lineId: $lineId,
@@ -98,7 +105,42 @@ final readonly class OrderBuilder
 			requiresShipping: $product->requiresShipping,
 			meta: $product->meta,
 			category: $product->category,
+			billing: $every instanceof Recurrence ? OrderLineDraft::RECURRING : OrderLineDraft::ONCE,
+			interval: $every->interval ?? '',
+			intervalCount: $every->intervalCount ?? 0,
+			trialDays: $every->trialDays ?? 0,
+			// Only a group on the store's allow-list is ever sold. Any other is
+			// dropped here, so nothing later can give it.
+			accessGroup: in_array($product->accessGroup, $this->settings->grantableGroups(), true) ? $product->accessGroup : '',
 		);
+	}
+
+	/**
+	 * The part of the order that is billed again every period: its
+	 * recurring lines, added up on their own with the discount that repeats
+	 * and the tax for the same address. Null when nothing in it recurs.
+	 *
+	 * @param array<string,OrderLineDraft> $lines
+	 */
+	private function subscription(array $lines, CheckoutInput $input, string $currency, ?AppliedDiscount $discount): ?SubscriptionDraft
+	{
+		$recurring = array_filter($lines, static fn (OrderLineDraft $line): bool => $line->isRecurring());
+		if ($recurring === []) {
+			return null;
+		}
+
+		// The same code, as it applies to every later payment.
+		$again = $discount instanceof AppliedDiscount
+			? new AppliedDiscount($discount->code, $discount->type, $discount->value, array_sum(array_intersect_key($discount->recurringLineAmounts, $recurring)), $discount->recurringLineAmounts, $discount->recurringLineAmounts, false, $discount->recurring)
+			: null;
+		$totals = $this->totals->calculate($recurring, $input->shipping ?? $input->billing, null, $currency, $again);
+
+		$first = $recurring[array_key_first($recurring)];
+		foreach ($recurring as $lineId => $line) {
+			$recurring[$lineId] = $line->withDiscount($totals->lineDiscount[$lineId] ?? 0)->withTax($totals->lineTax[$lineId] ?? 0);
+		}
+
+		return new SubscriptionDraft(new Recurrence($first->interval, $first->intervalCount, $first->trialDays), $recurring, $totals, $again->code ?? '');
 	}
 
 	private function title(ProductView $product, ?VariantView $variant): string

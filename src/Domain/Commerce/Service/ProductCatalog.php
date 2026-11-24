@@ -85,7 +85,8 @@ final readonly class ProductCatalog
 	 *
 	 * @throws CommerceException `product_unavailable` when the product is unknown or not active;
 	 *                           `variant_required` when it has variants and none is named;
-	 *                           `variant_invalid` when the variant is unknown or switched off, or one is named for a product without variants
+	 *                           `variant_invalid` when the variant is unknown or switched off, or one is named for a product without variants;
+	 *                           `subscription_ships` for a plan that ships; `product_unavailable` for a plan billed on a period no provider can bill
 	 */
 	public function purchasable(string $productId, string $variantId): ProductView
 	{
@@ -94,8 +95,18 @@ final readonly class ProductCatalog
 			throw CommerceException::productUnavailable();
 		}
 
+		// A provider bills a period. It does not send a parcel each time.
+		if ($product->isRecurring() && $product->requiresShipping) {
+			throw CommerceException::subscriptionShips();
+		}
+
 		if (!$product->hasVariants) {
-			return $variantId === '' ? $product : throw CommerceException::variantInvalid();
+			if ($variantId !== '') {
+				throw CommerceException::variantInvalid();
+			}
+			$product->recurrence();
+
+			return $product;
 		}
 		if ($variantId === '') {
 			throw CommerceException::variantRequired();
@@ -103,6 +114,8 @@ final readonly class ProductCatalog
 		if (!isset($product->variants[$variantId]) || !$product->variants[$variantId]->active) {
 			throw CommerceException::variantInvalid();
 		}
+		// A plan whose billing period no provider can bill is not for sale.
+		$product->recurrence($product->variants[$variantId]);
 
 		return $product;
 	}

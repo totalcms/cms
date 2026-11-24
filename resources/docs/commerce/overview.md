@@ -34,7 +34,9 @@ On a site without the add-on, nothing about Commerce shows: no Orders page, no s
 - **Orders.** A list you can filter and search, a page for each order, and a count of the orders that need you.
 - **Fulfillment.** Mark items as sent, with a tracking number.
 - **Refunds.** Ask the provider for a refund from the order's page.
-- **Events.** Your own code can act when an order is paid, fulfilled, refunded or disputed.
+- **Subscriptions.** Sell something a buyer pays for every week, month or year. Stripe bills each period, and each payment is an order with its own receipt.
+- **Memberships.** A product can put its buyer in an access group, for as long as they pay.
+- **Events.** Your own code can act when an order is paid, fulfilled, refunded or disputed, and when a subscription starts, renews or ends.
 
 ## How a sale works
 
@@ -57,16 +59,17 @@ Commerce adds these collections. You edit products and discount codes like any o
 | `orders` | One object for each order | The store |
 | `transactions` | Every movement of an order's money | The store |
 | `carts` | Carts of signed-in customers | The store |
+| `subscriptions` | One object for each subscription | The store |
 
 ## Not in this version yet
 
-These are designed and on the way. Their settings and fields are already there, and do nothing yet:
-
-- **Subscriptions.**
+- **Free trials** on a subscription.
+- **Subscriptions with PayPal.** A cart with a subscription in it is offered Stripe only.
 
 ## Next
 
 1. [Set up your store](docs/commerce/setup)
 2. [Add products](docs/commerce/products)
 3. [Put a cart and checkout on your site](docs/commerce/cart-and-checkout)
-4. [Work with orders](docs/commerce/orders)
+4. [Sell a subscription](docs/commerce/subscriptions) or a [membership](docs/commerce/memberships)
+5. [Work with orders](docs/commerce/orders)

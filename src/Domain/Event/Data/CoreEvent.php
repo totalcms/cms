@@ -44,6 +44,11 @@ final class CoreEvent
 	public const ORDER_REFUNDED     = 'order.refunded';
 	public const ORDER_DISPUTED     = 'order.disputed';
 
+	public const SUBSCRIPTION_CREATED  = 'subscription.created';
+	public const SUBSCRIPTION_RENEWED  = 'subscription.renewed';
+	public const SUBSCRIPTION_PAST_DUE = 'subscription.past_due';
+	public const SUBSCRIPTION_CANCELED = 'subscription.canceled';
+
 	/**
 	 * Every core event, in a sensible display order.
 	 *
@@ -77,6 +82,10 @@ final class CoreEvent
 		self::ORDER_FULFILLED,
 		self::ORDER_REFUNDED,
 		self::ORDER_DISPUTED,
+		self::SUBSCRIPTION_CREATED,
+		self::SUBSCRIPTION_RENEWED,
+		self::SUBSCRIPTION_PAST_DUE,
+		self::SUBSCRIPTION_CANCELED,
 	];
 
 	/**
