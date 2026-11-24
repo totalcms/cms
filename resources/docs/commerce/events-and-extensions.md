@@ -94,6 +94,34 @@ Every renewal is an order, so `order.paid` fires for each period too, with `kind
 
 A provider can send the same news twice. Each of these events is sent once for the thing it is about: once per subscription for `created` and `canceled`, once per renewal order for `renewed`, once per failed invoice for `past_due`.
 
+
+## Stock events
+
+The store changes a product's stock itself: down when an order is paid, up when a refund's goods come back. It writes the new count without `object.updated`, so a sale does not run every automation you have on products. Listen for these instead:
+
+| Event | When |
+|---|---|
+| `stock.changed` | Every time the store changes a count. |
+| `stock.low` | Once, as a count comes down to **Low Stock At** (Settings → Commerce) with something still left. |
+| `stock.out` | Once, as a count comes down to nothing, or below it for a product that takes back-orders. |
+
+`stock.low` and `stock.out` fire after the `stock.changed` for the same sale. A count that goes straight to nothing fires `stock.out` only.
+
+| Key | Type | Description |
+|---|---|---|
+| `collection` | `string` | The collection products are kept in |
+| `productId` | `string` | The product |
+| `variantId` | `string` | The variant whose count it was; empty for a product without variants |
+| `title`, `sku` | `string` | As on the order line |
+| `before`, `after` | `int` | The count before and after |
+| `change` | `int` | `after` minus `before`: negative for a sale |
+| `reason` | `string` | `sale` or `restock` |
+| `orderId` | `string` | The order that caused it |
+| `lowStockAt` | `int` | The store's Low Stock At when it happened |
+| `actor` | `array` | [Who caused the event](docs/extensions/events#who-caused-the-event) |
+
+A stock number you change by hand on the product's form is an ordinary edit: it fires `object.updated`, not these.
+
 ## Deliver something when an order is paid
 
 A product's **Fulfillment Data** is copied onto its order line as `meta`. This listener issues a license for each line that asks for one, then marks the line delivered:
@@ -164,6 +192,46 @@ $context->addCheckoutValidator(new NeedsAccount());
 ```
 
 A `CheckoutValidator` sees the order the store built, before any payment is asked for. Return the reason to show the buyer, or `null` to allow it. It cannot change the order.
+
+### Add a place to keep downloads
+
+```php
+$context->addDownloadSource(new VaultDownloads());
+```
+
+A `DownloadSource` is a place a digital product's download can be kept: a bucket, a media host. The store asks each source in turn (the product's own file, then extension sources, then the product's Download Link) and the first with something for the product delivers it.
+
+```php
+use TotalCMS\Domain\Commerce\Contract\DownloadSource;
+use TotalCMS\Domain\Commerce\Download\Deliverable;
+use TotalCMS\Domain\Commerce\Download\Delivery;
+
+final class VaultDownloads implements DownloadSource
+{
+    public function id(): string
+    {
+        return 'vault';
+    }
+
+    // Asked whenever an order is shown: keep it cheap.
+    public function find(string $collection, array $product): ?Deliverable
+    {
+        $file = $this->vault->lookup($product['id']);
+
+        return $file ? new Deliverable($file->name, $file->size, 'vaultFile') : null;
+    }
+
+    // Asked once for each download, after the store has counted it.
+    public function deliver(string $collection, array $product): ?Delivery
+    {
+        $file = $this->vault->lookup($product['id']);
+
+        return $file ? Delivery::redirect($file->name, $this->vault->signedUrl($file)) : null;
+    }
+}
+```
+
+Return `Delivery::redirect()` to send the buyer to an address, or `Delivery::stream()` to send the bytes yourself. A source never decides who may download: the store has already checked the buyer's link, that the order is still paid, and that downloads are left. A source that throws is passed over and logged.
 
 ### Write your own data on an order
 

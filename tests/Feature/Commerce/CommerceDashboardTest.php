@@ -10,6 +10,7 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Service\CommerceDashboard;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 
@@ -100,6 +101,14 @@ describe('what is running out', function (): void {
 			['productId' => 'pad', 'variantId' => 'a5', 'title' => 'Pad — A5', 'stock' => 2],
 			['productId' => 'ink', 'variantId' => '', 'title' => 'Ink', 'stock' => 5],
 		])->and(array_column($this->store->lowStock(1), 'productId'))->toBe(['print']);
+	});
+
+	it('goes by the store\'s Low Stock At when no line is given', function (): void {
+		($this->product)(['id' => 'ink', 'title' => 'Ink', 'trackInventory' => true, 'stock' => 5]);
+		$config           = $this->app->getContainer()->get(Config::class);
+		$config->commerce = ['lowStockAt' => 2] + $config->commerce;
+
+		expect(array_column($this->store->lowStock(), 'productId'))->toBe(['print']);
 	});
 });
 

@@ -7,6 +7,9 @@ use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use Tests\Fakes\ClosedCommerceGate;
+use Tests\Fakes\FakeDownloadSource;
+use TotalCMS\Domain\Commerce\Download\DownloadSources;
+use TotalCMS\Domain\Commerce\Download\UrlDownloadSource;
 use TotalCMS\Domain\Commerce\Order\OrderAdmin;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
@@ -273,30 +276,183 @@ describe('downloading', function (): void {
 });
 
 /*
- * The file is the product. The site's ordinary addresses for a file must
- * never hand it over, to anyone.
+ * The file is the product, and it is protected the way any file is: by the
+ * File Access Groups of its collection. The store installs its products
+ * collection with the group `admin`, so a product's file is closed to the
+ * public from the first upload. The buyer's signed link is not one of these
+ * addresses and asks nothing of the buyer but the link.
  */
-describe('the file is served nowhere else', function (): void {
-	it('is not found at the ordinary download and stream addresses', function (string $path): void {
-		expect(get($path)->getStatusCode())->toBeIn([403, 404])
-			->and((string)get($path)->getBody())->not->toContain('%PDF');
+describe('the site\'s ordinary file addresses', function (): void {
+	it('refuse a visitor the product\'s file', function (string $path): void {
+		$res = get($path);
+
+		expect($res->getStatusCode())->toBeIn([302, 401, 403])
+			->and((string)$res->getBody())->not->toContain('%PDF');
 	})->with([
 		'/download/products/guide/download',
 		'/stream/products/guide/download',
-		'/download/products/guide/download/guide.pdf',
-		'/stream/products/guide/download/guide.pdf',
-		'/download/upload/products/guide/download/guide.pdf',
-		'/stream/upload/products/guide/download/guide.pdf',
 	]);
 
-	it('knows a product\'s download from any other file', function (string $collection, string $property, bool $guarded): void {
-		expect($this->c->get(ProductDownload::class)->guards($collection, $property))->toBe($guarded);
+	it('refuse a customer who is signed in but is not in the collection\'s groups', function (): void {
+		seedCommerceStaff($this->app);
+		signInAs($this->app, 'writer', 'auth');
+
+		expect(get('/download/products/guide/download')->getStatusCode())->toBeIn([401, 403]);
+	});
+
+	it('hand it to staff in the collection\'s groups, so the product form\'s own download works', function (): void {
+		seedCommerceStaff($this->app);
+		signInAs($this->app, 'boss', 'auth');
+		$res = get('/download/products/guide/download');
+
+		expect($res->getStatusCode())->toBe(200)
+			->and((string)$res->getBody())->toBe('%PDF-1.4 the guide');
+	});
+
+	it('still hand a buyer the file through their own link', function (): void {
+		$order = ($this->order)();
+
+		expect((string)get(($this->path)(($this->links)($order)[0]['url']))->getBody())->toBe('%PDF-1.4 the guide');
+	});
+});
+
+/*
+ * A product's download need not be a file kept on the site. It can be a
+ * link to a file kept anywhere, and an extension can add a source of its
+ * own (S3 Uploads does). Whatever it is, the buyer is given the same signed
+ * link, and each download is counted the same way; a download that is not
+ * kept here ends with the buyer sent on to where it is.
+ *
+ * The manual is a $12.00 download whose file is a link.
+ */
+describe('a download that is a link', function (): void {
+	beforeEach(function (): void {
+		$this->manualUrl = 'https://files.example.test/manuals/Manual%20v2.zip?edition=2';
+		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'downloadUrl' => $this->manualUrl,
+		]));
+	});
+
+	it('is delivered when the order is paid, under the name of the file it leads to', function (): void {
+		$order = ($this->order)(['manual' => 1]);
+		$links = ($this->links)($order);
+
+		expect(($this->line)($order, 'manual')['fulfillmentStatus'])->toBe('fulfilled')
+			->and($links)->toHaveCount(1)
+			->and($links[0]['fileName'])->toBe('Manual v2.zip')
+			// Nobody knows how big a file kept elsewhere is.
+			->and($links[0]['size'])->toBe(0)
+			->and($links[0]['url'])->toContain('/commerce/download/')
+			->and($links[0]['url'])->not->toContain('files.example.test');
+	});
+
+	it('counts the download, then sends the buyer on to the link', function (): void {
+		$order = ($this->order)(['manual' => 1]);
+		$res   = get(($this->path)(($this->links)($order)[0]['url']));
+
+		expect($res->getStatusCode())->toBe(302)
+			->and($res->getHeaderLine('Location'))->toBe($this->manualUrl)
+			->and($res->getHeaderLine('Cache-Control'))->toContain('no-store')
+			->and($res->getHeaderLine('Referrer-Policy'))->toBe('no-referrer')
+			->and(($this->line)($order, 'manual')['downloads'])->toBe(['count' => 1]);
+	});
+
+	it('stops at the limit, as a file does', function (): void {
+		$config           = $this->c->get(Config::class);
+		$config->commerce = ['downloadMaxCount' => 1] + $config->commerce;
+		$order            = ($this->order)(['manual' => 1]);
+		$url              = ($this->path)(($this->links)($order)[0]['url']);
+		get($url);
+
+		expect(get($url)->getStatusCode())->toBe(410);
+	});
+
+	it('tells the site which field the download came from', function (): void {
+		$heard = [];
+		$this->c->get(EventDispatcher::class)->listen(CoreEvent::FILE_DOWNLOADED, function (array $payload) use (&$heard): void {
+			$heard[] = [$payload['collection'], $payload['id'], $payload['property'], $payload['filename']];
+		});
+		$order = ($this->order)(['manual' => 1]);
+
+		get(($this->path)(($this->links)($order)[0]['url']));
+
+		expect($heard)->toBe([['products', 'manual', 'downloadUrl', 'Manual v2.zip']]);
+	});
+
+	it('gives way to a file: a product with both delivers its file', function (): void {
+		($this->attach)('manual', 'manual.pdf', '%PDF the manual');
+		$order = ($this->order)(['manual' => 1]);
+		$links = ($this->links)($order);
+
+		expect($links[0]['fileName'])->toBe('manual.pdf')
+			->and((string)get(($this->path)($links[0]['url']))->getBody())->toBe('%PDF the manual');
+	});
+
+	it('shows no size for it on the order page', function (): void {
+		$order = ($this->order)(['manual' => 1]);
+		$html  = html_entity_decode((string)get("/commerce/order/{$order->id()}/status?t=" . rawurlencode($this->c->get(OrderAccess::class)->token($order)))->getBody());
+
+		expect($html)->toContain('Manual v2.zip', '5 downloads left')
+			->and(preg_match('/<small>\s*,/', $html))->toBe(0)
+			->and($html)->not->toContain('0 B', '0 bytes');
+	});
+
+	it('names a link with no file in it by its host', function (): void {
+		expect((new UrlDownloadSource())->find('products', ['downloadUrl' => 'https://learn.example.test/'])?->name)->toBe('learn.example.test');
+	});
+
+	it('is no download unless it is a web address', function (mixed $value): void {
+		$source = new UrlDownloadSource();
+
+		expect($source->find('products', ['downloadUrl' => $value]))->toBeNull()
+			->and($source->deliver('products', ['downloadUrl' => $value]))->toBeNull();
 	})->with([
-		'the products collection\'s download' => ['products', 'download', true],
-		'another field of a product'          => ['products', 'images', false],
-		'a field called download elsewhere'   => ['orders', 'download', false],
-		'a collection that does not exist'    => ['nope', 'download', false],
+		'a script'             => ['javascript:alert(1)'],
+		'another kind of link' => ['ftp://files.example.test/a.zip'],
+		'no scheme'            => ['//files.example.test/a.zip'],
+		'not a link'           => ['the manual'],
+		'nothing'              => [''],
+		'not text'             => [['https://files.example.test/a.zip']],
 	]);
+});
+
+describe('a source an extension adds', function (): void {
+	beforeEach(function (): void {
+		$this->fake = new FakeDownloadSource(['course' => 'https://cdn.example.test/kept/course.zip']);
+		$this->c->get(DownloadSources::class)->add($this->fake);
+	});
+
+	it('delivers a product it has something for', function (): void {
+		$order = ($this->order)(['course' => 1]);
+		$links = ($this->links)($order);
+
+		expect(($this->line)($order, 'course')['fulfillmentStatus'])->toBe('fulfilled')
+			->and([$links[0]['fileName'], $links[0]['size']])->toBe(['course.zip', 4096])
+			->and(get(($this->path)($links[0]['url']))->getHeaderLine('Location'))->toBe('https://cdn.example.test/kept/course.zip');
+	});
+
+	it('is asked after the product\'s own file', function (): void {
+		$this->fake->links['guide'] = 'https://cdn.example.test/kept/guide.zip';
+		$order                      = ($this->order)();
+
+		expect(($this->links)($order)[0]['fileName'])->toBe('guide.pdf');
+	});
+
+	it('is asked before the product\'s link', function (): void {
+		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'downloadUrl' => 'https://files.example.test/manual.zip',
+		]));
+		$this->fake->links['manual'] = 'https://cdn.example.test/kept/manual-kept.zip';
+
+		expect(($this->links)(($this->order)(['manual' => 1]))[0]['fileName'])->toBe('manual-kept.zip');
+	});
+
+	it('is passed over when it fails, and the others still deliver', function (): void {
+		$this->fake->broken = true;
+
+		expect(($this->links)(($this->order)())[0]['fileName'])->toBe('guide.pdf')
+			->and(($this->line)(($this->order)(['course' => 1]), 'course')['fulfillmentStatus'])->toBe('unfulfilled');
+	});
 });
 
 describe('where the buyer finds them', function (): void {

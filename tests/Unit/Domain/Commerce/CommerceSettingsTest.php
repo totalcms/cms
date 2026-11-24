@@ -46,6 +46,7 @@ it('has a working default for everything', function (): void {
 		->and($s->storeName())->toBe('shop.example')
 		->and($s->downloadTtlHours())->toBe(72)
 		->and($s->downloadMaxCount())->toBe(5)
+		->and($s->lowStockAt())->toBe(5)
 		->and($s->pendingOrderTtlHours())->toBe(24)
 		->and($s->cartMaxLines())->toBe(100)
 		->and($s->cartMaxQty())->toBe(99)
@@ -73,6 +74,7 @@ it('reads what the site set', function (): void {
 		'paymentFailedMailer'  => 'my-failed',
 		'downloadTtlHours'     => 24,
 		'downloadMaxCount'     => 3,
+		'lowStockAt'           => 0,
 		'pendingOrderTtlHours' => 2,
 		'cartMaxLines'         => 20,
 		'cartMaxQty'           => 10,
@@ -100,6 +102,7 @@ it('reads what the site set', function (): void {
 		->and($s->paymentFailedMailer())->toBe('my-failed')
 		->and($s->downloadTtlHours())->toBe(24)
 		->and($s->downloadMaxCount())->toBe(3)
+		->and($s->lowStockAt())->toBe(0)
 		->and($s->pendingOrderTtlHours())->toBe(2)
 		->and($s->cartMaxLines())->toBe(20)
 		->and($s->cartMaxQty())->toBe(10)

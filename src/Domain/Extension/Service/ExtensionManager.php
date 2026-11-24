@@ -11,6 +11,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
+use TotalCMS\Domain\Commerce\Contract\DownloadSource;
 use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
@@ -733,6 +734,26 @@ class ExtensionManager
 			$validators = $context->getRegisteredCheckoutValidators();
 			if ($validators !== []) {
 				$byExtension[$id] = $validators;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the download sources extensions registered.
+	 * Drained during boot() into DownloadSources. Gated by the
+	 * `commerce:downloads` capability permission.
+	 *
+	 * @return array<string,list<DownloadSource>>
+	 */
+	public function getAllDownloadSources(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:downloads') as $id => $context) {
+			$sources = $context->getRegisteredDownloadSources();
+			if ($sources !== []) {
+				$byExtension[$id] = $sources;
 			}
 		}
 

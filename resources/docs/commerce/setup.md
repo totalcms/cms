@@ -75,6 +75,7 @@ These are under **Settings → Commerce**.
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
 | **Shipping**, **Flat Rate**, **Free Shipping Over**, **Shipping Zones** | What an order is charged for shipping. See [Shipping](docs/commerce/shipping). |
 | **Download Link Lifetime**, **Downloads per Purchase** | How long a buyer's download link works, and how many times they may download. See [Digital Delivery](docs/commerce/digital-delivery). |
+| **Low Stock At** | A product that counts its stock is running low when this many or fewer are left. The dashboard lists it, and the `stock.low` event fires. Default 5; 0 for no warning before a product sells out. |
 | **Tax**, **Tax Worked Out By**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and who works it out: you, from your own table of rates, or Stripe Tax. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |

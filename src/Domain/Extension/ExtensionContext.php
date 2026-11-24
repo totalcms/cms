@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
+use TotalCMS\Domain\Commerce\Contract\DownloadSource;
 use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
@@ -128,6 +129,9 @@ final class ExtensionContext
 
 	/** @var list<CheckoutValidator> */
 	private array $checkoutValidators = [];
+
+	/** @var list<DownloadSource> */
+	private array $downloadSources = [];
 
 	/** @var list<array{prompt: Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
 	private array $registeredMcpPrompts = [];
@@ -537,6 +541,26 @@ final class ExtensionContext
 	public function getRegisteredCheckoutValidators(): array
 	{
 		return $this->checkoutValidators;
+	}
+
+	/**
+	 * Add a place a product's download can be kept: a bucket, a media
+	 * host. The store asks it for each digital product, after the product's
+	 * own file and before its link, and the first with something delivers.
+	 * The store still checks the buyer's link and counts the download; the
+	 * source only says what there is and hands it over.
+	 */
+	public function addDownloadSource(DownloadSource $source): void
+	{
+		$this->downloadSources[] = $source;
+	}
+
+	/**
+	 * @return list<DownloadSource>
+	 */
+	public function getRegisteredDownloadSources(): array
+	{
+		return $this->downloadSources;
 	}
 
 	/**
@@ -1041,6 +1065,7 @@ final class ExtensionContext
 			'commerce:pricing'   => 'Commerce Pricing',
 			'commerce:payments'  => 'Payment Provider',
 			'commerce:checkout'  => 'Checkout Validator',
+			'commerce:downloads' => 'Download Source',
 		];
 	}
 
@@ -1078,6 +1103,7 @@ final class ExtensionContext
 		'commerce:pricing'   => 'priceResolvers',
 		'commerce:payments'  => 'paymentProviders',
 		'commerce:checkout'  => 'checkoutValidators',
+		'commerce:downloads' => 'downloadSources',
 	];
 
 	/**

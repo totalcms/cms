@@ -22,7 +22,7 @@ Products live in the `products` collection. Add and edit them under **Collection
 | **Price** | The price of one, in your store's currency. |
 | **Compare-at Price** | Shown as a crossed-out price. For display only. It is never charged. |
 | **Type** | **Physical** or **Digital**. A digital product never asks for a shipping address. |
-| **Download** | Digital products only. The file a buyer gets after paying. See [Digital Delivery](docs/commerce/digital-delivery). |
+| **Download**, **Download from S3**, **Download Link** | Digital products only. What a buyer gets after paying: a file on your site, a file in your S3 bucket, or a link to a file kept elsewhere. See [Digital Delivery](docs/commerce/digital-delivery). |
 | **Requires Shipping** | Whether checkout asks where to send it. |
 | **SKU** | Your own stock code. Copied onto each order line. |
 | **Images** | Product photos. The first is the main one. |
@@ -55,6 +55,12 @@ Nothing is taken for an order that was started and never paid. So two buyers can
 A refund does not put anything back by itself, because the goods may never come back. When you refund from the order's page, tick **Return the items to stock** if they are. The count goes back up when the payment provider confirms the refund, once for the order.
 
 A refund made at the payment provider puts nothing back. Change the product's stock by hand.
+
+### Knowing when stock runs low
+
+The dashboard's **Running low** list shows every product and variant at or under **Low Stock At**, a number you set in **Settings → Commerce** (5 unless you change it).
+
+To be told as it happens, make an [automation](docs/automations/overview) on the `stock.low` or `stock.out` event. Each fires once as a count comes down past the line. See [Stock events](docs/commerce/events-and-extensions#stock-events).
 
 ## Prices are read at checkout
 

@@ -92,7 +92,7 @@ final readonly class InventoryService
 			// telling the listeners a product was changed by someone.
 			$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($products, $productId, $product, silent: true));
 
-			return new StockResult(true, $short, $now);
+			return new StockResult(true, $short, $now, $had);
 		});
 	}
 }

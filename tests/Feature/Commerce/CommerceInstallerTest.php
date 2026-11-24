@@ -72,6 +72,14 @@ test('nothing the engine writes, and no discount code, is open to the public', f
 	expect($this->c->get(CollectionFetcher::class)->fetchCollection($id)->publicOperations)->toBe([]);
 })->with(['orders', 'transactions', 'carts', 'subscriptions', 'discounts']);
 
+test('a product\'s files are closed to the public from the start: the products collection has a file access group', function (): void {
+	commerceInstall();
+
+	expect($this->c->get(CollectionFetcher::class)->fetchCollection('products')->groups)->toBe(['admin'])
+		// The rest hold no files to protect.
+		->and($this->c->get(CollectionFetcher::class)->fetchCollection('orders')->groups)->toBe([]);
+});
+
 test('the collections are labelled for the people who use them', function (): void {
 	commerceInstall();
 	$name = fn (string $id): string => $this->c->get(CollectionFetcher::class)->fetchCollection($id)->name;

@@ -202,6 +202,18 @@ final readonly class CommerceSettings
 		return $this->atLeastOne('downloadMaxCount', 5);
 	}
 
+	/**
+	 * The count at or under which a product is running low: what the
+	 * dashboard lists and `stock.low` goes by. 0 is no line at all: nothing
+	 * is low until it is gone.
+	 */
+	public function lowStockAt(): int
+	{
+		$value = $this->setting('lowStockAt');
+
+		return is_numeric($value) ? max(0, (int)$value) : 5;
+	}
+
 	/** How long an order that was started and never paid is kept before it is cancelled. */
 	public function pendingOrderTtlHours(): int
 	{

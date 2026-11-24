@@ -132,6 +132,11 @@ readonly class SchemaLinter
 			return [];
 		}
 
+		if (TotalForm::waitsForFieldType($property)) {
+			// Meant for sites with the extension that adds the type; forms leave it out here.
+			return [];
+		}
+
 		if (!TotalForm::isKnownFieldType($field)) {
 			return ["Property '{$name}' uses field type '{$field}', which neither core nor an enabled extension provides. The admin cannot render it; enable the extension that adds it, or change the field."];
 		}

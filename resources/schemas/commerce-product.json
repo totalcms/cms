@@ -6,7 +6,7 @@
 	"title": "Product",
 	"category": "Commerce",
 	"description": "A sellable product. Prices are edited here and converted to whole minor units at checkout; the cart never stores a price.",
-	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Subscription and Membership---\nbilling .\ninterval intervalCount\naccessGroup accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Delivery---\ndownload download\n---Organize---\ncategory tags\nmeta meta",
+	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Subscription and Membership---\nbilling .\ninterval intervalCount\naccessGroup accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Delivery---\ndownload download\ndownloadS3 downloadS3\ndownloadUrl downloadUrl\n---Organize---\ncategory tags\nmeta meta",
 	"required": [
 		"id",
 		"title",
@@ -178,7 +178,23 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
 			"field": "file",
 			"label": "Download",
-			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. This file is never served by the site's ordinary download or stream addresses. Sell several files as one zip."
+			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. Like any file, it is kept from the public by the File Access Groups of this collection: leave at least one group there. Sell several files as one zip."
+		},
+		"downloadS3": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "s3file",
+			"label": "Download from S3",
+			"help": "Digital products only. A file kept in your S3 bucket, for a download too big to keep on the site. Used when Download is empty. The buyer is sent to a signed link to the bucket that works for a short time. Use a private bucket: in a public one, anyone who has the file's address can fetch it.",
+			"settings": {
+				"ifFieldInstalled": true
+			}
+		},
+		"downloadUrl": {
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"field": "url",
+			"label": "Download Link",
+			"help": "Digital products only. The address of a file kept somewhere else, starting with https://. Used when the product has no other download. The store counts each download and then sends the buyer to this address, so the address itself is only as private as its host makes it.",
+			"placeholder": "https://"
 		},
 		"category": {
 			"type": "string",

@@ -1,6 +1,6 @@
 ---
 title: "Digital Delivery"
-description: "Sell a file: the buyer gets a signed download link on their order page and in their receipt, with a time limit and a download limit you set."
+description: "Sell a download kept as a file, in an S3 bucket or behind a link: the buyer gets a signed link on their order page and in their receipt, with a time limit and a download limit you set."
 since: "3.7.0"
 related:
   - commerce/products
@@ -11,22 +11,30 @@ related:
 
 # Digital Delivery
 
-A digital product can carry a file. When an order is paid, the buyer is given a link to that file. Nobody else can get it.
+A digital product can carry a download. When an order is paid, the buyer is given a link to it.
 
-## Give a product its file
+## Give a product its download
 
 1. Set the product's **Type** to **Digital**.
-2. Under **Digital Delivery**, upload the file to **Download**.
+2. Under **Digital Delivery**, fill in one of these:
 
-A product has one file. To sell several files together, zip them and upload the zip.
+| Field | Where the file is kept | Use it for |
+|---|---|---|
+| **Download** | On your site | Most files. The site sends the file itself. |
+| **Download from S3** | In your S3 bucket | A file too big to keep on the site. Needs the [S3 Uploads](docs/extensions/s3-uploads) extension; the field is not shown without it. |
+| **Download Link** | Anywhere else | A file another service hosts. Enter its address, starting with `https://`. |
 
-A digital product may have no file at all. A license key, a service or a membership is sold this way. See [Products with no file](#products-with-no-file).
+A product has one download. If more than one field is filled, the store uses the first in that order: Download, then Download from S3, then Download Link. To sell several files together, zip them.
+
+Whichever you choose, the buyer is given the same kind of link, and it is counted and limited the same way. See [Who else can get the file](#who-else-can-get-the-file) for how well each one is protected.
+
+A digital product may have no download at all. A license key, a service or a membership is sold this way. See [Products with no file](#products-with-no-file).
 
 ## What the buyer gets
 
 The moment the order is paid, each item with a file is delivered:
 
-- **On the order page.** The page the buyer lands on after paying lists their downloads, with the file's size and how many downloads are left. It appears by itself as soon as the payment is confirmed.
+- **On the order page.** The page the buyer lands on after paying lists their downloads, with how many downloads are left, and the file's size when the store knows it. It appears by itself as soon as the payment is confirmed.
 - **In the receipt.** The receipt email lists the same links.
 - **In their account.** A signed-in customer's orders carry their downloads too.
 
@@ -54,13 +62,32 @@ The admin's page for the order shows how many times each item has been downloade
 - **Replace the file** on the product and every buyer, past and future, gets the new one from their links. Their download count carries on from where it was.
 - **Remove the file** and a buyer who follows a link is told the file is not available.
 
-## The file is served nowhere else
+## Who else can get the file
 
-Total CMS can serve any file field at an address such as `/download/products/guide/download`. A product's **Download** is the exception: those addresses answer "not found" for it, for everyone. The only way to the file is a buyer's signed link.
+A buyer's signed link is the only thing a buyer needs. It works for a guest, and it asks for no account and no group.
 
-That includes you. The download button on the product's own form in the admin does not work for this field. To check a file as a buyer would, buy the product with a 100% discount code.
+Everyone else is kept out the way Total CMS protects any file: by the **File Access Groups** of the collection it is in.
 
-Do not put a paid file in any other field of the product, or in another collection. Only **Download** is guarded.
+### Download (a file on your site)
+
+Total CMS can serve any file field at an address such as `/download/products/guide/download`. For a file in a collection with File Access Groups, that address works only for a signed-in member of one of those groups, and for a super admin.
+
+A new store's products collection is made with the group `admin` there, so a product's file is closed to the public from the first upload. Check yours in **Collections → Products → File Access Groups**:
+
+- **Keep at least one group there.** With none, the address above gives the file to anyone, and a product's ID is in your shop's URLs.
+- **Use a staff group.** A group your customers hold, such as one a membership grants, lets every customer in it fetch every product's file. The group `default` means any signed-in user at all.
+
+Staff in one of the groups can use the download button on the product's form.
+
+### Download from S3
+
+The same rule covers the extension's own addresses for the file: they follow the collection's File Access Groups.
+
+Use a **private** bucket. The buyer is sent to a signed link to the bucket that works for a short time. In a public bucket, the file can also be read at its public address by anyone who has that address.
+
+### Download Link
+
+The store's limits end at its own link. Once a download is counted, the buyer is sent to the address you entered, and that address is as open as the service that hosts it makes it. Use this for files that are not worth guarding, or with a host that protects them itself.
 
 ## Products with no file
 
@@ -82,7 +109,7 @@ The order page and the receipt already show the downloads. On a page of your own
 {% for download in cms.commerce.downloads(order) %}
     {% if download.url %}
         <a href="{{ download.url|e('html_attr') }}">{{ download.fileName|e }}</a>
-        ({{ download.size|filesize }}, {{ download.remaining }} left)
+        ({% if download.size %}{{ download.size|filesize }}, {% endif %}{{ download.remaining }} left)
     {% else %}
         {{ download.fileName|e }} (no downloads left)
     {% endif %}
@@ -93,7 +120,7 @@ The order page and the receipt already show the downloads. On a page of your own
 |---|---|
 | `title` | The product's name on the order. |
 | `fileName` | The name the file downloads under. |
-| `size` | The file's size in bytes. |
+| `size` | The file's size in bytes. `0` when the store does not know it, as for a Download Link. |
 | `remaining` | How many downloads are left. |
 | `url` | The signed link. Empty when no downloads are left. |
 | `lineId` | The order line it belongs to. |
@@ -101,6 +128,10 @@ The order page and the receipt already show the downloads. On a page of your own
 `cms.commerce.downloads()` gives links only for an order that `cms.commerce.order()` or `cms.commerce.orders()` handed you. An order id a visitor typed gets nothing.
 
 In a mailer template, pass it `data`, the order the email is about.
+
+## Other places to keep a download
+
+An extension can add a place of its own to keep downloads, as S3 Uploads does. See [Add a place to keep downloads](docs/commerce/events-and-extensions#add-a-place-to-keep-downloads).
 
 ## If your Commerce add-on lapses
 

@@ -707,6 +707,7 @@ $settings['commerce'] = [
 	'receiptMailer'        => 'commerce-receipt',
 	'downloadTtlHours'     => 72,
 	'downloadMaxCount'     => 5,
+	'lowStockAt'           => 5,               // a count at or under this is running low; 0 = no line
 	'pendingOrderTtlHours' => 24,
 	'cartMaxLines'         => 100,
 	'cartMaxQty'           => 99,

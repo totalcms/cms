@@ -161,3 +161,13 @@ test('with no group allowed, the product form offers none', function (): void {
 
 	expect(array_values(array_filter($options[1])))->toBe([]);
 });
+
+test('the product form asks for a download as a file or a link, and not from S3 on a site without S3 Uploads', function (): void {
+	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'products', 'name' => 'Products', 'schema' => 'commerce-product']);
+
+	$html = $this->c->get(TotalFormFactory::class)->builder('products')->autoBuild();
+
+	expect($html)->toContain('name="downloadUrl"', 'Download Link')
+		->and($html)->toContain('--grid-area: download;')
+		->and($html)->not->toContain('downloadS3', 'Download from S3');
+});

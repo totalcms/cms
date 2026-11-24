@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use Tests\Fakes\FakeDownloadSource;
 use Tests\Fakes\FakePaymentProvider;
 use Tests\Fakes\OpenCommerceGate;
 use TotalCMS\Domain\Admin\Form\FormOptionSources;
@@ -51,6 +52,16 @@ test('addPaymentProvider() gives it the commerce:payments capability', function 
 	expect($context->getCapabilities())->toHaveKey('commerce:payments')
 		->and($context->getRegisteredPaymentProviders())->toBe([$provider])
 		->and(ExtensionContext::capabilityLabels()['commerce:payments'])->toBe('Payment Provider');
+});
+
+test('addDownloadSource() gives it the commerce:downloads capability', function (): void {
+	$context = paymentProviderContext();
+	$source  = new FakeDownloadSource();
+	$context->addDownloadSource($source);
+
+	expect($context->getCapabilities())->toBe(['commerce:downloads' => true])
+		->and($context->getRegisteredDownloadSources())->toBe([$source])
+		->and(ExtensionContext::capabilityLabels()['commerce:downloads'])->toBe('Download Source');
 });
 
 test('addCheckoutValidator() gives it the commerce:checkout capability', function (): void {

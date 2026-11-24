@@ -7,7 +7,7 @@
 
 	Autoescape is off in this app, so everything a buyer typed is escaped.
 
-	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock}
+	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock, lowStockAt}
 #}
 <div class="dashboard-section commerce-dashboard" id="commerce-dashboard">
 	<div class="commerce-dashboard-header">
@@ -35,7 +35,7 @@
 		<div>
 			<dt>Running low</dt>
 			<dd>{{ store.lowStock|length }}</dd>
-			<dd class="commerce-dashboard-note">{{ store.lowStock|length == 1 ? 'item has' : 'items have' }} 5 or fewer left</dd>
+			<dd class="commerce-dashboard-note">{{ store.lowStock|length == 1 ? 'item has' : 'items have' }} {{ store.lowStockAt > 0 ? store.lowStockAt ~ ' or fewer' : 'none' }} left</dd>
 		</div>
 	</dl>
 

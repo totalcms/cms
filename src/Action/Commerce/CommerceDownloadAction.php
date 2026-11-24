@@ -7,6 +7,8 @@ namespace TotalCMS\Action\Commerce;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
+use TotalCMS\Domain\Commerce\Download\Deliverable;
+use TotalCMS\Domain\Commerce\Download\Delivery;
 use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
@@ -14,7 +16,6 @@ use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\FileDownloadedPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
-use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\SignedToken;
 use TotalCMS\Renderer\FileStreamRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -26,7 +27,8 @@ use TotalCMS\Renderer\TwigRenderer;
  * line of one order, is signed by this site, and runs out. Behind it the
  * order must still be paid, and the line must have downloads left. Each
  * download is counted on the line, with the order locked, before the file
- * is sent.
+ * is sent. A download kept somewhere else (a link, a bucket) ends with the
+ * buyer sent on to it.
  *
  * Not behind the Commerce gate: goods already paid for must stay
  * downloadable on a store whose add-on has lapsed.
@@ -62,8 +64,8 @@ final readonly class CommerceDownloadAction
 			return $this->problem($response, 403, 'not_paid', $order);
 		}
 
-		$file = $this->links->fileFor($line);
-		if (!$file instanceof FileData) {
+		$found = $this->links->deliverableFor($line);
+		if (!$found instanceof Deliverable) {
 			return $this->problem($response, 404, 'no_file', $order);
 		}
 
@@ -71,11 +73,37 @@ final readonly class CommerceDownloadAction
 			return $this->problem($response, 410, 'used_up', $order);
 		}
 
-		$productId = (string)$line['productId'];
-		$name      = $file->download !== '' ? $file->download : $file->name;
-		$this->events->dispatch(CoreEvent::FILE_DOWNLOADED, new FileDownloadedPayload($this->settings->collection('products'), $productId, ProductDownload::PROPERTY, $name, '', true));
+		return $this->handOver($response, $order, (string)$line['productId'], $found);
+	}
 
-		return $this->stream->download($response->withHeader('Cache-Control', 'private, no-store'), $file->mime !== '' ? $file->mime : 'application/octet-stream', $name, $this->downloads->open($productId));
+	/**
+	 * The download is counted: send the file, or send the buyer on to
+	 * where it is kept.
+	 */
+	private function handOver(ResponseInterface $response, OrderData $order, string $productId, Deliverable $found): ResponseInterface
+	{
+		$delivery = $this->downloads->deliver($productId);
+		if (!$delivery instanceof Delivery) {
+			return $this->problem($response, 404, 'no_file', $order);
+		}
+
+		$this->events->dispatch(CoreEvent::FILE_DOWNLOADED, new FileDownloadedPayload($this->settings->collection('products'), $productId, $found->property, $delivery->name, '', true));
+
+		if ($delivery->isRedirect()) {
+			// The file is kept somewhere else. The address is the store's own
+			// (the product's link, or one a source signed), never the request's,
+			// and the page it came from is not passed along.
+			return $response->withStatus(302)
+				->withHeader('Location', $delivery->url)
+				->withHeader('Cache-Control', 'private, no-store')
+				->withHeader('Referrer-Policy', 'no-referrer');
+		}
+
+		if (!is_resource($delivery->stream)) {
+			return $this->problem($response, 404, 'no_file', $order);
+		}
+
+		return $this->stream->download($response->withHeader('Cache-Control', 'private, no-store'), $delivery->mime, $delivery->name, $delivery->stream);
 	}
 
 	/**

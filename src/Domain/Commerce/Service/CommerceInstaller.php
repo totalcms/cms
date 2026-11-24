@@ -43,6 +43,12 @@ final readonly class CommerceInstaller
 
 	private const MAILER_COLLECTION = 'mailer';
 
+	/**
+	 * The group that may fetch a product's files through the site's ordinary
+	 * download and stream addresses. Super admins always may.
+	 */
+	private const FILE_ACCESS_GROUP = 'admin';
+
 	public function __construct(
 		private CommerceSettings $settings,
 		private CollectionFetcher $collections,
@@ -110,6 +116,10 @@ final readonly class CommerceInstaller
 			// Nothing here is public until the operator says so. For orders,
 			// transactions, carts, subscriptions and discount codes it never is.
 			'publicOperations' => [],
+			// File Access Groups. A product's files, the download a buyer pays
+			// for among them, are closed to the public from the first upload.
+			// The owner may change the groups; a buyer's own link asks for none.
+			'groups'           => $role === 'products' ? [self::FILE_ACCESS_GROUP] : [],
 		]);
 
 		return 'created';

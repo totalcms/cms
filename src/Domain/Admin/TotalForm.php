@@ -235,6 +235,24 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Whether a property is waiting for its field type to be installed: it
+	 * says it is only for sites that have the type (`settings.ifFieldInstalled`)
+	 * and this one does not. That is a field an extension provides, in a
+	 * schema core ships: without the extension there is nothing to draw it
+	 * with, so forms leave it out rather than show a plain text box, and the
+	 * linter does not call it a mistake.
+	 *
+	 * @param array<string,mixed> $property the property as its schema has it
+	 */
+	public static function waitsForFieldType(array $property): bool
+	{
+		$settings = is_array($property['settings'] ?? null) ? $property['settings'] : [];
+
+		return ($settings['ifFieldInstalled'] ?? false) === true
+			&& !self::isKnownFieldType(is_string($property['field'] ?? null) ? $property['field'] : '');
+	}
+
+	/**
 	 * Get all field types grouped by category, including extension types.
 	 *
 	 * @return array<string,list<string>>
@@ -1574,14 +1592,17 @@ class TotalForm implements \Stringable
 			return;
 		}
 
-		$properties = array_keys($this->schemaData->properties);
-		foreach ($properties as $property) {
+		foreach ($this->schemaData->properties as $property => $options) {
 			// Skip ID field in AddOnly forms if it has autogen configured
 			if ($property === 'id' && $this->addOnly) {
-				$settings = $this->schemaData->properties[$property]['settings'] ?? [];
+				$settings = $options['settings'] ?? [];
 				if (isset($settings['autogen']) && !empty($settings['autogen'])) {
 					continue; // Skip this field - ID will be auto-generated
 				}
+			}
+
+			if (self::waitsForFieldType($options)) {
+				continue;
 			}
 
 			$this->addField($property);

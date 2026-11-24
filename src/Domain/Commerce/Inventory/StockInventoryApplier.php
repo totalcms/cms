@@ -10,6 +10,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\SideEffect;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\TransactionLedger;
+use TotalCMS\Domain\Event\Payload\StockEventPayload;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -33,6 +34,7 @@ final readonly class StockInventoryApplier implements InventoryApplier
 	public function __construct(
 		private InventoryService $inventory,
 		private TransactionLedger $ledger,
+		private StockEvents $events,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Commerce);
@@ -47,7 +49,7 @@ final readonly class StockInventoryApplier implements InventoryApplier
 
 		$short = 0;
 		foreach ($order->lines() as $line) {
-			$short += $this->move($line, -1)->short;
+			$short += $this->move($line, -1, $order->id())->short;
 		}
 		if ($short < 1) {
 			return $order;
@@ -71,7 +73,7 @@ final readonly class StockInventoryApplier implements InventoryApplier
 		}
 
 		foreach ($order->lines() as $line) {
-			$this->move($line, 1);
+			$this->move($line, 1, $order->id());
 		}
 
 		return $order->withFlag($flag);
@@ -83,7 +85,7 @@ final readonly class StockInventoryApplier implements InventoryApplier
 	 * @param array<string,mixed> $line
 	 * @param int                 $direction -1 to take it out, 1 to put it back
 	 */
-	private function move(array $line, int $direction): StockResult
+	private function move(array $line, int $direction, string $orderId): StockResult
 	{
 		$productId = is_string($line['productId'] ?? null) ? $line['productId'] : '';
 		$variantId = is_string($line['variantId'] ?? null) ? $line['variantId'] : '';
@@ -93,13 +95,18 @@ final readonly class StockInventoryApplier implements InventoryApplier
 		}
 
 		try {
-			return $direction < 0 ? $this->inventory->decrement($productId, $variantId, $qty) : $this->inventory->increment($productId, $variantId, $qty);
+			$result = $direction < 0 ? $this->inventory->decrement($productId, $variantId, $qty) : $this->inventory->increment($productId, $variantId, $qty);
 		} catch (\Throwable $e) {
 			// A product that cannot be written must not fail the payment it was sold in.
 			$this->logger->error('Stock could not be changed for a paid order line', ['productId' => $productId, 'variantId' => $variantId, 'error' => $e::class]);
 
 			return StockResult::untracked();
 		}
+
+		// The count is written and the product's lock let go: now the site is told.
+		$this->events->changed($line, $result, $direction < 0 ? StockEventPayload::SALE : StockEventPayload::RESTOCK, $orderId);
+
+		return $result;
 	}
 
 	/**

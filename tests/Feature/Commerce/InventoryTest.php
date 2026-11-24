@@ -15,10 +15,13 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Commerce\Service\RefundService;
+use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 /*
  * Stock. A product that counts its stock has that count taken down when an
@@ -258,5 +261,134 @@ describe('when a refund is confirmed', function (): void {
 		($this->confirm)(1000, 'ch_the_charge', 'evt_refund');
 
 		expect(($this->stock)('poster'))->toBe(5);
+	});
+});
+
+/*
+ * The store tells the site about stock it changed, with events of its own:
+ * `stock.changed` each time, and `stock.low` or `stock.out` once, as a
+ * count comes down past the line. A sale does not fire `object.updated` on
+ * the product; these are what an automation listens for instead.
+ */
+describe('telling the site', function (): void {
+	beforeEach(function (): void {
+		$this->heard = [];
+		foreach ([CoreEvent::STOCK_CHANGED, CoreEvent::STOCK_LOW, CoreEvent::STOCK_OUT, CoreEvent::OBJECT_UPDATED] as $event) {
+			$this->c->get(EventDispatcher::class)->listen($event, function (array $payload) use ($event): void {
+				// An order being paid updates the order and its ledger. Only what is said of a product counts here.
+				if (($payload['collection'] ?? '') === 'products') {
+					$this->heard[] = [$event, $payload];
+				}
+			});
+		}
+		$this->names = fn (): array => array_column($this->heard, 0);
+		$this->of    = fn (string $event): array => array_values(array_column(array_filter($this->heard, static fn (array $h): bool => $h[0] === $event), 1));
+	});
+
+	it('says what a sale took: the product, the count before and after, and the order', function (): void {
+		($this->product)(['id' => 'lamp', 'title' => 'Lamp', 'sku' => 'LMP-1', 'price' => 30, 'trackInventory' => true, 'stock' => 20]);
+		$order = ($this->order)(['lamp' => 2]);
+
+		expect(($this->names)())->toBe([CoreEvent::STOCK_CHANGED])
+			->and(array_diff_key(($this->of)(CoreEvent::STOCK_CHANGED)[0], ['actor' => 1]))->toBe([
+				'collection' => 'products',
+				'productId'  => 'lamp',
+				'variantId'  => '',
+				'title'      => 'Lamp',
+				'sku'        => 'LMP-1',
+				'before'     => 20,
+				'after'      => 18,
+				'change'     => -2,
+				'reason'     => 'sale',
+				'orderId'    => $order->id(),
+				'lowStockAt' => 5,
+			]);
+	});
+
+	it('names the variant whose count it was', function (): void {
+		($this->order)(['shirt:large' => 1]);
+		$told = ($this->of)(CoreEvent::STOCK_CHANGED)[0];
+
+		expect([$told['productId'], $told['variantId'], $told['before'], $told['after']])->toBe(['shirt', 'large', 3, 2]);
+	});
+
+	it('says it once, however often the provider says the order was paid', function (): void {
+		$order = ($this->order)(['poster' => 1], false);
+		($this->pay)($order, 'evt_a');
+		($this->pay)($order, 'evt_b');
+
+		expect(($this->of)(CoreEvent::STOCK_CHANGED))->toHaveCount(1);
+	});
+
+	it('says nothing for a product that does not count stock, or a count that did not move', function (): void {
+		($this->product)(['id' => 'gone', 'title' => 'Gone', 'price' => 5, 'trackInventory' => true, 'stock' => 0]);
+		($this->order)(['mug' => 1, 'gone' => 1]);
+
+		expect(($this->names)())->toBe([]);
+	});
+
+	it('says a count is low once, as it comes down to the store\'s Low Stock At', function (): void {
+		($this->product)(['id' => 'lamp', 'title' => 'Lamp', 'price' => 30, 'trackInventory' => true, 'stock' => 8]);
+		($this->order)(['lamp' => 2]);
+		expect(($this->of)(CoreEvent::STOCK_LOW))->toBe([]);
+
+		($this->order)(['lamp' => 1]);
+		($this->order)(['lamp' => 1]);
+
+		$low = ($this->of)(CoreEvent::STOCK_LOW);
+		expect($low)->toHaveCount(1)
+			->and([$low[0]['productId'], $low[0]['before'], $low[0]['after'], $low[0]['lowStockAt']])->toBe(['lamp', 6, 5, 5]);
+	});
+
+	it('goes by the setting, and never says low when it is nothing', function (int $at, int $times): void {
+		$config           = $this->c->get(Config::class);
+		$config->commerce = ['lowStockAt' => $at] + $config->commerce;
+		($this->product)(['id' => 'lamp', 'title' => 'Lamp', 'price' => 30, 'trackInventory' => true, 'stock' => 12]);
+		($this->order)(['lamp' => 2]);
+
+		expect(($this->of)(CoreEvent::STOCK_LOW))->toHaveCount($times);
+	})->with([
+		'low at 10' => [10, 1],
+		'low at 5'  => [5, 0],
+		'never low' => [0, 0],
+	]);
+
+	it('says a count has run out, and not that it is low as well', function (): void {
+		($this->order)(['shirt:small' => 1]);
+
+		expect(($this->names)())->toBe([CoreEvent::STOCK_CHANGED, CoreEvent::STOCK_OUT])
+			->and(($this->of)(CoreEvent::STOCK_OUT)[0]['variantId'])->toBe('small')
+			->and(($this->of)(CoreEvent::STOCK_OUT)[0]['after'])->toBe(0);
+	});
+
+	it('says a back-ordered product ran out once, as it passes nothing', function (): void {
+		($this->product)(['id' => 'vase', 'title' => 'Vase', 'price' => 30, 'trackInventory' => true, 'stock' => 1, 'allowBackorder' => true]);
+		($this->order)(['vase' => 2]);
+		($this->order)(['vase' => 1]);
+
+		expect(($this->of)(CoreEvent::STOCK_OUT))->toHaveCount(1)
+			->and(($this->of)(CoreEvent::STOCK_CHANGED))->toHaveCount(2)
+			->and(($this->of)(CoreEvent::STOCK_CHANGED)[1]['after'])->toBe(-2);
+	});
+
+	it('says what a refund put back, and nothing about low or out', function (): void {
+		seedCommerceStaff($this->app);
+		$order  = ($this->order)(['shirt:small' => 1]);
+		$result = $this->c->get(RefundService::class)->request($order->id(), $order->grandTotal(), 'Returned', true, new Actor(ActorKind::Admin, 'boss', 'auth'));
+		$this->heard = [];
+
+		$this->c->get(PaymentEventProcessor::class)->process(
+			new PaymentEvent('fake', 'evt_refund', PaymentEventType::Refunded, $order->id(), Money::of($order->grandTotal(), 'USD'), $result->providerRefundRef, $order->providerPaymentRef()),
+		);
+
+		$told = ($this->of)(CoreEvent::STOCK_CHANGED);
+		expect(array_values(array_intersect(($this->names)(), [CoreEvent::STOCK_CHANGED, CoreEvent::STOCK_LOW, CoreEvent::STOCK_OUT])))->toBe([CoreEvent::STOCK_CHANGED])
+			->and([$told[0]['before'], $told[0]['after'], $told[0]['change'], $told[0]['reason'], $told[0]['orderId']])->toBe([0, 1, 1, 'restock', $order->id()]);
+	});
+
+	it('does not tell the site the product was edited', function (): void {
+		($this->order)(['poster' => 1]);
+
+		expect(($this->names)())->not->toContain(CoreEvent::OBJECT_UPDATED);
 	});
 });

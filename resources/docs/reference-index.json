@@ -6049,6 +6049,13 @@
                 "permission": null
             },
             {
+                "name": "addDownloadSource",
+                "signature": "addDownloadSource(DownloadSource $source): void",
+                "description": "Add a place a product's download can be kept: a bucket, a media host. The store asks it for each digital product, after the product's own file and before its link, and the first with something delivers.",
+                "phase": "register",
+                "permission": null
+            },
+            {
                 "name": "addPaymentProvider",
                 "signature": "addPaymentProvider(PaymentProvider $provider): void",
                 "description": "Add a way to pay. The store's owner switches it on in Settings \u2192 Commerce, and a buyer is offered it once it has its keys (`isConfigured()`). Nothing is registered on a site without Commerce.",
@@ -6460,6 +6467,10 @@
             {
                 "id": "commerce:checkout",
                 "description": "Checkout Validator"
+            },
+            {
+                "id": "commerce:downloads",
+                "description": "Download Source"
             }
         ],
         "manifest_fields": [

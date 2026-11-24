@@ -27,7 +27,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 	expect(array_keys($defaults))->toBe([
 		'currency', 'collections', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix',
 		'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer',
-		'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage',
+		'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage',
 		'checkoutMode', 'payPage', 'grantableGroups', 'paymentFailedMailer',
 	])
 		->and($defaults['collections'])->toBe(['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts']);
@@ -40,7 +40,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 
 	// The store name is not here: left empty it is the site's own name, which
 	// CommerceSettingsTest pins.
-	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
+	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
 		expect($shipped->{$accessor}())->toBe($fallback->{$accessor}(), $accessor);
 	}
 });

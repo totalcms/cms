@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
-use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -43,7 +42,6 @@ readonly class RawUploadGate
 		private UploadAccessPolicy $uploadPolicy,
 		private SessionInterface $session,
 		private UserValidationService $userValidator,
-		private ProductDownload $paidFiles,
 	) {
 	}
 
@@ -55,12 +53,6 @@ readonly class RawUploadGate
 	 */
 	public function denialFor(string $collection, string $id, string $property, ?string $subpath, ?string $settingKey): ?string
 	{
-		// A store product's download is handed over by the store's own signed
-		// link and by nothing else.
-		if ($this->paidFiles->guards($collection, $property)) {
-			return 'This file is not served here.';
-		}
-
 		if ($this->loadManagedFile($collection, $id, $property, $subpath)) {
 			$denial = $this->managedFileDenial();
 			if ($denial !== null) {

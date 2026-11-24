@@ -80,10 +80,13 @@ final readonly class CommerceDashboard
 	 * or fewer left, lowest first. A product with variants is listed by its
 	 * variants: its own stock number is not what is sold.
 	 *
+	 * @param int|null $threshold the store's Low Stock At when null
+	 *
 	 * @return list<array{productId: string, variantId: string, title: string, stock: int}>
 	 */
-	public function lowStock(int $threshold = 5): array
+	public function lowStock(?int $threshold = null): array
 	{
+		$threshold ??= $this->settings->lowStockAt();
 		$low     = [];
 		$checked = 0;
 		foreach ($this->index->fetchIndex($this->settings->collection('products'))->objects as $row) {

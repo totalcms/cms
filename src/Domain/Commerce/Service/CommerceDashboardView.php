@@ -32,7 +32,7 @@ final readonly class CommerceDashboardView
 	}
 
 	/**
-	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>}|null
+	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>, lowStockAt: int}|null
 	 *                                                                                                                                                                                                                          null when there is no store, or this user may not see it
 	 */
 	public function forCurrentUser(): ?array
@@ -58,6 +58,7 @@ final readonly class CommerceDashboardView
 				'payment' => $this->labels->payment($order->paymentStatus()),
 			], $this->dashboard->recentOrders()),
 			'lowStock'   => $this->dashboard->lowStock(),
+			'lowStockAt' => $this->settings->lowStockAt(),
 		];
 	}
 }

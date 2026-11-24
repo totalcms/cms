@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
+use TotalCMS\Domain\Commerce\Download\DownloadSources;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Service\CheckoutValidatorRegistry;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 
 /**
- * Wire extension payment providers into the PaymentProviderRegistry, and
- * their checkout validators into the CheckoutValidatorRegistry.
+ * Wire extension payment providers into the PaymentProviderRegistry, their
+ * checkout validators into the CheckoutValidatorRegistry, and their
+ * download sources into DownloadSources.
  *
  * Providers are registered on every site, with or without Commerce: a store
  * whose add-on has lapsed must still hear a provider's webhook about money
@@ -25,6 +27,7 @@ final readonly class PaymentProvidersStep extends BootStep
 	public function wire(ExtensionManager $manager): void
 	{
 		$this->wireCheckoutValidators($manager);
+		$this->wireDownloadSources($manager);
 
 		if (!$this->container->has(PaymentProviderRegistry::class)) {
 			return;
@@ -42,6 +45,26 @@ final readonly class PaymentProvidersStep extends BootStep
 						'message'   => $e->getMessage(),
 					]);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Where a product's download can be kept. Wired on every site, like the
+	 * providers: what a buyer paid for must stay downloadable on a store
+	 * whose add-on has lapsed.
+	 */
+	private function wireDownloadSources(ExtensionManager $manager): void
+	{
+		if (!$this->container->has(DownloadSources::class)) {
+			return;
+		}
+
+		/** @var DownloadSources $sources */
+		$sources = $this->container->get(DownloadSources::class);
+		foreach ($manager->getAllDownloadSources() as $added) {
+			foreach ($added as $source) {
+				$sources->add($source);
 			}
 		}
 	}

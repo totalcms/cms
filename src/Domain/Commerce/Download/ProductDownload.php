@@ -4,82 +4,55 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Download;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
-use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Service\FileFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 /**
- * The file a digital product is: what its buyers paid for.
+ * What a digital product gives its buyer.
  *
- * It is one file field on the product, `download`. This is the only way the
- * store reads it, and {@see guards()} is how every other route that serves
- * files learns to keep away from it.
+ * A product keeps its download in one of several places ({@see
+ * DownloadSources}): a file on the product, a file in a bucket, a link.
+ * This is the only way the store reads it. The file on the product is
+ * protected, like any file, by the File Access Groups of the products
+ * collection.
  */
 final readonly class ProductDownload
 {
-	public const PROPERTY = 'download';
-
-	private const SCHEMA = 'commerce-product';
-
 	public function __construct(
 		private CommerceSettings $settings,
-		private CollectionFetcher $collections,
-		private FileFetcher $files,
+		private ObjectFetcher $objects,
+		private DownloadSources $sources,
 	) {
 	}
 
-	/**
-	 * Whether this is a product's download: a file no ordinary route may
-	 * serve. Decided by the collection's schema, not its name, so a store
-	 * that keeps its products under another id is covered, and a site's own
-	 * collection with a `download` field is left alone.
-	 */
-	public function guards(string $collection, string $property): bool
+	/** What the product gives a buyer, or null when it has nothing to give. */
+	public function find(string $productId): ?Deliverable
 	{
-		if ($property !== self::PROPERTY || $collection === '') {
-			return false;
-		}
+		$product = $this->product($productId);
 
-		try {
-			$found = $this->collections->fetchCollection($collection);
-		} catch (\Throwable) {
-			return false;
-		}
-
-		return $found instanceof CollectionData && $found->schema === self::SCHEMA;
+		return $product === null ? null : ($this->sources->for($this->settings->collection('products'), $product)[1] ?? null);
 	}
 
-	/** The product's file, or null when it has none. */
-	public function file(string $productId): ?FileData
+	/** Hand the product's download over, or null when there is nothing to hand over. */
+	public function deliver(string $productId): ?Delivery
+	{
+		$product = $this->product($productId);
+		$found   = $product === null ? null : $this->sources->for($this->settings->collection('products'), $product);
+
+		return $product === null || $found === null ? null : $found[0]->deliver($this->settings->collection('products'), $product);
+	}
+
+	/** @return array<string,mixed>|null null for a product that was deleted */
+	private function product(string $productId): ?array
 	{
 		if ($productId === '') {
 			return null;
 		}
 
 		try {
-			$products = $this->settings->collection('products');
-			if (!$this->files->fileExists($products, $productId, self::PROPERTY)) {
-				return null;
-			}
-
-			$file = $this->files->fetchFile($products, $productId, self::PROPERTY);
+			return $this->objects->fetchObject($this->settings->collection('products'), $productId)->toArray();
 		} catch (\Throwable) {
-			// A product that was deleted, or a record with no file behind it.
 			return null;
 		}
-
-		return $file->name !== '' ? $file : null;
-	}
-
-	/**
-	 * The file's bytes.
-	 *
-	 * @return resource
-	 */
-	public function open(string $productId): mixed
-	{
-		return $this->files->streamFile($this->settings->collection('products'), $productId, self::PROPERTY);
 	}
 }

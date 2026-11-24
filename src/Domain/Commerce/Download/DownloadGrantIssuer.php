@@ -11,11 +11,12 @@ use TotalCMS\Domain\Commerce\Order\OrderStateMachine;
 /**
  * Delivers a paid order's downloads.
  *
- * A digital line whose product has a file is delivered the moment the
- * order is paid: the buyer's links are made from the order whenever it is
- * shown ({@see DownloadLinks}), so there is nothing to store but that the
- * line is done. A digital line with no file is left as it is: something
- * else delivers that one (a license key, a person).
+ * A digital line whose product has a download (a file, a file in a bucket,
+ * a link) is delivered the moment the order is paid: the buyer's links are
+ * made from the order whenever it is shown ({@see DownloadLinks}), so there
+ * is nothing to store but that the line is done. A digital line with no
+ * download is left as it is: something else delivers that one (a license
+ * key, a person).
  */
 final readonly class DownloadGrantIssuer implements DownloadIssuer
 {
@@ -32,7 +33,7 @@ final readonly class DownloadGrantIssuer implements DownloadIssuer
 			if (($line['type'] ?? '') !== self::DIGITAL || $delivered || !is_string($line['productId'] ?? null)) {
 				continue;
 			}
-			if ($this->downloads->file($line['productId']) === null) {
+			if ($this->downloads->find($line['productId']) === null) {
 				continue;
 			}
 

@@ -976,16 +976,17 @@ final class GrainFilter implements ImageFilter
 
 ## Commerce
 
-On a site with [Commerce](docs/commerce/overview), an extension can add a way to pay, set a price that depends on the buyer, refuse a checkout, and write its own data on an order:
+On a site with [Commerce](docs/commerce/overview), an extension can add a way to pay, set a price that depends on the buyer, refuse a checkout, add a place to keep a product's download, and write its own data on an order:
 
 ```php
 $context->addPaymentProvider($provider);
 $context->addPriceResolver($resolver, priority: 10);
 $context->addCheckoutValidator($validator);
+$context->addDownloadSource($source);
 $context->addOrderBuildingListener($listener);
 ```
 
-Each is described, with examples, in [Commerce Events and Extensions](docs/commerce/events-and-extensions). They show in the extension's permissions as **Payment Provider**, **Checkout Validator** and **Commerce Pricing**.
+Each is described, with examples, in [Commerce Events and Extensions](docs/commerce/events-and-extensions). They show in the extension's permissions as **Payment Provider**, **Checkout Validator**, **Download Source** and **Commerce Pricing**.
 
 ## Agent Skill
 

@@ -49,6 +49,10 @@ final class CoreEvent
 	public const SUBSCRIPTION_PAST_DUE = 'subscription.past_due';
 	public const SUBSCRIPTION_CANCELED = 'subscription.canceled';
 
+	public const STOCK_CHANGED = 'stock.changed';
+	public const STOCK_LOW     = 'stock.low';
+	public const STOCK_OUT     = 'stock.out';
+
 	/**
 	 * Every core event, in a sensible display order.
 	 *
@@ -86,6 +90,9 @@ final class CoreEvent
 		self::SUBSCRIPTION_RENEWED,
 		self::SUBSCRIPTION_PAST_DUE,
 		self::SUBSCRIPTION_CANCELED,
+		self::STOCK_CHANGED,
+		self::STOCK_LOW,
+		self::STOCK_OUT,
 	];
 
 	/**

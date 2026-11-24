@@ -20,7 +20,8 @@
 						{{ download.fileName|e }}
 					{% endif %}
 					<small>
-						{{ download.size|filesize }},
+						{# A file kept somewhere else has no size the store knows. #}
+						{% if download.size %}{{ download.size|filesize }},{% endif %}
 						{% if download.remaining > 0 %}
 							{{ download.remaining }} {{ download.remaining == 1 ? 'download' : 'downloads' }} left
 						{% else %}

@@ -391,6 +391,18 @@ $context->addEventListener('order.paid', function (array $payload): void {
 
 Listen for these, not for `object.updated` on the orders collection: they say what happened to the order, and each fires once for it.
 
+### `stock.changed`, `stock.low`, `stock.out`
+
+Fired by a store as it changes a product's stock: for a paid order, and for a refund whose goods came back. `stock.low` fires once as a count comes down to the store's Low Stock At, and `stock.out` once as it reaches nothing. A sale does not fire `object.updated` on the product, so these are what to listen for.
+
+All three carry the product and variant, the count `before` and `after`, the `reason` (`sale` or `restock`) and the `orderId`. The full list is in [Commerce Events and Extensions](docs/commerce/events-and-extensions#stock-events).
+
+```php
+$context->addEventListener('stock.out', function (array $payload): void {
+    // e.g. tell someone that $payload['title'] has sold out
+});
+```
+
 ## Listener Isolation
 
 Each listener is wrapped in a try/catch. If your listener throws:

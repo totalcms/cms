@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Commerce\Download;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderStateMachine;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
-use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\SignedToken;
 use TotalCMS\Support\Config;
 
@@ -49,7 +48,7 @@ final readonly class DownloadLinks
 
 		$links = [];
 		foreach ($order->lines() as $lineId => $line) {
-			$file = $this->fileFor($line);
+			$file = $this->deliverableFor($line);
 			if ($file === null) {
 				continue;
 			}
@@ -58,7 +57,7 @@ final readonly class DownloadLinks
 			$links[]   = [
 				'lineId'    => (string)$lineId,
 				'title'     => is_string($line['title'] ?? null) ? $line['title'] : '',
-				'fileName'  => $file->download !== '' ? $file->download : $file->name,
+				'fileName'  => $file->name,
 				'size'      => $file->size,
 				'remaining' => $remaining,
 				'url'       => $remaining > 0 ? $this->url($order, (string)$lineId) : '',
@@ -109,18 +108,18 @@ final readonly class DownloadLinks
 	}
 
 	/**
-	 * The file a line gives, when it is a delivered download.
+	 * What a line gives, when it is a delivered download.
 	 *
 	 * @param array<string,mixed> $line
 	 */
-	public function fileFor(array $line): ?FileData
+	public function deliverableFor(array $line): ?Deliverable
 	{
 		$delivered = ($line['fulfillmentStatus'] ?? '') === OrderStateMachine::FULFILLED;
 		if (($line['type'] ?? '') !== 'digital' || !$delivered || !is_string($line['productId'] ?? null)) {
 			return null;
 		}
 
-		return $this->downloads->file($line['productId']);
+		return $this->downloads->find($line['productId']);
 	}
 
 	private function url(OrderData $order, string $lineId): string
