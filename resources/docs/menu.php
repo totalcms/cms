@@ -286,6 +286,7 @@ $menu = [
 					['title' => 'Client Help',      'path' => 'extensions/client-help'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 					['title' => 'Maintenance',      'path' => 'extensions/maintenance'],
+					['title' => 'PayPal Payments',  'path' => 'extensions/paypal'],
 					['title' => 'Podcast',          'path' => 'extensions/podcast'],
 					['title' => 'Protect',          'path' => 'extensions/protect'],
 					['title' => 'Pushover',         'path' => 'extensions/pushover'],

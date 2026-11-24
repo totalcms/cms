@@ -1,0 +1,146 @@
+{
+	"id": "WH-3HB164405R7526601-0F3782386D215471M",
+	"event_version": "1.0",
+	"create_time": "2026-11-24T06:55:02.320Z",
+	"resource_type": "checkout-order",
+	"resource_version": "2.0",
+	"event_type": "CHECKOUT.ORDER.APPROVED",
+	"summary": "An order has been approved by buyer",
+	"resource": {
+		"update_time": "2026-11-24T06:55:00Z",
+		"create_time": "2026-11-24T06:55:00Z",
+		"purchase_units": [
+			{
+				"reference_id": "0123456789abcdef0123456789abcdef",
+				"amount": {
+					"currency_code": "USD",
+					"value": "39.98",
+					"breakdown": {
+						"item_total": {
+							"currency_code": "USD",
+							"value": "39.98"
+						}
+					}
+				},
+				"payee": {
+					"email_address": "someone@example.com",
+					"merchant_id": "TESTID0000000"
+				},
+				"custom_id": "0123456789abcdef0123456789abcdef",
+				"invoice_id": "1001-01234567",
+				"items": [
+					{
+						"name": "El Paraíso Gesha",
+						"unit_amount": {
+							"currency_code": "USD",
+							"value": "39.98"
+						},
+						"quantity": "1"
+					}
+				],
+				"payments": {
+					"captures": [
+						{
+							"id": "8RU61172JS455403V",
+							"status": "COMPLETED",
+							"amount": {
+								"currency_code": "USD",
+								"value": "39.98"
+							},
+							"final_capture": true,
+							"seller_protection": {
+								"status": "ELIGIBLE",
+								"dispute_categories": [
+									"ITEM_NOT_RECEIVED",
+									"UNAUTHORIZED_TRANSACTION"
+								]
+							},
+							"seller_receivable_breakdown": {
+								"gross_amount": {
+									"currency_code": "USD",
+									"value": "39.98"
+								},
+								"paypal_fee": {
+									"currency_code": "USD",
+									"value": "1.68"
+								},
+								"net_amount": {
+									"currency_code": "USD",
+									"value": "38.30"
+								}
+							},
+							"invoice_id": "1001-01234567",
+							"custom_id": "0123456789abcdef0123456789abcdef",
+							"links": [
+								{
+									"href": "https://api.sandbox.paypal.com/v2/payments/captures/8RU61172JS455403V",
+									"rel": "self",
+									"method": "GET"
+								},
+								{
+									"href": "https://api.sandbox.paypal.com/v2/payments/captures/8RU61172JS455403V/refund",
+									"rel": "refund",
+									"method": "POST"
+								},
+								{
+									"href": "https://api.sandbox.paypal.com/v2/checkout/orders/3P199480AE683730M",
+									"rel": "up",
+									"method": "GET"
+								}
+							],
+							"create_time": "2026-11-24T06:55:00Z",
+							"update_time": "2026-11-24T06:55:00Z"
+						}
+					]
+				}
+			}
+		],
+		"links": [
+			{
+				"href": "https://api.sandbox.paypal.com/v2/checkout/orders/3P199480AE683730M",
+				"rel": "self",
+				"method": "GET"
+			}
+		],
+		"id": "3P199480AE683730M",
+		"payment_source": {
+			"paypal": {
+				"email_address": "someone@example.com",
+				"account_id": "TESTID0000000",
+				"account_status": "VERIFIED",
+				"name": {
+					"given_name": "Test",
+					"surname": "Buyer"
+				},
+				"address": {
+					"country_code": "US"
+				}
+			}
+		},
+		"intent": "CAPTURE",
+		"payer": {
+			"name": {
+				"given_name": "Test",
+				"surname": "Buyer"
+			},
+			"email_address": "someone@example.com",
+			"payer_id": "TESTID0000000",
+			"address": {
+				"country_code": "US"
+			}
+		},
+		"status": "COMPLETED"
+	},
+	"links": [
+		{
+			"href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-3HB164405R7526601-0F3782386D215471M",
+			"rel": "self",
+			"method": "GET"
+		},
+		{
+			"href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-3HB164405R7526601-0F3782386D215471M/resend",
+			"rel": "resend",
+			"method": "POST"
+		}
+	]
+}

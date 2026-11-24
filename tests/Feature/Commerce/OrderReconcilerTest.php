@@ -89,6 +89,29 @@ test('an order whose checkout ran out at the provider is given up on', function 
 		->and($report[0]['result'])->toBe('expired');
 });
 
+// The provider was asked about this order's own checkout, so its answer is
+// about this order, whatever order the answer names or fails to name.
+test('an answer that names no order is still this order\'s', function (): void {
+	$order                   = ($this->waiting)(30);
+	$this->answers['sess_1'] = fn (): PaymentEvent => commercePaymentEvent(PaymentEventType::Expired, '', 0, 'order-sess_1-expired');
+
+	$report = ($this->run)();
+
+	expect(($this->fresh)($order)->paymentStatus())->toBe('expired')
+		->and($report[0]['result'])->toBe('expired');
+});
+
+test('an answer that names another order does not touch that one', function (): void {
+	$order                   = ($this->waiting)(30);
+	$other                   = ($this->waiting)(1, 'sess_other');
+	$this->answers['sess_1'] = fn (): PaymentEvent => commercePaidEvent($other->id(), $order->grandTotal(), 'session-sess_1-paid');
+
+	($this->run)();
+
+	expect(($this->fresh)($order)->paymentStatus())->toBe('paid')
+		->and(($this->fresh)($other)->paymentStatus())->toBe('pending');
+});
+
 test('an order the provider has nothing to say about goes on waiting', function (): void {
 	$order = ($this->waiting)(30);
 

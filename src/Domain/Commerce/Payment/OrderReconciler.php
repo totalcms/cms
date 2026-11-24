@@ -116,7 +116,13 @@ final readonly class OrderReconciler
 
 		// Only what settles an order that is waiting. Anything later (a refund,
 		// a dispute) has an event of its own.
-		return $event instanceof PaymentEvent && in_array($event->type, [PaymentEventType::Paid, PaymentEventType::Expired], true) ? $event : null;
+		if (!$event instanceof PaymentEvent || !in_array($event->type, [PaymentEventType::Paid, PaymentEventType::Expired], true)) {
+			return null;
+		}
+
+		// The provider was asked about this order's own checkout, so the
+		// answer is about this order, whatever order it names or fails to.
+		return new PaymentEvent($event->provider, $event->eventId, $event->type, $order->id(), $event->amount, $event->providerRef, $event->providerPaymentRef, $event->summary, $event->subscriptionRef, $event->customerRef, $event->tax, $event->orderTotal);
 	}
 
 	private function startedAt(OrderData $order): int
