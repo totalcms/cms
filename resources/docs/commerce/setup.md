@@ -64,10 +64,8 @@ These are under **Settings → Commerce**.
 
 | Setting | What it does |
 |---|---|
-| **Store Currency** | The currency of every price and order. |
-| **Store Name** | The name receipts come from: their sender name, and in their subject and text. Empty uses the site's name. |
-| **Store Email** | Where a buyer's reply to a receipt goes, and the address the receipt says to write to. Empty sends replies to the address your site sends email from. |
-| **Customer Accounts Collection** | The auth collection customers sign in to, so they can see their orders. Empty means guest checkout only. |
+| **Store Currency** | The currency of every price and order, chosen from a list. |
+| **Customer Accounts Collection** | The collection customers sign in to, so they can see their orders, chosen from the collections people can sign in to. Empty means guest checkout only. |
 | **Payment Providers** | The ways a buyer can pay: tick each one to offer. Checkout lists them in the order shown here. |
 | **Checkout** | Where the buyer pays: the provider's page, or this site. |
 | **First Order Number** | The number your first order gets. Default `1001`. A number is never used twice. |
@@ -75,15 +73,16 @@ These are under **Settings → Commerce**.
 | **Receipt Email** | The mailer template sent when an order is paid. Empty uses `commerce-receipt`. |
 | **Order Page** | A Site Builder page that shows an order after payment. Empty uses the built-in page. |
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
+| **Tax**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and at what rate where. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |
 
-The settings for tax, shipping, downloads and subscriptions are for features that are [not in this version yet](docs/commerce/overview#not-in-this-version-yet).
+The settings for shipping, downloads and subscriptions are for features that are [not in this version yet](docs/commerce/overview#not-in-this-version-yet).
 
 ## Receipts
 
-`tcms commerce:install` adds a mailer template called `commerce-receipt`. It is your receipt unless you choose another under **Receipt Email**. Edit it under **Mailer** like any other template. It is sent once when an order is paid. It comes from your **Store Name** and a reply to it goes to your **Store Email**. In the template the order is `data`, as in `{{ data.number }}`. Any template, yours or an email's, can print the two settings with `cms.commerce.storeName()` and `cms.commerce.storeEmail()`.
+`tcms commerce:install` adds a mailer template called `commerce-receipt`. It is your receipt unless you choose another under **Receipt Email**. Edit it under **Mailer** like any other template. It is sent once when an order is paid. It comes from your site's name, which is **Site Name** under **Settings → General**. To have replies go to an address of your choice, fill in **Reply-To** on the template. In the template the order is `data`, as in `{{ data.number }}`, and `cms.commerce.storeName()` prints the site's name.
 
 Receipts go out through your site's email settings. If email is not set up, no receipt is sent.
 

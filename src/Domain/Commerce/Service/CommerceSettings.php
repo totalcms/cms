@@ -28,7 +28,6 @@ final readonly class CommerceSettings
 {
 	public const DEFAULT_CURRENCY = 'USD';
 
-	public const DEFAULT_PURCHASE_URL = 'https://totalcms.co/commerce';
 
 	/** What each kind of commerce record is stored in, unless the site says otherwise. */
 	private const COLLECTIONS = [
@@ -53,18 +52,13 @@ final readonly class CommerceSettings
 	}
 
 	/**
-	 * What the store calls itself on a receipt. A store with no name of its
-	 * own goes by the site's, so a receipt always says who it is from.
+	 * What the store calls itself, on a receipt and anywhere else: the
+	 * site's name (Settings → General). The store has no second name to
+	 * keep in step with it.
 	 */
 	public function storeName(): string
 	{
-		return $this->text('storeName') ?: $this->config->displayName();
-	}
-
-	/** The address a buyer's reply to a receipt goes to. Empty when the store has none. */
-	public function storeEmail(): string
-	{
-		return $this->text('storeEmail');
+		return $this->config->displayName();
 	}
 
 	/**
@@ -153,13 +147,19 @@ final readonly class CommerceSettings
 	/** A decimal string in the store's currency. */
 	public function shippingFlatRate(): string
 	{
-		return $this->text('shippingFlatRate') ?: '0';
+		return $this->amount('shippingFlatRate') ?: '0';
 	}
 
-	/** Orders at or over this ship free; empty means never. A decimal string. */
+	/**
+	 * Orders at or over this ship free; empty means never. A decimal string.
+	 * An amount of nothing is no threshold: free over nothing would be free
+	 * for everyone.
+	 */
 	public function shippingFreeOver(): string
 	{
-		return $this->text('shippingFreeOver');
+		$over = $this->amount('shippingFreeOver');
+
+		return (float)$over > 0 ? $over : '';
 	}
 
 	/**
@@ -251,12 +251,6 @@ final readonly class CommerceSettings
 		return array_values(array_diff($this->names('grantableGroups'), [UserValidationService::ADMINGROUP]));
 	}
 
-	/** Where a Pro site without the Commerce add-on is sent to add it. */
-	public function purchaseUrl(): string
-	{
-		return $this->text('purchaseUrl') ?: self::DEFAULT_PURCHASE_URL;
-	}
-
 	/** Read when asked, not when built: this class is built while the app boots. */
 	private function setting(string $key): mixed
 	{
@@ -268,6 +262,21 @@ final readonly class CommerceSettings
 		$value = $this->setting($key);
 
 		return is_string($value) ? trim($value) : '';
+	}
+
+	/**
+	 * An amount of money as its digits, such as "4.95". A price field saves
+	 * a number and a text box saved the digits as typed: both are read. ''
+	 * for anything that is not an amount.
+	 */
+	private function amount(string $key): string
+	{
+		$value = $this->setting($key);
+		if (is_int($value) || is_float($value)) {
+			$value = (string)$value;
+		}
+
+		return is_string($value) && preg_match('/^\d+(\.\d+)?\z/', trim($value)) === 1 ? trim($value) : '';
 	}
 
 	private function atLeastOne(string $key, int $default): int

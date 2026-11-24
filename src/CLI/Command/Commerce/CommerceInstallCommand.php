@@ -35,7 +35,7 @@ class CommerceInstallCommand extends BaseCommand
 		// A site without Commerce gets no store collections it cannot use.
 		$status = $container->get(CommerceGate::class)->status();
 		if ($status !== CommerceGateStatus::Allowed) {
-			return $this->outputError($input, $output, $status->refusal($container->get(CommerceSettings::class)->purchaseUrl()));
+			return $this->outputError($input, $output, $status->refusal());
 		}
 
 		$report = $container->get(CommerceInstaller::class)->install();

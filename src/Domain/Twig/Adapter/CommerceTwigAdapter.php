@@ -88,16 +88,10 @@ final readonly class CommerceTwigAdapter
 		return $this->settings->currency();
 	}
 
-	/** What the store calls itself: its own name, or the site's when it has none. */
+	/** What the store calls itself: the site's name, set in Settings → General. */
 	public function storeName(): string
 	{
 		return $this->settings->storeName();
-	}
-
-	/** The address buyers can write to, or '' when the store has none. */
-	public function storeEmail(): string
-	{
-		return $this->settings->storeEmail();
 	}
 
 	/**

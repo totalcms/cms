@@ -88,9 +88,7 @@ final readonly class CheckoutService
 		// The code is checked again here, with the email: a code that stopped
 		// being valid stops the checkout, before any order or payment exists.
 		$draft = $this->builder->build($this->cart->items(), $input, $ctx, $this->cart->discountCode());
-		if ($this->needsCountry($draft, $input)) {
-			throw CommerceException::addressRequired();
-		}
+		$this->requireWhere($draft, $input);
 
 		$free     = $draft->totals->grandTotal === 0 && !$draft->hasRecurringLine();
 		$provider = $free ? null : $this->provider($input->provider, $draft);
@@ -129,16 +127,26 @@ final readonly class CheckoutService
 		return $cancelled;
 	}
 
-	/** An order that ships, or is taxed, needs to say where. */
-	private function needsCountry(OrderDraft $draft, CheckoutInput $input): bool
+	/**
+	 * An order that ships, or is taxed, has to say where: the country, and
+	 * the region too where the store's tax depends on it.
+	 *
+	 * @throws CommerceException
+	 */
+	private function requireWhere(OrderDraft $draft, CheckoutInput $input): void
 	{
-		if (!$draft->ships() && $this->tax->mode() === TaxCalculator::NONE) {
-			return false;
+		$taxed = $this->tax->mode() !== TaxCalculator::NONE;
+		if (!$draft->ships() && !$taxed) {
+			return;
 		}
 
 		$address = $input->shipping ?? $input->billing;
-
-		return $address === null || $address->country === '';
+		if ($address === null || $address->country === '') {
+			throw $draft->ships() ? CommerceException::addressRequired() : CommerceException::taxCountryRequired();
+		}
+		if ($taxed && $address->region === '' && $this->tax->needsRegion($address->country)) {
+			throw CommerceException::regionRequired();
+		}
 	}
 
 	/** @throws CommerceException when the provider cannot take this order */

@@ -92,13 +92,19 @@
 			"type": "number",
 			"field": "price",
 			"label": "Price",
-			"help": "Unit price in the store currency. Used when the product has no variants, and as the default for a variant without its own price."
+			"help": "Unit price in the store currency. Used when the product has no variants, and as the default for a variant without its own price.",
+			"settings": {
+				"currency": "store"
+			}
 		},
 		"compareAtPrice": {
 			"type": "number",
 			"field": "price",
 			"label": "Compare-at Price",
-			"help": "Shown as the crossed-out price. Display only; never charged."
+			"help": "Shown as the crossed-out price. Display only; never charged.",
+			"settings": {
+				"currency": "store"
+			}
 		},
 		"taxable": {
 			"type": "boolean",

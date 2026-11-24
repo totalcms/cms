@@ -44,7 +44,6 @@ it('has a working default for everything', function (): void {
 		->and($s->receiptMailer())->toBe('commerce-receipt')
 		->and($s->paymentFailedMailer())->toBe('commerce-payment-failed')
 		->and($s->storeName())->toBe('shop.example')
-		->and($s->storeEmail())->toBe('')
 		->and($s->downloadTtlHours())->toBe(72)
 		->and($s->downloadMaxCount())->toBe(5)
 		->and($s->pendingOrderTtlHours())->toBe(24)
@@ -54,15 +53,12 @@ it('has a working default for everything', function (): void {
 		->and($s->returnPage())->toBe('')
 		->and($s->payPage())->toBe('')
 		->and($s->checkoutMode())->toBe('hosted')
-		->and($s->grantableGroups())->toBe([])
-		->and($s->purchaseUrl())->toBe('https://totalcms.co/commerce');
+		->and($s->grantableGroups())->toBe([]);
 });
 
 it('reads what the site set', function (): void {
 	$s = ($this->settings)([
 		'currency'             => 'eur',
-		'storeName'            => 'Acme Coffee',
-		'storeEmail'           => 'shop@acme.example',
 		'collections'          => ['orders' => 'shop-orders'],
 		'customerCollection'   => 'members',
 		'providers'            => ['stripe', 'paypal'],
@@ -84,12 +80,10 @@ it('reads what the site set', function (): void {
 		'returnPage'           => 'thanks',
 		'payPage'              => 'pay',
 		'checkoutMode'         => 'embedded',
-		'purchaseUrl'          => 'https://reseller.example/commerce',
 	]);
 
 	expect($s->currency())->toBe('EUR')
-		->and($s->storeName())->toBe('Acme Coffee')
-		->and($s->storeEmail())->toBe('shop@acme.example')
+		->and($s->storeName())->toBe('shop.example')
 		// One collection renamed; the others keep their defaults.
 		->and($s->collection('orders'))->toBe('shop-orders')
 		->and($s->collection('products'))->toBe('products')
@@ -112,8 +106,7 @@ it('reads what the site set', function (): void {
 		->and($s->checkoutAttributes())->toBe(['licenseKey', 'giftNote'])
 		->and($s->returnPage())->toBe('thanks')
 		->and($s->payPage())->toBe('pay')
-		->and($s->checkoutMode())->toBe('embedded')
-		->and($s->purchaseUrl())->toBe('https://reseller.example/commerce');
+		->and($s->checkoutMode())->toBe('embedded');
 });
 
 it('refuses a collection role it does not know', fn () => ($this->settings)()->collection('nope'))->throws(InvalidArgumentException::class);
@@ -175,18 +168,32 @@ it('drops anything that is not a plain name from a list of names', function (): 
 		->and($s->checkoutAttributes())->toBe(['licenseKey']);
 });
 
-// A receipt always says who it is from: a store that has not been named
-// goes by the site's own name.
-it('uses the site name as the store name until the store has its own', function (): void {
+// The store has no name of its own: it goes by the site's, set once in
+// Settings → General, so a receipt and the rest of the site agree.
+it('goes by the site\'s name', function (): void {
 	$config            = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->dashboard = [];
 	$config->domain    = 'shop.example';
 	$config->siteName  = 'Larkspur Roastery';
-	$config->commerce  = [];
+	$config->commerce  = ['storeName' => 'An Old Store Name'];
 
 	expect((new CommerceSettings($config))->storeName())->toBe('Larkspur Roastery');
-
-	$config->commerce = ['storeName' => ' Larkspur Shop '];
-
-	expect((new CommerceSettings($config))->storeName())->toBe('Larkspur Shop');
 });
+
+// A price field saves a number where the text box it replaced saved the
+// digits as typed. Both are read, and both come out as the digits.
+it('reads a shipping amount whether it was saved as a number or as text', function (mixed $saved, string $flat, string $freeOver): void {
+	$s = ($this->settings)(['shippingFlatRate' => $saved, 'shippingFreeOver' => $saved]);
+
+	expect($s->shippingFlatRate())->toBe($flat)
+		->and($s->shippingFreeOver())->toBe($freeOver);
+})->with([
+	'a number with cents' => [4.95, '4.95', '4.95'],
+	'a whole number'      => [50, '50', '50'],
+	'a float that is whole' => [50.0, '50', '50'],
+	'text, as before'     => [' 12.50 ', '12.50', '12.50'],
+	// Free over nothing would be free for everyone: an empty price field is no threshold.
+	'nothing'             => [0, '0', ''],
+	'nothing, as text'    => ['', '0', ''],
+	'not an amount'       => [['x'], '0', ''],
+]);

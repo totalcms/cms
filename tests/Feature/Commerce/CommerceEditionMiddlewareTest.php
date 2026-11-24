@@ -62,11 +62,8 @@ test('the refusal is JSON for a caller that asks for JSON', function (): void {
 		->and(($this->message)($response))->toStartWith('Commerce requires Total CMS Pro and the Commerce add-on.');
 });
 
-test('the add-on link comes from the site\'s settings', function (): void {
-	$config           = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
-	$config->commerce = ['purchaseUrl' => 'https://reseller.example/commerce'] + $config->commerce;
-
-	expect(($this->message)(get('/commerce-gate-test')))->toEndWith('Add Commerce: https://reseller.example/commerce');
+test('the refusal says where to add Commerce', function (): void {
+	expect(($this->message)(get('/commerce-gate-test')))->toEndWith('Add Commerce: https://totalcms.co/commerce');
 });
 
 test('with commerce enabled the request goes through', function (): void {

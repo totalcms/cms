@@ -20,6 +20,12 @@ interface TaxCalculator
 	public function mode(): string;
 
 	/**
+	 * Whether a buyer in this country must say which region they are in,
+	 * because the tax there depends on it. A two-letter country code.
+	 */
+	public function needsRegion(string $country): bool;
+
+	/**
 	 * The tax on each line and on shipping, in minor units. A line is taxed
 	 * on what is charged for it: {@see OrderLineDraft::netTotal()}.
 	 *

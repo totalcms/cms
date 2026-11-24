@@ -62,7 +62,7 @@ Commerce adds these collections. You edit products and discount codes like any o
 
 These are designed and on the way. Their settings and fields are already there, and do nothing yet:
 
-- **Tax and shipping rates.** Checkout charges no tax and no shipping.
+- **Shipping rates.** Checkout charges no shipping. [Tax](docs/commerce/tax) from your own table of rates is in this version.
 - **Stock counted down.** A product's stock stops a sale at zero. It does not go down as orders are paid.
 - **File downloads.** A digital product can be sold. Its files are not delivered automatically.
 - **Subscriptions** and **PayPal.**

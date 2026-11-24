@@ -17,6 +17,7 @@ use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
@@ -61,6 +62,7 @@ final readonly class CartTwigAdapter
 		private \Closure $twig,
 		private PaymentProviderRegistry $providers,
 		private MoneyFilter $money,
+		private TaxCalculator $tax,
 	) {
 	}
 
@@ -268,7 +270,10 @@ final readonly class CartTwigAdapter
 
 		return ($this->twig)()->render('commerce/checkout-form.twig', [
 			'providers' => $providers,
-			'ships'     => $this->ships($view),
+			'ships'     => $ships = $this->ships($view),
+			// Tax goes by where the buyer is. An order that ships says so with
+			// its address; one that does not has to be asked.
+			'taxed'     => !$ships && $this->tax->mode() !== TaxCalculator::NONE,
 			'email'     => '',
 			'label'     => $this->option($options, 'label') ?: 'Continue to payment',
 			'class'     => $this->option($options, 'class'),

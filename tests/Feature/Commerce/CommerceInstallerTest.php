@@ -126,7 +126,8 @@ test('the receipt email is installed, addressed to the buyer', function (): void
 
 	expect($mailer['subject'])->toBe('Your order {{ data.number }} from {{ cms.commerce.storeName() }}')
 		->and($mailer['fromName'])->toBe('{{ cms.commerce.storeName() }}')
-		->and($mailer['replyTo'])->toBe('{{ cms.commerce.storeEmail() }}')
+		// Left empty for the owner to fill in under Mailer, as on any other email.
+		->and($mailer['replyTo'] ?? '')->toBe('')
 		->and($mailer['to'])->toBe('{{ data.email }}')
 		->and($mailer['bodyHtml'])->toContain('|money(data.currency)', 'cms.commerce.downloads(data)', "data.kind == 'renewal'", 'data.discountCode')
 		->and($mailer['bodyText'])->toContain('|money(data.currency)');
@@ -145,7 +146,7 @@ test('a receipt sent through the mailer is addressed to the buyer and shows the 
 	});
 	$this->c->set(EmailSender::class, $sender);
 	$config           = $this->c->get(Config::class);
-	$config->commerce = ['storeName' => 'Larkspur & Co', 'storeEmail' => 'shop@larkspur.example'] + $config->commerce;
+	$config->siteName = 'Larkspur & Co';
 
 	$result = $this->c->get(EmailService::class)->sendEmail('commerce-receipt', [
 		'id'            => 'order-1',
@@ -167,11 +168,13 @@ test('a receipt sent through the mailer is addressed to the buyer and shows the 
 		->and($sent)->toHaveCount(1)
 		->and($sent[0]['to'])->toBe('buyer@example.com')
 		->and($sent[0]['subject'])->toBe('Your order 1001 from Larkspur & Co')
-		// The receipt comes from the store, and a reply goes to the store.
+		// The receipt comes from the site's name. Who a reply goes to is the
+		// template's own Reply-To, empty until the owner sets it.
 		->and($sent[0]['fromName'])->toBe('Larkspur & Co')
-		->and($sent[0]['replyTo'])->toBe('shop@larkspur.example')
-		->and($sent[0]['bodyHtml'])->toContain('Larkspur &amp; Co has received your payment', 'dated November 23, 2026', 'reply to this email', 'mailto:shop@larkspur.example')
-		->and($sent[0]['bodyText'])->toContain('Larkspur & Co has received your payment', 'dated November 23, 2026', 'shop@larkspur.example')
+		->and($sent[0]['replyTo'])->toBe('')
+		->and($sent[0]['bodyHtml'])->toContain('Larkspur &amp; Co has received your payment', 'dated November 23, 2026', 'reply to this email')
+		->not->toContain('mailto:')
+		->and($sent[0]['bodyText'])->toContain('Larkspur & Co has received your payment', 'dated November 23, 2026', 'reply to this email')
 		->and($sent[0]['bodyHtml'])->toContain('Thank you for your order', 'Kiambu &lt;AA&gt; &times; 2', '$44.00', 'Discount (WELCOME10)', '-$4.40', '$5.00', '$44.60')
 		->not->toContain('{{', '{%', 'Tax', 'Your downloads')
 		->and($sent[0]['bodyText'])->toContain('Kiambu <AA> x 2: $44.00', 'Total: $44.60')
@@ -188,7 +191,7 @@ test('the failed payment email is installed, with the link to fix the payment', 
 		->and($mailer['bodyText'])->toContain('cms.commerce.subscriptionUrl(data)');
 });
 
-test('a store with no email of its own sends a receipt with no reply-to', function (): void {
+test('a receipt with no date to show still reads properly', function (): void {
 	commerceInstall();
 	$sent   = [];
 	$sender = $this->createMock(EmailSender::class);
@@ -201,9 +204,8 @@ test('a store with no email of its own sends a receipt with no reply-to', functi
 
 	$this->c->get(EmailService::class)->sendEmail('commerce-receipt', ['number' => 1002, 'email' => 'buyer@example.com', 'currency' => 'USD', 'lines' => [], 'grandTotal' => 0]);
 
-	expect($sent[0]['replyTo'])->toBe('')
-		->and($sent[0]['fromName'])->not->toBe('')
-		->and($sent[0]['bodyHtml'])->toContain('reply to this email')->not->toContain('mailto:', 'dated');
+	expect($sent[0]['fromName'])->not->toBe('')
+		->and($sent[0]['bodyHtml'])->toContain('reply to this email')->not->toContain('dated', '{{');
 });
 
 test('the failed payment email comes from the store too', function (): void {
@@ -211,7 +213,7 @@ test('the failed payment email comes from the store too', function (): void {
 	$mailer = $this->c->get(MailerFetcher::class)->fetchMailer('commerce-payment-failed')->toArray();
 
 	expect($mailer['fromName'])->toBe('{{ cms.commerce.storeName() }}')
-		->and($mailer['replyTo'])->toBe('{{ cms.commerce.storeEmail() }}');
+		->and($mailer['replyTo'] ?? '')->toBe('');
 });
 
 test('everything a template prints from an order is escaped', function (string $id): void {

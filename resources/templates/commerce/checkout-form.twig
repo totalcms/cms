@@ -10,6 +10,7 @@
 
 	providers  the ways to pay that can take this cart: [{id, label}]
 	ships      whether anything in the cart has to be sent
+	taxed      whether to ask where the buyer is, for tax: nothing ships and the store charges tax
 	email      the buyer's email, when they are signed in
 	label      the button's text
 	class      an extra class for the form
@@ -37,6 +38,21 @@
 				<label for="commerce-checkout-country">Country</label>
 				<input id="commerce-checkout-country" type="text" name="shippingAddress[country]" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" autocomplete="shipping country" placeholder="US" required>
 			</p>
+		</fieldset>
+	{% endif %}
+	{% if taxed %}
+		{# Nothing here ships, and the store charges tax: tax goes by where the buyer is. #}
+		<fieldset class="commerce-checkout-address commerce-checkout-location">
+			<legend>Where you are</legend>
+			<p class="commerce-checkout-field">
+				<label for="commerce-checkout-billing-country">Country</label>
+				<input id="commerce-checkout-billing-country" type="text" name="billingAddress[country]" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" autocomplete="billing country" placeholder="US" required>
+			</p>
+			<p class="commerce-checkout-field">
+				<label for="commerce-checkout-billing-region">State or region</label>
+				<input id="commerce-checkout-billing-region" type="text" name="billingAddress[region]" maxlength="200" autocomplete="billing address-level1">
+			</p>
+			<p class="commerce-checkout-hint">Used to work out the tax on your order.</p>
 		</fieldset>
 	{% endif %}
 	{% if providers|length > 1 %}

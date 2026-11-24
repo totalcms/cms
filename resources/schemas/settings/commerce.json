@@ -2,36 +2,29 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Commerce Settings",
 	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
-	"formgrid": "---Store---\ncurrency storeName\nstoreEmail customerCollection\n---Payments---\nproviders providers\ncheckoutMode payPage\nreturnPage .\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxShipping\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty\npurchaseUrl purchaseUrl",
+	"formgrid": "---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxShipping\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
 	"type": "object",
 	"properties": {
 		"currency": {
 			"type": "string",
-			"field": "text",
+			"field": "select",
 			"label": "Store Currency",
-			"help": "The three-letter code every price and order is in, such as <code>USD</code>, <code>EUR</code> or <code>GBP</code>. Choose it before the first order: changing it later does not convert existing prices or orders.",
-			"placeholder": "USD",
-			"default": "USD"
-		},
-		"storeName": {
-			"type": "string",
-			"field": "text",
-			"label": "Store Name",
-			"help": "The name receipts come from: it is their sender name, and it is in their subject and text. Leave empty to use the site name."
-		},
-		"storeEmail": {
-			"type": "string",
-			"field": "text",
-			"label": "Store Email",
-			"help": "Where a buyer's reply to a receipt goes. The receipt also shows it as the address to write to. Leave empty and replies go to the address your site sends email from.",
-			"placeholder": "shop@example.com"
+			"help": "The currency every price and order is in. Choose it before the first order: changing it later does not convert existing prices or orders.",
+			"default": "USD",
+			"settings": {
+				"propertyOptions": "currencies",
+				"clearValue": false
+			}
 		},
 		"customerCollection": {
 			"type": "string",
-			"field": "text",
+			"field": "select",
 			"label": "Customer Accounts Collection",
-			"help": "The auth collection customers sign in to, so they can see their orders. Leave empty for guest checkout only.",
-			"placeholder": "Guest checkout only"
+			"help": "The collection customers sign in to, so they can see their orders. Leave empty for guest checkout only.",
+			"placeholder": "Guest checkout only",
+			"settings": {
+				"propertyOptions": "schemaCollections:auth"
+			}
 		},
 		"providers": {
 			"type": "array",
@@ -49,7 +42,7 @@
 		},
 		"checkoutMode": {
 			"type": "string",
-			"field": "select",
+			"field": "radio",
 			"label": "Checkout",
 			"help": "Where the buyer pays. <strong>Provider's page</strong> sends them to the payment provider and brings them back. <strong>On this site</strong> shows the payment form on your own page; it is used when the chosen provider can do it, and the provider's page otherwise.",
 			"default": "hosted",
@@ -84,7 +77,7 @@
 		},
 		"taxMode": {
 			"type": "string",
-			"field": "select",
+			"field": "radio",
 			"label": "Tax",
 			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> adds it at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.",
 			"default": "none",
@@ -108,10 +101,17 @@
 			"field": "toggle",
 			"label": "Tax Shipping",
 			"help": "Charge tax on the shipping amount as well as on the goods.",
-			"default": false
+			"default": false,
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
+			}
 		},
 		"taxRates": {
-			"field": "deck",
+			"field": "deckTable",
 			"label": "Tax Rates",
 			"help": "One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country.",
 			"schemaref": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
@@ -120,11 +120,18 @@
 				"^[a-zA-Z0-9][\\w-]*$": {
 					"$ref": "https://www.totalcms.co/schemas/commerce-tax-rate.json"
 				}
+			},
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
 			}
 		},
 		"shippingMode": {
 			"type": "string",
-			"field": "select",
+			"field": "radio",
 			"label": "Shipping",
 			"help": "<strong>No shipping</strong> charges none. <strong>Flat rate</strong> charges one amount for every order. <strong>By zone</strong> charges by where the order ships.",
 			"default": "none",
@@ -144,19 +151,32 @@
 			]
 		},
 		"shippingFlatRate": {
-			"type": "string",
-			"field": "text",
+			"type": "number",
+			"field": "price",
 			"label": "Flat Rate",
-			"help": "The shipping charge for every order, in the store's currency, such as <code>4.95</code>.",
-			"placeholder": "0",
-			"default": "0"
+			"help": "The shipping charge for every order, in the store's currency.",
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "flat",
+					"operator": "=="
+				},
+				"currency": "store"
+			}
 		},
 		"shippingFreeOver": {
-			"type": "string",
-			"field": "text",
+			"type": "number",
+			"field": "price",
 			"label": "Free Shipping Over",
 			"help": "Orders at or over this amount ship free. Leave empty for never.",
-			"placeholder": "50"
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "flat",
+					"operator": "=="
+				},
+				"currency": "store"
+			}
 		},
 		"shippingZones": {
 			"field": "deck",
@@ -168,6 +188,14 @@
 				"^[a-zA-Z0-9][\\w-]*$": {
 					"$ref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json"
 				}
+			},
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "zones",
+					"operator": "=="
+				},
+				"deckItemLabel": "${label}"
 			}
 		},
 		"receiptMailer": {
@@ -223,6 +251,11 @@
 					"collection": "builder-pages",
 					"label": "title",
 					"value": "id"
+				},
+				"visibility": {
+					"watch": "checkoutMode",
+					"value": "embedded",
+					"operator": "=="
 				}
 			}
 		},
@@ -291,14 +324,6 @@
 			"settings": {
 				"accessGroupOptions": true
 			}
-		},
-		"purchaseUrl": {
-			"type": "string",
-			"field": "text",
-			"label": "Add Commerce Link",
-			"help": "Where a Pro site without the Commerce add-on is sent to add it.",
-			"placeholder": "https://totalcms.co/commerce",
-			"default": "https://totalcms.co/commerce"
 		}
 	}
 }

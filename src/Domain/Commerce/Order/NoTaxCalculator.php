@@ -12,6 +12,11 @@ final readonly class NoTaxCalculator implements TaxCalculator
 		return self::NONE;
 	}
 
+	public function needsRegion(string $country): bool
+	{
+		return false;
+	}
+
 	public function calculate(array $lines, int $shipping, ?Address $address, string $currency): array
 	{
 		return ['lines' => array_fill_keys(array_keys($lines), 0), 'shipping' => 0, 'taxLines' => []];

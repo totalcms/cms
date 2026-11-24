@@ -780,6 +780,21 @@
 	}
 }
 
+// Where the buyer is, asked only for tax: two short fields, side by side
+// when there is room, with a line under them saying why they are asked.
+@container (min-width: 22rem) {
+	.commerce-checkout-location .commerce-checkout-field:nth-of-type(-n + 3) {
+		grid-column : auto;
+	}
+}
+
+.commerce-checkout-hint {
+	grid-column : 1 / -1;
+	margin      : 0;
+	font-size   : 0.875em;
+	opacity     : 0.75;
+}
+
 .commerce-checkout-providers {
 	display : grid;
 	gap     : 0.5rem;

@@ -30,7 +30,6 @@ readonly class CommerceEditionMiddleware extends BaseEditionMiddleware
 {
 	public const MESSAGE = CommerceGateStatus::MESSAGE;
 
-	public const DEFAULT_PURCHASE_URL = 'https://totalcms.co/commerce';
 
 	public function __construct(
 		private CommerceGate $gate,
@@ -50,8 +49,6 @@ readonly class CommerceEditionMiddleware extends BaseEditionMiddleware
 			return $handler->handle($request);
 		}
 
-		$url = $this->config->commerce['purchaseUrl'] ?? '';
-
-		return $this->forbiddenResponse($request, $status->refusal(is_string($url) && $url !== '' ? $url : self::DEFAULT_PURCHASE_URL));
+		return $this->forbiddenResponse($request, $status->refusal());
 	}
 }

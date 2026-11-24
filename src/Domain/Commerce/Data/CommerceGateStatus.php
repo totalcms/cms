@@ -20,16 +20,19 @@ enum CommerceGateStatus: string
 
 	public const MESSAGE = 'Commerce requires Total CMS Pro and the Commerce add-on.';
 
+	/** Where a Pro site without the add-on is sent to add it. */
+	public const PURCHASE_URL = 'https://totalcms.co/commerce';
+
 	/**
 	 * What to tell someone the gate turned away, or '' when it let them in.
 	 * A Pro site is one purchase away, so it is told where.
 	 */
-	public function refusal(string $purchaseUrl): string
+	public function refusal(): string
 	{
 		return match ($this) {
 			self::Allowed          => '',
 			self::NeedsPro         => self::MESSAGE,
-			self::NeedsEntitlement => self::MESSAGE . ' Add Commerce: ' . $purchaseUrl,
+			self::NeedsEntitlement => self::MESSAGE . ' Add Commerce: ' . self::PURCHASE_URL,
 		};
 	}
 }

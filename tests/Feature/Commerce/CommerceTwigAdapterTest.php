@@ -29,11 +29,11 @@ test('says whether the store is on, and its currency', function (): void {
 	expect(($this->twig)('{{ cms.commerce.enabled() ? "on" : "off" }}|{{ cms.commerce.currency() }}'))->toBe('on|USD');
 });
 
-test('gives a template the store name and the address buyers can write to', function (): void {
+test('gives a template the name the store goes by, which is the site\'s', function (): void {
 	$config           = $this->c->get(Config::class);
-	$config->commerce = ['storeName' => 'Larkspur <Shop>', 'storeEmail' => 'shop@larkspur.example'] + $config->commerce;
+	$config->siteName = 'Larkspur <Shop>';
 
-	expect(($this->twig)('{{ cms.commerce.storeName() }}|{{ cms.commerce.storeEmail() }}'))->toBe('Larkspur <Shop>|shop@larkspur.example');
+	expect(($this->twig)('{{ cms.commerce.storeName() }}'))->toBe('Larkspur <Shop>');
 });
 
 describe('prices', function (): void {

@@ -61,6 +61,11 @@ function stubTax(string $mode = 'exclusive'): TaxCalculator
 			return $this->mode;
 		}
 
+		public function needsRegion(string $country): bool
+		{
+			return false;
+		}
+
 		public function calculate(array $lines, int $shipping, ?Address $address, string $currency): array
 		{
 			$tax = [];

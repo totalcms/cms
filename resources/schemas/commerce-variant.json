@@ -52,7 +52,10 @@
 			"type": "number",
 			"field": "price",
 			"label": "Price",
-			"help": "Leave empty, or 0, to use the product's price."
+			"help": "Leave empty, or 0, to use the product's price.",
+			"settings": {
+				"currency": "store"
+			}
 		},
 		"stock": {
 			"type": "integer",

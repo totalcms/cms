@@ -685,12 +685,12 @@ $settings['backups'] = [
 // Editable under Settings → Commerce; read through CommerceSettings, which
 // turns a missing or mistyped value into a safe one.
 //
-// Money-like values (`shippingFlatRate`, `shippingFreeOver`, a zone's rate) and
-// tax rates are decimal STRINGS, so "8.875" is never a float.
+// A tax rate is a decimal STRING, so "8.875" is never a float. A shipping
+// amount (`shippingFlatRate`, `shippingFreeOver`, a zone's rate) is saved by a
+// price field as a number, as a product's price is; CommerceSettings reads
+// either and hands on the digits.
 $settings['commerce'] = [
 	'currency'             => 'USD',
-	'storeName'            => '',
-	'storeEmail'           => '',               // reply-to on receipts; where a new-order notice goes
 	'collections'          => ['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts'],
 	'customerCollection'   => '',               // auth collection for customer accounts; '' = guest checkout only
 	'providers'            => [],               // enabled payment provider ids, in the order checkout shows them
@@ -700,8 +700,8 @@ $settings['commerce'] = [
 	'taxShipping'          => false,
 	'taxRates'             => [],               // [{country, region, rate, label}]; rate is a percent, e.g. "8.875"
 	'shippingMode'         => 'none',           // none | flat | zones
-	'shippingFlatRate'     => '0',
-	'shippingFreeOver'     => '',               // '' = never free
+	'shippingFlatRate'     => 0,
+	'shippingFreeOver'     => 0,                // 0 = never free
 	'shippingZones'        => [],               // [{id, label, countries[], regions[], rate, freeOver}]
 	'receiptMailer'        => 'commerce-receipt',
 	'downloadTtlHours'     => 72,
@@ -711,7 +711,6 @@ $settings['commerce'] = [
 	'cartMaxQty'           => 99,
 	'checkoutAttributes'   => [],               // extra values checkout may take from the buyer, by name, e.g. ['licenseKey']
 	'returnPage'           => '',               // Site Builder page id for the order page; '' = the built-in page
-	'purchaseUrl'          => 'https://totalcms.co/commerce', // where a Pro site without the add-on is sent
 	'checkoutMode'         => 'hosted',         // hosted | embedded; embedded falls back to hosted when the provider cannot do it
 	'payPage'              => '',               // Site Builder page id for on-page checkout; '' = the built-in page
 	'grantableGroups'      => [],               // access group ids a product may grant its buyer; never the admin group

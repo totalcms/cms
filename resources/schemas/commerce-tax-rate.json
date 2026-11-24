@@ -12,20 +12,33 @@
 			"field": "id",
 			"factory": "uid",
 			"label": "Rate ID",
-			"placeholder": "us-ny"
+			"settings": {
+				"autogen": "tax_${uid}",
+				"hide": true
+			}
 		},
 		"country": {
 			"type": "string",
-			"field": "text",
+			"field": "select",
 			"label": "Country",
-			"help": "Two-letter country code, such as <code>US</code>. Leave empty for a rate that applies everywhere.",
-			"placeholder": "US"
+			"help": "The country this rate is for. <em>Everywhere</em> is a rate for buyers in any country that has no rate of its own.",
+			"default": "",
+			"options": [
+				{
+					"value": "",
+					"label": "Everywhere"
+				}
+			],
+			"settings": {
+				"propertyOptions": "countries",
+				"sortOptions": false
+			}
 		},
 		"region": {
 			"type": "string",
 			"field": "text",
 			"label": "Region",
-			"help": "State or province code, such as <code>NY</code>. Leave empty for the whole country.",
+			"help": "A state or province, such as <code>NY</code>. Leave empty for the whole country. For the United States and Canada the code and the full name both match what a buyer types. Anywhere else, write it each way a buyer might, with commas between: <code>NSW, New South Wales</code>.",
 			"placeholder": "NY"
 		},
 		"rate": {

@@ -167,6 +167,18 @@ final class CommerceException extends \RuntimeException
 		return new self('address_required', 422, 'Choose the country this order is going to.');
 	}
 
+	/** Nothing ships, and the store charges tax: tax goes by where the buyer is. */
+	public static function taxCountryRequired(): self
+	{
+		return new self('address_required', 422, 'Choose your country, so the tax on your order can be worked out.');
+	}
+
+	/** The store's tax in that country depends on the region. */
+	public static function regionRequired(): self
+	{
+		return new self('region_required', 422, 'Enter your state or region, so the tax on your order can be worked out.');
+	}
+
 	/** No way to pay that can take this order: none switched on, none with keys, or not in this currency. */
 	public static function checkoutUnavailable(): self
 	{

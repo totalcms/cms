@@ -85,7 +85,10 @@
 			"type": "number",
 			"field": "price",
 			"label": "Minimum Subtotal",
-			"help": "The cart must reach this amount for the code to work."
+			"help": "The cart must reach this amount for the code to work.",
+			"settings": {
+				"currency": "store"
+			}
 		},
 		"startsAt": {
 			"$ref": "https://www.totalcms.co/schemas/properties/date.json",

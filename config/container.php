@@ -45,12 +45,12 @@ use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
 use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\InventoryApplier;
 use TotalCMS\Domain\Commerce\Order\NoShippingCalculator;
-use TotalCMS\Domain\Commerce\Order\NoTaxCalculator;
 use TotalCMS\Domain\Commerce\Order\NullDownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\NullInventoryApplier;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
 use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
+use TotalCMS\Domain\Commerce\Order\TableTaxCalculator;
 use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Commerce\Payment\PaymentCatchUp;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
@@ -714,6 +714,7 @@ return [
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 		$container->get(PaymentProviderRegistry::class),
 		$container->get(MoneyFilter::class),
+		$container->get(TaxCalculator::class),
 	),
 
 	// Spelled out for the same reason, and so checkout is built only when a pay page asks.
@@ -995,7 +996,8 @@ return [
 
 	// How an order's tax and shipping are worked out. Until the tax and
 	// shipping settings are built, nothing is charged for either.
-	TaxCalculator::class      => \DI\get(NoTaxCalculator::class),
+	// The store's own tax table. With Tax set to none it works nothing out.
+	TaxCalculator::class      => \DI\get(TableTaxCalculator::class),
 	ShippingCalculator::class => \DI\get(NoShippingCalculator::class),
 
 	// What a paid order does to stock and to its digital lines. Neither is
