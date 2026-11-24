@@ -56,7 +56,7 @@ An order is flagged when something went wrong that only a person can settle. Its
 | **Oversold** | More was sold than was in stock. |
 | **Refund failed** | The payment provider refused a refund you asked for. No money moved. |
 | **Disputed** | Answer the dispute at the payment provider. |
-| **Not delivered** | The order was paid more than 15 minutes ago, and a digital item in it has still not been delivered. |
+| **Not delivered** | The order was paid more than 15 minutes ago, and a digital item in it has still not been delivered. An item with a file is delivered by itself; this is an item with none. See [Products with no file](docs/commerce/digital-delivery#products-with-no-file). |
 
 ### Orders that stay pending
 

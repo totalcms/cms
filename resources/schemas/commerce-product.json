@@ -6,7 +6,7 @@
 	"title": "Product",
 	"category": "Commerce",
 	"description": "A sellable product. Prices are edited here and converted to whole minor units at checkout; the cart never stores a price.",
-	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Subscription and Membership---\nbilling trialDays\ninterval intervalCount\naccessGroup accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Files---\ndeliverables deliverables\n---Organize---\ncategory tags\nmeta meta",
+	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Subscription and Membership---\nbilling trialDays\ninterval intervalCount\naccessGroup accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Delivery---\ndownload download\n---Organize---\ncategory tags\nmeta meta",
 	"required": [
 		"id",
 		"title",
@@ -174,11 +174,11 @@
 				"deckItemLabel": "${title}"
 			}
 		},
-		"deliverables": {
-			"$ref": "https://www.totalcms.co/schemas/properties/depot.json",
-			"field": "depot",
-			"label": "Downloadable Files",
-			"help": "Digital products only. Buyers get expiring links after payment. These files are never served by the public download routes."
+		"download": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"field": "file",
+			"label": "Download",
+			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. This file is never served by the site's ordinary download or stream addresses. Sell several files as one zip."
 		},
 		"category": {
 			"type": "string",

@@ -115,6 +115,10 @@
 										<td>
 											<span class="dash-badge sm {{ line.badge.tone }}">{{ line.badge.label|e }}</span>
 											{% if line.fulfillmentNote ?? '' %}<span class="commerce-sub">{{ line.fulfillmentNote|e }}</span>{% endif %}
+											{# A delivered download: how much of the buyer's allowance is used. #}
+											{% if line.type == 'digital' and line.fulfillmentStatus == 'fulfilled' and line.downloads is iterable %}
+												<span class="commerce-sub">Downloaded {{ line.downloads.count ?? 0 }} of {{ downloadMax }} times</span>
+											{% endif %}
 										</td>
 									</tr>
 								{% endfor %}

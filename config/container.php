@@ -42,10 +42,11 @@ use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
+use TotalCMS\Domain\Commerce\Download\DownloadGrantIssuer;
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\InventoryApplier;
 use TotalCMS\Domain\Commerce\Order\NoShippingCalculator;
-use TotalCMS\Domain\Commerce\Order\NullDownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\NullInventoryApplier;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
@@ -729,6 +730,7 @@ return [
 		$container->get(ActorContext::class),
 		$container->get(MoneyFilter::class),
 		$container->get(CustomerOrders::class),
+		$container->get(DownloadLinks::class),
 		fn (): CheckoutService => $container->get(CheckoutService::class),
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 		fn (): CommerceDashboardView => $container->get(CommerceDashboardView::class),
@@ -1003,7 +1005,7 @@ return [
 	// What a paid order does to stock and to its digital lines. Neither is
 	// built yet, so a paid order changes no stock and issues no links.
 	InventoryApplier::class => \DI\get(NullInventoryApplier::class),
-	DownloadIssuer::class   => \DI\get(NullDownloadIssuer::class),
+	DownloadIssuer::class   => \DI\get(DownloadGrantIssuer::class),
 
 	// Paid products. Entitlements asks every source in its list; the license is
 	// the first, and the marketplace client adds another. Neither class can be

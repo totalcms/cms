@@ -1,0 +1,34 @@
+{#
+	What the buyer of an order may download. Part of the order page's status
+	block, so it appears by itself the moment the payment is confirmed. A
+	store's own order page can include it too.
+
+	The links are made fresh each time this is shown, so one from an old
+	receipt that has run out is replaced by opening the order again.
+
+	order.downloads  [{lineId, title, fileName, size, remaining, url}]; url is empty when a line's downloads are used up
+#}
+{% if order.downloads is not empty %}
+	<section class="commerce-order-downloads">
+		<h2>Your downloads</h2>
+		<ul>
+			{% for download in order.downloads %}
+				<li>
+					{% if download.url %}
+						<a href="{{ download.url|e('html_attr') }}" download>{{ download.fileName|e }}</a>
+					{% else %}
+						{{ download.fileName|e }}
+					{% endif %}
+					<small>
+						{{ download.size|filesize }},
+						{% if download.remaining > 0 %}
+							{{ download.remaining }} {{ download.remaining == 1 ? 'download' : 'downloads' }} left
+						{% else %}
+							no downloads left
+						{% endif %}
+					</small>
+				</li>
+			{% endfor %}
+		</ul>
+	</section>
+{% endif %}

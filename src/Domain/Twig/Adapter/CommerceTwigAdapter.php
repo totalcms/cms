@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Order\CustomerOrders;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
@@ -58,6 +59,7 @@ final readonly class CommerceTwigAdapter
 		private ActorContext $actors,
 		private MoneyFilter $money,
 		private CustomerOrders $orders,
+		private DownloadLinks $downloadLinks,
 		private \Closure $checkout,
 		private \Closure $twig,
 		private \Closure $dashboard,
@@ -212,6 +214,62 @@ final readonly class CommerceTwigAdapter
 	public function orders(int $limit = 20): array
 	{
 		return $this->gate->allowed() ? $this->orders->mine($limit) : [];
+	}
+
+	/**
+	 * The links to what an order's buyer may download: for each,
+	 * `{lineId, title, fileName, size, remaining, url}`. `url` is empty when
+	 * the downloads for that line are used up.
+	 *
+	 * Give it an order this object handed you (`order()`, `orders()`, the
+	 * order page's `order`): the links are already on it. In a mailer, give
+	 * it `data`, the whole order. An "order" a page put together itself gets
+	 * none, so a visitor cannot ask for the links to someone else's order.
+	 *
+	 * @param mixed $order
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	public function downloads(mixed $order): array
+	{
+		if (!is_array($order)) {
+			return [];
+		}
+		if (is_array($order['downloads'] ?? null) && !isset($order['accessToken'])) {
+			return array_values(array_filter($order['downloads'], is_array(...)));
+		}
+
+		$whole = $this->whole($order);
+
+		return $whole instanceof OrderData ? $this->downloadLinks->for($whole) : [];
+	}
+
+	/**
+	 * The signed address of an order's own page, for a mailer: give it
+	 * `data`, the whole order. The page lists the buyer's downloads with
+	 * fresh links, so it is the way back when a link in an old receipt has
+	 * run out. '' for anything but a whole order.
+	 */
+	public function orderUrl(mixed $order): string
+	{
+		$whole = is_array($order) ? $this->whole($order) : null;
+
+		return $whole instanceof OrderData ? ($this->checkout)()->orderUrl('return', $whole) : '';
+	}
+
+	/**
+	 * The order an array is, when the array is the whole of it: it carries
+	 * the order's secret, which only the store's own record does. An "order"
+	 * a page made up from what a visitor sent does not.
+	 *
+	 * @param array<mixed> $order
+	 */
+	private function whole(array $order): ?OrderData
+	{
+		$id     = $order['id'] ?? '';
+		$secret = $order['accessToken'] ?? '';
+
+		return is_string($id) && is_string($secret) ? $this->orders->bySecret($id, $secret) : null;
 	}
 
 	/**

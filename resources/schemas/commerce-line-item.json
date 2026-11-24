@@ -169,7 +169,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"field": "json",
 			"label": "Downloads",
-			"help": "How many times each file has been downloaded: {fileName: count}."
+			"help": "How many times this line's file has been downloaded: {count: 2}."
 		},
 		"refundedQty": {
 			"type": "integer",

@@ -13856,6 +13856,36 @@
                 ]
             }
         },
+        "/commerce/download/{token}": {
+            "get": {
+                "operationId": "commerce-download",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/download/{token}",
+                "x-tcms-action": "CommerceDownloadAction",
+                "x-tcms-middleware": [
+                    "CartRateLimitMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
         "/commerce/order/{orderId}/status": {
             "get": {
                 "operationId": "commerce-order-status",

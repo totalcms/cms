@@ -2,7 +2,7 @@
 	Where an order's payment stands. While the provider has not said, it asks
 	again every three seconds, and gives up asking after a minute.
 
-	order    the order, as its buyer may see it
+	order    the order, as its buyer may see it, with `downloads`: the links to what they bought
 	token    the order's signed link, which every request for it must carry
 	base     the path Total CMS is served under ('' at the site root)
 	polls    how many times this has asked already
@@ -25,4 +25,5 @@
 	{% else %}
 		<p class="commerce-order-message" role="status">Your payment is being checked. We will email {{ order.email|e }} as soon as it is confirmed.</p>
 	{% endif %}
+	{% include 'commerce/order-downloads.twig' %}
 </div>

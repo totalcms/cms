@@ -31,6 +31,7 @@ final readonly class OrderAdmin
 		private OrderStateMachine $machine,
 		private ReceiptQueuer $receipts,
 		private PaymentEventProcessor $payments,
+		private DownloadIssuer $downloads,
 	) {
 	}
 
@@ -149,7 +150,13 @@ final readonly class OrderAdmin
 	 */
 	public function refulfill(string $orderId): OrderData
 	{
-		$this->fulfillment->redispatchPaid($this->paid($orderId)->id());
+		$id = $this->paid($orderId)->id();
+
+		// What the store delivers itself comes first: a download whose file
+		// was added to the product after the order was paid.
+		$this->orders->withLock($id, fn (OrderData $order): OrderData => $this->fulfillment->settle($this->downloads->issue($order)));
+		$this->fulfillment->announce($id);
+		$this->fulfillment->redispatchPaid($id);
 
 		return $this->orders->find($orderId) ?? throw CommerceException::orderNotFound();
 	}

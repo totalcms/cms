@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\StorefrontPage;
@@ -33,6 +34,7 @@ final readonly class OrderPage
 		private StorefrontPage $pages,
 		private CommerceSettings $settings,
 		private Config $config,
+		private DownloadLinks $downloads,
 	) {
 	}
 
@@ -70,7 +72,7 @@ final readonly class OrderPage
 		$polls = is_numeric($asked) ? max(0, (int)$asked) : 0;
 
 		return [
-			'order'   => $order->forBuyer(),
+			'order'   => $this->downloads->forBuyer($order),
 			'token'   => $this->token($request),
 			'base'    => $this->config->api,
 			'polls'   => $polls,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
@@ -26,6 +27,7 @@ final readonly class PropertyFileResolver
 		private PropertyFetcher $propertyFetcher,
 		private ObjectUpdater $objectUpdater,
 		private ActorContext $actors,
+		private ProductDownload $paidFiles,
 	) {
 	}
 
@@ -69,6 +71,11 @@ final readonly class PropertyFileResolver
 
 	private function make(PropertyFileKind $kind, string $collection, string $id, string $property, string $name = '', ?string $subpath = null, ?string $nestedSubpath = null, bool $missing = false): PropertyFile
 	{
+		// A store product's download is what its buyers paid for. It is handed
+		// over by the store's own signed link and by no download or stream
+		// address, so here it does not exist.
+		$missing = $missing || $this->paidFiles->guards($collection, $property);
+
 		return new PropertyFile($this->fileFetcher, $this->depotFetcher, $this->propertyFetcher, $this->objectUpdater, $this->actors, $kind, $collection, $id, $property, $name, $subpath, $nestedSubpath, $missing);
 	}
 }

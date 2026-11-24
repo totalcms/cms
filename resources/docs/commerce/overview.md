@@ -64,7 +64,6 @@ These are designed and on the way. Their settings and fields are already there, 
 
 - **Shipping rates.** Checkout charges no shipping. [Tax](docs/commerce/tax) is in this version, from your own table of rates or worked out by Stripe Tax.
 - **Stock counted down.** A product's stock stops a sale at zero. It does not go down as orders are paid.
-- **File downloads.** A digital product can be sold. Its files are not delivered automatically.
 - **Subscriptions.**
 - **Returning items to stock** when you refund.
 

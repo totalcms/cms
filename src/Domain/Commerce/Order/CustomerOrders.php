@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
 
 /**
@@ -17,6 +18,7 @@ final readonly class CustomerOrders
 		private OrderAccess $access,
 		private OrderRepository $orders,
 		private CurrentCustomer $customer,
+		private DownloadLinks $downloads,
 	) {
 	}
 
@@ -26,10 +28,23 @@ final readonly class CustomerOrders
 		return $this->access->verify($orderId, $token);
 	}
 
+	/**
+	 * The order with this id, for whoever holds its secret: the store's own
+	 * mailer, which is given the whole order. Anyone else gets nothing.
+	 */
+	public function bySecret(string $orderId, string $accessToken): ?OrderData
+	{
+		$order = $orderId !== '' && $accessToken !== '' ? $this->orders->find($orderId) : null;
+
+		return $order instanceof OrderData && $order->accessToken() !== '' && hash_equals($order->accessToken(), $accessToken) ? $order : null;
+	}
+
 	/** @return array<string,mixed>|null */
 	public function byLink(string $orderId, string $token): ?array
 	{
-		return $this->access->verify($orderId, $token)?->forBuyer();
+		$order = $this->access->verify($orderId, $token);
+
+		return $order instanceof OrderData ? $this->downloads->forBuyer($order) : null;
 	}
 
 	/**
@@ -45,7 +60,7 @@ final readonly class CustomerOrders
 		}
 
 		return array_map(
-			static fn (OrderData $order): array => $order->forBuyer(),
+			fn (OrderData $order): array => $this->downloads->forBuyer($order),
 			$this->orders->forCustomer($customer['collection'], $customer['id'], $limit),
 		);
 	}

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Property\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Commerce\Download\ProductDownload;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
+use TotalCMS\Support\Config;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Auth\Data\Actor;
@@ -43,6 +47,8 @@ final class PropertyFileResolverTest extends TestCase
 			$this->createMock(PropertyFetcher::class),
 			$this->objectUpdater,
 			$this->actors,
+			// No collection here is a store's products, so nothing is guarded.
+			new ProductDownload(new CommerceSettings((new \ReflectionClass(Config::class))->newInstanceWithoutConstructor()), $this->createMock(CollectionFetcher::class), $this->fileFetcher),
 		);
 	}
 

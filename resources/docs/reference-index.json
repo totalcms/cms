@@ -1418,6 +1418,13 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.commerce.downloads",
+            "signature": "downloads(mixed $order): array",
+            "description": "The links to what an order's buyer may download: for each, `{lineId, title, fileName, size, remaining, url}`. `url` is empty when the downloads for that line are used up.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.commerce.embed",
             "signature": "embed(array $order, string $token = ''): string",
             "description": "The payment form for an order that is waiting to be paid on the store's own page, for a custom pay page. Nothing for any other order, and nothing without the order's signed link: what the form is mounted with belongs to that one buyer.",
@@ -1449,6 +1456,13 @@
             "name": "cms.commerce.order",
             "signature": "order(string $orderId, string $token): ?array",
             "description": "One order, for someone holding its link (the `t` its pages carry). Without the order's secret, staff notes, or anything else not theirs.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.commerce.orderUrl",
+            "signature": "orderUrl(mixed $order): string",
+            "description": "The signed address of an order's own page, for a mailer: give it `data`, the whole order. The page lists the buyer's downloads with fresh links, so it is the way back when a link in an old receipt has run out. '' for anything but a whole order.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },

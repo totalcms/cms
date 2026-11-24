@@ -1,0 +1,43 @@
+{#
+	Shown in place of a download that cannot be given: what is wrong, and
+	what the buyer can do about it.
+
+	reason  invalid | not_paid | no_file | used_up
+	number  the order's number, when the link named a real order
+#}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>Download</title>
+	<style>
+		body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; color: #1c1c1c; background: #f6f6f4; }
+		main { box-sizing: border-box; width: min(34rem, 100% - 2rem); margin: clamp(1rem, 6vw, 3rem) auto; padding: clamp(1rem, 5vw, 2rem); background: #fff; border-radius: 0.5rem; }
+		h1 { margin-top: 0; font-size: 1.5rem; }
+		@media (prefers-color-scheme: dark) {
+			body { color: #ececec; background: #161616; }
+			main { background: #222; }
+		}
+	</style>
+</head>
+<body>
+<main class="commerce-download-problem">
+	{% if reason == 'used_up' %}
+		<h1>No downloads left</h1>
+		<p>This file has been downloaded as many times as the store allows for one purchase.</p>
+		<p>If you need it again, reply to your receipt for Order {{ number|e }} and the store can help.</p>
+	{% elseif reason == 'not_paid' %}
+		<h1>This download is not available</h1>
+		<p>Order {{ number|e }} is not paid, or its payment was returned, so its files can no longer be downloaded.</p>
+	{% elseif reason == 'no_file' %}
+		<h1>This file is not available</h1>
+		<p>The store has taken this file down or is replacing it. Reply to your receipt for Order {{ number|e }} and the store can help.</p>
+	{% else %}
+		<h1>This link is no longer valid</h1>
+		<p>Download links run out after a while. Open your order from the link in your receipt to get a new one.</p>
+	{% endif %}
+</main>
+</body>
+</html>

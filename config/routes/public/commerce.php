@@ -9,6 +9,7 @@ use TotalCMS\Action\Commerce\CheckoutPayAction;
 use TotalCMS\Action\Commerce\CheckoutReturnAction;
 use TotalCMS\Action\Commerce\CheckoutStartAction;
 use TotalCMS\Action\Commerce\OrderStatusAction;
+use TotalCMS\Action\Commerce\CommerceDownloadAction;
 use TotalCMS\Action\Commerce\CommerceWebhookAction;
 use TotalCMS\Action\Commerce\CartAddAction;
 use TotalCMS\Action\Commerce\CartAttributesAction;
@@ -76,6 +77,13 @@ return function (App $app): void {
 		$group->get('/order/{orderId}/status', OrderStatusAction::class)->setName('commerce-order-status');
 	})->add(NoCacheMiddleware::class)
 		->add(CommerceEditionMiddleware::class)
+		->add(CartRateLimitMiddleware::class);
+
+	// A buyer's file. The token in the address is their right to it, so
+	// there is no session and no gate: goods already paid for stay
+	// downloadable on a store whose add-on has lapsed.
+	$app->get('/commerce/download/{token}', CommerceDownloadAction::class)->setName('commerce-download')
+		->add(NoCacheMiddleware::class)
 		->add(CartRateLimitMiddleware::class);
 
 	// Where a payment provider reports to the store. No session, no CSRF
