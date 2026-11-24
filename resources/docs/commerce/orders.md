@@ -26,7 +26,7 @@ The address bar keeps your filters, so a filtered list can be bookmarked.
 
 | Status | What it means |
 |---|---|
-| **Pending** | The buyer started to check out and has not paid. |
+| **Pending** | The buyer started to check out and has not paid. If the buyer says they did, see [Orders that stay pending](#orders-that-stay-pending). |
 | **Paid** | The payment provider confirmed the payment. |
 | **Failed** | The payment did not go through. |
 | **Expired** | Nobody paid, and the checkout was given up or cancelled. |
@@ -57,6 +57,38 @@ An order is flagged when something went wrong that only a person can settle. Its
 | **Refund failed** | The payment provider refused a refund you asked for. No money moved. |
 | **Disputed** | Answer the dispute at the payment provider. |
 | **Not delivered** | The order was paid more than 15 minutes ago, and a digital item in it has still not been delivered. |
+
+### Orders that stay pending
+
+Your store learns that an order was paid when the payment provider calls its webhook address. If that call never arrives, the buyer has paid and the order still says **Pending**. A wrong webhook address, a firewall, or a server that was down can each cause it.
+
+This command asks the payment provider about every order that has waited more than 10 minutes, and records the answer exactly as the webhook would have:
+
+```bash
+tcms commerce:reconcile
+```
+
+```text
+Order 1042: paid
+Order 1043: its checkout ran out; given up on
+Order 1044: still waiting
+```
+
+An order found to be paid gets everything a paid order gets, the receipt included. It is safe to run as often as you like: an order is only ever paid once.
+
+Run it from cron so a missed webhook mends itself, for example every 15 minutes:
+
+```text
+*/15 * * * * tcms commerce:reconcile
+```
+
+| Option | What it does |
+|---|---|
+| `--minutes=30` | Leave alone any order started less than this many minutes ago. The default is 10, so an order whose webhook is on its way is not asked about. |
+| `--dry-run` | Ask, and say what was found, but change nothing. |
+| `--json` | Print the result as JSON. |
+
+It exits with an error when an order could not be checked, so cron tells you. If orders often turn out paid here, your webhook is not arriving: check its address at the payment provider.
 
 ### Orders in review
 

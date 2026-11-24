@@ -117,6 +117,7 @@ class CliApplication
 
 		// Commerce commands
 		$app->addCommand(new Command\Commerce\CommerceInstallCommand($totalcms));
+		$app->addCommand(new Command\Commerce\CommerceReconcileCommand($totalcms));
 
 		// Search commands
 		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
