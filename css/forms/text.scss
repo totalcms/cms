@@ -424,10 +424,15 @@
 // Currency symbol shown alongside the value (left prefix). Marker class lives on
 // .form-group (the input's wrapper); the per-currency icon sits in the separate
 // right-hand .form-group-icon, so a left prefix never collides with it.
-.form-group:has(.totalform-currency-symbol) {
+//
+// Every step is a direct child (`>`). A deck or a deck table is a .form-group
+// too, with price fields somewhere inside it: without `>` it would count as
+// having a symbol, and every input in it, its own hidden one included, would
+// be pushed 2rem to the right.
+.form-group:has(> .totalform-currency-symbol) {
 	position : relative;
 
-	.totalform-currency-symbol {
+	> .totalform-currency-symbol {
 		position       : absolute;
 		top            : 50%;
 		left           : 0.75rem;
@@ -436,7 +441,7 @@
 		pointer-events : none;
 	}
 
-	input {
+	> input {
 		padding-left : 2rem;
 	}
 }
@@ -662,4 +667,124 @@
 		oklch(var(--totalform-mediumgray)) 84%,
 		transparent 84%
 	);
+}
+
+//------------------------------
+// Multiselect
+//------------------------------
+// The form draws this list itself (javascript/totalform/multiselect.js). The
+// browser's own list box cannot be given row height, spacing or a tick, and
+// in Safari takes nothing from a stylesheet but its font size.
+.totalform {
+	// The <select> stays in the page as the field's value, out of sight.
+	select.multiselect-native {
+		position       : absolute;
+		width          : 1px;
+		height         : 1px;
+		padding        : 0;
+		border         : 0;
+		opacity        : 0;
+		pointer-events : none;
+	}
+
+	.multiselect-list {
+		flex             : 1;
+		box-sizing       : border-box;
+		min-width        : 0;
+		// Six and a half rows: the half row says there is more to scroll to.
+		max-height       : 15.75rem;
+		padding          : .25rem;
+		overflow-y       : auto;
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-background));
+		color            : oklch(var(--totalform-text-color));
+		font-size        : var(--totalform-font-size);
+		box-shadow       : inset 0 1px 2px oklch(var(--totalform-shadow));
+		scrollbar-width  : thin;
+		transition       : border-color .25s ease-in-out;
+
+		&:has(~ .form-group-icon) {
+			border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
+		}
+
+		&:focus-visible {
+			outline : none;
+		}
+
+		&[aria-disabled="true"] {
+			box-shadow : none;
+			cursor     : not-allowed;
+		}
+	}
+
+	.multiselect-option {
+		display       : flex;
+		align-items   : center;
+		gap           : .625rem;
+		padding       : .5rem .625rem;
+		border-radius : calc(var(--totalform-radius) - 2px);
+		line-height   : 1.35;
+		cursor        : pointer;
+		user-select   : none;
+
+		// The tick box: empty until the row is picked.
+		&::before {
+			content       : "";
+			flex          : none;
+			box-sizing    : border-box;
+			width         : 1rem;
+			height        : 1rem;
+			border        : 1.5px solid oklch(var(--totalform-darkgray));
+			border-radius : .25rem;
+			transition    : background-color .15s ease-out, border-color .15s ease-out;
+		}
+
+		&:hover {
+			background-color : oklch(var(--totalform-text-color) / .06);
+		}
+
+		&[aria-selected="true"] {
+			background-color : oklch(var(--totalform-accent) / .14);
+
+			&::before {
+				border-color     : oklch(var(--totalform-accent));
+				background-color : oklch(var(--totalform-accent));
+				// A tick, drawn so it needs no icon file.
+				background-image    : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+				background-size     : 100%;
+				background-repeat   : no-repeat;
+			}
+
+			&:hover {
+				background-color : oklch(var(--totalform-accent) / .2);
+			}
+		}
+
+		&[aria-disabled="true"] {
+			opacity : .5;
+			cursor  : not-allowed;
+
+			&:hover {
+				background-color : transparent;
+			}
+		}
+	}
+
+	// Where the keyboard is, shown only while the list has the keyboard.
+	.multiselect-list:focus-visible .multiselect-option.is-active {
+		outline        : 2px solid oklch(var(--totalform-accent));
+		outline-offset : -2px;
+	}
+
+	.multiselect-list[aria-disabled="true"] .multiselect-option {
+		cursor : not-allowed;
+	}
+
+	.multiselect-group {
+		padding     : .625rem .625rem .25rem;
+		font-size   : .8125em;
+		font-weight : 600;
+		opacity     : .7;
+	}
 }

@@ -694,6 +694,7 @@ class FormField
 			'schemaProperties'    => $this->form->schemaPropertyKeys(),
 			'locales'             => $this->form->localeList(),
 			'countries'           => $this->form->countryList(),
+			'currencies'          => $this->form->currencyList(),
 			'events'              => $this->form->eventsList(),
 			'podcastCategories'   => TotalForm::podcastCategoryOptions(),
 			default               => null,

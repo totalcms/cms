@@ -8,6 +8,11 @@ import { t } from "../i18n";
 //-----------------------------------------------
 export default class ListField extends MultiSelectField {
 
+    /** A list field is a box of tags with a search, drawn by Choices: it takes no list of rows as well. */
+    drawsList() {
+        return false;
+    }
+
     constructor(container, settings) {
         super(container, settings);
 

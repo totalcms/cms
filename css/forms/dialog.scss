@@ -127,6 +127,45 @@ dialog.cms-modal {
 }
 
 //--------------------------------
+// A deck item's dialog
+//--------------------------------
+// As tall as the item's form, and no taller than the window allows: past that
+// the form scrolls and the buttons stay in view. Other dialogs keep one fixed
+// height, because what they hold (an image and its details, an editor) is
+// laid out to fill it.
+.deck-item > dialog.cms-modal {
+	height     : fit-content;
+	// Never so short that a list's choices or a date picker has nowhere to open.
+	min-height : min(30rem, 85vh);
+	max-height : min(85vh, 1000px);
+
+	&.large {
+		max-height : min(85vh, 1400px);
+	}
+
+	&[open] {
+		// The form takes what is left, and gives way first when there is not enough.
+		grid-template-rows : minmax(0, 1fr) auto;
+	}
+
+	> section.scroller {
+		// The whole of its row, not just the height of the fields. A field's
+		// help hangs below the field and a list opens downward: in a box only
+		// as tall as the fields, either one made it scroll for no reason.
+		align-self    : stretch;
+		align-content : start;
+		min-height    : 0;
+		max-height    : none;
+		// Room for the help under the last row, when the form is the taller.
+		padding-bottom : 4.5rem;
+	}
+
+	@media screen and (max-width: 45em) {
+		max-height : 95svh;
+	}
+}
+
+//--------------------------------
 // Confirm Dialog
 //--------------------------------
 dialog.cms-modal.cms-confirm {

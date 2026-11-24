@@ -52,6 +52,25 @@ describe('PriceField', function (): void {
 		expect($html)->toContain('EUR');
 	});
 
+	// A store's prices are in the store's currency, whatever language the
+	// admin is in: a site in US English selling in euros types euro amounts.
+	test('PriceField → "store" is the currency the store sells in, not the locale\'s', function (): void {
+		$this->form->method('storeCurrency')->willReturn('EUR');
+
+		$html = (new PriceField($this->form, 'price', settings: ['currency' => 'store']))->build();
+
+		expect($html)->toContain('&quot;currency&quot;:&quot;EUR&quot;', '€')
+			->not->toContain('USD', 'STORE', '&quot;store&quot;');
+	});
+
+	test('PriceField → "store" takes its decimals from that currency', function (): void {
+		$this->form->method('storeCurrency')->willReturn('JPY');
+
+		$html = (new PriceField($this->form, 'price', settings: ['currency' => 'store']))->build();
+
+		expect($html)->toContain('&quot;currency&quot;:&quot;JPY&quot;', '&quot;decimals&quot;:0');
+	});
+
 	test('PriceField → uppercases an explicit currency setting', function (): void {
 		$field = new PriceField($this->form, 'price', settings: ['currency' => 'gbp']);
 		$html  = $field->build();

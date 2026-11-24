@@ -16,6 +16,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
 use TotalCMS\Domain\Locale\CountryNames;
+use TotalCMS\Domain\Locale\CurrencyNames;
 use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -406,6 +407,12 @@ final readonly class FormOptionSources
 		return $this->services->config->i18n['default'];
 	}
 
+	/** The currency the store sells in, as Settings → Commerce has it. */
+	public function storeCurrency(): string
+	{
+		return (new CommerceSettings($this->services->config))->currency();
+	}
+
 	/**
 	 * @return array<int,array{value: string, label: string}>
 	 */
@@ -423,6 +430,18 @@ final readonly class FormOptionSources
 	public function countryList(): array
 	{
 		return CountryNames::options($this->services->config->locale !== '' ? $this->services->config->locale : null);
+	}
+
+	/**
+	 * Every currency in use today, its ISO 4217 code as the value and its
+	 * name in the site's locale, with the code, as the label — feeds
+	 * `propertyOptions: "currencies"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function currencyList(): array
+	{
+		return CurrencyNames::options($this->services->config->locale !== '' ? $this->services->config->locale : null);
 	}
 
 	/**

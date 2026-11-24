@@ -22,7 +22,7 @@ All optional — sensible defaults are derived automatically.
 
 | Setting | Purpose | Default |
 |---|---|---|
-| `currency` | ISO 4217 code (`USD`, `EUR`, `GBP`, `JPY`, …) | Inferred from the resolved locale's region |
+| `currency` | ISO 4217 code (`USD`, `EUR`, `GBP`, `JPY`, …), or `store` for the currency your store sells in | Inferred from the resolved locale's region |
 | `decimals` | Number of fraction digits (`0`, `2`, …) | The currency's standard (USD/EUR = 2, JPY = 0) |
 | `locale` | BCP-47 tag (`en-US`, `de-DE`, …) drives the grouping/decimal style | Your site's default locale |
 
@@ -38,6 +38,19 @@ All optional — sensible defaults are derived automatically.
 ```
 
 The example above renders `100000` as `100.000,00` with a `€` symbol and the euro icon.
+
+### The store's currency
+
+On a site with Commerce, set `currency` to `store` and the field shows the **Store Currency** from **Settings → Commerce**, whatever language the admin is in. The store's own price fields work this way: a product's price, a discount's minimum, a shipping rate.
+
+```json
+{
+	"field": "price",
+	"settings": {
+		"currency": "store"
+	}
+}
+```
 
 ## Currency symbol and icon
 
