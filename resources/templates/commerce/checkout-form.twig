@@ -8,9 +8,11 @@
 	payment on its own page, puts the payment form where this form was.
 	Without JavaScript it posts normally and is redirected.
 
-	providers  the ways to pay that can take this cart: [{id, label}]
+	providers  the ways to pay that can take this cart: [{id, label, worksOutTax}]. One that works
+	           out the tax itself asks the buyer where they are on its own page
 	ships      whether anything in the cart has to be sent
-	taxed      whether to ask where the buyer is, for tax: nothing ships and the store charges tax
+	taxed      whether to ask where the buyer is, for tax: nothing ships and the store works out
+	           the tax for at least one way to pay
 	email      the buyer's email, when they are signed in
 	label      the button's text
 	class      an extra class for the form
@@ -41,8 +43,9 @@
 		</fieldset>
 	{% endif %}
 	{% if taxed %}
-		{# Nothing here ships, and the store charges tax: tax goes by where the buyer is. #}
-		<fieldset class="commerce-checkout-address commerce-checkout-location">
+		{# Nothing here ships, and the store charges tax: tax goes by where the buyer is.
+		   The page puts these away while a way to pay that works out the tax itself is chosen. #}
+		<fieldset class="commerce-checkout-address commerce-checkout-location" data-commerce-location>
 			<legend>Where you are</legend>
 			<p class="commerce-checkout-field">
 				<label for="commerce-checkout-billing-country">Country</label>
@@ -59,12 +62,12 @@
 		<fieldset class="commerce-checkout-providers">
 			<legend>Pay with</legend>
 			{% for provider in providers %}
-				<label><input type="radio" name="provider" value="{{ provider.id|e }}"{% if loop.first %} checked{% endif %}> {{ provider.label|e }}</label>
+				<label><input type="radio" name="provider" value="{{ provider.id|e }}"{% if provider.worksOutTax %} data-works-out-tax{% endif %}{% if loop.first %} checked{% endif %}> {{ provider.label|e }}</label>
 			{% endfor %}
 		</fieldset>
 	{% else %}
 		{% for provider in providers %}
-			<input type="hidden" name="provider" value="{{ provider.id|e }}">
+			<input type="hidden" name="provider" value="{{ provider.id|e }}"{% if provider.worksOutTax %} data-works-out-tax{% endif %}>
 			<p class="commerce-checkout-provider">Pay with {{ provider.label|e }}</p>
 		{% endfor %}
 	{% endif %}

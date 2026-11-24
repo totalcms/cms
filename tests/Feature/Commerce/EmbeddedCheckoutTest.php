@@ -97,7 +97,7 @@ it('gives a script what it needs to mount the form itself', function (): void {
 
 it('tells the buyer on the pay page that tax comes at payment, when it is left to the provider', function (): void {
 	$config              = $this->c->get(Config::class);
-	$config->commerce    = ['taxMode' => 'provider'] + $config->commerce;
+	$config->commerce    = ['taxMode' => 'exclusive', 'taxBy' => 'provider'] + $config->commerce;
 	$this->embeds->tax   = true;
 	($this->buy)();
 

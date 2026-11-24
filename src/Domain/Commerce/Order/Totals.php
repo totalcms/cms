@@ -38,9 +38,20 @@ final readonly class Totals
 	) {
 	}
 
-	/** The same totals, said to be taxed another way. No amount is touched. */
-	public function withTaxMode(string $mode): self
+	/**
+	 * The same totals with the tax left to the payment provider: none of
+	 * the store's own, on the order or on any line, and the total as it is
+	 * without tax added on top. The provider adds its own when the buyer
+	 * pays.
+	 */
+	public function leftToProvider(): self
 	{
-		return new self(...['taxMode' => $mode] + get_object_vars($this));
+		return new self(...[
+			'taxTotal'   => 0,
+			'taxLines'   => [],
+			'lineTax'    => array_fill_keys(array_keys($this->lineTax), 0),
+			'grandTotal' => $this->subtotal - $this->discountTotal + $this->shippingTotal,
+			'taxMode'    => TaxCalculator::PROVIDER,
+		] + get_object_vars($this));
 	}
 }

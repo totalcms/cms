@@ -767,6 +767,12 @@
 .commerce-checkout-address {
 	display : grid;
 	gap     : 0.875rem 1rem;
+
+	// The "Where you are" fields are put away while a way to pay that works
+	// out the tax itself is chosen; `display: grid` would show them anyway.
+	&[hidden] {
+		display : none;
+	}
 }
 
 @container (min-width: 22rem) {
@@ -795,15 +801,59 @@
 	opacity     : 0.75;
 }
 
-.commerce-checkout-providers {
+// The ways to pay: one row each, the whole row the thing to click, and the
+// chosen one outlined. Named under the form so that a site's own rules for
+// every label and every input (a label on its own line, an input as wide as
+// its box) do not pull a radio button and its name apart.
+.commerce-checkout-form .commerce-checkout-providers {
 	display : grid;
 	gap     : 0.5rem;
 
 	label {
-		display     : flex;
-		align-items : center;
-		gap         : 0.5rem;
-		margin      : 0;
+		display       : flex;
+		align-items   : center;
+		gap           : 0.625rem;
+		margin        : 0;
+		padding       : 0.7em 0.875em;
+		border        : 1px solid var(--_border);
+		border-radius : var(--_radius);
+		background    : var(--_field-bg);
+		font-size     : 1em;
+		font-weight   : 500;
+		line-height   : 1.3;
+		cursor        : pointer;
+
+		&:has(input:checked) {
+			border-color : var(--_accent);
+			box-shadow   : inset 0 0 0 1px var(--_accent);
+		}
+
+		// The row is what was chosen, so the row shows where the keyboard is.
+		&:has(input:focus-visible) {
+			outline        : 2px solid var(--_accent);
+			outline-offset : 2px;
+		}
+	}
+
+	input[type='radio'] {
+		flex         : none;
+		display      : inline-block;
+		width        : 1.125em;
+		height       : 1.125em;
+		margin       : 0;
+		padding      : 0;
+		accent-color : var(--_accent);
+
+		&:focus-visible {
+			outline : none;
+		}
+	}
+}
+
+// Side by side once there is room for two.
+@container (min-width: 30rem) {
+	.commerce-checkout-form .commerce-checkout-providers {
+		grid-template-columns : repeat(auto-fit, minmax(11rem, 1fr));
 	}
 }
 

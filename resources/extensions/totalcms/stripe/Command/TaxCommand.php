@@ -45,7 +45,7 @@ final class TaxCommand extends Command
 			->setName('stripe:tax')
 			->setDescription('Check that Stripe Tax is ready to work out the tax on orders')
 			->setHelp(
-				"With Tax set to \"Worked out by the payment provider\" in Settings → Commerce, Stripe works out the tax\n"
+				"With Tax Worked Out By set to \"The payment provider, when it can\" in Settings → Commerce, Stripe works out the tax\n"
 				. "on each order and adds it when the buyer pays. That needs two things set up at Stripe: its tax settings\n"
 				. "(your head office address), and a registration for each place you collect tax.\n\n"
 				. "If they are missing a buyer can still pay, but is charged no tax, and nothing on the site says so.\n"
@@ -86,10 +86,13 @@ final class TaxCommand extends Command
 		}
 
 		$ready = $status['ready'] && $places > 0;
-		if (($this->store)()->taxMode() !== TaxCalculator::PROVIDER) {
-			$output->writeln('  <comment>!</comment> Settings → Commerce → Tax is not "Worked out by the payment provider", so Stripe is not asked for tax on any order.');
+		$store = ($this->store)();
+		if ($store->taxMode() === TaxCalculator::NONE) {
+			$output->writeln('  <comment>!</comment> Settings → Commerce → Tax is set to "No tax", so Stripe is not asked for tax on any order.');
+		} elseif ($store->taxBy() !== TaxCalculator::BY_PROVIDER) {
+			$output->writeln('  <comment>!</comment> Settings → Commerce → Tax Worked Out By is not "The payment provider, when it can", so Stripe is not asked for tax on any order.');
 		} elseif ($ready) {
-			$output->writeln('  <info>✓</info> Settings → Commerce → Tax leaves the tax to the payment provider');
+			$output->writeln('  <info>✓</info> Settings → Commerce leaves the tax to the payment provider');
 		}
 
 		$output->writeln('');

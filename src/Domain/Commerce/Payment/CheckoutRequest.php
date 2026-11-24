@@ -40,6 +40,8 @@ final readonly class CheckoutRequest
 	 *                                                       report it on the paid event ({@see PaymentEvent::$tax}). Only asked of a
 	 *                                                       provider whose capabilities say it can
 	 * @param Address|null              $shipTo              with `providerTax`: where the order ships, to tax it by. Null when nothing ships
+	 * @param bool                      $taxIncluded         with `providerTax`: the store's prices already hold the tax, so the provider
+	 *                                                       counts its tax as part of `total` and adds nothing on top
 	 */
 	public function __construct(
 		public string $orderId,
@@ -62,6 +64,7 @@ final readonly class CheckoutRequest
 		public string $providerCustomerRef = '',
 		public bool $providerTax = false,
 		public ?Address $shipTo = null,
+		public bool $taxIncluded = false,
 	) {
 	}
 }

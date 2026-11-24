@@ -2,7 +2,7 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Commerce Settings",
 	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
-	"formgrid": "---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxShipping\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
+	"formgrid": "---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
 	"type": "object",
 	"properties": {
 		"currency": {
@@ -79,7 +79,7 @@
 			"type": "string",
 			"field": "radio",
 			"label": "Tax",
-			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> and <strong>Included in prices</strong> use your own tax rates, below: the first adds the tax at checkout, the second treats your prices as already including it. <strong>Worked out by the payment provider</strong> leaves it to Stripe Tax, which finds the exact rate for the buyer's address and adds it when they pay. That needs Stripe Tax set up in your Stripe account: run <code>tcms stripe:tax</code> to check. Orders paid with a provider that cannot work out tax carry none.",
+			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> adds the tax at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.",
 			"default": "none",
 			"options": [
 				{
@@ -93,34 +93,51 @@
 				{
 					"value": "inclusive",
 					"label": "Included in prices"
+				}
+			]
+		},
+		"taxBy": {
+			"type": "string",
+			"field": "radio",
+			"label": "Tax Worked Out By",
+			"help": "<strong>My tax rates</strong> uses the table below for every order. <strong>The payment provider, when it can</strong> leaves it to Stripe Tax for orders paid with Stripe: Stripe finds the exact rate for the buyer's address and adds it when they pay. That needs Stripe Tax set up in your Stripe account; run <code>tcms stripe:tax</code> to check. An order paid with a provider that cannot work out tax, such as PayPal, uses your tax rates.",
+			"default": "table",
+			"options": [
+				{
+					"value": "table",
+					"label": "My tax rates"
 				},
 				{
 					"value": "provider",
-					"label": "Worked out by the payment provider"
+					"label": "The payment provider, when it can"
 				}
-			]
+			],
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
+			}
 		},
 		"taxShipping": {
 			"type": "boolean",
 			"field": "toggle",
 			"label": "Tax Shipping",
-			"help": "Charge tax on the shipping amount as well as on the goods.",
+			"help": "Charge tax on the shipping amount as well as on the goods. This is for your own tax rates: a payment provider that works out the tax decides this by the rules of the buyer's place.",
 			"default": false,
 			"settings": {
 				"visibility": {
 					"watch": "taxMode",
-					"value": [
-						"exclusive",
-						"inclusive"
-					],
-					"operator": "in"
+					"value": "none",
+					"operator": "!="
 				}
 			}
 		},
 		"taxRates": {
 			"field": "deckTable",
 			"label": "Tax Rates",
-			"help": "One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country.",
+			"help": "One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country. When the payment provider works out the tax, these rates are for orders paid with a provider that cannot, such as PayPal: leave the table empty and those orders carry no tax.",
 			"schemaref": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
 			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
 			"patternProperties": {
@@ -131,11 +148,8 @@
 			"settings": {
 				"visibility": {
 					"watch": "taxMode",
-					"value": [
-						"exclusive",
-						"inclusive"
-					],
-					"operator": "in"
+					"value": "none",
+					"operator": "!="
 				}
 			}
 		},

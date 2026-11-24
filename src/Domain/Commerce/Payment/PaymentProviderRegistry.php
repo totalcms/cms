@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Payment;
 
+use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 
@@ -93,6 +94,18 @@ final class PaymentProviderRegistry
 		return $hasRecurringLine
 			? array_values(array_filter($enabled, static fn (PaymentProvider $provider): bool => $provider instanceof SubscriptionProvider))
 			: $enabled;
+	}
+
+	/**
+	 * Whether this provider works out the tax on the orders it takes: the
+	 * store charges tax, leaves it to the provider, and this one can. For
+	 * any other the store works it out, from its own rates.
+	 */
+	public function worksOutTax(PaymentProvider $provider): bool
+	{
+		return $this->settings->taxMode() !== TaxCalculator::NONE
+			&& $this->settings->taxBy() === TaxCalculator::BY_PROVIDER
+			&& $provider->capabilities()->tax;
 	}
 
 	public function subscriptionProvider(string $id): ?SubscriptionProvider

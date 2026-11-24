@@ -1,6 +1,6 @@
 /**
- * The storefront's own script: the slide-out cart, and the payment form of
- * an on-page checkout.
+ * The storefront's own script: the slide-out cart, the payment form of an
+ * on-page checkout, and the checkout form's "Where you are" fields.
  *
  * It is small on purpose. Everything the cart shows comes from the server,
  * and each piece of it (the drawer's body, the count badge, the widget)
@@ -139,9 +139,58 @@ export async function mountEmbeddedCheckout(root = document, load = (url) => imp
 	}));
 }
 
+const LOCATION = '[data-commerce-location]';
+const PROVIDER = '#commerce-checkout-form [name="provider"]';
+
+/** The documents whose checkout form is watched, so that asking again adds nothing. */
+const watched = new WeakSet();
+
+/**
+ * Show the checkout form's "Where you are" fields only while they are
+ * needed. The store asks them to work out tax from its own rates. A way to
+ * pay that works the tax out itself (`data-works-out-tax`) asks the buyer on
+ * its own page, so while one is chosen the fields are put away and
+ * disabled: a disabled field is not sent, and is not required.
+ *
+ * Safe to call again: it sets the fields for the form on the page now, and
+ * a document is watched once. Like the drawer, it finds the form when it is
+ * needed, because the page may have replaced it since.
+ *
+ * @param {Document} root
+ */
+export function syncCheckoutLocation(root = document) {
+	const apply = () => {
+		const fields = root.querySelector(LOCATION);
+		if (!fields) {
+			return;
+		}
+
+		// One way to pay is a hidden field; several are radios, one of them ticked.
+		const ways   = [...root.querySelectorAll(PROVIDER)];
+		const chosen = ways.find((way) => way.type !== 'radio' || way.checked);
+		const away   = Boolean(chosen) && chosen.hasAttribute('data-works-out-tax');
+
+		fields.hidden = away;
+		fields.querySelectorAll('input, select').forEach((field) => { field.disabled = away; });
+	};
+
+	apply();
+	if (watched.has(root)) {
+		return;
+	}
+	watched.add(root);
+
+	root.addEventListener('change', (event) => {
+		if (event.target instanceof Element && event.target.matches(PROVIDER)) {
+			apply();
+		}
+	});
+}
+
 const start = () => {
 	initCartDrawer();
 	mountEmbeddedCheckout();
+	syncCheckoutLocation();
 };
 
 if (document.readyState === 'loading') {
@@ -153,4 +202,8 @@ if (document.readyState === 'loading') {
 // A checkout form posted with HTMX is answered with the mount point in its
 // place. HTMX announces a swap on the document when the element that asked
 // for it is gone, which here it is.
-document.addEventListener('htmx:after:swap', () => mountEmbeddedCheckout());
+document.addEventListener('htmx:after:swap', () => {
+	mountEmbeddedCheckout();
+	// A form that arrived with the swap starts as its chosen way to pay says.
+	syncCheckoutLocation();
+});

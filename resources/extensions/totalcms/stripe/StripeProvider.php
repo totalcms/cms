@@ -54,16 +54,12 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	/** Stripe's tax code for a delivery charge, which places tax by rules of their own. */
 	private const SHIPPING_TAX_CODE = 'txcd_92010001';
 
-	/** How a price stands to the tax Stripe works out: the tax goes on top, or is already in it. */
-	private const TAX_BEHAVIORS = ['exclusive', 'inclusive'];
-
 	/** The reasons Stripe takes for a refund. Any other is sent as the buyer's request, with the words in metadata. */
 	private const REFUND_REASONS = ['duplicate', 'fraudulent', 'requested_by_customer'];
 
 	/**
 	 * @param string                    $publishableKey the key a page may hold; needed only to take payment on the store's own page
 	 * @param (\Closure(): string)|null $moduleUrl      where the page imports this extension's embed.js from; asked when a checkout needs it
-	 * @param string                    $taxBehavior    with Stripe Tax: `exclusive` (tax goes on top of the store's prices) or `inclusive`
 	 *
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") the extension's settings, one argument each
 	 */
@@ -75,7 +71,6 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 		private LoggerInterface $logger,
 		private string $publishableKey = '',
 		private ?\Closure $moduleUrl = null,
-		private string $taxBehavior = 'exclusive',
 	) {
 	}
 
@@ -372,7 +367,8 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider
 	private function items(CheckoutRequest $request, bool $taxed): array
 	{
 		$currency = strtolower($request->total->currency());
-		$behavior = $taxed ? ['tax_behavior' => in_array($this->taxBehavior, self::TAX_BEHAVIORS, true) ? $this->taxBehavior : 'exclusive'] : [];
+		// The tax goes on top of the store's prices, or the prices already hold it: the store says which.
+		$behavior = $taxed ? ['tax_behavior' => $request->taxIncluded ? 'inclusive' : 'exclusive'] : [];
 		$item     = static fn (string $name, int $quantity, int $unitAmount, string $taxCode = ''): array => [
 			'quantity'   => $quantity,
 			'price_data' => ['currency' => $currency, 'unit_amount' => $unitAmount, 'product_data' => ['name' => $name] + ($taxCode !== '' ? ['tax_code' => $taxCode] : [])] + $behavior,

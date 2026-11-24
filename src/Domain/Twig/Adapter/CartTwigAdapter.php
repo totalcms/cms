@@ -259,9 +259,12 @@ final readonly class CartTwigAdapter
 		}
 
 		$providers = array_map(
-			static fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label()],
+			fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label(), 'worksOutTax' => $this->providers->worksOutTax($provider)],
 			$this->providers->forCart(false),
 		);
+		// The store works out the tax for an order paid with any provider
+		// that does not work it out itself, and for one that costs nothing.
+		$storeTaxes = $this->tax->mode() !== TaxCalculator::NONE && array_filter($providers, static fn (array $provider): bool => !$provider['worksOutTax']) !== [];
 		// A cart that costs nothing needs no way to pay, whether its products
 		// are free or a discount code took the whole price off.
 		if ($providers === [] && !$view->total->isZero()) {
@@ -271,9 +274,9 @@ final readonly class CartTwigAdapter
 		return ($this->twig)()->render('commerce/checkout-form.twig', [
 			'providers' => $providers,
 			'ships'     => $ships = $this->ships($view),
-			// Tax goes by where the buyer is. An order that ships says so with
-			// its address; one that does not has to be asked.
-			'taxed'     => !$ships && in_array($this->tax->mode(), TaxCalculator::OWN, true),
+			// The store's tax goes by where the buyer is. An order that ships
+			// says so with its address; one that does not has to be asked.
+			'taxed'     => !$ships && ($storeTaxes || ($providers === [] && $this->tax->mode() !== TaxCalculator::NONE)),
 			'email'     => '',
 			'label'     => $this->option($options, 'label') ?: 'Continue to payment',
 			'class'     => $this->option($options, 'class'),

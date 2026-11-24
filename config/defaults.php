@@ -697,6 +697,7 @@ $settings['commerce'] = [
 	'orderNumberStart'     => 1001,
 	'orderNumberPrefix'    => '#',              // display only; the number is stored as an integer
 	'taxMode'              => 'none',           // none | exclusive | inclusive
+	'taxBy'                => 'table',          // table | provider (the payment provider when it can, e.g. Stripe Tax; else the table)
 	'taxShipping'          => false,
 	'taxRates'             => [],               // [{country, region, rate, label}]; rate is a percent, e.g. "8.875"
 	'shippingMode'         => 'none',           // none | flat | zones

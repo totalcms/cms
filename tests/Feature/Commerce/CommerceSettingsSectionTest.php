@@ -26,7 +26,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 
 	expect(array_keys($defaults))->toBe([
 		'currency', 'collections', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix',
-		'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer',
+		'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer',
 		'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage',
 		'checkoutMode', 'payPage', 'grantableGroups', 'paymentFailedMailer',
 	])
@@ -40,7 +40,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 
 	// The store name is not here: left empty it is the site's own name, which
 	// CommerceSettingsTest pins.
-	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
+	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
 		expect($shipped->{$accessor}())->toBe($fallback->{$accessor}(), $accessor);
 	}
 });
@@ -70,7 +70,7 @@ test('the settings form renders with a field for each setting an operator choose
 	// has none: the field is there, with nothing in it to name.
 	expect($html)->toContain('data-type="checklist" style="--grid-area: providers;');
 
-	foreach (['currency', 'customerCollection', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
+	foreach (['currency', 'customerCollection', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
 		expect($html)->toContain('name="' . $field . '"', $field);
 	}
 });
@@ -195,16 +195,19 @@ describe('the settings form', function (): void {
 			// And the form is told, so it can show and hide the field as the choice changes.
 			->and(($this->field)($name))->toContain('&quot;visibility&quot;');
 	})->with([
-		// Not when the payment provider works the tax out: it uses neither.
-		'Tax Shipping, when the store works out the tax' => ['taxShipping', 'taxMode', 'in', ['exclusive', 'inclusive']],
-		'Tax Rates, when the store works out the tax'    => ['taxRates', 'taxMode', 'in', ['exclusive', 'inclusive']],
+		'Tax Shipping, when tax is charged'      => ['taxShipping', 'taxMode', '!=', 'none'],
+		// Always there with tax on: the rates are the store's way, or what a provider that cannot work out tax falls back on.
+		'Tax Rates, when tax is charged'         => ['taxRates', 'taxMode', '!=', 'none'],
+		'Tax Worked Out By, when tax is charged' => ['taxBy', 'taxMode', '!=', 'none'],
 		'Flat Rate, for a flat rate'         => ['shippingFlatRate', 'shippingMode', '==', 'flat'],
 		'Free Shipping Over, for a flat rate' => ['shippingFreeOver', 'shippingMode', '==', 'flat'],
 		'Shipping Zones, by zone'            => ['shippingZones', 'shippingMode', '==', 'zones'],
 	]);
 
-	test('tax can be left to the payment provider', function (): void {
-		expect(($this->field)('taxMode'))->toContain('value="provider"', 'Worked out by the payment provider');
+	// Whether there is tax, and who works it out, are two questions.
+	test('tax can be left to the payment provider, as a setting of its own', function (): void {
+		expect(($this->field)('taxBy'))->toContain('data-type="radio"', 'value="table"', 'value="provider"', 'The payment provider, when it can')
+			->and(($this->field)('taxMode'))->not->toContain('value="provider"');
 	});
 
 	test('an amount of money is a price field', function (string $name): void {

@@ -16,7 +16,7 @@ Your store can charge tax in one of two ways.
 - **From your own table of rates.** You give a rate for a country, or for one state or province of it, and the store adds the tax for buyers there. It is a simple table. It does not know which rates the law asks for, which products are taxable where, or the local rates inside a state. Those are yours to decide and to keep up to date.
 - **Worked out by Stripe.** [Stripe Tax](#let-stripe-work-out-the-tax) finds the exact rate for each buyer's address, local rates included, and adds it when they pay. It is a paid Stripe service.
 
-Most of this page is about your own table. The last section is about Stripe Tax.
+Two settings decide it: **Tax** says whether you charge tax and how your prices stand to it, and **Tax Worked Out By** says who does the sum. Most of this page is about your own table. The last section is about Stripe Tax.
 
 ## Turn tax on
 
@@ -27,7 +27,6 @@ Open **Settings → Commerce** and set **Tax**:
 | **No tax** | No tax is charged. This is the default. |
 | **Added to prices** | Tax is added to the order at checkout. A $20.00 product taxed at 10% costs $22.00. |
 | **Included in prices** | Your prices already include the tax. A $20.00 product still costs $20.00, and the order says how much of it is tax. |
-| **Worked out by the payment provider** | Stripe Tax works out the tax and adds it when the buyer pays. Your table of rates is not used. See [Let Stripe work out the tax](#let-stripe-work-out-the-tax). |
 
 ## Add your rates
 
@@ -89,13 +88,15 @@ With your own table, the store works out the tax and asks the payment provider f
 
 ## Let Stripe work out the tax
 
-Set **Tax** to **Worked out by the payment provider** and Stripe Tax takes over:
+Turn tax on as above, then set **Tax Worked Out By** to **The payment provider, when it can**. For an order paid with Stripe, Stripe Tax takes over:
 
 1. Your store builds the order without tax and asks Stripe for that total.
 2. Stripe asks the buyer for the address it needs, works out the tax for that address, and adds it on its payment form.
 3. When the buyer has paid, Stripe tells your store how much tax it charged. The order takes its tax and its total from the payment.
 
 So the buyer first sees the tax on the payment form, not in the cart. The order page and the receipt show it once the order is paid.
+
+**Tax** still says how your prices stand to the tax. With **Added to prices**, Stripe adds its tax on top of your price. With **Included in prices**, Stripe charges your price and counts the tax as part of it.
 
 ### What Stripe needs first
 
@@ -118,17 +119,20 @@ Run this check before you switch the setting on. If Stripe Tax is not ready, a b
 
 ### What is taxed
 
-- **Where:** an order that ships is taxed by the address it ships to. An order with nothing to ship is taxed by the billing address Stripe asks the buyer for. The checkout form does not ask for a country or region of its own.
-- **Your prices:** in the Stripe extension's settings, **Stripe Tax: Your Prices** says whether the tax is added on top of your prices or is already inside them.
+- **Where:** an order that ships is taxed by the address it ships to. An order with nothing to ship is taxed by the billing address Stripe asks the buyer for.
 - **Products:** Stripe taxes a product under the default product tax code of your Stripe account. A product with **Taxable** switched off is sent to Stripe as not taxable.
 - **Shipping** is sent to Stripe as shipping, and Stripe taxes it by the rules of the buyer's place. **Tax Shipping** is not used.
 - **A discount** comes off first, as with your own table.
 
-### Other payment providers
+### Providers that cannot work out tax
 
-Only a provider that can work out tax does. Stripe can. An order paid with a provider that cannot carries no tax.
+Stripe can work out tax. PayPal cannot. An order paid with a provider that cannot is taxed from **your own tax rates**, exactly as if **Tax Worked Out By** were **My tax rates**. Leave the table empty and those orders carry no tax.
 
-Do not switch on Stripe Tax in some other way for a store that uses its own table of rates. Stripe would then charge more than the order's total, and the order would be held for review.
+So a store that offers both keeps a table as well. A buyer who pays with Stripe gets Stripe's exact rate for their address. A buyer who pays with PayPal gets the rate in your table, which can differ by a point or two where local rates apply.
+
+The checkout form follows the buyer's choice. Your table needs to know where the buyer is, so for an order with nothing to ship the form asks for **Country** and **State or region** while PayPal is chosen, and puts those fields away while Stripe is chosen, because Stripe asks on its own page.
+
+Do not switch on Stripe Tax in some other way for a store set to **My tax rates**. Stripe would then charge more than the order's total, and the order would be held for review.
 
 ### Refunds
 

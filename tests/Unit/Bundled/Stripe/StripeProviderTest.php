@@ -563,9 +563,8 @@ describe('leaving the tax to Stripe', function (): void {
 	});
 
 	it('says the prices already hold the tax when the store says so', function (): void {
-		$http     = new RecordingHttpClient(stripeSession());
-		$provider = new StripeProvider(new StripeClient(static fn (): HttpClientInterface => $http, STRIPE_KEY), STRIPE_KEY, STRIPE_SECRET, '', new NullLogger(), taxBehavior: 'inclusive');
-		$provider->createCheckout(($this->taxed)());
+		$http = new RecordingHttpClient(stripeSession());
+		stripeProvider($http)->createCheckout(($this->taxed)(['taxIncluded' => true]));
 
 		expect(stripeForm($http)['line_items'][0]['price_data']['tax_behavior'])->toBe('inclusive');
 	});
@@ -741,10 +740,10 @@ describe('leaving the tax to Stripe', function (): void {
  */
 describe('tcms stripe:tax', function (): void {
 	beforeEach(function (): void {
-		$this->run = function (array $responses, string $taxMode = 'provider', string $key = STRIPE_KEY): CommandTester {
+		$this->run = function (array $responses, array $store = [], string $key = STRIPE_KEY): CommandTester {
 			$http             = new RecordingHttpClient(...$responses);
 			$config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-			$config->commerce = ['taxMode' => $taxMode];
+			$config->commerce = $store + ['taxMode' => 'exclusive', 'taxBy' => 'provider'];
 			$tester           = new CommandTester(new TaxCommand(stripeProvider($http, $key), static fn (): CommerceSettings => new CommerceSettings($config)));
 			$tester->execute([]);
 			$this->http = $http;
@@ -778,11 +777,21 @@ describe('tcms stripe:tax', function (): void {
 			->and($tester->getDisplay())->toContain('collected nowhere', 'Registrations');
 	});
 
-	it('says when the store is not set to leave the tax to the provider', function (): void {
-		$tester = ($this->run)([$this->active, ($this->registrations)(1)], 'exclusive');
+	it('says when the store is not set to leave the tax to the provider', function (array $store, string $words): void {
+		$tester = ($this->run)([$this->active, ($this->registrations)(1)], $store);
 
 		expect($tester->getStatusCode())->toBe(0)
-			->and($tester->getDisplay())->toContain('Settings → Commerce → Tax', 'is not');
+			->and($tester->getDisplay())->toContain('Settings → Commerce', $words)
+			->and($tester->getDisplay())->not->toContain('leaves the tax to the payment provider');
+	})->with([
+		'it works out its own tax' => [['taxBy' => 'table'], 'Tax Worked Out By'],
+		'it charges no tax'        => [['taxMode' => 'none'], 'No tax'],
+	]);
+
+	it('says so when the store does leave it to the provider', function (): void {
+		$tester = ($this->run)([$this->active, ($this->registrations)(1)]);
+
+		expect($tester->getDisplay())->toContain('leaves the tax to the payment provider');
 	});
 
 	it('says so when Stripe cannot be asked, and never shows the key', function (): void {
@@ -794,7 +803,7 @@ describe('tcms stripe:tax', function (): void {
 	});
 
 	it('asks nothing of Stripe without a secret key', function (): void {
-		$tester = ($this->run)([], 'provider', '');
+		$tester = ($this->run)([], [], '');
 
 		expect($tester->getStatusCode())->toBe(1)
 			->and($tester->getDisplay())->toContain('No Stripe secret key')
@@ -873,18 +882,6 @@ describe('the extension', function (): void {
 		'with it'                 => [['testPublishableKey' => STRIPE_PUBLIC], true],
 	]);
 
-	it('hands the provider how the store\'s prices stand to Stripe\'s tax', function (array $settings, string $behavior): void {
-		$context = ($this->context)($settings + ['testSecretKey' => STRIPE_KEY, 'testWebhookSecret' => STRIPE_SECRET]);
-		(new Extension())->register($context);
-		$provider = $context->getRegisteredPaymentProviders()[0];
-
-		expect((new ReflectionProperty($provider, 'taxBehavior'))->getValue($provider))->toBe($behavior);
-	})->with([
-		'by default, the tax goes on top' => [[], 'exclusive'],
-		'prices that include tax'         => [['taxBehavior' => 'inclusive'], 'inclusive'],
-		'anything else is "on top"'       => [['taxBehavior' => 'sideways'], 'exclusive'],
-	]);
-
 	it('ships the command that checks Stripe Tax', function (): void {
 		$context = ($this->context)([]);
 		(new Extension())->register($context);
@@ -916,7 +913,7 @@ describe('the extension', function (): void {
 			->and($manifest['min_edition'])->toBe('pro')
 			->and($manifest['entitlement'])->toBe('totalcms/commerce')
 			->and(is_file($dir . '/' . $manifest['icon']))->toBeTrue()
-			->and(array_keys($settings))->toBe(['mode', 'testPublishableKey', 'testSecretKey', 'testWebhookSecret', 'livePublishableKey', 'liveSecretKey', 'liveWebhookSecret', 'statementDescriptor', 'taxBehavior'])
+			->and(array_keys($settings))->toBe(['mode', 'testPublishableKey', 'testSecretKey', 'testWebhookSecret', 'livePublishableKey', 'liveSecretKey', 'liveWebhookSecret', 'statementDescriptor'])
 			->and($settings['testPublishableKey']['field'])->toBe('text')
 			->and($settings['livePublishableKey']['field'])->toBe('text');
 		foreach (['testSecretKey', 'testWebhookSecret', 'liveSecretKey', 'liveWebhookSecret'] as $key) {

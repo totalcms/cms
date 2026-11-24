@@ -55,9 +55,11 @@ final readonly class OrderDraft
 		return new self($this->currency, $this->email, $updated, $this->totals, $this->shippingAddress, $this->billingAddress, $this->attributes, $order, $this->customerCollection, $this->customerId);
 	}
 
-	/** The same order, said to be taxed another way. No amount is touched. */
-	public function withTaxMode(string $mode): self
+	/** The same order with its tax left to the payment provider: none of the store's own on it. */
+	public function leftToProvider(): self
 	{
-		return new self($this->currency, $this->email, $this->lines, $this->totals->withTaxMode($mode), $this->shippingAddress, $this->billingAddress, $this->attributes, $this->metadata, $this->customerCollection, $this->customerId);
+		$lines = array_map(static fn (OrderLineDraft $line): OrderLineDraft => $line->withTax(0), $this->lines);
+
+		return new self($this->currency, $this->email, $lines, $this->totals->leftToProvider(), $this->shippingAddress, $this->billingAddress, $this->attributes, $this->metadata, $this->customerCollection, $this->customerId);
 	}
 }

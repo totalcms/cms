@@ -88,16 +88,19 @@ final readonly class CheckoutService
 		// The code is checked again here, with the email: a code that stopped
 		// being valid stops the checkout, before any order or payment exists.
 		$draft = $this->builder->build($this->cart->items(), $input, $ctx, $this->cart->discountCode());
-		$this->requireWhere($draft, $input);
 
 		$free     = $draft->totals->grandTotal === 0 && !$draft->hasRecurringLine();
 		$provider = $free ? null : $this->provider($input->provider, $draft);
 
-		// The tax is left to the provider only when this one can work it out.
-		// With one that cannot, or nothing to pay, the order has no tax.
-		if ($draft->totals->taxMode === TaxCalculator::PROVIDER && $provider?->capabilities()->tax !== true) {
-			$draft = $draft->withTaxMode(TaxCalculator::NONE);
+		// A provider that works the tax out finds out where the buyer is and
+		// adds its own, so the store's is left off. For any other the store's
+		// own tax stands, and it has to know where the buyer is.
+		$providerTax = $provider instanceof PaymentProvider && $this->providers->worksOutTax($provider);
+		if ($providerTax) {
+			$draft = $draft->leftToProvider();
 		}
+		// An order that costs nothing has no tax to place.
+		$this->requireWhere($draft, $input, !$free && !$providerTax);
 
 		$refusal = $this->validators->refusal($draft, $ctx);
 		if ($refusal !== null) {
@@ -134,15 +137,16 @@ final readonly class CheckoutService
 	}
 
 	/**
-	 * An order that ships, or is taxed, has to say where: the country, and
-	 * the region too where the store's tax depends on it.
+	 * An order that ships, or that the store taxes, has to say where: the
+	 * country, and the region too where the store's tax depends on it.
+	 *
+	 * @param bool $storeTaxes false when the payment provider works the tax out and asks the buyer itself
 	 *
 	 * @throws CommerceException
 	 */
-	private function requireWhere(OrderDraft $draft, CheckoutInput $input): void
+	private function requireWhere(OrderDraft $draft, CheckoutInput $input, bool $storeTaxes): void
 	{
-		// A provider that works the tax out asks the buyer where they are itself.
-		$taxed = in_array($this->tax->mode(), TaxCalculator::OWN, true);
+		$taxed = $storeTaxes && $this->tax->mode() !== TaxCalculator::NONE;
 		if (!$draft->ships() && !$taxed) {
 			return;
 		}
@@ -273,6 +277,7 @@ final readonly class CheckoutService
 			uiMode: $uiMode,
 			providerTax: $order->taxMode() === TaxCalculator::PROVIDER,
 			shipTo: $order->taxMode() === TaxCalculator::PROVIDER && $draft->ships() ? $draft->shippingAddress : null,
+			taxIncluded: $this->tax->mode() === TaxCalculator::INCLUSIVE,
 		);
 	}
 

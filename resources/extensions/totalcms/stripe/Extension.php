@@ -65,8 +65,6 @@ class Extension implements ExtensionInterface
 			// Asked when a checkout needs it: the site's config does not exist
 			// yet while extensions register.
 			static fn (): string => $context->get(Config::class)->api . '/api/ext/totalcms/stripe/assets/embed.js?v=' . (int)@filemtime($module),
-			// With Stripe Tax: whether the tax goes on top of the store's prices or is already in them.
-			$context->setting('taxBehavior', 'exclusive') === 'inclusive' ? 'inclusive' : 'exclusive',
 		);
 		$context->addPaymentProvider($provider);
 

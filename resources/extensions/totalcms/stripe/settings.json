@@ -70,23 +70,6 @@
 			"help": "Optional. A short name added after your Stripe account's own on the buyer's card statement, such as your store's name. Up to 22 letters, digits and spaces.",
 			"default": "",
 			"maxLength": 22
-		},
-		"taxBehavior": {
-			"type": "string",
-			"field": "select",
-			"label": "Stripe Tax: Your Prices",
-			"help": "Used only when Settings → Commerce → Tax is set to <strong>Worked out by the payment provider</strong>. <strong>Tax is added on top</strong> charges the buyer your price plus the tax, as is usual in the United States and Canada. <strong>Prices include tax</strong> charges your price and counts the tax as part of it, as is usual in Europe.",
-			"default": "exclusive",
-			"options": [
-				{
-					"value": "exclusive",
-					"label": "Tax is added on top"
-				},
-				{
-					"value": "inclusive",
-					"label": "Prices include tax"
-				}
-			]
 		}
 	}
 }

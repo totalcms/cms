@@ -14,19 +14,20 @@ interface TaxCalculator
 	public const INCLUSIVE = 'inclusive';
 
 	/**
-	 * The payment provider works the tax out and adds it when the buyer
-	 * pays (Stripe Tax). The store builds the order without tax, and the
-	 * order takes its tax and its total from the payment.
+	 * Not a mode a store is set to: the tax mode of one order, while it
+	 * waits to be paid, when its tax is left to the payment provider (Stripe
+	 * Tax). The order is built without tax and takes its tax, its total and
+	 * one of the three modes above from the payment.
 	 */
 	public const PROVIDER = 'provider';
 
-	/** The modes in which the store works the tax out itself, and so must know where the buyer is. */
-	public const OWN = [self::EXCLUSIVE, self::INCLUSIVE];
+	/** Who works the tax out: the store, from its table of rates, or the payment provider when it can. */
+	public const BY_TABLE    = 'table';
+	public const BY_PROVIDER = 'provider';
 
 	/**
-	 * none | exclusive | inclusive | provider. Exclusive tax is added to
-	 * the total; inclusive tax is already inside the prices; with provider
-	 * the store works out none ({@see PROVIDER}).
+	 * none | exclusive | inclusive. Exclusive tax is added to the total;
+	 * inclusive tax is already inside the prices.
 	 */
 	public function mode(): string;
 

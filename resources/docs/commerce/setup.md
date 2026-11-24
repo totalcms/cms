@@ -32,7 +32,7 @@ Choose it before your first order. Every price and every order is in this one cu
 
 A payment provider is an extension. Enable one, give it its keys, then tick it under **Payment Providers** in **Settings → Commerce**.
 
-The [Stripe extension](docs/extensions/stripe) ships with Total CMS. Its page walks through keys, the webhook and a test purchase.
+The [Stripe extension](docs/extensions/stripe) and the [PayPal extension](docs/extensions/paypal) ship with Total CMS. Each one's page walks through its keys, the webhook and a test purchase. You can offer both.
 
 A buyer can check out once a provider is enabled, has its keys, and is chosen here. Until then your pages can show products, and `cms.commerce.enabled()` is `false`.
 
@@ -73,7 +73,7 @@ These are under **Settings → Commerce**.
 | **Receipt Email** | The mailer template sent when an order is paid. Empty uses `commerce-receipt`. |
 | **Order Page** | A Site Builder page that shows an order after payment. Empty uses the built-in page. |
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
-| **Tax**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax: from your own table of rates, or worked out by Stripe Tax. See [Tax](docs/commerce/tax). |
+| **Tax**, **Tax Worked Out By**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and who works it out: you, from your own table of rates, or Stripe Tax. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |
