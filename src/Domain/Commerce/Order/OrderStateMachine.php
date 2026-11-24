@@ -181,7 +181,7 @@ final readonly class OrderStateMachine
 		return Transition::to(
 			$order,
 			['paymentStatus' => $refunded >= $paid ? self::REFUNDED : self::PARTIALLY_REFUNDED, 'refundedTotal' => $refunded],
-			[SideEffect::DispatchRefunded],
+			[SideEffect::Restock, SideEffect::DispatchRefunded],
 		);
 	}
 

@@ -121,7 +121,15 @@ For anything more, write your own CSS for their classes, such as `.commerce-cart
 
 ## Checkout
 
-`cms.cart.checkoutForm()` prints the form that starts a checkout: the buyer's email, a shipping address if anything in the cart ships, and how they pay. It prints nothing for an empty cart, or when nobody can pay yet.
+`cms.cart.checkoutForm()` prints the form that starts a checkout: the buyer's email, a shipping address if anything in the cart ships, what the order comes to, and how they pay. It prints nothing for an empty cart, or when nobody can pay yet.
+
+### What the order comes to
+
+The form lists the goods, any discount, [shipping](docs/commerce/shipping), [tax](docs/commerce/tax) and the total. Shipping and tax depend on where the order is going, so the form works them out again each time the buyer changes their address or how they pay.
+
+A figure the store does not have yet is said in words, not shown as zero: shipping before there is an address, and tax that the payment provider works out when the buyer pays.
+
+Your own script can ask for the same numbers. Post the form's fields to `/commerce/checkout/quote` with `Accept: application/json`. It makes no order.
 
 When the buyer sends it, Total CMS:
 

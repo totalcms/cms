@@ -13,6 +13,7 @@
 	ships      whether anything in the cart has to be sent
 	taxed      whether to ask where the buyer is, for tax: nothing ships and the store works out
 	           the tax for at least one way to pay
+	quote      what the order comes to so far, as commerce/checkout-totals.twig shows it; null when it cannot be worked out
 	email      the buyer's email, when they are signed in
 	label      the button's text
 	class      an extra class for the form
@@ -58,6 +59,11 @@
 			<p class="commerce-checkout-hint">Used to work out the tax on your order.</p>
 		</fieldset>
 	{% endif %}
+	{# What the order comes to. The form asks for it again whenever something
+	   it depends on changes: where the order is going, or how it is paid for. #}
+	<div id="commerce-checkout-totals" class="commerce-checkout-totals" aria-live="polite" hx-post="{{ base|e }}/commerce/checkout/quote" hx-trigger="change from:#commerce-checkout-form delay:150ms" hx-include="#commerce-checkout-form" hx-target="this" hx-swap="innerHTML">
+		{% include 'commerce/checkout-totals.twig' %}
+	</div>
 	{% if providers|length > 1 %}
 		<fieldset class="commerce-checkout-providers">
 			<legend>Pay with</legend>

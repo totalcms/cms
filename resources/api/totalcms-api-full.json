@@ -13856,6 +13856,45 @@
                 ]
             }
         },
+        "/commerce/checkout/quote": {
+            "post": {
+                "operationId": "commerce-checkout-quote",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/checkout/quote",
+                "x-tcms-action": "CheckoutQuoteAction",
+                "x-tcms-middleware": [
+                    "CartRateLimitMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
         "/commerce/download/{token}": {
             "get": {
                 "operationId": "commerce-download",

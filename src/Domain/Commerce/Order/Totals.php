@@ -21,6 +21,7 @@ final readonly class Totals
 	 * @param array<string,int>                                         $lineDiscount   line id => its share of the discount
 	 * @param int                                                       $shippingWaived what a free-shipping code took off
 	 * @param array{code: string, type: string, value: string, amount: int, shippingWaived: int, recurring: string}|null $discountLine
+	 * @param bool                                                      $shippingKnown  false only in an estimate, for an order that ships to a place no rate covers yet
 	 */
 	public function __construct(
 		public int $subtotal,
@@ -35,6 +36,7 @@ final readonly class Totals
 		public array $lineDiscount = [],
 		public int $shippingWaived = 0,
 		public ?array $discountLine = null,
+		public bool $shippingKnown = true,
 	) {
 	}
 

@@ -42,9 +42,19 @@ A product with variants is always bought as one of them. The cart refuses the pr
 Turn on **Track Inventory** and set **Stock** to stop selling when a product runs out. For a product with variants, each variant has its own stock.
 
 - At zero, the product cannot be added to a cart, and checkout refuses an order for it.
-- **Allow Backorder** keeps selling at zero.
+- **Allow Backorder** keeps selling at zero. The count then goes below zero, which tells you how many you owe.
 
-Stock does [not count down by itself yet](docs/commerce/overview#not-in-this-version-yet). Until it does, set it by hand.
+### Stock counts itself down
+
+When an order is paid, what it sold is taken out of stock. It is taken once, however many times the payment is reported.
+
+Nothing is taken for an order that was started and never paid. So two buyers can both check out the last one. Each is allowed through, the count is taken down as each pays, and the second order is flagged **Oversold**: the buyer has paid, and you choose between sending it later and a refund. See [Orders that need attention](docs/commerce/orders#orders-that-need-attention).
+
+### Putting stock back
+
+A refund does not put anything back by itself, because the goods may never come back. When you refund from the order's page, tick **Return the items to stock** if they are. The count goes back up when the payment provider confirms the refund, once for the order.
+
+A refund made at the payment provider puts nothing back. Change the product's stock by hand.
 
 ## Prices are read at checkout
 

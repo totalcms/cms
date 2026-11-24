@@ -200,6 +200,7 @@ $menu = [
 			['title' => 'Products',               'path' => 'commerce/products'],
 			['title' => 'Discount Codes',         'path' => 'commerce/discounts'],
 			['title' => 'Tax',                    'path' => 'commerce/tax'],
+			['title' => 'Shipping',               'path' => 'commerce/shipping'],
 			['title' => 'Cart and Checkout',      'path' => 'commerce/cart-and-checkout'],
 			['title' => 'Digital Delivery',       'path' => 'commerce/digital-delivery'],
 			['title' => 'Orders',                 'path' => 'commerce/orders'],

@@ -17,6 +17,7 @@ use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Order\CheckoutInput;
 use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -63,6 +64,7 @@ final readonly class CartTwigAdapter
 		private PaymentProviderRegistry $providers,
 		private MoneyFilter $money,
 		private TaxCalculator $tax,
+		private \Closure $checkout,
 	) {
 	}
 
@@ -272,6 +274,7 @@ final readonly class CartTwigAdapter
 		}
 
 		return ($this->twig)()->render('commerce/checkout-form.twig', [
+			'quote'     => $this->quote($providers[0]['id'] ?? ''),
 			'providers' => $providers,
 			'ships'     => $ships = $this->ships($view),
 			// The store's tax goes by where the buyer is. An order that ships
@@ -283,6 +286,24 @@ final readonly class CartTwigAdapter
 			'base'      => $this->config->api,
 			'csrf'      => $this->csrf->getTokenField(),
 		]);
+	}
+
+	/**
+	 * What the cart comes to before the buyer has said anything, for the
+	 * form to start with: the way to pay that is chosen first, and no
+	 * address. Null when it cannot be worked out, and the form shows none.
+	 *
+	 * @return array<string,bool|int|string>|null
+	 */
+	private function quote(string $provider): ?array
+	{
+		try {
+			$input = CheckoutInput::fromRequest(['provider' => $provider, 'attributes' => $this->store->attributes()], []);
+
+			return ($this->checkout)()->quote($input, $this->contexts->current($input->attributes))->toArray();
+		} catch (\Throwable) {
+			return null;
+		}
 	}
 
 	/** Whether anything in the cart has to be sent somewhere. */

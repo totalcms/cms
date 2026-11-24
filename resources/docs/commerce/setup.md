@@ -73,12 +73,14 @@ These are under **Settings → Commerce**.
 | **Receipt Email** | The mailer template sent when an order is paid. Empty uses `commerce-receipt`. |
 | **Order Page** | A Site Builder page that shows an order after payment. Empty uses the built-in page. |
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
+| **Shipping**, **Flat Rate**, **Free Shipping Over**, **Shipping Zones** | What an order is charged for shipping. See [Shipping](docs/commerce/shipping). |
+| **Download Link Lifetime**, **Downloads per Purchase** | How long a buyer's download link works, and how many times they may download. See [Digital Delivery](docs/commerce/digital-delivery). |
 | **Tax**, **Tax Worked Out By**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and who works it out: you, from your own table of rates, or Stripe Tax. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |
 
-The settings for shipping, downloads and subscriptions are for features that are [not in this version yet](docs/commerce/overview#not-in-this-version-yet).
+The settings for subscriptions and memberships are for features that are [not in this version yet](docs/commerce/overview#not-in-this-version-yet).
 
 ## Receipts
 

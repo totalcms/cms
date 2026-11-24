@@ -801,6 +801,48 @@
 	opacity     : 0.75;
 }
 
+// What the order comes to: a short list of amounts above the ways to pay.
+// A figure the store does not have yet is in words, a little quieter.
+.commerce-checkout-totals:empty {
+	display : none;
+}
+
+.commerce-checkout-totals-list {
+	display    : grid;
+	gap        : 0.4rem;
+	margin     : 0;
+	padding    : 0.875rem 0 0;
+	border-top : 1px solid var(--_border);
+
+	> div {
+		display         : flex;
+		justify-content : space-between;
+		gap             : 1rem;
+	}
+
+	dt,
+	dd {
+		margin : 0;
+	}
+
+	dd {
+		text-align           : right;
+		font-variant-numeric : tabular-nums;
+	}
+
+	.commerce-checkout-pending {
+		font-size : 0.875em;
+		opacity   : 0.75;
+	}
+
+	.commerce-checkout-total {
+		margin-top  : 0.25rem;
+		padding-top : 0.6rem;
+		border-top  : 1px solid var(--_border);
+		font-size   : 1.0625em;
+	}
+}
+
 // The ways to pay: one row each, the whole row the thing to click, and the
 // chosen one outlined. Named under the form so that a site's own rules for
 // every label and every input (a label on its own line, an input as wide as

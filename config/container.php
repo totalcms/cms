@@ -43,13 +43,13 @@ use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
 use TotalCMS\Domain\Commerce\Download\DownloadGrantIssuer;
+use TotalCMS\Domain\Commerce\Inventory\StockInventoryApplier;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
 use TotalCMS\Domain\Commerce\Order\InventoryApplier;
-use TotalCMS\Domain\Commerce\Order\NoShippingCalculator;
-use TotalCMS\Domain\Commerce\Order\NullInventoryApplier;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
+use TotalCMS\Domain\Commerce\Order\TableShippingCalculator;
 use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
 use TotalCMS\Domain\Commerce\Order\TableTaxCalculator;
 use TotalCMS\Domain\Commerce\Order\TaxCalculator;
@@ -716,6 +716,8 @@ return [
 		$container->get(PaymentProviderRegistry::class),
 		$container->get(MoneyFilter::class),
 		$container->get(TaxCalculator::class),
+		// Lazy: checkout is built only when a checkout form is shown.
+		fn (): CheckoutService => $container->get(CheckoutService::class),
 	),
 
 	// Spelled out for the same reason, and so checkout is built only when a pay page asks.
@@ -1000,11 +1002,11 @@ return [
 	// shipping settings are built, nothing is charged for either.
 	// The store's own tax table. With Tax set to none it works nothing out.
 	TaxCalculator::class      => \DI\get(TableTaxCalculator::class),
-	ShippingCalculator::class => \DI\get(NoShippingCalculator::class),
+	ShippingCalculator::class => \DI\get(TableShippingCalculator::class),
 
 	// What a paid order does to stock and to its digital lines. Neither is
 	// built yet, so a paid order changes no stock and issues no links.
-	InventoryApplier::class => \DI\get(NullInventoryApplier::class),
+	InventoryApplier::class => \DI\get(StockInventoryApplier::class),
 	DownloadIssuer::class   => \DI\get(DownloadGrantIssuer::class),
 
 	// Paid products. Entitlements asks every source in its list; the license is

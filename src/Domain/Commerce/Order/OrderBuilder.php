@@ -37,10 +37,13 @@ final readonly class OrderBuilder
 	 *                                                here, now with the buyer's email, and what it takes off is
 	 *                                                worked out again: the cart never carries an amount
 	 *
+	 * @param bool                      $estimate     build it to show what it comes to, not to sell it: an order that
+	 *                                                cannot ship yet is built without shipping and not refused
+	 *
 	 * @throws CommerceException when the cart is empty, a product can no longer be bought, the order cannot
 	 *                           ship, or the code can no longer be used
 	 */
-	public function build(array $items, CheckoutInput $input, PricingContext $ctx, string $discountCode = ''): OrderDraft
+	public function build(array $items, CheckoutInput $input, PricingContext $ctx, string $discountCode = '', bool $estimate = false): OrderDraft
 	{
 		if ($items === []) {
 			throw CommerceException::cartEmpty();
@@ -55,7 +58,7 @@ final readonly class OrderBuilder
 		$subtotal = array_sum(array_map(static fn (OrderLineDraft $line): int => $line->lineTotal, $lines));
 		$discount = $discountCode === '' ? null : $this->discounts->resolve($discountCode, $lines, Money::of($subtotal, $ctx->currency), $input->email);
 
-		$totals = $this->totals->calculate($lines, $input->shipping ?? $input->billing, $input->shippingRateId, $ctx->currency, $discount);
+		$totals = $this->totals->calculate($lines, $input->shipping ?? $input->billing, $input->shippingRateId, $ctx->currency, $discount, $estimate);
 		foreach ($lines as $lineId => $line) {
 			$lines[$lineId] = $line->withDiscount($totals->lineDiscount[$lineId] ?? 0)->withTax($totals->lineTax[$lineId] ?? 0);
 		}

@@ -338,11 +338,21 @@ final readonly class PaymentEventProcessor
 	{
 		match ($effect) {
 			SideEffect::DispatchPaid->value     => $this->tell($orderId, $effect, CoreEvent::ORDER_PAID, null, $this->paymentTransaction($orderId)),
+			SideEffect::Restock->value          => $this->restock($orderId, $event),
 			SideEffect::DispatchRefunded->value => $this->tell($orderId, $effect . ':' . $event->eventKey(), CoreEvent::ORDER_REFUNDED, $event->amount->amount(), $this->transactionOf($orderId, $event)),
 			SideEffect::DispatchDisputed->value => $this->tell($orderId, $effect . ':' . $event->eventKey(), CoreEvent::ORDER_DISPUTED, null, $this->transactionOf($orderId, $event)),
 			SideEffect::AdminNotice->value      => $this->notify($orderId, $effect . ':' . $event->eventKey()),
 			default                             => $this->change($orderId, $event, $effect),
 		};
+	}
+
+	/**
+	 * Put a refunded order's items back into stock, when staff asked for
+	 * that with the refund. Once for the order: the applier marks it.
+	 */
+	private function restock(string $orderId, PaymentEvent $event): void
+	{
+		$this->orders->withLock($orderId, fn (OrderData $order): OrderData => $this->inventory->restock($order, $event));
 	}
 
 	/** An effect that changes the order: run and marked in one locked save. */

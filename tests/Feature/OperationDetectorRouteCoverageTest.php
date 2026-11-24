@@ -213,6 +213,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		// the order pages are opened by the order's signed link.
 		'commerce-cancel',
 		'commerce-checkout',
+		'commerce-checkout-quote',
 		'commerce-download',
 		'commerce-order-status',
 		'commerce-pay',

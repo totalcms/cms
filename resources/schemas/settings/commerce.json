@@ -205,7 +205,7 @@
 		"shippingZones": {
 			"field": "deck",
 			"label": "Shipping Zones",
-			"help": "One row for each zone. An order ships at the rate of the first zone that covers its address.",
+			"help": "One zone for each group of places with one rate. An order ships at the rate of the first zone that covers its address, so list the most exact first. An address no zone covers cannot be checked out.",
 			"schemaref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json",
 			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
 			"patternProperties": {

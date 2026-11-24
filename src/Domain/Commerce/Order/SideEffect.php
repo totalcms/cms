@@ -14,6 +14,7 @@ enum SideEffect: string
 	case Downloads         = 'downloadsIssued';
 	case Receipt           = 'receiptQueued';
 	case DispatchPaid      = 'paidDispatched';
+	case Restock           = 'restocked';
 	case DispatchRefunded  = 'refunded';
 	case DispatchDisputed  = 'disputed';
 	case DispatchFulfilled = 'fulfilled';

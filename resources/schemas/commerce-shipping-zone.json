@@ -32,7 +32,7 @@
 			},
 			"field": "list",
 			"label": "Countries",
-			"help": "The countries this zone covers.",
+			"help": "The countries in this zone. Leave empty for a zone that covers every country, such as a last zone for the rest of the world.",
 			"settings": {
 				"propertyOptions": "countries",
 				"duplicateItemsAllowed": false,
@@ -46,7 +46,7 @@
 			},
 			"field": "list",
 			"label": "Regions",
-			"help": "State or province codes, to narrow the zone inside its countries. Leave empty for the whole of each country.",
+			"help": "Optional. States or provinces, to limit the zone to part of its countries, such as CA and OR. Leave empty for the whole of each country.",
 			"placeholder": "CA"
 		},
 		"rate": {

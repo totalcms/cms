@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Data\CheckoutStart;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Order\Address;
 use TotalCMS\Domain\Commerce\Order\AdminEvent;
 use TotalCMS\Domain\Commerce\Order\CheckoutInput;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
@@ -116,6 +117,38 @@ final readonly class CheckoutService
 		$this->cart->markCheckout($order->id());
 
 		return $start;
+	}
+
+	/**
+	 * What the cart would come to as an order, for the buyer to see before
+	 * they check out. Nothing is made and no provider is asked. An order
+	 * that cannot ship yet is still worked out, without shipping, and says
+	 * why it cannot.
+	 *
+	 * @throws CommerceException when there is nothing to work out: an empty cart, a product that can no longer be bought
+	 */
+	public function quote(CheckoutInput $input, PricingContext $ctx): CheckoutQuote
+	{
+		$draft    = $this->builder->build($this->cart->items(), $input, $ctx, $this->cart->discountCode(), true);
+		$provider = null;
+		foreach ($this->providers->forCart($draft->hasRecurringLine()) as $candidate) {
+			if ($candidate->id() === $input->provider) {
+				$provider = $candidate;
+			}
+		}
+
+		$providerTax = $provider instanceof PaymentProvider && $this->providers->worksOutTax($provider);
+		if ($providerTax) {
+			$draft = $draft->leftToProvider();
+		}
+
+		$where      = $input->shipping ?? $input->billing;
+		$country    = $where instanceof Address ? $where->country : '';
+		$storeTaxes = !$providerTax && $this->tax->mode() !== TaxCalculator::NONE;
+		// No rate for an address the buyer did give: the store does not ship there.
+		$problem    = !$draft->totals->shippingKnown && $country !== '' ? CommerceException::noShipping()->getMessage() : '';
+
+		return CheckoutQuote::of($draft, $storeTaxes, $country !== '', $problem);
 	}
 
 	/**

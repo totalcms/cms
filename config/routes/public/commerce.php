@@ -6,6 +6,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Commerce\CheckoutCancelAction;
 use TotalCMS\Action\Commerce\CheckoutPayAction;
+use TotalCMS\Action\Commerce\CheckoutQuoteAction;
 use TotalCMS\Action\Commerce\CheckoutReturnAction;
 use TotalCMS\Action\Commerce\CheckoutStartAction;
 use TotalCMS\Action\Commerce\OrderStatusAction;
@@ -67,6 +68,14 @@ return function (App $app): void {
 		->add(CSRFProtectionMiddleware::class)
 		->add(CommerceEditionMiddleware::class)
 		->add(CheckoutRateLimitMiddleware::class);
+
+	// What the cart would come to, for the checkout form to show. It makes
+	// nothing and calls no provider, so it keeps the cart's limit.
+	$app->post('/commerce/checkout/quote', CheckoutQuoteAction::class)->setName('commerce-checkout-quote')
+		->add(NoCacheMiddleware::class)
+		->add(CSRFProtectionMiddleware::class)
+		->add(CommerceEditionMiddleware::class)
+		->add(CartRateLimitMiddleware::class);
 
 	// The buyer's own pages for one order. Each is opened by the order's
 	// signed link (`?t=`) and by nothing else.

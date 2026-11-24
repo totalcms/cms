@@ -25,15 +25,19 @@ final readonly class TotalsCalculator
 	 * @param array<string,OrderLineDraft> $lines   keyed by line id
 	 * @param Address|null                 $address where it ships; the billing address when nothing does
 	 *
+	 * @param bool                         $estimate for a figure to show, not an order: an order that cannot ship yet is
+	 *                                               worked out without shipping ({@see Totals::$shippingKnown}) and not refused
+	 *
 	 * @throws CommerceException when the order ships and no rate covers it, or the chosen rate is not on offer
 	 */
-	public function calculate(array $lines, ?Address $address, ?string $shippingRateId, string $currency, ?AppliedDiscount $discount = null): Totals
+	public function calculate(array $lines, ?Address $address, ?string $shippingRateId, string $currency, ?AppliedDiscount $discount = null, bool $estimate = false): Totals
 	{
 		$subtotal     = array_sum(array_map(static fn (OrderLineDraft $line): int => $line->lineTotal, $lines));
 		$lineDiscount = $this->lineDiscounts($lines, $discount);
 		$discounted   = array_sum($lineDiscount);
 
-		$rate     = $this->rate($lines, Money::of($subtotal - $discounted, $currency), $address, $shippingRateId);
+		$rate     = $this->rate($lines, Money::of($subtotal - $discounted, $currency), $address, $shippingRateId, $estimate);
+		$known    = $rate instanceof ShippingRate || array_filter($lines, static fn (OrderLineDraft $line): bool => $line->ships()) === [];
 		$shipping = $rate?->amount->amount() ?? 0;
 		$waived   = $discount?->freeShipping === true ? $shipping : 0;
 		$shipping -= $waived;
@@ -68,6 +72,7 @@ final readonly class TotalsCalculator
 				'shippingWaived' => $waived,
 				'recurring'      => $discount->recurring,
 			] : null,
+			shippingKnown: $known,
 		);
 	}
 
@@ -94,7 +99,7 @@ final readonly class TotalsCalculator
 	 *
 	 * @param array<string,OrderLineDraft> $lines
 	 */
-	private function rate(array $lines, Money $subtotal, ?Address $address, ?string $rateId): ?ShippingRate
+	private function rate(array $lines, Money $subtotal, ?Address $address, ?string $rateId, bool $estimate = false): ?ShippingRate
 	{
 		$ships = array_filter($lines, static fn (OrderLineDraft $line): bool => $line->ships());
 		if ($ships === []) {
@@ -103,7 +108,8 @@ final readonly class TotalsCalculator
 
 		$rates = $this->shipping->rates($lines, $subtotal, $address);
 		if ($rates === []) {
-			throw CommerceException::noShipping();
+			// An estimate carries on without shipping, and says it has none.
+			return $estimate ? null : throw CommerceException::noShipping();
 		}
 		if ($rateId === null || $rateId === '') {
 			return $rates[0];
