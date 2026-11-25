@@ -68,13 +68,7 @@ class CollectionForm extends TotalForm
 		// Generate the schema field options
 		$schemaField = $this->fields['schema'];
 		if ($schemaField instanceof SelectField) {
-			$customSchemas = $this->customSchemas();
-			$options       = ['Reserved Schemas' => $this->reservedSchemas()];
-
-			// Only include Custom Schemas group if there are any
-			if (count($customSchemas) > 0) {
-				$options = ['Custom Schemas' => $customSchemas] + $options;
-			}
+			$options = $this->schemaOptions();
 
 			$schemaField->setOptions($options);
 			if ($this->method === 'PUT') {
@@ -107,6 +101,31 @@ class CollectionForm extends TotalForm
 		}
 	}
 
+	/**
+	 * The schema ids to choose from, grouped, in the order they are shown.
+	 *
+	 * The schema a collection already has is always one of them, whatever the
+	 * lists leave out: without it the disabled select shows the first option,
+	 * and saving would write that schema to the collection.
+	 *
+	 * @return array<int|string,string|array<string>>
+	 */
+	private function schemaOptions(): array
+	{
+		$groups = array_filter([
+			'Custom Schemas'    => $this->customSchemas(),
+			'Extension Schemas' => $this->extensionSchemas(),
+			'Reserved Schemas'  => $this->reservedSchemas(),
+		], static fn (array $ids): bool => $ids !== []);
+
+		$stored = $this->collectionData instanceof CollectionData ? $this->collectionData->schema : '';
+		if ($stored !== '' && !in_array($stored, array_merge(...array_values($groups)), true)) {
+			return [$stored, ...$groups];
+		}
+
+		return $groups;
+	}
+
 	/** @return array<string> */
 	private function reservedSchemas(): array
 	{
@@ -135,6 +154,23 @@ class CollectionForm extends TotalForm
 		$schemaIds = array_filter($schemaIds, $this->services->collectionEditionService->isSchemaAccessible(...));
 
 		// Sort alphabetically
+		sort($schemaIds);
+
+		return $schemaIds;
+	}
+
+	/**
+	 * Not part of the reserved list, although no one can edit these either: the
+	 * bundle check expects every schema in that list to be a file of the bundle.
+	 *
+	 * @return array<string>
+	 */
+	private function extensionSchemas(): array
+	{
+		$schemas   = $this->services->schemaLister->listExtensionSchemas();
+		$schemaIds = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
+		$schemaIds = array_filter($schemaIds, $this->services->collectionEditionService->isSchemaAccessible(...));
+
 		sort($schemaIds);
 
 		return $schemaIds;

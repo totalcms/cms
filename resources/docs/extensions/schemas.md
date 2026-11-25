@@ -57,6 +57,7 @@ Read-only schemas:
 - Cannot be edited by the user through the admin UI
 - Are removed when the extension is disabled or removed
 - Appear in the schema list alongside built-in and custom schemas
+- Can be chosen for a collection: the collection form lists them under **Extension Schemas**
 
 The presence of a `schemas/` directory is auto-detected when the extension is enabled and surfaces as a `Schemas` capability on the extension's permission list. Admins can toggle this capability off to hide the extension's read-only schemas without uninstalling the extension. If you add a `schemas/` directory to an already-enabled extension, disable + re-enable so the capability is re-detected.
 

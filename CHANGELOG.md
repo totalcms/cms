@@ -19,6 +19,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **Editing a collection keeps an extension's schema.** The Schema field of the collection form did not list the schemas extensions ship, the bundled Podcast extension's among them, and saving the form gave the collection the first schema in the list instead. They are now listed in their own group, for new collections too, and the schema a collection already has is always kept. A collection this has changed needs `schema` set back in its `.meta.json`.
 - **Deleting a gallery image never deletes the others.** The trash icon of an image whose upload had failed or not finished could remove every image in the gallery. It now removes that thumbnail only, and the API refuses (400) a delete under `/collections/` whose URL ends in a slash.
 - **Gallery uploads keep the right name.** When several files uploaded at once and the server had to rename them, a thumbnail could end up with another image's name until the page was reloaded. The upload response now says which name each file got (`meta.name`).
 - **A gallery no longer stores an image without a name.** Saving or reordering while an upload was running or had failed left a broken thumbnail behind.
