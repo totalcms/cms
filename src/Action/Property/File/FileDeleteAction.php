@@ -37,6 +37,11 @@ readonly class FileDeleteAction
 		$query                                 = $request->getQueryParams();
 		['path' => $path, 'nested' => $nested] = $this->classifyDispatchPath($args, $this->fileFetcher);
 
+		// A path of nothing but dots and slashes names no file.
+		if ($path === '') {
+			throw new HttpNotFoundException($request);
+		}
+
 		if ($nested) {
 			$object = $this->objectRemover->deleteNestedProperty(
 				$args['collection'],

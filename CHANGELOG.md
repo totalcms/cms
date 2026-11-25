@@ -2,6 +2,14 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.6.12] - Unreleased
+
+### Fixed
+
+- **Deleting a gallery image never deletes the others.** The trash icon of an image whose upload had failed or not finished could remove every image in the gallery. It now removes that thumbnail only, and the API refuses (400) a delete under `/collections/` whose URL ends in a slash.
+- **Gallery uploads keep the right name.** When several files uploaded at once and the server had to rename them, a thumbnail could end up with another image's name until the page was reloaded. The upload response now says which name each file got (`meta.name`).
+- **A gallery no longer stores an image without a name.** Saving or reordering while an upload was running or had failed left a broken thumbnail behind.
+
 ## [3.6.11] - 2026-11-20
 
 ### Added
