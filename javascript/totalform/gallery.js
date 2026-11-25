@@ -326,6 +326,8 @@ export default class GalleryField extends ImageField {
 	}
 
 	openEditDialog(preview) {
+		// Nothing to edit or link to until the upload is done.
+		if (!preview.getImageName()) return;
 		const dialog = this.getSharedDialog();
 		if (!dialog) return;
 
@@ -339,6 +341,7 @@ export default class GalleryField extends ImageField {
 	}
 
 	openLinkDialog(preview) {
+		if (!preview.getImageName()) return;
 		const dialog = this.getSharedDialog();
 		if (!dialog || !this.sharedLinkDialog) return;
 
@@ -413,12 +416,13 @@ export default class GalleryField extends ImageField {
 		if (!this.form.isEditMode()) {
 			return [];
 		}
-		// Build array from DOM order using data store lookups
+		// Build array from DOM order using data store lookups. A thumbnail has
+		// no name until its upload is done, and is no image of the gallery yet.
 		return Array.from(this.previewContainer.children)
-			.filter(el => el.preview)
+			.filter(el => el.preview && el.dataset.imageName)
 			.map(el => {
 				const name = el.dataset.imageName;
-				return name ? (this.imageDataStore.get(name) || {}) : el.preview.getValue();
+				return this.imageDataStore.get(name) || { name };
 			});
     }
 
@@ -439,10 +443,12 @@ export default class GalleryField extends ImageField {
 		const images = response.data[this.property];
 		if (!Array.isArray(images)) return;
 
-		const image = this.matchUploadedImage(images, file.name);
-		if (image && image.name) {
-			// Add to data store under the *saved* name (the server renames on a
-			// name collision, e.g. "photo.png" -> "photo-2a3f1.png").
+		// The server says which name it stored this file under: it cleans names
+		// and changes a taken one. The list alone cannot tell, because responses
+		// to parallel uploads may arrive out of order.
+		const name  = response.meta?.name;
+		const image = name ? images.find(img => img.name === name) : undefined;
+		if (image) {
 			this.imageDataStore.set(image.name, image);
 
 			// Bind the saved name to this upload's preview. Dropzone tracks the
@@ -461,27 +467,6 @@ export default class GalleryField extends ImageField {
 		}
 		this.setupPreview(image);
 		this.swapServerPreview(file, response);
-	}
-
-	// Correlate a just-uploaded file with its saved image in the response. The
-	// server uniquifies the name on a collision ("name.ext" -> "name-XXXXX.ext"),
-	// so an exact match on the original file name is not enough.
-	matchUploadedImage(images, fileName) {
-		// 1) Exact match — the common case, and correct under parallel uploads.
-		let image = images.find(img => img.name === fileName);
-		if (image) return image;
-
-		// 2) Server renamed this file on collision. Match the "name-XXXXX.ext"
-		//    shape, preferring an image the store hasn't tracked yet (the new one).
-		const dot  = fileName.lastIndexOf(".");
-		const base = dot === -1 ? fileName : fileName.slice(0, dot);
-		const ext  = dot === -1 ? "" : fileName.slice(dot);
-		const renamed = images.filter(img => img.name && img.name.startsWith(`${base}-`) && img.name.endsWith(ext));
-		image = renamed.find(img => !this.imageDataStore.has(img.name)) || renamed[0];
-		if (image) return image;
-
-		// 3) Last resort — the single image not already in the store.
-		return images.find(img => img.name && !this.imageDataStore.has(img.name));
 	}
 
 	validate() {

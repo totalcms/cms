@@ -484,6 +484,8 @@ DELETE /api/collections/{collection}/{id}/{property}
 
 Removes the property from the object entirely.
 
+A `DELETE` under `/api/collections/` whose URL ends in a slash is refused with `400`: the name of what to delete is missing.
+
 **Response (200 OK):** The updated object with the property removed.
 
 ### Increment Property

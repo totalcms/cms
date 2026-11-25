@@ -27,6 +27,7 @@ use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
 use TotalCMS\Middleware\Security\AuthorizationHeaderMiddleware;
+use TotalCMS\Middleware\Security\SlashedDeleteMiddleware;
 use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\TotalCMS;
 
@@ -60,6 +61,8 @@ return function (App $app): void {
 	$app->add(SentryMiddleware::class);
 	$app->add(ErrorMiddleware::class);
 	$app->add(TrailingSlash::class);
+	// Between the two: it needs the overridden method and the slash.
+	$app->add(SlashedDeleteMiddleware::class);
 	$app->add(MethodOverrideMiddleware::class);
 
 	if (TotalCMS::isPreview()) {

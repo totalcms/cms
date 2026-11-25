@@ -19,6 +19,9 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **Deleting a gallery image never deletes the others.** The trash icon of an image whose upload had failed or not finished could remove every image in the gallery. It now removes that thumbnail only, and the API refuses (400) a delete under `/collections/` whose URL ends in a slash.
+- **Gallery uploads keep the right name.** When several files uploaded at once and the server had to rename them, a thumbnail could end up with another image's name until the page was reloaded. The upload response now says which name each file got (`meta.name`).
+- **A gallery no longer stores an image without a name.** Saving or reordering while an upload was running or had failed left a broken thumbnail behind.
 - **Backup settings take effect.** Snapshots per Object and Maximum Age under Settings → Backups were ignored: every site kept ten snapshots for 30 days whatever was set. A site that lowered either will see older snapshots pruned on the next save of each object
 - **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import
 - **The schema editor shows the JSON icon for a property stored as JSON.** A property whose data type is `json` but whose field comes from an extension showed a question mark as its type icon

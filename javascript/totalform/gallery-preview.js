@@ -29,6 +29,23 @@ export default class GalleryPreview {
 		return this.container.dataset.imageName || '';
 	}
 
+	// The image's own API path, or null while it has no name (its upload is
+	// running or failed). Without a name the path is the whole gallery's.
+	getImageApi() {
+		const name = this.getImageName();
+		if (!name) return null;
+		return `/collections/${this.form.collection}/${this.form.id}/${this.property}/${encodeURIComponent(name)}`;
+	}
+
+	// Take a thumbnail that is not stored on the server off the page, and out
+	// of the upload queue so it is not sent after all.
+	discard() {
+		const dropzone = this.gallery.droplet?.dropzone;
+		const file     = dropzone?.files.find(file => file.previewElement === this.container);
+		if (file) dropzone.removeFile(file);
+		this.container.remove();
+	}
+
 	setupActionBar() {
 		const edit  = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
@@ -109,6 +126,7 @@ export default class GalleryPreview {
 			downloadButton.addEventListener("click", event => {
 				event.preventDefault();
 				const name = this.getImageName();
+				if (!name) return;
 				const data = this.gallery.imageDataStore.get(name);
 				const mimeType = data ? data.mime : 'image/jpeg';
 				const format = mimeType.split("/")[1];
@@ -130,10 +148,10 @@ export default class GalleryPreview {
 		if (featureButton) {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
+				const featureApi = this.getImageApi();
+				if (!featureApi) return;
 				const newFeatured = !this.isFeatured();
 				this.tempToggleFeaturedActionButton();
-				const name = this.getImageName();
-				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
 				this.form.api.postAPI(featureApi, { featured: newFeatured }, "patch").then(response => {
 					this.setFeatured(newFeatured);
 				}).catch(error => {
@@ -150,9 +168,9 @@ export default class GalleryPreview {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				const name = this.getImageName();
-				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}/cache`;
-				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
+				const imageApi = this.getImageApi();
+				if (!imageApi) return;
+				this.form.api.postAPI(`${imageApi}/cache`, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
 					console.error("Failed to clear image cache", error);
@@ -170,7 +188,8 @@ export default class GalleryPreview {
 				const ok = await tcmsConfirm({ message: t("confirm.delete_image"), countdown: 0 });
 				if (!ok) return;
 				const name = this.getImageName();
-				const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+				const deleteApi = this.getImageApi();
+				if (!deleteApi) return this.discard();
 				this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 					this.gallery.imageDataStore.delete(name);
 					if (this.gallery.activePreview === this) {

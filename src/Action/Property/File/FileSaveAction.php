@@ -127,9 +127,13 @@ readonly class FileSaveAction
 			}
 		}
 
-		// Additive meta: the preview the droplet swaps in for its local thumbnail.
-		// Omitted when it can't be built; never fails the upload.
-		$meta = $stored->preview !== '' ? ['preview' => $stored->preview] : [];
+		// Additive meta: the name the file was stored under (cleaned, and changed
+		// when taken), and the preview the droplet swaps in for its local
+		// thumbnail, omitted when it can't be built. Never fails the upload.
+		$meta = ['name' => $stored->name];
+		if ($stored->preview !== '') {
+			$meta['preview'] = $stored->preview;
+		}
 
 		return $this->renderer->jsonItem($response, $stored->object, new ObjectMetaTransformer(), $meta);
 	}

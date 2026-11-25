@@ -120,6 +120,13 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 
 	private function processGalleryData(GalleryData $galleryData): GalleryData
 	{
+		// An entry without a name belongs to no file: an upload that failed, or
+		// one still running when the form was saved.
+		$galleryData->images = array_values(array_filter(
+			$galleryData->images,
+			static fn (ImageData $image): bool => $image->name !== '',
+		));
+
 		foreach ($galleryData->images as $image) {
 			$this->processImageData($image);
 		}
