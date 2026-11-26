@@ -17,12 +17,20 @@ use Psr\Log\NullLogger;
 use Random\RandomException;
 use Slim\App;
 use Symfony\Component\Console\Application;
+use Tests\Fakes\ClosedCommerceGate;
+use Tests\Fakes\FakePaymentProvider;
+use Tests\Fakes\FakeSubscriptionProvider;
 use Tests\Fakes\OfflineHttpClient;
+use Tests\Fakes\OpenCommerceGate;
+use Tests\Fakes\StubLicenseValidator;
 use TotalCMS\Action\Admin\MediaToolAccess;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
@@ -46,6 +54,21 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
+use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Commerce\Order\CheckoutInput;
+use TotalCMS\Domain\Commerce\Order\OrderBuilder;
+use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\OrderDraft;
+use TotalCMS\Domain\Commerce\Order\OrderQuery;
+use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Pricing\PricingContext;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
+use TotalCMS\Domain\Commerce\Service\CommerceNav;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
 use TotalCMS\Domain\Cron\Service\CronTokenProvider;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -66,9 +89,14 @@ use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\Entitlements;
+use TotalCMS\Domain\License\Service\EntitlementSource;
+use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
+use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectWriteGate;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -108,6 +136,7 @@ use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\ImageRenderer;
 use TotalCMS\Domain\Twig\Service\JobQueueRenderer;
 use TotalCMS\Domain\Twig\Service\LoadMoreRenderer;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -120,13 +149,6 @@ use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
-use Tests\Fakes\StubLicenseValidator;
-use TotalCMS\Domain\License\Service\EntitlementSource;
-use TotalCMS\Domain\License\Service\Entitlements;
-use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
-use Tests\Fakes\OpenCommerceGate;
-use TotalCMS\Domain\Commerce\Service\CommerceGate;
-use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
 
 $_SERVER['APP_ENV'] = 'test';
 
@@ -674,16 +696,16 @@ function buildBuilderTwigAdapter(
 function snapshotExtensionFieldTypes(): array
 {
 	return [
-		'types'    => (new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldTypes'))->getValue(),
-		'defaults' => (new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldDefaultTypes'))->getValue(),
+		'types'    => (new ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->getValue(),
+		'defaults' => (new ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->getValue(),
 	];
 }
 
 /** @param array{types: mixed, defaults: mixed} $snapshot from snapshotExtensionFieldTypes() */
 function restoreExtensionFieldTypes(array $snapshot): void
 {
-	(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldTypes'))->setValue(null, $snapshot['types']);
-	(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'extensionFieldDefaultTypes'))->setValue(null, $snapshot['defaults']);
+	(new ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->setValue(null, $snapshot['types']);
+	(new ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->setValue(null, $snapshot['defaults']);
 }
 
 /**
@@ -1542,7 +1564,7 @@ function trialEntitlements(bool $running = true): Entitlements
  * commerce Twig tests (a helper in one test file is invisible to another
  * under --parallel).
  */
-function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, string $scene = ''): void
+function bootCommerceStore(bool $open = true, ?Closure $beforeBoot = null, string $scene = ''): void
 {
 	// Installing the store and saving its catalog writes the same files every
 	// time, and took most of this function's time. So a worker does it once,
@@ -1558,12 +1580,12 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, stri
 	if ($scene !== '' && isset(commerceScenes()[$scene])) {
 		$copy = commerceSceneDir($scene);
 	}
-	$fromCopy = $copy !== '' && !$beforeBoot instanceof \Closure && is_dir($copy);
+	$fromCopy = $copy !== '' && !$beforeBoot instanceof Closure && is_dir($copy);
 
 	recursiveDelete(cmsDataDir());
 	$fromCopy ? recursiveCopy($copy, rtrim(cmsDataDir(), '/')) : restoreFixtures();
 	// For a test that needs something on disk before the site boots, such as an enabled extension.
-	if ($beforeBoot instanceof \Closure) {
+	if ($beforeBoot instanceof Closure) {
 		$beforeBoot();
 	}
 	// The gate is swapped before the app is built, not after: `cms.cart` and
@@ -1585,14 +1607,14 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, stri
 	$app->getContainer()->get(ActorContext::class)->set(Actor::anonymous());
 	$c = $app->getContainer();
 	if (!$fromCopy) {
-		$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
+		$c->get(CommerceInstaller::class)->install();
 	}
 
 	// A store that can take money: one provider, switched on. Nothing is
 	// registered on a site without Commerce, as at a real boot.
 	if ($open) {
-		test()->fakeProvider = new \Tests\Fakes\FakePaymentProvider();
-		$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register(test()->fakeProvider);
+		test()->fakeProvider = new FakePaymentProvider();
+		$c->get(PaymentProviderRegistry::class)->register(test()->fakeProvider);
 		$config           = $c->get(Config::class);
 		$config->commerce = ['providers' => ['fake']] + $config->commerce;
 	}
@@ -1600,7 +1622,7 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, stri
 		return;
 	}
 
-	$save = fn (array $product) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $product);
+	$save = fn (array $product) => $c->get(ObjectSaver::class)->saveObject('products', $product);
 	$save(['id' => 'tee', 'title' => 'Tee <i>Shirt</i>', 'status' => 'active', 'price' => 15, 'category' => 'Clothing', 'variants' => [
 		'large' => ['id' => 'large', 'title' => 'Large', 'price' => 19.99],
 		'small' => ['id' => 'small', 'title' => 'Small'],
@@ -1610,7 +1632,7 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, stri
 	$save(['id' => 'print', 'title' => 'Print', 'status' => 'active', 'price' => 40, 'trackInventory' => true, 'stock' => 0]);
 	$save(['id' => 'draft-thing', 'title' => 'Draft Thing', 'status' => 'draft', 'price' => 5]);
 
-	if (!$beforeBoot instanceof \Closure) {
+	if (!$beforeBoot instanceof Closure) {
 		recursiveDelete($kept);
 		recursiveCopy(rtrim(cmsDataDir(), '/'), $kept);
 		$built = true;
@@ -1678,17 +1700,17 @@ function commerceSceneDir(string $name): string
  * @param array<string,int>   $items
  * @param array<string,mixed> $body  the checkout form, beside provider and email
  */
-function commerceDraft(array $items = ['mug' => 1], array $body = []): \TotalCMS\Domain\Commerce\Order\OrderDraft
+function commerceDraft(array $items = ['mug' => 1], array $body = []): OrderDraft
 {
 	$cart = [];
 	foreach ($items as $key => $qty) {
 		[$productId, $variantId] = array_pad(explode(':', $key, 2), 2, '');
-		$cart[]                  = new \TotalCMS\Domain\Commerce\Cart\CartItem($productId, $variantId, $qty);
+		$cart[]                  = new CartItem($productId, $variantId, $qty);
 	}
-	$input = \TotalCMS\Domain\Commerce\Order\CheckoutInput::fromRequest($body + ['provider' => 'fake', 'email' => 'buyer@example.com'], []);
+	$input = CheckoutInput::fromRequest($body + ['provider' => 'fake', 'email' => 'buyer@example.com'], []);
 
-	return test()->commerceApp->getContainer()->get(\TotalCMS\Domain\Commerce\Order\OrderBuilder::class)
-		->build($cart, $input, new \TotalCMS\Domain\Commerce\Pricing\PricingContext('USD', null, null, []));
+	return test()->commerceApp->getContainer()->get(OrderBuilder::class)
+		->build($cart, $input, new PricingContext('USD', null, null, []));
 }
 
 /**
@@ -1697,9 +1719,9 @@ function commerceDraft(array $items = ['mug' => 1], array $body = []): \TotalCMS
  *
  * @param array<string,mixed> $changes fields of the order to set
  */
-function commerceOrder(int $grandTotal = 3998, string $paymentStatus = 'pending', array $changes = []): \TotalCMS\Domain\Commerce\Order\OrderData
+function commerceOrder(int $grandTotal = 3998, string $paymentStatus = 'pending', array $changes = []): OrderData
 {
-	return new \TotalCMS\Domain\Commerce\Order\OrderData($changes + [
+	return new OrderData($changes + [
 		'id'                => 'order-1',
 		'number'            => 1001,
 		'kind'              => 'checkout',
@@ -1720,15 +1742,15 @@ function commerceOrder(int $grandTotal = 3998, string $paymentStatus = 'pending'
 }
 
 /** A provider's event about a payment, as its webhook would report it. */
-function commercePaymentEvent(\TotalCMS\Domain\Commerce\Payment\PaymentEventType $type, string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD', string $paymentRef = 'pi_1'): \TotalCMS\Domain\Commerce\Payment\PaymentEvent
+function commercePaymentEvent(PaymentEventType $type, string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD', string $paymentRef = 'pi_1'): PaymentEvent
 {
-	return new \TotalCMS\Domain\Commerce\Payment\PaymentEvent('fake', $eventId, $type, $orderId, \TotalCMS\Domain\Money\Money::of($amount, $currency), 'ref_' . $eventId, $paymentRef);
+	return new PaymentEvent('fake', $eventId, $type, $orderId, Money::of($amount, $currency), 'ref_' . $eventId, $paymentRef);
 }
 
 /** The event a provider sends when an order has been paid. */
-function commercePaidEvent(string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD'): \TotalCMS\Domain\Commerce\Payment\PaymentEvent
+function commercePaidEvent(string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD'): PaymentEvent
 {
-	return commercePaymentEvent(\TotalCMS\Domain\Commerce\Payment\PaymentEventType::Paid, $orderId, $amount, $eventId, $currency);
+	return commercePaymentEvent(PaymentEventType::Paid, $orderId, $amount, $eventId, $currency);
 }
 
 /**
@@ -1740,7 +1762,7 @@ function commercePaidEvent(string $orderId = 'order-1', int $amount = 3998, stri
 function seedPlan(string $id, int $priceMinor = 1000, array $fields = []): void
 {
 	$c = test()->commerceApp->getContainer();
-	$c->get(\TotalCMS\Domain\Auth\Service\ActorContext::class)->runAs(\TotalCMS\Domain\Auth\Data\Actor::system(), fn () => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $fields + [
+	$c->get(ActorContext::class)->runAs(Actor::system(), fn () => $c->get(ObjectSaver::class)->saveObject('products', $fields + [
 		'id'               => $id,
 		'title'            => ucfirst($id),
 		'status'           => 'active',
@@ -1757,13 +1779,13 @@ function seedPlan(string $id, int $priceMinor = 1000, array $fields = []): void
  * Give the bootCommerceStore() site a provider that can bill a
  * subscription, `fake-sub`, beside the plain `fake`, and offer both.
  */
-function enableSubscriptions(): \Tests\Fakes\FakeSubscriptionProvider
+function enableSubscriptions(): FakeSubscriptionProvider
 {
 	$c        = test()->commerceApp->getContainer();
-	$provider = new \Tests\Fakes\FakeSubscriptionProvider(true, false);
-	$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register($provider);
-	$config           = $c->get(Config::class);
-	$config->commerce = ['providers' => ['fake', 'fake-sub']] + $config->commerce;
+	$provider = new FakeSubscriptionProvider(true, false);
+	$c->get(PaymentProviderRegistry::class)->register($provider);
+	$config             = $c->get(Config::class);
+	$config->commerce   = ['providers' => ['fake', 'fake-sub']] + $config->commerce;
 	test()->subProvider = $provider;
 
 	return $provider;
@@ -1778,7 +1800,7 @@ function enableSubscriptions(): \Tests\Fakes\FakeSubscriptionProvider
 function seedDiscount(string $id, array $fields = []): void
 {
 	$c = test()->commerceApp->getContainer();
-	$c->get(ActorContext::class)->runAs(Actor::system(), fn () => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)
+	$c->get(ActorContext::class)->runAs(Actor::system(), fn () => $c->get(ObjectSaver::class)
 		->saveObject('discounts', $fields + ['id' => $id, 'title' => $id, 'active' => true, 'type' => 'percent', 'value' => 15]));
 }
 
@@ -1794,7 +1816,7 @@ function applyCode(string $code): mixed
 /** Render a Twig string through the app bootCommerceStore() made. */
 function renderTwig(string $template, array $vars = []): string
 {
-	return test()->commerceApp->getContainer()->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class)->renderString($template, $vars);
+	return test()->commerceApp->getContainer()->get(TwigEngine::class)->renderString($template, $vars);
 }
 
 /**
@@ -1820,15 +1842,15 @@ function seedCommerceStaff(App $app): void
 	$actors = $c->get(ActorContext::class);
 	$actors->set(Actor::system());
 
-	$editor = $c->get(\TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository::class)->findById('editor');
-	$c->get(\TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository::class)->save(new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+	$editor = $c->get(AccessGroupRepository::class)->findById('editor');
+	$c->get(AccessGroupRepository::class)->save(new AccessGroupData([
 		'id'          => 'shopkeepers',
 		'description' => 'Runs the store',
 		'operations'  => ['read'],
 		'permissions' => ['commerce' => true] + ($editor?->permissions ?? []),
 	]));
 
-	$save = static fn (string $id, array $groups) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('auth', [
+	$save = static fn (string $id, array $groups) => $c->get(ObjectSaver::class)->saveObject('auth', [
 		'id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => quickPasswordHash(), 'active' => true, 'groups' => $groups,
 	]);
 	$save('boss', ['admin']);
@@ -1853,11 +1875,11 @@ function quickPasswordHash(string $plain = 'commerce-Password-1'): string
 }
 
 /** What the admin sidebar knows of a site without Commerce: no store, nothing to count. */
-function closedCommerceNav(): \TotalCMS\Domain\Commerce\Service\CommerceNav
+function closedCommerceNav(): CommerceNav
 {
-	return new \TotalCMS\Domain\Commerce\Service\CommerceNav(
-		new \Tests\Fakes\ClosedCommerceGate(),
-		(new ReflectionClass(\TotalCMS\Domain\Commerce\Order\OrderQuery::class))->newInstanceWithoutConstructor(),
-		(new ReflectionClass(\TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery::class))->newInstanceWithoutConstructor(),
+	return new CommerceNav(
+		new ClosedCommerceGate(),
+		(new ReflectionClass(OrderQuery::class))->newInstanceWithoutConstructor(),
+		(new ReflectionClass(SubscriptionQuery::class))->newInstanceWithoutConstructor(),
 	);
 }

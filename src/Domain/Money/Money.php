@@ -98,9 +98,9 @@ final readonly class Money
 	 */
 	public function percentage(string $rate, Rounding $mode = Rounding::HalfUp): self
 	{
-		[$digits, $scale] = self::decimal($rate);
+		[$digits, $scale] = $this->decimal($rate);
 
-		return new self(self::divideRounded($this->whole($this->amount * $digits), $this->whole(10 ** $scale * 100), $mode), $this->currency);
+		return new self($this->divideRounded($this->whole($this->amount * $digits), $this->whole(10 ** $scale * 100), $mode), $this->currency);
 	}
 
 	/**
@@ -113,12 +113,12 @@ final readonly class Money
 	 */
 	public function divide(string $divisor, Rounding $mode = Rounding::HalfUp): self
 	{
-		[$digits, $scale] = self::decimal($divisor);
+		[$digits, $scale] = $this->decimal($divisor);
 		if ($digits === 0) {
 			throw new \InvalidArgumentException('Money cannot be divided by zero');
 		}
 
-		return new self(self::divideRounded($this->whole($this->amount * $this->whole(10 ** $scale)), $digits, $mode), $this->currency);
+		return new self($this->divideRounded($this->whole($this->amount * $this->whole(10 ** $scale)), $digits, $mode), $this->currency);
 	}
 
 	public function isZero(): bool
@@ -176,7 +176,7 @@ final readonly class Money
 	 *
 	 * @return array{0:int, 1:int}
 	 */
-	private static function decimal(string $number): array
+	private function decimal(string $number): array
 	{
 		if (preg_match('/^(\d+)(?:\.(\d+))?\z/', $number, $parts) !== 1) {
 			throw new \InvalidArgumentException("'{$number}' is not a decimal number such as 8.875");
@@ -192,7 +192,7 @@ final readonly class Money
 	}
 
 	/** Whole-number division with the fraction rounded as asked. The divisor is above zero. */
-	private static function divideRounded(int $dividend, int $divisor, Rounding $mode): int
+	private function divideRounded(int $dividend, int $divisor, Rounding $mode): int
 	{
 		$quotient  = intdiv($dividend, $divisor);
 		$remainder = abs($dividend % $divisor);

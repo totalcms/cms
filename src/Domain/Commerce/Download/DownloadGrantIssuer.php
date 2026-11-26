@@ -33,7 +33,7 @@ final readonly class DownloadGrantIssuer implements DownloadIssuer
 			if (($line['type'] ?? '') !== self::DIGITAL || $delivered || !is_string($line['productId'] ?? null)) {
 				continue;
 			}
-			if ($this->downloads->find($line['productId']) === null) {
+			if (!$this->downloads->find($line['productId']) instanceof Deliverable) {
 				continue;
 			}
 

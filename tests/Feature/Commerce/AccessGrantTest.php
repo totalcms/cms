@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Access\AccessGrantService;
@@ -162,7 +163,7 @@ describe('the checkout form, with a membership in the cart', function (): void {
 
 	it('is the ordinary form for a customer who is signed in', function (): void {
 		postJson('/commerce/cart/add', ['productId' => 'course', 'variantId' => '', 'qty' => 1]);
-		$this->c->get(ActorContext::class)->set(new Actor(TotalCMS\Domain\Auth\Data\ActorKind::Member, 'pat', 'customers'));
+		$this->c->get(ActorContext::class)->set(new Actor(ActorKind::Member, 'pat', 'customers'));
 
 		expect(renderTwig('{{ cms.cart.checkoutForm() }}'))->toContain('name="email"')->not->toContain('commerce-checkout-account');
 	});
@@ -318,7 +319,7 @@ describe('what the store allows', function (): void {
 	});
 
 	it('does not give a group an order line names when the store no longer allows it', function (): void {
-		$order = ($this->checkout)('course');
+		$order            = ($this->checkout)('course');
 		$config           = $this->c->get(Config::class);
 		$config->commerce = ['grantableGroups' => ['members']] + $config->commerce;
 

@@ -139,7 +139,7 @@ test('a product and a variant carry what a subscription and a membership need', 
 
 test('the product form offers exactly the groups Settings allows a product to grant', function (): void {
 	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'products', 'name' => 'Products', 'schema' => 'commerce-product']);
-	$config = $this->c->get(Config::class);
+	$config           = $this->c->get(Config::class);
 	$config->commerce = array_merge($config->commerce, ['grantableGroups' => ['members', 'vip', 'admin']]);
 
 	$html = $this->c->get(TotalFormFactory::class)->builder('products')->autoBuild();

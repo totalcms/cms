@@ -42,9 +42,9 @@ final class PayPalClient
 	 * @param array<string,mixed> $body      an empty one is sent as `{}`
 	 * @param string              $requestId PayPal answers a repeat of the same id with its first answer
 	 *
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function post(string $path, array $body, string $requestId = ''): array
 	{
@@ -54,9 +54,9 @@ final class PayPalClient
 	/**
 	 * Post a body that is already JSON, byte for byte as given.
 	 *
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function postJson(string $path, string $json, string $requestId = ''): array
 	{
@@ -64,9 +64,9 @@ final class PayPalClient
 	}
 
 	/**
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function get(string $path): array
 	{

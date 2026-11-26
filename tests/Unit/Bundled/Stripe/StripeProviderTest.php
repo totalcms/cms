@@ -389,9 +389,9 @@ describe('reading a webhook', function (): void {
 		expect(stripeProvider(new RecordingHttpClient())->parseWebhook(stripeWebhook($fixture)))->toBeNull();
 	})->with([
 		// The page was completed but the bank has not paid yet: the later event says how it went.
-		'completed, not yet paid' => ['checkout.session.completed.unpaid'],
+		'completed, not yet paid'  => ['checkout.session.completed.unpaid'],
 		'a dispute warning closed' => ['charge.dispute.closed.warning_closed'],
-		'another kind of event'   => ['customer.created'],
+		'another kind of event'    => ['customer.created'],
 	]);
 
 	it('makes no request while reading one', function (): void {
@@ -542,7 +542,7 @@ describe('asking Stripe where a payment stands', function (): void {
  */
 describe('leaving the tax to Stripe', function (): void {
 	beforeEach(function (): void {
-		$this->taxed = static fn (array $with = []): CheckoutRequest => stripeCheckout(null, 3998, ['providerTax' => true] + $with);
+		$this->taxed  = static fn (array $with = []): CheckoutRequest => stripeCheckout(null, 3998, ['providerTax' => true] + $with);
 		$this->shipTo = new Address(name: 'Ada Buyer', line1: '1 Main St', line2: 'Apt 2', city: 'Boise', region: 'ID', postalCode: '83702', country: 'US');
 	});
 

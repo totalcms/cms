@@ -70,7 +70,7 @@ final readonly class SubscriptionQuery
 	 */
 	public function monthlyValue(SubscriptionData $subscription): int
 	{
-		return self::monthly($subscription->recurringTotal(), $subscription->interval(), $subscription->intervalCount());
+		return $this->monthly($subscription->recurringTotal(), $subscription->interval(), $subscription->intervalCount());
 	}
 
 	/**
@@ -88,17 +88,17 @@ final readonly class SubscriptionQuery
 			if (!in_array($row['status'] ?? '', SubscriptionData::LIVE, true)) {
 				continue;
 			}
-			++$active;
+			$active++;
 			// A subscription's own record says how often it is billed; the index says the rest.
 			$every    = $this->subscriptions->find((string)$row['id'])?->intervalCount() ?? 1;
-			$monthly += self::monthly(is_numeric($row['recurringTotal'] ?? null) ? (int)$row['recurringTotal'] : 0, is_string($row['interval'] ?? null) ? $row['interval'] : '', $every);
+			$monthly += $this->monthly(is_numeric($row['recurringTotal'] ?? null) ? (int)$row['recurringTotal'] : 0, is_string($row['interval'] ?? null) ? $row['interval'] : '', $every);
 			$currency = $currency !== '' ? $currency : (is_string($row['currency'] ?? null) ? $row['currency'] : '');
 		}
 
 		return ['active' => $active, 'monthly' => $monthly, 'currency' => $currency];
 	}
 
-	private static function monthly(int $total, string $interval, int $every): int
+	private function monthly(int $total, string $interval, int $every): int
 	{
 		$perYear = self::PER_YEAR[$interval] ?? 0;
 

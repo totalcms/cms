@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Service;
 
-use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
 
 /**
  * What the admin sidebar needs to know about the store: whether there is

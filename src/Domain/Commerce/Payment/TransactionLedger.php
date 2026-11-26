@@ -10,6 +10,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Money\Money;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
@@ -67,7 +68,7 @@ final readonly class TransactionLedger
 		];
 
 		$collection = $this->collection();
-		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($collection, $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->saver->saveObject($collection, $data));
 
 		return $data['id'];
 	}

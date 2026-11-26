@@ -190,7 +190,7 @@ it('prints the checkout form for a cart a code makes free, on a store with no wa
 });
 
 it('waives shipping with a free-shipping code', function (): void {
-	$this->c->set(ShippingCalculator::class, new class() implements ShippingCalculator {
+	$this->c->set(ShippingCalculator::class, new class implements ShippingCalculator {
 		public function rates(array $lines, Money $subtotal, ?Address $address): array
 		{
 			return [new ShippingRate('flat', 'Flat rate', Money::of(500, $subtotal->currency()))];

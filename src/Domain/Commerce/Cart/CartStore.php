@@ -100,7 +100,7 @@ final readonly class CartStore
 
 	public function clear(): void
 	{
-		$this->session->set(SessionKeys::COMMERCE_CART, self::blank());
+		$this->session->set(SessionKeys::COMMERCE_CART, $this->blank());
 	}
 
 	/**
@@ -130,7 +130,7 @@ final readonly class CartStore
 	{
 		$stored = $this->session->get(SessionKeys::COMMERCE_CART);
 		if (!is_array($stored) || ($stored['v'] ?? null) !== self::VERSION) {
-			return self::blank();
+			return $this->blank();
 		}
 
 		return [
@@ -157,7 +157,7 @@ final readonly class CartStore
 	}
 
 	/** @return array{v: int, items: array<never,never>, attributes: array<never,never>, cartId: null, discountCode: string} */
-	private static function blank(): array
+	private function blank(): array
 	{
 		return ['v' => self::VERSION, 'items' => [], 'attributes' => [], 'cartId' => null, 'discountCode' => ''];
 	}

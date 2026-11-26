@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Bundled\S3Uploads\Serving\DownloadCounter;
 
 /**
- * tcms s3:stats [collection] [--json]
+ * tcms s3:stats [collection] [--json].
  *
  * Download counts of the files stored in the bucket, most downloaded first.
  */
@@ -48,7 +48,7 @@ final class StatsCommand extends Command
 			foreach ($objects as $id => $totals) {
 				$current = $counts[$name][$id] ?? [];
 				foreach ($totals as $property => $total) {
-					$files = array_filter($current, fn (string $key): bool => str_starts_with($key, $property . '/'), ARRAY_FILTER_USE_KEY);
+					$files  = array_filter($current, fn (string $key): bool => str_starts_with($key, $property . '/'), ARRAY_FILTER_USE_KEY);
 					$rows[] = [
 						'collection' => $name,
 						'id'         => $id,

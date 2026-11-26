@@ -25,7 +25,7 @@ it('records a line and gives back its id', function (): void {
 	expect($id)->toMatch('/^[0-9a-f]{32}$/')
 		->and($rows)->toHaveCount(1)
 		->and($rows[0])->toMatchArray([
-			'id' => $id, 'orderId' => 'order-1', 'provider' => 'fake', 'type' => 'payment', 'status' => 'succeeded', 'amount' => 3998, 'currency' => 'USD',
+			'id'          => $id, 'orderId' => 'order-1', 'provider' => 'fake', 'type' => 'payment', 'status' => 'succeeded', 'amount' => 3998, 'currency' => 'USD',
 			'providerRef' => 'pi_1', 'providerEventId' => 'evt_1', 'actor' => 'webhook:fake', 'summary' => ['brand' => 'visa', 'last4' => '4242'],
 		])
 		->and($rows[0]['created'])->not->toBe('');

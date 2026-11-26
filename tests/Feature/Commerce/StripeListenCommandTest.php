@@ -77,7 +77,7 @@ function stripeCliStandIn(array $with = []): StripeCli
 			return $this->with['secret'] ?? 'whsec_from_the_cli';
 		}
 
-		public function listen(string $apiKey, string $forwardTo, bool $skipVerify, \Closure $print): int
+		public function listen(string $apiKey, string $forwardTo, bool $skipVerify, Closure $print): int
 		{
 			$this->listened[] = [$apiKey, $forwardTo, $skipVerify];
 			$print($this->with['prints'] ?? '');

@@ -8,13 +8,12 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
-use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
-use TotalCMS\Domain\Money\Money;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -398,6 +397,7 @@ final readonly class CartService
 			throw CommerceException::outOfStock(max(0, $stock));
 		}
 	}
+
 	/**
 	 * The first time a signed-in customer's cart is used in a session, join
 	 * it to the cart stored for them. After a password or passkey login the

@@ -6,6 +6,8 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\CustomerOrders;
@@ -13,7 +15,6 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
 use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
-use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
 use TotalCMS\Domain\Commerce\Service\CheckoutService;
@@ -201,7 +202,7 @@ final readonly class CommerceTwigAdapter
 			return false;
 		}
 
-		$variants = array_filter($product->variants, static fn ($variant): bool => $variant->active);
+		$variants = array_filter($product->variants, static fn (VariantView $variant): bool => $variant->active);
 		if ($variantId !== '') {
 			$variants = array_intersect_key($variants, [$variantId => true]);
 		}
@@ -247,8 +248,6 @@ final readonly class CommerceTwigAdapter
 	 * order page's `order`): the links are already on it. In a mailer, give
 	 * it `data`, the whole order. An "order" a page put together itself gets
 	 * none, so a visitor cannot ask for the links to someone else's order.
-	 *
-	 * @param mixed $order
 	 *
 	 * @return list<array<string,mixed>>
 	 */

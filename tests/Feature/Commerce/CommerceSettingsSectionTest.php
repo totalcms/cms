@@ -226,9 +226,9 @@ describe('the settings form', function (): void {
 		// Always there with tax on: the rates are the store's way, or what a provider that cannot work out tax falls back on.
 		'Tax Rates, when tax is charged'         => ['taxRates', 'taxMode', '!=', 'none'],
 		'Tax Worked Out By, when tax is charged' => ['taxBy', 'taxMode', '!=', 'none'],
-		'Flat Rate, for a flat rate'         => ['shippingFlatRate', 'shippingMode', '==', 'flat'],
-		'Free Shipping Over, for a flat rate' => ['shippingFreeOver', 'shippingMode', '==', 'flat'],
-		'Shipping Zones, by zone'            => ['shippingZones', 'shippingMode', '==', 'zones'],
+		'Flat Rate, for a flat rate'             => ['shippingFlatRate', 'shippingMode', '==', 'flat'],
+		'Free Shipping Over, for a flat rate'    => ['shippingFreeOver', 'shippingMode', '==', 'flat'],
+		'Shipping Zones, by zone'                => ['shippingZones', 'shippingMode', '==', 'zones'],
 	]);
 
 	// Whether there is tax, and who works it out, are two questions.

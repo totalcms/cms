@@ -38,9 +38,9 @@ final readonly class CheckoutQuoteAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$body = $request->getParsedBody();
-		$body = is_array($body) ? $body : [];
-		$sent = $body['attributes'] ?? [];
+		$body               = $request->getParsedBody();
+		$body               = is_array($body) ? $body : [];
+		$sent               = $body['attributes'] ?? [];
 		$body['attributes'] = (is_array($sent) ? $sent : []) + $this->store->attributes();
 
 		try {

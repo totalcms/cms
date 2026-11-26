@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Tests\Fakes\RecordingHttpClient;
 use TotalCMS\Bundled\S3Uploads\S3\ListedObject;
-use TotalCMS\Bundled\S3Uploads\S3\S3Client;
 use TotalCMS\Bundled\S3Uploads\S3\S3Exception;
+use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 
 require_once __DIR__ . '/helpers.php';
@@ -137,7 +137,7 @@ describe('S3Client', function (): void {
 	});
 
 	test('a transport exception is a NetworkError too', function (): void {
-		$http = new class () implements TotalCMS\Support\HttpClientInterface {
+		$http = new class implements HttpClientInterface {
 			public function request(string $method, string $url, array $options = []): HttpResponse
 			{
 				throw new RuntimeException('HTTP request failed: could not resolve host');

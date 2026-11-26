@@ -10,7 +10,6 @@ use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\Commerce\Data\CommerceGateStatus;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
-use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 
 class CommerceInstallCommand extends BaseCommand
 {

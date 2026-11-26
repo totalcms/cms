@@ -71,7 +71,7 @@ final readonly class CommerceCollectionGuardMiddleware implements MiddlewareInte
 
 		$body       = $request->getParsedBody();
 		$body       = is_array($body) ? $body : [];
-		$collection = (string)($route->getArgument('collection') ?? '');
+		$collection = $route->getArgument('collection') ?? '';
 
 		$refusal = in_array($name, self::SETTINGS_ROUTES, true)
 			? $this->settingsRefusal($this->schemaOf($collection !== '' ? $collection : $this->text($body['id'] ?? ''), $body), $body)

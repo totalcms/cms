@@ -24,7 +24,6 @@ final readonly class TotalsCalculator
 	/**
 	 * @param array<string,OrderLineDraft> $lines   keyed by line id
 	 * @param Address|null                 $address where it ships; the billing address when nothing does
-	 *
 	 * @param bool                         $estimate for a figure to show, not an order: an order that cannot ship yet is
 	 *                                               worked out without shipping ({@see Totals::$shippingKnown}) and not refused
 	 *

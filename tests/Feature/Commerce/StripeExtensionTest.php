@@ -8,9 +8,12 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\OrderDraft;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Order\Totals;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Service\CheckoutService;
+use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Support\Config;
 
@@ -49,11 +52,11 @@ function bootStoreWithStripe(array $settings, bool $permitted = true, bool $open
 /** POST a webhook fixture for $orderId, signed with $secret as Stripe signs. */
 function stripeWebhookPost(string $orderId, string $secret = STRIPE_TEST_WEBHOOK_SECRET, string $fixture = 'checkout.session.completed', int $amount = 1250)
 {
-	$event                                         = json_decode((string)file_get_contents(dirname(__DIR__, 2) . "/fixtures/stripe/{$fixture}.json"), true);
+	$event                                          = json_decode((string)file_get_contents(dirname(__DIR__, 2) . "/fixtures/stripe/{$fixture}.json"), true);
 	$event['data']['object']['client_reference_id'] = $orderId;
 	$event['data']['object']['amount_total']        = $amount;
-	$body                                          = (string)json_encode($event);
-	$time                                          = time();
+	$body                                           = (string)json_encode($event);
+	$time                                           = time();
 
 	// The exact bytes are what is signed, so the request is built by hand.
 	$request = (new Psr17Factory())->createServerRequest('POST', '/commerce/webhook/stripe')
@@ -128,8 +131,8 @@ it('still hears Stripe on a site whose Commerce add-on has lapsed', function ():
 	bootStoreWithStripe(STRIPE_TEST_SETTINGS, open: false);
 	$c      = $this->app->getContainer();
 	$orders = $c->get(OrderRepository::class);
-	$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
-	$order  = $c->get(ActorContext::class)->runAs(Actor::system(), fn () => $orders->create(new \TotalCMS\Domain\Commerce\Order\OrderDraft('USD', 'buyer@example.com', [], new \TotalCMS\Domain\Commerce\Order\Totals(1250, 0, 0, 0, 1250, [], null, [], 'none'), null, null, []), 'stripe'));
+	$c->get(CommerceInstaller::class)->install();
+	$order  = $c->get(ActorContext::class)->runAs(Actor::system(), fn () => $orders->create(new OrderDraft('USD', 'buyer@example.com', [], new Totals(1250, 0, 0, 0, 1250, [], null, [], 'none'), null, null, []), 'stripe'));
 
 	expect($c->get(PaymentProviderRegistry::class)->enabled())->toBe([])
 		->and(stripeWebhookPost($order->id())->getStatusCode())->toBe(200)

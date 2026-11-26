@@ -58,9 +58,9 @@ describe('BucketSnippets', function (): void {
 	test('only Amazon S3 takes these policies', function (string $endpoint, bool $amazon): void {
 		expect(BucketSnippets::isAmazon(s3Settings(['endpoint' => $endpoint])))->toBe($amazon);
 	})->with([
-		'no endpoint'       => ['', true],
+		'no endpoint'        => ['', true],
 		'an Amazon endpoint' => ['https://s3.eu-west-1.amazonaws.com', true],
-		'Cloudflare R2'     => ['https://abc.r2.cloudflarestorage.com', false],
-		'MinIO'             => ['https://minio.example.com', false],
+		'Cloudflare R2'      => ['https://abc.r2.cloudflarestorage.com', false],
+		'MinIO'              => ['https://minio.example.com', false],
 	]);
 });

@@ -14,7 +14,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Support\Config;
 
 /**
- * tcms stripe:listen [--url=…] [--skip-verify] [--check]
+ * tcms stripe:listen [--url=…] [--skip-verify] [--check].
  *
  * Test payments on a site Stripe cannot reach, such as one on a `.test`
  * address. Stripe's own CLI holds a connection open to Stripe and forwards
@@ -82,7 +82,7 @@ final class ListenCommand extends Command
 		// A site in live mode charges real cards, and the events forwarded
 		// here would be a sandbox's: nothing would match.
 		if (($settings['mode'] ?? 'test') !== 'test') {
-			return $this->refuse($output, "The Stripe extension is in Live mode. Set Mode to Test in its settings: this command is for test payments only.");
+			return $this->refuse($output, 'The Stripe extension is in Live mode. Set Mode to Test in its settings: this command is for test payments only.');
 		}
 
 		$key = $this->text($settings['testSecretKey'] ?? '');

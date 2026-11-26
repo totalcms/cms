@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\Address;
 use TotalCMS\Domain\Commerce\Order\CheckoutInput;
@@ -13,9 +15,8 @@ use TotalCMS\Domain\Commerce\Order\OrderDraftMetadata;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Commerce\Pricing\PriceResolverRegistry;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
-use TotalCMS\Domain\Commerce\Data\ProductView;
-use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Money\Money;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 
@@ -28,7 +29,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 beforeEach(function (): void {
 	bootCommerceStore();
 	$this->c = $this->app->getContainer();
-	$this->c->get(ObjectUpdater::class)->updateObject('products', 'tee', ['meta' => ['fabric' => 'cotton'], 'sku' => 'TEE'] + $this->c->get(\TotalCMS\Domain\Object\Service\ObjectFetcher::class)->fetchObject('products', 'tee')->toArray());
+	$this->c->get(ObjectUpdater::class)->updateObject('products', 'tee', ['meta' => ['fabric' => 'cotton'], 'sku' => 'TEE'] + $this->c->get(ObjectFetcher::class)->fetchObject('products', 'tee')->toArray());
 	$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'type' => 'digital', 'price' => 9]);
 
 	$this->builder = $this->c->get(OrderBuilder::class);
@@ -65,7 +66,7 @@ it('numbers the lines l1, l2 in cart order, and each line knows its own id', fun
 });
 
 it('uses the resolver price and says which resolver set it', function (): void {
-	$this->c->get(PriceResolverRegistry::class)->register(new class() implements PriceResolver {
+	$this->c->get(PriceResolverRegistry::class)->register(new class implements PriceResolver {
 		public function id(): string
 		{
 			return 'members';

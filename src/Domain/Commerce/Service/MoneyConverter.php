@@ -26,7 +26,7 @@ final class MoneyConverter
 	 */
 	public function fromPrice(float|int|string $price, string $currency): Money
 	{
-		return $this->fromDecimal(is_string($price) ? PriceData::normalize($price) : self::written($price), $currency);
+		return $this->fromDecimal(is_string($price) ? PriceData::normalize($price) : $this->written($price), $currency);
 	}
 
 	/**
@@ -65,7 +65,7 @@ final class MoneyConverter
 	 * A number as its shortest exact decimal text: 19.99 is "19.99", not the
 	 * 19.989999999999998 it is in binary.
 	 */
-	private static function written(float|int $number): string
+	private function written(float|int $number): string
 	{
 		if (is_int($number)) {
 			return (string)$number;

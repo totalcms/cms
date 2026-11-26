@@ -127,9 +127,9 @@ final readonly class PaymentEventProcessor
 	 *
 	 * @param string $actor who accepted it, for the ledger
 	 *
-	 * @return Transition not applied, with `not_in_review`, for an order that is not held for review
-	 *
 	 * @throws CommerceException when there is no such order
+	 *
+	 * @return Transition not applied, with `not_in_review`, for an order that is not held for review
 	 */
 	public function accept(string $orderId, string $actor): Transition
 	{
@@ -243,7 +243,7 @@ final readonly class PaymentEventProcessor
 		if ($transition->paymentStatus === 'paid' && $order->paidAt() === '') {
 			$changes['paidAt']             = date(DATE_ATOM);
 			$changes['providerPaymentRef'] = $event->providerPaymentRef !== '' ? $event->providerPaymentRef : $order->providerPaymentRef();
-			$changes += $order->taxFromPayment($event->amount->amount(), $event->orderTotal !== null ? $event->tax?->amount() : null);
+			$changes += $order->taxFromPayment($event->amount->amount(), $event->taxForOrder());
 		}
 
 		$flags                       = $order->flags();

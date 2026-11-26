@@ -12,6 +12,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\FileLock;
@@ -96,9 +97,9 @@ final readonly class AccessGrantService
 	 * grantable group they are entitled to is there, every other grantable
 	 * group is not, and no other group is touched.
 	 *
-	 * @return list<string> the groups their purchases back
-	 *
 	 * @throws CommerceException `grant_failed` when the account is gone or cannot be written
+	 *
+	 * @return list<string> the groups their purchases back
 	 */
 	public function sync(string $collection, string $customerId): array
 	{
@@ -121,7 +122,7 @@ final readonly class AccessGrantService
 				}
 
 				$user[self::GROUPS] = $now;
-				$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($collection, $customerId, $user));
+				$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->updater->updateObject($collection, $customerId, $user));
 			});
 		} catch (CommerceException $e) {
 			throw $e;

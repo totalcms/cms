@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionProvider;
 
 /**
  * GET /commerce/subscription/{id}/billing: sends the subscriber to the
@@ -27,7 +28,7 @@ final readonly class SubscriptionBillingAction
 		$subscription = $this->page->subscription($request);
 		$provider     = $this->providers->subscriptionProvider($subscription->provider());
 
-		$url = $provider === null || $subscription->providerCustomerRef() === ''
+		$url = !$provider instanceof SubscriptionProvider || $subscription->providerCustomerRef() === ''
 			? ''
 			: $provider->billingPortalUrl($subscription->providerCustomerRef(), $this->page->url($request, $subscription, '', [], true));
 		if ($url === '') {

@@ -1733,6 +1733,6 @@ return [
 	'overlay_preview.reason.needs-pro'       => 'Edizione Pro: sotto Pro le condivisioni usano l\'immagine semplice, mostrata qui.',
 
 	// Commerce: the store's admin pages
-	'commerce.orders' => 'Ordini',
+	'commerce.orders'        => 'Ordini',
 	'commerce.subscriptions' => 'Abbonamenti',
 ];

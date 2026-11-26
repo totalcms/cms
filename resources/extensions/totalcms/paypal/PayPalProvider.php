@@ -208,7 +208,7 @@ final readonly class PayPalProvider implements PaymentProvider
 			'CUSTOMER.DISPUTE.RESOLVED' => match (true) {
 				in_array($this->outcome($resource), self::WON, true)  => $this->dispute($id, PaymentEventType::DisputeWon, $resource),
 				in_array($this->outcome($resource), self::LOST, true) => $this->dispute($id, PaymentEventType::DisputeLost, $resource),
-				default                                              => null,
+				default                                               => null,
 			},
 			default => null,
 		};
@@ -266,9 +266,9 @@ final readonly class PayPalProvider implements PaymentProvider
 	 *
 	 * @param string $orderId the store's order, which names the request: PayPal answers a repeat with the first capture
 	 *
-	 * @return array<string,mixed> PayPal's order, with the capture in it
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed> PayPal's order, with the capture in it
 	 */
 	private function capture(string $providerSessionRef, string $orderId): array
 	{

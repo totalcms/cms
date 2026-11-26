@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
@@ -10,7 +11,6 @@ use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionAccess;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\SignedToken;
 use TotalCMS\Support\Config;
@@ -43,11 +43,11 @@ beforeEach(function (): void {
 	$session->isStarted() || $session->start();
 
 	withHeader('X-CSRF-Token', $this->c->get(CSRFTokenManager::class)->getToken());
-	$this->add = fn (string $productId, string $variantId = '', int $qty = 1) => postJson('/commerce/cart/add', ['productId' => $productId, 'variantId' => $variantId, 'qty' => $qty]);
-	$this->buy = fn (string $provider = 'fake-sub', array $body = []) => post('/commerce/checkout', $body + ['provider' => $provider, 'email' => 'a@example.com', 'shippingAddress' => ['country' => 'US']], ['Accept' => 'application/json']);
+	$this->add       = fn (string $productId, string $variantId = '', int $qty = 1) => postJson('/commerce/cart/add', ['productId' => $productId, 'variantId' => $variantId, 'qty' => $qty]);
+	$this->buy       = fn (string $provider = 'fake-sub', array $body = []) => post('/commerce/checkout', $body + ['provider' => $provider, 'email' => 'a@example.com', 'shippingAddress' => ['country' => 'US']], ['Accept' => 'application/json']);
 	$this->allOrders = fn (): array => array_values(array_filter(array_map(fn (array $row): ?OrderData => $this->orders->find((string)$row['id']), $this->orders->index())));
 	$this->allSubs   = fn (): array => array_values(array_filter(array_map(fn (array $row): ?SubscriptionData => $this->subs->find((string)$row['id']), $this->subs->index())));
-	$this->code = fn ($response): string => (string)(json_decode((string)$response->getBody(), true)['error']['code'] ?? '');
+	$this->code      = fn ($response): string => (string)(json_decode((string)$response->getBody(), true)['error']['code'] ?? '');
 });
 
 describe('a cart with a plan', function (): void {
@@ -216,7 +216,7 @@ describe('where subscriptions are kept', function (): void {
 
 		expect($this->subs->find($this->kept->id())->status())->toBe('active')
 			->and($changed->hasFlag('createdDispatched'))->toBeTrue()
-			->and(fn () => $this->subs->withLock('nope', static fn (SubscriptionData $s): SubscriptionData => $s))->toThrow(TotalCMS\Domain\Commerce\Exception\CommerceException::class);
+			->and(fn () => $this->subs->withLock('nope', static fn (SubscriptionData $s): SubscriptionData => $s))->toThrow(CommerceException::class);
 	});
 
 	it('counts as live while the subscriber has what they pay for', function (string $status, bool $live): void {

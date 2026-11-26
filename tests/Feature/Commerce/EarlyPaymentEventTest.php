@@ -34,7 +34,7 @@ beforeEach(function (): void {
 	$this->types  = fn (): array => array_map(static fn (array $line): string => $line['type'] . ':' . $line['status'], $this->c->get(TransactionLedger::class)->forOrder($this->order->id()));
 
 	// What the provider answers when asked about the order's checkout.
-	$this->asked              = [];
+	$this->asked               = [];
 	$this->fakeProvider->fetch = function (string $sessionRef): ?PaymentEvent {
 		$this->asked[] = $sessionRef;
 

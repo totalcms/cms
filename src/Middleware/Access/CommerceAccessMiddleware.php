@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Middleware\Commerce\CommerceEditionMiddleware;
 
 /**
  * Commerce Access Middleware.
@@ -18,7 +19,7 @@ use TotalCMS\Domain\Auth\Data\Actor;
  * fulfillment again) is for super admins only: those routes add
  * {@see AdminOnlyMiddleware} as well.
  *
- * This is the second of two locks. {@see \TotalCMS\Middleware\Commerce\CommerceEditionMiddleware}
+ * This is the second of two locks. {@see CommerceEditionMiddleware}
  * says whether the site has Commerce at all; this says whether this user may see it.
  */
 readonly class CommerceAccessMiddleware extends BaseAccessMiddleware

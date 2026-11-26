@@ -193,8 +193,8 @@ describe('talking to PayPal', function (): void {
 		expect(fn () => paypalProvider(paypalHttp($answer))->createCheckout(paypalCheckout()))
 			->toThrow(fn (ProviderException $e) => expect($e->providerCode)->toBe($code));
 	})->with([
-		'an error with only a name' => [paypalAnswer(['name' => 'INTERNAL_SERVER_ERROR'], 500), 'INTERNAL_SERVER_ERROR'],
-		'no answer at all'          => [new HttpResponse(0, ''), 'network'],
+		'an error with only a name'  => [paypalAnswer(['name' => 'INTERNAL_SERVER_ERROR'], 500), 'INTERNAL_SERVER_ERROR'],
+		'no answer at all'           => [new HttpResponse(0, ''), 'network'],
 		'something that is not JSON' => [new HttpResponse(200, '<html>'), 'network'],
 	]);
 
@@ -292,8 +292,8 @@ describe('starting a checkout', function (): void {
 		expect(fn () => paypalProvider(paypalHttp(paypalAnswer($answer)))->createCheckout(paypalCheckout()))
 			->toThrow(fn (ProviderException $e) => expect($e->providerCode)->toBe('invalid_response'));
 	})->with([
-		'no id'   => [['links' => [['rel' => 'payer-action', 'href' => 'https://www.sandbox.paypal.com/checkoutnow?token=x']]]],
-		'no link' => [['id' => PAYPAL_REF, 'links' => [['rel' => 'self', 'href' => 'https://api.sandbox.paypal.com/x']]]],
+		'no id'                               => [['links' => [['rel' => 'payer-action', 'href' => 'https://www.sandbox.paypal.com/checkoutnow?token=x']]]],
+		'no link'                             => [['id' => PAYPAL_REF, 'links' => [['rel' => 'self', 'href' => 'https://api.sandbox.paypal.com/x']]]],
 		'a link somewhere that is not PayPal' => [['id' => PAYPAL_REF, 'links' => [['rel' => 'payer-action', 'href' => 'https://evil.example/pay']]]],
 	]);
 
@@ -381,8 +381,8 @@ describe('asking PayPal where a payment stands', function (): void {
 	it('has nothing to report for an order nobody has paid, or a capture that is not finished', function (HttpResponse ...$answers): void {
 		expect(paypalProvider(paypalHttp(...$answers))->fetchPayment(PAYPAL_REF))->toBeNull();
 	})->with([
-		'waiting for the buyer' => [paypalAnswer(['id' => PAYPAL_REF, 'status' => 'PAYER_ACTION_REQUIRED'])],
-		'a pending capture'     => [paypalCaptured('PENDING')],
+		'waiting for the buyer'             => [paypalAnswer(['id' => PAYPAL_REF, 'status' => 'PAYER_ACTION_REQUIRED'])],
+		'a pending capture'                 => [paypalCaptured('PENDING')],
 		'approved, and the capture refused' => [paypalAnswer(['id' => PAYPAL_REF, 'status' => 'APPROVED', 'purchase_units' => [['custom_id' => PAYPAL_ORDER_ID]]]), paypalAnswer(['name' => 'UNPROCESSABLE_ENTITY', 'details' => [['issue' => 'INSTRUMENT_DECLINED']]], 422)],
 	]);
 
@@ -448,12 +448,12 @@ describe('reading a webhook', function (): void {
 			->and($event->eventId)->toBe($eventId);
 	})->with([
 		// A paid capture is keyed by the capture, so asking PayPal about the order later is the same event.
-		'a payment'       => ['PAYMENT.CAPTURE.COMPLETED', PaymentEventType::Paid, PAYPAL_ORDER_ID, 3998, PAYPAL_REF, PAYPAL_CAPTURE, 'capture-' . PAYPAL_CAPTURE],
-		'a failed one'    => ['PAYMENT.CAPTURE.DENIED', PaymentEventType::Failed, PAYPAL_ORDER_ID, 3998, PAYPAL_REF, PAYPAL_CAPTURE, 'WH-4SW78779LY2325805-07E03580SX1414828'],
-		'a refund'        => ['PAYMENT.CAPTURE.REFUNDED', PaymentEventType::Refunded, PAYPAL_ORDER_ID, 1000, '1Y107995YT783435V', PAYPAL_CAPTURE, 'WH-1GE84257G0350133W-6RW800890C634293G'],
-		'a dispute'       => ['CUSTOMER.DISPUTE.CREATED', PaymentEventType::Disputed, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-4M0448861G563140B-9EX36365822141321'],
-		'a dispute won'   => ['CUSTOMER.DISPUTE.RESOLVED.won', PaymentEventType::DisputeWon, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-RESOLVED-won'],
-		'a dispute lost'  => ['CUSTOMER.DISPUTE.RESOLVED.lost', PaymentEventType::DisputeLost, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-RESOLVED-lost'],
+		'a payment'                    => ['PAYMENT.CAPTURE.COMPLETED', PaymentEventType::Paid, PAYPAL_ORDER_ID, 3998, PAYPAL_REF, PAYPAL_CAPTURE, 'capture-' . PAYPAL_CAPTURE],
+		'a failed one'                 => ['PAYMENT.CAPTURE.DENIED', PaymentEventType::Failed, PAYPAL_ORDER_ID, 3998, PAYPAL_REF, PAYPAL_CAPTURE, 'WH-4SW78779LY2325805-07E03580SX1414828'],
+		'a refund'                     => ['PAYMENT.CAPTURE.REFUNDED', PaymentEventType::Refunded, PAYPAL_ORDER_ID, 1000, '1Y107995YT783435V', PAYPAL_CAPTURE, 'WH-1GE84257G0350133W-6RW800890C634293G'],
+		'a dispute'                    => ['CUSTOMER.DISPUTE.CREATED', PaymentEventType::Disputed, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-4M0448861G563140B-9EX36365822141321'],
+		'a dispute won'                => ['CUSTOMER.DISPUTE.RESOLVED.won', PaymentEventType::DisputeWon, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-RESOLVED-won'],
+		'a dispute lost'               => ['CUSTOMER.DISPUTE.RESOLVED.lost', PaymentEventType::DisputeLost, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-RESOLVED-lost'],
 		'a dispute the buyer withdrew' => ['CUSTOMER.DISPUTE.RESOLVED.canceled', PaymentEventType::DisputeWon, PAYPAL_ORDER_ID, 3998, 'PP-D-27803', PAYPAL_CAPTURE, 'WH-RESOLVED-canceled'],
 	]);
 
@@ -557,7 +557,7 @@ describe('the webhook signature', function (): void {
 
 	it('refuses, without asking PayPal, a request that could not be a webhook of PayPal\'s', function (Closure $change): void {
 		$http              = paypalHttp(paypalAnswer(['verification_status' => 'SUCCESS']));
-		[$request, $hook] = $change(paypalWebhook('PAYMENT.CAPTURE.COMPLETED', $this->headers));
+		[$request, $hook]  = $change(paypalWebhook('PAYMENT.CAPTURE.COMPLETED', $this->headers));
 
 		expect(($this->verifier)($http, $hook)->verify($request))->toBeFalse()
 			->and($http->requests)->toBe([]);
@@ -566,7 +566,7 @@ describe('the webhook signature', function (): void {
 		'a header is missing'   => [static fn (ServerRequestInterface $r): array => [$r->withoutHeader('PAYPAL-TRANSMISSION-SIG'), PAYPAL_WEBHOOK]],
 		// The certificate must be PayPal's: an address of anyone else's is never passed on.
 		'a certificate from elsewhere' => [static fn (ServerRequestInterface $r): array => [$r->withHeader('PAYPAL-CERT-URL', 'https://evil.example/cert.pem'), PAYPAL_WEBHOOK]],
-		'a body that is not JSON' => [static fn (ServerRequestInterface $r): array => [$r->withBody((new Psr17Factory())->createStream('not json')), PAYPAL_WEBHOOK]],
+		'a body that is not JSON'      => [static fn (ServerRequestInterface $r): array => [$r->withBody((new Psr17Factory())->createStream('not json')), PAYPAL_WEBHOOK]],
 	]);
 });
 
@@ -625,10 +625,10 @@ describe('the extension', function (): void {
 	it('registers the PayPal provider, ready when the mode in use has its three values', function (array $settings, bool $ready): void {
 		expect(($this->provider)($settings)->isConfigured())->toBe($ready);
 	})->with([
-		'nothing set'                 => [[], false],
-		'sandbox values, sandbox mode' => [['sandboxClientId' => PAYPAL_CLIENT, 'sandboxClientSecret' => PAYPAL_SECRET, 'sandboxWebhookId' => PAYPAL_WEBHOOK], true],
+		'nothing set'                    => [[], false],
+		'sandbox values, sandbox mode'   => [['sandboxClientId' => PAYPAL_CLIENT, 'sandboxClientSecret' => PAYPAL_SECRET, 'sandboxWebhookId' => PAYPAL_WEBHOOK], true],
 		'only live values, sandbox mode' => [['liveClientId' => PAYPAL_CLIENT, 'liveClientSecret' => PAYPAL_SECRET, 'liveWebhookId' => PAYPAL_WEBHOOK], false],
-		'live values, live mode'      => [['mode' => 'live', 'liveClientId' => PAYPAL_CLIENT, 'liveClientSecret' => PAYPAL_SECRET, 'liveWebhookId' => PAYPAL_WEBHOOK], true],
+		'live values, live mode'         => [['mode' => 'live', 'liveClientId' => PAYPAL_CLIENT, 'liveClientSecret' => PAYPAL_SECRET, 'liveWebhookId' => PAYPAL_WEBHOOK], true],
 		'only sandbox values, live mode' => [['mode' => 'live', 'sandboxClientId' => PAYPAL_CLIENT, 'sandboxClientSecret' => PAYPAL_SECRET, 'sandboxWebhookId' => PAYPAL_WEBHOOK], false],
 	]);
 

@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Commerce\Inventory;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\FileLock;
@@ -63,7 +64,7 @@ final readonly class InventoryService
 				return StockResult::untracked();
 			}
 
-			$variants = is_array($product['variants'] ?? null) ? $product['variants'] : [];
+			$variants  = is_array($product['variants'] ?? null) ? $product['variants'] : [];
 			$onVariant = $variants !== [];
 			if ($onVariant && !is_array($variants[$variantId] ?? null)) {
 				// The variant that was sold is gone: there is no count to change.
@@ -90,7 +91,7 @@ final readonly class InventoryService
 
 			// Bookkeeping, not an edit: written as the store, and without
 			// telling the listeners a product was changed by someone.
-			$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($products, $productId, $product, silent: true));
+			$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->updater->updateObject($products, $productId, $product, silent: true));
 
 			return new StockResult(true, $short, $now, $had);
 		});

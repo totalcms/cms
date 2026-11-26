@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Order\OrderData;
@@ -10,6 +11,7 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Service\CommerceDashboard;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -152,7 +154,7 @@ describe('on the admin home page', function (): void {
 		signInAs($this->app, 'boss', 'auth');
 		$boss = renderTwig('{{ cms.commerce.dashboard() is null ? "nothing" : "numbers" }}');
 		// The same site, with whoever this is signed in, or nobody.
-		$this->c->get(\Odan\Session\PhpSession::class)->set(\TotalCMS\Domain\Session\SessionKeys::AUTH_USER, $user);
+		$this->c->get(PhpSession::class)->set(SessionKeys::AUTH_USER, $user);
 
 		expect($boss)->toBe('numbers')
 			->and(renderTwig('{{ cms.commerce.dashboard() is null ? "nothing" : "numbers" }}'))->toBe('nothing');

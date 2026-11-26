@@ -30,9 +30,9 @@ beforeEach(function (): void {
 	$save(['id' => 'old-mug', 'title' => 'Old Mug', 'status' => 'archived', 'price' => 12.5]);
 	$save(['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'type' => 'digital', 'price' => 9]);
 	$save(['id' => 'shirt', 'title' => 'Shirt', 'status' => 'active', 'price' => 20, 'variants' => [
-		'large' => ['id' => 'large', 'title' => 'Large', 'sku' => 'SH-L', 'price' => 22, 'stock' => 3, 'options' => ['size' => 'L']],
-		'small' => ['id' => 'small', 'title' => 'Small', 'stock' => 0],
-		'zero' => ['id' => 'zero', 'title' => 'Zero', 'price' => 0],
+		'large'   => ['id' => 'large', 'title' => 'Large', 'sku' => 'SH-L', 'price' => 22, 'stock' => 3, 'options' => ['size' => 'L']],
+		'small'   => ['id' => 'small', 'title' => 'Small', 'stock' => 0],
+		'zero'    => ['id' => 'zero', 'title' => 'Zero', 'price' => 0],
 		'retired' => ['id' => 'retired', 'title' => 'Retired', 'active' => false],
 	]]);
 

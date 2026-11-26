@@ -11,7 +11,7 @@ require_once __DIR__ . '/helpers.php';
 
 describe('S3DepotField', function (): void {
 	$item = fn (string $id, string $name): array => [
-		'id' => $id, 'key' => "site/docs/d1/files/{$id}-x.pdf", 'name' => $name, 'size' => 1536, 'mime' => 'application/pdf',
+		'id'   => $id, 'key' => "site/docs/d1/files/{$id}-x.pdf", 'name' => $name, 'size' => 1536, 'mime' => 'application/pdf',
 		'etag' => '', 'uploadedAt' => '2026-09-05T14:02:11+00:00', 'uploadedBy' => 'joe',
 	];
 

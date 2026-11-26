@@ -40,7 +40,7 @@ function providerRegistry(array $enabled = [], ?CommerceGate $gate = null): Paym
 /** The gate of a site that has not got Commerce. */
 function closedCommerceGate(): CommerceGate
 {
-	return new class() implements CommerceGate {
+	return new class implements CommerceGate {
 		public function allowed(): bool
 		{
 			return false;
@@ -132,13 +132,13 @@ describe('the contract\'s value objects', function (): void {
 	it('a billing period must be one a provider can bill', function (string $interval, int $count, int $trialDays): void {
 		expect(fn () => new Recurrence($interval, $count, $trialDays))->toThrow(InvalidArgumentException::class);
 	})->with([
-		'an unknown interval' => ['fortnight', 1, 0],
-		'37 months'           => ['month', 37, 0],
-		'4 years'             => ['year', 4, 0],
-		'157 weeks'           => ['week', 157, 0],
-		'1096 days'           => ['day', 1096, 0],
-		'no periods'          => ['month', 0, 0],
-		'a negative trial'    => ['month', 1, -1],
+		'an unknown interval'  => ['fortnight', 1, 0],
+		'37 months'            => ['month', 37, 0],
+		'4 years'              => ['year', 4, 0],
+		'157 weeks'            => ['week', 157, 0],
+		'1096 days'            => ['day', 1096, 0],
+		'no periods'           => ['month', 0, 0],
+		'a negative trial'     => ['month', 1, -1],
 		'a trial over 2 years' => ['month', 1, 731],
 	]);
 

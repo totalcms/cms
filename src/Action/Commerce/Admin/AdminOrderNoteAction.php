@@ -26,8 +26,6 @@ final readonly class AdminOrderNoteAction
 		$body  = (array)$request->getParsedBody();
 		$notes = is_string($body['notes'] ?? null) ? $body['notes'] : '';
 
-		return $this->responder->run($request, $response, $args['id'] ?? '', function (string $id) use ($notes): string {
-			return $this->admin->note($id, $notes)->notes() === '' ? 'Note cleared.' : 'Note saved.';
-		});
+		return $this->responder->run($request, $response, $args['id'] ?? '', fn (string $id): string => $this->admin->note($id, $notes)->notes() === '' ? 'Note cleared.' : 'Note saved.');
 	}
 }

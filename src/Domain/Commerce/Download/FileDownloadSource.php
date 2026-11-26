@@ -42,14 +42,14 @@ final readonly class FileDownloadSource implements DownloadSource
 		return Delivery::stream(
 			$file->download !== '' ? $file->download : $file->name,
 			$file->mime,
-			$this->files->streamFile($collection, self::productId($product), self::PROPERTY),
+			$this->files->streamFile($collection, $this->productId($product), self::PROPERTY),
 		);
 	}
 
 	/** @param array<string,mixed> $product */
 	private function file(string $collection, array $product): ?FileData
 	{
-		$id = self::productId($product);
+		$id = $this->productId($product);
 		if ($id === '' || !$this->files->fileExists($collection, $id, self::PROPERTY)) {
 			return null;
 		}
@@ -60,7 +60,7 @@ final readonly class FileDownloadSource implements DownloadSource
 	}
 
 	/** @param array<string,mixed> $product */
-	private static function productId(array $product): string
+	private function productId(array $product): string
 	{
 		return is_string($product['id'] ?? null) ? $product['id'] : '';
 	}

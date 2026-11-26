@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
+use Tests\Fakes\ClosedCommerceGate;
+use Tests\Fakes\FakeDownloadSource;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
-use TotalCMS\Domain\Commerce\Download\ProductDownload;
-use Tests\Fakes\ClosedCommerceGate;
-use Tests\Fakes\FakeDownloadSource;
 use TotalCMS\Domain\Commerce\Download\DownloadSources;
 use TotalCMS\Domain\Commerce\Download\UrlDownloadSource;
-use TotalCMS\Domain\Commerce\Order\OrderAdmin;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
+use TotalCMS\Domain\Commerce\Order\OrderAdmin;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
@@ -232,9 +231,9 @@ describe('downloading', function (): void {
 		expect($res->getStatusCode())->toBe(404)
 			->and((string)$res->getBody())->toContain('no longer valid');
 	})->with([
-		'made up' => ['not-a-token'],
+		'made up'                  => ['not-a-token'],
 		'another purpose\'s token' => [fn (): string => test()->c->get(SignedToken::class)->sign('something-else', ['o' => 'x', 'l' => 'y'], time() + 60)],
-		'run out' => [fn (): string => test()->c->get(SignedToken::class)->sign('commerce-download', ['o' => test()->placed->id(), 'l' => 'x'], time() - 10)],
+		'run out'                  => [fn (): string => test()->c->get(SignedToken::class)->sign('commerce-download', ['o' => test()->placed->id(), 'l' => 'x'], time() - 10)],
 	]);
 
 	it('refuses a link for a line the order does not have', function (): void {

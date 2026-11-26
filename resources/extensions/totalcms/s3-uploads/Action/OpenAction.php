@@ -13,7 +13,7 @@ use TotalCMS\Bundled\S3Uploads\S3\S3Client;
 use TotalCMS\Bundled\S3Uploads\Serving\PointerLocator;
 
 /**
- * GET /admin/ext/totalcms/s3-uploads/open?collection=&id=&property=[&file=]
+ * GET /admin/ext/totalcms/s3-uploads/open?collection=&id=&property=[&file=].
  *
  * The field's Open button: a five-minute signed link to the file, so an
  * editor can check what they uploaded whether the bucket is public or

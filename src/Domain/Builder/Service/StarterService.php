@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
-use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
+use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;

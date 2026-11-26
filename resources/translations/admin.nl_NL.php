@@ -1733,6 +1733,6 @@ return [
 	'overlay_preview.reason.needs-pro'       => 'Pro-editie: onder Pro wordt bij delen de gewone afbeelding gebruikt, die hier staat.',
 
 	// Commerce: the store's admin pages
-	'commerce.orders' => 'Bestellingen',
+	'commerce.orders'        => 'Bestellingen',
 	'commerce.subscriptions' => 'Abonnementen',
 ];

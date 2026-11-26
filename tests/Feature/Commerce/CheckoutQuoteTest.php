@@ -40,16 +40,16 @@ beforeEach(function (): void {
 		$config->commerce = $settings + $config->commerce;
 	};
 	($this->store)([
-		'shippingMode' => 'zones',
+		'shippingMode'  => 'zones',
 		'shippingZones' => [['id' => 'zone_us', 'label' => 'United States', 'countries' => ['US'], 'regions' => [], 'rate' => 6, 'freeOver' => 0]],
-		'taxMode'  => 'exclusive',
-		'taxRates' => [['country' => 'US', 'region' => 'CA', 'rate' => '10', 'label' => 'CA sales tax']],
+		'taxMode'       => 'exclusive',
+		'taxRates'      => [['country' => 'US', 'region' => 'CA', 'rate' => '10', 'label' => 'CA sales tax']],
 	]);
 
 	withHeader('X-CSRF-Token', $this->c->get(CSRFTokenManager::class)->getToken());
-	$this->add   = fn (string $productId, int $qty = 1) => postJson('/commerce/cart/add', ['productId' => $productId, 'variantId' => '', 'qty' => $qty]);
-	$this->quote = fn (array $body = []): array => (array)json_decode((string)post('/commerce/checkout/quote', $body + ['provider' => 'fake'], ['Accept' => 'application/json'])->getBody(), true);
-	$this->html  = fn (array $body = []): string => (string)post('/commerce/checkout/quote', $body + ['provider' => 'fake'])->getBody();
+	$this->add    = fn (string $productId, int $qty = 1) => postJson('/commerce/cart/add', ['productId' => $productId, 'variantId' => '', 'qty' => $qty]);
+	$this->quote  = fn (array $body = []): array => (array)json_decode((string)post('/commerce/checkout/quote', $body + ['provider' => 'fake'], ['Accept' => 'application/json'])->getBody(), true);
+	$this->html   = fn (array $body = []): string => (string)post('/commerce/checkout/quote', $body + ['provider' => 'fake'])->getBody();
 	$this->orders = fn (): int => count($this->c->get(IndexReader::class)->fetchIndex('orders')->objects);
 });
 

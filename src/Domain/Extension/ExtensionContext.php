@@ -22,9 +22,9 @@ use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
-use TotalCMS\Domain\License\Service\ExtensionLicense;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\ExtensionLicense;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -1129,10 +1129,10 @@ final class ExtensionContext
 
 		foreach (self::CAPABILITY_SOURCES as $cap => $property) {
 			$present = match ($cap) {
-				'schemas'       => is_dir($this->extensionPath . '/schemas'),
-				'mcp:resources' => $this->mcpResources !== [] || $this->mcpResourceTemplates !== [],
+				'schemas'          => is_dir($this->extensionPath . '/schemas'),
+				'mcp:resources'    => $this->mcpResources !== [] || $this->mcpResourceTemplates !== [],
 				'commerce:pricing' => $this->priceResolvers !== [] || $this->orderBuildingListeners !== [],
-				default         => $this->{$property} !== [],
+				default            => $this->{$property} !== [],
 			};
 			if ($present) {
 				$caps[$cap] = true;

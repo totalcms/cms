@@ -39,7 +39,7 @@ test('a Pro site without the add-on is refused, and told where to add it', funct
 test('a site below Pro is refused with no add-on link: there is nothing to add yet', function (): void {
 	$container = $this->app->getContainer();
 	assert($container instanceof Container);
-	$container->set(CommerceGate::class, new class() implements CommerceGate {
+	$container->set(CommerceGate::class, new class implements CommerceGate {
 		public function allowed(): bool
 		{
 			return false;

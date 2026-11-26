@@ -76,13 +76,13 @@ describe('a rate by where the order is going', function (): void {
 	it('takes the first zone the address is in', function (string $country, string $region, array $rate): void {
 		expect(shippingFor(['shippingMode' => 'zones', 'shippingZones' => SHIPPING_ZONES], 2000, $country, $region))->toBe([$rate]);
 	})->with([
-		'a region of the first zone, by its code'     => ['US', 'CA', ['zone_west', 'West Coast', 400]],
-		'the same region, by its name'                => ['US', 'california', ['zone_west', 'West Coast', 400]],
+		'a region of the first zone, by its code'      => ['US', 'CA', ['zone_west', 'West Coast', 400]],
+		'the same region, by its name'                 => ['US', 'california', ['zone_west', 'West Coast', 400]],
 		'a region the zone names in full, by its code' => ['US', 'OR', ['zone_west', 'West Coast', 400]],
-		'another region of that country'              => ['US', 'NY', ['zone_us', 'United States', 750]],
-		'that country with no region given'           => ['US', '', ['zone_us', 'United States', 750]],
-		'a country of a later zone'                   => ['FR', '', ['zone_eu', 'Europe', 1800]],
-		'a country code in small letters'             => ['de', '', ['zone_eu', 'Europe', 1800]],
+		'another region of that country'               => ['US', 'NY', ['zone_us', 'United States', 750]],
+		'that country with no region given'            => ['US', '', ['zone_us', 'United States', 750]],
+		'a country of a later zone'                    => ['FR', '', ['zone_eu', 'Europe', 1800]],
+		'a country code in small letters'              => ['de', '', ['zone_eu', 'Europe', 1800]],
 	]);
 
 	it('does not ship to a place no zone covers', function (?string $country): void {

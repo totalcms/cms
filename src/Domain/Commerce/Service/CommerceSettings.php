@@ -28,7 +28,6 @@ final readonly class CommerceSettings
 {
 	public const DEFAULT_CURRENCY = 'USD';
 
-
 	/** What each kind of commerce record is stored in, unless the site says otherwise. */
 	private const COLLECTIONS = [
 		'products'      => 'products',

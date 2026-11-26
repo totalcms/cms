@@ -10,7 +10,7 @@ require_once __DIR__ . '/helpers.php';
 
 describe('S3FileField', function (): void {
 	$pointer = [
-		'id' => '0a1b2c3d', 'key' => 'site/blog/post-1/brochure/0a1b2c3d-brochure.pdf', 'name' => 'Brochure <2026>.pdf',
+		'id'   => '0a1b2c3d', 'key' => 'site/blog/post-1/brochure/0a1b2c3d-brochure.pdf', 'name' => 'Brochure <2026>.pdf',
 		'size' => 48211334, 'mime' => 'application/pdf', 'etag' => '"e"', 'uploadedAt' => '2026-09-05T14:02:11+00:00', 'uploadedBy' => 'joe',
 	];
 

@@ -27,10 +27,10 @@ final class S3Exception extends \RuntimeException
 	public function hint(S3Settings $settings): string
 	{
 		return match ($this->s3Code) {
-			'SignatureDoesNotMatch' => 'Check the secret key.',
-			'InvalidAccessKeyId'    => 'Check the access key.',
-			'AccessDenied'          => 'The key lacks permission for this bucket.',
-			'NoSuchBucket'          => 'Check the bucket name.',
+			'SignatureDoesNotMatch'                             => 'Check the secret key.',
+			'InvalidAccessKeyId'                                => 'Check the access key.',
+			'AccessDenied'                                      => 'The key lacks permission for this bucket.',
+			'NoSuchBucket'                                      => 'Check the bucket name.',
 			'PermanentRedirect', 'AuthorizationHeaderMalformed' => $this->bucketRegion !== ''
 				? "The bucket is in {$this->bucketRegion}; set Region to that."
 				: 'Check the region.',

@@ -45,7 +45,7 @@ it('says which codes are well formed', function (string $typed, ?string $id): vo
 
 it('reads every field of a code', function (): void {
 	seedDiscount('fall15', [
-		'title' => 'Fall sale', 'type' => 'fixed', 'value' => 5.5, 'products' => ['tee'], 'categories' => ['Kitchen'], 'minSubtotal' => 30,
+		'title'    => 'Fall sale', 'type' => 'fixed', 'value' => 5.5, 'products' => ['tee'], 'categories' => ['Kitchen'], 'minSubtotal' => 30,
 		'startsAt' => '2026-11-01T00:00:00+00:00', 'endsAt' => '2026-12-01T00:00:00+00:00', 'usageLimit' => 100, 'perCustomerLimit' => 2, 'recurring' => 'forever', 'usedCount' => 7,
 	]);
 	$d = $this->repo->find('fall15');
@@ -101,8 +101,8 @@ describe('counting a use', function (): void {
 
 	it('counts from what is on disk now, not from what this request read earlier', function (): void {
 		$this->repo->find('save10');
-		$file           = cmsDataDir() . 'discounts/save10.json';
-		$data           = json_decode((string)file_get_contents($file), true);
+		$file              = cmsDataDir() . 'discounts/save10.json';
+		$data              = json_decode((string)file_get_contents($file), true);
 		$data['usedCount'] = 5;
 		file_put_contents($file, json_encode($data));
 

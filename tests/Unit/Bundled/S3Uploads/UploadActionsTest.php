@@ -40,12 +40,12 @@ describe('S3 Uploads upload routes', function (): void {
 		expect($response->getStatusCode())->toBe(400)
 			->and(s3Json($response))->toBe(['error' => 'The upload request is incomplete.', 'code' => 's3.bad_request']);
 	})->with([
-		'not JSON'       => ['collection=blog'],
-		'empty'          => [[]],
-		'no property'    => [['collection' => 'blog', 'id' => 'post-1', 'filename' => 'a.pdf', 'size' => 1, 'mime' => 'x/y']],
+		'not JSON'          => ['collection=blog'],
+		'empty'             => [[]],
+		'no property'       => [['collection' => 'blog', 'id' => 'post-1', 'filename' => 'a.pdf', 'size' => 1, 'mime' => 'x/y']],
 		'size not a number' => [['collection' => 'blog', 'id' => 'post-1', 'property' => 'brochure', 'filename' => 'a.pdf', 'size' => 'big', 'mime' => 'x/y']],
-		'negative size'  => [['collection' => 'blog', 'id' => 'post-1', 'property' => 'brochure', 'filename' => 'a.pdf', 'size' => -1, 'mime' => 'x/y']],
-		'empty file name' => [['collection' => 'blog', 'id' => 'post-1', 'property' => 'brochure', 'filename' => '', 'size' => 1, 'mime' => 'x/y']],
+		'negative size'     => [['collection' => 'blog', 'id' => 'post-1', 'property' => 'brochure', 'filename' => 'a.pdf', 'size' => -1, 'mime' => 'x/y']],
+		'empty file name'   => [['collection' => 'blog', 'id' => 'post-1', 'property' => 'brochure', 'filename' => '', 'size' => 1, 'mime' => 'x/y']],
 	]);
 
 	test('presign answers with the upload link and token', function () use ($responder, $upload): void {

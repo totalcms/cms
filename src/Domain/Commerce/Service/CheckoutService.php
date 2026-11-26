@@ -31,9 +31,9 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Payment\ProviderException;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Payment\TransactionLedger;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
-use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
@@ -200,7 +200,7 @@ final readonly class CheckoutService
 		}
 
 		$address = $input->shipping ?? $input->billing;
-		if ($address === null || $address->country === '') {
+		if (!$address instanceof Address || $address->country === '') {
 			throw $draft->ships() ? CommerceException::addressRequired() : CommerceException::taxCountryRequired();
 		}
 		if ($taxed && $address->region === '' && $this->tax->needsRegion($address->country)) {

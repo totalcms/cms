@@ -1733,6 +1733,6 @@ return [
 	'overlay_preview.reason.needs-pro'       => 'Pro edition: below Pro, shares use the plain image, shown here.',
 
 	// Commerce: the store's admin pages
-	'commerce.orders' => 'Orders',
+	'commerce.orders'        => 'Orders',
 	'commerce.subscriptions' => 'Subscriptions',
 ];

@@ -12,7 +12,7 @@ use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 
 /**
- * tcms stripe:tax
+ * tcms stripe:tax.
  *
  * Says whether Stripe Tax is ready on the account the site charges with.
  *
@@ -57,7 +57,7 @@ final class TaxCommand extends Command
 	{
 		$mode = $this->provider->keyMode();
 		if ($mode === '') {
-			$output->writeln("<error>No Stripe secret key is saved for the mode the extension is in, so Stripe cannot be asked.</error>");
+			$output->writeln('<error>No Stripe secret key is saved for the mode the extension is in, so Stripe cannot be asked.</error>');
 
 			return Command::FAILURE;
 		}

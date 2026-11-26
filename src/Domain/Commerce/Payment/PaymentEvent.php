@@ -52,4 +52,14 @@ final readonly class PaymentEvent implements ProviderEvent
 	{
 		return $this->provider . ':' . $this->eventId;
 	}
+
+	/**
+	 * The tax the provider worked out for the order, in minor units. Null
+	 * unless it sent the order's total with it: without that total there is
+	 * nothing to check the order against, and the tax is not taken.
+	 */
+	public function taxForOrder(): ?int
+	{
+		return $this->orderTotal instanceof Money ? $this->tax?->amount() : null;
+	}
 }

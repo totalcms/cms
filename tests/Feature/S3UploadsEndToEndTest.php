@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Bundled\S3Uploads\Field\S3Field;
 use DI\Container;
 use Tests\Fakes\RecordingHttpClient;
+use TotalCMS\Bundled\S3Uploads\Field\S3Field;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
@@ -12,6 +12,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
@@ -179,7 +180,7 @@ test('a download fires file.downloaded, and replacing the file starts its count 
 	// Both routes count; only /download reports, as in core.
 	get('/api/ext/totalcms/s3-uploads/stream/docs/doc-one/brochure');
 	$download = get('/api/ext/totalcms/s3-uploads/download/docs/doc-one/brochure');
-	$counts = fn (): string => (string)get('/admin/ext/totalcms/s3-uploads/stats?collection=docs&id=doc-one')->getBody();
+	$counts   = fn (): string => (string)get('/admin/ext/totalcms/s3-uploads/stats?collection=docs&id=doc-one')->getBody();
 
 	expect($fired)->toBe([['docs', 'doc-one', 'brochure', 'first.pdf', false]])
 		->and($download->getHeaderLine('Location'))->toContain('response-content-disposition=attachment')
@@ -222,7 +223,7 @@ test('a property that names the field and no data type is saved as json', functi
 		'index'    => ['id'],
 	]);
 
-	$saved = $container->get(TotalCMS\Domain\Schema\Service\SchemaFetcher::class)->fetchSchema('untyped')->toArray()['properties'];
+	$saved = $container->get(SchemaFetcher::class)->fetchSchema('untyped')->toArray()['properties'];
 
 	// On disk a data type is a reference to its property schema.
 	$json = 'https://www.totalcms.co/schemas/properties/json.json';

@@ -72,9 +72,9 @@ final readonly class ProductView
 		$text = static fn (string $key, string $default = ''): string => is_scalar($object[$key] ?? null) && trim((string)$object[$key]) !== '' ? trim((string)$object[$key]) : $default;
 		$flag = static fn (string $key, bool $default): bool => filter_var($object[$key] ?? $default, FILTER_VALIDATE_BOOLEAN);
 
-		$type     = $text('type', self::TYPE_PHYSICAL) === self::TYPE_DIGITAL ? self::TYPE_DIGITAL : self::TYPE_PHYSICAL;
-		$price    = $object['price'] ?? 0;
-		$meta     = $object['meta'] ?? [];
+		$type      = $text('type', self::TYPE_PHYSICAL) === self::TYPE_DIGITAL ? self::TYPE_DIGITAL : self::TYPE_PHYSICAL;
+		$price     = $object['price'] ?? 0;
+		$meta      = $object['meta'] ?? [];
 		$variants  = self::variants($object['variants'] ?? []);
 		$recurring = $text('billing', self::BILLING_ONCE) === self::BILLING_RECURRING;
 

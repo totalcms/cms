@@ -46,9 +46,9 @@ final readonly class RefundService
 	 *
 	 * @param bool $restock whether the items are coming back into stock; kept with the request, and acted on when the refund is confirmed
 	 *
-	 * @return RefundResult whether the provider took the request; `error` is the provider's own code when it did not
-	 *
 	 * @throws CommerceException no such order, nothing paid to refund, an amount that is not there, or a provider that cannot refund
+	 *
+	 * @return RefundResult whether the provider took the request; `error` is the provider's own code when it did not
 	 */
 	public function request(string $orderId, int $amount, string $reason, bool $restock, Actor $by): RefundResult
 	{

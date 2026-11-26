@@ -131,7 +131,7 @@ describe('an order with nothing to ship', function (): void {
 			// Refused before any order exists.
 			->and(count($this->c->get(IndexReader::class)->fetchIndex('orders')->objects))->toBe(0);
 	})->with([
-		'nothing said'           => [[], 'address_required'],
+		'nothing said'             => [[], 'address_required'],
 		'a country with no region' => [['country' => 'US'], 'region_required'],
 	]);
 

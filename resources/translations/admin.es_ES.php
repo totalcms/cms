@@ -1733,6 +1733,6 @@ return [
 	'overlay_preview.reason.needs-pro'       => 'Edición Pro: por debajo de Pro, al compartir se usa la imagen sin superposición, la que se ve aquí.',
 
 	// Commerce: the store's admin pages
-	'commerce.orders' => 'Pedidos',
+	'commerce.orders'        => 'Pedidos',
 	'commerce.subscriptions' => 'Suscripciones',
 ];

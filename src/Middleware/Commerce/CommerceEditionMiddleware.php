@@ -30,7 +30,6 @@ readonly class CommerceEditionMiddleware extends BaseEditionMiddleware
 {
 	public const MESSAGE = CommerceGateStatus::MESSAGE;
 
-
 	public function __construct(
 		private CommerceGate $gate,
 		EditionFeatureService $editionFeatures,

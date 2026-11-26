@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use Tests\Fakes\RecordingHttpClient;
 use TotalCMS\Bundled\S3Uploads\Upload\UploadError;
-use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Property\Data\JsonData;
 use TotalCMS\Support\HttpResponse;
 
@@ -154,7 +153,7 @@ describe('UploadService::commit', function (): void {
 		}
 	});
 
-	test('a file that differs from what was announced is deleted and refused', function (HttpResponse $found) : void {
+	test('a file that differs from what was announced is deleted and refused', function (HttpResponse $found): void {
 		$kit   = s3UploadService($this, ['responses' => [$found, new HttpResponse(204, '')]]);
 		$token = $kit->service->presign('blog', 'post-1', 'brochure', 'a.pdf', 2048, 'application/pdf')['token'];
 
@@ -206,12 +205,12 @@ describe('UploadService::commit', function (): void {
 
 		expect($item['duration'] ?? null)->toBe($kept);
 	})->with([
-		'audio'            => ['audio/mpeg', 2714.3, 2714.3],
-		'video'            => ['video/mp4', 61.0, 61.0],
-		'a document'       => ['application/pdf', 2714.3, null],
-		'negative'         => ['audio/mpeg', -5.0, null],
+		'audio'             => ['audio/mpeg', 2714.3, 2714.3],
+		'video'             => ['video/mp4', 61.0, 61.0],
+		'a document'        => ['application/pdf', 2714.3, null],
+		'negative'          => ['audio/mpeg', -5.0, null],
 		'longer than a day' => ['audio/mpeg', 90000.0, null],
-		'none'             => ['audio/mpeg', null, null],
+		'none'              => ['audio/mpeg', null, null],
 	]);
 
 	test('a depot commit appends to the current list', function () use ($head): void {
@@ -260,8 +259,8 @@ describe('UploadService::commit', function (): void {
 	});
 
 	test('an object deleted during the upload removes the key', function () use ($head): void {
-		$kit   = s3UploadService($this, ['responses' => [$head(), new HttpResponse(204, '')]]);
-		$token = $kit->service->presign('blog', 'post-1', 'brochure', 'a.pdf', 2048, 'application/pdf')['token'];
+		$kit       = s3UploadService($this, ['responses' => [$head(), new HttpResponse(204, '')]]);
+		$token     = $kit->service->presign('blog', 'post-1', 'brochure', 'a.pdf', 2048, 'application/pdf')['token'];
 		$kit->gone = true;
 
 		try {
@@ -317,7 +316,7 @@ describe('UploadService::commit', function (): void {
 			422, 's3.save_failed', 'The file uploaded, but the object could not be saved, so the upload was removed. Failed schema validation: title is required',
 		],
 		'the write gate says no' => [
-			fn () => new TotalCMS\Domain\Auth\Exception\AccessDeniedException('You may not update object "post-1" in "blog".'),
+			fn () => new AccessDeniedException('You may not update object "post-1" in "blog".'),
 			403, 's3.forbidden', 'You do not have permission to upload files to blog.',
 		],
 	]);

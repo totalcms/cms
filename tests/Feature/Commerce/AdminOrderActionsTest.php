@@ -67,7 +67,7 @@ describe('marking lines sent', function (): void {
 		$this->c->get(EventDispatcher::class)->listen(CoreEvent::ORDER_FULFILLED, function () use (&$heard): void {
 			$heard++;
 		});
-		$order = ($this->order)();
+		$order       = ($this->order)();
 		[$mug, $tee] = ($this->lineIds)($order);
 
 		$first  = ($this->act)($order, 'fulfill', ['lines' => [$mug]]);
@@ -90,7 +90,7 @@ describe('marking lines sent', function (): void {
 	});
 
 	it('keeps the tracking already saved when a later parcel has none', function (): void {
-		$order = ($this->order)();
+		$order       = ($this->order)();
 		[$mug, $tee] = ($this->lineIds)($order);
 		($this->act)($order, 'fulfill', ['lines' => [$mug], 'trackingNumber' => 'RM123']);
 		($this->act)($order, 'fulfill', ['lines' => [$tee]]);
@@ -98,7 +98,7 @@ describe('marking lines sent', function (): void {
 		expect($this->orders->find($order->id())->trackingNumber())->toBe('RM123');
 	});
 
-	it('refuses what cannot be sent', function (\Closure $body, bool $paid, int $status, string $code): void {
+	it('refuses what cannot be sent', function (Closure $body, bool $paid, int $status, string $code): void {
 		$order = ($this->order)(paid: $paid);
 		$res   = ($this->act)($order, 'fulfill', $body(($this->lineIds)($order)));
 

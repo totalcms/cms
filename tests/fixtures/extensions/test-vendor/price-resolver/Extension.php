@@ -23,7 +23,7 @@ class Extension implements ExtensionInterface
 {
 	public function register(ExtensionContext $context): void
 	{
-		$context->addPriceResolver(new class() implements PriceResolver {
+		$context->addPriceResolver(new class implements PriceResolver {
 			public function id(): string
 			{
 				return 'fixture-price';

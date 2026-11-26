@@ -174,9 +174,9 @@ describe('S3TwigAdapter', function (): void {
 		$files = $kit->s3->files($doc, ['collection' => 'docs', 'property' => 'files']);
 
 		expect($files)->toBe([
-			['id' => '0a1b2c3d', 'name' => 'a.pdf', 'size' => 1536, 'sizeLabel' => '1.5 KB', 'mime' => 'application/pdf', 'duration' => null,
+			['id'  => '0a1b2c3d', 'name' => 'a.pdf', 'size' => 1536, 'sizeLabel' => '1.5 KB', 'mime' => 'application/pdf', 'duration' => null,
 				'url' => '/base/api/ext/totalcms/s3-uploads/stream/docs/d1/files/0a1b2c3d', 'download' => '/base/api/ext/totalcms/s3-uploads/download/docs/d1/files/0a1b2c3d', 'downloads' => 0],
-			['id' => '1a1b2c3d', 'name' => 'b.mp3', 'size' => 999, 'sizeLabel' => '999 B', 'mime' => 'audio/mpeg', 'duration' => 12.5,
+			['id'  => '1a1b2c3d', 'name' => 'b.mp3', 'size' => 999, 'sizeLabel' => '999 B', 'mime' => 'audio/mpeg', 'duration' => 12.5,
 				'url' => '/base/api/ext/totalcms/s3-uploads/stream/docs/d1/files/1a1b2c3d', 'download' => '/base/api/ext/totalcms/s3-uploads/download/docs/d1/files/1a1b2c3d', 'downloads' => 1],
 		]);
 	});

@@ -112,7 +112,6 @@ final readonly class ExtensionManifest
 			entrypoint: (string)($data['entrypoint'] ?? 'Extension.php'),
 			settingsSchema: isset($data['settings_schema']) ? (string)$data['settings_schema'] : null,
 			minEdition: (string)($data['min_edition'] ?? 'lite'),
-			entitlement: (string)($data['entitlement'] ?? ''),
 			author: is_array($data['author'] ?? null) ? $data['author'] : [],
 			license: (string)($data['license'] ?? 'proprietary'),
 			links: self::parseLinks($data['links'] ?? null),
@@ -120,6 +119,7 @@ final readonly class ExtensionManifest
 			hidden: (bool)($data['hidden'] ?? false),
 			reviewNote: (string)($data['reviewNote'] ?? ''),
 			defaultEnabled: (bool)($data['default_enabled'] ?? false),
+			entitlement: (string)($data['entitlement'] ?? ''),
 		);
 	}
 

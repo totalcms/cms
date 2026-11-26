@@ -164,9 +164,9 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider, Subscri
 	 * less, and the items billed again must come to exactly what every
 	 * later period costs.
 	 *
-	 * @return int how much the items come to above the order's total: what a coupon must take off the first payment
-	 *
 	 * @throws ProviderException `total_mismatch`
+	 *
+	 * @return int how much the items come to above the order's total: what a coupon must take off the first payment
 	 */
 	private function checked(CheckoutRequest $request): int
 	{
@@ -200,9 +200,9 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider, Subscri
 	 * written into the plan's price, which is charged again every period.
 	 * It is a coupon Stripe uses once, for exactly the difference.
 	 *
-	 * @return string the coupon's id, or '' when the items already come to the total
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return string the coupon's id, or '' when the items already come to the total
 	 */
 	private function firstPaymentCoupon(CheckoutRequest $request, int $amountOff): string
 	{

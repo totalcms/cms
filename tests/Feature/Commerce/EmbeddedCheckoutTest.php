@@ -9,6 +9,7 @@ use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
@@ -139,14 +140,14 @@ describe('the pay page', function (): void {
 	})->with(['', '?t=forged']);
 
 	it('leaves the pay page once the order is paid', function (): void {
-		$this->c->get(PaymentEventProcessor::class)->process(new \TotalCMS\Domain\Commerce\Payment\PaymentEvent('embeds', 'evt_1', PaymentEventType::Paid, $this->order->id(), $this->order->grandTotalMoney(), 'ref', 'pi_1'));
+		$this->c->get(PaymentEventProcessor::class)->process(new PaymentEvent('embeds', 'evt_1', PaymentEventType::Paid, $this->order->id(), $this->order->grandTotalMoney(), 'ref', 'pi_1'));
 		$res = get(($this->pay)($this->order));
 
 		expect($res->getStatusCode())->toBe(303)->and($res->getHeaderLine('Location'))->toContain("/commerce/return/{$this->order->id()}?t=");
 	});
 
 	it('clears the client secret when the order leaves pending', function (PaymentEventType $type): void {
-		$this->c->get(PaymentEventProcessor::class)->process(new \TotalCMS\Domain\Commerce\Payment\PaymentEvent('embeds', 'evt_1', $type, $this->order->id(), $this->order->grandTotalMoney(), 'ref', 'pi_1'));
+		$this->c->get(PaymentEventProcessor::class)->process(new PaymentEvent('embeds', 'evt_1', $type, $this->order->id(), $this->order->grandTotalMoney(), 'ref', 'pi_1'));
 
 		expect($this->orders->find($this->order->id())->providerClientSecret())->toBe('');
 	})->with([PaymentEventType::Paid, PaymentEventType::Expired, PaymentEventType::Failed]);

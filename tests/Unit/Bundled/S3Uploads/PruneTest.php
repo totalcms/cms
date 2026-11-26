@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 use Tests\Fakes\RecordingHttpClient;
 use TotalCMS\Bundled\S3Uploads\Command\PruneCommand;
@@ -40,7 +41,7 @@ function s3Listing(array $items, ?string $next = null): HttpResponse
  *
  * @param array<string,mixed> $with
  */
-function s3Prune(PHPUnit\Framework\TestCase $test, array $with = []): object
+function s3Prune(TestCase $test, array $with = []): object
 {
 	$mock    = fn (string $class) => (fn () => $this->createMock($class))->call($test);
 	$objects = $with['objects'] ?? [];
@@ -172,8 +173,8 @@ describe('PruneService', function (): void {
 	test('a load failure downgrades the run to a dry run', function () use ($usual, $listing, $day): void {
 		$objects                 = $usual();
 		$objects['blog']['bad']  = new RuntimeException('unreadable');
-		$kit    = s3Prune($this, ['objects' => $objects, 'responses' => [$listing()]]);
-		$report = $kit->service->run(true, $day);
+		$kit                     = s3Prune($this, ['objects' => $objects, 'responses' => [$listing()]]);
+		$report                  = $kit->service->run(true, $day);
 
 		expect($report->downgraded)->toBeTrue()
 			->and($report->problems)->toBe(['blog/bad could not be read.'])

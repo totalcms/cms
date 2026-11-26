@@ -14,7 +14,7 @@ use TotalCMS\Bundled\S3Uploads\S3\S3Exception;
 use TotalCMS\Bundled\S3Uploads\Upload\UploadRules;
 
 /**
- * tcms s3:prune [--delete] [--older-than=24h] [--max=1000] [--whole-bucket] [--json]
+ * tcms s3:prune [--delete] [--older-than=24h] [--max=1000] [--whole-bucket] [--json].
  *
  * Reports the files in the bucket that no object points at. Nothing is
  * deleted without --delete.

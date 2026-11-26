@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 use Odan\Session\MemorySession;
 use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Commerce\Cart\CartPricer;
 use TotalCMS\Domain\Commerce\Cart\CartRepository;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
+use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\CurrentCustomer;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Money\Money;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /*
@@ -46,7 +49,7 @@ beforeEach(function (): void {
 
 	$this->session = new MemorySession();
 	$this->store   = new CartStore($this->session);
-	$this->cart    = new CartService($this->store, $this->c->get(ProductCatalog::class), $this->c->get(CommerceSettings::class), $this->c->get(CartRepository::class), $this->c->get(CurrentCustomer::class), $this->c->get(\TotalCMS\Domain\Commerce\Discount\DiscountService::class), $this->c->get(\TotalCMS\Domain\Commerce\Cart\CartPricer::class), $this->c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class), $this->c->get(LoggerFactory::class));
+	$this->cart    = new CartService($this->store, $this->c->get(ProductCatalog::class), $this->c->get(CommerceSettings::class), $this->c->get(CartRepository::class), $this->c->get(CurrentCustomer::class), $this->c->get(DiscountService::class), $this->c->get(CartPricer::class), $this->c->get(PaymentProviderRegistry::class), $this->c->get(LoggerFactory::class));
 	$this->usd     = new PricingContext('USD', null, null, []);
 
 	$this->setting = function (array $settings): void {
@@ -270,7 +273,7 @@ describe('looking at the cart', function (): void {
 		$this->cart->add('tee', 'large', 2);
 		$this->cart->add('mug', '', 3);
 
-		$view = $this->cart->view($this->usd);
+		$view        = $this->cart->view($this->usd);
 		[$tee, $mug] = $view->lines;
 
 		expect($view->count)->toBe(5)
@@ -324,7 +327,7 @@ describe('looking at the cart', function (): void {
 
 	it('drops a line whose variant was retired', function (): void {
 		$this->cart->add('tee', 'large', 1);
-		$tee = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'tee')->toArray();
+		$tee                                = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'tee')->toArray();
 		$tee['variants']['large']['active'] = false;
 		$this->c->get(ObjectUpdater::class)->updateObject('products', 'tee', $tee);
 

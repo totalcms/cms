@@ -14,6 +14,7 @@ use TotalCMS\Domain\Commerce\Cart\CartLoginListener;
 use TotalCMS\Domain\Commerce\Cart\CartRepository;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
+use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -173,7 +174,7 @@ describe('a signed-in customer', function (): void {
 		expect($this->cart->items()[$this->key]->qty)->toBe(2)
 			->and($this->store->cartId())->toBe($stored)
 			->and($this->store->attributes())->toBe(['giftNote' => 'From before'])
-			->and($this->cart->view($this->c->get(\TotalCMS\Domain\Commerce\Pricing\PricingContextFactory::class)->current())->count)->toBe(2);
+			->and($this->cart->view($this->c->get(PricingContextFactory::class)->current())->count)->toBe(2);
 	});
 
 	test('has every change written to their stored cart', function (): void {

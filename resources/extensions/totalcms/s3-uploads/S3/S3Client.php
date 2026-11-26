@@ -35,9 +35,9 @@ final class S3Client
 	}
 
 	/**
-	 * @return array{size:int, mime:string, etag:string, lastModified:string}|null null when the key is not in the bucket
-	 *
 	 * @throws S3Exception
+	 *
+	 * @return array{size:int, mime:string, etag:string, lastModified:string}|null null when the key is not in the bucket
 	 */
 	public function headObject(string $key): ?array
 	{
@@ -91,9 +91,9 @@ final class S3Client
 	/**
 	 * Every object under $prefix, one page of $maxKeys at a time.
 	 *
-	 * @return \Generator<int, ListedObject>
-	 *
 	 * @throws S3Exception
+	 *
+	 * @return \Generator<int, ListedObject>
 	 */
 	public function listObjects(string $prefix, int $maxKeys = 1000): \Generator
 	{

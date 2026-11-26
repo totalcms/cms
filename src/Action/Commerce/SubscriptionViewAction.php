@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Commerce;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionProvider;
 use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Renderer\TwigRenderer;
@@ -34,7 +35,7 @@ final readonly class SubscriptionViewAction
 	{
 		$subscription = $this->page->subscription($request);
 		$provider     = $this->providers->subscriptionProvider($subscription->provider());
-		$running      = $subscription->isLive() && $subscription->providerSubscriptionRef() !== '' && $provider !== null;
+		$running      = $subscription->isLive() && $subscription->providerSubscriptionRef() !== '' && $provider instanceof SubscriptionProvider;
 		$query        = $request->getQueryParams();
 
 		return $this->twig->template($response->withHeader('Content-Type', 'text/html; charset=utf-8'), 'commerce/subscription.twig', [

@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Exception\HttpNotFoundException;
 use Psr\Log\NullLogger;
+use Slim\Exception\HttpNotFoundException;
 use Tests\Fakes\RecordingHttpClient;
 use Tests\Fakes\RecordingLogger;
 use TotalCMS\Bundled\S3Uploads\Access\S3Access;
 use TotalCMS\Bundled\S3Uploads\Action\DownloadRedirectAction;
-use TotalCMS\Bundled\S3Uploads\Serving\DownloadCounter;
 use TotalCMS\Bundled\S3Uploads\Serving\PointerLocator;
 use TotalCMS\Bundled\S3Uploads\Serving\UrlResolver;
 use TotalCMS\Bundled\S3Uploads\Storage\KeyBuilder;
@@ -19,9 +19,9 @@ use TotalCMS\Bundled\S3Uploads\Storage\S3Fields;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 require_once __DIR__ . '/helpers.php';
@@ -150,8 +150,8 @@ describe('DownloadRedirectAction', function (): void {
 	/**
 	 * @param array<string,mixed> $with settings, object (stored values; null = missing), groups, signedIn, hasAccess
 	 */
-	$build = function (PHPUnit\Framework\TestCase $test, array $with = []): object {
-		$mock = fn (string $class) => (fn () => $this->createMock($class))->call($test);
+	$build = function (TestCase $test, array $with = []): object {
+		$mock         = fn (string $class) => (fn () => $this->createMock($class))->call($test);
 		$kit          = new stdClass();
 		$kit->datadir = tcmsTestTempDir('s3-dl');
 		$kit->counter = s3Counter($kit->datadir);
@@ -264,11 +264,11 @@ describe('DownloadRedirectAction', function (): void {
 		expect($response->getStatusCode())->toBe(302)
 			->and($kit->counter->count('blog', 'post-1', 'brochure'))->toBe($count);
 	})->with([
-		'plain GET'             => ['GET', [], 1],
-		'whole file as a range' => ['GET', ['Range' => 'bytes=0-'], 1],
-		'first megabyte'        => ['GET', ['Range' => 'bytes=0-1048575'], 1],
-		'two-byte probe'        => ['GET', ['Range' => 'bytes=0-1'], 0],
-		'a seek'                => ['GET', ['Range' => 'bytes=1000-'], 0],
+		'plain GET'                       => ['GET', [], 1],
+		'whole file as a range'           => ['GET', ['Range' => 'bytes=0-'], 1],
+		'first megabyte'                  => ['GET', ['Range' => 'bytes=0-1048575'], 1],
+		'two-byte probe'                  => ['GET', ['Range' => 'bytes=0-1'], 0],
+		'a seek'                          => ['GET', ['Range' => 'bytes=1000-'], 0],
 		'HEAD redirects without counting' => ['HEAD', [], 0],
 	]);
 
@@ -310,7 +310,7 @@ describe('DownloadRedirectAction', function (): void {
 			->and($kit->accessLog->records)->toHaveCount(1)
 			->and($kit->accessLog->records[0]['message'])->toBe('Protected file downloaded')
 			->and(array_diff_key($kit->accessLog->records[0]['context'], ['timestamp' => 1]))->toBe([
-				'user_id' => 'member-1', 'user_collection' => 'members', 'collection' => 'blog', 'object_id' => 'post-1',
+				'user_id'  => 'member-1', 'user_collection' => 'members', 'collection' => 'blog', 'object_id' => 'post-1',
 				'property' => 'private', 'filename' => 'Brochure 2026.pdf', 'subpath' => null, 'is_super_admin' => false, 'user_groups' => ['members'],
 			]);
 	});
@@ -386,18 +386,18 @@ describe('DownloadRedirectAction', function (): void {
 	});
 
 	test('protectedByCollection: false opens the property to everyone, however the schema spells it', function (mixed $flag) use ($build, $request): void {
-		$properties                                               = s3TestProperties();
+		$properties                                                 = s3TestProperties();
 		$properties['private']['settings']['protectedByCollection'] = $flag;
-		$kit = $build($this, ['groups' => ['members'], 'properties' => $properties]);
+		$kit                                                        = $build($this, ['groups' => ['members'], 'properties' => $properties]);
 
 		expect($request($kit, 'private')->getHeaderLine('Location'))->toStartWith('https://my-bucket.')
 			->and($kit->access)->toBe(0);
 	})->with([false, 'false', 0, '0', 'no', 'off']);
 
 	test('protectedByCollection: true, or a value that is not a yes or no, keeps the file protected', function (mixed $flag) use ($build, $request): void {
-		$properties                                               = s3TestProperties();
+		$properties                                                 = s3TestProperties();
 		$properties['private']['settings']['protectedByCollection'] = $flag;
-		$kit = $build($this, ['groups' => ['members'], 'properties' => $properties]);
+		$kit                                                        = $build($this, ['groups' => ['members'], 'properties' => $properties]);
 
 		expect($request($kit, 'private')->getHeaderLine('Location'))->toStartWith('/admin/login');
 	})->with([true, 'true', 1, 'yes', 'maybe', null]);

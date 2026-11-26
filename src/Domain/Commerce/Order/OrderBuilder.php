@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
-use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
-use TotalCMS\Domain\Commerce\Payment\Recurrence;
-use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
 use TotalCMS\Domain\Commerce\Cart\CartItem;
 use TotalCMS\Domain\Commerce\Data\ProductView;
-use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
+use TotalCMS\Domain\Commerce\Discount\DiscountService;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
 use TotalCMS\Domain\Money\Money;
 
 /**
@@ -41,7 +41,6 @@ final readonly class OrderBuilder
 	 * @param string                    $discountCode the code on the cart, or '' for none. It is checked again
 	 *                                                here, now with the buyer's email, and what it takes off is
 	 *                                                worked out again: the cart never carries an amount
-	 *
 	 * @param bool                      $estimate     build it to show what it comes to, not to sell it: an order that
 	 *                                                cannot ship yet is built without shipping and not refused
 	 *

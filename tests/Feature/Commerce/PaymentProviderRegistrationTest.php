@@ -66,7 +66,7 @@ test('addDownloadSource() gives it the commerce:downloads capability', function 
 
 test('addCheckoutValidator() gives it the commerce:checkout capability', function (): void {
 	$context   = paymentProviderContext();
-	$validator = new class() implements CheckoutValidator {
+	$validator = new class implements CheckoutValidator {
 		public function validate(OrderDraft $draft, PricingContext $context): ?string
 		{
 			return null;

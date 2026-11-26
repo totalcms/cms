@@ -206,7 +206,7 @@ describe('one order', function (): void {
 	});
 
 	it('starts a parcel\'s lines ticked to send, and leaves a download for the store to deliver', function (): void {
-		$html = ($this->page)($this->paid);
+		$html          = ($this->page)($this->paid);
 		[$mug, $ebook] = array_keys($this->paid->lines());
 
 		expect($html)->toContain('name="lines[]" value="' . $mug . '" checked', 'Mark as sent')

@@ -63,7 +63,7 @@ final readonly class OrderPageView
 
 		$left    = $this->refunds->refundable($order);
 		$pending = $this->refunds->pending($order);
-		$held = $order->paymentStatus() === 'review' ? $order->heldMoney() : null;
+		$held    = $order->paymentStatus() === 'review' ? $order->heldMoney() : null;
 
 		return [
 			'order'       => $order,
@@ -75,9 +75,9 @@ final readonly class OrderPageView
 			'prefix'      => $this->settings->orderNumberPrefix(),
 			// The provider's own name; its id when the provider is no longer installed.
 			'providerLabel' => $this->providers->get($order->provider())?->label() ?? $order->provider(),
-			'noteMax'     => OrderAdmin::NOTE_MAX,
-			'downloadMax' => $this->settings->downloadMaxCount(),
-			'refund'      => [
+			'noteMax'       => OrderAdmin::NOTE_MAX,
+			'downloadMax'   => $this->settings->downloadMaxCount(),
+			'refund'        => [
 				// As a person writes it ("29.98"), for the form's amount box.
 				'left'          => Money::of($left, $order->currency())->toDecimal(),
 				'leftFormatted' => ($this->money)($left, $order->currency()),
@@ -93,7 +93,6 @@ final readonly class OrderPageView
 			'held'        => $held instanceof Money ? ($this->money)($held->amount(), $held->currency()) : '',
 		];
 	}
-
 
 	/**
 	 * The order's money history, each line with what to call it.

@@ -113,7 +113,7 @@ describe('a booted site', function (): void {
 		bootWithPriceResolverExtension(true);
 		$c = $this->app->getContainer();
 
-		$ids = array_map(fn (PriceResolver $r): string => $r->id(), $c->get(PriceResolverRegistry::class)->ordered());
+		$ids    = array_map(fn (PriceResolver $r): string => $r->id(), $c->get(PriceResolverRegistry::class)->ordered());
 		$priced = $c->get(PricingService::class)->unitPrice(
 			ProductView::fromObject(['id' => 'fixture-priced', 'title' => 'Priced', 'status' => 'active', 'price' => 50]),
 			null,

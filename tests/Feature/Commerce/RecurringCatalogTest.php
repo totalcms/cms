@@ -11,6 +11,7 @@ use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter;
 
 /*
  * A product can be a plan: billed again every so often until it is
@@ -158,10 +159,10 @@ describe('what a template is told', function (): void {
 	});
 
 	it('prices a plan with its billing period', function (): void {
-		$price = $this->c->get(TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter::class)->price('club', 'yearly');
+		$price = $this->c->get(CommerceTwigAdapter::class)->price('club', 'yearly');
 
 		expect($price)->toMatchArray(['amount' => 10000, 'billing' => 'recurring', 'interval' => 'year', 'intervalCount' => 1, 'trialDays' => 0])
-			->and($this->c->get(TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter::class)->price('mug'))->toMatchArray(['billing' => 'once', 'interval' => '', 'intervalCount' => 0]);
+			->and($this->c->get(CommerceTwigAdapter::class)->price('mug'))->toMatchArray(['billing' => 'once', 'interval' => '', 'intervalCount' => 0]);
 	});
 
 	it('offers only the ways to pay that can bill a subscription, for a cart with a plan', function (): void {

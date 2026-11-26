@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\TestCase;
 use Tests\Fakes\RecordingHttpClient;
 use Tests\Fakes\RecordingLogger;
 use TotalCMS\Bundled\S3Uploads\Lifecycle\KeyCleanupListener;
@@ -23,7 +24,7 @@ describe('KeyCleanupListener', function (): void {
 	$own = fn (string $property, string $file, string $object = 'post-1'): string => "site/blog/{$object}/{$property}/{$file}";
 
 	/** @param list<HttpResponse> $responses */
-	$build = function (PHPUnit\Framework\TestCase $test, array $responses = [], array $settings = []): object {
+	$build = function (TestCase $test, array $responses = [], array $settings = []): object {
 		$kit          = new stdClass();
 		$kit->http    = new RecordingHttpClient(...$responses);
 		$kit->logger  = new RecordingLogger();
@@ -99,11 +100,11 @@ describe('KeyCleanupListener', function (): void {
 
 		expect($kit->http->requests)->toBe([]);
 	})->with([
-		'another object\'s path' => ['brochure', 'site/blog/post-2/brochure/0a1b2c3d-a.pdf'],
+		'another object\'s path'   => ['brochure', 'site/blog/post-2/brochure/0a1b2c3d-a.pdf'],
 		'another property\'s path' => ['brochure', 'site/blog/post-1/private/0a1b2c3d-a.pdf'],
-		'outside the prefix'     => ['brochure', 'other/blog/post-1/brochure/0a1b2c3d-a.pdf'],
-		'dot dot in the key'     => ['brochure', 'site/blog/post-1/brochure/../../../x/0a1b2c3d-a.pdf'],
-		'a folder property'      => ['shared', 'site/downloads/0a1b2c3d-a.pdf'],
+		'outside the prefix'       => ['brochure', 'other/blog/post-1/brochure/0a1b2c3d-a.pdf'],
+		'dot dot in the key'       => ['brochure', 'site/blog/post-1/brochure/../../../x/0a1b2c3d-a.pdf'],
+		'a folder property'        => ['shared', 'site/downloads/0a1b2c3d-a.pdf'],
 	]);
 
 	test('a key that moved to another s3 property of the object is kept', function () use ($build, $updated, $own): void {

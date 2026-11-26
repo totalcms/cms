@@ -212,7 +212,7 @@ describe('a paid event', function (): void {
 
 	it('does not rewrite lines when the product changes later', function (): void {
 		($this->processor)()->process(($this->paid)());
-		$tee = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'tee')->toArray();
+		$tee                               = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'tee')->toArray();
 		$tee['variants']['large']['price'] = 99;
 		$tee['title']                      = 'Renamed';
 		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectUpdater::class)->updateObject('products', 'tee', $tee));
@@ -418,7 +418,7 @@ describe('fulfilling lines', function (): void {
 	});
 
 	it('dispatches order.fulfilled once when the last line is fulfilled', function (): void {
-		$first = $this->fulfillment->markLineFulfilled($this->order->id(), 'l1', 'Posted Monday');
+		$first           = $this->fulfillment->markLineFulfilled($this->order->id(), 'l1', 'Posted Monday');
 		$heardAfterFirst = count(($this->named)(CoreEvent::ORDER_FULFILLED));
 		$this->fulfillment->markLineFulfilled($this->order->id(), 'l2');
 		$this->fulfillment->markLineFulfilled($this->order->id(), 'l2');

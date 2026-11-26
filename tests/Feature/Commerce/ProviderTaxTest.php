@@ -9,7 +9,6 @@ use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Order\Address;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
-use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;

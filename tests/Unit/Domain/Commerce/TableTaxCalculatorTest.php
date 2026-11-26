@@ -122,10 +122,10 @@ describe('which rate applies', function (): void {
 	it('is the most exact one for the address', function (string $country, string $region, string $label): void {
 		expect(($this->label)(taxAt($country, $region)))->toBe($label);
 	})->with([
-		'the region'                 => ['US', 'CA', 'California'],
-		'another region'             => ['US', 'NY', 'United States'],
-		'no region given'            => ['US', '', 'United States'],
-		'a country with no rate'     => ['DE', '', 'Everywhere'],
+		'the region'                  => ['US', 'CA', 'California'],
+		'another region'              => ['US', 'NY', 'United States'],
+		'no region given'             => ['US', '', 'United States'],
+		'a country with no rate'      => ['DE', '', 'Everywhere'],
 		'a region of another country' => ['CA', 'ON', 'Ontario'],
 		// CA the country is not CA the state.
 		'Canada, not California'     => ['CA', 'BC', 'Everywhere'],

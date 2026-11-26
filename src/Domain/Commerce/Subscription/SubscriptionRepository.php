@@ -11,6 +11,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderLineDraft;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -80,7 +81,7 @@ final readonly class SubscriptionRepository
 		];
 
 		$subscriptions = $this->collection();
-		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($subscriptions, $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->saver->saveObject($subscriptions, $data));
 
 		return $this->find($data['id']) ?? new SubscriptionData($data);
 	}
@@ -136,7 +137,7 @@ final readonly class SubscriptionRepository
 			}
 
 			$data = ['updated' => date(DATE_ATOM)] + $changed->toArray();
-			$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($this->collection(), $id, $data));
+			$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->updater->updateObject($this->collection(), $id, $data));
 
 			return new SubscriptionData($data);
 		});

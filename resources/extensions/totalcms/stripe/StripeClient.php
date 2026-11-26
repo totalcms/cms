@@ -37,9 +37,9 @@ final readonly class StripeClient
 	 * @param array<string,mixed> $form           nested arrays become `a[b][c]=…`
 	 * @param string              $idempotencyKey Stripe answers a repeat of the same key with the first answer
 	 *
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function post(string $path, array $form, string $idempotencyKey): array
 	{
@@ -52,9 +52,9 @@ final readonly class StripeClient
 	/**
 	 * @param array<string,mixed> $query
 	 *
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function get(string $path, array $query = []): array
 	{
@@ -62,9 +62,9 @@ final readonly class StripeClient
 	}
 
 	/**
-	 * @return array<string,mixed>
-	 *
 	 * @throws ProviderException
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function delete(string $path): array
 	{

@@ -94,7 +94,7 @@ final readonly class DiscountData
 	/** A plain decimal string for a number, or '' for none, zero, or anything that is not a number. */
 	private static function decimal(mixed $value): string
 	{
-		if (!is_int($value) && !is_float($value) && !(is_string($value) && is_numeric($value))) {
+		if (!is_int($value) && !is_float($value) && (!is_string($value) || !is_numeric($value))) {
 			return '';
 		}
 

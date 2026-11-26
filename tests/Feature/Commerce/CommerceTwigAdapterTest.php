@@ -47,7 +47,7 @@ describe('prices', function (): void {
 	});
 
 	test('a registered resolver changes the price and says so', function (): void {
-		$this->c->get(PriceResolverRegistry::class)->register(new class() implements PriceResolver {
+		$this->c->get(PriceResolverRegistry::class)->register(new class implements PriceResolver {
 			public function id(): string
 			{
 				return 'member';

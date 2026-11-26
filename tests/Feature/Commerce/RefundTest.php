@@ -16,7 +16,6 @@ use TotalCMS\Domain\Commerce\Payment\RefundRequest;
 use TotalCMS\Domain\Commerce\Payment\RefundResult;
 use TotalCMS\Domain\Commerce\Payment\TransactionLedger;
 use TotalCMS\Domain\Commerce\Service\RefundService;
-use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\post;
@@ -55,9 +54,9 @@ beforeEach(function (): void {
 	/** The provider's webhook, saying a refund of $amount went through. */
 	$this->confirm = fn (int $amount, string $eventId) => $this->c->get(PaymentEventProcessor::class)->process(commercePaymentEvent(PaymentEventType::Refunded, $this->order->id(), $amount, $eventId));
 	/** A provider that behaves as $refund says, or cannot refund at all, in place of the store's. */
-	$this->provider = function (?\Closure $refund = null, ?ProviderCapabilities $can = null): void {
+	$this->provider = function (?Closure $refund = null, ?ProviderCapabilities $can = null): void {
 		$provider = new class($refund, $can) extends FakePaymentProvider {
-			public function __construct(private ?\Closure $answer, private ?ProviderCapabilities $can)
+			public function __construct(private ?Closure $answer, private ?ProviderCapabilities $can)
 			{
 				parent::__construct(true, 'other');
 			}
@@ -69,7 +68,7 @@ beforeEach(function (): void {
 
 			public function refund(RefundRequest $request): RefundResult
 			{
-				return $this->answer instanceof \Closure ? ($this->answer)($request) : parent::refund($request);
+				return $this->answer instanceof Closure ? ($this->answer)($request) : parent::refund($request);
 			}
 		};
 		$this->c->get(PaymentProviderRegistry::class)->register($provider);

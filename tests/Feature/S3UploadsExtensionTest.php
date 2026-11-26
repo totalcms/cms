@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Bundled\S3Uploads\Field\S3Field;
 use Tests\Fakes\OfflineHttpClient;
+use TotalCMS\Bundled\S3Uploads\Field\S3Field;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
@@ -136,7 +137,7 @@ test('the preview route answers 404 for a file that is not there', function (): 
 // registered only once configured (cleanup, the nightly prune) would stay off
 // for good. Everything is therefore registered up front.
 test('every capability is there before the bucket is configured', function (): void {
-	$manager      = $this->app->getContainer()->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+	$manager      = $this->app->getContainer()->get(ExtensionManager::class);
 	$capabilities = array_keys(array_filter($manager->getCapabilities('totalcms/s3-uploads')));
 
 	expect($capabilities)->toContain('events:listen', 'automations', 'cli:commands', 'fields', 'routes:admin', 'routes:public', 'twig:globals', 'admin:assets');

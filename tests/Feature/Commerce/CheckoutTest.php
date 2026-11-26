@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
@@ -15,7 +17,9 @@ use TotalCMS\Domain\Commerce\Service\CheckoutValidatorRegistry;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
@@ -41,7 +45,7 @@ beforeEach(function (): void {
 	$this->fake   = $this->fakeProvider;
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'sample', 'title' => 'Free Sample', 'status' => 'active', 'type' => 'digital', 'price' => 0]);
-	$this->c->get(\TotalCMS\Domain\Auth\Service\ActorContext::class)->set(\TotalCMS\Domain\Auth\Data\Actor::anonymous());
+	$this->c->get(ActorContext::class)->set(Actor::anonymous());
 
 	// A browser on the site's own pages passes the CSRF check by its Origin.
 	// The test client sends none, so it carries the session's token instead.
@@ -225,9 +229,9 @@ describe('starting a checkout', function (): void {
 	it('refuses to sell more than there is', function (): void {
 		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'last-one', 'title' => 'Last One', 'status' => 'active', 'price' => 5, 'trackInventory' => true, 'stock' => 2]);
 		($this->add)('last-one', '', 2);
-		$product          = $this->c->get(\TotalCMS\Domain\Object\Service\ObjectFetcher::class)->fetchObject('products', 'last-one')->toArray();
+		$product          = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'last-one')->toArray();
 		$product['stock'] = 1;
-		$this->c->get(\TotalCMS\Domain\Object\Service\ObjectUpdater::class)->updateObject('products', 'last-one', $product);
+		$this->c->get(ObjectUpdater::class)->updateObject('products', 'last-one', $product);
 
 		$res = ($this->buy)([], ['Accept' => 'application/json']);
 
@@ -271,7 +275,7 @@ describe('starting a checkout', function (): void {
 		($this->add)('mug');
 		($this->buy)();
 		$order = ($this->only)();
-		$cart  = $this->c->get(\TotalCMS\Domain\Object\Service\ObjectFetcher::class)->fetchObjectFromDisk('carts', $order->cartKey())->toArray();
+		$cart  = $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('carts', $order->cartKey())->toArray();
 
 		expect($cart['status'])->toBe('checkout')
 			->and($cart['orderId'])->toBe($order->id())

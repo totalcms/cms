@@ -49,7 +49,7 @@ final readonly class DownloadLinks
 		$links = [];
 		foreach ($order->lines() as $lineId => $line) {
 			$file = $this->deliverableFor($line);
-			if ($file === null) {
+			if (!$file instanceof Deliverable) {
 				continue;
 			}
 
@@ -104,7 +104,7 @@ final readonly class DownloadLinks
 	{
 		$counts = is_array($line['downloads'] ?? null) ? $line['downloads'] : [];
 
-		return (int)array_sum(array_filter($counts, is_int(...)));
+		return array_sum(array_filter($counts, is_int(...)));
 	}
 
 	/**

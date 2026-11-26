@@ -6,9 +6,9 @@ namespace TotalCMS\Action\Commerce;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Download\Deliverable;
 use TotalCMS\Domain\Commerce\Download\Delivery;
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;

@@ -8,6 +8,9 @@ use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Builder\Data\StarterManifest;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
@@ -15,12 +18,18 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Template\Service\TemplateMigrationService;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -202,19 +211,19 @@ it('says why, and scaffolds nothing, on a site without Commerce', function (): v
 	$this->c->set(CommerceGate::class, new ClosedCommerceGate());
 	$this->c->set(CommerceStarterSetup::class, new CommerceStarterSetup(
 		$this->c->get(CommerceGate::class),
-		$this->c->get(TotalCMS\Domain\Commerce\Service\CommerceInstaller::class),
-		$this->c->get(TotalCMS\Domain\Settings\Services\SettingsSaver::class),
+		$this->c->get(CommerceInstaller::class),
+		$this->c->get(SettingsSaver::class),
 		$this->c->get(Config::class),
 	));
 	$service = new StarterService(
-		$this->c->get(TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
-		$this->c->get(TotalCMS\Domain\Builder\Service\BuilderInstaller::class),
-		$this->c->get(TotalCMS\Domain\Template\Service\TemplateLister::class),
-		$this->c->get(TotalCMS\Domain\Template\Service\TemplateMigrationService::class),
-		$this->c->get(TotalCMS\Domain\JumpStart\Service\JumpStartImporter::class),
-		$this->c->get(TotalCMS\Domain\Builder\Service\BuilderOrderService::class),
+		$this->c->get(BuilderConfigService::class),
+		$this->c->get(BuilderInstaller::class),
+		$this->c->get(TemplateLister::class),
+		$this->c->get(TemplateMigrationService::class),
+		$this->c->get(JumpStartImporter::class),
+		$this->c->get(BuilderOrderService::class),
 		$this->c->get(CommerceStarterSetup::class),
-		$this->c->get(TotalCMS\Factory\LoggerFactory::class),
+		$this->c->get(LoggerFactory::class),
 	);
 
 	$result = $service->scaffold('shop', true);

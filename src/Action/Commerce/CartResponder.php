@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Commerce\Cart\CartLineView;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartView;
+use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
@@ -236,18 +237,18 @@ final readonly class CartResponder
 			'count'    => $cart->count,
 			'subtotal' => $cart->subtotal->amount(),
 			// What the code takes off, worked out now. The cart itself keeps only the code.
-			'discount' => $cart->discount === null ? null : ['code' => $cart->discount->code, 'type' => $cart->discount->type, 'amount' => $cart->discount->amount],
+			'discount' => $cart->discount instanceof AppliedDiscount ? ['code' => $cart->discount->code, 'type' => $cart->discount->type, 'amount' => $cart->discount->amount] : null,
 			'total'    => $cart->total->amount(),
 			'currency' => $cart->subtotal->currency(),
 			'lines'    => array_map(static fn (CartLineView $line): array => [
-				'lineKey'      => $line->lineKey,
-				'productId'    => $line->productId,
-				'variantId'    => $line->variantId,
-				'title'        => $line->title,
-				'variantTitle' => $line->variantTitle,
-				'image'        => $line->image,
-				'qty'          => $line->qty,
-				'unitPrice'    => $line->unitPrice->amount(),
+				'lineKey'       => $line->lineKey,
+				'productId'     => $line->productId,
+				'variantId'     => $line->variantId,
+				'title'         => $line->title,
+				'variantTitle'  => $line->variantTitle,
+				'image'         => $line->image,
+				'qty'           => $line->qty,
+				'unitPrice'     => $line->unitPrice->amount(),
 				'lineTotal'     => $line->lineTotal->amount(),
 				'discountTotal' => $line->discountTotal,
 				'priceSource'   => $line->priceSource,

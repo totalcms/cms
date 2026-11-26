@@ -9,6 +9,7 @@ use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Storage\FileLock;
@@ -84,7 +85,7 @@ final readonly class DiscountRepository
 			$used                = $stored['usedCount'] ?? 0;
 			$stored['usedCount'] = (is_numeric($used) ? (int)$used : 0) + 1;
 
-			$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($collection, $id, $stored));
+			$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->updater->updateObject($collection, $id, $stored));
 		});
 	}
 

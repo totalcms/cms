@@ -134,9 +134,9 @@ it('asks the provider to send the event again when handling it fails, and handle
 	$this->fake->queueEvent(commercePaidEvent($this->order->id(), 1250, 'evt_1'));
 	$this->fake->queueEvent(commercePaidEvent($this->order->id(), 1250, 'evt_1'));
 
-	$first  = ($this->hook)();
+	$first   = ($this->hook)();
 	$between = ($this->found)();
-	$second = ($this->hook)();
+	$second  = ($this->hook)();
 
 	expect($first->getStatusCode())->toBe(500)
 		->and((string)$first->getBody())->not->toContain('the queue is locked')

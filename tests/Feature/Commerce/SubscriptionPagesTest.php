@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Odan\Session\PhpSession;
 use Tests\Fakes\ClosedCommerceGate;
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
@@ -13,6 +14,7 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
 use TotalCMS\Domain\Commerce\Payment\SubscriptionEvent;
 use TotalCMS\Domain\Commerce\Payment\SubscriptionEventType;
+use TotalCMS\Domain\Commerce\Service\CheckoutService;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionAccess;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
@@ -21,6 +23,7 @@ use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -257,7 +260,7 @@ describe('in the store\'s own templates', function (): void {
 		post('/commerce/cart/clear');
 		postJson('/commerce/cart/add', ['productId' => 'club', 'variantId' => '', 'qty' => 2]);
 		post('/commerce/checkout', ['provider' => 'fake-sub', 'email' => 'pat@example.test'], ['Accept' => 'application/json']);
-		$this->c->get(ActorContext::class)->set(new Actor(TotalCMS\Domain\Auth\Data\ActorKind::Member, 'pat', 'customers'));
+		$this->c->get(ActorContext::class)->set(new Actor(ActorKind::Member, 'pat', 'customers'));
 
 		$out = renderTwig('{% for s in cms.commerce.subscriptions() %}{{ s.status }}:{{ s.recurringTotal }}:{{ s.url ? "link" : "none" }}:{{ s.accessToken is defined ? "SECRET" : "" }};{% endfor %}');
 
@@ -267,7 +270,7 @@ describe('in the store\'s own templates', function (): void {
 	it('gives a guest none, and another customer none of Pat\'s', function (): void {
 		$this->c->get(ActorContext::class)->set(Actor::anonymous());
 		$guest = renderTwig('{{ cms.commerce.subscriptions()|length }}');
-		$this->c->get(ActorContext::class)->set(new Actor(TotalCMS\Domain\Auth\Data\ActorKind::Member, 'sam', 'customers'));
+		$this->c->get(ActorContext::class)->set(new Actor(ActorKind::Member, 'sam', 'customers'));
 
 		expect($guest)->toBe('0')->and(renderTwig('{{ cms.commerce.subscriptions()|length }}'))->toBe('0');
 	});
@@ -283,7 +286,7 @@ describe('in the store\'s own templates', function (): void {
 
 	it('makes the signed address of a subscription for the store\'s own emails, and for nobody who made one up', function (): void {
 		$whole = ($this->kept)()->toArray();
-		$this->c->get(TotalCMS\Domain\Twig\Service\TwigEngine::class);
+		$this->c->get(TwigEngine::class);
 
 		$url  = renderTwig('{{ cms.commerce.subscriptionUrl(data) }}', ['data' => $whole]);
 		$fake = renderTwig('{{ cms.commerce.subscriptionUrl(data) }}', ['data' => ['id' => $this->id, 'accessToken' => 'guessed']]);
@@ -300,7 +303,7 @@ describe('in the store\'s own templates', function (): void {
 	});
 
 	it('links to the subscription from the page of the order that started it', function (): void {
-		$url  = $this->c->get(TotalCMS\Domain\Commerce\Service\CheckoutService::class)->orderUrl('return', $this->order);
+		$url  = $this->c->get(CheckoutService::class)->orderUrl('return', $this->order);
 		$path = (string)parse_url($url, PHP_URL_PATH) . '?' . (string)parse_url($url, PHP_URL_QUERY);
 		$html = html_entity_decode((string)get($path)->getBody());
 

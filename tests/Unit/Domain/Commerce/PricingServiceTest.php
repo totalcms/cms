@@ -28,7 +28,7 @@ beforeEach(function (): void {
 	$this->usd      = new PricingContext('USD', null, null, []);
 
 	$this->product = ProductView::fromObject([
-		'id' => 'pro', 'title' => 'Pro', 'status' => 'active', 'price' => 299,
+		'id'       => 'pro', 'title' => 'Pro', 'status' => 'active', 'price' => 299,
 		'variants' => ['yearly' => ['id' => 'yearly', 'title' => 'Yearly', 'price' => 249.5], 'plain' => ['id' => 'plain', 'title' => 'Plain']],
 	]);
 

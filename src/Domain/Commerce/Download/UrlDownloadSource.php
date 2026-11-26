@@ -25,16 +25,16 @@ final readonly class UrlDownloadSource implements DownloadSource
 
 	public function find(string $collection, array $product): ?Deliverable
 	{
-		$url = self::url($product);
+		$url = $this->url($product);
 
-		return $url === '' ? null : new Deliverable(self::name($url), 0, self::PROPERTY);
+		return $url === '' ? null : new Deliverable($this->name($url), 0, self::PROPERTY);
 	}
 
 	public function deliver(string $collection, array $product): ?Delivery
 	{
-		$url = self::url($product);
+		$url = $this->url($product);
 
-		return $url === '' ? null : Delivery::redirect(self::name($url), $url);
+		return $url === '' ? null : Delivery::redirect($this->name($url), $url);
 	}
 
 	/**
@@ -43,7 +43,7 @@ final readonly class UrlDownloadSource implements DownloadSource
 	 *
 	 * @param array<string,mixed> $product
 	 */
-	private static function url(array $product): string
+	private function url(array $product): string
 	{
 		$url = is_string($product[self::PROPERTY] ?? null) ? trim($product[self::PROPERTY]) : '';
 		if ($url === '' || preg_match('/[\s\x00-\x1f]/', $url) === 1) {
@@ -59,7 +59,7 @@ final readonly class UrlDownloadSource implements DownloadSource
 	}
 
 	/** What to call it: the file the link ends in, or the host when it ends in none. */
-	private static function name(string $url): string
+	private function name(string $url): string
 	{
 		$name = rawurldecode(basename((string)parse_url($url, PHP_URL_PATH)));
 

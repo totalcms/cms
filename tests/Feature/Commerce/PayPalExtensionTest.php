@@ -102,7 +102,7 @@ function payPalBuysAMug(RecordingHttpClient $http): OrderData
 /** PayPal's webhook for a completed capture of $order, with the headers it signs with. */
 function payPalWebhookPost(OrderData $order, string $value = '12.50')
 {
-	$event                               = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/paypal/PAYMENT.CAPTURE.COMPLETED.json'), true);
+	$event                                = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/paypal/PAYMENT.CAPTURE.COMPLETED.json'), true);
 	$event['resource']['custom_id']       = $order->id();
 	$event['resource']['amount']['value'] = $value;
 

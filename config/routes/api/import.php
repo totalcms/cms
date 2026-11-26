@@ -7,11 +7,11 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
-use TotalCMS\Middleware\Commerce\CommerceCollectionGuardMiddleware;
 use TotalCMS\Middleware\Access\ImportAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
+use TotalCMS\Middleware\Commerce\CommerceCollectionGuardMiddleware;
 use TotalCMS\Middleware\License\RssImportEditionMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {

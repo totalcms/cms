@@ -13,7 +13,7 @@ use TotalCMS\Bundled\S3Uploads\Setup\BucketSnippets;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
- * GET|POST /admin/ext/totalcms/s3-uploads/test (super admins)
+ * GET|POST /admin/ext/totalcms/s3-uploads/test (super admins).
  *
  * The Bucket Setup page. POST lists the first key under the prefix, which
  * proves the endpoint, region, bucket and both keys in one request. The page

@@ -186,7 +186,7 @@ final readonly class SubscriptionEventProcessor
 		}
 
 		$paid       = $order->paymentStatus() === OrderStateMachine::PAID;
-		$abandoned  = in_array($order->paymentStatus(), ['expired'], true);
+		$abandoned  = $order->paymentStatus() === 'expired';
 		$transition = SubscriptionTransition::none('unprocessed');
 		if ($paid || $abandoned) {
 			$this->subscriptions->withLock($id, function (SubscriptionData $subscription) use ($paid, $event, &$transition): SubscriptionData {

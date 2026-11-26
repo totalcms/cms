@@ -7,8 +7,8 @@ namespace TotalCMS\Action\Commerce;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
+use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\StorefrontPage;
@@ -77,10 +77,10 @@ final readonly class OrderPage
 			'order'   => $this->downloads->forBuyer($order),
 			// For an order that is a payment on a subscription: where its buyer manages that.
 			'subscriptionUrl' => $this->subscriptions->urlForOrder($order),
-			'token'   => $this->token($request),
-			'base'    => $this->config->api,
-			'polls'   => $polls,
-			'waiting' => $order->paymentStatus() === 'pending' && $polls < self::MAX_POLLS,
+			'token'           => $this->token($request),
+			'base'            => $this->config->api,
+			'polls'           => $polls,
+			'waiting'         => $order->paymentStatus() === 'pending' && $polls < self::MAX_POLLS,
 		];
 	}
 

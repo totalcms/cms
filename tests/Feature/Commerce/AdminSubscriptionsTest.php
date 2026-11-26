@@ -19,7 +19,9 @@ use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -87,8 +89,8 @@ beforeEach(function (): void {
 		signInAs($this->app, 'pat', 'customers');
 		$session = $this->c->get(PhpSession::class);
 		$session->isStarted() || $session->start();
-		$session->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_USER);
-		$session->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_COLLECTION);
+		$session->delete(SessionKeys::AUTH_USER);
+		$session->delete(SessionKeys::AUTH_COLLECTION);
 	};
 	if ($stock) {
 		($this->subscribe)('club', 'pat@example.test', 'sub_1', 'pat');
@@ -281,7 +283,7 @@ describe('what staff can do to one', function (): void {
 		signInAs($this->app, 'boss', 'auth');
 		$this->c->get(ActorContext::class)->runAs(Actor::system(), function (): void {
 			$pat = $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('customers', 'pat')->toArray();
-			$this->c->get(TotalCMS\Domain\Object\Service\ObjectUpdater::class)->updateObject('customers', 'pat', ['groups' => []] + $pat);
+			$this->c->get(ObjectUpdater::class)->updateObject('customers', 'pat', ['groups' => []] + $pat);
 		});
 		$this->fake->subscriptions['sub_1'] = new SubscriptionEvent('fake-sub', 'state_sub_1', SubscriptionEventType::Updated, $this->pat->id(), 'sub_1', 'active');
 

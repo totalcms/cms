@@ -129,8 +129,8 @@ describe('changing an order', function (): void {
 		$stale = $this->orders->find($this->order->id());
 
 		// Another process pays the order while this one is still holding its old copy.
-		$file          = cmsDataDir() . 'orders/' . $this->order->id() . '.json';
-		$onDisk        = json_decode((string)file_get_contents($file), true);
+		$file                    = cmsDataDir() . 'orders/' . $this->order->id() . '.json';
+		$onDisk                  = json_decode((string)file_get_contents($file), true);
 		$onDisk['paymentStatus'] = 'paid';
 		file_put_contents($file, json_encode($onDisk));
 

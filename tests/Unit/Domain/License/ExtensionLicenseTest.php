@@ -82,7 +82,7 @@ it('answers licensed() inside register()', function (bool $entitled): void {
 	$storage = $this->createMock(StorageFilesystemAdapter::class);
 	$context = new ExtensionContext($manifest, '/tmp/acme-thing', $container, new ExtensionSettingsManager($storage), new NullLogger());
 
-	$extension = new class() implements ExtensionInterface {
+	$extension = new class implements ExtensionInterface {
 		public ?bool $licensed = null;
 
 		public function register(ExtensionContext $context): void

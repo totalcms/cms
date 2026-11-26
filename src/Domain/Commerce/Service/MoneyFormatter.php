@@ -43,7 +43,7 @@ final readonly class MoneyFormatter
 
 	private function plain(Money $money): string
 	{
-		$decimal = ltrim($money->toDecimal(), '-');
+		$decimal            = ltrim($money->toDecimal(), '-');
 		[$whole, $fraction] = array_pad(explode('.', $decimal, 2), 2, '');
 
 		$number = number_format((float)$whole) . ($fraction === '' ? '' : '.' . $fraction);

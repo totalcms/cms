@@ -70,10 +70,10 @@ final readonly class UploadService
 	/**
 	 * @param int $size bytes, as the browser reports them
 	 *
-	 * @return array{url:string, method:string, headers:array<string,string>, key:string, token:string}
-	 *
 	 * @throws UploadError when the upload is refused
 	 * @throws S3Exception
+	 *
+	 * @return array{url:string, method:string, headers:array<string,string>, key:string, token:string}
 	 */
 	public function presign(string $collection, string $id, string $property, string $filename, int $size, string $mime): array
 	{
@@ -136,10 +136,10 @@ final readonly class UploadService
 	/**
 	 * @param float|null $duration seconds, as the browser measured them; kept for audio and video only
 	 *
-	 * @return array{value:mixed, item:array<string,mixed>} the property's new stored value, and the pointer just added
-	 *
 	 * @throws UploadError when the upload is refused
 	 * @throws S3Exception
+	 *
+	 * @return array{value:mixed, item:array<string,mixed>} the property's new stored value, and the pointer just added
 	 */
 	public function commit(string $token, ?float $duration): array
 	{
@@ -222,9 +222,9 @@ final readonly class UploadService
 	 *
 	 * @param array{field:string, settings:array<string,mixed>} $field
 	 *
-	 * @return array{value:mixed, item:array<string,mixed>}
-	 *
 	 * @throws UploadError when the object is gone, the rules refuse the file, or the save does not keep the pointer
+	 *
+	 * @return array{value:mixed, item:array<string,mixed>}
 	 */
 	private function save(string $collection, string $id, string $property, array $field, Pointer $pointer): array
 	{
@@ -313,9 +313,9 @@ final readonly class UploadService
 	/**
 	 * The property's valid pointers as they are on disk right now.
 	 *
-	 * @return list<Pointer>
-	 *
 	 * @throws \UnexpectedValueException when the object is gone
+	 *
+	 * @return list<Pointer>
 	 */
 	private function currentPointers(string $collection, string $id, string $property, string $field): array
 	{

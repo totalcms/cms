@@ -19,7 +19,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * GET|HEAD /api/ext/totalcms/s3-uploads/stream/{collection}/{id}/{property}[/{file}]
- * GET|HEAD /api/ext/totalcms/s3-uploads/download/{collection}/{id}/{property}[/{file}]
+ * GET|HEAD /api/ext/totalcms/s3-uploads/download/{collection}/{id}/{property}[/{file}].
  *
  * The public links templates print, named and behaving as core's own
  * `/stream` and `/download` file routes do. Both count the hit and redirect to

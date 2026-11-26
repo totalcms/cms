@@ -8,6 +8,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderLabels;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionProvider;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery;
@@ -30,9 +31,9 @@ final readonly class SubscriptionPageView
 
 	/** Why a subscription needs someone → [a few words for the list, a sentence for its page]. */
 	private const ATTENTION = [
-		'amount_mismatch' => ['Payment mismatch', 'A renewal payment did not match what this subscription is billed at. Nothing was delivered for it. Check the payment at the provider, then accept or refund it on its order.'],
+		'amount_mismatch'      => ['Payment mismatch', 'A renewal payment did not match what this subscription is billed at. Nothing was delivered for it. Check the payment at the provider, then accept or refund it on its order.'],
 		'renewal_before_start' => ['Renewal not recorded', 'The provider took a renewal payment before this subscription\'s first order was accepted here, so that payment has no order. Accept or refund the first order, then check the payment at the provider.'],
-		'grant_failed'    => ['Access not granted', 'The subscriber could not be given the access they pay for: their account is missing. Once it exists, check this subscription with the provider.'],
+		'grant_failed'         => ['Access not granted', 'The subscriber could not be given the access they pay for: their account is missing. Once it exists, check this subscription with the provider.'],
 	];
 
 	/** How many of a subscription's payments its page lists. */
@@ -92,7 +93,7 @@ final readonly class SubscriptionPageView
 	{
 		$reason   = $subscription->needsAttention();
 		$provider = $this->providers->get($subscription->provider());
-		$running  = $subscription->isLive() && $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) !== null;
+		$running  = $subscription->isLive() && $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) instanceof SubscriptionProvider;
 
 		return [
 			'subscription'  => $subscription,
@@ -109,7 +110,7 @@ final readonly class SubscriptionPageView
 			'providerLabel' => $provider?->label() ?? $subscription->provider(),
 			'can'           => [
 				'cancel' => $running,
-				'sync'   => $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) !== null,
+				'sync'   => $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) instanceof SubscriptionProvider,
 			],
 		];
 	}

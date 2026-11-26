@@ -6,10 +6,10 @@ namespace TotalCMS\Action\Commerce;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
 use TotalCMS\Domain\Commerce\Service\CheckoutService;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\StorefrontPage;
-use TotalCMS\Domain\Commerce\Payment\EmbeddedCheckout;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 

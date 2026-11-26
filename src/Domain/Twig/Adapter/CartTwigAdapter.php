@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\SessionInterface;
-use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
-use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Cart\CartLineView;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
 use TotalCMS\Domain\Commerce\Cart\CartView;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
+use TotalCMS\Domain\Commerce\Order\CheckoutInput;
+use TotalCMS\Domain\Commerce\Order\TaxCalculator;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
-use TotalCMS\Domain\Commerce\Order\CheckoutInput;
-use TotalCMS\Domain\Commerce\Order\TaxCalculator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
@@ -87,18 +88,18 @@ final readonly class CartTwigAdapter
 	public function lines(): array
 	{
 		return array_map(fn (CartLineView $line): array => [
-			'lineKey'      => $line->lineKey,
-			'productId'    => $line->productId,
-			'variantId'    => $line->variantId,
-			'title'        => $line->title,
-			'variantTitle' => $line->variantTitle,
-			'image'        => $line->image,
-			'qty'          => $line->qty,
-			'unitPrice'    => $line->unitPrice->amount(),
-			'lineTotal'    => $line->lineTotal->amount(),
+			'lineKey'       => $line->lineKey,
+			'productId'     => $line->productId,
+			'variantId'     => $line->variantId,
+			'title'         => $line->title,
+			'variantTitle'  => $line->variantTitle,
+			'image'         => $line->image,
+			'qty'           => $line->qty,
+			'unitPrice'     => $line->unitPrice->amount(),
+			'lineTotal'     => $line->lineTotal->amount(),
 			'discountTotal' => $line->discountTotal,
-			'currency'     => $line->lineTotal->currency(),
-			'url'          => $this->catalog->url($line->productId),
+			'currency'      => $line->lineTotal->currency(),
+			'url'           => $this->catalog->url($line->productId),
 			// How the line is billed: `once`, or `recurring` every `intervalCount` `interval`s.
 			'billing'       => $line->billing,
 			'interval'      => $line->interval,
@@ -128,7 +129,7 @@ final readonly class CartTwigAdapter
 	public function discount(): ?array
 	{
 		$view = $this->view();
-		if (!$view instanceof CartView || $view->discount === null) {
+		if (!$view instanceof CartView || !$view->discount instanceof AppliedDiscount) {
 			return null;
 		}
 

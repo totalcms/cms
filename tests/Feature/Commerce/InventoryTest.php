@@ -378,8 +378,8 @@ describe('telling the site', function (): void {
 
 	it('says what a refund put back, and nothing about low or out', function (): void {
 		seedCommerceStaff($this->app);
-		$order  = ($this->order)(['shirt:small' => 1]);
-		$result = $this->c->get(RefundService::class)->request($order->id(), $order->grandTotal(), 'Returned', true, new Actor(ActorKind::Admin, 'boss', 'auth'));
+		$order       = ($this->order)(['shirt:small' => 1]);
+		$result      = $this->c->get(RefundService::class)->request($order->id(), $order->grandTotal(), 'Returned', true, new Actor(ActorKind::Admin, 'boss', 'auth'));
 		$this->heard = [];
 
 		$this->c->get(PaymentEventProcessor::class)->process(

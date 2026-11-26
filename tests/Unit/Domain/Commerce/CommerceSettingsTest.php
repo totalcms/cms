@@ -191,10 +191,10 @@ it('reads a shipping amount whether it was saved as a number or as text', functi
 	expect($s->shippingFlatRate())->toBe($flat)
 		->and($s->shippingFreeOver())->toBe($freeOver);
 })->with([
-	'a number with cents' => [4.95, '4.95', '4.95'],
-	'a whole number'      => [50, '50', '50'],
+	'a number with cents'   => [4.95, '4.95', '4.95'],
+	'a whole number'        => [50, '50', '50'],
 	'a float that is whole' => [50.0, '50', '50'],
-	'text, as before'     => [' 12.50 ', '12.50', '12.50'],
+	'text, as before'       => [' 12.50 ', '12.50', '12.50'],
 	// Free over nothing would be free for everyone: an empty price field is no threshold.
 	'nothing'             => [0, '0', ''],
 	'nothing, as text'    => ['', '0', ''],

@@ -8,6 +8,7 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Tests\Fakes\RecordingHttpClient;
 use TotalCMS\Bundled\S3Uploads\Access\S3Access;
 use TotalCMS\Bundled\S3Uploads\S3\S3Client;
@@ -25,7 +26,6 @@ use TotalCMS\Domain\Property\Data\JsonData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Security\SignedToken;
-use Psr\Log\NullLogger;
 use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\FileLock;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
@@ -115,7 +115,7 @@ if (!function_exists('s3SchemaFetcher')) {
 	 */
 	function s3UploadService(TestCase $test, array $with = []): object
 	{
-		$kit = new class () {
+		$kit = new class {
 			public UploadService $service;
 			public SignedToken $tokens;
 			public RecordingHttpClient $http;
@@ -138,7 +138,7 @@ if (!function_exists('s3SchemaFetcher')) {
 		};
 
 		$kit->siteKey = (string)($with['siteKey'] ?? bin2hex(random_bytes(16)));
-		$kit->clock   = new class () {
+		$kit->clock   = new class {
 			public int $now = 1788616931; // 2026-09-05T14:02:11Z
 		};
 		$kit->tokens  = new SignedToken(fn (): string => $kit->siteKey, fn (): int => $kit->clock->now);

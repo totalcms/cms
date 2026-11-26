@@ -12,7 +12,7 @@ use TotalCMS\Bundled\S3Uploads\Serving\DownloadCounter;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * GET /admin/ext/totalcms/s3-uploads/stats?collection=&id=
+ * GET /admin/ext/totalcms/s3-uploads/stats?collection=&id=.
  *
  * Answers `{"counts": {"brochure": 12}, "totals": {"brochure": 40}}`: the
  * download counts of one object's current files, and each property's all-time

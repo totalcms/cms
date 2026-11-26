@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Cart;
 
 use TotalCMS\Domain\Commerce\Data\ProductView;
-use TotalCMS\Domain\Commerce\Payment\Recurrence;
-use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Discount\DiscountLine;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
+use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;

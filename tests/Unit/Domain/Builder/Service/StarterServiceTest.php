@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Builder\Service;
 
-use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -13,6 +12,7 @@ use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
+use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;

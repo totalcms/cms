@@ -3,22 +3,37 @@
 declare(strict_types=1);
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Access\AccessGrantService;
+use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
 use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\OrderFulfillment;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
 use TotalCMS\Domain\Commerce\Payment\SubscriptionEvent;
 use TotalCMS\Domain\Commerce\Payment\SubscriptionEventType as T;
 use TotalCMS\Domain\Commerce\Payment\TransactionLedger;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
+use TotalCMS\Domain\Commerce\Subscription\PaymentFailedNotifier;
 use TotalCMS\Domain\Commerce\Subscription\RenewalOrderFactory;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEvents;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionStateMachine;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Money\Money;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Factory\LoggerFactory;
 
 use function TotalCMS\Slim\Pest\post;
 use function TotalCMS\Slim\Pest\postJson;
@@ -134,7 +149,7 @@ describe('when something goes wrong halfway', function (): void {
 		($this->route)(($this->firstPayment)());
 		$this->heard = [];
 		// The email cannot be queued the first time it is tried.
-		$notifier = new class($this->c->get(TotalCMS\Domain\JobQueue\Service\JobQueuer::class), $this->c->get(TotalCMS\Domain\Commerce\Service\CommerceSettings::class)) extends TotalCMS\Domain\Commerce\Subscription\PaymentFailedNotifier {
+		$notifier = new class($this->c->get(JobQueuer::class), $this->c->get(CommerceSettings::class)) extends PaymentFailedNotifier {
 			public int $tries = 0;
 
 			public function notify(SubscriptionData $subscription): void
@@ -146,17 +161,17 @@ describe('when something goes wrong halfway', function (): void {
 			}
 		};
 		$c = $this->c;
-		$c->set(TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor::class, new TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor(
+		$c->set(SubscriptionEventProcessor::class, new SubscriptionEventProcessor(
 			$c->get(SubscriptionRepository::class),
-			$c->get(TotalCMS\Domain\Commerce\Subscription\SubscriptionStateMachine::class),
+			$c->get(SubscriptionStateMachine::class),
 			$c->get(RenewalOrderFactory::class),
 			$c->get(OrderRepository::class),
-			fn () => $c->get(TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor::class),
-			$c->get(TotalCMS\Domain\Commerce\Access\AccessGrantService::class),
+			fn () => $c->get(PaymentEventProcessor::class),
+			$c->get(AccessGrantService::class),
 			$notifier,
-			$c->get(TotalCMS\Domain\Commerce\Order\OrderFulfillment::class),
-			$c->get(TotalCMS\Domain\Commerce\Subscription\SubscriptionEvents::class),
-			$c->get(TotalCMS\Factory\LoggerFactory::class),
+			$c->get(OrderFulfillment::class),
+			$c->get(SubscriptionEvents::class),
+			$c->get(LoggerFactory::class),
 		));
 		$failed = ($this->event)(T::PaymentFailed, ['providerInvoiceRef' => 'in_2']);
 
@@ -180,7 +195,7 @@ describe('when something goes wrong halfway', function (): void {
 		($this->route)(($this->firstPayment)());
 		$held = [$this->orders->find($first->id())->paymentStatus(), ($this->kept)()->status()];
 
-		$this->c->get(TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor::class)->accept($first->id(), 'boss');
+		$this->c->get(PaymentEventProcessor::class)->accept($first->id(), 'boss');
 		$sub = ($this->kept)();
 
 		expect($gaveUp)->toBe('canceled')
@@ -316,13 +331,13 @@ describe('a period paid', function (): void {
 
 		($this->route)(($this->renewal)());
 
-		expect($this->c->get(TotalCMS\Domain\Commerce\Discount\DiscountRepository::class)->find('ALWAYS10')?->usedCount)->toBe(3)
+		expect($this->c->get(DiscountRepository::class)->find('ALWAYS10')?->usedCount)->toBe(3)
 			->and(($this->renewalOrder)()->discountCode())->toBe('ALWAYS10');
 	});
 
 	it('bills what was signed up for, whatever the product costs now', function (): void {
-		$club = $this->c->get(TotalCMS\Domain\Object\Service\ObjectFetcher::class)->fetchObject('products', 'club')->toArray();
-		$this->c->get(TotalCMS\Domain\Auth\Service\ActorContext::class)->runAs(TotalCMS\Domain\Auth\Data\Actor::system(), fn () => $this->c->get(TotalCMS\Domain\Object\Service\ObjectUpdater::class)->updateObject('products', 'club', ['price' => 50] + $club));
+		$club = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'club')->toArray();
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectUpdater::class)->updateObject('products', 'club', ['price' => 50] + $club));
 		($this->route)(($this->renewal)());
 
 		expect(($this->renewalOrder)()->paymentStatus())->toBe('paid')

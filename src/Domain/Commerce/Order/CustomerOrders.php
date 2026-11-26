@@ -60,7 +60,7 @@ final readonly class CustomerOrders
 		}
 
 		return array_map(
-			fn (OrderData $order): array => $this->downloads->forBuyer($order),
+			$this->downloads->forBuyer(...),
 			$this->orders->forCustomer($customer['collection'], $customer['id'], $limit),
 		);
 	}

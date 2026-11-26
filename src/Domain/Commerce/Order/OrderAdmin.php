@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
-use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
 
 /**
  * What staff do to an order from the admin: mark lines sent, keep a note,
@@ -97,9 +97,9 @@ final readonly class OrderAdmin
 	/**
 	 * Send the buyer their receipt again.
 	 *
-	 * @return bool false when the store has no receipt mailer to send with
-	 *
 	 * @throws CommerceException no such order, or one nobody paid for
+	 *
+	 * @return bool false when the store has no receipt mailer to send with
 	 */
 	public function resendReceipt(string $orderId): bool
 	{

@@ -9,6 +9,7 @@ use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -89,7 +90,7 @@ final readonly class OrderRepository
 		];
 
 		$orders = $this->collection();
-		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($orders, $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->saver->saveObject($orders, $data));
 
 		return $this->find($data['id']) ?? new OrderData($data);
 	}
@@ -125,7 +126,7 @@ final readonly class OrderRepository
 		];
 
 		$orders = $this->collection();
-		$this->actors->runAs(Actor::system(), fn () => $this->saver->saveObject($orders, $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->saver->saveObject($orders, $data));
 
 		return $this->find($id) ?? new OrderData($data);
 	}
@@ -172,7 +173,7 @@ final readonly class OrderRepository
 	{
 		$orders = $this->collection();
 		$data   = ['updated' => date(DATE_ATOM)] + $order->toArray();
-		$this->actors->runAs(Actor::system(), fn () => $this->updater->updateObject($orders, $order->id(), $data));
+		$this->actors->runAs(Actor::system(), fn (): ObjectData => $this->updater->updateObject($orders, $order->id(), $data));
 
 		return new OrderData($data);
 	}
