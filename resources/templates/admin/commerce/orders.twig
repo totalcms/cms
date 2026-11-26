@@ -1,0 +1,62 @@
+{#
+	The store's orders. The filter form posts with HTMX and gets the table
+	back (partials/orders-table.twig); without JavaScript it is a plain GET.
+
+	Autoescape is off in this app, so everything a buyer typed is escaped.
+#}
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<main class="dash-main-content commerce-admin" style="max-width:100%;">
+	<header class="commerce-admin-header">
+		<h1>{{ t('commerce.orders') }}</h1>
+		<a class="dash-button transparent" href="commerce/subscriptions">{{ t('commerce.subscriptions') }}</a>
+		{% if cms.auth.isAdmin() %}
+			<a class="dash-button transparent" href="settings/commerce">Store settings</a>
+		{% endif %}
+	</header>
+
+	<section class="dash-content-section commerce-orders">
+		{# `totalform` for styling; data-method=GET + no-save/no-unsaved-warning keep
+		   TotalForm from taking over this plain GET filter form. #}
+		<form class="commerce-filters totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="commerce/orders"
+			hx-get="commerce/orders" hx-target="#commerce-orders-table" hx-swap="outerHTML" hx-push-url="true" hx-trigger="submit, change">
+			<label class="commerce-filter-search">Search
+				<input type="search" name="q" value="{{ filters.q|default('')|e }}" placeholder="Order number or email">
+			</label>
+			<label>Payment
+				<select name="paymentStatus">
+					<option value="">Any payment</option>
+					{% for value, label in choices.payment %}
+						<option value="{{ value }}"{{ filters.paymentStatus|default('') == value ? ' selected' }}>{{ label }}</option>
+					{% endfor %}
+				</select>
+			</label>
+			<label>Fulfillment
+				<select name="fulfillmentStatus">
+					<option value="">Any fulfillment</option>
+					{% for value, label in choices.fulfillment %}
+						<option value="{{ value }}"{{ filters.fulfillmentStatus|default('') == value ? ' selected' }}>{{ label }}</option>
+					{% endfor %}
+				</select>
+			</label>
+			<label>From
+				<input type="date" name="from" value="{{ filters.from|default('')|e }}">
+			</label>
+			<label>To
+				<input type="date" name="to" value="{{ filters.to|default('')|e }}">
+			</label>
+			<label class="commerce-filter-check">
+				<input type="checkbox" name="needsAttention" value="1"{{ filters.needsAttention|default('') ? ' checked' }}>
+				Needs attention
+			</label>
+			<div class="commerce-filter-actions">
+				<button class="dash-button" type="submit">Filter</button>
+				<a class="dash-button transparent" href="commerce/orders">Clear</a>
+			</div>
+		</form>
+
+		{% include 'admin/commerce/partials/orders-table.twig' %}
+	</section>
+</main>
+{% endblock %}

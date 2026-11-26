@@ -1,0 +1,32 @@
+{
+	"id": "evt_1RenewalRefund",
+	"object": "event",
+	"api_version": "2026-11-18.endive",
+	"livemode": false,
+	"type": "charge.refunded",
+	"data": {
+		"object": {
+			"id": "ch_3Renewal",
+			"object": "charge",
+			"amount": 1000,
+			"amount_refunded": 1000,
+			"currency": "usd",
+			"metadata": {},
+			"payment_intent": "pi_3Renewal",
+			"refunded": true,
+			"refunds": {
+				"object": "list",
+				"data": [
+					{
+						"id": "re_3Renewal",
+						"amount": 1000,
+						"created": 1900000100
+					}
+				]
+			}
+		},
+		"previous_attributes": {
+			"amount_refunded": 0
+		}
+	}
+}

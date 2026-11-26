@@ -283,7 +283,7 @@ final readonly class ExtensionArchive
 
 		// fromArray() casts with (string); an array there is a warning, not an
 		// exception, and would yield the id "Array". Refuse it up front.
-		foreach (['id', 'name', 'description', 'version', 'entrypoint', 'settings_schema', 'min_edition', 'license', 'icon', 'reviewNote'] as $key) {
+		foreach (['id', 'name', 'description', 'version', 'entrypoint', 'settings_schema', 'min_edition', 'entitlement', 'license', 'icon', 'reviewNote'] as $key) {
 			if (isset($data[$key]) && !is_scalar($data[$key])) {
 				throw InstallException::invalidManifest("extension.json has a malformed field: {$key} must be a string.");
 			}

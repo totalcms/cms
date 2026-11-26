@@ -139,6 +139,10 @@ readonly class OperationDetector
 		'playground-fetch',
 		'admin-collection-edit',
 		'admin-dataviews',
+		'admin-commerce',
+		'admin-commerce-order',
+		'admin-commerce-subscriptions',
+		'admin-commerce-subscription',
 		'export-object-zip',
 		'report-fields',
 		'report-csv',
@@ -153,6 +157,16 @@ readonly class OperationDetector
 	 */
 	private const UPDATE_ROUTES = [
 		'collection-update',    // Collection metadata
+		// The store's admin actions: the grant is a yes or no (CommerceAccessMiddleware).
+		'admin-commerce-order-fulfill',
+		'admin-commerce-order-note',
+		'admin-commerce-order-receipt',
+		'admin-commerce-order-cancel',
+		'admin-commerce-order-accept',
+		'admin-commerce-order-refund',
+		'admin-commerce-order-refulfill',
+		'admin-commerce-subscription-cancel',
+		'admin-commerce-subscription-sync',
 		'collection-patch',     // Collection metadata
 		'collection-reindex',
 		'object-update',

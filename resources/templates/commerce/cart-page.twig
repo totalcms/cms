@@ -1,0 +1,77 @@
+{#
+	The whole cart, with a quantity and a remove button on every line. Each
+	form posts with HTMX and gets this partial back; without JavaScript the
+	same forms post normally and the browser comes back to this page.
+
+	cart, notices, base  as in cart-widget.twig. cart.discount is the code on
+	                     the cart, worked out now, or null
+	csrf                 the hidden token field, for a browser that sends no Origin
+#}
+<div id="cart-page" class="commerce-cart commerce-cart-page" hx-get="{{ base|e }}/commerce/cart?part=page" hx-trigger="cart-updated from:body" hx-swap="outerHTML">
+	{% for notice in notices %}
+		<p class="commerce-cart-notice" role="status">{{ notice|e }}</p>
+	{% endfor %}
+	{% if cart.lines is empty %}
+		<p class="commerce-cart-empty">Your cart is empty.</p>
+	{% else %}
+		<table class="commerce-cart-table">
+			<thead>
+				<tr>
+					<th scope="col">Item</th>
+					<th scope="col">Price</th>
+					<th scope="col">Quantity</th>
+					<th scope="col">Total</th>
+					<th scope="col"><span class="visually-hidden">Remove</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for line in cart.lines %}
+					<tr data-line="{{ line.lineKey|e }}">
+						<td class="commerce-cart-title">
+							{% if line.image %}<img src="{{ line.image|e }}" alt="" width="64" height="64" loading="lazy">{% endif %}
+							<span class="commerce-cart-name">{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}</span>
+						</td>
+						<td class="commerce-cart-price">{{ line.unitPrice.amount|money(line.unitPrice.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</td>
+						<td class="commerce-cart-qty">
+							{# As in the drawer: a quantity saves itself when it changes. The button is for a browser with no JavaScript. #}
+							<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML" hx-trigger="change, submit">
+								{{ csrf|raw }}
+								<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+								<label class="visually-hidden" for="qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
+								<input id="qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
+								<noscript><button type="submit">Update</button></noscript>
+							</form>
+						</td>
+						<td class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}</td>
+						<td class="commerce-cart-remove">
+							<form method="post" action="{{ base|e }}/commerce/cart/remove" hx-post="{{ base|e }}/commerce/cart/remove?part=page" hx-target="#cart-page" hx-swap="outerHTML">
+								{{ csrf|raw }}
+								<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+								<button type="submit" aria-label="Remove {{ line.title|e }}">Remove</button>
+							</form>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot>
+				<tr>
+					<th scope="row" colspan="3">Subtotal</th>
+					<td class="commerce-cart-subtotal" colspan="2">{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</td>
+				</tr>
+				{% if cart.discount %}
+					<tr>
+						<th scope="row" colspan="3">Discount <small>{{ cart.discount.code|e }}</small></th>
+						<td class="commerce-cart-discount" colspan="2">{% if cart.discount.freeShipping %}Free shipping{% else %}{{ (0 - cart.discountTotal.amount)|money(cart.subtotal.currency) }}{% endif %}</td>
+					</tr>
+					<tr>
+						<th scope="row" colspan="3">Total</th>
+						<td class="commerce-cart-grand" colspan="2"><strong>{{ cart.total.amount|money(cart.total.currency) }}</strong></td>
+					</tr>
+				{% endif %}
+			</tfoot>
+		</table>
+		{# The page's own notices are printed above; the form keeps its own for a code it refuses. #}
+		{% include 'commerce/discount-form.twig' with {notices: [], amount: false} %}
+		<p class="commerce-cart-note">Shipping and tax are worked out at checkout.</p>
+	{% endif %}
+</div>

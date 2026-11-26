@@ -7,7 +7,9 @@ namespace TotalCMS\Action\Admin\AccessGroup;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -18,6 +20,8 @@ readonly class AccessGroupSaveAction
 	public function __construct(
 		private AccessGroupManager $accessGroupManager,
 		private JsonRenderer $jsonRenderer,
+		private AccessGroupRepository $groups,
+		private CommerceGate $commerce,
 	) {
 	}
 
@@ -50,6 +54,13 @@ readonly class AccessGroupSaveAction
 		// Build permissions structure
 		$permissions = $this->buildPermissions($data);
 
+		// The form offers the Commerce grant only on a store. Where it was
+		// not offered it cannot have been unticked, so what the group has
+		// stays as it is: a store whose add-on lapsed keeps its grants.
+		if (!$this->commerce->allowed()) {
+			$permissions['commerce'] = ($this->groups->findById($id)?->permissions['commerce'] ?? false) === true;
+		}
+
 		try {
 			$group = new AccessGroupData([
 				'id'          => $id,
@@ -81,7 +92,7 @@ readonly class AccessGroupSaveAction
 	 */
 	private function buildPermissions(array $data): array
 	{
-		// Parse permissions-simple field (contains builder, mailer, playground, dataviews, docs, inlineEdit)
+		// Parse permissions-simple field (contains builder, mailer, playground, dataviews, commerce, docs, inlineEdit)
 		$simplePermissions = isset($data['permissions-simple']) ? (array)$data['permissions-simple'] : [];
 
 		// Collections permissions
@@ -112,6 +123,7 @@ readonly class AccessGroupSaveAction
 			'mailer'     => in_array('mailer', $simplePermissions),
 			'playground' => in_array('playground', $simplePermissions),
 			'dataviews'  => in_array('dataviews', $simplePermissions),
+			'commerce'   => in_array('commerce', $simplePermissions),
 			'docs'       => in_array('docs', $simplePermissions),
 			'inlineEdit' => in_array('inlineEdit', $simplePermissions),
 			'utils'      => [

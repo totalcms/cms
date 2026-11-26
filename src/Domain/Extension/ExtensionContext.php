@@ -13,11 +13,16 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
+use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
+use TotalCMS\Domain\Commerce\Contract\DownloadSource;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\ImageWorks\Filter\ImageFilter;
+use TotalCMS\Domain\License\Service\ExtensionLicense;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
@@ -37,6 +42,10 @@ use Twig\TwigFunction;
  * Extensions interact with Total CMS exclusively through this object.
  * It wraps the DI container and provides curated, versionable methods
  * so that internal changes don't break third-party extensions.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassLength") one add/get pair per
+ *                                                extension point: the class
+ *                                                is as long as that list
  */
 final class ExtensionContext
 {
@@ -109,6 +118,21 @@ final class ExtensionContext
 	/** @var list<SearchProvider> */
 	private array $searchProviders = [];
 
+	/** @var list<array{resolver: PriceResolver, priority: int}> */
+	private array $priceResolvers = [];
+
+	/** @var list<PaymentProvider> */
+	private array $paymentProviders = [];
+
+	/** @var list<array{listener: callable, priority: int}> */
+	private array $orderBuildingListeners = [];
+
+	/** @var list<CheckoutValidator> */
+	private array $checkoutValidators = [];
+
+	/** @var list<DownloadSource> */
+	private array $downloadSources = [];
+
 	/** @var list<array{prompt: Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
 	private array $registeredMcpPrompts = [];
 
@@ -128,6 +152,18 @@ final class ExtensionContext
 	public function extensionId(): string
 	{
 		return $this->manifest->id;
+	}
+
+	/**
+	 * Whether the site is licensed for this extension: the edition its
+	 * manifest asks for (`min_edition`), and the paid product it names
+	 * (`entitlement`), when it names one. Safe to call inside `register()`,
+	 * so a paid extension can register nothing on a site that has not bought
+	 * it.
+	 */
+	public function licensed(): bool
+	{
+		return $this->container->get(ExtensionLicense::class)->allows($this->manifest);
 	}
 
 	public function extensionPath(): string
@@ -443,6 +479,106 @@ final class ExtensionContext
 	public function getRegisteredSearchProviders(): array
 	{
 		return $this->searchProviders;
+	}
+
+	/**
+	 * Set a price that depends on who is buying: an upgrade price, a
+	 * member's price, a volume price. The resolver is asked for every cart
+	 * line and again at checkout, so what the buyer saw is what is charged.
+	 *
+	 * @param int $priority lower is asked first; the first resolver to name a price sets it
+	 */
+	public function addPriceResolver(PriceResolver $resolver, int $priority = 0): void
+	{
+		$this->priceResolvers[] = ['resolver' => $resolver, 'priority' => $priority];
+	}
+
+	/**
+	 * @return list<array{resolver: PriceResolver, priority: int}>
+	 */
+	public function getRegisteredPriceResolvers(): array
+	{
+		return $this->priceResolvers;
+	}
+
+	/**
+	 * Write metadata on an order while it is being built: who sold a line,
+	 * which campaign the order came from. The listener is given an
+	 * `OrderDraftMetadata` to write to and the priced `OrderDraft` to read;
+	 * it cannot change a price. If it throws, the checkout stops.
+	 *
+	 * @param callable $listener callable(OrderDraftMetadata $meta, OrderDraft $draft): void
+	 * @param int      $priority lower runs first
+	 */
+	public function addOrderBuildingListener(callable $listener, int $priority = 0): void
+	{
+		$this->orderBuildingListeners[] = ['listener' => $listener, 'priority' => $priority];
+	}
+
+	/**
+	 * @return list<array{listener: callable, priority: int}>
+	 */
+	public function getRegisteredOrderBuildingListeners(): array
+	{
+		return $this->orderBuildingListeners;
+	}
+
+	/**
+	 * Refuse a checkout the store should not take: a license key that does
+	 * not match, a product this buyer may not have. The validator sees the
+	 * order the server built, before any payment is asked for, and returns
+	 * the reason to show the buyer, or null to allow it. It cannot change
+	 * the order. If it throws, the checkout is refused.
+	 */
+	public function addCheckoutValidator(CheckoutValidator $validator): void
+	{
+		$this->checkoutValidators[] = $validator;
+	}
+
+	/**
+	 * @return list<CheckoutValidator>
+	 */
+	public function getRegisteredCheckoutValidators(): array
+	{
+		return $this->checkoutValidators;
+	}
+
+	/**
+	 * Add a place a product's download can be kept: a bucket, a media
+	 * host. The store asks it for each digital product, after the product's
+	 * own file and before its link, and the first with something delivers.
+	 * The store still checks the buyer's link and counts the download; the
+	 * source only says what there is and hands it over.
+	 */
+	public function addDownloadSource(DownloadSource $source): void
+	{
+		$this->downloadSources[] = $source;
+	}
+
+	/**
+	 * @return list<DownloadSource>
+	 */
+	public function getRegisteredDownloadSources(): array
+	{
+		return $this->downloadSources;
+	}
+
+	/**
+	 * Add a way to pay. The store's owner switches it on in Settings →
+	 * Commerce, and a buyer is offered it once it has its keys
+	 * (`isConfigured()`). Nothing is registered on a site without Commerce.
+	 */
+	public function addPaymentProvider(PaymentProvider $provider): void
+	{
+		$this->paymentProviders[] = $provider;
+	}
+
+	/**
+	 * @return list<PaymentProvider>
+	 */
+	public function getRegisteredPaymentProviders(): array
+	{
+		return $this->paymentProviders;
 	}
 
 	/**
@@ -926,13 +1062,17 @@ final class ExtensionContext
 			'mcp:resources'      => 'MCP Resources',
 			'mcp:search'         => 'Search Provider',
 			'mcp:prompts'        => 'MCP Prompts',
+			'commerce:pricing'   => 'Commerce Pricing',
+			'commerce:payments'  => 'Payment Provider',
+			'commerce:checkout'  => 'Checkout Validator',
+			'commerce:downloads' => 'Download Source',
 		];
 	}
 
 	/**
 	 * Capability key => the registration list that proves it, in display
-	 * order. `schemas` (a directory) and `mcp:resources` (two lists) are the
-	 * two that are not a single property; they are handled by name.
+	 * order. `schemas` (a directory), `mcp:resources` and `commerce:pricing`
+	 * (two lists each) are not a single property; they are handled by name.
 	 *
 	 * @var array<string,string|null>
 	 */
@@ -960,6 +1100,10 @@ final class ExtensionContext
 		'mcp:resources'      => null,
 		'mcp:search'         => 'searchProviders',
 		'mcp:prompts'        => 'registeredMcpPrompts',
+		'commerce:pricing'   => 'priceResolvers',
+		'commerce:payments'  => 'paymentProviders',
+		'commerce:checkout'  => 'checkoutValidators',
+		'commerce:downloads' => 'downloadSources',
 	];
 
 	/**
@@ -987,6 +1131,7 @@ final class ExtensionContext
 			$present = match ($cap) {
 				'schemas'       => is_dir($this->extensionPath . '/schemas'),
 				'mcp:resources' => $this->mcpResources !== [] || $this->mcpResourceTemplates !== [],
+				'commerce:pricing' => $this->priceResolvers !== [] || $this->orderBuildingListeners !== [],
 				default         => $this->{$property} !== [],
 			};
 			if ($present) {

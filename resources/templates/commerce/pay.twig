@@ -1,0 +1,71 @@
+{#
+	The built-in pay page for on-page checkout: the order, and the payment
+	provider's form mounted under it. A store can use a Site Builder page of
+	its own instead (Settings → Commerce → Pay page), which is given the same
+	variables and prints the form with `cms.commerce.embed(order, token)`.
+
+	Autoescape is off in this app, so every value from the order is escaped.
+
+	order      the order, as its buyer may see it
+	embed      {moduleUrl, config} from the provider
+	token      the order's signed link
+	cancelUrl  where a buyer who changes their mind goes: back to the cart, with this order cancelled
+	base       the path Total CMS is served under
+#}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>Pay for order {{ order.number|e }}</title>
+	<style>
+		body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; color: #1c1c1c; background: #f6f6f4; }
+		main { box-sizing: border-box; width: min(40rem, 100% - 2rem); margin: clamp(1rem, 6vw, 3rem) auto; padding: clamp(1rem, 5vw, 2rem); background: #fff; border-radius: 0.5rem; }
+		h1 { margin-top: 0; font-size: 1.5rem; }
+		table { width: 100%; border-collapse: collapse; margin-block-end: 1.5rem; }
+		th, td { padding: 0.5rem 0; text-align: left; border-bottom: 1px solid #e5e5e0; }
+		td:last-child, th:last-child { text-align: right; }
+		tfoot th, tfoot td { border-bottom: 0; }
+		a { color: inherit; }
+		.commerce-pay-back { margin: 1.5rem 0 0; font-size: 0.9375rem; }
+		@media (prefers-color-scheme: dark) {
+			body { color: #ececec; background: #161616; }
+			main { background: #222; }
+			th, td { border-color: #3a3a3a; }
+		}
+	</style>
+</head>
+<body>
+<main class="commerce-pay">
+	<h1>Order {{ order.number|e }}</h1>
+	<table class="commerce-order-lines">
+		<tbody>
+			{% for line in order.lines %}
+				<tr>
+					<td>{{ line.qty|e }} &times; {{ line.title|e }}</td>
+					<td>{{ (line.lineTotal - (line.discountTotal ?? 0))|money(order.currency) }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+		<tfoot>
+			{% if order.shippingTotal > 0 %}
+				<tr><th scope="row">Shipping</th><td>{{ order.shippingTotal|money(order.currency) }}</td></tr>
+			{% endif %}
+			{% if order.taxTotal > 0 and order.taxMode == 'exclusive' %}
+				<tr><th scope="row">Tax</th><td>{{ order.taxTotal|money(order.currency) }}</td></tr>
+			{% endif %}
+			<tr><th scope="row">Total</th><td><strong>{{ order.grandTotal|money(order.currency) }}</strong></td></tr>
+		</tfoot>
+	</table>
+	{% if order.taxMode == 'provider' %}
+		<p class="commerce-pay-tax">Tax is worked out when you pay, from your address, and added to this total if any is due.</p>
+	{% endif %}
+	{% include 'commerce/checkout-embedded.twig' %}
+	<noscript><p>Paying on this page needs JavaScript. Turn it on and reload, or go back to your cart.</p></noscript>
+	<p class="commerce-pay-back"><a href="{{ cancelUrl|e }}">Back to your cart</a></p>
+</main>
+{# The cart's script mounts the form; a page that takes payment loads nothing else. #}
+{{ cms.assetsBody({except: ['forms', 'content', 'gallery', 'htmx', 'cms-grid', 'pagination', 'icons']}) }}
+</body>
+</html>

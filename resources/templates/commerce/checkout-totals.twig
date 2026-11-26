@@ -1,0 +1,70 @@
+{#
+	What the order will come to: the part of the checkout form that the
+	form asks for again whenever its address or its way to pay changes.
+
+	A figure the store does not have yet is said in words, never shown as
+	zero: shipping before there is an address, tax the payment provider
+	works out when the buyer pays.
+
+	quote  {currency, subtotal, discount, discountCode, ships, shipping, shippingLabel, shippingKnown,
+	        tax, taxLabel, taxIncluded, taxAtPayment, taxPending, total, problem, recurringTotal, interval,
+	        intervalCount}; amounts in minor units
+#}
+{% if quote %}
+	<dl class="commerce-checkout-totals-list">
+		<div>
+			<dt>Subtotal</dt>
+			<dd>{{ quote.subtotal|money(quote.currency) }}</dd>
+		</div>
+		{% if quote.discount > 0 %}
+			<div>
+				<dt>Discount{% if quote.discountCode %} ({{ quote.discountCode|e }}){% endif %}</dt>
+				<dd>{{ (0 - quote.discount)|money(quote.currency) }}</dd>
+			</div>
+		{% endif %}
+		{% if quote.ships %}
+			<div>
+				<dt>{{ quote.shippingKnown and quote.shippingLabel ? quote.shippingLabel|e : 'Shipping' }}</dt>
+				<dd>
+					{% if not quote.shippingKnown %}
+						<span class="commerce-checkout-pending">{{ quote.problem ? 'Not available' : 'Worked out from your address' }}</span>
+					{% elseif quote.shipping > 0 %}
+						{{ quote.shipping|money(quote.currency) }}
+					{% else %}
+						Free
+					{% endif %}
+				</dd>
+			</div>
+		{% endif %}
+		{% if quote.taxAtPayment %}
+			<div>
+				<dt>Tax</dt>
+				<dd><span class="commerce-checkout-pending">Worked out when you pay</span></dd>
+			</div>
+		{% elseif quote.tax > 0 %}
+			<div>
+				<dt>{{ quote.taxLabel|e }}{% if quote.taxIncluded %} (included){% endif %}</dt>
+				<dd>{{ quote.tax|money(quote.currency) }}</dd>
+			</div>
+		{% elseif quote.taxPending %}
+			<div>
+				<dt>Tax</dt>
+				<dd><span class="commerce-checkout-pending">Worked out from your address</span></dd>
+			</div>
+		{% endif %}
+		<div class="commerce-checkout-total">
+			<dt>{{ quote.interval ? 'Due today' : 'Total' }}{% if quote.taxAtPayment %} before tax{% endif %}</dt>
+			<dd><strong>{{ quote.total|money(quote.currency) }}</strong></dd>
+		</div>
+		{# A plan is paid for again every period, until it is cancelled. #}
+		{% if quote.interval %}
+			<div class="commerce-checkout-recurring">
+				<dt>Then every {{ quote.intervalCount > 1 ? quote.intervalCount ~ ' ' ~ quote.interval ~ 's' : quote.interval }}</dt>
+				<dd>{{ quote.recurringTotal|money(quote.currency) }}{% if quote.taxAtPayment %} <span class="commerce-checkout-pending">plus tax</span>{% endif %}</dd>
+			</div>
+		{% endif %}
+	</dl>
+	{% if quote.problem %}
+		<p class="commerce-cart-notice" role="alert">{{ quote.problem|e }}</p>
+	{% endif %}
+{% endif %}

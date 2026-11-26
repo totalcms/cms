@@ -329,6 +329,16 @@ If any object cannot be read, the run deletes nothing and says which object was 
 
 Open **Admin → Extensions → S3 Uploads** and check that **Event Listeners**, **Automations** and **CLI Commands** are switched on. After an update that adds a capability to an extension you already enabled, Total CMS leaves the new capability off until you turn it on.
 
+## Selling a file from the bucket
+
+On a site with [Commerce](docs/commerce/overview), a digital product has a **Download from S3** field while this extension is on. Upload the file there and the store delivers it like any other download: the buyer gets the store's own signed, counted link, and behind it they are sent to a signed link to the bucket that saves the file under its name.
+
+- Use a **private** bucket. In a public one the file can also be read at its public address.
+- The file's `/stream` and `/download` addresses follow the File Access Groups of the products collection, like every S3 file. Keep a staff group there.
+- After updating a site where this extension was already enabled, switch on its **Download Source** capability in **Admin → Extensions → S3 Uploads**.
+
+See [Digital Delivery](docs/commerce/digital-delivery).
+
 ## Hosting a podcast
 
 Podcast audio is the case this extension was built for: large files, served from a bucket with no load on your site.

@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
- * Service.
+ * The schemas a site has, as they are shown: on the schema page, in every
+ * picker, over the API, the CLI and MCP.
+ *
+ * Commerce is part of core, so its schemas ship with every install, but a
+ * site without the Commerce add-on has no use for them and is not shown
+ * them. They are hidden, not removed: a schema is still read by its id, and
+ * its id stays reserved.
  */
 readonly class SchemaLister
 {
-	public function __construct(private SchemaRepository $storage)
-	{
+	public function __construct(
+		private SchemaRepository $storage,
+		private CommerceGate $commerce,
+	) {
 	}
 
 	/**
@@ -48,11 +57,28 @@ readonly class SchemaLister
 	}
 
 	/**
-	 * List reserved Schemas.
+	 * List reserved Schemas, without the Commerce ones on a site that does
+	 * not have Commerce.
 	 *
 	 * @return array<SchemaData>
 	 */
 	public function listReservedSchemas(): array
+	{
+		$schemas = $this->storage->listReservedSchemas();
+		if ($this->commerce->allowed()) {
+			return $schemas;
+		}
+
+		return array_values(array_filter($schemas, static fn (SchemaData $schema): bool => !SchemaData::isCommerceSchema($schema->id)));
+	}
+
+	/**
+	 * Every reserved schema that ships, shown or not. For checks on the
+	 * files themselves, not for anything a person picks from.
+	 *
+	 * @return array<SchemaData>
+	 */
+	public function listShippedSchemas(): array
 	{
 		return $this->storage->listReservedSchemas();
 	}

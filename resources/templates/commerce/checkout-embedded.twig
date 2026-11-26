@@ -1,0 +1,9 @@
+{#
+	Where the payment provider's own form is mounted in the store's page.
+	`commerce.js` imports the provider's module and hands it this element and
+	the config. The config holds what the form needs to show itself (a client
+	secret for this one checkout, a publishable key) and never a secret key.
+
+	embed  {moduleUrl, config} from the provider
+#}
+<div id="commerce-checkout" class="commerce-checkout-embed" data-commerce-embed data-module="{{ embed.moduleUrl|e }}" data-config="{{ embed.config|json_encode|e }}"></div>

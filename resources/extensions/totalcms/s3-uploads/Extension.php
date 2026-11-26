@@ -24,6 +24,7 @@ use TotalCMS\Bundled\S3Uploads\S3\S3Client;
 use TotalCMS\Bundled\S3Uploads\S3\S3Settings;
 use TotalCMS\Bundled\S3Uploads\Serving\DownloadCounter;
 use TotalCMS\Bundled\S3Uploads\Serving\PointerLocator;
+use TotalCMS\Bundled\S3Uploads\Serving\ProductDownloadSource;
 use TotalCMS\Bundled\S3Uploads\Serving\UrlResolver;
 use TotalCMS\Bundled\S3Uploads\Storage\KeyBuilder;
 use TotalCMS\Bundled\S3Uploads\Storage\S3Fields;
@@ -77,6 +78,7 @@ require_once __DIR__ . '/Upload/UploadService.php';
 require_once __DIR__ . '/Serving/DownloadCounter.php';
 require_once __DIR__ . '/Serving/UrlResolver.php';
 require_once __DIR__ . '/Serving/PointerLocator.php';
+require_once __DIR__ . '/Serving/ProductDownloadSource.php';
 require_once __DIR__ . '/Lifecycle/KeyCleanupListener.php';
 require_once __DIR__ . '/Lifecycle/PruneReport.php';
 require_once __DIR__ . '/Lifecycle/PruneService.php';
@@ -193,6 +195,13 @@ class Extension implements ExtensionInterface
 		S3Field::configure($settings->isConfigured() ? null : 'Uploads are off: S3 Uploads is not configured. A super admin can set it up in Extensions → S3 Uploads.');
 		$context->addFieldType('s3file', S3FileField::class, 'json');
 		$context->addFieldType('s3depot', S3DepotField::class, 'json');
+		// A store product's Download from S3 field: the store asks here for a
+		// product's download, and sends the buyer to a signed link to it.
+		$context->addDownloadSource(new ProductDownloadSource(
+			fn (): PointerLocator => $context->get(PointerLocator::class),
+			fn (): UrlResolver => $context->get(UrlResolver::class),
+			fn (): DownloadCounter => $context->get(DownloadCounter::class),
+		));
 		$context->addAdminAsset('css', 's3-field.css');
 		$context->addAdminAsset('js', 's3-field.js');
 

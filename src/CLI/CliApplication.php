@@ -115,6 +115,10 @@ class CliApplication
 		$app->addCommand(new Command\OAuth\OAuthSetupCommand($totalcms));
 		$app->addCommand(new Command\OAuth\OAuthGcCommand($totalcms));
 
+		// Commerce commands
+		$app->addCommand(new Command\Commerce\CommerceInstallCommand($totalcms));
+		$app->addCommand(new Command\Commerce\CommerceReconcileCommand($totalcms));
+
 		// Search commands
 		$app->addCommand(new Command\Search\SearchReindexCommand($totalcms));
 

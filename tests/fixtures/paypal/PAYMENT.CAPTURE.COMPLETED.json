@@ -1,0 +1,81 @@
+{
+	"id": "WH-3FU00128GH785982W-57339276NF430544B",
+	"event_version": "1.0",
+	"create_time": "2026-11-24T06:55:04.361Z",
+	"resource_type": "capture",
+	"resource_version": "2.0",
+	"event_type": "PAYMENT.CAPTURE.COMPLETED",
+	"summary": "Payment completed for $ 39.98 USD",
+	"resource": {
+		"id": "8RU61172JS455403V",
+		"amount": {
+			"currency_code": "USD",
+			"value": "39.98"
+		},
+		"final_capture": true,
+		"seller_protection": {
+			"status": "ELIGIBLE",
+			"dispute_categories": [
+				"ITEM_NOT_RECEIVED",
+				"UNAUTHORIZED_TRANSACTION"
+			]
+		},
+		"seller_receivable_breakdown": {
+			"gross_amount": {
+				"currency_code": "USD",
+				"value": "39.98"
+			},
+			"paypal_fee": {
+				"currency_code": "USD",
+				"value": "1.68"
+			},
+			"net_amount": {
+				"currency_code": "USD",
+				"value": "38.30"
+			}
+		},
+		"invoice_id": "1001-01234567",
+		"custom_id": "0123456789abcdef0123456789abcdef",
+		"status": "COMPLETED",
+		"supplementary_data": {
+			"related_ids": {
+				"order_id": "3P199480AE683730M"
+			}
+		},
+		"payee": {
+			"email_address": "someone@example.com",
+			"merchant_id": "TESTID0000000"
+		},
+		"create_time": "2026-11-24T06:55:00Z",
+		"update_time": "2026-11-24T06:55:00Z",
+		"links": [
+			{
+				"href": "https://api.sandbox.paypal.com/v2/payments/captures/8RU61172JS455403V",
+				"rel": "self",
+				"method": "GET"
+			},
+			{
+				"href": "https://api.sandbox.paypal.com/v2/payments/captures/8RU61172JS455403V/refund",
+				"rel": "refund",
+				"method": "POST"
+			},
+			{
+				"href": "https://api.sandbox.paypal.com/v2/checkout/orders/3P199480AE683730M",
+				"rel": "up",
+				"method": "GET"
+			}
+		]
+	},
+	"links": [
+		{
+			"href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-3FU00128GH785982W-57339276NF430544B",
+			"rel": "self",
+			"method": "GET"
+		},
+		{
+			"href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-3FU00128GH785982W-57339276NF430544B/resend",
+			"rel": "resend",
+			"method": "POST"
+		}
+	]
+}

@@ -41,6 +41,44 @@ use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
+use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
+use TotalCMS\Domain\Commerce\Download\DownloadGrantIssuer;
+use TotalCMS\Domain\Commerce\Inventory\StockInventoryApplier;
+use TotalCMS\Domain\Commerce\Download\DownloadLinks;
+use TotalCMS\Domain\Commerce\Order\DownloadIssuer;
+use TotalCMS\Domain\Commerce\Order\InventoryApplier;
+use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
+use TotalCMS\Domain\Commerce\Access\AccessGrantService;
+use TotalCMS\Domain\Commerce\Payment\SubscriptionEvent;
+use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionEvents;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
+use TotalCMS\Domain\Commerce\Subscription\SubscriptionStateMachine;
+use TotalCMS\Domain\Commerce\Subscription\RenewalOrderFactory;
+use TotalCMS\Domain\Commerce\Subscription\PaymentFailedNotifier;
+use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Order\OrderFulfillment;
+use TotalCMS\Domain\Commerce\Order\TableShippingCalculator;
+use TotalCMS\Domain\Commerce\Order\SideEffectRunner;
+use TotalCMS\Domain\Commerce\Order\TableTaxCalculator;
+use TotalCMS\Domain\Commerce\Order\TaxCalculator;
+use TotalCMS\Domain\Commerce\Payment\PaymentCatchUp;
+use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\Commerce\Service\MoneyFilter;
+use TotalCMS\Domain\Commerce\Service\ProductCatalog;
+use TotalCMS\Domain\Commerce\Service\CheckoutService;
+use TotalCMS\Domain\Commerce\Service\CommerceDashboardView;
+use TotalCMS\Domain\Commerce\Order\CustomerOrders;
+use TotalCMS\Domain\Query\Service\TemplateQuery;
+use TotalCMS\Domain\Commerce\Pricing\PricingService;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Activity\Listener\ActivityListener;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
@@ -72,6 +110,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Commerce\Cart\CartLoginListener;
+use TotalCMS\Domain\Commerce\Cart\CartService;
+use TotalCMS\Domain\Commerce\Cart\CartStore;
+use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -105,6 +147,9 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\Export\AccessGroupExport;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\Entitlements;
+use TotalCMS\Domain\License\Service\ExtensionLicense;
+use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -223,7 +268,9 @@ use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BadgeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CartTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\CommerceTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\FeedTwigAdapter;
@@ -636,6 +683,7 @@ return [
 		actors                  : $container->get(ActorContext::class),
 		mailers                 : $container->get(MailerFetcher::class),
 		uploads                 : $container->get(PublicUploadPolicy::class),
+		paymentProviders        : $container->get(PaymentProviderRegistry::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
@@ -658,8 +706,50 @@ return [
 		new UtilsTwigAdapter(),
 		$container->get(SeoTwigAdapter::class),
 		new BadgeTwigAdapter(),
+		$container->get(CartTwigAdapter::class),
+		$container->get(CommerceTwigAdapter::class),
 		// Lazy: the engine's `cms` global is this adapter.
 		fn (): TwigEngine => $container->get(TwigEngine::class),
+	),
+
+	// Spelled out for the lazy engine: `cms.cart` renders the cart partials,
+	// and the engine's `cms` global holds this adapter.
+	CartTwigAdapter::class => fn (ContainerInterface $container): CartTwigAdapter => new CartTwigAdapter(
+		$container->get(CommerceGate::class),
+		$container->get(CartService::class),
+		$container->get(CartStore::class),
+		$container->get(PricingContextFactory::class),
+		$container->get(ProductCatalog::class),
+		$container->get(SessionInterface::class),
+		$container->get(CSRFTokenManager::class),
+		$container->get(Config::class),
+		fn (): TwigEngine => $container->get(TwigEngine::class),
+		$container->get(PaymentProviderRegistry::class),
+		$container->get(MoneyFilter::class),
+		$container->get(TaxCalculator::class),
+		// Lazy: checkout is built only when a checkout form is shown.
+		fn (): CheckoutService => $container->get(CheckoutService::class),
+	),
+
+	// Spelled out for the same reason, and so checkout is built only when a pay page asks.
+	CommerceTwigAdapter::class => fn (ContainerInterface $container): CommerceTwigAdapter => new CommerceTwigAdapter(
+		$container->get(CommerceGate::class),
+		$container->get(PaymentProviderRegistry::class),
+		$container->get(CommerceSettings::class),
+		$container->get(ProductCatalog::class),
+		$container->get(PricingService::class),
+		$container->get(PricingContextFactory::class),
+		$container->get(TemplateQuery::class),
+		$container->get(ActorContext::class),
+		$container->get(MoneyFilter::class),
+		$container->get(CustomerOrders::class),
+		$container->get(DownloadLinks::class),
+		$container->get(CustomerSubscriptions::class),
+		fn (): CheckoutService => $container->get(CheckoutService::class),
+		// Lazy, and through the cart's own adapter: it prices the cart once for the page.
+		fn (): CartTwigAdapter => $container->get(CartTwigAdapter::class),
+		fn (): TwigEngine => $container->get(TwigEngine::class),
+		fn (): CommerceDashboardView => $container->get(CommerceDashboardView::class),
 	),
 
 	// HttpClientInterface → GuzzleHttpClient. Interface binding (autowiring can't
@@ -849,6 +939,11 @@ return [
 		$dispatcher->listen('object.updated', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 		$dispatcher->listen('object.deleted', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 
+		// CartLoginListener — joins the cart a visitor started to the cart
+		// stored for the customer they sign in as. It must run on the event:
+		// the password and passkey logins destroy the session right after it.
+		$dispatcher->listen(CoreEvent::USER_LOGIN, $lazy(CartLoginListener::class, '__invoke'));
+
 		// ActivityListener — records who changed, downloaded or was refused
 		// what, for Utilities → Activity. Priority 100 = after the core
 		// listeners; it only writes a row, so order among the 100s is moot.
@@ -882,6 +977,93 @@ return [
 	// -------------------------------------------------------------------------
 	// Extensions
 	// -------------------------------------------------------------------------
+
+	// Commerce asks one gate everywhere: Pro, and the Commerce add-on on the license.
+	CommerceGate::class => \DI\get(LicenseCommerceGate::class),
+
+	// Which part of the store handles which kind of provider event. The
+	// handler is fetched when an event arrives, not when the router is built.
+	// A payment event goes through PaymentCatchUp, which first makes sure the
+	// store knows about the payment a refund or a dispute is about.
+	ProviderEventRouter::class => function (ContainerInterface $container): ProviderEventRouter {
+		$router = new ProviderEventRouter();
+		$router->handle(PaymentEvent::class, static function (PaymentEvent $event) use ($container): void {
+			$container->get(PaymentCatchUp::class)->process($event);
+		});
+		// A provider's word about a subscription: a period paid, a charge failed, the end.
+		$router->handle(SubscriptionEvent::class, static function (SubscriptionEvent $event) use ($container): void {
+			$container->get(SubscriptionEventProcessor::class)->process($event);
+		});
+
+		return $router;
+	},
+
+	// Built by hand: it pays a renewal's order through the payment
+	// processor, and the payment processor comes back to it afterward, so
+	// one of the two has to be fetched late.
+	SubscriptionEventProcessor::class => fn (ContainerInterface $container): SubscriptionEventProcessor => new SubscriptionEventProcessor(
+		$container->get(SubscriptionRepository::class),
+		$container->get(SubscriptionStateMachine::class),
+		$container->get(RenewalOrderFactory::class),
+		$container->get(OrderRepository::class),
+		fn (): PaymentEventProcessor => $container->get(PaymentEventProcessor::class),
+		$container->get(AccessGrantService::class),
+		$container->get(PaymentFailedNotifier::class),
+		$container->get(OrderFulfillment::class),
+		$container->get(SubscriptionEvents::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	// What else happens once when an order is paid, beside stock, downloads
+	// and the receipt. Each is fetched when it runs, not when this is built.
+	SideEffectRunner::class => function (ContainerInterface $container): SideEffectRunner {
+		$effects = new SideEffectRunner();
+
+		// A code's use is counted when its order is paid, and only for an
+		// order a buyer checked out: a renewal never counts.
+		$effects->register('discountCounted', static function (OrderData $order) use ($container): ?OrderData {
+			if (!$order->isRenewal() && $order->discountCode() !== '') {
+				$container->get(DiscountRepository::class)->recordUse($order->discountCode());
+			}
+
+			return null;
+		});
+
+		// After any payment event for an order: a subscription that begins
+		// with the order, and the access groups the order gives its buyer.
+		$effects->after(static function (string $orderId, PaymentEvent $event) use ($container): void {
+			$container->get(SubscriptionEventProcessor::class)->afterOrderEvent($orderId, $event);
+		});
+
+		return $effects;
+	},
+
+	// How an order's tax and shipping are worked out. Until the tax and
+	// shipping settings are built, nothing is charged for either.
+	// The store's own tax table. With Tax set to none it works nothing out.
+	TaxCalculator::class      => \DI\get(TableTaxCalculator::class),
+	ShippingCalculator::class => \DI\get(TableShippingCalculator::class),
+
+	// What a paid order does to stock and to its digital lines. Neither is
+	// built yet, so a paid order changes no stock and issues no links.
+	InventoryApplier::class => \DI\get(StockInventoryApplier::class),
+	DownloadIssuer::class   => \DI\get(DownloadGrantIssuer::class),
+
+	// Paid products. Entitlements asks every source in its list; the license is
+	// the first, and the marketplace client adds another. Neither class can be
+	// autowired: one takes a list, the other a closure.
+	Entitlements::class => fn (ContainerInterface $container): Entitlements => new Entitlements(
+		[$container->get(LicenseEntitlementSource::class)],
+		$container->get(LicenseEntitlementSource::class),
+		$container->get(LicenseStatus::class),
+	),
+
+	// The manifests are read when first asked for, not here: discovery scans the disk.
+	ExtensionLicense::class => fn (ContainerInterface $container): ExtensionLicense => new ExtensionLicense(
+		fn (): array => $container->get(ExtensionDiscovery::class)->discover(),
+		$container->get(EditionFeatureService::class),
+		$container->get(Entitlements::class),
+	),
 
 	ExtensionDiscovery::class => function (ContainerInterface $container): ExtensionDiscovery {
 		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);

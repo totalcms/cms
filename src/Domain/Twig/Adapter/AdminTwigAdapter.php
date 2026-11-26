@@ -501,7 +501,7 @@ readonly class AdminTwigAdapter
 	 * sidebar scales as sections are added.
 	 *
 	 * Edition/license-gated sections are appended only when available: `oauth`
-	 * needs the OAuth Server feature, `license` needs edition simulation — the
+	 * needs the OAuth Server feature, `commerce` needs Pro, `license` needs edition simulation — the
 	 * same gating settings.twig previously did inline.
 	 *
 	 * @return array<string,array{label:string,description:string}>
@@ -534,6 +534,11 @@ readonly class AdminTwigAdapter
 
 		if ($this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
 			$sections['oauth'] = ['label' => $t('settings.oauth'), 'description' => $t('settings.oauth_desc')];
+		}
+
+		// Commerce is an add-on for Pro: below Pro there is nothing to configure.
+		if ($this->editionFeatures->can(EditionFeature::COMMERCE)) {
+			$sections['commerce'] = ['label' => $t('settings.commerce'), 'description' => $t('settings.commerce_desc')];
 		}
 
 		if ($this->licenseStatus->canSimulateEdition()) {

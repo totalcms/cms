@@ -1,0 +1,28 @@
+{
+	"id": "evt_1SubSession",
+	"object": "event",
+	"api_version": "2026-11-18.endive",
+	"livemode": false,
+	"type": "checkout.session.completed",
+	"data": {
+		"object": {
+			"id": "cs_test_s1",
+			"object": "checkout.session",
+			"amount_total": 1000,
+			"amount_subtotal": 1000,
+			"currency": "usd",
+			"client_reference_id": "0123456789abcdef0123456789abcdef",
+			"customer": "cus_A1",
+			"invoice": "in_1First",
+			"subscription": "sub_1A",
+			"metadata": {
+				"orderId": "0123456789abcdef0123456789abcdef",
+				"orderNumber": "1001"
+			},
+			"mode": "subscription",
+			"payment_intent": null,
+			"payment_status": "paid",
+			"status": "complete"
+		}
+	}
+}

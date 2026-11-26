@@ -106,7 +106,7 @@ them back. Files over `backups.maxFileSizeMB` (100) are never kept.
   another schema inherits it. A copy goes to `.system/backups/schemas/`
 
 ### Site Builder
-- `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`); `--frontend`, `--no-build`, `--force`, `--list`
+- `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`, or `shop` on a site with Commerce); `--frontend`, `--no-build`, `--force`, `--list`
 - `builder:frontend` — install and build the Vite pipeline at the project root; `--no-build`, `--dry-run`; stops if `package.json` exists
 - `builder:routes` — list every route the page router serves; flags conflicts
 - `builder:history` — list/restore snapshot versions of a builder template

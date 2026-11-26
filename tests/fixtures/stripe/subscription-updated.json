@@ -1,0 +1,35 @@
+{
+	"id": "evt_1SubUpdated",
+	"object": "event",
+	"api_version": "2026-11-18.endive",
+	"livemode": false,
+	"type": "customer.subscription.updated",
+	"data": {
+		"object": {
+			"id": "sub_1A",
+			"object": "subscription",
+			"status": "past_due",
+			"cancel_at_period_end": false,
+			"cancel_at": null,
+			"customer": "cus_A1",
+			"metadata": {
+				"subscriptionId": "fedcba9876543210fedcba9876543210",
+				"orderId": "0123456789abcdef0123456789abcdef",
+				"orderNumber": "1001"
+			},
+			"items": {
+				"object": "list",
+				"data": [
+					{
+						"id": "si_1",
+						"current_period_start": 1897408000,
+						"current_period_end": 1900000000
+					}
+				]
+			}
+		},
+		"previous_attributes": {
+			"status": "active"
+		}
+	}
+}

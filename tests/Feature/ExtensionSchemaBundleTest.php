@@ -121,7 +121,8 @@ it('lists only the schemas Total CMS ships as core schemas', function (): void {
 	($this->copy)();
 	$this->hub->get(SchemaRepository::class)->listCustomSchemas();
 
-	$ids = array_map(static fn (SchemaData $schema): string => $schema->id, $this->hub->get(SchemaLister::class)->listReservedSchemas());
+	// Shipped, not reserved: the lister hides Commerce's schemas from a site without Commerce.
+	$ids = array_map(static fn (SchemaData $schema): string => $schema->id, $this->hub->get(SchemaLister::class)->listShippedSchemas());
 
 	expect($ids)->not->toContain('deepl-translation')
 		->and(array_values(array_diff(SchemaData::RESERVED_SCHEMAS, $ids)))->toBe([]);

@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TotalCMS\Domain\Commerce\Pricing;
+
+use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Service\MoneyConverter;
+use TotalCMS\Domain\Money\Money;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
+
+/**
+ * What one unit of a line costs this buyer.
+ *
+ * The cart a visitor sees and the order that is charged both come from this
+ * one call, so what was shown is what is charged unless the catalog changed
+ * in between.
+ */
+final readonly class PricingService
+{
+	private LoggerInterface $logger;
+
+	public function __construct(
+		private MoneyConverter $converter,
+		private PriceResolverRegistry $resolvers,
+		LoggerFactory $loggerFactory,
+	) {
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Commerce);
+	}
+
+	/**
+	 * The catalog price is the variant's own when it has one, the product's
+	 * otherwise. Each registered resolver is then asked, lowest priority
+	 * first, and the first that names a price sets it.
+	 */
+	public function unitPrice(ProductView $product, ?VariantView $variant, int $qty, PricingContext $ctx): PricedUnit
+	{
+		$list = $this->converter->fromPrice($variant->price ?? $product->price, $ctx->currency);
+
+		foreach ($this->resolvers->ordered() as $resolver) {
+			$price = $this->ask($resolver, $product, $variant, $qty, $ctx);
+			if ($price instanceof Money) {
+				return new PricedUnit($list, $price, $resolver->id());
+			}
+		}
+
+		return new PricedUnit($list, $list, PricedUnit::CATALOG);
+	}
+
+	/**
+	 * One resolver's answer, or null when it has none or its answer cannot
+	 * be used. A resolver is third-party code: whatever it does, the line
+	 * is still priced.
+	 */
+	private function ask(PriceResolver $resolver, ProductView $product, ?VariantView $variant, int $qty, PricingContext $ctx): ?Money
+	{
+		try {
+			$price = $resolver->resolve($product, $variant, $qty, $ctx);
+		} catch (\Throwable $e) {
+			return $this->skip($resolver, $product, 'Price resolver threw; skipped', ['error' => $e->getMessage()]);
+		}
+
+		if (!$price instanceof Money) {
+			return null;
+		}
+		if ($price->isNegative()) {
+			return $this->skip($resolver, $product, 'Price resolver returned a negative amount; skipped', ['amount' => $price->amount()]);
+		}
+		if ($price->currency() !== strtoupper($ctx->currency)) {
+			return $this->skip($resolver, $product, 'Price resolver returned another currency; skipped', ['currency' => $price->currency(), 'expected' => $ctx->currency]);
+		}
+
+		return $price;
+	}
+
+	/**
+	 * @param array<string,mixed> $context
+	 */
+	private function skip(PriceResolver $resolver, ProductView $product, string $message, array $context): null
+	{
+		$this->logger->warning($message, ['resolver' => $resolver->id(), 'product' => $product->id] + $context);
+
+		return null;
+	}
+}

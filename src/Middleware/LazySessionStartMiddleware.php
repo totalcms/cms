@@ -113,6 +113,10 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 	private function isSessionlessPath(string $path): bool
 	{
 		return str_starts_with($path, '/imageworks/')
+			// A payment provider's webhook and a purchased file's link: neither
+			// is a visitor's page, and neither reads anything from a session.
+			|| str_starts_with($path, '/commerce/webhook/')
+			|| str_starts_with($path, '/commerce/download/')
 			|| str_starts_with($path, '/api/assets/')
 			|| preg_match('#^/api/ext/[^/]+/[^/]+/assets/#', $path) === 1
 			|| (preg_match('#\.(svg|png|jpe?g|gif|webp|avif|ico)$#i', $path) === 1 && preg_match('#^/(admin|api|download|stream)/#', $path) !== 1);

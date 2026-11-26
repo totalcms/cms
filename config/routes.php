@@ -28,6 +28,7 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/public/oauth.php')($app);
 	(require __DIR__ . '/routes/public/automations.php')($app);
 	(require __DIR__ . '/routes/public/cron.php')($app);
+	(require __DIR__ . '/routes/public/commerce.php')($app);
 
 	// All API routes under /api prefix
 	$app->group('/api', function (RouteCollectorProxy $api): void {

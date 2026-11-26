@@ -38,6 +38,20 @@ final class CoreEvent
 	public const CACHE_CLEARED      = 'cache.cleared';
 	public const ACCESS_DENIED      = 'access.denied';
 	public const FILE_DOWNLOADED    = 'file.downloaded';
+	public const ORDER_CREATED      = 'order.created';
+	public const ORDER_PAID         = 'order.paid';
+	public const ORDER_FULFILLED    = 'order.fulfilled';
+	public const ORDER_REFUNDED     = 'order.refunded';
+	public const ORDER_DISPUTED     = 'order.disputed';
+
+	public const SUBSCRIPTION_CREATED  = 'subscription.created';
+	public const SUBSCRIPTION_RENEWED  = 'subscription.renewed';
+	public const SUBSCRIPTION_PAST_DUE = 'subscription.past_due';
+	public const SUBSCRIPTION_CANCELED = 'subscription.canceled';
+
+	public const STOCK_CHANGED = 'stock.changed';
+	public const STOCK_LOW     = 'stock.low';
+	public const STOCK_OUT     = 'stock.out';
 
 	/**
 	 * Every core event, in a sensible display order.
@@ -67,6 +81,18 @@ final class CoreEvent
 		self::CACHE_CLEARED,
 		self::ACCESS_DENIED,
 		self::FILE_DOWNLOADED,
+		self::ORDER_CREATED,
+		self::ORDER_PAID,
+		self::ORDER_FULFILLED,
+		self::ORDER_REFUNDED,
+		self::ORDER_DISPUTED,
+		self::SUBSCRIPTION_CREATED,
+		self::SUBSCRIPTION_RENEWED,
+		self::SUBSCRIPTION_PAST_DUE,
+		self::SUBSCRIPTION_CANCELED,
+		self::STOCK_CHANGED,
+		self::STOCK_LOW,
+		self::STOCK_OUT,
 	];
 
 	/**

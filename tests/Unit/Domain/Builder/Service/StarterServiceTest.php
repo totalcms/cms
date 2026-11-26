@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Builder\Service;
 
+use TotalCMS\Domain\Commerce\Service\CommerceStarterSetup;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -68,6 +69,7 @@ final class StarterServiceTest extends TestCase
 			$this->templateMigration,
 			$this->jumpStart,
 			$this->pageOrder,
+			$this->createStub(CommerceStarterSetup::class),
 			$loggerFactory,
 		);
 	}
@@ -184,6 +186,7 @@ final class StarterServiceTest extends TestCase
 			$this->templateMigration,
 			$this->jumpStart,
 			$this->pageOrder,
+			$this->createStub(CommerceStarterSetup::class),
 			$loggerFactory,
 		);
 
@@ -438,6 +441,7 @@ final class StarterServiceTest extends TestCase
 			$this->templateMigration,
 			$this->jumpStart,
 			$this->pageOrder,
+			$this->createStub(CommerceStarterSetup::class),
 			$loggerFactory,
 		);
 

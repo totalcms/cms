@@ -38,6 +38,12 @@
 	{# Main content area - two column layout #}
 	<div class="dashboard-grid">
 		<div class="dashboard-main">
+			{# The store, for those who may see orders. Null on a site without Commerce. #}
+			{% set store = cms.commerce.dashboard() %}
+			{% if store %}
+				{% include 'admin/partials/dashboard/commerce.twig' %}
+			{% endif %}
+
 			{# Recent activity from the activity log — admins only #}
 			{% if cms.auth.isAdmin() %}
 				{{ dashboard.recentActivity(cms.admin.dashboardRecentActivity(25)) }}

@@ -1,0 +1,75 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://www.totalcms.co/schemas/commerce-shipping-zone.json",
+	"id": "commerce-shipping-zone",
+	"title": "Commerce Shipping Zone",
+	"description": "One shipping zone: where it covers and what it costs",
+	"category": "Internal",
+	"formgrid": "label label\ncountries regions\nrate freeOver",
+	"type": "object",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"factory": "uid",
+			"label": "Zone ID",
+			"settings": {
+				"autogen": "zone_${uid}",
+				"hide": true
+			}
+		},
+		"label": {
+			"type": "string",
+			"field": "text",
+			"label": "Label",
+			"help": "What the buyer sees at checkout.",
+			"placeholder": "Europe"
+		},
+		"countries": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"field": "list",
+			"label": "Countries",
+			"help": "The countries in this zone. Leave empty for a zone that covers every country, such as a last zone for the rest of the world.",
+			"settings": {
+				"propertyOptions": "countries",
+				"duplicateItemsAllowed": false,
+				"addChoices": false
+			}
+		},
+		"regions": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"field": "list",
+			"label": "Regions",
+			"help": "Optional. States or provinces, to limit the zone to part of its countries, such as CA and OR. Leave empty for the whole of each country.",
+			"placeholder": "CA"
+		},
+		"rate": {
+			"type": "number",
+			"field": "price",
+			"label": "Rate",
+			"help": "The shipping charge in the store's currency, such as <code>12.00</code>.",
+			"settings": {
+				"currency": "store"
+			}
+		},
+		"freeOver": {
+			"type": "number",
+			"field": "price",
+			"label": "Free Over",
+			"help": "Orders at or over this amount ship free in this zone. Leave empty for never.",
+			"settings": {
+				"currency": "store"
+			}
+		}
+	},
+	"required": [
+		"id",
+		"rate"
+	]
+}

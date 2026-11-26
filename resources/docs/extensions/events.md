@@ -253,6 +253,7 @@ Fired after a user successfully logs in.
 | Key | Type | Description |
 |---|---|---|
 | `user` | `string` | User ID or email |
+| `collection` | `string` | The auth collection the user signed in to |
 
 ```php
 $context->addEventListener('user.login', function (array $payload): void {
@@ -373,6 +374,32 @@ $context->addEventListener('file.downloaded', function (array $payload): void {
     if ($payload['actor']['kind'] === 'member') {
         // e.g. count downloads per member
     }
+});
+```
+
+### `order.created`, `order.paid`, `order.fulfilled`, `order.refunded`, `order.disputed`
+
+Fired by a store, on a site with [Commerce](docs/commerce/overview), as an order moves: a checkout is started, the payment provider confirms the payment, everything is delivered, a refund is confirmed, the buyer disputes the payment.
+
+All five carry the same payload: the order's ID and number, its totals in minor units, the buyer's email, and its lines. The full list, and how to write a listener that is safe to run twice, is in [Commerce Events and Extensions](docs/commerce/events-and-extensions).
+
+```php
+$context->addEventListener('order.paid', function (array $payload): void {
+    // e.g. issue a license for $payload['email']
+});
+```
+
+Listen for these, not for `object.updated` on the orders collection: they say what happened to the order, and each fires once for it.
+
+### `stock.changed`, `stock.low`, `stock.out`
+
+Fired by a store as it changes a product's stock: for a paid order, and for a refund whose goods came back. `stock.low` fires once as a count comes down to the store's Low Stock At, and `stock.out` once as it reaches nothing. A sale does not fire `object.updated` on the product, so these are what to listen for.
+
+All three carry the product and variant, the count `before` and `after`, the `reason` (`sale` or `restock`) and the `orderId`. The full list is in [Commerce Events and Extensions](docs/commerce/events-and-extensions#stock-events).
+
+```php
+$context->addEventListener('stock.out', function (array $payload): void {
+    // e.g. tell someone that $payload['title'] has sold out
 });
 ```
 

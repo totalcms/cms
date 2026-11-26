@@ -25,6 +25,9 @@ enum Decision: string
 	/** A protected, forced or owner field rule refuses it. */
 	case DenyProtected = 'protected';
 
+	/** The collection holds records only the site itself writes (an order, a cart). */
+	case DenySystemOnly = 'system-only';
+
 	/** The object does not exist; a read may go on to its usual 404. */
 	case NotFound = 'not-found';
 

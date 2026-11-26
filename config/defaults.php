@@ -668,6 +668,7 @@ $settings['security'] = [
 // limit), and anything larger is deleted as before. Sync's pre-overwrite
 // snapshots land in the same tree. `keep` is per object; `maxAgeDays` prunes
 // snapshots and kept files regardless of count (0 disables the age rule).
+// A store's carts keep no snapshots: one is saved on every change to it.
 // Editable under Settings → Backups; restore with `tcms backup:list` /
 // `tcms backup:restore`.
 $settings['backups'] = [
@@ -678,6 +679,44 @@ $settings['backups'] = [
 	'keepFiles'     => 0,
 	'trash'         => false,
 	'maxFileSizeMB' => 100,
+];
+
+// Commerce: a paid add-on on top of Pro (the `totalcms/commerce` entitlement).
+// Editable under Settings → Commerce; read through CommerceSettings, which
+// turns a missing or mistyped value into a safe one.
+//
+// A tax rate is a decimal STRING, so "8.875" is never a float. A shipping
+// amount (`shippingFlatRate`, `shippingFreeOver`, a zone's rate) is saved by a
+// price field as a number, as a product's price is; CommerceSettings reads
+// either and hands on the digits.
+$settings['commerce'] = [
+	'currency'             => 'USD',
+	'collections'          => ['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts'],
+	'customerCollection'   => '',               // auth collection for customer accounts; '' = guest checkout only
+	'providers'            => [],               // enabled payment provider ids, in the order checkout shows them
+	'orderNumberStart'     => 1001,
+	'orderNumberPrefix'    => '#',              // display only; the number is stored as an integer
+	'taxMode'              => 'none',           // none | exclusive | inclusive
+	'taxBy'                => 'table',          // table | provider (the payment provider when it can, e.g. Stripe Tax; else the table)
+	'taxShipping'          => false,
+	'taxRates'             => [],               // [{country, region, rate, label}]; rate is a percent, e.g. "8.875"
+	'shippingMode'         => 'none',           // none | flat | zones
+	'shippingFlatRate'     => 0,
+	'shippingFreeOver'     => 0,                // 0 = never free
+	'shippingZones'        => [],               // [{id, label, countries[], regions[], rate, freeOver}]
+	'receiptMailer'        => 'commerce-receipt',
+	'downloadTtlHours'     => 72,
+	'downloadMaxCount'     => 5,
+	'lowStockAt'           => 5,               // a count at or under this is running low; 0 = no line
+	'pendingOrderTtlHours' => 24,
+	'cartMaxLines'         => 100,
+	'cartMaxQty'           => 99,
+	'checkoutAttributes'   => [],               // extra values checkout may take from the buyer, by name, e.g. ['licenseKey']
+	'returnPage'           => '',               // Site Builder page id for the order page; '' = the built-in page
+	'checkoutMode'         => 'hosted',         // hosted | embedded; embedded falls back to hosted when the provider cannot do it
+	'payPage'              => '',               // Site Builder page id for on-page checkout; '' = the built-in page
+	'grantableGroups'      => [],               // access group ids a product may grant its buyer; never the admin group
+	'paymentFailedMailer'  => 'commerce-payment-failed', // sent once for each failed renewal payment
 ];
 
 // Activity log: who changed, downloaded or called what, recorded from core

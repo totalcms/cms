@@ -1,0 +1,723 @@
+// Commerce → Orders, and one order's page
+.commerce-admin {
+	// A grid/flex child defaults to `min-width: auto` and grows to fit a
+	// wide table; 0 lets the table wrapper scroll instead.
+	min-width : 0;
+
+	.commerce-admin-header {
+		display         : flex;
+		flex-wrap       : wrap;
+		justify-content : space-between;
+		align-items     : center;
+		gap             : 1rem;
+	}
+
+	h2 {
+		margin      : 0;
+		font-size   : 1rem;
+		font-weight : 600;
+		color       : oklch(var(--totalform-darkgray));
+	}
+
+	// Search takes the room; the choices and dates sit beside it. Two
+	// columns on narrow screens, one on phones.
+	// `form` in the selector: the dashboard caps every form at 800px, which
+	// suits a form of fields and not a row of filters over a wide table.
+	form.commerce-filters {
+		max-width             : none;
+		display               : grid;
+		grid-template-columns : minmax(0, 2fr) repeat(4, minmax(0, 1fr));
+		gap                   : 1rem 0.75rem;
+		align-items           : end;
+		margin-block          : 0 1rem;
+		padding               : 1.25rem;
+		background            : oklch(var(--totalform-nearwhite));
+		border                : 1px solid oklch(var(--totalform-border-color));
+		border-radius         : var(--totalform-radius);
+
+		@media (max-width: 1100px) {
+			grid-template-columns : repeat(2, minmax(0, 1fr));
+
+			.commerce-filter-search {
+				grid-column : 1 / -1;
+			}
+		}
+
+		@media (max-width: 500px) {
+			grid-template-columns : minmax(0, 1fr);
+		}
+
+		// The TotalForm stylesheet sizes every label to its text
+		// (`width: max-content`); stretch these across their grid cell so the
+		// control inside can fill it.
+		label {
+			width       : 100%;
+			max-width   : none;
+			display     : grid;
+			gap         : 0.35rem;
+			font-size   : 0.8em;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		select,
+		input:not([type="checkbox"]) {
+			box-sizing    : border-box;
+			width         : 100%;
+			min-width     : 0;
+			height        : 2.5rem;
+			padding       : 0 0.75rem;
+			font          : inherit;
+			font-size     : 0.95rem;
+			font-weight   : normal;
+			color         : oklch(var(--totalform-text-color));
+			background    : oklch(var(--totalform-white));
+			border        : 1px solid oklch(var(--totalform-border-color));
+			border-radius : var(--totalform-radius);
+		}
+
+		select:focus,
+		input:focus {
+			outline        : 2px solid oklch(var(--totalform-accent));
+			outline-offset : 1px;
+		}
+
+		label.commerce-filter-check {
+			display               : grid;
+			grid-template-columns : auto 1fr;
+			align-items           : center;
+			gap                   : 0.5rem;
+			font-size             : 0.9rem;
+			font-weight           : normal;
+			color                 : oklch(var(--totalform-text-color));
+			cursor                : pointer;
+
+			input {
+				width        : 1.1rem;
+				height       : 1.1rem;
+				margin       : 0;
+				accent-color : oklch(var(--totalform-accent));
+			}
+		}
+	}
+
+	.commerce-filter-actions {
+		grid-column     : 2 / -1;
+		display         : flex;
+		flex-wrap       : wrap;
+		justify-content : end;
+		gap             : 0.5rem;
+
+		@media (max-width: 1100px) {
+			grid-column : 1 / -1;
+		}
+	}
+
+	.commerce-count,
+	.commerce-quiet {
+		margin    : 0;
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.85em;
+	}
+
+	.commerce-orders-table {
+		display : grid;
+		gap     : 0.75rem;
+	}
+
+	.commerce-table-wrap {
+		max-width     : 100%;
+		overflow-x    : auto;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+	}
+
+	// The shared admin table clips and fixes the height of every cell. These
+	// tables hold a second line under some values, so cells size themselves.
+	table.admin-table {
+		width      : 100%;
+		max-height : none;
+
+		th,
+		td {
+			padding : 0.75rem 1rem;
+		}
+
+		td {
+			height         : auto;
+			max-width      : none;
+			overflow       : visible;
+			white-space    : normal;
+			text-overflow  : clip;
+			vertical-align : top;
+		}
+
+		tbody tr + tr td {
+			border-top : 1px solid oklch(var(--totalform-border-color));
+		}
+	}
+
+	// Money and counts line up on the right, in digits of equal width.
+	.commerce-num {
+		text-align           : right;
+		font-variant-numeric : tabular-nums;
+		white-space          : nowrap !important;
+	}
+
+	.commerce-when {
+		white-space          : nowrap !important;
+		font-variant-numeric : tabular-nums;
+	}
+
+	// A second, quieter line under a value.
+	.commerce-sub {
+		display   : block;
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.8em;
+	}
+
+	.commerce-order-number {
+		white-space : nowrap !important;
+
+		a {
+			font-weight          : 600;
+			font-variant-numeric : tabular-nums;
+		}
+
+		.dash-badge {
+			margin-inline-start : 0.4rem;
+		}
+	}
+
+	.commerce-customer {
+		max-width : 18rem !important;
+	}
+
+	tr.commerce-attention {
+		background : oklch(var(--totalform-warning) / 0.07);
+	}
+
+	.commerce-pager {
+		display         : flex;
+		justify-content : space-between;
+	}
+}
+
+// ─── One order ────────────────────────────────────────────────────────────
+
+.commerce-order {
+	// The order, whole: what an action on it puts back in its place. It
+	// is the page's one child, so it lays out the heading and the body.
+	.commerce-order-wrap {
+		display       : grid;
+		gap           : 2rem;
+		align-content : start;
+		min-width     : 0;
+	}
+
+	.commerce-order-header {
+		display : grid;
+		gap     : 0.5rem;
+	}
+
+	.commerce-order-refused,
+	.commerce-order-done {
+		margin : 0;
+
+		p {
+			margin : 0;
+		}
+	}
+
+	// The dashboard caps every form at 800px; these sit inside cards.
+	form {
+		max-width : none;
+		margin    : 0;
+	}
+
+	.commerce-check {
+		width         : 1%;
+		padding-right : 0 !important;
+
+		input {
+			width        : 1.1rem;
+			height       : 1.1rem;
+			margin       : 0;
+			accent-color : oklch(var(--totalform-accent));
+		}
+	}
+
+	.commerce-fulfill-fields {
+		display               : grid;
+		grid-template-columns : repeat(2, minmax(0, 1fr));
+		gap                   : 0.75rem;
+		align-items           : end;
+		margin                : 1rem 0 0;
+		padding               : 1rem;
+		border                : 1px solid oklch(var(--totalform-border-color));
+		border-radius         : var(--totalform-radius);
+
+		legend {
+			padding     : 0 0.4rem;
+			font-size   : 0.85rem;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		.commerce-fulfill-note {
+			grid-column : 1 / -1;
+		}
+
+		.dash-button {
+			grid-column  : 1 / -1;
+			justify-self : end;
+		}
+
+		@media (max-width: 600px) {
+			grid-template-columns : minmax(0, 1fr);
+		}
+	}
+
+	.commerce-fulfill-fields label,
+	.commerce-note {
+		display     : grid;
+		gap         : 0.35rem;
+		font-size   : 0.8rem;
+		font-weight : 600;
+		color       : oklch(var(--totalform-darkgray));
+	}
+
+	.commerce-fulfill-fields input,
+	.commerce-note textarea {
+		box-sizing    : border-box;
+		width         : 100%;
+		min-width     : 0;
+		padding       : 0.55rem 0.75rem;
+		font          : inherit;
+		font-size     : 0.95rem;
+		font-weight   : normal;
+		color         : oklch(var(--totalform-text-color));
+		background    : oklch(var(--totalform-white));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+
+		&:focus {
+			outline        : 2px solid oklch(var(--totalform-accent));
+			outline-offset : 1px;
+		}
+	}
+
+	.commerce-note {
+		gap : 0.75rem;
+
+		textarea {
+			resize     : vertical;
+			min-height : 5.5rem;
+		}
+
+		.dash-button {
+			justify-self : start;
+		}
+	}
+
+	.commerce-order-actions > form,
+	.commerce-order-action {
+		display : grid;
+		gap     : 0.35rem;
+
+		.dash-button {
+			justify-self : start;
+		}
+
+		// A rule between one action and the next. The refund popover sits
+		// among them, out of the flow, so the rule is on what follows it too.
+		& ~ form {
+			padding-top : 1rem;
+			border-top  : 1px solid oklch(var(--totalform-border-color));
+		}
+	}
+
+	// The refund form: a popover, centered like a dialog.
+	.commerce-refund {
+		box-sizing    : border-box;
+		width         : min(28rem, 100vw - 2rem);
+		margin        : auto;
+		padding       : 1.5rem;
+		color         : oklch(var(--totalform-text-color));
+		background    : oklch(var(--totalform-white));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : calc(var(--totalform-radius) * 2);
+		box-shadow    : 0 1rem 3rem oklch(0% 0 0 / 0.35);
+
+		&::backdrop {
+			background : oklch(0% 0 0 / 0.5);
+		}
+
+		form {
+			display : grid;
+			gap     : 1rem;
+		}
+
+		h2 {
+			font-size : 1.15rem;
+			color     : oklch(var(--totalform-text-color));
+		}
+
+		p {
+			color     : oklch(var(--totalform-darkgray));
+			font-size : 0.9rem;
+		}
+
+		label {
+			display     : grid;
+			gap         : 0.35rem;
+			font-size   : 0.8rem;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		input:not([type="checkbox"]) {
+			box-sizing    : border-box;
+			width         : 100%;
+			padding       : 0.55rem 0.75rem;
+			font          : inherit;
+			font-size     : 0.95rem;
+			font-weight   : normal;
+			color         : oklch(var(--totalform-text-color));
+			background    : oklch(var(--totalform-white));
+			border        : 1px solid oklch(var(--totalform-border-color));
+			border-radius : var(--totalform-radius);
+
+			&:focus {
+				outline        : 2px solid oklch(var(--totalform-accent));
+				outline-offset : 1px;
+			}
+		}
+
+		input[name="amount"] {
+			font-variant-numeric : tabular-nums;
+		}
+
+		label.commerce-refund-check {
+			grid-template-columns : auto 1fr;
+			align-items           : center;
+			gap                   : 0.5rem;
+			font-size             : 0.9rem;
+			font-weight           : normal;
+			color                 : oklch(var(--totalform-text-color));
+			cursor                : pointer;
+
+			input {
+				width        : 1.1rem;
+				height       : 1.1rem;
+				margin       : 0;
+				accent-color : oklch(var(--totalform-accent));
+			}
+		}
+
+		footer {
+			display         : flex;
+			justify-content : end;
+			gap             : 0.5rem;
+		}
+	}
+
+	h2 label {
+		font   : inherit;
+		color  : inherit;
+		cursor : pointer;
+	}
+
+	.visually-hidden {
+		position    : absolute;
+		width       : 1px;
+		height      : 1px;
+		overflow    : hidden;
+		clip-path   : inset(50%);
+		white-space : nowrap;
+	}
+
+	.commerce-back {
+		width           : max-content;
+		color           : oklch(var(--totalform-darkgray));
+		font-size       : 0.9rem;
+		text-decoration : none;
+
+		&::before {
+			content : "\2190\00a0";
+		}
+
+		&:hover {
+			color : oklch(var(--totalform-text-color));
+		}
+	}
+
+	.commerce-order-title {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.75rem 1rem;
+
+		// The dashboard's page h1 takes the row and at least 300px; here
+		// the badges sit beside the number.
+		h1 {
+			flex      : 0 1 auto;
+			min-width : 0;
+		}
+	}
+
+	// Here the h1 names the thing on the page, so it leads, where the
+	// dashboard's h1 is a muted label.
+	&.dash-main-content h1 {
+		color                : oklch(var(--totalform-text-color));
+		font-variant-numeric : tabular-nums;
+	}
+
+	.commerce-order-meta {
+		margin    : 0;
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.9rem;
+	}
+
+	.commerce-order-body {
+		display       : grid;
+		gap           : 1.5rem;
+		align-content : start;
+		min-width     : 0;
+	}
+
+	.commerce-order-attention {
+		margin : 0;
+
+		p {
+			margin : 0;
+		}
+
+		strong {
+			color : oklch(var(--totalform-text-color));
+		}
+	}
+
+	// What was bought and what happened to the money take the room; who
+	// bought it sits beside them, and drops below on a narrow screen.
+	.commerce-order-grid {
+		display               : grid;
+		grid-template-columns : minmax(0, 1fr) minmax(16rem, 22rem);
+		gap                   : 1.5rem;
+		align-items           : start;
+
+		@media (max-width: 1000px) {
+			grid-template-columns : minmax(0, 1fr);
+		}
+	}
+
+	.commerce-order-main,
+	.commerce-order-side {
+		display   : grid;
+		gap       : 1.5rem;
+		min-width : 0;
+	}
+
+	.dash-card {
+		min-width : 0;
+
+		p {
+			margin : 0;
+		}
+	}
+
+	.commerce-totals {
+		display      : grid;
+		gap          : 0.35rem;
+		width        : min(100%, 22rem);
+		margin       : 0;
+		margin-left  : auto;
+
+		> div {
+			display         : flex;
+			justify-content : space-between;
+			gap             : 1.5rem;
+		}
+
+		dt,
+		dd {
+			margin : 0;
+		}
+
+		dt {
+			color : oklch(var(--totalform-darkgray));
+		}
+
+		dd {
+			font-variant-numeric : tabular-nums;
+			white-space          : nowrap;
+		}
+
+		small {
+			font-size : 0.85em;
+		}
+
+		.commerce-total {
+			margin-top  : 0.35rem;
+			padding-top : 0.6rem;
+			border-top  : 1px solid oklch(var(--totalform-border-color));
+			font-weight : 600;
+
+			dt {
+				color : oklch(var(--totalform-text-color));
+			}
+		}
+	}
+
+	.commerce-address {
+		display    : grid;
+		gap        : 0.15rem;
+		font-style : normal;
+	}
+
+	.commerce-email {
+		overflow-wrap : anywhere;
+	}
+
+	.commerce-facts {
+		display : grid;
+		gap     : 0.6rem;
+		margin  : 0;
+
+		dt {
+			color     : oklch(var(--totalform-darkgray));
+			font-size : 0.8rem;
+		}
+
+		dd {
+			margin        : 0;
+			overflow-wrap : anywhere;
+		}
+	}
+
+	code {
+		font-size     : 0.85rem;
+		overflow-wrap : anywhere;
+	}
+
+	.commerce-refs code {
+		display : block;
+	}
+
+	.commerce-notes {
+		overflow-wrap : anywhere;
+	}
+}
+
+// ─── The store on the admin home page ─────────────────────────────────────
+
+.commerce-dashboard {
+	.commerce-dashboard-header {
+		display         : flex;
+		justify-content : space-between;
+		align-items     : baseline;
+		gap             : 1rem;
+
+		a {
+			font-size : 0.9rem;
+		}
+	}
+
+	// Three figures in a row; one above the other on a narrow screen.
+	.commerce-dashboard-figures {
+		display               : grid;
+		grid-template-columns : repeat(3, minmax(0, 1fr));
+		gap                   : 1rem;
+		margin                : 1rem 0 0;
+
+		@media (max-width: 700px) {
+			grid-template-columns : minmax(0, 1fr);
+		}
+
+		> div {
+			padding       : 1rem;
+			background    : oklch(var(--totalform-nearwhite));
+			border        : 1px solid oklch(var(--totalform-border-color));
+			border-radius : var(--totalform-radius);
+		}
+
+		dt {
+			color     : oklch(var(--totalform-darkgray));
+			font-size : 0.8rem;
+		}
+
+		dd {
+			margin               : 0.15rem 0 0;
+			font-size            : 1.6rem;
+			font-weight          : 600;
+			line-height          : 1.2;
+			font-variant-numeric : tabular-nums;
+			color                : oklch(var(--totalform-text-color));
+		}
+
+		dd.commerce-dashboard-note {
+			margin-top  : 0.35rem;
+			font-size   : 0.8rem;
+			font-weight : normal;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		.commerce-dashboard-alert {
+			background   : oklch(var(--totalform-warning) / 0.1);
+			border-color : oklch(var(--totalform-warning) / 0.4);
+		}
+	}
+
+	.commerce-dashboard-lists {
+		display               : grid;
+		grid-template-columns : repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		gap                   : 1.5rem;
+		margin-top            : 1.5rem;
+
+		> div {
+			min-width : 0;
+		}
+
+		h3 {
+			margin      : 0 0 0.5rem;
+			font-size   : 0.85rem;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		table {
+			width           : 100%;
+			margin          : 0;
+			border-collapse : collapse;
+		}
+
+		td {
+			padding        : 0.5rem 0.5rem 0.5rem 0;
+			border-top     : 1px solid oklch(var(--totalform-border-color));
+			vertical-align : middle;
+			white-space    : nowrap;
+
+			&:last-child {
+				padding-right : 0;
+				text-align    : right;
+			}
+		}
+
+		.commerce-dashboard-email {
+			width       : 100%;
+			max-width   : 0;
+			white-space : normal;
+		}
+
+		.commerce-dashboard-num {
+			text-align           : right;
+			font-variant-numeric : tabular-nums;
+		}
+	}
+
+	.commerce-dashboard-empty {
+		margin    : 0;
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.85rem;
+	}
+}

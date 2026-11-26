@@ -173,8 +173,9 @@
 			<h3>{{ t('access_groups.other_permissions') }}</h3>
 
 			{# A new group starts from AccessGroupData::getDefaultPermissions() —
-			   keep the defaults below in step. Mailer, Data Views and Builder stay
-			   off until granted, the same as a group created through the API. #}
+			   keep the defaults below in step. Mailer, Data Views, Builder and
+			   Commerce stay off until granted, the same as a group created
+			   through the API. Commerce is offered only on a store. #}
 			{{ cms.form.field("checklist", "permissions-simple", {
 				label    : t('access_groups.dashboard_features'),
 				help     : t('access_groups.select_features'),
@@ -183,6 +184,8 @@
 						group.permissions.playground ? ["playground"] : []
 					)|merge(
 						group.permissions.dataviews ? ["dataviews"] : []
+					)|merge(
+						group.permissions.commerce ?? false ? ["commerce"] : []
 					)|merge(
 						group.permissions.docs ? ["docs"] : []
 					)|merge(
@@ -198,7 +201,7 @@
 					{value: "playground", label: t('access_groups.feature_playground')},
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 					{value: "inlineEdit", label: t('access_groups.feature_inline_edit')},
-				],
+				]|merge(cms.commerce.available() ? [{value: "commerce", label: t('access_groups.feature_commerce')}] : []),
 				settings : {
 					toggleAll    : false,
 					fieldColumns : "150px"
@@ -387,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			.map(cb => cb.value);
 
 		// Create hidden inputs for each simple permission
-		['templates', 'mailer', 'playground', 'dataviews', 'docs', 'inlineEdit'].forEach(function(perm) {
+		['templates', 'mailer', 'playground', 'dataviews', 'commerce', 'docs', 'inlineEdit'].forEach(function(perm) {
 			const existingInput = form.querySelector(`input[name="${perm}"]`);
 			if (existingInput) {
 				existingInput.remove();

@@ -1,0 +1,12 @@
+{
+    "id": "test-vendor/raw-body",
+    "name": "Raw Body (fixture)",
+    "description": "Test fixture with one public route that answers with the exact bytes it was sent.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

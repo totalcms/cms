@@ -24,6 +24,9 @@ use TotalCMS\Support\Config;
  * Twig sub-adapter for authentication and access control.
  *
  * Accessed in Twig as `cms.auth.*`.
+ *
+ * @SuppressWarnings("PHPMD.TooManyMethods") each public method is one question
+ *                                          a template asks as `cms.auth.…`
  */
 readonly class AuthTwigAdapter
 {
@@ -238,6 +241,12 @@ readonly class AuthTwigAdapter
 	public function canAccessDataViews(): bool
 	{
 		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessDataViews($userId));
+	}
+
+	/** Whether this user may see the store's orders. Says nothing about whether the site has a store. */
+	public function canAccessCommerce(): bool
+	{
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessCommerce($userId));
 	}
 
 	public function canAccessBuilder(): bool

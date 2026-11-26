@@ -199,6 +199,30 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'xmlrpc-collection',
 		'xmlrpc-collection-discovery',
 		'xmlrpc-discovery',
+		// Storefront cart routes: public, behind the commerce gate, the CSRF
+		// check and a per-address limit. No access group decides them.
+		'commerce-cart',
+		'commerce-cart-add',
+		'commerce-cart-attributes',
+		'commerce-cart-clear',
+		'commerce-cart-discount',
+		'commerce-cart-discount-remove',
+		'commerce-cart-remove',
+		'commerce-cart-update',
+		// Checkout and the buyer's own order pages: the same gate and limits;
+		// the order pages are opened by the order's signed link.
+		'commerce-cancel',
+		'commerce-checkout',
+		'commerce-checkout-quote',
+		'commerce-download',
+		'commerce-subscription',
+		'commerce-subscription-billing',
+		'commerce-subscription-cancel',
+		'commerce-order-status',
+		'commerce-pay',
+		'commerce-return',
+		// A payment provider's webhook: opened by its signature, not by a login.
+		'commerce-webhook',
 	];
 
 	$unaccounted = array_values(array_diff(array_keys($routeNames), $mapped, $exempt));

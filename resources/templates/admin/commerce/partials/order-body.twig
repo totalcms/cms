@@ -1,0 +1,257 @@
+{#
+	One order, whole: its heading, and everything under it. The order's page
+	prints it, and every action on the order is answered with it, so what
+	staff see after marking a line sent is the order as it is now.
+
+	Autoescape is off in this app, so everything a buyer typed is escaped.
+	The buyer's link to the order and the provider's client secret are never
+	printed here.
+
+	order        the order
+	lines        its lines, each with `needsWork`, `open` and a `badge`
+	ledger       its ledger lines, each with a `label`
+	payment      {label, tone}
+	fulfillment  {label, tone}
+	attention    {label, help}, both '' when the order needs nobody
+	prefix       what goes in front of an order number
+	providerLabel  the payment provider's name
+	can          {refund, fulfill, receipt, refulfill, cancel, accept}: what this user may do to this order now
+	held         what the provider says was paid for an order held for review, formatted; '' for any other order
+	refund       {left, leftFormatted, step}: what can still be refunded;
+	             {pending, pendingFormatted}: asked for and not yet confirmed
+	polls        how often the order has asked for itself again (0 at first)
+	noteMax      the longest note, in characters
+	notice       what an action just did, or nothing
+	error        why an action was refused, or nothing
+#}
+{% macro address(a) %}
+	<address class="commerce-address">
+		{% for part in [a.name ?? '', a.company ?? '', a.line1 ?? '', a.line2 ?? ''] %}{% if part %}<span>{{ part|e }}</span>{% endif %}{% endfor %}
+		{% set place = [a.city ?? '', a.region ?? '', a.postalCode ?? '']|filter(v => v)|join(' ') %}
+		{% if place %}<span>{{ place|e }}</span>{% endif %}
+		{% if a.country ?? '' %}<span>{{ a.country|e }}</span>{% endif %}
+		{% if a.phone ?? '' %}<span>{{ a.phone|e }}</span>{% endif %}
+	</address>
+{% endmacro %}
+
+{# Every form here posts with HTMX and puts the answer, the order redrawn, in place of the order. #}
+{% macro post(order, action) %}method="post" action="commerce/orders/{{ order.id|e }}/{{ action }}" hx-post="commerce/orders/{{ order.id|e }}/{{ action }}" hx-target="#commerce-order" hx-swap="outerHTML"{% endmacro %}
+
+{# While a refund is on its way the order asks for itself again every two seconds, and gives up after ten tries. #}
+{% set polls = polls ?? 0 %}
+<div id="commerce-order" class="commerce-order-wrap"
+	{%- if refund.pending > 0 and polls < 10 %} hx-get="commerce/orders/{{ order.id|e }}?part=body&amp;n={{ polls + 1 }}" hx-trigger="load delay:2s" hx-swap="outerHTML"{% endif %}>
+	<header class="commerce-order-header">
+		<a class="commerce-back" href="commerce/orders">Orders</a>
+		<div class="commerce-order-title">
+			<h1>Order {{ prefix|e }}{{ order.number }}</h1>
+			<div class="dash-badge-group">
+				<span class="dash-badge {{ payment.tone }}">{{ payment.label|e }}</span>
+				<span class="dash-badge {{ fulfillment.tone }}">{{ fulfillment.label|e }}</span>
+				{% if order.isRenewal %}<span class="dash-badge muted">Renewal</span>{% endif %}
+			</div>
+			{% if order.subscriptionId %}<a class="dash-button transparent" href="commerce/subscriptions/{{ order.subscriptionId|e }}">{{ order.isRenewal ? 'Its subscription' : 'The subscription it started' }}</a>{% endif %}
+		</div>
+		<p class="commerce-order-meta">
+			{% if order.created %}Placed <time datetime="{{ order.created|e }}">{{ order.created|date('M j, Y \\a\\t H:i') }}</time>{% endif %}
+			{% if order.paidAt %} · paid <time datetime="{{ order.paidAt|e }}">{{ order.paidAt|date('M j, Y \\a\\t H:i') }}</time>{% endif %}
+		</p>
+	</header>
+
+	<section class="dash-content-section commerce-order-body">
+		{# What an action just did, or why it was refused. #}
+		{% if refund.pending > 0 %}
+			<div class="info-box commerce-order-waiting" role="status"><p>A refund of {{ refund.pendingFormatted|e }} is on its way. This order shows it once {{ providerLabel|e }} confirms it.</p></div>
+		{% endif %}
+		{% if error ?? '' %}
+			<div class="warning-box commerce-order-refused" role="alert"><p>{{ error|e }}</p></div>
+		{% elseif notice ?? '' %}
+			<div class="info-box commerce-order-done" role="status"><p>{{ notice|e }}</p></div>
+		{% endif %}
+
+		{% if attention.label %}
+			<div class="warning-box commerce-order-attention" role="status">
+				<p><strong>{{ attention.label|e }}.</strong> {{ attention.help|e }}</p>
+			</div>
+		{% endif %}
+
+		<div class="commerce-order-grid">
+			<div class="commerce-order-main">
+				<section class="dash-card commerce-items">
+					<h2>Items</h2>
+					{# One form around the table: the boxes ticked are the lines to mark as sent. #}
+					{% if can.fulfill %}<form class="commerce-fulfill no-save no-unsaved-warning" {{ _self.post(order, 'fulfill') }}>{% endif %}
+					<div class="commerce-table-wrap">
+						<table class="admin-table">
+							<thead>
+								<tr>
+									{% if can.fulfill %}<th class="commerce-check"><span class="visually-hidden">Send</span></th>{% endif %}
+									<th>Item</th>
+									<th class="commerce-num">Qty</th>
+									<th class="commerce-num">Price</th>
+									<th class="commerce-num">Total</th>
+									<th>Fulfillment</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for line in lines %}
+									<tr>
+										{% if can.fulfill %}
+											<td class="commerce-check">
+												{# A parcel's lines start ticked. A download is delivered by the store, so marking it by hand is a choice. #}
+												{% if line.open %}<input type="checkbox" name="lines[]" value="{{ line.id|e }}"{{ line.requiresShipping ?? false ? ' checked' }} aria-label="Mark {{ line.title|e }} as sent">{% endif %}
+											</td>
+										{% endif %}
+										<td>
+											{{ line.title|e }}
+											{% if line.sku ?? '' %}<span class="commerce-sub">SKU {{ line.sku|e }}</span>{% endif %}
+											{% if (line.billing ?? 'once') != 'once' %}<span class="commerce-sub">Every {{ (line.intervalCount ?? 1) > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</span>{% endif %}
+										</td>
+										<td class="commerce-num">{{ line.qty|e }}</td>
+										<td class="commerce-num">{{ line.unitPrice|money(order.currency) }}</td>
+										<td class="commerce-num">
+											{{ line.lineTotal|money(order.currency) }}
+											{% if (line.discountTotal ?? 0) > 0 %}<span class="commerce-sub">{{ (0 - line.discountTotal)|money(order.currency) }} discount</span>{% endif %}
+										</td>
+										<td>
+											<span class="dash-badge sm {{ line.badge.tone }}">{{ line.badge.label|e }}</span>
+											{% if line.fulfillmentNote ?? '' %}<span class="commerce-sub">{{ line.fulfillmentNote|e }}</span>{% endif %}
+											{# A delivered download: how much of the buyer's allowance is used. #}
+											{% if line.type == 'digital' and line.fulfillmentStatus == 'fulfilled' and line.downloads is iterable %}
+												<span class="commerce-sub">Downloaded {{ line.downloads.count ?? 0 }} of {{ downloadMax }} times</span>
+											{% endif %}
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% if can.fulfill %}
+						<fieldset class="commerce-fulfill-fields">
+							<legend>Mark the ticked items as sent</legend>
+							<label>Tracking number <input type="text" name="trackingNumber" value="{{ order.trackingNumber|e }}" maxlength="200" autocomplete="off"></label>
+							<label>Tracking link <input type="url" name="trackingUrl" value="{{ order.trackingUrl|e }}" placeholder="https://" autocomplete="off"></label>
+							<label class="commerce-fulfill-note">Note for these items <input type="text" name="note" maxlength="500" placeholder="Optional. Staff only." autocomplete="off"></label>
+							<button class="dash-button" type="submit">Mark as sent</button>
+						</fieldset>
+						</form>
+					{% endif %}
+
+					<dl class="commerce-totals">
+						<div><dt>Subtotal</dt><dd>{{ order.subtotal|money(order.currency) }}</dd></div>
+						{% if order.discountTotal > 0 %}
+							<div><dt>Discount{% if order.discountCode %} <code>{{ order.discountCode|e }}</code>{% endif %}</dt><dd>{{ (0 - order.discountTotal)|money(order.currency) }}</dd></div>
+						{% endif %}
+						{% if order.shippingLine is not empty %}
+							{# A rate called just "Shipping" would read "Shipping Shipping". #}
+							{% set rate = order.shippingLine.label ?? '' %}
+							<div><dt>Shipping{% if rate and rate|lower != 'shipping' %} <small>{{ rate|e }}</small>{% endif %}</dt><dd>{{ order.shippingTotal|money(order.currency) }}</dd></div>
+						{% endif %}
+						{% for tax in order.taxLines %}
+							<div><dt>{{ (tax.label ?? 'Tax')|e }}{% if order.taxMode == 'inclusive' %} <small>included</small>{% endif %}</dt><dd>{{ (tax.amount ?? 0)|money(order.currency) }}</dd></div>
+						{% endfor %}
+						<div class="commerce-total"><dt>Total</dt><dd>{{ order.grandTotal|money(order.currency) }}</dd></div>
+						{% if order.refundedTotal > 0 %}
+							<div><dt>Refunded</dt><dd>{{ (0 - order.refundedTotal)|money(order.currency) }}</dd></div>
+							<div class="commerce-total"><dt>Kept</dt><dd>{{ (order.paidTotal - order.refundedTotal)|money(order.currency) }}</dd></div>
+						{% endif %}
+					</dl>
+				</section>
+
+				<section class="dash-card" id="commerce-order-ledger">
+					<h2>Payments</h2>
+					{% include 'admin/commerce/partials/order-ledger.twig' %}
+				</section>
+			</div>
+
+			<aside class="commerce-order-side">
+				<section class="dash-card">
+					<h2>Customer</h2>
+					<p class="commerce-email"><a href="mailto:{{ order.email|e }}">{{ order.email|e }}</a></p>
+					{% if order.customerId %}
+						<p><a href="collections/{{ order.customerCollection|e }}/{{ order.customerId|e }}">View their account</a></p>
+					{% else %}
+						<p class="commerce-quiet">Checked out as a guest.</p>
+					{% endif %}
+				</section>
+
+				{% if order.shippingAddress is not empty %}
+					<section class="dash-card">
+						<h2>Ship to</h2>
+						{{ _self.address(order.shippingAddress) }}
+					</section>
+				{% endif %}
+
+				{% if order.billingAddress is not empty %}
+					<section class="dash-card">
+						<h2>Bill to</h2>
+						{{ _self.address(order.billingAddress) }}
+					</section>
+				{% endif %}
+
+				<section class="dash-card">
+					<h2>Payment</h2>
+					<dl class="commerce-facts">
+						<div><dt>Paid with</dt><dd>{{ providerLabel|e }}</dd></div>
+						{% if order.providerPaymentRef %}<div><dt>Payment</dt><dd><code>{{ order.providerPaymentRef|e }}</code></dd></div>{% endif %}
+						{% if order.providerSessionRef %}<div><dt>Checkout</dt><dd><code>{{ order.providerSessionRef|e }}</code></dd></div>{% endif %}
+					</dl>
+				</section>
+
+				{% if order.trackingNumber or order.trackingUrl %}
+					<section class="dash-card">
+						<h2>Tracking</h2>
+						<p>{% if order.trackingUrl %}<a href="{{ order.trackingUrl|e }}" rel="noopener noreferrer" target="_blank">{{ (order.trackingNumber ?: 'Track the parcel')|e }}</a>{% else %}{{ order.trackingNumber|e }}{% endif %}</p>
+					</section>
+				{% endif %}
+
+				<section class="dash-card">
+					<h2><label for="commerce-order-notes">Notes</label></h2>
+					<form class="commerce-note no-save no-unsaved-warning" {{ _self.post(order, 'note') }}>
+						<textarea id="commerce-order-notes" name="notes" rows="4" maxlength="{{ noteMax }}" placeholder="For staff only. The buyer never sees this.">{{ order.notes|e }}</textarea>
+						<button class="dash-button transparent" type="submit">Save note</button>
+					</form>
+				</section>
+
+				{% if can.refund or can.receipt or can.refulfill or can.cancel or can.accept %}
+					<section class="dash-card commerce-order-actions">
+						<h2>Actions</h2>
+						{% if can.accept %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(order, 'accept') }}
+								hx-confirm="Accept this payment? The order becomes paid: the buyer gets their receipt, and what they bought is delivered.">
+								<button class="dash-button" type="submit">Accept this payment</button>
+								<p class="commerce-quiet">{% if held %}{{ held|e }} was paid for an order of {{ order.grandTotal|money(order.currency) }}. {% endif %}To turn it down, refund it at the payment provider.</p>
+							</form>
+						{% endif %}
+						{% if can.refund %}
+							<div class="commerce-order-action">
+								<button class="dash-button transparent" type="button" popovertarget="commerce-refund">Refund</button>
+								<p class="commerce-quiet">{{ refund.leftFormatted|e }} can be refunded.</p>
+							</div>
+							{% include 'admin/commerce/partials/refund-dialog.twig' %}
+						{% endif %}
+						{% if can.receipt %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(order, 'receipt') }}>
+								<button class="dash-button transparent" type="submit">Send the receipt again</button>
+								<p class="commerce-quiet">To {{ order.email|e }}.</p>
+							</form>
+						{% endif %}
+						{% if can.refulfill %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(order, 'refulfill') }}
+								hx-confirm="Run fulfillment again for this order? Everything that listens for a paid order is told again.">
+								<button class="dash-button transparent" type="submit">Run fulfillment again</button>
+								<p class="commerce-quiet">For when a download, a license or access was not delivered.</p>
+							</form>
+						{% endif %}
+						{% if can.cancel %}
+							<form class="no-save no-unsaved-warning" {{ _self.post(order, 'cancel') }}
+								hx-confirm="Cancel this order? It has not been paid, and the buyer's checkout will stop working.">
+								<button class="dash-button transparent danger" type="submit">Cancel this order</button>
+							</form>
+						{% endif %}
+					</section>
+				{% endif %}
+			</aside>
+		</div>
+	</section>
+</div>

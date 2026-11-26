@@ -1,0 +1,33 @@
+{#
+	The cart at a glance. It reloads itself whenever anything on the page
+	changes the cart. Autoescape is off in this app, so every value from a
+	product is escaped here.
+
+	cart     the buyer's cart, priced now
+	notices  what to tell the buyer, such as why an add was refused
+	base     the path Total CMS is served under ('' at the site root)
+#}
+<div id="cart-widget" class="commerce-cart commerce-cart-widget" hx-get="{{ base|e }}/commerce/cart?part=widget" hx-trigger="cart-updated from:body" hx-swap="outerHTML">
+	{% for notice in notices %}
+		<p class="commerce-cart-notice" role="status">{{ notice|e }}</p>
+	{% endfor %}
+	{% if cart.lines is empty %}
+		<p class="commerce-cart-empty">Your cart is empty.</p>
+	{% else %}
+		<ul class="commerce-cart-lines">
+			{% for line in cart.lines %}
+				<li class="commerce-cart-line" data-line="{{ line.lineKey|e }}">
+					<span class="commerce-cart-title">{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}</span>
+					<span class="commerce-cart-qty">&times; {{ line.qty|e }}</span>
+					<span class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}</span>
+				</li>
+			{% endfor %}
+		</ul>
+		{% if cart.discount %}
+			<p class="commerce-cart-discount">Code {{ cart.discount.code|e }} <span>{% if cart.discount.freeShipping %}Free shipping{% else %}{{ (0 - cart.discountTotal.amount)|money(cart.subtotal.currency) }}{% endif %}</span></p>
+			<p class="commerce-cart-subtotal">Total <strong>{{ cart.total.amount|money(cart.total.currency) }}</strong></p>
+		{% else %}
+			<p class="commerce-cart-subtotal">Subtotal <strong>{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</strong></p>
+		{% endif %}
+	{% endif %}
+</div>

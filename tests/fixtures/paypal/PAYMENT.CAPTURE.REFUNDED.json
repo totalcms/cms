@@ -1,0 +1,51 @@
+{
+	"id": "WH-1GE84257G0350133W-6RW800890C634293G",
+	"event_version": "1.0",
+	"create_time": "2026-11-24T05:00:05.000Z",
+	"resource_type": "refund",
+	"resource_version": "2.0",
+	"event_type": "PAYMENT.CAPTURE.REFUNDED",
+	"summary": "A $ 10.0 USD capture payment was refunded",
+	"resource": {
+		"id": "1Y107995YT783435V",
+		"amount": {
+			"currency_code": "USD",
+			"value": "10.00"
+		},
+		"seller_payable_breakdown": {
+			"gross_amount": {
+				"currency_code": "USD",
+				"value": "10.00"
+			},
+			"paypal_fee": {
+				"currency_code": "USD",
+				"value": "0.00"
+			},
+			"net_amount": {
+				"currency_code": "USD",
+				"value": "10.00"
+			},
+			"total_refunded_amount": {
+				"currency_code": "USD",
+				"value": "10.00"
+			}
+		},
+		"custom_id": "0123456789abcdef0123456789abcdef",
+		"invoice_id": "1001-01234567",
+		"status": "COMPLETED",
+		"create_time": "2026-11-24T05:00:00Z",
+		"update_time": "2026-11-24T05:00:00Z",
+		"links": [
+			{
+				"href": "https://api.sandbox.paypal.com/v2/payments/refunds/1Y107995YT783435V",
+				"rel": "self",
+				"method": "GET"
+			},
+			{
+				"href": "https://api.sandbox.paypal.com/v2/payments/captures/8RU61172JS455403V",
+				"rel": "up",
+				"method": "GET"
+			}
+		]
+	}
+}

@@ -31,6 +31,10 @@ final class SessionKeysTest extends TestCase
 			'LICENSE_CHECK_DUE'         => 'totalcms.licenseCheckDue',
 			'WEBAUTHN_REGISTER_OPTIONS' => 'totalcms.webauthn.register_options',
 			'WEBAUTHN_AUTH_OPTIONS'     => 'totalcms.webauthn.auth_options',
+			'COMMERCE_CART'             => 'totalcms.commerce.cart',
+			'COMMERCE_CART_OWNER'       => 'totalcms.commerce.cartOwner',
+			'COMMERCE_PRICE_NOTED'      => 'totalcms.commerce.priceNoted',
+			'COMMERCE_CHECKOUT_FROM'    => 'totalcms.commerce.checkoutFrom',
 		], $this->keys());
 	}
 

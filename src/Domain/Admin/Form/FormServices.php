@@ -13,6 +13,7 @@ use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
@@ -76,6 +77,7 @@ final readonly class FormServices
 		public ?ActorContext $actors = null,
 		public ?MailerFetcher $mailers = null,
 		public ?PublicUploadPolicy $uploads = null,
+		public ?PaymentProviderRegistry $paymentProviders = null,
 	) {
 		$this->logger = $logger ?? new NullLogger();
 	}

@@ -135,6 +135,9 @@ RewriteRule ^oauth/(authorize|token|register|revoke)$ rw_common/plugins/stacks/t
 
 # Automation webhooks (POST /automations/<id>)
 RewriteRule ^automations/.+$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+
+# Commerce: the cart, checkout, order pages and payment webhooks
+RewriteRule ^commerce/.+$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
 ```
 
 This preserves the host site's 404 behavior — any URL not on this list and not a real file still falls through to Apache's `ErrorDocument 404` (or the host's custom 404 page).

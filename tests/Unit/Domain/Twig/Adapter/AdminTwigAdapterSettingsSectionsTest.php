@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -23,9 +24,9 @@ use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 final class AdminTwigAdapterSettingsSectionsTest extends TestCase
 {
 	/**
-	 * @param array<string,bool> $opts editionOauth, simulateEdition
+	 * @param array<string,bool> $opts editionOauth, simulateEdition, editionCommerce
 	 */
-	private function makeAdapter(bool $editionOauth = true, bool $simulateEdition = true): AdminTwigAdapter
+	private function makeAdapter(bool $editionOauth = true, bool $simulateEdition = true, bool $editionCommerce = true): AdminTwigAdapter
 	{
 		// Translator echoes the key back so assertions stay deterministic and
 		// independent of locale strings.
@@ -33,7 +34,7 @@ final class AdminTwigAdapterSettingsSectionsTest extends TestCase
 		$translator->method('trans')->willReturnArgument(0);
 
 		$edition = $this->createMock(EditionFeatureService::class);
-		$edition->method('can')->willReturn($editionOauth);
+		$edition->method('can')->willReturnCallback(fn (EditionFeature $feature): bool => $feature === EditionFeature::COMMERCE ? $editionCommerce : $editionOauth);
 
 		$license = $this->createMock(LicenseStatus::class);
 		$license->method('canSimulateEdition')->willReturn($simulateEdition);
@@ -93,6 +94,13 @@ final class AdminTwigAdapterSettingsSectionsTest extends TestCase
 	{
 		$this->assertArrayNotHasKey('oauth', $this->makeAdapter(editionOauth: false)->settingsSections());
 		$this->assertArrayHasKey('oauth', $this->makeAdapter(editionOauth: true)->settingsSections());
+	}
+
+	public function testCommerceSectionGatedByItsEdition(): void
+	{
+		// Commerce is an add-on for Pro. Below Pro there is nothing to configure.
+		$this->assertArrayNotHasKey('commerce', $this->makeAdapter(editionCommerce: false)->settingsSections());
+		$this->assertArrayHasKey('commerce', $this->makeAdapter(editionCommerce: true)->settingsSections());
 	}
 
 	public function testLicenseSectionGatedBySimulation(): void

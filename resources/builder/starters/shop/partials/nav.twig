@@ -1,0 +1,20 @@
+{#
+	The site's top bar: the pages marked "Show in navigation", then the
+	customer's account and the cart.
+#}
+<nav class="site-nav">
+	<div class="container">
+		<a class="site-name" href="/">{{ cms.config('domain')|e }}</a>
+		<ul>
+			{% for p in cms.builder.nav() %}
+				<li><a href="{{ p.route|e }}"{% if page is defined and page.route == p.route %} aria-current="page"{% endif %}>{{ p.title|e }}</a></li>
+			{% endfor %}
+			{% if cms.auth.userLoggedIn('customers') %}
+				<li><a href="/account">Account</a></li>
+			{% else %}
+				<li><a href="{{ cms.auth.login('customers', '/account')|e('html_attr') }}">Sign in</a></li>
+			{% endif %}
+			{% if cms.commerce.available() %}<li>{{ cms.cart.toggle({label: 'Cart'}) }}</li>{% endif %}
+		</ul>
+	</div>
+</nav>

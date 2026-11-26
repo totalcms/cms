@@ -1,0 +1,412 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-order.json",
+	"id": "commerce-order",
+	"type": "object",
+	"title": "Order",
+	"category": "Commerce",
+	"description": "An order built by the site. Every amount is a whole number of minor units of its currency. Only the commerce engine writes it.",
+	"required": [
+		"id"
+	],
+	"index": [
+		"id",
+		"number",
+		"email",
+		"status",
+		"paymentStatus",
+		"fulfillmentStatus",
+		"grandTotal",
+		"currency",
+		"customerId",
+		"provider",
+		"needsAttention",
+		"kind",
+		"subscriptionId",
+		"discountCode",
+		"providerPaymentRef",
+		"created",
+		"paidAt"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "A random id. The order's number is what people see.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${uid-32}",
+				"readonly": true
+			}
+		},
+		"number": {
+			"type": "integer",
+			"field": "number",
+			"label": "Order Number",
+			"help": "The number buyers and staff see. Counted up from the first order number in Settings → Commerce, and never used twice.",
+			"serverOnly": true
+		},
+		"kind": {
+			"type": "string",
+			"field": "select",
+			"label": "Kind",
+			"help": "A checkout order comes from a cart. A renewal order is built from a subscription when the payment provider reports a renewal payment.",
+			"default": "checkout",
+			"options": [
+				{
+					"value": "checkout",
+					"label": "Checkout"
+				},
+				{
+					"value": "renewal",
+					"label": "Renewal"
+				}
+			],
+			"serverOnly": true
+		},
+		"status": {
+			"type": "string",
+			"field": "select",
+			"label": "Status",
+			"help": "Open until it is fulfilled or cancelled.",
+			"default": "open",
+			"options": [
+				{
+					"value": "open",
+					"label": "Open"
+				},
+				{
+					"value": "completed",
+					"label": "Completed"
+				},
+				{
+					"value": "cancelled",
+					"label": "Cancelled"
+				}
+			],
+			"serverOnly": true
+		},
+		"paymentStatus": {
+			"type": "string",
+			"field": "select",
+			"label": "Payment",
+			"help": "Set from what the payment provider reports, never from the buyer's browser.",
+			"default": "pending",
+			"options": [
+				{
+					"value": "pending",
+					"label": "Pending"
+				},
+				{
+					"value": "paid",
+					"label": "Paid"
+				},
+				{
+					"value": "failed",
+					"label": "Failed"
+				},
+				{
+					"value": "expired",
+					"label": "Expired"
+				},
+				{
+					"value": "review",
+					"label": "Review"
+				},
+				{
+					"value": "partially_refunded",
+					"label": "Partially refunded"
+				},
+				{
+					"value": "refunded",
+					"label": "Refunded"
+				},
+				{
+					"value": "disputed",
+					"label": "Disputed"
+				}
+			],
+			"serverOnly": true
+		},
+		"fulfillmentStatus": {
+			"type": "string",
+			"field": "select",
+			"label": "Fulfillment",
+			"help": "Whether the order's lines have been shipped or delivered.",
+			"default": "unfulfilled",
+			"options": [
+				{
+					"value": "unfulfilled",
+					"label": "Unfulfilled"
+				},
+				{
+					"value": "partial",
+					"label": "Partial"
+				},
+				{
+					"value": "fulfilled",
+					"label": "Fulfilled"
+				},
+				{
+					"value": "not_required",
+					"label": "Not required"
+				}
+			],
+			"serverOnly": true
+		},
+		"needsAttention": {
+			"type": "string",
+			"field": "text",
+			"label": "Needs Attention",
+			"help": "Empty, or why a person should look: amount_mismatch, paid_after_expiry, oversold, fulfillment_incomplete, refund_failed or disputed.",
+			"serverOnly": true
+		},
+		"currency": {
+			"type": "string",
+			"field": "text",
+			"label": "Currency",
+			"help": "The three-letter code every amount on this order is in.",
+			"serverOnly": true
+		},
+		"email": {
+			"type": "string",
+			"field": "email",
+			"label": "Email",
+			"help": "Where the receipt goes.",
+			"serverOnly": true
+		},
+		"customerCollection": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer Collection",
+			"help": "The auth collection of the buyer's account. Empty for a guest.",
+			"serverOnly": true
+		},
+		"customerId": {
+			"type": "string",
+			"field": "text",
+			"label": "Customer ID",
+			"help": "The buyer's account. Empty for a guest.",
+			"serverOnly": true
+		},
+		"subscriptionId": {
+			"type": "string",
+			"field": "text",
+			"label": "Subscription",
+			"help": "The subscription this order started or renewed. Empty when no line recurs.",
+			"serverOnly": true
+		},
+		"lines": {
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"field": "deck",
+			"label": "Lines",
+			"help": "What was bought, as it was at purchase.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-line-item.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-line-item.json"
+				}
+			},
+			"serverOnly": true
+		},
+		"subtotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Subtotal",
+			"help": "The lines added up, in minor units, before discount, shipping and tax.",
+			"serverOnly": true
+		},
+		"discountTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Discount",
+			"help": "The line discounts added up, in minor units. Free shipping is not counted here.",
+			"default": 0,
+			"serverOnly": true
+		},
+		"shippingTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Shipping",
+			"help": "The shipping charge, in minor units.",
+			"default": 0,
+			"serverOnly": true
+		},
+		"taxTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Tax",
+			"help": "The tax charged, in minor units.",
+			"default": 0,
+			"serverOnly": true
+		},
+		"grandTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Total",
+			"help": "What the buyer pays, in minor units. The payment provider's amount is checked against it.",
+			"serverOnly": true
+		},
+		"refundedTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Refunded",
+			"help": "How much has been refunded, in minor units.",
+			"default": 0,
+			"serverOnly": true
+		},
+		"taxMode": {
+			"type": "string",
+			"field": "text",
+			"label": "Tax Mode",
+			"help": "none, exclusive or inclusive. An order whose tax is left to the payment provider says provider until it is paid, then takes one of the three from the payment.",
+			"serverOnly": true
+		},
+		"taxLines": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Tax Lines",
+			"help": "The tax by rate: [{label, rate, amount}].",
+			"serverOnly": true
+		},
+		"shippingLine": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Shipping Line",
+			"help": "The shipping rate that applied: {rateId, label, amount}.",
+			"serverOnly": true
+		},
+		"discountCode": {
+			"type": "string",
+			"field": "text",
+			"label": "Discount Code",
+			"help": "The code used, in uppercase. Empty for none.",
+			"serverOnly": true
+		},
+		"discountLine": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Discount Line",
+			"help": "How the code applied: {code, type, value, amount, shippingWaived, recurring}.",
+			"serverOnly": true
+		},
+		"shippingAddress": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"field": "card",
+			"label": "Shipping Address",
+			"help": "Where the order ships. Empty when nothing ships.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-address.json",
+			"serverOnly": true
+		},
+		"billingAddress": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"field": "card",
+			"label": "Billing Address",
+			"help": "The buyer's billing address.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-address.json",
+			"serverOnly": true
+		},
+		"provider": {
+			"type": "string",
+			"field": "text",
+			"label": "Payment Provider",
+			"help": "The provider that took the payment, such as stripe.",
+			"serverOnly": true
+		},
+		"providerSessionRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Session",
+			"help": "The provider's id for the checkout, such as a Stripe Checkout Session id or a PayPal order id.",
+			"serverOnly": true
+		},
+		"providerPaymentRef": {
+			"type": "string",
+			"field": "text",
+			"label": "Provider Payment",
+			"help": "The provider's id for the payment, set when it is paid.",
+			"serverOnly": true
+		},
+		"providerClientSecret": {
+			"type": "string",
+			"field": "hidden",
+			"label": "Provider Client Secret",
+			"help": "On-page checkout only: the provider session's client secret, so the payment page survives a reload. Cleared when the order leaves pending.",
+			"serverOnly": true
+		},
+		"attributes": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Checkout Attributes",
+			"help": "The extra values checkout accepted from the buyer, strings only. Only the names listed in Settings → Commerce are kept.",
+			"serverOnly": true
+		},
+		"metadata": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Metadata",
+			"help": "Written by extensions while the order is built. Passed to the payment provider where it allows.",
+			"serverOnly": true
+		},
+		"flags": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Flags",
+			"help": "Marks for work already done, so it is never done twice: inventoryApplied, receiptQueued, downloadsIssued, paidDispatched.",
+			"serverOnly": true
+		},
+		"accessToken": {
+			"type": "string",
+			"field": "hidden",
+			"label": "Access Token",
+			"help": "A random secret that signs the guest order-status and download links.",
+			"serverOnly": true
+		},
+		"notes": {
+			"type": "string",
+			"field": "textarea",
+			"label": "Internal Notes",
+			"help": "For staff. Never shown to the buyer."
+		},
+		"trackingNumber": {
+			"type": "string",
+			"field": "text",
+			"label": "Tracking Number",
+			"help": "The carrier's tracking number."
+		},
+		"trackingUrl": {
+			"type": "string",
+			"field": "url",
+			"label": "Tracking Link",
+			"help": "Where the buyer can follow the shipment."
+		},
+		"tags": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"field": "list",
+			"label": "Tags",
+			"help": "Free-form labels for staff."
+		},
+		"created": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Created",
+			"help": "When checkout started.",
+			"serverOnly": true
+		},
+		"paidAt": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Paid",
+			"help": "When the payment was confirmed.",
+			"serverOnly": true
+		},
+		"updated": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Updated",
+			"help": "When the order last changed.",
+			"serverOnly": true
+		}
+	}
+}

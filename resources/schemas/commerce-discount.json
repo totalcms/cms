@@ -1,0 +1,148 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-discount.json",
+	"id": "commerce-discount",
+	"type": "object",
+	"title": "Discount Code",
+	"category": "Commerce",
+	"description": "A code a buyer types at the cart. The site works out the amount; the cart stores only the code.",
+	"formgrid": "active type\nid title\nvalue minSubtotal\nproducts products\ncategories categories\nstartsAt endsAt\nusageLimit perCustomerLimit\nrecurring usedCount",
+	"required": [
+		"id",
+		"type"
+	],
+	"index": [
+		"id",
+		"title",
+		"active",
+		"type",
+		"usedCount",
+		"usageLimit",
+		"startsAt",
+		"endsAt"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "Code",
+			"help": "Letters, numbers and hyphens, 3 to 40 characters. Buyers can type it in any case.",
+			"factory": "slug"
+		},
+		"title": {
+			"type": "string",
+			"field": "text",
+			"label": "Internal Name",
+			"help": "For staff. Never shown to buyers."
+		},
+		"active": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Active",
+			"help": "Turn off to stop the code working without deleting it.",
+			"default": true
+		},
+		"type": {
+			"type": "string",
+			"field": "select",
+			"label": "Type",
+			"help": "What the code takes off.",
+			"default": "percent",
+			"options": [
+				{
+					"value": "percent",
+					"label": "Percent off"
+				},
+				{
+					"value": "fixed",
+					"label": "Amount off"
+				},
+				{
+					"value": "free_shipping",
+					"label": "Free shipping"
+				}
+			]
+		},
+		"value": {
+			"type": "number",
+			"field": "number",
+			"label": "Value",
+			"help": "Percent off: 15 means 15%. Amount off: an amount in the store currency. Ignored for free shipping."
+		},
+		"products": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"field": "list",
+			"label": "Only These Products",
+			"help": "Product ids. Leave this and the categories empty for the whole cart."
+		},
+		"categories": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"field": "list",
+			"label": "Only These Categories",
+			"help": "Product categories the code applies to."
+		},
+		"minSubtotal": {
+			"type": "number",
+			"field": "price",
+			"label": "Minimum Subtotal",
+			"help": "The cart must reach this amount for the code to work.",
+			"settings": {
+				"currency": "store"
+			}
+		},
+		"startsAt": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Starts",
+			"help": "The code does not work before this. Leave empty to start now."
+		},
+		"endsAt": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Ends",
+			"help": "The code stops working after this. Leave empty for no end."
+		},
+		"usageLimit": {
+			"type": "integer",
+			"field": "number",
+			"label": "Total Uses",
+			"help": "How many orders can use the code. 0 means no limit.",
+			"default": 0
+		},
+		"perCustomerLimit": {
+			"type": "integer",
+			"field": "number",
+			"label": "Uses per Customer",
+			"help": "0 means no limit. Counted by the order's email address.",
+			"default": 0
+		},
+		"recurring": {
+			"type": "string",
+			"field": "select",
+			"label": "On a Subscription",
+			"help": "Whether the discount repeats on renewals.",
+			"default": "once",
+			"options": [
+				{
+					"value": "once",
+					"label": "First payment only"
+				},
+				{
+					"value": "forever",
+					"label": "Every payment"
+				}
+			]
+		},
+		"usedCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Times Used",
+			"help": "Counted by the site as orders are paid.",
+			"default": 0,
+			"serverOnly": true,
+			"settings": {
+				"readonly": true
+			}
+		}
+	}
+}

@@ -1,0 +1,36 @@
+{
+	"id": "evt_1SubSessionTaxed",
+	"object": "event",
+	"api_version": "2026-11-18.endive",
+	"livemode": false,
+	"type": "checkout.session.completed",
+	"data": {
+		"object": {
+			"id": "cs_test_s2",
+			"object": "checkout.session",
+			"amount_total": 9540,
+			"amount_subtotal": 10000,
+			"total_details": {
+				"amount_discount": 1000,
+				"amount_shipping": 0,
+				"amount_tax": 540
+			},
+			"automatic_tax": {
+				"enabled": true
+			},
+			"currency": "usd",
+			"client_reference_id": "0123456789abcdef0123456789abcdef",
+			"customer": "cus_A1",
+			"invoice": "in_1First",
+			"subscription": "sub_1A",
+			"metadata": {
+				"orderId": "0123456789abcdef0123456789abcdef",
+				"orderNumber": "1001"
+			},
+			"mode": "subscription",
+			"payment_intent": null,
+			"payment_status": "paid",
+			"status": "complete"
+		}
+	}
+}

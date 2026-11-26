@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Historial para deshacer cada guardado y eliminación de objetos',
 	'settings.cache'                   => 'Caché',
 	'settings.cache_desc'              => 'Configuración del backend de caché',
+	'settings.commerce'                => 'Comercio',
+	'settings.commerce_desc'           => 'Tu tienda: moneda, pagos, impuestos, envíos y correos',
 	'settings.dashboard'               => 'Panel de control',
 	'settings.dashboard_desc'          => 'Configuración del panel de administración',
 	'settings.extensions'              => 'Extensiones',
@@ -936,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
+	'access_groups.feature_commerce'       => 'Pedidos de Commerce',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Edición en línea',
 	'access_groups.utils_access'           => 'Nivel de acceso a utilidades',
@@ -1728,4 +1731,8 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Aún no hay capas: al compartir se usa la imagen sin superposición.',
 	'overlay_preview.reason.no-record'       => 'No se puede leer este registro, así que no hay nada que previsualizar.',
 	'overlay_preview.reason.needs-pro'       => 'Edición Pro: por debajo de Pro, al compartir se usa la imagen sin superposición, la que se ve aquí.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Pedidos',
+	'commerce.subscriptions' => 'Suscripciones',
 ];

@@ -1,0 +1,21 @@
+{#
+	Shown in place of the checkout form when the cart holds something that is
+	added to an account, such as a membership, and the visitor is not signed
+	in to one. Nothing can be paid for until they are: checkout would refuse.
+
+	collection   the collection customers sign in to; '' when the store has none
+	registerUrl  the site's own page for making an account; '' when the page gave none
+	class        an extra class
+#}
+<div id="commerce-checkout-form" class="commerce-checkout-form commerce-checkout-account{% if class %} {{ class|e }}{% endif %}" role="status">
+	<p><strong>You need an account to buy this.</strong> What is in your cart is added to your account when you pay, so please sign in first. Your cart is kept.</p>
+	{% if collection %}
+		<p class="commerce-checkout-account-links">
+			{# cms.auth.login() brings the buyer back to this page after they sign in. #}
+			<a class="commerce-checkout-signin" href="{{ cms.auth.login(collection)|e('html_attr') }}">Sign in</a>
+			{% if registerUrl %}<a class="commerce-checkout-register" href="{{ registerUrl|e('html_attr') }}">Create an account</a>{% endif %}
+		</p>
+	{% else %}
+		<p>This store has no customer accounts yet, so this cannot be bought.</p>
+	{% endif %}
+</div>

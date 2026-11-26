@@ -46,6 +46,18 @@ enum Operation: string
 	}
 
 	/**
+	 * Whether it makes, changes or removes objects. Rebuilding an index does
+	 * not: it changes no record.
+	 */
+	public function changesObjects(): bool
+	{
+		return match ($this) {
+			self::Create, self::Update, self::Delete, self::BulkDelete, self::Clone, self::Import => true,
+			default                                                                               => false,
+		};
+	}
+
+	/**
 	 * The access-group operation (read, create, update, delete) that grants it.
 	 */
 	public function groupOperation(): string

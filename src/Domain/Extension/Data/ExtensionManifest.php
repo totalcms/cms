@@ -45,6 +45,10 @@ final readonly class ExtensionManifest
 	 *                                                                extension is code Composer owns: it can be disabled but not
 	 *                                                                removed here — `composer remove` does that. Set by
 	 *                                                                ExtensionDiscovery — not declared in the manifest JSON.
+	 * @param string                                  $entitlement    Declared in the manifest JSON as `entitlement`: the paid
+	 *                                                                product (`vendor/name` in the store) a site must own to use
+	 *                                                                the extension, on top of `min_edition`. Empty for an
+	 *                                                                extension that is not sold. See ExtensionLicense.
 	 * @param bool                                    $defaultEnabled Declared in the manifest JSON as `default_enabled`.
 	 *                                                                Only honoured for bundled extensions with no saved
 	 *                                                                state — see ExtensionStateRepository::isEnabled().
@@ -72,6 +76,7 @@ final readonly class ExtensionManifest
 		public bool $project = false,
 		public bool $defaultEnabled = false,
 		public string $composerPackage = '',
+		public string $entitlement = '',
 	) {
 	}
 
@@ -107,6 +112,7 @@ final readonly class ExtensionManifest
 			entrypoint: (string)($data['entrypoint'] ?? 'Extension.php'),
 			settingsSchema: isset($data['settings_schema']) ? (string)$data['settings_schema'] : null,
 			minEdition: (string)($data['min_edition'] ?? 'lite'),
+			entitlement: (string)($data['entitlement'] ?? ''),
 			author: is_array($data['author'] ?? null) ? $data['author'] : [],
 			license: (string)($data['license'] ?? 'proprietary'),
 			links: self::parseLinks($data['links'] ?? null),

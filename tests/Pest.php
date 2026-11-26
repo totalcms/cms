@@ -115,10 +115,18 @@ use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Slim\Test\TestResponse;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\ContainerFactory;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 use TotalCMS\Support\PublicHttpClient;
 use TotalCMS\Support\RemoteFileDownloader;
+use Tests\Fakes\StubLicenseValidator;
+use TotalCMS\Domain\License\Service\EntitlementSource;
+use TotalCMS\Domain\License\Service\Entitlements;
+use TotalCMS\Domain\License\Service\LicenseEntitlementSource;
+use Tests\Fakes\OpenCommerceGate;
+use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
 
 $_SERVER['APP_ENV'] = 'test';
 
@@ -622,7 +630,7 @@ function buildAdminTwigAdapter(
 		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
 		// The adapter tests never render the rail, so a bare ExtensionManager
 		// (no constructor run) is enough to satisfy the registry's dependency.
-		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor(), $collectionLister, (new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor()),
+		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor(), $collectionLister, (new ReflectionClass(CollectionEditionService::class))->newInstanceWithoutConstructor(), closedCommerceNav()),
 		// The owned-collection table is covered end to end in OwnedCollectionTest.
 		(new ReflectionClass(CollectionTableAccess::class))->newInstanceWithoutConstructor(),
 	);
@@ -1468,4 +1476,293 @@ function imageFilterRegistry(?Config $config = null): ImageFilterRegistry
 	$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 	return new ImageFilterRegistry($config, $loggerFactory);
+}
+
+/**
+ * An entitlement source that has exactly these products, for tests of
+ * anything that asks {@see Entitlements}.
+ *
+ * @param list<string> $products
+ */
+function fakeSource(array $products): EntitlementSource
+{
+	return new class($products) implements EntitlementSource {
+		/** @param list<string> $products */
+		public function __construct(private array $products)
+		{
+		}
+
+		public function has(string $productId): bool
+		{
+			return in_array($productId, $this->products, true);
+		}
+	};
+}
+
+/**
+ * The license as an entitlement source, over a license that carries these
+ * entitlements (as the license server sends them).
+ *
+ * @param list<mixed> $entitlements
+ */
+function licenseSource(array $entitlements, string $edition = 'pro'): LicenseEntitlementSource
+{
+	return new LicenseEntitlementSource(StubLicenseValidator::with($edition, $entitlements));
+}
+
+/** A license status over a Development license, or a Pro one. */
+function licenseStatus(bool $dev): LicenseStatus
+{
+	return new LicenseStatus(StubLicenseValidator::with($dev ? 'development' : 'pro'), testNullLoggerFactory());
+}
+
+/**
+ * Entitlements for a site whose license carries these products.
+ *
+ * @param list<mixed> $products
+ */
+function entitlements(array $products, bool $dev = false): Entitlements
+{
+	$license = licenseSource($products, $dev ? 'development' : 'pro');
+
+	return new Entitlements([$license], $license, licenseStatus($dev));
+}
+
+/** Entitlements for a site on a trial that is running, or one that has expired. */
+function trialEntitlements(bool $running = true): Entitlements
+{
+	$validator = StubLicenseValidator::trial($running);
+	$license   = new LicenseEntitlementSource($validator);
+
+	return new Entitlements([$license], $license, new LicenseStatus($validator, testNullLoggerFactory()));
+}
+
+/**
+ * Boot a site with a small catalog, the store on or off. Shared by the
+ * commerce Twig tests (a helper in one test file is invisible to another
+ * under --parallel).
+ */
+function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null): void
+{
+	recursiveDelete(cmsDataDir());
+	restoreFixtures();
+	// For a test that needs something on disk before the site boots, such as an enabled extension.
+	if ($beforeBoot instanceof \Closure) {
+		$beforeBoot();
+	}
+	// The gate is swapped before the app is built, not after: `cms.cart` and
+	// `cms.commerce` are built while the app boots and keep the gate they were
+	// given. The override is process-wide, so it is put back at once; the
+	// container that was just built keeps the gate it was built with.
+	if ($open) {
+		ContainerFactory::override([CommerceGate::class => \DI\autowire(OpenCommerceGate::class)]);
+	}
+	$app = bootstrap();
+	ContainerFactory::override([CommerceGate::class => \DI\get(LicenseCommerceGate::class)]);
+	test()->setUpApp($app);
+	test()->commerceApp = $app;
+
+	// As a page request has it: a session (the forms carry its CSRF token)
+	// and a visitor who is nobody in particular.
+	$session = $app->getContainer()->get(PhpSession::class);
+	$session->isStarted() || $session->start();
+	$app->getContainer()->get(ActorContext::class)->set(Actor::anonymous());
+	$c = $app->getContainer();
+	$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
+
+	// A store that can take money: one provider, switched on. Nothing is
+	// registered on a site without Commerce, as at a real boot.
+	if ($open) {
+		test()->fakeProvider = new \Tests\Fakes\FakePaymentProvider();
+		$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register(test()->fakeProvider);
+		$config           = $c->get(Config::class);
+		$config->commerce = ['providers' => ['fake']] + $config->commerce;
+	}
+
+	$save = fn (array $product) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $product);
+	$save(['id' => 'tee', 'title' => 'Tee <i>Shirt</i>', 'status' => 'active', 'price' => 15, 'category' => 'Clothing', 'variants' => [
+		'large' => ['id' => 'large', 'title' => 'Large', 'price' => 19.99],
+		'small' => ['id' => 'small', 'title' => 'Small'],
+		'gone'  => ['id' => 'gone', 'title' => 'Gone', 'active' => false],
+	]]);
+	$save(['id' => 'mug', 'title' => 'Mug', 'status' => 'active', 'price' => 12.5, 'category' => 'Kitchen']);
+	$save(['id' => 'print', 'title' => 'Print', 'status' => 'active', 'price' => 40, 'trackInventory' => true, 'stock' => 0]);
+	$save(['id' => 'draft-thing', 'title' => 'Draft Thing', 'status' => 'draft', 'price' => 5]);
+}
+
+/**
+ * An order draft built from the bootCommerceStore() catalog, the way checkout
+ * builds one. $items maps a product id (or "product:variant") to a quantity.
+ *
+ * @param array<string,int>   $items
+ * @param array<string,mixed> $body  the checkout form, beside provider and email
+ */
+function commerceDraft(array $items = ['mug' => 1], array $body = []): \TotalCMS\Domain\Commerce\Order\OrderDraft
+{
+	$cart = [];
+	foreach ($items as $key => $qty) {
+		[$productId, $variantId] = array_pad(explode(':', $key, 2), 2, '');
+		$cart[]                  = new \TotalCMS\Domain\Commerce\Cart\CartItem($productId, $variantId, $qty);
+	}
+	$input = \TotalCMS\Domain\Commerce\Order\CheckoutInput::fromRequest($body + ['provider' => 'fake', 'email' => 'buyer@example.com'], []);
+
+	return test()->commerceApp->getContainer()->get(\TotalCMS\Domain\Commerce\Order\OrderBuilder::class)
+		->build($cart, $input, new \TotalCMS\Domain\Commerce\Pricing\PricingContext('USD', null, null, []));
+}
+
+/**
+ * An order as stored, for tests that need one without a store: one line
+ * that ships, unless $changes says otherwise.
+ *
+ * @param array<string,mixed> $changes fields of the order to set
+ */
+function commerceOrder(int $grandTotal = 3998, string $paymentStatus = 'pending', array $changes = []): \TotalCMS\Domain\Commerce\Order\OrderData
+{
+	return new \TotalCMS\Domain\Commerce\Order\OrderData($changes + [
+		'id'                => 'order-1',
+		'number'            => 1001,
+		'kind'              => 'checkout',
+		'status'            => 'open',
+		'paymentStatus'     => $paymentStatus,
+		'fulfillmentStatus' => 'unfulfilled',
+		'needsAttention'    => '',
+		'currency'          => 'USD',
+		'email'             => 'buyer@example.com',
+		'provider'          => 'fake',
+		'lines'             => ['l1' => ['id' => 'l1', 'productId' => 'tee', 'title' => 'Tee', 'type' => 'physical', 'requiresShipping' => true, 'qty' => 2, 'unitPrice' => 1999, 'lineTotal' => $grandTotal, 'fulfillmentStatus' => 'unfulfilled']],
+		'subtotal'          => $grandTotal,
+		'grandTotal'        => $grandTotal,
+		'refundedTotal'     => 0,
+		'flags'             => [],
+		'accessToken'       => str_repeat('a', 64),
+	]);
+}
+
+/** A provider's event about a payment, as its webhook would report it. */
+function commercePaymentEvent(\TotalCMS\Domain\Commerce\Payment\PaymentEventType $type, string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD', string $paymentRef = 'pi_1'): \TotalCMS\Domain\Commerce\Payment\PaymentEvent
+{
+	return new \TotalCMS\Domain\Commerce\Payment\PaymentEvent('fake', $eventId, $type, $orderId, \TotalCMS\Domain\Money\Money::of($amount, $currency), 'ref_' . $eventId, $paymentRef);
+}
+
+/** The event a provider sends when an order has been paid. */
+function commercePaidEvent(string $orderId = 'order-1', int $amount = 3998, string $eventId = 'evt_1', string $currency = 'USD'): \TotalCMS\Domain\Commerce\Payment\PaymentEvent
+{
+	return commercePaymentEvent(\TotalCMS\Domain\Commerce\Payment\PaymentEventType::Paid, $orderId, $amount, $eventId, $currency);
+}
+
+/**
+ * A plan in the bootCommerceStore() site: a digital product billed every
+ * month, at $priceMinor cents, unless $fields says otherwise.
+ *
+ * @param array<string,mixed> $fields
+ */
+function seedPlan(string $id, int $priceMinor = 1000, array $fields = []): void
+{
+	$c = test()->commerceApp->getContainer();
+	$c->get(\TotalCMS\Domain\Auth\Service\ActorContext::class)->runAs(\TotalCMS\Domain\Auth\Data\Actor::system(), fn () => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $fields + [
+		'id'               => $id,
+		'title'            => ucfirst($id),
+		'status'           => 'active',
+		'type'             => 'digital',
+		'requiresShipping' => false,
+		'price'            => $priceMinor / 100,
+		'billing'          => 'recurring',
+		'interval'         => 'month',
+		'intervalCount'    => 1,
+	]));
+}
+
+/**
+ * Give the bootCommerceStore() site a provider that can bill a
+ * subscription, `fake-sub`, beside the plain `fake`, and offer both.
+ */
+function enableSubscriptions(): \Tests\Fakes\FakeSubscriptionProvider
+{
+	$c        = test()->commerceApp->getContainer();
+	$provider = new \Tests\Fakes\FakeSubscriptionProvider(true, false);
+	$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register($provider);
+	$config           = $c->get(Config::class);
+	$config->commerce = ['providers' => ['fake', 'fake-sub']] + $config->commerce;
+	test()->subProvider = $provider;
+
+	return $provider;
+}
+
+/**
+ * A discount code in the bootCommerceStore() site: 15% off unless $fields
+ * says otherwise. Written as the store, so `usedCount` can be set.
+ *
+ * @param array<string,mixed> $fields
+ */
+function seedDiscount(string $id, array $fields = []): void
+{
+	$c = test()->commerceApp->getContainer();
+	$c->get(ActorContext::class)->runAs(Actor::system(), fn () => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)
+		->saveObject('discounts', $fields + ['id' => $id, 'title' => $id, 'active' => true, 'type' => 'percent', 'value' => 15]));
+}
+
+/**
+ * Apply a discount code to the visitor's cart, the way a buyer does: by
+ * posting it. The caller has set the CSRF header, as for any cart request.
+ */
+function applyCode(string $code): mixed
+{
+	return \TotalCMS\Slim\Pest\postJson('/commerce/cart/discount', ['code' => $code]);
+}
+
+/** Render a Twig string through the app bootCommerceStore() made. */
+function renderTwig(string $template, array $vars = []): string
+{
+	return test()->commerceApp->getContainer()->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class)->renderString($template, $vars);
+}
+
+/**
+ * Switch commerce on for a test app, whatever its license says: the test
+ * license is Pro with no paid product.
+ */
+function enableCommerce(App $app): void
+{
+	$container = $app->getContainer();
+	if ($container instanceof Container) {
+		$container->set(CommerceGate::class, new OpenCommerceGate());
+	}
+}
+
+/**
+ * The people of a store, for the admin tests: `boss` is a super admin,
+ * `keeper` is in a group that grants Commerce, and `writer` is in the
+ * built-in editor group, which does not. Sign in as one with signInAs().
+ */
+function seedCommerceStaff(App $app): void
+{
+	$c      = $app->getContainer();
+	$actors = $c->get(ActorContext::class);
+	$actors->set(Actor::system());
+
+	$editor = $c->get(\TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository::class)->findById('editor');
+	$c->get(\TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository::class)->save(new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+		'id'          => 'shopkeepers',
+		'description' => 'Runs the store',
+		'operations'  => ['read'],
+		'permissions' => ['commerce' => true] + ($editor?->permissions ?? []),
+	]));
+
+	$save = static fn (string $id, array $groups) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('auth', [
+		'id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => 'commerce-Password-1', 'active' => true, 'groups' => $groups,
+	]);
+	$save('boss', ['admin']);
+	$save('keeper', ['shopkeepers']);
+	$save('writer', ['editor']);
+
+	$actors->set(Actor::anonymous());
+}
+
+/** What the admin sidebar knows of a site without Commerce: no store, nothing to count. */
+function closedCommerceNav(): \TotalCMS\Domain\Commerce\Service\CommerceNav
+{
+	return new \TotalCMS\Domain\Commerce\Service\CommerceNav(
+		new \Tests\Fakes\ClosedCommerceGate(),
+		(new ReflectionClass(\TotalCMS\Domain\Commerce\Order\OrderQuery::class))->newInstanceWithoutConstructor(),
+		(new ReflectionClass(\TotalCMS\Domain\Commerce\Subscription\SubscriptionQuery::class))->newInstanceWithoutConstructor(),
+	);
 }

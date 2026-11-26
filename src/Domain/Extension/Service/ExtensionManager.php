@@ -10,6 +10,10 @@ use Mcp\Schema\Prompt;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
+use TotalCMS\Domain\Commerce\Contract\DownloadSource;
+use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Pricing\PriceResolver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -33,6 +37,8 @@ use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
 use TotalCMS\Domain\Extension\Service\Boot\ImageFiltersStep;
 use TotalCMS\Domain\Extension\Service\Boot\McpStep;
 use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
+use TotalCMS\Domain\Extension\Service\Boot\PaymentProvidersStep;
+use TotalCMS\Domain\Extension\Service\Boot\PriceResolversStep;
 use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
 use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
@@ -48,6 +54,10 @@ use Twig\TwigFunction;
 
 /**
  * Orchestrates extension discovery, loading, and lifecycle.
+ *
+ * @SuppressWarnings("PHPMD.ExcessivePublicCount") one `getAll…()` accessor per
+ *                                                extension point, each read
+ *                                                by its own boot step
  */
 class ExtensionManager
 {
@@ -104,6 +114,8 @@ class ExtensionManager
 		ImageFiltersStep::class,
 		McpStep::class,
 		SearchProvidersStep::class,
+		PriceResolversStep::class,
+		PaymentProvidersStep::class,
 		TwigStep::class,
 		AssetsStep::class,
 	];
@@ -658,6 +670,108 @@ class ExtensionManager
 		$byExtension = [];
 		foreach ($this->permittedContexts('mcp:search') as $id => $context) {
 			$providers = $context->getRegisteredSearchProviders();
+			if ($providers !== []) {
+				$byExtension[$id] = $providers;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the price resolvers extensions registered, each
+	 * with its priority. Drained during boot() into the
+	 * PriceResolverRegistry. Gated by the `commerce:pricing` capability
+	 * permission.
+	 *
+	 * @return array<string,list<array{resolver: PriceResolver, priority: int}>>
+	 */
+	public function getAllPriceResolvers(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:pricing') as $id => $context) {
+			$resolvers = $context->getRegisteredPriceResolvers();
+			if ($resolvers !== []) {
+				$byExtension[$id] = $resolvers;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the order-building listeners extensions
+	 * registered, each with its priority. Drained during boot() into the
+	 * OrderBuildingRegistry. Gated by the `commerce:pricing` capability
+	 * permission, like the price resolvers.
+	 *
+	 * @return array<string,list<array{listener: callable, priority: int}>>
+	 */
+	public function getAllOrderBuildingListeners(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:pricing') as $id => $context) {
+			$listeners = $context->getRegisteredOrderBuildingListeners();
+			if ($listeners !== []) {
+				$byExtension[$id] = $listeners;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the checkout validators extensions registered.
+	 * Drained during boot() into the CheckoutValidatorRegistry. Gated by the
+	 * `commerce:checkout` capability permission.
+	 *
+	 * @return array<string,list<CheckoutValidator>>
+	 */
+	public function getAllCheckoutValidators(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:checkout') as $id => $context) {
+			$validators = $context->getRegisteredCheckoutValidators();
+			if ($validators !== []) {
+				$byExtension[$id] = $validators;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the download sources extensions registered.
+	 * Drained during boot() into DownloadSources. Gated by the
+	 * `commerce:downloads` capability permission.
+	 *
+	 * @return array<string,list<DownloadSource>>
+	 */
+	public function getAllDownloadSources(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:downloads') as $id => $context) {
+			$sources = $context->getRegisteredDownloadSources();
+			if ($sources !== []) {
+				$byExtension[$id] = $sources;
+			}
+		}
+
+		return $byExtension;
+	}
+
+	/**
+	 * Per-extension map of the payment providers extensions registered.
+	 * Drained during boot() into the PaymentProviderRegistry. Gated by the
+	 * `commerce:payments` capability permission.
+	 *
+	 * @return array<string,list<PaymentProvider>>
+	 */
+	public function getAllPaymentProviders(): array
+	{
+		$byExtension = [];
+		foreach ($this->permittedContexts('commerce:payments') as $id => $context) {
+			$providers = $context->getRegisteredPaymentProviders();
 			if ($providers !== []) {
 				$byExtension[$id] = $providers;
 			}

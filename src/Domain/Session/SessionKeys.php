@@ -37,6 +37,16 @@ final class SessionKeys
 	public const WEBAUTHN_REGISTER_OPTIONS = 'totalcms.webauthn.register_options';
 	public const WEBAUTHN_AUTH_OPTIONS     = 'totalcms.webauthn.auth_options';
 
+	// Commerce: the cart, as product ids and quantities. Never a price.
+	public const COMMERCE_CART = 'totalcms.commerce.cart';
+	/** The customer (`collection/id`) whose stored cart this session's cart was last joined to. */
+	public const COMMERCE_CART_OWNER = 'totalcms.commerce.cartOwner';
+	/** Set once a cart request has sent a price, so the log notes it once per session. */
+	public const COMMERCE_PRICE_NOTED = 'totalcms.commerce.priceNoted';
+
+	/** The page of this site a checkout was started from, to bring the buyer back to if they give up. */
+	public const COMMERCE_CHECKOUT_FROM = 'totalcms.commerce.checkoutFrom';
+
 	// Security Keys (Note: CSRF uses its own SESSION_KEY constant)
 	// public const CSRF_TOKENS = '_csrf'; // Managed by CSRFTokenManager
 

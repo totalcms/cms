@@ -1,0 +1,26 @@
+{
+	"id": "evt_1Refunded",
+	"object": "event",
+	"livemode": false,
+	"type": "charge.refunded",
+	"data": {
+		"object": {
+			"id": "ch_3A1",
+			"object": "charge",
+			"amount": 3998,
+			"amount_refunded": 1500,
+			"currency": "usd",
+			"metadata": { "orderId": "0123456789abcdef0123456789abcdef", "orderNumber": "1001" },
+			"payment_intent": "pi_3A1",
+			"refunded": false,
+			"refunds": {
+				"object": "list",
+				"data": [
+					{ "id": "re_3A1b", "object": "refund", "amount": 1000, "currency": "usd", "created": 1795000200 },
+					{ "id": "re_3A1a", "object": "refund", "amount": 500, "currency": "usd", "created": 1795000100 }
+				]
+			}
+		},
+		"previous_attributes": { "amount_refunded": 500 }
+	}
+}

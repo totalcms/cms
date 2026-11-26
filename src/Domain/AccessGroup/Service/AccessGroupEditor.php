@@ -20,7 +20,7 @@ use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
  *   - collections, collectionsMeta, schemas: {operations, all, allowed}
  *     — operations from create/read/update/delete, allowed a list of ids;
  *   - utils, settings, extensions: {all, allowed};
- *   - builder, mailer, playground, dataviews, docs, inlineEdit: true/false.
+ *   - builder, mailer, playground, dataviews, commerce, docs, inlineEdit: true/false.
  */
 final readonly class AccessGroupEditor
 {
@@ -30,7 +30,7 @@ final readonly class AccessGroupEditor
 
 	private const LISTED = ['utils', 'settings', 'extensions'];
 
-	private const FLAGS = ['builder', 'mailer', 'playground', 'dataviews', 'docs', 'inlineEdit'];
+	private const FLAGS = ['builder', 'mailer', 'playground', 'dataviews', 'commerce', 'docs', 'inlineEdit'];
 
 	public function __construct(
 		private AccessGroupLister $lister,

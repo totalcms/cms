@@ -8,6 +8,19 @@ use TotalCMS\Action\Admin\ActivityExportAction;
 use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Admin\AdminBuilderAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderAcceptAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderCancelAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderFulfillAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderNoteAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderReceiptAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderRefundAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderRefulfillAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrdersAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionCancelAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionsAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionSyncAction;
 use TotalCMS\Action\Admin\AdminCellAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
@@ -47,6 +60,7 @@ use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\BuilderAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Access\CommerceAccessMiddleware;
 use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
 use TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware;
@@ -55,6 +69,7 @@ use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Commerce\CommerceEditionMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
 use TotalCMS\Middleware\License\AccessGroupsEditionMiddleware;
@@ -159,6 +174,27 @@ return function (App $app): void {
 		$group->post('/sync/{action}', SyncAction::class)->setName('admin-sync')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/dataviews[/{id}]', AdminDataViewsAction::class)->setName('admin-dataviews')->add(DataViewsEditionMiddleware::class)->add(DataViewsAccessMiddleware::class);
+
+		// The store. Two locks, and both must open: the site has Commerce, and
+		// the user's access group grants it (orders hold buyers' details).
+		$group->group('/commerce', function (RouteCollectorProxy $commerce): void {
+			$commerce->get('[/orders]', AdminOrdersAction::class)->setName('admin-commerce');
+			$commerce->get('/orders/{id}', AdminOrderAction::class)->setName('admin-commerce-order');
+			$commerce->post('/orders/{id}/fulfill', AdminOrderFulfillAction::class)->setName('admin-commerce-order-fulfill');
+			$commerce->post('/orders/{id}/note', AdminOrderNoteAction::class)->setName('admin-commerce-order-note');
+			$commerce->post('/orders/{id}/receipt', AdminOrderReceiptAction::class)->setName('admin-commerce-order-receipt');
+			// What undoes or repeats a sale is for a super admin.
+			$commerce->post('/orders/{id}/refund', AdminOrderRefundAction::class)->setName('admin-commerce-order-refund')->add(AdminOnlyMiddleware::class);
+			$commerce->post('/orders/{id}/cancel', AdminOrderCancelAction::class)->setName('admin-commerce-order-cancel')->add(AdminOnlyMiddleware::class);
+			$commerce->post('/orders/{id}/accept', AdminOrderAcceptAction::class)->setName('admin-commerce-order-accept')->add(AdminOnlyMiddleware::class);
+			$commerce->post('/orders/{id}/refulfill', AdminOrderRefulfillAction::class)->setName('admin-commerce-order-refulfill')->add(AdminOnlyMiddleware::class);
+
+			$commerce->get('/subscriptions', AdminSubscriptionsAction::class)->setName('admin-commerce-subscriptions');
+			$commerce->get('/subscriptions/{id}', AdminSubscriptionAction::class)->setName('admin-commerce-subscription');
+			// Ending one, or taking the provider's word for where it stands, is for a super admin.
+			$commerce->post('/subscriptions/{id}/cancel', AdminSubscriptionCancelAction::class)->setName('admin-commerce-subscription-cancel')->add(AdminOnlyMiddleware::class);
+			$commerce->post('/subscriptions/{id}/sync', AdminSubscriptionSyncAction::class)->setName('admin-commerce-subscription-sync')->add(AdminOnlyMiddleware::class);
+		})->add(CommerceEditionMiddleware::class)->add(CommerceAccessMiddleware::class);
 
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post')->add(PlaygroundAccessMiddleware::class);

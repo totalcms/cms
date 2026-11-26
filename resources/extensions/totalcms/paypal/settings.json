@@ -1,0 +1,67 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "PayPal Payments",
+	"description": "Your PayPal app's credentials. Make an app at developer.paypal.com, add a webhook to it that points at /commerce/webhook/paypal on this site, then switch PayPal on in Settings → Commerce.",
+	"type": "object",
+	"properties": {
+		"mode": {
+			"type": "string",
+			"field": "select",
+			"label": "Mode",
+			"help": "Sandbox takes no real money: use it with PayPal's sandbox accounts until your store works end to end. Live charges real accounts.",
+			"default": "sandbox",
+			"options": [
+				{
+					"value": "sandbox",
+					"label": "Sandbox"
+				},
+				{
+					"value": "live",
+					"label": "Live"
+				}
+			]
+		},
+		"sandboxClientId": {
+			"type": "string",
+			"field": "text",
+			"label": "Sandbox Client ID",
+			"help": "From developer.paypal.com, under Apps &amp; Credentials, with Sandbox selected.",
+			"default": ""
+		},
+		"sandboxClientSecret": {
+			"type": "string",
+			"field": "secret",
+			"label": "Sandbox Secret",
+			"help": "The secret shown beside the sandbox Client ID.",
+			"default": ""
+		},
+		"sandboxWebhookId": {
+			"type": "string",
+			"field": "text",
+			"label": "Sandbox Webhook ID",
+			"help": "Shown when you add a webhook to the sandbox app. PayPal is asked to check every event against it, and an event that does not check out is refused.",
+			"default": ""
+		},
+		"liveClientId": {
+			"type": "string",
+			"field": "text",
+			"label": "Live Client ID",
+			"help": "From developer.paypal.com, under Apps &amp; Credentials, with Live selected.",
+			"default": ""
+		},
+		"liveClientSecret": {
+			"type": "string",
+			"field": "secret",
+			"label": "Live Secret",
+			"help": "The secret shown beside the live Client ID.",
+			"default": ""
+		},
+		"liveWebhookId": {
+			"type": "string",
+			"field": "text",
+			"label": "Live Webhook ID",
+			"help": "The live app has its own webhook, with an ID different from the sandbox one.",
+			"default": ""
+		}
+	}
+}

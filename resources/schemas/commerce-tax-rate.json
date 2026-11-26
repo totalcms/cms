@@ -1,0 +1,63 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
+	"id": "commerce-tax-rate",
+	"title": "Commerce Tax Rate",
+	"description": "One row of the store's tax table",
+	"category": "Internal",
+	"type": "object",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"factory": "uid",
+			"label": "Rate ID",
+			"settings": {
+				"autogen": "tax_${uid}",
+				"hide": true
+			}
+		},
+		"country": {
+			"type": "string",
+			"field": "select",
+			"label": "Country",
+			"help": "The country this rate is for. <em>Everywhere</em> is a rate for buyers in any country that has no rate of its own.",
+			"default": "",
+			"options": [
+				{
+					"value": "",
+					"label": "Everywhere"
+				}
+			],
+			"settings": {
+				"propertyOptions": "countries",
+				"sortOptions": false
+			}
+		},
+		"region": {
+			"type": "string",
+			"field": "text",
+			"label": "Region",
+			"help": "A state or province, such as <code>NY</code>. Leave empty for the whole country. For the United States and Canada the code and the full name both match what a buyer types. Anywhere else, write it each way a buyer might, with commas between: <code>NSW, New South Wales</code>.",
+			"placeholder": "NY"
+		},
+		"rate": {
+			"type": "string",
+			"field": "text",
+			"label": "Rate (%)",
+			"help": "The percentage, such as <code>8.875</code>.",
+			"placeholder": "8.875"
+		},
+		"label": {
+			"type": "string",
+			"field": "text",
+			"label": "Label",
+			"help": "What the buyer sees on the order, such as <em>Sales tax</em> or <em>VAT</em>.",
+			"placeholder": "Sales tax"
+		}
+	},
+	"required": [
+		"id",
+		"rate"
+	]
+}

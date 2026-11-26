@@ -1,0 +1,363 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Commerce Settings",
+	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
+	"formgrid": "---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
+	"type": "object",
+	"properties": {
+		"currency": {
+			"type": "string",
+			"field": "select",
+			"label": "Store Currency",
+			"help": "The currency every price and order is in. Choose it before the first order: changing it later does not convert existing prices or orders.",
+			"default": "USD",
+			"settings": {
+				"propertyOptions": "currencies",
+				"clearValue": false
+			}
+		},
+		"customerCollection": {
+			"type": "string",
+			"field": "select",
+			"label": "Customer Accounts Collection",
+			"help": "The collection customers sign in to, so they can see their orders. Leave empty for guest checkout only.",
+			"placeholder": "Guest checkout only",
+			"settings": {
+				"propertyOptions": "schemaCollections:auth"
+			}
+		},
+		"providers": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"field": "checklist",
+			"label": "Payment Providers",
+			"help": "The ways a buyer can pay. Checkout lists them in the order shown here. A provider appears here once its extension is enabled, and is offered to buyers once it has its keys.",
+			"default": [],
+			"settings": {
+				"fieldGrid": "250px",
+				"propertyOptions": "paymentProviders"
+			}
+		},
+		"checkoutMode": {
+			"type": "string",
+			"field": "radio",
+			"label": "Checkout",
+			"help": "Where the buyer pays. <strong>Provider's page</strong> sends them to the payment provider and brings them back. <strong>On this site</strong> shows the payment form on your own page; it is used when the chosen provider can do it, and the provider's page otherwise.",
+			"default": "hosted",
+			"options": [
+				{
+					"value": "hosted",
+					"label": "On the provider's page"
+				},
+				{
+					"value": "embedded",
+					"label": "On this site"
+				}
+			]
+		},
+		"orderNumberStart": {
+			"type": "number",
+			"field": "number",
+			"label": "First Order Number",
+			"help": "The number the first order gets. Raise it later to jump ahead; lowering it does nothing, because a number is never used twice.",
+			"placeholder": "1001",
+			"default": 1001,
+			"min": 1,
+			"max": 999999999
+		},
+		"orderNumberPrefix": {
+			"type": "string",
+			"field": "text",
+			"label": "Order Number Prefix",
+			"help": "Shown before an order number, as in <code>#1001</code>. For display only.",
+			"placeholder": "#",
+			"default": "#"
+		},
+		"taxMode": {
+			"type": "string",
+			"field": "radio",
+			"label": "Tax",
+			"help": "<strong>No tax</strong> charges none. <strong>Added to prices</strong> adds the tax at checkout. <strong>Included in prices</strong> treats your prices as already including it and shows the tax part on the order.",
+			"default": "none",
+			"options": [
+				{
+					"value": "none",
+					"label": "No tax"
+				},
+				{
+					"value": "exclusive",
+					"label": "Added to prices"
+				},
+				{
+					"value": "inclusive",
+					"label": "Included in prices"
+				}
+			]
+		},
+		"taxBy": {
+			"type": "string",
+			"field": "radio",
+			"label": "Tax Worked Out By",
+			"help": "<strong>My tax rates</strong> uses the table below for every order. <strong>The payment provider, when it can</strong> leaves it to Stripe Tax for orders paid with Stripe: Stripe finds the exact rate for the buyer's address and adds it when they pay. That needs Stripe Tax set up in your Stripe account; run <code>tcms stripe:tax</code> to check. An order paid with a provider that cannot work out tax, such as PayPal, uses your tax rates.",
+			"default": "table",
+			"options": [
+				{
+					"value": "table",
+					"label": "My tax rates"
+				},
+				{
+					"value": "provider",
+					"label": "The payment provider, when it can"
+				}
+			],
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
+			}
+		},
+		"taxShipping": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Tax Shipping",
+			"help": "Charge tax on the shipping amount as well as on the goods. This is for your own tax rates: a payment provider that works out the tax decides this by the rules of the buyer's place.",
+			"default": false,
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
+			}
+		},
+		"taxRates": {
+			"field": "deckTable",
+			"label": "Tax Rates",
+			"help": "One row for each place you charge tax. The most specific row wins: a region's rate over its country's, a country's over a row with no country. When the payment provider works out the tax, these rates are for orders paid with a provider that cannot, such as PayPal: leave the table empty and those orders carry no tax.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-tax-rate.json",
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-tax-rate.json"
+				}
+			},
+			"settings": {
+				"visibility": {
+					"watch": "taxMode",
+					"value": "none",
+					"operator": "!="
+				}
+			}
+		},
+		"shippingMode": {
+			"type": "string",
+			"field": "radio",
+			"label": "Shipping",
+			"help": "<strong>No shipping</strong> charges none. <strong>Flat rate</strong> charges one amount for every order. <strong>By zone</strong> charges by where the order ships.",
+			"default": "none",
+			"options": [
+				{
+					"value": "none",
+					"label": "No shipping"
+				},
+				{
+					"value": "flat",
+					"label": "Flat rate"
+				},
+				{
+					"value": "zones",
+					"label": "By zone"
+				}
+			]
+		},
+		"shippingFlatRate": {
+			"type": "number",
+			"field": "price",
+			"label": "Flat Rate",
+			"help": "The shipping charge for every order, in the store's currency.",
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "flat",
+					"operator": "=="
+				},
+				"currency": "store"
+			}
+		},
+		"shippingFreeOver": {
+			"type": "number",
+			"field": "price",
+			"label": "Free Shipping Over",
+			"help": "Orders at or over this amount ship free. Leave empty for never.",
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "flat",
+					"operator": "=="
+				},
+				"currency": "store"
+			}
+		},
+		"shippingZones": {
+			"field": "deck",
+			"label": "Shipping Zones",
+			"help": "One zone for each group of places with one rate. An order ships at the rate of the first zone that covers its address, so list the most exact first. An address no zone covers cannot be checked out.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json",
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-shipping-zone.json"
+				}
+			},
+			"settings": {
+				"visibility": {
+					"watch": "shippingMode",
+					"value": "zones",
+					"operator": "=="
+				},
+				"deckItemLabel": "${label}"
+			}
+		},
+		"receiptMailer": {
+			"type": "string",
+			"field": "select",
+			"label": "Receipt Email",
+			"help": "The mailer template sent when an order is paid, and for each renewal of a subscription.",
+			"placeholder": "commerce-receipt",
+			"settings": {
+				"relationalOptions": {
+					"collection": "mailer",
+					"label": "name",
+					"value": "id"
+				}
+			}
+		},
+		"paymentFailedMailer": {
+			"type": "string",
+			"field": "select",
+			"label": "Failed Payment Email",
+			"help": "The mailer template sent once when a subscription's renewal payment fails.",
+			"placeholder": "commerce-payment-failed",
+			"settings": {
+				"relationalOptions": {
+					"collection": "mailer",
+					"label": "name",
+					"value": "id"
+				}
+			}
+		},
+		"returnPage": {
+			"type": "string",
+			"field": "select",
+			"label": "Order Page",
+			"help": "The Site Builder page that shows an order after payment. Leave empty to use the built-in page.",
+			"placeholder": "The built-in page",
+			"settings": {
+				"relationalOptions": {
+					"collection": "builder-pages",
+					"label": "title",
+					"value": "id"
+				}
+			}
+		},
+		"payPage": {
+			"type": "string",
+			"field": "select",
+			"label": "Payment Page",
+			"help": "The Site Builder page that holds the payment form when checkout is on this site. Leave empty to use the built-in page.",
+			"placeholder": "The built-in page",
+			"settings": {
+				"relationalOptions": {
+					"collection": "builder-pages",
+					"label": "title",
+					"value": "id"
+				},
+				"visibility": {
+					"watch": "checkoutMode",
+					"value": "embedded",
+					"operator": "=="
+				}
+			}
+		},
+		"downloadTtlHours": {
+			"type": "number",
+			"field": "number",
+			"label": "Download Link Lifetime (hours)",
+			"help": "How long a link to a purchased file works after the order is paid.",
+			"placeholder": "72",
+			"default": 72,
+			"min": 1,
+			"max": 8760
+		},
+		"downloadMaxCount": {
+			"type": "number",
+			"field": "number",
+			"label": "Downloads per Purchase",
+			"help": "How many times one purchased file can be downloaded.",
+			"placeholder": "5",
+			"default": 5,
+			"min": 1,
+			"max": 1000
+		},
+		"lowStockAt": {
+			"type": "number",
+			"field": "number",
+			"label": "Low Stock At",
+			"help": "A product that counts its stock is running low when this many or fewer are left. The dashboard lists it, and the stock.low event fires once as its count comes down to this number. Set 0 for no warning before a product sells out.",
+			"placeholder": "5",
+			"default": 5,
+			"min": 0,
+			"max": 100000
+		},
+		"pendingOrderTtlHours": {
+			"type": "number",
+			"field": "number",
+			"label": "Abandoned Checkout Lifetime (hours)",
+			"help": "An order that was started and never paid is cancelled after this long.",
+			"placeholder": "24",
+			"default": 24,
+			"min": 1,
+			"max": 720
+		},
+		"cartMaxLines": {
+			"type": "number",
+			"field": "number",
+			"label": "Most Lines in a Cart",
+			"help": "The most different items one cart can hold.",
+			"placeholder": "100",
+			"default": 100,
+			"min": 1,
+			"max": 1000
+		},
+		"cartMaxQty": {
+			"type": "number",
+			"field": "number",
+			"label": "Most of One Item",
+			"help": "The highest quantity of one item in a cart.",
+			"placeholder": "99",
+			"default": 99,
+			"min": 1,
+			"max": 100000
+		},
+		"checkoutAttributes": {
+			"type": "array",
+			"field": "list",
+			"label": "Checkout Attributes",
+			"help": "Extra values checkout may take from the buyer, by name, such as <code>giftNote</code>. Anything not named here is dropped.",
+			"placeholder": "giftNote"
+		},
+		"grantableGroups": {
+			"type": "array",
+			"field": "multiselect",
+			"label": "Groups a Product May Grant",
+			"help": "A product can give its buyer an access group: a membership. Only the groups chosen here can be given, and the admin group never can. Leave empty and no product grants anything.",
+			"settings": {
+				"accessGroupOptions": true
+			}
+		}
+	}
+}

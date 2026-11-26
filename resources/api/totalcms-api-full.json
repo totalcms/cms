@@ -1307,6 +1307,704 @@
                 ]
             }
         },
+        "/admin/commerce": {
+            "get": {
+                "operationId": "admin-commerce.0",
+                "tags": [
+                    "admin"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce[/orders]",
+                "x-tcms-action": "AdminOrdersAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders": {
+            "get": {
+                "operationId": "admin-commerce.1",
+                "tags": [
+                    "admin"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce[/orders]",
+                "x-tcms-action": "AdminOrdersAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}": {
+            "get": {
+                "operationId": "admin-commerce-order",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}",
+                "x-tcms-action": "AdminOrderAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/accept": {
+            "post": {
+                "operationId": "admin-commerce-order-accept",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/accept",
+                "x-tcms-action": "AdminOrderAcceptAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/cancel": {
+            "post": {
+                "operationId": "admin-commerce-order-cancel",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/cancel",
+                "x-tcms-action": "AdminOrderCancelAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/fulfill": {
+            "post": {
+                "operationId": "admin-commerce-order-fulfill",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/fulfill",
+                "x-tcms-action": "AdminOrderFulfillAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/note": {
+            "post": {
+                "operationId": "admin-commerce-order-note",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/note",
+                "x-tcms-action": "AdminOrderNoteAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/receipt": {
+            "post": {
+                "operationId": "admin-commerce-order-receipt",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/receipt",
+                "x-tcms-action": "AdminOrderReceiptAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/refulfill": {
+            "post": {
+                "operationId": "admin-commerce-order-refulfill",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/refulfill",
+                "x-tcms-action": "AdminOrderRefulfillAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/orders/{id}/refund": {
+            "post": {
+                "operationId": "admin-commerce-order-refund",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/refund",
+                "x-tcms-action": "AdminOrderRefundAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions": {
+            "get": {
+                "operationId": "admin-commerce-subscriptions",
+                "tags": [
+                    "admin"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions",
+                "x-tcms-action": "AdminSubscriptionsAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}": {
+            "get": {
+                "operationId": "admin-commerce-subscription",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}",
+                "x-tcms-action": "AdminSubscriptionAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}/cancel": {
+            "post": {
+                "operationId": "admin-commerce-subscription-cancel",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}/cancel",
+                "x-tcms-action": "AdminSubscriptionCancelAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}/sync": {
+            "post": {
+                "operationId": "admin-commerce-subscription-sync",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}/sync",
+                "x-tcms-action": "AdminSubscriptionSyncAction",
+                "x-tcms-middleware": [
+                    "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
         "/admin/dataviews": {
             "get": {
                 "operationId": "admin-dataviews.0",
@@ -6132,6 +6830,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6206,6 +6905,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6262,6 +6962,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6318,6 +7019,7 @@
                 "x-tcms-middleware": [
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "CollectionEditionMiddleware",
                     "CollectionMetaAccessMiddleware",
                     "AuthMiddleware"
@@ -6459,6 +7161,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6523,6 +7226,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6570,6 +7274,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6633,6 +7338,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6680,6 +7386,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6780,6 +7487,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6834,6 +7542,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6898,6 +7607,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -6963,6 +7673,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7016,6 +7727,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7087,6 +7799,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7162,6 +7875,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7235,6 +7949,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7297,6 +8012,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7376,6 +8092,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7440,6 +8157,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7515,6 +8233,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7586,6 +8305,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7666,6 +8386,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7736,6 +8457,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7818,6 +8540,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7908,6 +8631,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -7988,6 +8712,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8068,6 +8793,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8150,6 +8876,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8240,6 +8967,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8328,6 +9056,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8418,6 +9147,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8506,6 +9236,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8577,6 +9308,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8665,6 +9397,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -8738,6 +9471,7 @@
                     "OAuthBearerMiddleware",
                     "NoCacheMiddleware",
                     "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "SystemCollectionGuardMiddleware",
                     "CollectionAccessMiddleware",
                     "DualAuthMiddleware",
@@ -10220,6 +10954,7 @@
                 "x-tcms-action": "ImportCsvAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10277,6 +11012,7 @@
                 "x-tcms-action": "ImportDeckCsvAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10334,6 +11070,7 @@
                 "x-tcms-action": "ImportDeckJsonAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10391,6 +11128,7 @@
                 "x-tcms-action": "ImportFactoryAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -10448,6 +11186,7 @@
                 "x-tcms-action": "ImportJsonAction",
                 "x-tcms-middleware": [
                     "CollectionAccessMiddleware",
+                    "CommerceCollectionGuardMiddleware",
                     "OAuthRestScopeMiddleware",
                     "OAuthBearerMiddleware",
                     "AuthMiddleware"
@@ -12937,6 +13676,692 @@
                 "x-tcms-action": "AutomationWebhookAction",
                 "x-tcms-middleware": [
                     "AutomationWebhookMiddleware"
+                ]
+            }
+        },
+        "/commerce/cancel/{orderId}": {
+            "get": {
+                "operationId": "commerce-cancel",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cancel/{orderId}",
+                "x-tcms-action": "CheckoutCancelAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart": {
+            "get": {
+                "operationId": "commerce-cart",
+                "tags": [
+                    "commerce"
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart",
+                "x-tcms-action": "CartViewAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/add": {
+            "post": {
+                "operationId": "commerce-cart-add",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/add",
+                "x-tcms-action": "CartAddAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/attributes": {
+            "post": {
+                "operationId": "commerce-cart-attributes",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/attributes",
+                "x-tcms-action": "CartAttributesAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/clear": {
+            "post": {
+                "operationId": "commerce-cart-clear",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/clear",
+                "x-tcms-action": "CartClearAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/discount": {
+            "post": {
+                "operationId": "commerce-cart-discount",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/discount",
+                "x-tcms-action": "CartDiscountAction",
+                "x-tcms-middleware": [
+                    "DiscountRateLimitMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/discount/remove": {
+            "post": {
+                "operationId": "commerce-cart-discount-remove",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/discount/remove",
+                "x-tcms-action": "CartDiscountRemoveAction",
+                "x-tcms-middleware": [
+                    "CartRateLimitMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/remove": {
+            "post": {
+                "operationId": "commerce-cart-remove",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/remove",
+                "x-tcms-action": "CartRemoveAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/cart/update": {
+            "post": {
+                "operationId": "commerce-cart-update",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/cart/update",
+                "x-tcms-action": "CartUpdateAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/checkout": {
+            "post": {
+                "operationId": "commerce-checkout",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/checkout",
+                "x-tcms-action": "CheckoutStartAction",
+                "x-tcms-middleware": [
+                    "CheckoutRateLimitMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
+        "/commerce/checkout/quote": {
+            "post": {
+                "operationId": "commerce-checkout-quote",
+                "tags": [
+                    "commerce"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/checkout/quote",
+                "x-tcms-action": "CheckoutQuoteAction",
+                "x-tcms-middleware": [
+                    "CartRateLimitMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
+        "/commerce/download/{token}": {
+            "get": {
+                "operationId": "commerce-download",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/download/{token}",
+                "x-tcms-action": "CommerceDownloadAction",
+                "x-tcms-middleware": [
+                    "CartRateLimitMiddleware",
+                    "NoCacheMiddleware"
+                ]
+            }
+        },
+        "/commerce/order/{orderId}/status": {
+            "get": {
+                "operationId": "commerce-order-status",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/order/{orderId}/status",
+                "x-tcms-action": "OrderStatusAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/pay/{orderId}": {
+            "get": {
+                "operationId": "commerce-pay",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/pay/{orderId}",
+                "x-tcms-action": "CheckoutPayAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/return/{orderId}": {
+            "get": {
+                "operationId": "commerce-return",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/return/{orderId}",
+                "x-tcms-action": "CheckoutReturnAction",
+                "x-tcms-middleware": [
+                    "NoCacheMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}": {
+            "get": {
+                "operationId": "commerce-subscription",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}",
+                "x-tcms-action": "SubscriptionViewAction",
+                "x-tcms-middleware": [
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}/billing": {
+            "get": {
+                "operationId": "commerce-subscription-billing",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}/billing",
+                "x-tcms-action": "SubscriptionBillingAction",
+                "x-tcms-middleware": [
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/subscription/{id}/cancel": {
+            "post": {
+                "operationId": "commerce-subscription-cancel",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/subscription/{id}/cancel",
+                "x-tcms-action": "SubscriptionCancelAction",
+                "x-tcms-middleware": [
+                    "CheckoutRateLimitMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "SubscriptionOwnerMiddleware",
+                    "NoCacheMiddleware",
+                    "CartRateLimitMiddleware"
+                ]
+            }
+        },
+        "/commerce/webhook/{provider}": {
+            "post": {
+                "operationId": "commerce-webhook",
+                "tags": [
+                    "commerce"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [],
+                "x-tcms-route": "/commerce/webhook/{provider}",
+                "x-tcms-action": "CommerceWebhookAction",
+                "x-tcms-middleware": [
+                    "WebhookRateLimitMiddleware",
+                    "NoCacheMiddleware"
                 ]
             }
         },

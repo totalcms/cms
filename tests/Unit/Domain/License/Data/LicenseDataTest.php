@@ -202,6 +202,8 @@ describe('LicenseData', function (): void {
 			'allowedVersion'     => '3.1.0',
 			'registered'         => true,
 			'timestamp'          => 1234567890,
+			// Paid products the license carries; none on this one.
+			'entitlements'       => [],
 		]);
 	});
 

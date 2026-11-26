@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Verlauf zum Rückgängigmachen für jedes Speichern und Löschen von Objekten',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache-Backend-Konfiguration',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Ihr Shop: Währung, Zahlungen, Steuern, Versand und E-Mails',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Admin-Dashboard-Konfiguration',
 	'settings.extensions'              => 'Erweiterungen',
@@ -936,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
+	'access_groups.feature_commerce'       => 'Commerce-Bestellungen',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Inline-Bearbeitung',
 	'access_groups.utils_access'           => 'Werkzeuge-Zugriffsebene',
@@ -1728,4 +1731,8 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Noch keine Ebenen: Shares nutzen das einfache Bild.',
 	'overlay_preview.reason.no-record'       => 'Dieser Eintrag lässt sich nicht lesen, daher gibt es keine Vorschau.',
 	'overlay_preview.reason.needs-pro'       => 'Pro-Edition: Unter Pro nutzen Shares das einfache Bild, das hier zu sehen ist.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Bestellungen',
+	'commerce.subscriptions' => 'Abonnements',
 ];

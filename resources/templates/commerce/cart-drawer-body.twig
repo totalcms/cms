@@ -1,0 +1,48 @@
+{#
+	What is inside the cart drawer: the lines, the discount code and the
+	totals. It is reloaded whole every time the cart changes, so its own
+	forms swap nothing: they change the cart, and the reload shows the result.
+
+	cart, notices, base, csrf  as in cart-page.twig
+#}
+{% for notice in notices %}
+	<p class="commerce-cart-notice" role="status">{{ notice|e }}</p>
+{% endfor %}
+{% if cart.lines is empty %}
+	<p class="commerce-cart-empty">Your cart is empty.</p>
+{% else %}
+	<ul class="cart-drawer-lines">
+		{% for line in cart.lines %}
+			<li class="cart-drawer-line" data-line="{{ line.lineKey|e }}">
+				{% if line.image %}<img class="cart-drawer-image" src="{{ line.image|e }}" alt="" width="56" height="56" loading="lazy">{% endif %}
+				<div class="cart-drawer-item">
+					<span class="commerce-cart-title">{{ line.title|e }}{% if line.variantTitle %} <small>{{ line.variantTitle|e }}</small>{% endif %}</span>
+					<span class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</span>
+				</div>
+				<div class="cart-drawer-controls">
+					<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=none" hx-swap="none" hx-trigger="change, submit">
+						{{ csrf|raw }}
+						<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+						<label class="visually-hidden" for="drawer-qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
+						<input id="drawer-qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
+						<noscript><button type="submit">Update</button></noscript>
+					</form>
+					<form method="post" action="{{ base|e }}/commerce/cart/remove" hx-post="{{ base|e }}/commerce/cart/remove?part=none" hx-swap="none">
+						{{ csrf|raw }}
+						<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+						<button type="submit" class="cart-drawer-remove" aria-label="Remove {{ line.title|e }}">Remove</button>
+					</form>
+				</div>
+			</li>
+		{% endfor %}
+	</ul>
+	{% include 'commerce/discount-form.twig' with {notices: [], amount: false} %}
+	<dl class="cart-drawer-totals">
+		{% if cart.discount %}
+			<div><dt>Subtotal</dt><dd>{{ cart.subtotal.amount|money(cart.subtotal.currency) }}</dd></div>
+			<div><dt>Discount <small>{{ cart.discount.code|e }}</small></dt><dd>{% if cart.discount.freeShipping %}Free shipping{% else %}{{ (0 - cart.discountTotal.amount)|money(cart.subtotal.currency) }}{% endif %}</dd></div>
+		{% endif %}
+		<div class="cart-drawer-total"><dt>{{ cart.discount ? 'Total' : 'Subtotal' }}</dt><dd>{{ cart.total.amount|money(cart.total.currency) }}</dd></div>
+	</dl>
+	<p class="commerce-cart-note">Shipping and tax are worked out at checkout.</p>
+{% endif %}

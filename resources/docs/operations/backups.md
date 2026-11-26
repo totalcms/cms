@@ -23,6 +23,8 @@ This is a **record history**, not a site backup. Out of the box only the object'
 
 Creating an object writes nothing: its first state is recoverable from the first update's snapshot, and doubling writes on import-heavy sites buys nothing. Imports never write snapshots at all — the whole point of a bulk import is that it's bulk.
 
+A store's carts are never snapshotted either. A signed-in customer's cart is saved every time they change it, and it is priced again from the catalog each time it is read, so an old copy of one is of no use. This goes by the collection's schema, not its name: a collection of your own that happens to be called `carts` keeps its history.
+
 Snapshots live inside the data directory, so they stay with the content they protect and survive application updates:
 
 ```

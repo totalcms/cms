@@ -19,7 +19,8 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
  * {@see ActorContext}, so an entry point that forgets its own check (a new
  * route, an MCP tool, an extension) still cannot claim another member's
  * object, set a protected field, or let an API key limited to some
- * collections write to another.
+ * collections write to another. Nor can anyone but the site itself write a
+ * record of the store's.
  *
  * Entry points still check first: they answer with a proper refusal, while
  * a refusal here is an {@see AccessDeniedException} (403) that means the
@@ -47,6 +48,7 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeCreate(string $collection, array $data): array
 	{
+		$this->requireWritable($collection, (string)($data['id'] ?? ''), Operation::Create);
 		$this->requireReach($collection, (string)($data['id'] ?? ''), Operation::Create);
 
 		return $this->guard->applyWrite($this->fieldActor($collection), $collection, (string)($data['id'] ?? ''), $data);
@@ -62,6 +64,7 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeUpdate(string $collection, string $id, array $data): array
 	{
+		$this->requireWritable($collection, $id, Operation::Update);
 		$this->requireReach($collection, $id, Operation::Update);
 		$this->requireOwner($collection, $id, Operation::Update);
 
@@ -73,8 +76,27 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeDelete(string $collection, string $id): void
 	{
+		$this->requireWritable($collection, $id, Operation::Delete);
 		$this->requireReach($collection, $id, Operation::Delete);
 		$this->requireOwner($collection, $id, Operation::Delete);
+	}
+
+	/**
+	 * Refuse a write to a collection only the site itself writes (an order,
+	 * a cart), for every actor but the system. The three methods above call
+	 * it; a writer that stores objects without ObjectSaver (the cloner, the
+	 * factory) calls it itself, so it cannot be the way round.
+	 */
+	public function requireWritable(string $collection, string $id, Operation $operation): void
+	{
+		$actor = $this->actors->current();
+		if ($this->guard->writableBy($actor, $collection)) {
+			return;
+		}
+
+		$this->denials->write($actor, $collection, $id, $operation, Decision::DenySystemOnly);
+
+		throw new AccessDeniedException(sprintf('Objects in "%s" are written by the store and cannot be changed here.', $collection));
 	}
 
 	/**

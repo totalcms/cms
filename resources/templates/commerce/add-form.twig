@@ -1,0 +1,42 @@
+{#
+	An "Add to cart" form for one product. With HTMX on the page the cart
+	updates in place; without it the form posts and the browser comes back to
+	the page. Autoescape is off in this app, so every value is escaped here.
+
+	productId  the product's id
+	variantId  one variant to add, fixed (addButton); '' for none
+	variants   options to choose from as [{id, title}] (variantPicker); empty for none
+	qty        the quantity: a fixed hidden value when showQty is false, the field's starting value when true
+	showQty    show a quantity field
+	label      the button's text
+	target     the selector HTMX swaps the answer into; '' to swap nothing and
+	           let the carts on the page reload themselves
+	class      extra classes for the form
+	base       the path Total CMS is served under
+	csrf       the hidden token field
+#}
+<form class="commerce-add-form{% if class %} {{ class|e }}{% endif %}" method="post" action="{{ base|e }}/commerce/cart/add" {% if target %}hx-post="{{ base|e }}/commerce/cart/add" hx-target="{{ target|e }}" hx-swap="outerHTML"{% else %}hx-post="{{ base|e }}/commerce/cart/add?part=none" hx-swap="none"{% endif %}>
+	{{ csrf|raw }}
+	<input type="hidden" name="productId" value="{{ productId|e }}">
+	{% if variants is not empty %}
+		<label>
+			<span class="commerce-add-label">Option</span>
+			<select name="variantId" required>
+				{% for variant in variants %}
+					<option value="{{ variant.id|e }}">{{ variant.title|e }}</option>
+				{% endfor %}
+			</select>
+		</label>
+	{% elseif variantId %}
+		<input type="hidden" name="variantId" value="{{ variantId|e }}">
+	{% endif %}
+	{% if showQty %}
+		<label>
+			<span class="commerce-add-label">Quantity</span>
+			<input type="number" name="qty" value="{{ qty|e }}" min="1" inputmode="numeric">
+		</label>
+	{% else %}
+		<input type="hidden" name="qty" value="{{ qty|e }}">
+	{% endif %}
+	<button type="submit">{{ label|e }}</button>
+</form>

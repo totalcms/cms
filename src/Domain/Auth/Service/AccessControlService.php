@@ -137,6 +137,11 @@ readonly class AccessControlService
 		return $this->sessionAuthority($userId)->canDataViews();
 	}
 
+	public function canAccessCommerce(string $userId): bool
+	{
+		return $this->sessionAuthority($userId)->canCommerce();
+	}
+
 	public function canAccessBuilder(string $userId): bool
 	{
 		return $this->sessionAuthority($userId)->canBuilder();

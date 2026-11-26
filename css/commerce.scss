@@ -1,0 +1,922 @@
+// The storefront's own styles: the slide-out cart and its toggle, the cart
+// page, the discount code form and the checkout form.
+//
+// This is a site's public face, not the admin, so nothing here names a font
+// or uses the admin's design tokens. Colors come from the page (`Canvas`,
+// `CanvasText`, `currentColor`) unless the site sets one of these:
+//
+//   --cart-drawer-width      24rem
+//   --cart-drawer-bg         the page's background
+//   --cart-drawer-color      the page's text color
+//   --cart-drawer-radius     0
+//   --cart-drawer-accent     the text color (the Checkout button, the count badge)
+//   --cart-drawer-on-accent  the background color (text on those)
+//   --cart-drawer-border     a hairline mixed from the text color
+//
+// The cart page and the two forms have the same choices under their own names.
+// Set them on the page, or on anything the cart or the form is inside:
+//
+//   --commerce-accent      the text color (the pay button)
+//   --commerce-on-accent   the page's background (text on that button)
+//   --commerce-border      a hairline mixed from the text color
+//   --commerce-radius      0.375rem (fields and buttons)
+//   --commerce-field-bg    transparent (inside a field)
+//
+// Every rule here is one class deep, so a site's own rule for the same
+// thing wins without `!important`.
+
+.cart-drawer,
+.cart-toggle {
+	--_bg        : var(--cart-drawer-bg, Canvas);
+	--_color     : var(--cart-drawer-color, CanvasText);
+	--_accent    : var(--cart-drawer-accent, var(--_color));
+	--_on-accent : var(--cart-drawer-on-accent, var(--_bg));
+	--_border    : var(--cart-drawer-border, color-mix(in oklab, var(--_color) 18%, transparent));
+	--_radius    : var(--cart-drawer-radius, 0);
+}
+
+// ─── The toggle and its count ─────────────────────────────────────────────
+
+.cart-toggle {
+	display     : inline-flex;
+	align-items : center;
+	gap         : 0.5em;
+	font        : inherit;
+	cursor      : pointer;
+}
+
+.cart-count {
+	display         : inline-flex;
+	align-items     : center;
+	justify-content : center;
+	min-width       : 1.6em;
+	padding         : 0.1em 0.45em;
+	border-radius   : 999px;
+	background      : var(--_accent);
+	color           : var(--_on-accent);
+	font-size       : 0.8em;
+	font-weight     : 600;
+	line-height     : 1.4;
+	// A count is a number: digits of equal width, so it does not jiggle as it changes.
+	font-variant-numeric : tabular-nums;
+}
+
+// ─── The drawer ───────────────────────────────────────────────────────────
+
+.cart-drawer {
+	position         : fixed;
+	inset            : 0 0 0 auto;
+	box-sizing       : border-box;
+	width            : min(var(--cart-drawer-width, 24rem), 100vw);
+	max-width        : none;
+	height           : 100dvh;
+	max-height       : none;
+	margin           : 0;
+	// No padding: a click on the dialog itself is then a click on the backdrop.
+	padding          : 0;
+	border           : 0;
+	border-start-start-radius : var(--_radius);
+	border-end-start-radius   : var(--_radius);
+	background       : var(--_bg);
+	color            : var(--_color);
+	box-shadow       : 0 0 2.5rem rgb(0 0 0 / 0.18);
+	overflow         : hidden;
+
+	// Off the edge until it is open, and sliding in from there.
+	translate        : 100% 0;
+	transition       : translate 240ms cubic-bezier(0.2, 0, 0, 1), overlay 240ms allow-discrete, display 240ms allow-discrete;
+
+	&[data-side="left"] {
+		inset                     : 0 auto 0 0;
+		translate                 : -100% 0;
+		border-radius             : 0;
+		border-start-end-radius   : var(--_radius);
+		border-end-end-radius     : var(--_radius);
+	}
+
+	&[open] {
+		display            : grid;
+		grid-template-rows : auto minmax(0, 1fr) auto;
+		translate          : 0 0;
+	}
+
+	&::backdrop {
+		background : rgb(0 0 0 / 0);
+		transition : background 240ms ease, overlay 240ms allow-discrete, display 240ms allow-discrete;
+	}
+
+	&[open]::backdrop {
+		background : rgb(0 0 0 / 0.4);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition : none;
+
+		&::backdrop {
+			transition : none;
+		}
+	}
+}
+
+// Where the slide starts from, the moment the drawer opens.
+@starting-style {
+	.cart-drawer[open] {
+		translate : 100% 0;
+	}
+
+	.cart-drawer[open][data-side="left"] {
+		translate : -100% 0;
+	}
+
+	.cart-drawer[open]::backdrop {
+		background : rgb(0 0 0 / 0);
+	}
+}
+
+.cart-drawer-header,
+.cart-drawer-footer {
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	gap             : 1rem;
+	padding         : 1rem 1.25rem;
+}
+
+.cart-drawer-header {
+	border-block-end : 1px solid var(--_border);
+}
+
+.cart-drawer-footer {
+	border-block-start : 1px solid var(--_border);
+}
+
+// Nothing to check out with an empty cart.
+.cart-drawer:has(.commerce-cart-empty) .cart-drawer-footer {
+	display : none;
+}
+
+.cart-drawer-title {
+	margin      : 0;
+	font-size   : 1.125em;
+	line-height : 1.3;
+}
+
+// The script puts focus on the drawer when it opens. The drawer is the whole
+// panel, so a ring around it says nothing.
+.cart-drawer:focus {
+	outline : none;
+}
+
+.cart-drawer-close {
+	display         : inline-grid;
+	place-items     : center;
+	flex            : none;
+	width           : 2.25rem;
+	height          : 2.25rem;
+	margin-inline-end : -0.5rem;
+	padding         : 0;
+	border          : 0;
+	border-radius   : 50%;
+	background      : none;
+	color           : inherit;
+	cursor          : pointer;
+	opacity         : 0.75;
+
+	&:hover {
+		background : color-mix(in oklab, var(--_color) 8%, transparent);
+		opacity    : 1;
+	}
+
+	&:focus-visible {
+		outline        : 2px solid var(--_accent);
+		outline-offset : 2px;
+		opacity        : 1;
+	}
+
+	svg {
+		display : block;
+	}
+}
+
+.cart-drawer-remove {
+	padding         : 0.25em 0;
+	border          : 0;
+	background      : none;
+	color           : inherit;
+	font            : inherit;
+	font-size       : 0.875em;
+	text-decoration : underline;
+	text-underline-offset : 0.2em;
+	cursor          : pointer;
+	opacity         : 0.75;
+
+	&:hover {
+		opacity : 1;
+	}
+}
+
+.cart-drawer-body {
+	overflow-y          : auto;
+	overscroll-behavior : contain;
+	padding             : 0.5rem 1.25rem 1.25rem;
+}
+
+.cart-drawer-lines {
+	margin     : 0;
+	padding    : 0;
+	list-style : none;
+}
+
+.cart-drawer-line {
+	display               : grid;
+	grid-template-columns : auto minmax(0, 1fr);
+	gap                   : 0.5rem 0.875rem;
+	padding-block         : 1rem;
+	border-block-end      : 1px solid var(--_border);
+
+	// A line with no picture uses the full width.
+	> :not(.cart-drawer-image) {
+		grid-column : 2;
+	}
+
+	&:not(:has(.cart-drawer-image)) > * {
+		grid-column : 1 / -1;
+	}
+}
+
+.cart-drawer-image {
+	grid-row      : span 2;
+	width         : 3.5rem;
+	height        : 3.5rem;
+	border-radius : 0.25rem;
+	object-fit    : cover;
+}
+
+.cart-drawer-item {
+	display         : flex;
+	align-items     : baseline;
+	justify-content : space-between;
+	gap             : 1rem;
+
+	small {
+		display : block;
+		opacity : 0.7;
+	}
+
+	.commerce-cart-total {
+		font-variant-numeric : tabular-nums;
+		white-space          : nowrap;
+	}
+}
+
+.cart-drawer-controls {
+	display         : flex;
+	align-items     : center;
+	justify-content : space-between;
+	gap             : 1rem;
+
+	form {
+		margin : 0;
+	}
+
+	input[type="number"] {
+		box-sizing    : border-box;
+		width         : 4.5rem;
+		padding       : 0.35em 0.5em;
+		border        : 1px solid var(--_border);
+		border-radius : 0.25rem;
+		background    : transparent;
+		color         : inherit;
+		font          : inherit;
+	}
+}
+
+.cart-drawer .commerce-discount {
+	padding-block : 1rem;
+
+	form {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.5rem;
+		margin      : 0;
+	}
+
+	label {
+		flex-basis : 100%;
+		font-size  : 0.875em;
+	}
+
+	input[type="text"] {
+		flex          : 1 1 8rem;
+		box-sizing    : border-box;
+		min-width     : 0;
+		padding       : 0.45em 0.6em;
+		border        : 1px solid var(--_border);
+		border-radius : 0.25rem;
+		background    : transparent;
+		color         : inherit;
+		font          : inherit;
+	}
+
+	button {
+		padding       : 0.45em 0.9em;
+		border        : 1px solid var(--_border);
+		border-radius : 0.25rem;
+		background    : transparent;
+		color         : inherit;
+		font          : inherit;
+		cursor        : pointer;
+	}
+
+	.commerce-discount-applied {
+		justify-content : space-between;
+	}
+}
+
+.cart-drawer-totals {
+	margin : 0;
+
+	> div {
+		display         : flex;
+		justify-content : space-between;
+		gap             : 1rem;
+		padding-block   : 0.3rem;
+	}
+
+	dt,
+	dd {
+		margin : 0;
+	}
+
+	dd {
+		font-variant-numeric : tabular-nums;
+	}
+
+	.cart-drawer-total {
+		padding-block-start : 0.6rem;
+		font-size           : 1.0625em;
+		font-weight         : 600;
+	}
+}
+
+.cart-drawer .commerce-cart-note,
+.cart-drawer .commerce-cart-empty {
+	margin    : 0.75rem 0 0;
+	font-size : 0.875em;
+	opacity   : 0.75;
+}
+
+.cart-drawer .commerce-cart-empty {
+	padding-block : 2rem;
+	text-align    : center;
+	font-size     : 1em;
+}
+
+.cart-drawer .commerce-cart-notice {
+	margin        : 0.75rem 0 0;
+	padding       : 0.6rem 0.75rem;
+	border        : 1px solid var(--_border);
+	border-radius : 0.25rem;
+	font-size     : 0.9375em;
+}
+
+.cart-drawer-checkout {
+	display         : block;
+	flex            : 1;
+	padding         : 0.8em 1.25em;
+	border-radius   : 0.375rem;
+	background      : var(--_accent);
+	color           : var(--_on-accent);
+	font-weight     : 600;
+	text-align      : center;
+	text-decoration : none;
+
+	&:hover {
+		opacity : 0.9;
+	}
+}
+
+.cart-drawer :focus-visible,
+.cart-toggle:focus-visible {
+	outline        : 2px solid var(--_accent);
+	outline-offset : 2px;
+}
+
+// For labels a screen reader needs and the eye does not.
+.cart-drawer .visually-hidden {
+	position    : absolute;
+	width       : 1px;
+	height      : 1px;
+	overflow    : hidden;
+	clip-path   : inset(50%);
+	white-space : nowrap;
+}
+
+// ─── The cart page, the discount form, the checkout form ──────────────────
+
+// A discount form inside the slide-out cart keeps the drawer's own colors.
+.commerce-cart-page,
+.commerce-discount:not(.cart-drawer .commerce-discount),
+.commerce-checkout-form {
+	--_color     : currentColor;
+	--_accent    : var(--commerce-accent, CanvasText);
+	--_on-accent : var(--commerce-on-accent, Canvas);
+	--_border    : var(--commerce-border, color-mix(in oklab, currentColor 22%, transparent));
+	--_radius    : var(--commerce-radius, 0.375rem);
+	--_field-bg  : var(--commerce-field-bg, transparent);
+}
+
+// For labels a screen reader needs and the eye does not.
+.commerce-cart-page .visually-hidden,
+.commerce-discount .visually-hidden,
+.commerce-checkout-form .visually-hidden {
+	position    : absolute;
+	width       : 1px;
+	height      : 1px;
+	overflow    : hidden;
+	clip-path   : inset(50%);
+	white-space : nowrap;
+}
+
+.commerce-cart-page :focus-visible,
+.commerce-discount :focus-visible,
+.commerce-checkout-form :focus-visible {
+	outline        : 2px solid var(--_accent);
+	outline-offset : 2px;
+}
+
+// ─── The cart page ────────────────────────────────────────────────────────
+
+// The table lays itself out by the room it is given, not by the window: a
+// cart beside a checkout form is narrow on a wide screen.
+.commerce-cart-page {
+	container-type : inline-size;
+}
+
+.commerce-cart-table {
+	width           : 100%;
+	border-collapse : collapse;
+
+	th,
+	td {
+		padding        : 0.875rem 0.75rem;
+		text-align     : start;
+		vertical-align : middle;
+	}
+
+	th:first-child,
+	td:first-child {
+		padding-inline-start : 0;
+	}
+
+	th:last-child,
+	td:last-child {
+		padding-inline-end : 0;
+	}
+
+	thead th {
+		padding-block  : 0 0.625rem;
+		border-block-end : 1px solid var(--_border);
+		font-size      : 0.8125em;
+		font-weight    : 600;
+		white-space    : nowrap;
+	}
+
+	tbody tr {
+		border-block-end : 1px solid var(--_border);
+	}
+
+	form {
+		margin : 0;
+	}
+
+	// Money lines up on its right edge, in digits of equal width.
+	.commerce-cart-price,
+	.commerce-cart-total,
+	.commerce-cart-subtotal,
+	.commerce-cart-discount,
+	.commerce-cart-grand,
+	thead th:nth-child(2),
+	thead th:nth-child(4) {
+		text-align           : end;
+		font-variant-numeric : tabular-nums;
+		white-space          : nowrap;
+	}
+
+	tfoot th {
+		padding-block : 0.5rem;
+		font-weight   : 400;
+		text-align    : end;
+	}
+
+	tfoot td {
+		padding-block : 0.5rem;
+	}
+
+	tfoot tr:first-child > * {
+		padding-block-start : 1rem;
+	}
+
+	tfoot tr:last-child > * {
+		font-weight : 600;
+	}
+}
+
+.commerce-cart-title {
+	width : 100%;
+
+	img {
+		float               : inline-start;
+		width               : 3.5rem;
+		height              : 3.5rem;
+		margin-inline-end   : 0.875rem;
+		border-radius       : var(--_radius);
+		object-fit          : cover;
+	}
+
+	small {
+		display   : block;
+		font-size : 0.8125em;
+		opacity   : 0.75;
+	}
+}
+
+.commerce-cart-name {
+	display       : block;
+	// Beside the picture, in the middle of its height when it is one line.
+	overflow      : hidden;
+	padding-block : 0.25rem;
+	font-weight   : 600;
+}
+
+.commerce-cart-qty input[type="number"] {
+	box-sizing    : border-box;
+	width         : 4.5rem;
+	padding       : 0.45em 0.6em;
+	border        : 1px solid var(--_border);
+	border-radius : var(--_radius);
+	background    : var(--_field-bg);
+	color         : inherit;
+	font          : inherit;
+	font-variant-numeric : tabular-nums;
+}
+
+.commerce-cart-qty button,
+.commerce-cart-remove button {
+	padding         : 0.25em 0;
+	border          : 0;
+	border-radius   : 0;
+	background      : none;
+	color           : inherit;
+	font            : inherit;
+	font-size       : 0.875em;
+	font-weight     : 400;
+	text-decoration : underline;
+	text-underline-offset : 0.2em;
+	cursor          : pointer;
+	opacity         : 0.75;
+
+	&:hover {
+		opacity : 1;
+	}
+}
+
+.commerce-cart-qty button {
+	margin-inline-start : 0.5rem;
+}
+
+.commerce-cart-remove {
+	text-align : end;
+}
+
+.commerce-cart-page .commerce-cart-note,
+.commerce-cart-page .commerce-cart-empty {
+	margin    : 1rem 0 0;
+	font-size : 0.875em;
+	opacity   : 0.75;
+}
+
+.commerce-cart-page .commerce-cart-empty {
+	font-size : 1em;
+}
+
+.commerce-cart-page .commerce-cart-notice,
+.commerce-discount .commerce-cart-notice,
+.commerce-checkout-notice:not(:empty) {
+	margin        : 0 0 1rem;
+	padding       : 0.6rem 0.75rem;
+	border        : 1px solid var(--_border);
+	border-radius : var(--_radius);
+	font-size     : 0.9375em;
+}
+
+.commerce-discount .commerce-cart-notice {
+	margin : 0.75rem 0 0;
+}
+
+// With little room, each line is a block of its own: the picture and the
+// name, then the quantity, the total and Remove on one row beneath.
+@container (max-width: 30rem) {
+	.commerce-cart-table {
+		display : block;
+
+		thead {
+			display : none;
+		}
+
+		tbody,
+		tfoot {
+			display : block;
+		}
+
+		tbody tr {
+			display               : grid;
+			grid-template-columns : 1fr auto auto;
+			align-items           : center;
+			column-gap            : 1rem;
+			padding-block         : 0.875rem;
+		}
+
+		tbody td {
+			padding : 0;
+		}
+
+		.commerce-cart-title {
+			grid-column   : 1 / -1;
+			margin-block-end : 0.75rem;
+		}
+
+		.commerce-cart-price {
+			display : none;
+		}
+
+		.commerce-cart-qty {
+			grid-column : 1;
+		}
+
+		tfoot tr {
+			display         : flex;
+			justify-content : space-between;
+			gap             : 1rem;
+		}
+
+		tfoot th,
+		tfoot td {
+			padding-inline : 0;
+		}
+	}
+}
+
+// ─── The discount code form ───────────────────────────────────────────────
+
+.commerce-cart-page .commerce-discount {
+	max-width     : 24rem;
+	margin-block  : 1.25rem 0;
+}
+
+.commerce-discount {
+	form {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.5rem;
+		margin      : 0;
+	}
+
+	label {
+		flex-basis : 100%;
+		margin     : 0;
+		font-size  : 0.875em;
+	}
+
+	input[type="text"] {
+		flex          : 1 1 8rem;
+		box-sizing    : border-box;
+		min-width     : 0;
+		padding       : 0.55em 0.7em;
+		border        : 1px solid var(--_border);
+		border-radius : var(--_radius);
+		background    : var(--_field-bg);
+		color         : inherit;
+		font          : inherit;
+	}
+
+	button {
+		padding       : 0.55em 1em;
+		border        : 1px solid var(--_border);
+		border-radius : var(--_radius);
+		background    : transparent;
+		color         : inherit;
+		font          : inherit;
+		cursor        : pointer;
+	}
+
+	.commerce-discount-applied {
+		justify-content : space-between;
+	}
+}
+
+// ─── The checkout form ────────────────────────────────────────────────────
+
+.commerce-checkout-form {
+	container-type : inline-size;
+	display        : grid;
+	gap            : 1rem;
+	margin         : 0;
+
+	fieldset {
+		min-width : 0;
+		margin    : 0;
+		padding   : 0;
+		border    : 0;
+	}
+
+	legend {
+		margin-block-end : 0.75rem;
+		padding          : 0;
+		font-weight      : 600;
+	}
+}
+
+.commerce-checkout-field {
+	display : grid;
+	gap     : 0.3rem;
+	margin  : 0;
+
+	label {
+		margin    : 0;
+		font-size : 0.875em;
+	}
+
+	input {
+		box-sizing    : border-box;
+		width         : 100%;
+		max-width     : none;
+		padding       : 0.6em 0.75em;
+		border        : 1px solid var(--_border);
+		border-radius : var(--_radius);
+		background    : var(--_field-bg);
+		color         : inherit;
+		font          : inherit;
+	}
+}
+
+// One field to a row, until there is room for the short ones to pair up:
+// city with region, postal code with country.
+.commerce-checkout-address {
+	display : grid;
+	gap     : 0.875rem 1rem;
+
+	// The "Where you are" fields are put away while a way to pay that works
+	// out the tax itself is chosen; `display: grid` would show them anyway.
+	&[hidden] {
+		display : none;
+	}
+}
+
+@container (min-width: 22rem) {
+	.commerce-checkout-address {
+		grid-template-columns : 1fr 1fr;
+
+		legend,
+		.commerce-checkout-field:nth-of-type(-n + 3) {
+			grid-column : 1 / -1;
+		}
+	}
+}
+
+// Where the buyer is, asked only for tax: two short fields, side by side
+// when there is room, with a line under them saying why they are asked.
+@container (min-width: 22rem) {
+	.commerce-checkout-location .commerce-checkout-field:nth-of-type(-n + 3) {
+		grid-column : auto;
+	}
+}
+
+.commerce-checkout-hint {
+	grid-column : 1 / -1;
+	margin      : 0;
+	font-size   : 0.875em;
+	opacity     : 0.75;
+}
+
+// What the order comes to: a short list of amounts above the ways to pay.
+// A figure the store does not have yet is in words, a little quieter.
+.commerce-checkout-totals:empty {
+	display : none;
+}
+
+.commerce-checkout-totals-list {
+	display    : grid;
+	gap        : 0.4rem;
+	margin     : 0;
+	padding    : 0.875rem 0 0;
+	border-top : 1px solid var(--_border);
+
+	> div {
+		display         : flex;
+		justify-content : space-between;
+		gap             : 1rem;
+	}
+
+	dt,
+	dd {
+		margin : 0;
+	}
+
+	dd {
+		text-align           : right;
+		font-variant-numeric : tabular-nums;
+	}
+
+	.commerce-checkout-pending {
+		font-size : 0.875em;
+		opacity   : 0.75;
+	}
+
+	.commerce-checkout-total {
+		margin-top  : 0.25rem;
+		padding-top : 0.6rem;
+		border-top  : 1px solid var(--_border);
+		font-size   : 1.0625em;
+	}
+}
+
+// The ways to pay: one row each, the whole row the thing to click, and the
+// chosen one outlined. Named under the form so that a site's own rules for
+// every label and every input (a label on its own line, an input as wide as
+// its box) do not pull a radio button and its name apart.
+.commerce-checkout-form .commerce-checkout-providers {
+	display : grid;
+	gap     : 0.5rem;
+
+	label {
+		display       : flex;
+		align-items   : center;
+		gap           : 0.625rem;
+		margin        : 0;
+		padding       : 0.7em 0.875em;
+		border        : 1px solid var(--_border);
+		border-radius : var(--_radius);
+		background    : var(--_field-bg);
+		font-size     : 1em;
+		font-weight   : 500;
+		line-height   : 1.3;
+		cursor        : pointer;
+
+		&:has(input:checked) {
+			border-color : var(--_accent);
+			box-shadow   : inset 0 0 0 1px var(--_accent);
+		}
+
+		// The row is what was chosen, so the row shows where the keyboard is.
+		&:has(input:focus-visible) {
+			outline        : 2px solid var(--_accent);
+			outline-offset : 2px;
+		}
+	}
+
+	input[type='radio'] {
+		flex         : none;
+		display      : inline-block;
+		width        : 1.125em;
+		height       : 1.125em;
+		margin       : 0;
+		padding      : 0;
+		accent-color : var(--_accent);
+
+		&:focus-visible {
+			outline : none;
+		}
+	}
+}
+
+// Side by side once there is room for two.
+@container (min-width: 30rem) {
+	.commerce-checkout-form .commerce-checkout-providers {
+		grid-template-columns : repeat(auto-fit, minmax(11rem, 1fr));
+	}
+}
+
+.commerce-checkout-provider {
+	margin    : 0;
+	font-size : 0.875em;
+	opacity   : 0.75;
+}
+
+.commerce-checkout-submit {
+	width         : 100%;
+	padding       : 0.85em 1.25em;
+	border        : 0;
+	border-radius : var(--_radius);
+	background    : var(--_accent);
+	color         : var(--_on-accent);
+	font          : inherit;
+	font-weight   : 600;
+	cursor        : pointer;
+
+	&:hover {
+		opacity : 0.9;
+	}
+}

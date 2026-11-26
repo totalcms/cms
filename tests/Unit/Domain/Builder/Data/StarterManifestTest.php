@@ -39,6 +39,14 @@ final class StarterManifestTest extends TestCase
 		$this->assertSame('42', $m->version);
 	}
 
+	public function testReadsWhatTheSiteMustHave(): void
+	{
+		$m = new StarterManifest(['name' => 'Shop', 'requires' => ['commerce', 7, null]], '/starters/shop');
+
+		$this->assertSame(['commerce'], $m->requires);
+		$this->assertSame([], (new StarterManifest(['requires' => 'commerce'], '/starters/x'))->requires);
+	}
+
 	public function testToArrayReturnsAllFields(): void
 	{
 		$m = new StarterManifest([
@@ -51,6 +59,7 @@ final class StarterManifestTest extends TestCase
 			'name'        => 'Blog',
 			'description' => 'desc',
 			'version'     => '1.2.3',
+			'requires'    => [],
 		], $m->toArray());
 	}
 

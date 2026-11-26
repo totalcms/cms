@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	{# Title, description, canonical, Open Graph, Twitter and JSON-LD for this page — from the page's SEO card, then the page fields, then Settings → SEO. The product page overrides {% block seo %} to describe the product instead. #}
+	{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
+	{# Total CMS core styles and scripts: the cart, the checkout form and the sign-up form are all in here. Placed ahead of the site stylesheet so your own styles win. #}
+	{{ cms.assetsHead() }}
+	{# Site stylesheet. With the Vite pipeline, edit css/style.css and run npm run build. Without it, edit public/assets/css/style.css directly. #}
+	{{ cms.builder.css('css/style.css') }}
+	{% block head %}{% endblock %}
+</head>
+<body>
+	{% include 'partials/nav.twig' %}
+
+	<main>
+		{% block content %}{% endblock %}
+	</main>
+
+	{% include 'partials/footer.twig' %}
+
+	{# The cart that slides in when a buyer adds something. Its Checkout button goes to the cart page, which holds the checkout form. #}
+	{% if cms.commerce.available() %}{{ cms.cart.drawer({checkoutUrl: '/cart'}) }}{% endif %}
+
+	{# Total CMS core scripts, including htmx, which the cart and the checkout form run on. Take this out and they stop working. #}
+	{{ cms.assetsBody() }}
+</body>
+</html>

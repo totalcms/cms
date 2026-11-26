@@ -54,6 +54,10 @@ enum EditionFeature: string
 	// wrapped text, and the share image overlays built on them
 	case IMAGE_LAYERS = 'image_layers';
 
+	// Commerce: the edition half of its gate. It also needs the paid
+	// `totalcms/commerce` entitlement, which CommerceGate checks.
+	case COMMERCE = 'commerce';
+
 	/**
 	 * Get a human-readable label for this feature.
 	 */
@@ -82,6 +86,7 @@ enum EditionFeature: string
 			self::API_KEYS               => 'API Keys',
 			self::AUTOMATIONS            => 'Automations',
 			self::IMAGE_LAYERS           => 'Layered Image Marks',
+			self::COMMERCE               => 'Commerce',
 		};
 	}
 
@@ -142,6 +147,7 @@ enum EditionFeature: string
 			self::API_KEYS,
 			self::AUTOMATIONS,
 			self::IMAGE_LAYERS,
+			self::COMMERCE,
 			self::BULK_MAILER => Edition::PRO,
 		};
 	}

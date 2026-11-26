@@ -376,6 +376,8 @@ return [
 	'settings.backups_desc'            => 'Cronologia per annullare ogni salvataggio ed eliminazione di oggetti',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Configurazione del backend della cache',
+	'settings.commerce'                => 'Commerce',
+	'settings.commerce_desc'           => 'Il tuo negozio: valuta, pagamenti, tasse, spedizioni ed email',
 	'settings.dashboard'               => 'Dashboard',
 	'settings.dashboard_desc'          => 'Configurazione della dashboard di amministrazione',
 	'settings.extensions'              => 'Estensioni',
@@ -936,6 +938,7 @@ return [
 	'access_groups.feature_mailer'         => 'Mailer',
 	'access_groups.feature_playground'     => 'Playground Twig',
 	'access_groups.feature_dataviews'      => 'Viste dati',
+	'access_groups.feature_commerce'       => 'Ordini Commerce',
 	'access_groups.feature_builder'        => 'Site Builder',
 	'access_groups.feature_inline_edit'    => 'Modifica in linea',
 	'access_groups.utils_access'           => 'Livello di accesso alle utilità',
@@ -1728,4 +1731,8 @@ return [
 	'overlay_preview.reason.no-overlay'      => 'Ancora nessun livello: le condivisioni usano l\'immagine semplice.',
 	'overlay_preview.reason.no-record'       => 'Impossibile leggere questo record, quindi non c\'è niente da visualizzare.',
 	'overlay_preview.reason.needs-pro'       => 'Edizione Pro: sotto Pro le condivisioni usano l\'immagine semplice, mostrata qui.',
+
+	// Commerce: the store's admin pages
+	'commerce.orders' => 'Ordini',
+	'commerce.subscriptions' => 'Abbonamenti',
 ];

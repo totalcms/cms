@@ -1,6 +1,6 @@
 ---
 title: "Starter Templates"
-description: "Scaffold a complete working site in seconds with bundled starter templates for business, blog, portfolio, and minimal sites."
+description: "Scaffold a complete working site in seconds with bundled starter templates for business, blog, portfolio, shop, and minimal sites."
 since: "3.5.0"
 ---
 
@@ -151,6 +151,63 @@ public/assets/css/
 
 **Best for:** Designers, developers, agencies, creatives.
 
+---
+
+### Shop
+
+A store, with products, a cart, checkout, customer accounts and a membership. It needs the [Commerce add-on](docs/commerce/overview).
+
+```bash
+tcms builder:init shop
+```
+
+**Pages:** Home, Shop, a page for each product (`/shop/{id}`), Cart, Create an account, Account, Members
+
+**Files created:**
+```
+tcms-data/builder/
+  layouts/default.twig
+  pages/index.twig
+  pages/shop/index.twig
+  pages/shop/product.twig
+  pages/cart.twig
+  pages/register.twig
+  pages/account.twig
+  pages/members.twig
+  pages/readme.twig
+  pages/404.twig
+  partials/nav.twig
+  partials/footer.twig
+  partials/product-card.twig
+public/assets/css/
+  style.css                  ← edit me (css/style.css with the Vite pipeline)
+```
+
+**Features:**
+- A product grid and product pages, with the price each buyer pays worked out by the store
+- A cart that slides in when something is added, and a cart page that holds the checkout form
+- A sign-up page, and an account page with the customer's orders, downloads and subscriptions
+- A members-only page, opened by a monthly membership
+- Six sample products: one with sizes, one that counts its stock, one download and one membership
+
+**What it sets up besides pages:**
+
+| What | Why |
+|---|---|
+| The store's collections | The same as running `tcms commerce:install`. |
+| A `customers` collection, open to sign-ups | Where your customers' accounts are kept, apart from your admin users. New accounts are in no access group. |
+| A `members` access group | Opens the members-only page. It grants nothing in the admin. |
+| **Customer Accounts Collection** = `customers` | So a signed-in customer sees their orders. |
+| **Groups a Product May Grant** = `members` | So the membership can give the group. |
+
+The two settings are filled in only where you had not chosen. A choice you already made is kept.
+
+On a site without Commerce the command says so and changes nothing.
+
+Before it can take a payment the store needs a payment provider: enable [Stripe](docs/extensions/stripe), add your test keys and tick Stripe under **Settings → Commerce**. The starter's `/readme` page walks through it.
+
+**Best for:** Small stores, digital products, paid memberships.
+
 ## What Every Starter Includes
 
 ### Layout (`layouts/default.twig`)
@@ -213,6 +270,7 @@ Every starter ships a `jumpstart.json` alongside its `manifest.json`. It is the 
 | `portfolio` | 6 pages (Home, Work, About, Contact, Getting Started, 404) + a `project` schema + a `projects` collection + 6 sample projects with photos |
 | `blog` | 6 pages + the reserved `blog` collection + 5 sample posts with photos (featured + categories + tags populated) |
 | `business` | 6 pages + a `service` schema + a `services` collection + 4 sample services with pictures (Strategy, Design, Development, Ongoing Support) |
+| `shop` | 9 pages + a `customers` collection + a `members` access group + 6 sample products in the store's `products` collection. The products have no photos: add your own. |
 
 The pictures are made during the import with [factory rules](docs/twig/factory): `image(1600,900)` downloads a photo from picsum.photos, and `imageShapes(1280,720,e8edff|3b5bdb|3dd6a0)` draws shapes in the starter's colors. A photo that can't be downloaded, on a server without internet access, is left out, and the pages show the post or project without it.
 
@@ -271,7 +329,7 @@ Starters live in `resources/builder/starters/{name}/`. Each starter needs:
 
 ### `manifest.json`
 
-The manifest describes the starter for the picker UI — name, description, version. That's it:
+The manifest describes the starter for the picker UI — name, description, version:
 
 ```json
 {
@@ -280,6 +338,8 @@ The manifest describes the starter for the picker UI — name, description, vers
     "version": "1.0.0"
 }
 ```
+
+A starter that needs the store adds `"requires": ["commerce"]`. Total CMS then installs Commerce's collections before it copies anything, and on a site without Commerce it refuses and says why.
 
 ### `jumpstart.json`
 
@@ -336,3 +396,4 @@ Files are copied directly to `tcms-data/builder/{category}/`. Page templates use
 - [Site Builder Overview](docs/site-builder/overview)
 - [Builder CLI Commands](docs/site-builder/cli)
 - [Builder Admin UI](docs/site-builder/admin)
+- [Commerce Overview](docs/commerce/overview)

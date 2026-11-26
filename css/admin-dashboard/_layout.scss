@@ -108,6 +108,33 @@ body {
 	.automations {
 		mask-image : var(--icon-automations);
 	}
+	.commerce {
+		mask-image : var(--icon-orders);
+	}
+	// A count beside an entry's icon: how many things on that page need
+	// someone. It is a sibling of the link, because the link is a mask.
+	.menu-item:has(.nav-badge) {
+		position : relative;
+	}
+	.nav-badge {
+		position             : absolute;
+		top                  : 0.15rem;
+		right                : 0.15rem;
+		min-width            : 1.15rem;
+		height               : 1.15rem;
+		padding              : 0 0.3rem;
+		box-sizing           : border-box;
+		display              : grid;
+		place-items          : center;
+		border-radius        : 999px;
+		background           : oklch(var(--totalform-error));
+		color                : oklch(100% 0 0);
+		font-size            : 0.7rem;
+		font-weight          : 700;
+		line-height          : 1;
+		font-variant-numeric : tabular-nums;
+		pointer-events       : none;
+	}
 	.quick-nav-trigger {
 		display          : block;
 		width            : 3rem;

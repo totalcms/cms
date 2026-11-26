@@ -54,6 +54,13 @@ use TotalCMS\Support\Config;
  * Every other actor, admins and API keys included, and every write with
  * authentication off, keeps the stored value ({@see serverOnlyFieldsFor()}).
  *
+ * A second rule outside the layers covers whole collections: one whose schema
+ * is system-only ({@see SchemaData::isSystemOnly()}, the store's orders,
+ * transactions, carts and subscriptions) is written by the site alone
+ * ({@see writableBy()}). It binds admins and API keys and holds with
+ * authentication off, for the same reason: an edited total is wrong whoever
+ * typed it.
+ *
  * The storage layer applies layers 2 and 3 on every write through
  * {@see ObjectWriteGate}; entry points ask the
  * guard first so they can answer with a proper refusal.
@@ -104,7 +111,7 @@ final class AccessGuard
 	 * Per-request memo of {@see rulesFor()}, keyed by collection. Cleared by
 	 * {@see forgetRules()} at the start of every request.
 	 *
-	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}>
+	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>, systemOnly: bool}>
 	 */
 	private array $rules = [];
 
@@ -157,6 +164,10 @@ final class AccessGuard
 	 */
 	public function can(Actor $actor, string $collection, Operation $operation, string $objectId = ''): Decision
 	{
+		if ($operation->changesObjects() && !$this->writableBy($actor, $collection)) {
+			return Decision::DenySystemOnly;
+		}
+
 		if (!$this->groupAllows($actor, $collection, $operation->groupOperation(), $objectId)) {
 			return Decision::DenyGroup;
 		}
@@ -167,6 +178,16 @@ final class AccessGuard
 		}
 
 		return $this->copyAllows($actor, $collection, $operation) ? $owner : Decision::DenyProtected;
+	}
+
+	/**
+	 * Whether the actor may make, change or delete objects in $collection at
+	 * all. Everyone may, except in a collection of the store's own records,
+	 * which only the system actor writes. Reading is not decided here.
+	 */
+	public function writableBy(Actor $actor, string $collection): bool
+	{
+		return $this->isSystem($actor) || !$this->rulesFor($collection)['systemOnly'];
 	}
 
 	// ─── Layer 2: ownership ────────────────────────────────────────────────
@@ -444,8 +465,9 @@ final class AccessGuard
 	 * `forced` — property => value, set on every non-trusted write.
 	 * `owner`  — the collection's owner property, or ''.
 	 * `ownerIsList` — whether the owner property is a list of strings.
+	 * `systemOnly` — whether only the site itself writes the collection.
 	 *
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>, systemOnly: bool}
 	 */
 	private function rulesFor(string $collection): array
 	{
@@ -453,11 +475,11 @@ final class AccessGuard
 	}
 
 	/**
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>, systemOnly: bool}
 	 */
 	private function buildRules(string $collection): array
 	{
-		$none = ['plain' => [], 'forced' => [], 'owner' => '', 'ownerIsList' => false, 'serverOnly' => []];
+		$none = ['plain' => [], 'forced' => [], 'owner' => '', 'ownerIsList' => false, 'serverOnly' => [], 'systemOnly' => false];
 
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -508,6 +530,8 @@ final class AccessGuard
 			'owner'       => $owner,
 			'ownerIsList' => $this->isListProperty($schema, $owner),
 			'serverOnly'  => $serverOnly,
+			// By the schema's own id, as the route guard decides it.
+			'systemOnly'  => SchemaData::isSystemOnly($schema->id),
 		];
 	}
 
@@ -571,7 +595,7 @@ final class AccessGuard
 	 * Whether enforcement does nothing for this write: auth is off, the
 	 * collection has no rules, or the actor is trusted.
 	 *
-	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>} $rules
+	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool, serverOnly: list<string>, systemOnly: bool} $rules
 	 */
 	private function enforcementSkipped(array $rules, Actor $actor): bool
 	{

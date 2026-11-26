@@ -245,6 +245,43 @@ $context->addPublicRoutes(function (RouteCollector $group) use ($context): void 
 
 Prefix the name with your vendor so it can't collide with another extension. The site owner can override your default in `$settings['rateLimits']['acme-chat']`, or turn it off with `'max' => 0`; document the name. `attempt()` takes the same arguments and returns the full result (`allowed`, `limit`, `remaining`, `window`, `retryAfter`) when you want accurate `Retry-After` and `X-RateLimit-*` headers.
 
+#### Receiving webhooks
+
+A public route is where another service's webhook lands. Three helpers cover what every webhook handler needs.
+
+**Read the exact bytes.** A webhook is signed over the body exactly as it was sent. `$request->getParsedBody()` is no use for checking a signature: decoding JSON and encoding it again changes spacing and key order. `RawBody::of()` gives you the original bytes, whatever read the body before your handler.
+
+**Check the signature.** `HmacSignature::matches()` compares in constant time. It takes the raw body, your secret, the signature the sender sent, and optionally the algorithm (`sha256` by default) and how the signature is written (`hex` by default, or `base64`).
+
+**Handle each event once.** Senders repeat a webhook when they get no answer, sometimes days later. `WebhookEventStore` remembers event ids for seven days.
+
+```php
+use TotalCMS\Domain\Webhook\HmacSignature;
+use TotalCMS\Domain\Webhook\RawBody;
+use TotalCMS\Domain\Webhook\WebhookEventStore;
+
+$group->post('/webhook', function ($request, $response) use ($context) {
+    $body = RawBody::of($request);
+
+    if (!HmacSignature::matches($body, (string)$context->setting('webhookSecret'), $request->getHeaderLine('X-Acme-Signature'))) {
+        return $response->withStatus(400);
+    }
+
+    $event = json_decode($body, true);
+
+    // True the first time this event is seen, false every time after.
+    if ($context->get(WebhookEventStore::class)->firstSeen('acme', (string)$event['id'])) {
+        // ... handle it
+    }
+
+    return $response; // 200 either way: the sender should stop retrying
+});
+```
+
+`firstSeen()` checks and remembers in one step. If losing an event would matter, do the two halves yourself: `seen($key)` first, handle the event, then `remember($key)` only when handling succeeded. A failed attempt is then not remembered, and the sender's retry gets another go. Answer the retry's sender with a 5xx in that case so it does retry.
+
+A sender with a scheme of its own (a timestamp in the signed string, a certificate) can be wrapped in a class that implements `TotalCMS\Domain\Webhook\WebhookVerifier`: one method, `verify($request): bool`.
+
 ### Route placeholders
 
 API, public, and admin routes all support Slim-style `{placeholder}` segments. A captured value is passed to the handler in its `$args` array, keyed by the placeholder name:
@@ -936,6 +973,20 @@ final class GrainFilter implements ImageFilter
 - **Strength** (`filtamt`) is applied by ImageWorks around your filter. Do not implement it.
 - **In the admin**, your looks and duotones get their own row in the ImageWorks tool's filter strip, titled with your extension's `name` from `extension.json`. They are still picked one at a time along with the core looks. Your `effect` filters join the Extras row, where they stack on top of a look.
 - An admin can switch the **Image Filters** capability off. The extension's filters are then unregistered, and their names drop out of URLs silently, serving the unfiltered image.
+
+## Commerce
+
+On a site with [Commerce](docs/commerce/overview), an extension can add a way to pay, set a price that depends on the buyer, refuse a checkout, add a place to keep a product's download, and write its own data on an order:
+
+```php
+$context->addPaymentProvider($provider);
+$context->addPriceResolver($resolver, priority: 10);
+$context->addCheckoutValidator($validator);
+$context->addDownloadSource($source);
+$context->addOrderBuildingListener($listener);
+```
+
+Each is described, with examples, in [Commerce Events and Extensions](docs/commerce/events-and-extensions). They show in the extension's permissions as **Payment Provider**, **Checkout Validator**, **Download Source** and **Commerce Pricing**.
 
 ## Agent Skill
 

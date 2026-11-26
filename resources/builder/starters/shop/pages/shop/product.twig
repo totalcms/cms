@@ -1,0 +1,69 @@
+{% extends 'layouts/default.twig' %}
+
+{# This page's address is /shop/{id}: params.id is the product's id. Visitors only ever get an active product. #}
+{% set product = cms.commerce.product(params.id) %}
+
+{% block seo %}{{ product ? cms.seo.head(product, {collection: 'products'}) : cms.seo.head(page|default(null)) }}{% endblock %}
+
+{% block content %}
+{% if product %}
+	{% set price = cms.commerce.price(product.id) %}
+	{% set photo = product.images|default([])|first %}
+	<section class="container section product-detail">
+		<div class="product-photo large">
+			{% if photo %}
+				<img src="{{ cms.media.galleryPath(product, photo.name, {w: 1100, h: 1100, fit: 'crop', fm: 'webp'}, {collection: 'products', property: 'images'})|e('html_attr') }}" alt="{{ photo.alt|default(product.title)|e }}">
+			{% else %}
+				<span aria-hidden="true">{{ product.title|first|upper|e }}</span>
+			{% endif %}
+		</div>
+		<div>
+			<p class="meta">{{ product.category|e }}</p>
+			<h1>{{ product.title|e }}</h1>
+			<p class="price large">
+				{% if price %}
+					{% if price.listAmount > price.amount %}<s>{{ price.listFormatted|e }}</s> {% endif %}
+					<strong>{{ price.formatted|e }}</strong>
+					{% if price.billing == 'recurring' %}<small>every {{ price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval }}, until you cancel</small>{% endif %}
+					{% if product.variants is not empty %}<small>and up</small>{% endif %}
+				{% endif %}
+			</p>
+
+			{# The description is styled text you wrote in the admin, so it is printed as HTML. #}
+			<div class="prose">{{ product.description|raw }}</div>
+
+			<div class="buy">
+				{% if not cms.commerce.inStock(product.id) %}
+					<p class="soldout">Sold out. Back soon.</p>
+				{% elseif product.accessGroup and not cms.auth.userLoggedIn('customers') %}
+					{# A product that opens part of the site is added to an account, so the buyer needs one first. #}
+					<p><strong>You need an account to buy this.</strong> It is added to your account when you pay.</p>
+					<p>
+						<a class="button" href="/register">Create an account</a>
+						<a class="button ghost" href="{{ cms.auth.login('customers', '/shop/' ~ product.id)|e('html_attr') }}">Sign in</a>
+					</p>
+				{% elseif product.variants is not empty %}
+					{{ cms.cart.variantPicker(product.id) }}
+				{% else %}
+					{{ cms.cart.addButton(product.id) }}
+				{% endif %}
+			</div>
+
+			<dl class="facts">
+				{% if product.sku %}<div><dt>SKU</dt><dd>{{ product.sku|e }}</dd></div>{% endif %}
+				<div><dt>Delivery</dt><dd>{% if product.billing == 'recurring' %}Starts as soon as you pay{% elseif product.type == 'digital' %}A download link, on your order page and in your receipt{% else %}Shipped to you{% endif %}</dd></div>
+				{% if product.trackInventory and product.variants is empty %}<div><dt>In stock</dt><dd>{{ product.stock|e }}</dd></div>{% endif %}
+			</dl>
+			<p><a href="/shop">← Back to the shop</a></p>
+		</div>
+	</section>
+{% else %}
+	<section class="masthead not-found">
+		<div class="container">
+			<h1>Product not found</h1>
+			<p>It may have sold out, or the address may be wrong.</p>
+			<a class="button" href="/shop">Back to the shop</a>
+		</div>
+	</section>
+{% endif %}
+{% endblock %}

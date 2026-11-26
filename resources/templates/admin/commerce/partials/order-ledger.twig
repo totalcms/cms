@@ -1,0 +1,43 @@
+{#
+	Every movement of an order's money, oldest first: the checkout that was
+	started, the payment, each refund and dispute. Written by the store as
+	the payment provider reports them; nobody can edit it.
+
+	ledger  list of ledger lines, each with a `label` and a `statusText`
+	order   the order
+#}
+{% if ledger is empty %}
+	<p class="commerce-quiet">Nothing has happened to this order's money yet.</p>
+{% else %}
+	<div class="commerce-table-wrap">
+		<table class="admin-table commerce-ledger">
+			<thead>
+				<tr>
+					<th>When</th>
+					<th>What</th>
+					<th class="commerce-num">Amount</th>
+					<th>By</th>
+					<th>Reference</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in ledger %}
+					<tr class="commerce-ledger-row" data-type="{{ row.type|e }}">
+						<td class="commerce-when">{% if row.created %}<time datetime="{{ row.created|e }}">{{ row.created|date('M j, Y H:i') }}</time>{% endif %}</td>
+						<td>
+							{{ row.label|e }}
+							{% if row.statusText %}<span class="commerce-sub">{{ row.statusText|e }}</span>{% endif %}
+							{% if row.reason %}<span class="commerce-sub">Reason: {{ row.reason|e }}</span>{% endif %}
+						</td>
+						<td class="commerce-num">{{ row.amount|money(row.currency ?: order.currency) }}</td>
+						<td>{{ row.actor|e }}</td>
+						<td class="commerce-refs">
+							{% if row.providerRef %}<code>{{ row.providerRef|e }}</code>{% endif %}
+							{% if row.providerEventId %}<code>{{ row.providerEventId|e }}</code>{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+{% endif %}

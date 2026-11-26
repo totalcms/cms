@@ -1,0 +1,25 @@
+{
+	"id"              : "totalcms/paypal",
+	"name"            : "PayPal Payments",
+	"description"     : "Take payments in your store with PayPal. Buyers pay on PayPal's own page, and the store marks an order paid only when PayPal's signed webhook says so.",
+	"icon"            : "icon.png",
+	"requires"        : {
+		"totalcms" : ">=3.7.0-beta",
+		"php"      : ">=8.2"
+	},
+	"min_edition"      : "pro",
+	"entitlement"      : "totalcms/commerce",
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/paypal"
+		}
+	]
+}

@@ -1,0 +1,182 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-line-item.json",
+	"id": "commerce-line-item",
+	"type": "object",
+	"title": "Order Line",
+	"category": "Commerce",
+	"description": "One line of an order or a subscription: a snapshot taken at purchase. Later changes to the catalog never change it. Stored as a deck item; the deck key is the line id.",
+	"required": [
+		"id"
+	],
+	"index": [
+		"id",
+		"productId",
+		"sku",
+		"title"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "Line ID",
+			"help": "l1, l2 and so on. Stable for the life of the order.",
+			"factory": "slug",
+			"settings": {
+				"hide": true
+			}
+		},
+		"productId": {
+			"type": "string",
+			"field": "text",
+			"label": "Product ID",
+			"help": "The product that was bought."
+		},
+		"variantId": {
+			"type": "string",
+			"field": "text",
+			"label": "Variant ID",
+			"help": "The variant that was bought. Empty when the product has none."
+		},
+		"sku": {
+			"type": "string",
+			"field": "text",
+			"label": "SKU",
+			"help": "The SKU at purchase."
+		},
+		"title": {
+			"type": "string",
+			"field": "text",
+			"label": "Title",
+			"help": "The product title and variant title at purchase."
+		},
+		"type": {
+			"type": "string",
+			"field": "text",
+			"label": "Type",
+			"help": "physical or digital."
+		},
+		"qty": {
+			"type": "integer",
+			"field": "number",
+			"label": "Quantity",
+			"help": "How many were bought."
+		},
+		"unitPrice": {
+			"type": "integer",
+			"field": "number",
+			"label": "Unit Price",
+			"help": "The unit price charged, in minor units, after any price rule."
+		},
+		"listPrice": {
+			"type": "integer",
+			"field": "number",
+			"label": "List Price",
+			"help": "The catalog unit price, in minor units, before any price rule."
+		},
+		"priceSource": {
+			"type": "string",
+			"field": "text",
+			"label": "Price Source",
+			"help": "catalog, or the id of the price rule that set the unit price."
+		},
+		"lineTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Line Total",
+			"help": "Unit price times quantity, in minor units."
+		},
+		"discountTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Discount",
+			"help": "This line's share of the order's discount, in minor units.",
+			"default": 0
+		},
+		"taxTotal": {
+			"type": "integer",
+			"field": "number",
+			"label": "Tax",
+			"help": "The tax on this line, in minor units."
+		},
+		"taxable": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Taxable",
+			"help": "Whether the product was taxable at purchase."
+		},
+		"requiresShipping": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Requires Shipping",
+			"help": "Whether this line ships."
+		},
+		"billing": {
+			"type": "string",
+			"field": "text",
+			"label": "Billing",
+			"help": "once or recurring."
+		},
+		"interval": {
+			"type": "string",
+			"field": "text",
+			"label": "Interval",
+			"help": "day, week, month or year. Empty on a one-time line."
+		},
+		"intervalCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Interval Count",
+			"help": "How many intervals between payments."
+		},
+		"trialDays": {
+			"type": "integer",
+			"field": "number",
+			"label": "Trial Days",
+			"help": "The free trial the subscription started with."
+		},
+		"accessGroup": {
+			"type": "string",
+			"field": "text",
+			"label": "Access Group",
+			"help": "The group this line grants its buyer, copied from the product at purchase after it was checked against the groups a product may grant."
+		},
+		"meta": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Fulfillment Data",
+			"help": "A copy of the product's fulfillment data at purchase."
+		},
+		"metadata": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Metadata",
+			"help": "Written by extensions while the order is built. Example: {\"sellerId\":\"42\"}."
+		},
+		"fulfillmentStatus": {
+			"type": "string",
+			"field": "text",
+			"label": "Fulfillment Status",
+			"help": "unfulfilled, fulfilled or not_required."
+		},
+		"fulfillmentNote": {
+			"type": "string",
+			"field": "text",
+			"label": "Fulfillment Note",
+			"help": "A note from whoever fulfilled this line."
+		},
+		"downloads": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Downloads",
+			"help": "How many times this line's file has been downloaded: {count: 2}."
+		},
+		"refundedQty": {
+			"type": "integer",
+			"field": "number",
+			"label": "Refunded Quantity",
+			"help": "How many of this line have been refunded.",
+			"default": 0
+		}
+	}
+}

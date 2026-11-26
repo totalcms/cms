@@ -11,6 +11,7 @@ use TotalCMS\Action\Schema;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\SystemCollectionGuardMiddleware;
+use TotalCMS\Middleware\Commerce\CommerceCollectionGuardMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
@@ -26,7 +27,8 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 		$group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
 		$group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
-	})->add(CollectionEditionMiddleware::class)
+	})->add(CommerceCollectionGuardMiddleware::class)
+		->add(CollectionEditionMiddleware::class)
 		->add(CollectionMetaAccessMiddleware::class)
 		->add(AuthMiddleware::class);
 
@@ -121,6 +123,7 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}/{path:.+}', Property\File\FileSaveAction::class)->setName('property-file-save-nested');
 	})->add(NoCacheMiddleware::class)
 		->add(CollectionEditionMiddleware::class)
+		->add(CommerceCollectionGuardMiddleware::class)
 		->add(SystemCollectionGuardMiddleware::class)
 		->add(CollectionAccessMiddleware::class)
 		->add(DualAuthMiddleware::class)

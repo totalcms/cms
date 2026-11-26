@@ -1,0 +1,35 @@
+{#
+	The refund form, as a popover the order page's Refund button opens. No
+	script: the button names it, and the browser shows and hides it.
+
+	The order does not change when this is sent. The payment provider is
+	asked, and the order shows the refund when the provider confirms it.
+
+	order          the order
+	refund         {left, leftFormatted, step}: what can still be refunded
+	providerLabel  the payment provider's name
+	prefix         what goes in front of an order number
+#}
+<div popover id="commerce-refund" class="commerce-refund" role="dialog" aria-labelledby="commerce-refund-title">
+	<form class="no-save no-unsaved-warning" method="post" action="commerce/orders/{{ order.id|e }}/refund"
+		hx-post="commerce/orders/{{ order.id|e }}/refund" hx-target="#commerce-order" hx-swap="outerHTML">
+		<h2 id="commerce-refund-title">Refund order {{ prefix|e }}{{ order.number }}</h2>
+		<p>Up to <strong>{{ refund.leftFormatted|e }}</strong> can be refunded. The money goes back the way it was paid, and this order shows the refund once {{ providerLabel|e }} confirms it.</p>
+
+		<label>Amount ({{ order.currency|e }})
+			<input type="number" name="amount" value="{{ refund.left|e }}" min="{{ refund.step|e }}" max="{{ refund.left|e }}" step="{{ refund.step|e }}" inputmode="decimal" required>
+		</label>
+		<label>Reason
+			<input type="text" name="reason" maxlength="500" placeholder="Optional. Kept with the order." autocomplete="off">
+		</label>
+		<label class="commerce-refund-check">
+			<input type="checkbox" name="restock" value="1">
+			Return the items to stock
+		</label>
+
+		<footer>
+			<button class="dash-button transparent" type="button" popovertarget="commerce-refund" popovertargetaction="hide">Not now</button>
+			<button class="dash-button" type="submit">Refund</button>
+		</footer>
+	</form>
+</div>

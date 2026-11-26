@@ -1,0 +1,46 @@
+{#
+	The store's subscriptions. Built like the orders page: the filter form
+	posts with HTMX and gets the table back (partials/subscriptions-table.twig).
+
+	Autoescape is off in this app, so everything a buyer typed is escaped.
+#}
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<main class="dash-main-content commerce-admin" style="max-width:100%;">
+	<header class="commerce-admin-header">
+		<h1>{{ t('commerce.subscriptions') }}</h1>
+		<a class="dash-button transparent" href="commerce/orders">{{ t('commerce.orders') }}</a>
+	</header>
+
+	<section class="dash-content-section commerce-orders commerce-subscriptions">
+		{% if running.active > 0 %}
+			<p class="commerce-count commerce-subscriptions-running">{{ running.active|number_format }} running, worth {{ running.monthly|money(running.currency) }} a month</p>
+		{% endif %}
+		<form class="commerce-filters totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="commerce/subscriptions"
+			hx-get="commerce/subscriptions" hx-target="#commerce-subscriptions-table" hx-swap="outerHTML" hx-push-url="true" hx-trigger="submit, change">
+			<label class="commerce-filter-search">Search
+				<input type="search" name="q" value="{{ filters.q|default('')|e }}" placeholder="Email">
+			</label>
+			<label>Status
+				<select name="status">
+					<option value="">Any status</option>
+					{% for value, label in choices %}
+						<option value="{{ value }}"{{ filters.status|default('') == value ? ' selected' }}>{{ label }}</option>
+					{% endfor %}
+				</select>
+			</label>
+			<label class="commerce-filter-check">
+				<input type="checkbox" name="needsAttention" value="1"{{ filters.needsAttention|default('') ? ' checked' }}>
+				Needs attention
+			</label>
+			<div class="commerce-filter-actions">
+				<button class="dash-button" type="submit">Filter</button>
+				<a class="dash-button transparent" href="commerce/subscriptions">Clear</a>
+			</div>
+		</form>
+
+		{% include 'admin/commerce/partials/subscriptions-table.twig' %}
+	</section>
+</main>
+{% endblock %}

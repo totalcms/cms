@@ -1,0 +1,79 @@
+{#
+	The store on the admin home page: what it took in the last 30 days, how
+	many orders need someone, its newest orders, and what is running out.
+
+	Printed only when `cms.commerce.dashboard()` answers, which it does only
+	on a site with Commerce and for a user who may see orders.
+
+	Autoescape is off in this app, so everything a buyer typed is escaped.
+
+	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock, lowStockAt}
+#}
+<div class="dashboard-section commerce-dashboard" id="commerce-dashboard">
+	<div class="commerce-dashboard-header">
+		<h2>Store</h2>
+		<a href="commerce/orders">All orders →</a>
+	</div>
+
+	<dl class="commerce-dashboard-figures">
+		<div>
+			<dt>Last {{ store.days }} days</dt>
+			<dd>{{ store.revenue|e }}</dd>
+			<dd class="commerce-dashboard-note">{{ store.paidOrders }} paid {{ store.paidOrders == 1 ? 'order' : 'orders' }}, less refunds</dd>
+		</div>
+		<div{% if store.attention > 0 %} class="commerce-dashboard-alert"{% endif %}>
+			<dt>Need attention</dt>
+			<dd>{{ store.attention }}</dd>
+			<dd class="commerce-dashboard-note">
+				{% if store.attention > 0 %}
+					<a href="commerce/orders?needsAttention=1">Show {{ store.attention == 1 ? 'it' : 'them' }} →</a>
+				{% else %}
+					Nothing is waiting on you
+				{% endif %}
+			</dd>
+		</div>
+		<div>
+			<dt>Running low</dt>
+			<dd>{{ store.lowStock|length }}</dd>
+			<dd class="commerce-dashboard-note">{{ store.lowStock|length == 1 ? 'item has' : 'items have' }} {{ store.lowStockAt > 0 ? store.lowStockAt ~ ' or fewer' : 'none' }} left</dd>
+		</div>
+	</dl>
+
+	<div class="commerce-dashboard-lists">
+		<div>
+			<h3>Newest orders</h3>
+			{% if store.recent is empty %}
+				<p class="commerce-dashboard-empty">No orders yet. They appear here as buyers check out.</p>
+			{% else %}
+				<table>
+					<tbody>
+						{% for order in store.recent %}
+							<tr>
+								<td><a href="commerce/orders/{{ order.id|e }}">{{ store.prefix|e }}{{ order.number }}</a></td>
+								<td class="commerce-dashboard-email"><span class="dash-truncate" title="{{ order.email|e }}">{{ order.email|e }}</span></td>
+								<td class="commerce-dashboard-num">{{ order.total|e }}</td>
+								<td><span class="dash-badge sm {{ order.payment.tone }}">{{ order.payment.label|e }}</span></td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			{% endif %}
+		</div>
+		{% if store.lowStock is not empty %}
+			<div>
+				<h3>Running low</h3>
+				<table>
+					<tbody>
+						{% for item in store.lowStock|slice(0, 5) %}
+							<tr>
+								<td><a href="collections/products/{{ item.productId|e }}">{{ item.title|e }}</a></td>
+								<td class="commerce-dashboard-num">{{ item.stock }} left</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				{% if store.lowStock|length > 5 %}<p class="commerce-dashboard-empty">And {{ store.lowStock|length - 5 }} more.</p>{% endif %}
+			</div>
+		{% endif %}
+	</div>
+</div>

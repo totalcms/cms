@@ -1,0 +1,80 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-address.json",
+	"id": "commerce-address",
+	"type": "object",
+	"title": "Address",
+	"category": "Commerce",
+	"description": "A shipping or billing address on an order. Country and region decide tax and shipping; the rest is for display. Used as a card.",
+	"required": [],
+	"index": [
+		"id"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "Reserved — required by the schema system but unused for cards.",
+			"factory": "slug",
+			"settings": {
+				"readonly": true,
+				"hide": true
+			}
+		},
+		"name": {
+			"type": "string",
+			"field": "text",
+			"label": "Name",
+			"help": "The person the order is for."
+		},
+		"company": {
+			"type": "string",
+			"field": "text",
+			"label": "Company",
+			"help": "Optional."
+		},
+		"line1": {
+			"type": "string",
+			"field": "text",
+			"label": "Address",
+			"help": "Street address."
+		},
+		"line2": {
+			"type": "string",
+			"field": "text",
+			"label": "Address Line 2",
+			"help": "Apartment, suite or unit. Optional."
+		},
+		"city": {
+			"type": "string",
+			"field": "text",
+			"label": "City",
+			"help": "City or town."
+		},
+		"region": {
+			"type": "string",
+			"field": "text",
+			"label": "State or Region",
+			"help": "The state, province or region code, such as CA. Decides tax and shipping with the country."
+		},
+		"postalCode": {
+			"type": "string",
+			"field": "text",
+			"label": "Postal Code",
+			"help": "ZIP or postal code."
+		},
+		"country": {
+			"type": "string",
+			"field": "text",
+			"label": "Country",
+			"help": "Two-letter country code, such as US or DE. Decides tax and shipping."
+		},
+		"phone": {
+			"type": "string",
+			"field": "text",
+			"label": "Phone",
+			"help": "Optional. For the carrier."
+		}
+	}
+}

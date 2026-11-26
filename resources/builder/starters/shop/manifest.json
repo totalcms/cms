@@ -1,0 +1,6 @@
+{
+	"name": "Shop",
+	"description": "A store with a shop, product pages, cart, checkout, customer accounts and a membership. Needs the Commerce add-on.",
+	"version": "1.0.0",
+	"requires": ["commerce"]
+}

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Collection\Service\OidAllocator;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
@@ -16,6 +17,7 @@ readonly class ObjectCloner
 		private DateFieldResetter $dateFieldResetter,
 		private EventDispatcher $eventDispatcher,
 		private OidAllocator $oids,
+		private ObjectWriteGate $gate,
 	) {
 	}
 
@@ -25,6 +27,10 @@ readonly class ObjectCloner
 	 */
 	public function cloneObject(array $from, array $to): ObjectData
 	{
+		// The copy is stored without ObjectSaver, so the gate is asked here:
+		// nothing may be copied into the store's own records.
+		$this->gate->requireWritable((string)$to['collection'], (string)$to['id'], Operation::Clone);
+
 		$object = $this->storage->fetchObject($from['collection'], $from['id']);
 
 		if (!$object instanceof ObjectData) {

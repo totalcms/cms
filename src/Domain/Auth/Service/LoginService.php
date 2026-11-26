@@ -102,7 +102,7 @@ class LoginService
 
 		$this->logger->info("User {$this->account} logged in");
 
-		$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload($user['id'] ?? $this->account));
+		$this->eventDispatcher->dispatch(CoreEvent::USER_LOGIN, new UserEventPayload($user['id'] ?? $this->account, $collection));
 
 		return $user;
 	}
