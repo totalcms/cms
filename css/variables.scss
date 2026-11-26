@@ -56,6 +56,9 @@
 
 	--totalform-radius       : 5px;
 	--help-animation-timing  : 0.25s;
+	// How long the pointer rests on a field before its help shows. Without it
+	// the help of every field the pointer crosses flashes up on the way past.
+	--help-hover-delay       : 0.4s;
 	--dialog-scrollbar-width : 12px;
 
 	--totalform-status-banner-height : 100vh;

@@ -50,6 +50,16 @@
 		.help {
 			opacity : 1;
 		}
+		// The corner is squared off when the help box arrives, not before it.
+		@media (hover: hover) {
+			input,
+			.form-group-icon {
+				transition : border-bottom-right-radius 0s var(--help-hover-delay);
+			}
+			.help {
+				transition-delay : var(--help-hover-delay);
+			}
+		}
     }
     .help {
         max-width           : clamp(100px, 50ch, 85%);
@@ -230,6 +240,22 @@
 .help-on-hover .form-field:not(.deck-field):hover > .help:not(:empty),
 .help-on-hover .form-field:not(.card-field):hover > .help:not(:empty) {
     opacity: 1 !important;
+}
+
+// Help on hover waits for the pointer to rest (--help-hover-delay), and so does
+// the label it covers. A delay belongs to the state being entered, so it is set
+// on :hover only: leaving the field hides the help at once. A touch screen has
+// no pointer passing over fields on its way somewhere else, so a tap shows the
+// help straight away.
+@media (hover: hover) {
+	.help-on-hover .form-field:not(.deck-field):hover > .help:not(:empty),
+	.help-on-hover .form-field:not(.card-field):hover > .help:not(:empty),
+	.help-on-hover.help-label .form-field.radio-field:has(.help:not(:empty)):hover legend,
+	.help-on-hover.help-label .form-field.checklist-field:has(.help:not(:empty)):hover legend,
+	.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):has(.help:not(:empty)):hover > label,
+	.help-on-hover.help-label .form-field:has(.help:not(:empty)):hover > .localized-stack > .localized-header > label {
+		transition-delay : var(--help-hover-delay);
+	}
 }
 
 // Hide the field's own label/legend when the help overlay is showing.
