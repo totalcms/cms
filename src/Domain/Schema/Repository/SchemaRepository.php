@@ -82,14 +82,20 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/**
-	 * List reserved Schemas.
+	 * The schemas Total CMS ships (`SchemaData::RESERVED_SCHEMAS`), never an
+	 * extension's. Extension ids are reserved too, so they cannot be edited
+	 * or reused ({@see reservedSchemasIds()}), but they are not core files:
+	 * BundleChecker looks for every schema listed here in the manifest.
 	 *
 	 * @return array<SchemaData>
 	 */
 	public function listReservedSchemas(): array
 	{
-		// Try cache first (reserved schemas never change during runtime)
-		$cacheKey = 'reserved_schemas_list';
+		// Try cache first (reserved schemas never change during runtime).
+		// Renamed from `reserved_schemas_list`, which could hold an extension's
+		// id (a custom copy read as a core schema); a stale entry under the old
+		// key is never read.
+		$cacheKey = 'core_schemas_list';
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -100,10 +106,9 @@ class SchemaRepository extends StorageRepository
 		}
 
 		// Cache miss - load all reserved schemas
-		$ids     = $this->reservedSchemasIds();
 		$schemas = [];
 
-		foreach ($ids as $id) {
+		foreach (SchemaData::RESERVED_SCHEMAS as $id) {
 			$schema = $this->fetchDefaultSchema($id);
 			if ($schema instanceof SchemaData) {
 				$schemas[] = $schema;
@@ -147,7 +152,7 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		$cached = $this->cached($id);
+		$cached = $this->cached(self::defaultCacheKey($id));
 		if ($cached instanceof SchemaData) {
 			return $cached;
 		}
@@ -165,7 +170,7 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		return $this->remember($id, $this->factory->generateSchemaFromJson($contents));
+		return $this->remember(self::defaultCacheKey($id), $this->factory->generateSchemaFromJson($contents));
 	}
 
 	/**
@@ -177,14 +182,14 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		$cached = $this->cached($id);
+		$cached = $this->cached(self::customCacheKey($id));
 		if ($cached instanceof SchemaData) {
 			return $cached;
 		}
 
 		$schema = $this->fetchAndDeserialize(self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT, SchemaData::class);
 
-		return $schema instanceof SchemaData ? $this->remember($id, $schema) : null;
+		return $schema instanceof SchemaData ? $this->remember(self::customCacheKey($id), $schema) : null;
 	}
 
 	/**
@@ -201,13 +206,32 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/**
+	 * Core and custom schemas are cached under separate keys. They once shared
+	 * `schema:{id}`, so a custom schema with an extension schema's id, once
+	 * cached, came back from the core lookup: it took the extension's place,
+	 * and BundleChecker failed every write looking for it in the manifest.
+	 * Installs that share a data folder and a cache hit it whenever one of
+	 * them keeps such a copy for an install without the extension.
+	 */
+	private static function defaultCacheKey(string $id): string
+	{
+		return "schema_default:{$id}";
+	}
+
+	/** Cleared by {@see invalidateCustomSchemaCache()} when the schema is saved or deleted. */
+	private static function customCacheKey(string $id): string
+	{
+		return "schema:{$id}";
+	}
+
+	/**
 	 * The cached copy of a default or custom schema, or null on a miss. A
 	 * cache entry that no longer builds a schema reads as a miss so the file
 	 * is consulted.
 	 */
-	private function cached(string $id): ?SchemaData
+	private function cached(string $key): ?SchemaData
 	{
-		$cached = $this->cacheManager->getComputedData("schema:{$id}");
+		$cached = $this->cacheManager->getComputedData($key);
 		if (!is_array($cached)) {
 			return null;
 		}
@@ -220,9 +244,9 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/** Cache a freshly loaded schema. Default schemas never change at runtime; custom ones rarely. */
-	private function remember(string $id, SchemaData $schema): SchemaData
+	private function remember(string $key, SchemaData $schema): SchemaData
 	{
-		$this->cacheManager->storeComputedData("schema:{$id}", $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
+		$this->cacheManager->storeComputedData($key, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
 
 		return $schema;
 	}
@@ -376,7 +400,7 @@ class SchemaRepository extends StorageRepository
 	private function invalidateCustomSchemaCache(string $id): void
 	{
 		// Clear custom schema cache
-		$this->cacheManager->clearComputedData("schema:{$id}");
+		$this->cacheManager->clearComputedData(self::customCacheKey($id));
 
 		// Also clear flattened cache if this schema is flattened
 		$this->cacheManager->clearComputedData("schema_flattened:{$id}");
