@@ -183,7 +183,11 @@ test('a receipt sent through the mailer is addressed to the buyer and shows the 
 		->and($sent[0]['bodyHtml'])->toContain('Larkspur &amp; Co has received your payment', 'dated November 23, 2026', 'reply to this email')
 		->not->toContain('mailto:')
 		->and($sent[0]['bodyText'])->toContain('Larkspur & Co has received your payment', 'dated November 23, 2026', 'reply to this email')
-		->and($sent[0]['bodyHtml'])->toContain('Thank you for your order', 'Kiambu &lt;AA&gt; &times; 2', '$44.00', 'Discount (WELCOME10)', '-$4.40', '$5.00', '$44.60')
+		->and($sent[0]['bodyHtml'])->toContain('Thank you for your order', '$44.00', 'Discount (WELCOME10)', '-$4.40', '$5.00', '$44.60')
+		// The mailer writes the HTML back out through libxml, and which way the
+		// multiplication sign comes out depends on its version: `&times;` from
+		// 2.9, the character itself from newer ones. A mail reader shows the same.
+		->toMatch('/Kiambu &lt;AA&gt; (?:&times;|×) 2/u')
 		->not->toContain('{{', '{%', 'Tax', 'Your downloads')
 		->and($sent[0]['bodyText'])->toContain('Kiambu <AA> x 2: $44.00', 'Total: $44.60')
 		->not->toContain('{{', '{%');

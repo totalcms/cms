@@ -211,6 +211,15 @@ function bootstrap()
 		apcu_clear_cache();
 	}
 
+	// The settings are remembered for the whole PHP process too: Config::init()
+	// keeps what config/settings.php gave it, settings.json included, until
+	// SettingsSaver drops it. So a test that saved a setting left it in every
+	// test after it in the same process, even once the data folder (and the
+	// file) was wiped: no save, no drop. Parallel runs mostly hid this; CI's
+	// one process did not, and the shop starter's saved store settings turned
+	// up in the settings form's golden snapshot hundreds of files later.
+	Config::reset();
+
 	// Session state leaks the same way: after a request the middleware
 	// write-closes the session, so session_status() is NONE and the
 	// "session_destroy() if active" idiom in test files never fires — the
