@@ -1748,13 +1748,27 @@ function seedCommerceStaff(App $app): void
 	]));
 
 	$save = static fn (string $id, array $groups) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('auth', [
-		'id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => 'commerce-Password-1', 'active' => true, 'groups' => $groups,
+		'id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => quickPasswordHash(), 'active' => true, 'groups' => $groups,
 	]);
 	$save('boss', ['admin']);
 	$save('keeper', ['shopkeepers']);
 	$save('writer', ['editor']);
 
 	$actors->set(Actor::anonymous());
+}
+
+/**
+ * A password that is already hashed, at the cheapest cost, for a test that
+ * needs a user and not a slow hash. Saving a plain password hashes it at the
+ * real cost, about 55 ms each: a file that makes four users before every
+ * test spent a fifth of its time there. A user saved with this signs in with
+ * $plain as usual.
+ */
+function quickPasswordHash(string $plain = 'commerce-Password-1'): string
+{
+	static $hashes = [];
+
+	return $hashes[$plain] ??= password_hash($plain, PASSWORD_BCRYPT, ['cost' => 4]);
 }
 
 /** What the admin sidebar knows of a site without Commerce: no store, nothing to count. */

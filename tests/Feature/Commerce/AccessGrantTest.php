@@ -57,7 +57,7 @@ beforeEach(function (): void {
 
 	$this->asSystem = fn (callable $do): mixed => $this->c->get(ActorContext::class)->runAs(Actor::system(), $do);
 	$this->pat      = fn (array $groups = ['newsletter']) => ($this->asSystem)(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', [
-		'id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => 'commerce-Password-1', 'active' => true, 'groups' => $groups,
+		'id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => quickPasswordHash(), 'active' => true, 'groups' => $groups,
 	]));
 	($this->pat)();
 	$this->groups = function (): array {

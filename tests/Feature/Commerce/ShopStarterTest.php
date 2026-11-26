@@ -164,7 +164,7 @@ describe('on a site with Commerce', function (): void {
 
 	it('lets a customer in to the members page once their membership is paid for', function (): void {
 		$sub = enableSubscriptions();
-		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => 'commerce-Password-1', 'active' => true]));
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => quickPasswordHash(), 'active' => true]));
 		$session = $this->c->get(PhpSession::class);
 		$session->isStarted() || $session->start();
 		withHeader('X-CSRF-Token', $this->c->get(CSRFTokenManager::class)->getToken());

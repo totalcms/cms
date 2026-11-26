@@ -55,7 +55,7 @@ beforeEach(function (): void {
 	$asSystem         = fn (callable $do): mixed => $this->c->get(ActorContext::class)->runAs(Actor::system(), $do);
 	$asSystem(fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
 	foreach (['pat', 'sam'] as $id) {
-		$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => 'commerce-Password-1', 'active' => true]));
+		$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => quickPasswordHash(), 'active' => true]));
 	}
 	seedPlan('club', 1000);
 
