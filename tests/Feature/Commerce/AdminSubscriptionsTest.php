@@ -41,8 +41,10 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	bootCommerceStore();
-	seedCommerceStaff($this->app);
+	// Staff, Pat's account, the two plans and both subscriptions are the same
+	// for every test here: the first test in a worker makes them, the rest
+	// start from a copy.
+	$stock        = bootCommerceScene('admin-subscriptions');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->subs   = $this->c->get(SubscriptionRepository::class);
@@ -52,10 +54,13 @@ beforeEach(function (): void {
 	$config           = $this->c->get(Config::class);
 	$config->commerce = ['customerCollection' => 'customers', 'grantableGroups' => ['members']] + $config->commerce;
 	$asSystem         = fn (callable $do): mixed => $this->c->get(ActorContext::class)->runAs(Actor::system(), $do);
-	$asSystem(fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
-	$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => quickPasswordHash(), 'active' => true]));
-	seedPlan('club', 1000, ['accessGroup' => 'members']);
-	seedPlan('annual', 12000, ['interval' => 'year']);
+	if ($stock) {
+		seedCommerceStaff($this->app);
+		$asSystem(fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
+		$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => quickPasswordHash(), 'active' => true]));
+		seedPlan('club', 1000, ['accessGroup' => 'members']);
+		seedPlan('annual', 12000, ['interval' => 'year']);
+	}
 
 	$session = $this->c->get(PhpSession::class);
 	$session->isStarted() || $session->start();
@@ -77,13 +82,25 @@ beforeEach(function (): void {
 
 		return $this->subs->find($id);
 	};
-	$this->pat = ($this->subscribe)('club', 'pat@example.test', 'sub_1', 'pat');
-	// Bo is a guest.
-	$guest = $this->c->get(PhpSession::class);
-	$guest->isStarted() || $guest->start();
-	$guest->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_USER);
-	$guest->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_COLLECTION);
-	$this->bo = ($this->subscribe)('annual', 'bo@example.org', 'sub_2');
+	/** Nobody is signed in. Sign-in itself is on, as it is once anyone has signed in. */
+	$guest = function (): void {
+		signInAs($this->app, 'pat', 'customers');
+		$session = $this->c->get(PhpSession::class);
+		$session->isStarted() || $session->start();
+		$session->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_USER);
+		$session->delete(TotalCMS\Domain\Session\SessionKeys::AUTH_COLLECTION);
+	};
+	if ($stock) {
+		($this->subscribe)('club', 'pat@example.test', 'sub_1', 'pat');
+		// Bo is a guest.
+		$guest();
+		($this->subscribe)('annual', 'bo@example.org', 'sub_2');
+		keepCommerceScene('admin-subscriptions');
+	}
+	$guest();
+	$byEmail   = fn (string $part): SubscriptionData => $this->query->search(['q' => $part], 1)['subscriptions'][0];
+	$this->pat = $byEmail('pat@');
+	$this->bo  = $byEmail('bo@');
 
 	$this->kept   = fn (SubscriptionData $s): SubscriptionData => $this->subs->find($s->id());
 	$this->groups = fn (): array => $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('customers', 'pat')->toArray()['groups'] ?? [];

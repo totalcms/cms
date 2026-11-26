@@ -43,7 +43,9 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	bootCommerceStore();
+	// The customers collection, Pat and the products are the same for every
+	// test here: the first test in a worker makes them, the rest start from a copy.
+	$stock        = bootCommerceScene('access-grants');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->subs   = $this->c->get(SubscriptionRepository::class);
@@ -53,13 +55,15 @@ beforeEach(function (): void {
 	$config           = $this->c->get(Config::class);
 	$config->commerce = ['grantableGroups' => ['members', 'vip', 'admin'], 'customerCollection' => 'customers'] + $config->commerce;
 	// Customers sign in to their own collection, not the admin one.
-	$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
+	if ($stock) {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
+	}
 
 	$this->asSystem = fn (callable $do): mixed => $this->c->get(ActorContext::class)->runAs(Actor::system(), $do);
 	$this->pat      = fn (array $groups = ['newsletter']) => ($this->asSystem)(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', [
 		'id' => 'pat', 'name' => 'Pat', 'email' => 'pat@example.test', 'password' => quickPasswordHash(), 'active' => true, 'groups' => $groups,
 	]));
-	($this->pat)();
+	$stock && ($this->pat)();
 	$this->groups = function (): array {
 		$groups = $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('customers', 'pat')->toArray()['groups'] ?? [];
 		sort($groups);
@@ -67,14 +71,17 @@ beforeEach(function (): void {
 		return $groups;
 	};
 
-	seedPlan('club', 1000, ['accessGroup' => 'members']);
-	seedPlan('lounge', 2000, ['accessGroup' => 'members']);
-	$product = fn (string $id, string $group) => ($this->asSystem)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
-		'id' => $id, 'title' => ucfirst($id), 'status' => 'active', 'type' => 'digital', 'requiresShipping' => false, 'price' => 50, 'accessGroup' => $group,
-	]));
-	$product('course', 'vip');
-	$product('throne', 'admin');
-	$product('backroom', 'staff');
+	if ($stock) {
+		seedPlan('club', 1000, ['accessGroup' => 'members']);
+		seedPlan('lounge', 2000, ['accessGroup' => 'members']);
+		$product = fn (string $id, string $group) => ($this->asSystem)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => $id, 'title' => ucfirst($id), 'status' => 'active', 'type' => 'digital', 'requiresShipping' => false, 'price' => 50, 'accessGroup' => $group,
+		]));
+		$product('course', 'vip');
+		$product('throne', 'admin');
+		$product('backroom', 'staff');
+		keepCommerceScene('access-grants');
+	}
 
 	$session = $this->c->get(PhpSession::class);
 	$session->isStarted() || $session->start();

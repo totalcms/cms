@@ -44,7 +44,9 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	bootCommerceStore();
+	// The customers, the plan and Pat's subscription are the same for every
+	// test here: the first test in a worker makes them, the rest start from a copy.
+	$stock        = bootCommerceScene('subscription-pages');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->subs   = $this->c->get(SubscriptionRepository::class);
@@ -53,11 +55,13 @@ beforeEach(function (): void {
 	$config           = $this->c->get(Config::class);
 	$config->commerce = ['customerCollection' => 'customers'] + $config->commerce;
 	$asSystem         = fn (callable $do): mixed => $this->c->get(ActorContext::class)->runAs(Actor::system(), $do);
-	$asSystem(fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
-	foreach (['pat', 'sam'] as $id) {
-		$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => quickPasswordHash(), 'active' => true]));
+	if ($stock) {
+		$asSystem(fn () => $this->c->get(CollectionSaver::class)->saveCollection(['id' => 'customers', 'name' => 'Customers', 'schema' => 'auth']));
+		foreach (['pat', 'sam'] as $id) {
+			$asSystem(fn () => $this->c->get(ObjectSaver::class)->saveObject('customers', ['id' => $id, 'name' => ucfirst($id), 'email' => "{$id}@example.test", 'password' => quickPasswordHash(), 'active' => true]));
+		}
+		seedPlan('club', 1000);
 	}
-	seedPlan('club', 1000);
 
 	$session = $this->c->get(PhpSession::class);
 	$session->isStarted() || $session->start();
@@ -66,12 +70,17 @@ beforeEach(function (): void {
 	$this->route = fn (PaymentEvent|SubscriptionEvent $event): bool => $this->c->get(ProviderEventRouter::class)->route($event);
 
 	// Pat subscribes, and the provider says the first payment went through.
+	// Pat is left signed in either way.
 	signInAs($this->app, 'pat', 'customers');
-	postJson('/commerce/cart/add', ['productId' => 'club', 'variantId' => '', 'qty' => 1]);
-	post('/commerce/checkout', ['provider' => 'fake-sub', 'email' => 'pat@example.test'], ['Accept' => 'application/json']);
+	if ($stock) {
+		postJson('/commerce/cart/add', ['productId' => 'club', 'variantId' => '', 'qty' => 1]);
+		post('/commerce/checkout', ['provider' => 'fake-sub', 'email' => 'pat@example.test'], ['Accept' => 'application/json']);
+		$first = $this->subs->find((string)$this->subs->index()[0]['id']);
+		($this->route)(new PaymentEvent('fake-sub', 'evt_first', PaymentEventType::Paid, $first->originOrderId(), Money::of(1000, 'USD'), 'pi_first', 'pi_first', [], 'sub_1', 'cus_1'));
+		keepCommerceScene('subscription-pages');
+	}
 	$this->id    = (string)$this->subs->index()[0]['id'];
 	$this->order = $this->orders->find($this->subs->find($this->id)->originOrderId());
-	($this->route)(new PaymentEvent('fake-sub', 'evt_first', PaymentEventType::Paid, $this->order->id(), Money::of(1000, 'USD'), 'pi_first', 'pi_first', [], 'sub_1', 'cus_1'));
 
 	$this->kept    = fn (): SubscriptionData => $this->subs->find($this->id);
 	$this->token   = fn (): string => $this->c->get(SubscriptionAccess::class)->token(($this->kept)());

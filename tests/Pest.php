@@ -1542,10 +1542,26 @@ function trialEntitlements(bool $running = true): Entitlements
  * commerce Twig tests (a helper in one test file is invisible to another
  * under --parallel).
  */
-function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null): void
+function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null, string $scene = ''): void
 {
+	// Installing the store and saving its catalog writes the same files every
+	// time, and took most of this function's time. So a worker does it once,
+	// keeps a copy of the data folder, and every later test starts from that
+	// copy. `$built` is per process: a new run never trusts a copy that an
+	// earlier run, on earlier code, left behind. A test with something to put
+	// on disk before the site boots takes the long way, and its store is not
+	// the one that is kept.
+	static $built = false;
+	$kept         = rtrim(tcmsTestTmpDir(), '/') . '/commerce-store';
+	$copy         = $built ? $kept : '';
+	// A scene is a store with more in it, kept the same way: see bootCommerceScene().
+	if ($scene !== '' && isset(commerceScenes()[$scene])) {
+		$copy = commerceSceneDir($scene);
+	}
+	$fromCopy = $copy !== '' && !$beforeBoot instanceof \Closure && is_dir($copy);
+
 	recursiveDelete(cmsDataDir());
-	restoreFixtures();
+	$fromCopy ? recursiveCopy($copy, rtrim(cmsDataDir(), '/')) : restoreFixtures();
 	// For a test that needs something on disk before the site boots, such as an enabled extension.
 	if ($beforeBoot instanceof \Closure) {
 		$beforeBoot();
@@ -1568,7 +1584,9 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null): voi
 	$session->isStarted() || $session->start();
 	$app->getContainer()->get(ActorContext::class)->set(Actor::anonymous());
 	$c = $app->getContainer();
-	$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
+	if (!$fromCopy) {
+		$c->get(\TotalCMS\Domain\Commerce\Service\CommerceInstaller::class)->install();
+	}
 
 	// A store that can take money: one provider, switched on. Nothing is
 	// registered on a site without Commerce, as at a real boot.
@@ -1577,6 +1595,9 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null): voi
 		$c->get(\TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry::class)->register(test()->fakeProvider);
 		$config           = $c->get(Config::class);
 		$config->commerce = ['providers' => ['fake']] + $config->commerce;
+	}
+	if ($fromCopy) {
+		return;
 	}
 
 	$save = fn (array $product) => $c->get(\TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('products', $product);
@@ -1588,6 +1609,66 @@ function bootCommerceStore(bool $open = true, ?\Closure $beforeBoot = null): voi
 	$save(['id' => 'mug', 'title' => 'Mug', 'status' => 'active', 'price' => 12.5, 'category' => 'Kitchen']);
 	$save(['id' => 'print', 'title' => 'Print', 'status' => 'active', 'price' => 40, 'trackInventory' => true, 'stock' => 0]);
 	$save(['id' => 'draft-thing', 'title' => 'Draft Thing', 'status' => 'draft', 'price' => 5]);
+
+	if (!$beforeBoot instanceof \Closure) {
+		recursiveDelete($kept);
+		recursiveCopy(rtrim(cmsDataDir(), '/'), $kept);
+		$built = true;
+	}
+}
+
+/**
+ * bootCommerceStore(), for a file whose every test starts from the same
+ * store with more in it than the catalog: staff, a customers collection,
+ * plans, a subscription already bought.
+ *
+ * Stocking that store before each test was most of what the slowest commerce
+ * files did. So the first test of a scene in each worker stocks it and keeps
+ * a copy, and every later test starts from the copy:
+ *
+ *     $stock = bootCommerceScene('admin-orders');   // true: this test stocks it
+ *     // ... what lives in memory, needed every time: config, a provider, the session ...
+ *     if ($stock) {
+ *         // ... what is written to the site's data ...
+ *         keepCommerceScene('admin-orders');
+ *     }
+ *
+ * Only the site's data is kept. Config, registered providers, listeners and
+ * the session are gone when the next test boots, so they are set outside the
+ * `if`. A name belongs to one file.
+ */
+function bootCommerceScene(string $name): bool
+{
+	bootCommerceStore(true, null, $name);
+
+	return !isset(commerceScenes()[$name]);
+}
+
+/** Keep the site's data as it is now as the scene $name, for the tests that follow in this worker. */
+function keepCommerceScene(string $name): void
+{
+	$dir = commerceSceneDir($name);
+	recursiveDelete($dir);
+	recursiveCopy(rtrim(cmsDataDir(), '/'), $dir);
+	commerceScenes()[$name] = true;
+}
+
+/**
+ * The scenes this process has kept. Per process, like the store's own copy:
+ * a new run never trusts what an earlier run left behind.
+ *
+ * @return array<string,true>
+ */
+function &commerceScenes(): array
+{
+	static $kept = [];
+
+	return $kept;
+}
+
+function commerceSceneDir(string $name): string
+{
+	return rtrim(tcmsTestTmpDir(), '/') . '/commerce-scene-' . $name;
 }
 
 /**

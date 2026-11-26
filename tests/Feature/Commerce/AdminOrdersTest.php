@@ -26,16 +26,21 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	bootCommerceStore();
-	seedCommerceStaff($this->app);
+	// The staff and the e-book are the same for every test here: the first
+	// test in a worker makes them, the rest start from a copy.
+	$stock        = bootCommerceScene('admin-orders');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->query  = $this->c->get(OrderQuery::class);
 
 	// A file a buyer downloads: delivered by a listener, not shipped by a person.
-	$this->c->get(ActorContext::class)->set(Actor::system());
-	$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital']);
-	$this->c->get(ActorContext::class)->set(Actor::anonymous());
+	if ($stock) {
+		seedCommerceStaff($this->app);
+		$this->c->get(ActorContext::class)->set(Actor::system());
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital']);
+		$this->c->get(ActorContext::class)->set(Actor::anonymous());
+		keepCommerceScene('admin-orders');
+	}
 
 	/** An order for $items from $email, paid unless told otherwise. */
 	$this->order = function (array $items = ['mug' => 1], string $email = 'buyer@example.com', bool $paid = true, ?int $amount = null): OrderData {

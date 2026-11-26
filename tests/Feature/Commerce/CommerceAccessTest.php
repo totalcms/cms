@@ -22,8 +22,15 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->boot = function (bool $open = true): void {
-		bootCommerceStore($open);
-		seedCommerceStaff($this->app);
+		// An open store with its staff is the same every time: the first test
+		// in a worker makes it, the rest start from a copy.
+		if (!$open) {
+			bootCommerceStore(false);
+			seedCommerceStaff($this->app);
+		} elseif (bootCommerceScene('access')) {
+			seedCommerceStaff($this->app);
+			keepCommerceScene('access');
+		}
 		$this->c = $this->app->getContainer();
 	};
 });

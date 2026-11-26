@@ -43,12 +43,14 @@ use function TotalCMS\Slim\Pest\get;
  */
 
 beforeEach(function (): void {
-	bootCommerceStore();
+	// The two digital products and the guide's file are the same for every
+	// test here: the first test in a worker makes them, the rest start from a copy.
+	$stock        = bootCommerceScene('digital-delivery');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 
 	$this->asStore = fn (Closure $work) => $this->c->get(ActorContext::class)->runAs(Actor::system(), $work);
-	($this->asStore)(function (): void {
+	$stock && ($this->asStore)(function (): void {
 		$save = fn (array $product) => $this->c->get(ObjectSaver::class)->saveObject('products', $product);
 		$save(['id' => 'guide', 'title' => 'Guide', 'status' => 'active', 'type' => 'digital', 'price' => 9, 'requiresShipping' => false]);
 		$save(['id' => 'course', 'title' => 'Course', 'status' => 'active', 'type' => 'digital', 'price' => 40, 'requiresShipping' => false]);
@@ -61,7 +63,10 @@ beforeEach(function (): void {
 		rename($path, dirname($path) . '/' . $name) && $path = dirname($path) . '/' . $name;
 		($this->asStore)(fn () => $this->c->get(FileSaver::class)->save('products', $productId, 'download', $path));
 	};
-	($this->attach)('guide');
+	if ($stock) {
+		($this->attach)('guide');
+		keepCommerceScene('digital-delivery');
+	}
 
 	// An order for these items, paid unless told otherwise.
 	$this->order = function (array $items = ['guide' => 1], bool $paid = true): OrderData {

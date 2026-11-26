@@ -13,11 +13,18 @@ declare(strict_types=1);
 // expired".
 //
 // Each worker therefore gets its own sandbox, and all three live together under
-// ONE hidden directory: /tests/.workers/{token}/{tcms-data,cache,tmp}. Keeping
-// them nested matters — a flat layout meant 12 workers scattered 36 top-level
-// `cache-N` / `tmp-N` / `tcms-data-N` directories through the project.
-// Everything a parallel run creates can now be removed with a single
-// `rm -rf tests/.workers`.
+// ONE directory: {base}/{token}/{tcms-data,cache,tmp}. Keeping them nested
+// matters — a flat layout meant 12 workers scattered 36 top-level `cache-N` /
+// `tmp-N` / `tcms-data-N` directories through the project.
+//
+// {base} is in the system's temp folder, NOT in the project (it was
+// /tests/.workers until 2026-11-25). Inside the project, the editor's file
+// watcher and the system's file-event daemon reacted to every file a test
+// wrote, and together took about two cores from a 12-worker run: the suite ran
+// in 101s with the sandboxes outside the project against 114s inside it. There
+// is one {base} per checkout, so two copies of the repo never share sandboxes.
+// `composer run test:clean` removes it; TCMS_TEST_WORKERS_DIR names another
+// place for it.
 //
 // A serial run has no TEST_TOKEN and keeps the original paths untouched.
 //
@@ -46,7 +53,26 @@ if (!function_exists('tcmsTestWorkerToken')) {
 	{
 		$token = tcmsTestWorkerToken();
 
-		return $token === '' ? '' : dirname(__DIR__) . '/tests/.workers/' . $token;
+		return $token === '' ? '' : tcmsTestWorkersBase() . '/' . $token;
+	}
+
+	/**
+	 * The folder every worker's sandbox is kept in: outside the project, one
+	 * per checkout. See the note at the top of this file.
+	 */
+	function tcmsTestWorkersBase(): string
+	{
+		$named = getenv('TCMS_TEST_WORKERS_DIR');
+		if (is_string($named) && $named !== '') {
+			return rtrim($named, '/');
+		}
+
+		// The real path: on macOS the temp folder is reached through a link
+		// (/var → /private/var), and code that compares resolved paths must
+		// be given the resolved one.
+		$temp = realpath(sys_get_temp_dir());
+
+		return ($temp === false ? sys_get_temp_dir() : $temp) . '/totalcms-tests-' . substr(md5(dirname(__DIR__)), 0, 8);
 	}
 
 	/**

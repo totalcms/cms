@@ -33,17 +33,22 @@ use TotalCMS\Support\Config;
  */
 
 beforeEach(function (): void {
-	bootCommerceStore();
+	// The two stocked products are the same for every test here: the first
+	// test in a worker makes them, the rest start from a copy.
+	$stock        = bootCommerceScene('inventory');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
 
 	$this->asStore = fn (Closure $work) => $this->c->get(ActorContext::class)->runAs(Actor::system(), $work);
 	$this->product = fn (array $product) => ($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', $product + ['status' => 'active']));
-	($this->product)(['id' => 'poster', 'title' => 'Poster', 'price' => 20, 'trackInventory' => true, 'stock' => 5]);
-	($this->product)(['id' => 'shirt', 'title' => 'Shirt', 'price' => 25, 'trackInventory' => true, 'stock' => 99, 'variants' => [
-		'large' => ['id' => 'large', 'title' => 'Large', 'stock' => 3],
-		'small' => ['id' => 'small', 'title' => 'Small', 'stock' => 1],
-	]]);
+	if ($stock) {
+		($this->product)(['id' => 'poster', 'title' => 'Poster', 'price' => 20, 'trackInventory' => true, 'stock' => 5]);
+		($this->product)(['id' => 'shirt', 'title' => 'Shirt', 'price' => 25, 'trackInventory' => true, 'stock' => 99, 'variants' => [
+			'large' => ['id' => 'large', 'title' => 'Large', 'stock' => 3],
+			'small' => ['id' => 'small', 'title' => 'Small', 'stock' => 1],
+		]]);
+		keepCommerceScene('inventory');
+	}
 
 	// What the product's own record says now, read from disk.
 	$this->stored = fn (string $id): array => $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('products', $id)->toArray();

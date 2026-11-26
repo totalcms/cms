@@ -32,8 +32,9 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
-	bootCommerceStore();
-	seedCommerceStaff($this->app);
+	// The staff and the one paid order are the same for every test here: the
+	// first test in a worker makes them, the rest start from a copy.
+	$stock         = bootCommerceScene('refunds');
 	$this->c       = $this->app->getContainer();
 	$this->orders  = $this->c->get(OrderRepository::class);
 	$this->refunds = $this->c->get(RefundService::class);
@@ -41,9 +42,13 @@ beforeEach(function (): void {
 	$this->boss    = new Actor(ActorKind::Admin, 'boss', 'auth');
 
 	// One paid order of $39.98.
-	$order = $this->orders->create(commerceDraft(['tee:large' => 2]), 'fake');
-	$this->c->get(PaymentEventProcessor::class)->process(commercePaidEvent($order->id(), 3998, 'evt_paid'));
-	$this->order = $this->orders->find($order->id());
+	if ($stock) {
+		seedCommerceStaff($this->app);
+		$order = $this->orders->create(commerceDraft(['tee:large' => 2]), 'fake');
+		$this->c->get(PaymentEventProcessor::class)->process(commercePaidEvent($order->id(), 3998, 'evt_paid'));
+		keepCommerceScene('refunds');
+	}
+	$this->order = $this->orders->find((string)$this->orders->index()[0]['id']);
 
 	$this->fresh   = fn (): OrderData => $this->orders->find($this->order->id());
 	$this->lines   = fn (): array => array_values(array_filter($this->ledger->forOrder($this->order->id()), static fn (array $line): bool => $line['type'] === 'refund'));
