@@ -17,7 +17,7 @@ use TotalCMS\Domain\Backup\Service\ObjectHistory;
 use TotalCMS\Domain\Backup\Service\ObjectRestorer;
 
 /**
- * POST /admin/utils/backups/restore
+ * POST /admin/utils/backups/restore.
  *
  * Restores an object from one of its snapshots: the whole record, or one
  * top-level field (`property`). Then goes back to the object's history, which

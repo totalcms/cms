@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -31,7 +32,7 @@ describe('RemoverFactory', function (): void {
 			$this->objectPatcher,
 			$this->objectFetcher,
 			$this->schemaFetcher,
-			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
+			$this->createMock(FileBackupStore::class),
 		);
 	});
 

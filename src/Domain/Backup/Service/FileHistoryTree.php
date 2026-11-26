@@ -174,7 +174,7 @@ final readonly class FileHistoryTree
 	/**
 	 * Apply the count rule to one slot: of the dated folders that hold a file
 	 * for it, all but the newest `$keep - 1` lose it. (The folder just written
-	 * is the newest and is not among them.)
+	 * is the newest and is not among them.).
 	 *
 	 * @param list<string> $versionsNewestFirst
 	 */

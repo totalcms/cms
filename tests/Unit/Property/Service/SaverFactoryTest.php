@@ -6,6 +6,7 @@ namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -62,7 +63,7 @@ class SaverFactoryTest extends TestCase
 			$this->mockLoggerFactory,
 			$this->createMock(Config::class),
 			$this->mockMetaResolver,
-			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
+			$this->createMock(FileBackupStore::class),
 		);
 	}
 

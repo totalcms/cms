@@ -152,7 +152,7 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		$cached = $this->cached(self::defaultCacheKey($id));
+		$cached = $this->cached($this->defaultCacheKey($id));
 		if ($cached instanceof SchemaData) {
 			return $cached;
 		}
@@ -170,7 +170,7 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		return $this->remember(self::defaultCacheKey($id), $this->factory->generateSchemaFromJson($contents));
+		return $this->remember($this->defaultCacheKey($id), $this->factory->generateSchemaFromJson($contents));
 	}
 
 	/**
@@ -182,14 +182,14 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		$cached = $this->cached(self::customCacheKey($id));
+		$cached = $this->cached($this->customCacheKey($id));
 		if ($cached instanceof SchemaData) {
 			return $cached;
 		}
 
 		$schema = $this->fetchAndDeserialize(self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT, SchemaData::class);
 
-		return $schema instanceof SchemaData ? $this->remember(self::customCacheKey($id), $schema) : null;
+		return $schema instanceof SchemaData ? $this->remember($this->customCacheKey($id), $schema) : null;
 	}
 
 	/**
@@ -213,13 +213,13 @@ class SchemaRepository extends StorageRepository
 	 * Installs that share a data folder and a cache hit it whenever one of
 	 * them keeps such a copy for an install without the extension.
 	 */
-	private static function defaultCacheKey(string $id): string
+	private function defaultCacheKey(string $id): string
 	{
 		return "schema_default:{$id}";
 	}
 
 	/** Cleared by {@see invalidateCustomSchemaCache()} when the schema is saved or deleted. */
-	private static function customCacheKey(string $id): string
+	private function customCacheKey(string $id): string
 	{
 		return "schema:{$id}";
 	}
@@ -400,7 +400,7 @@ class SchemaRepository extends StorageRepository
 	private function invalidateCustomSchemaCache(string $id): void
 	{
 		// Clear custom schema cache
-		$this->cacheManager->clearComputedData(self::customCacheKey($id));
+		$this->cacheManager->clearComputedData($this->customCacheKey($id));
 
 		// Also clear flattened cache if this schema is flattened
 		$this->cacheManager->clearComputedData("schema_flattened:{$id}");

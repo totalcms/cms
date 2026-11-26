@@ -6,6 +6,7 @@ use Slim\App;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\Backup\Service\ObjectHistory;
+use TotalCMS\Domain\Cache\CacheManager;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\post;
@@ -139,7 +140,7 @@ describe('the page', function (): void {
 		$path   = cmsDataDir() . 'articles/one.json';
 		$record = ['title' => '<img src=x onerror=alert(1)><b>bold</b>'] + (array)json_decode((string)file_get_contents($path), true);
 		file_put_contents($path, json_encode($record));
-		$this->app->getContainer()->get(TotalCMS\Domain\Cache\CacheManager::class)->clearCollectionObjects('articles');
+		$this->app->getContainer()->get(CacheManager::class)->clearCollectionObjects('articles');
 		putJson('/api/collections/articles/one', ['id' => 'one', 'title' => 'Safe again', 'price' => 39])->assertOk();
 
 		$html = ($this->page)('collection=articles&id=one&snapshot=' . urlencode(($this->snapshot)('articles', 'one')));

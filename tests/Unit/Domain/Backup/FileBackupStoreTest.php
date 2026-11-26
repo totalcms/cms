@@ -35,7 +35,7 @@ describe('FileBackupStore', function (): void {
 		$this->storage = new StorageFilesystemAdapter(new Filesystem(new LocalFilesystemAdapter($this->root)));
 		$this->logger  = new RecordingLogger();
 
-		$this->kinds = new class() extends FileKindResolver {
+		$this->kinds = new class extends FileKindResolver {
 			public function __construct()
 			{
 			}
@@ -48,8 +48,8 @@ describe('FileBackupStore', function (): void {
 					$property === 'photos' && $dir === ''                            => self::GALLERY,
 					$property === 'downloads'                                        => self::DEPOT,
 					$property === 'lead' && $dir === 'photo'                         => self::IMAGE,
-					$property === 'team' && preg_match('#^\w+/photo$#', $dir) === 1 => self::IMAGE,
-					$property === 'team' && preg_match('#^\w+/cv$#', $dir) === 1    => self::FILE,
+					$property === 'team' && preg_match('#^\w+/photo$#', $dir) === 1  => self::IMAGE,
+					$property === 'team' && preg_match('#^\w+/cv$#', $dir) === 1     => self::FILE,
 					default                                                          => null,
 				};
 			}

@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Object\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -46,7 +47,7 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectUpdater,
 			$this->eventDispatcher,
 			systemWriteGate(),
-			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
+			$this->createMock(FileBackupStore::class),
 		);
 	}
 

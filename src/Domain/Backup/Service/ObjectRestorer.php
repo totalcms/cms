@@ -76,13 +76,12 @@ readonly class ObjectRestorer
 	 * folder; empty for the property's own.
 	 *
 	 * @param string $file a bare snapshot filename from BackupStore::listObjectSnapshots()
-	 *
-	 * @return array{object: ObjectData, files: list<array{property:string, path:string, file:string, outcome:'restored'|'missing'}>}
-	 *
 	 * @param string|null $property      restore this one top-level property and leave the rest of the record as it is now; the object must exist
 	 * @param bool        $keepPasswords keep the password the record has now. A snapshot of a user holds the old hash, and putting it back would make an old password work again. A deleted object has no current password, so it keeps the snapshot's.
 	 *
 	 * @throws \UnexpectedValueException when the snapshot is missing or cannot be decoded, or one property is asked of an object that does not exist
+	 *
+	 * @return array{object: ObjectData, files: list<array{property:string, path:string, file:string, outcome:'restored'|'missing'}>}
 	 */
 	public function restoreWithFiles(string $collection, string $id, string $file, ?string $property = null, bool $keepPasswords = false): array
 	{
@@ -125,9 +124,9 @@ readonly class ObjectRestorer
 	 *
 	 * @param string $file a bare snapshot filename from BackupStore::listObjectSnapshots()
 	 *
-	 * @return array<string,mixed>
-	 *
 	 * @throws \UnexpectedValueException when the snapshot is missing or cannot be decoded
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function read(string $collection, string $id, string $file): array
 	{
