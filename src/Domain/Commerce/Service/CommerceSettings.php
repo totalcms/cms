@@ -43,6 +43,16 @@ final readonly class CommerceSettings
 	{
 	}
 
+	/**
+	 * Whether the site has switched Commerce on (Settings → Commerce). Off
+	 * until someone does: a license that allows a store does not put one in
+	 * the admin of a site that does not want it.
+	 */
+	public function enabled(): bool
+	{
+		return $this->setting('enabled') === true;
+	}
+
 	/** The store's currency, as a three-letter code. Every price and order is in it. */
 	public function currency(): string
 	{

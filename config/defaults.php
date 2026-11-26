@@ -690,6 +690,7 @@ $settings['backups'] = [
 // price field as a number, as a product's price is; CommerceSettings reads
 // either and hands on the digits.
 $settings['commerce'] = [
+	'enabled'              => false,            // the switch at the top of Settings → Commerce; off, a licensed site has no store
 	'currency'             => 'USD',
 	'collections'          => ['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts'],
 	'customerCollection'   => '',               // auth collection for customer accounts; '' = guest checkout only

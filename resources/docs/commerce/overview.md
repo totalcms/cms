@@ -23,7 +23,9 @@ Your catalog, carts and orders are stored on your own site, as collections, like
 
 A development license (a local site on `.test` or `localhost`) and a running trial include all three, so you can build and test a store before you buy.
 
-On a site without the add-on, nothing about Commerce shows: no Orders page, no store settings, no product schema.
+Commerce is off until you turn it on. Open **Settings → Commerce** and switch on **Enable Commerce**. Until then nothing about the store shows: no Orders page, no Store block on the dashboard, no product schema. See [Set Up Your Store](docs/commerce/setup).
+
+On a site without the add-on the switch opens nothing.
 
 ## What it does
 

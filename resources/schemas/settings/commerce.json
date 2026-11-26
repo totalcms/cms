@@ -2,9 +2,16 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Commerce Settings",
 	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
-	"formgrid": "---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
+	"formgrid": "enabled enabled\n---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
 	"type": "object",
 	"properties": {
+		"enabled": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Enable Commerce",
+			"help": "Turn the store on for this site. While it is off there is no Orders page, no Store block on the dashboard, and no cart or checkout. Turning it off later does not take anything away from a buyer: their download links keep working, and a subscriber can still cancel.",
+			"default": false
+		},
 		"currency": {
 			"type": "string",
 			"field": "select",

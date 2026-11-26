@@ -10,8 +10,8 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\Entitlements;
 
 /**
- * The gate as the site's license decides it: the Pro edition, and the
- * Commerce product on the license.
+ * The gate as the site decides it: the Pro edition and the Commerce product
+ * on its license, and the switch in Settings → Commerce.
  */
 final readonly class LicenseCommerceGate implements CommerceGate
 {
@@ -21,6 +21,7 @@ final readonly class LicenseCommerceGate implements CommerceGate
 	public function __construct(
 		private EditionFeatureService $editions,
 		private Entitlements $entitlements,
+		private CommerceSettings $settings,
 	) {
 	}
 
@@ -36,6 +37,11 @@ final readonly class LicenseCommerceGate implements CommerceGate
 			return CommerceGateStatus::NeedsPro;
 		}
 
-		return $this->entitlements->has(self::COMMERCE_PRODUCT) ? CommerceGateStatus::Allowed : CommerceGateStatus::NeedsEntitlement;
+		if (!$this->entitlements->has(self::COMMERCE_PRODUCT)) {
+			return CommerceGateStatus::NeedsEntitlement;
+		}
+
+		// The license first, so a site is told what it lacks in the order it has to get it.
+		return $this->settings->enabled() ? CommerceGateStatus::Allowed : CommerceGateStatus::Off;
 	}
 }

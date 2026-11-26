@@ -155,7 +155,7 @@ public/assets/css/
 
 ### Shop
 
-A store, with products, a cart, checkout, customer accounts and a membership. It needs the [Commerce add-on](docs/commerce/overview).
+A store, with products, a cart, checkout, customer accounts and a membership. It needs the [Commerce add-on](docs/commerce/overview), with **Enable Commerce** switched on in **Settings → Commerce**.
 
 ```bash
 tcms builder:init shop

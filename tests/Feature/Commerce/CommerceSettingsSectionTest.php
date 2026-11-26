@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Commerce\Data\CommerceGateStatus;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
+use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
+use TotalCMS\Domain\License\Service\Entitlements;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Support\Config;
@@ -25,7 +28,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 	$defaults = $this->c->get(Config::class)->commerce;
 
 	expect(array_keys($defaults))->toBe([
-		'currency', 'collections', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix',
+		'enabled', 'currency', 'collections', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix',
 		'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer',
 		'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage',
 		'checkoutMode', 'payPage', 'grantableGroups', 'paymentFailedMailer',
@@ -40,9 +43,23 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 
 	// The store name is not here: left empty it is the site's own name, which
 	// CommerceSettingsTest pins.
-	foreach (['currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
+	foreach (['enabled', 'currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
 		expect($shipped->{$accessor}())->toBe($fallback->{$accessor}(), $accessor);
 	}
+});
+
+// The license says a site may have a store. The site says whether it wants one.
+test('a site whose license carries Commerce has no store until the switch is turned on', function (): void {
+	$this->c->set(Entitlements::class, entitlements(['totalcms/commerce']));
+	$gate = $this->c->make(LicenseCommerceGate::class);
+
+	expect($gate->status())->toBe(CommerceGateStatus::Off);
+
+	// Read when asked: saving the setting opens the store without a restart.
+	$config           = $this->c->get(Config::class);
+	$config->commerce = ['enabled' => true] + $config->commerce;
+
+	expect($gate->status())->toBe(CommerceGateStatus::Allowed);
 });
 
 // That it is left out below Pro is pinned in AdminTwigAdapterSettingsSectionsTest.
@@ -155,6 +172,16 @@ describe('the settings form', function (): void {
 
 			return $found[0] ?? '';
 		};
+	});
+
+	// The switch for the whole store is the first thing on the page, and off until someone turns it on.
+	test('Enable Commerce is a toggle at the top, off on a new site', function (): void {
+		$toggle = ($this->field)('enabled');
+
+		expect($toggle)->toContain('Enable Commerce')
+			->and($toggle)->toContain('type="checkbox"')
+			->and($toggle)->not->toMatch('/<input[^>]*name="enabled"[^>]*\\schecked/')
+			->and(strpos($this->html, '--grid-area: enabled;'))->toBeLessThan(strpos($this->html, '--grid-area: currency;'));
 	});
 
 	// A currency is chosen by name. The store keeps its three-letter code.

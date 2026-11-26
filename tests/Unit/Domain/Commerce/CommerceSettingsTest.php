@@ -200,3 +200,14 @@ it('reads a shipping amount whether it was saved as a number or as text', functi
 	'nothing, as text'    => ['', '0', ''],
 	'not an amount'       => [['x'], '0', ''],
 ]);
+
+// Commerce stays out of a site's way until someone turns it on, whatever the license.
+it('is switched off until the site turns it on', function (mixed $saved, bool $on): void {
+	expect(($this->settings)($saved === null ? [] : ['enabled' => $saved])->enabled())->toBe($on);
+})->with([
+	'nothing saved'   => [null, false],
+	'switched on'     => [true, true],
+	'switched off'    => [false, false],
+	// Only the toggle's own value turns it on: a hand-edited one does not.
+	'a hand-edited 1' => ['1', false],
+]);

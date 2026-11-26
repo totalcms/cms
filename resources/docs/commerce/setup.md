@@ -10,7 +10,15 @@ related:
 
 # Set Up Your Store
 
-## 1. Install the store
+## 1. Turn Commerce on
+
+Open **Settings → Commerce** and switch on **Enable Commerce**, the first setting on the page. Save.
+
+Commerce is off on every site until you do this, so a site that does not sell anything has no store in its admin. While it is off there is no Orders page, no Store block on the dashboard, no product schema, and no cart or checkout.
+
+You can turn it off again. That hides the store and closes the cart and checkout. It takes nothing from a buyer: their download links keep working, and a subscriber can still cancel.
+
+## 2. Install the store
 
 Commerce needs its collections before it can do anything. Create them from the command line:
 
@@ -20,15 +28,15 @@ tcms commerce:install
 
 This adds the `products`, `orders`, `transactions`, `carts`, `discounts` and `subscriptions` collections, and two email templates: `commerce-receipt` and `commerce-payment-failed`. It is safe to run again: it adds what is missing and leaves the rest alone.
 
-The command refuses on a site without the Commerce add-on.
+The command refuses on a site without the Commerce add-on, and while Commerce is switched off.
 
-## 2. Choose your currency
+## 3. Choose your currency
 
 Open **Settings → Commerce** and set **Store Currency** to a three-letter code such as `USD`, `EUR` or `GBP`.
 
 Choose it before your first order. Every price and every order is in this one currency, and changing it later does not convert what is already there.
 
-## 3. Connect a payment provider
+## 4. Connect a payment provider
 
 A payment provider is an extension. Enable one, give it its keys, then tick it under **Payment Providers** in **Settings → Commerce**.
 
@@ -36,7 +44,7 @@ The [Stripe extension](docs/extensions/stripe) and the [PayPal extension](docs/e
 
 A buyer can check out once a provider is enabled, has its keys, and is chosen here. Until then your pages can show products, and `cms.commerce.enabled()` is `false`.
 
-## 4. Choose where the buyer pays
+## 5. Choose where the buyer pays
 
 **Checkout** in **Settings → Commerce** has two choices:
 
@@ -47,7 +55,7 @@ A buyer can check out once a provider is enabled, has its keys, and is chosen he
 
 Either way the provider draws the form and takes the card. See [Cart and Checkout](docs/commerce/cart-and-checkout#paying-on-your-own-page).
 
-## 5. Let your team see orders
+## 6. Let your team see orders
 
 Orders hold your buyers' names, addresses and what they paid, so seeing them is a permission of its own.
 
@@ -64,6 +72,7 @@ These are under **Settings → Commerce**.
 
 | Setting | What it does |
 |---|---|
+| **Enable Commerce** | Turns the store on for this site. Off by default. |
 | **Store Currency** | The currency of every price and order, chosen from a list. |
 | **Customer Accounts Collection** | The collection customers sign in to, so they can see their orders, chosen from the collections people can sign in to. Empty means guest checkout only. |
 | **Payment Providers** | The ways a buyer can pay: tick each one to offer. Checkout lists them in the order shown here. |

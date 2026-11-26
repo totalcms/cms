@@ -18,6 +18,11 @@ enum CommerceGateStatus: string
 	/** A Pro site that has not bought the Commerce add-on. */
 	case NeedsEntitlement = 'needs_entitlement';
 
+	/** A site whose license allows a store, with Commerce switched off in its settings. */
+	case Off = 'off';
+
+	public const SWITCHED_OFF = 'Commerce is switched off. Turn it on in Settings → Commerce.';
+
 	public const MESSAGE = 'Commerce requires Total CMS Pro and the Commerce add-on.';
 
 	/** Where a Pro site without the add-on is sent to add it. */
@@ -33,6 +38,7 @@ enum CommerceGateStatus: string
 			self::Allowed          => '',
 			self::NeedsPro         => self::MESSAGE,
 			self::NeedsEntitlement => self::MESSAGE . ' Add Commerce: ' . self::PURCHASE_URL,
+			self::Off              => self::SWITCHED_OFF,
 		};
 	}
 }

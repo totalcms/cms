@@ -10,7 +10,7 @@ related:
 
 # Orders
 
-**Orders** is in the admin sidebar on a site with Commerce, for anyone [allowed to see orders](docs/commerce/setup#5-let-your-team-see-orders). A red number on its icon counts the orders that need someone.
+**Orders** is in the admin sidebar on a site with Commerce, for anyone [allowed to see orders](docs/commerce/setup#6-let-your-team-see-orders). A red number on its icon counts the orders that need someone.
 
 ## Find an order
 
