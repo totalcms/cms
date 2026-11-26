@@ -7,6 +7,7 @@ use TotalCMS\Domain\Activity\Repository\ActivityRepository;
 use TotalCMS\Domain\Backup\Service\ObjectHistory;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -39,7 +40,7 @@ beforeEach(function (): void {
 	$this->history = $this->c->get(ObjectHistory::class);
 
 	$this->update = function (array $fields): void {
-		$record = $this->c->get(TotalCMS\Domain\Object\Service\ObjectFetcher::class)->fetchObjectFromDisk('articles', 'one')->toArray();
+		$record = $this->c->get(ObjectFetcher::class)->fetchObjectFromDisk('articles', 'one')->toArray();
 		$this->c->get(ObjectUpdater::class)->updateObject('articles', 'one', $fields + $record);
 	};
 

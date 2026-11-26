@@ -252,7 +252,7 @@ final readonly class SnapshotComparison
 		$files   = [];
 
 		foreach (is_array($entries) ? $entries : [] as $entry) {
-			$entry = $this->record($entry);
+			$entry         = $this->record($entry);
 			[$name, $size] = $this->named($entry);
 			if ($name === '') {
 				continue;

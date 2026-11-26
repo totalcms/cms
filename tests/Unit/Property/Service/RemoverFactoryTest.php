@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -64,7 +65,7 @@ class RemoverFactoryTest extends TestCase
 			$this->createMock(ObjectPatcher::class),
 			$this->createMock(ObjectFetcher::class),
 			$schemaFetcher,
-			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
+			$this->createMock(FileBackupStore::class),
 		);
 	}
 }

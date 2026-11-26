@@ -8,13 +8,26 @@ All notable changes to Total CMS will be documented in this file.
 
 - **S3 Uploads extension (Pro).** Store large files in your own Amazon S3, Cloudflare R2, Backblaze B2, Wasabi or MinIO bucket. Editors upload straight from the browser to the bucket, so upload size limits and script timeouts no longer apply. It adds the `s3file` and `s3depot` fields, download links on your own domain that count downloads, private buckets with signed links, and cleanup of replaced and deleted files. Its links are named as core's are: `/stream` shows the file and `/download` saves it and fires `file.downloaded`. See [S3 Uploads](https://docs.totalcms.co/extensions/s3-uploads)
 - **`tcms s3:prune` and `tcms s3:stats`.** Find and remove files in the bucket that no object uses, and list download counts. A nightly automation runs the cleanup on live sites
-- **Backups can keep images and files.** New settings under Settings → Backups, all off until you turn them on. `keepImages` and `keepFiles` say how many earlier files each `image` or `file` field keeps when its file is replaced or removed, including a field inside a card or a deck item. `trash` keeps the pictures removed from a gallery and the files and folders removed from a depot until they are older than Maximum Age. `maxFileSizeMB` (100) is the largest file that is ever kept. `tcms backup:restore` then puts back the files its snapshot names and says which came back and which it could not find; `tcms backup:list` shows what is kept. Files past their age are cleared once a day by the job runner. See [Keeping Images and Files](https://docs.totalcms.co/operations/backups#keeping-images-and-files)
-- **Utilities → Backups: see an object's history and restore it in the admin.** Each change shows when it happened, who made it and each field's value before and after. Restore the whole object or one field; a preview says what will change and which files will come back before anything does. A **Restore from Backup** action on every object's ⋯ menu opens it, and **Deleted Objects** on a collection's ⋯ menu lists deleted objects you can bring back. Access is granted per access group like any utility, and a user sees only the history of what they may edit. A restore from the admin keeps the user's current password. See [Restoring in the Admin](https://docs.totalcms.co/operations/backups#restoring-in-the-admin)
 - **Podcast feeds use counted S3 links** for episodes whose audio is an `s3file`, and fill an empty Duration with the length measured at upload. See [Hosting audio in a bucket](https://docs.totalcms.co/extensions/podcast#hosting-audio-in-a-bucket)
 
 ### Changed
 
 - **The Extensions page is a list you can search.** Every extension is one row with its own icon, what it does, its links and its Enable or Disable button, so a site with many extensions fits on one screen. A search box finds an extension by its name or by what it does, and a filter shows only the enabled ones, the disabled ones, or those that need attention
+
+### Fixed
+
+- **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import
+- **The schema editor shows the JSON icon for a property stored as JSON.** A property whose data type is `json` but whose field comes from an extension showed a question mark as its type icon
+
+## [3.6.12] - 2026-11-25
+
+### Added
+
+- **Backups can keep images and files.** New settings under Settings → Backups, all off until you turn them on. `keepImages` and `keepFiles` say how many earlier files each `image` or `file` field keeps when its file is replaced or removed, including a field inside a card or a deck item. `trash` keeps the pictures removed from a gallery and the files and folders removed from a depot until they are older than Maximum Age. `maxFileSizeMB` (100) is the largest file that is ever kept. `tcms backup:restore` then puts back the files its snapshot names and says which came back and which it could not find; `tcms backup:list` shows what is kept. Files past their age are cleared once a day by the job runner. See [Keeping Images and Files](https://docs.totalcms.co/operations/backups#keeping-images-and-files)
+- **Utilities → Backups: see an object's history and restore it in the admin.** Each change shows when it happened, who made it and each field's value before and after. Restore the whole object or one field; a preview says what will change and which files will come back before anything does. A **Restore from Backup** action on every object's ⋯ menu opens it, and **Deleted Objects** on a collection's ⋯ menu lists deleted objects you can bring back. Access is granted per access group like any utility, and a user sees only the history of what they may edit. A restore from the admin keeps the user's current password. See [Restoring in the Admin](https://docs.totalcms.co/operations/backups#restoring-in-the-admin)
+
+### Changed
+
 - **The Backups and Authentication settings pages are grouped into sections.** Related settings sit together under a heading, two to a row, as on the MCP Server page. No setting changed
 
 ### Fixed
@@ -25,8 +38,6 @@ All notable changes to Total CMS will be documented in this file.
 - **Gallery uploads keep the right name.** When several files uploaded at once and the server had to rename them, a thumbnail could end up with another image's name until the page was reloaded. The upload response now says which name each file got (`meta.name`).
 - **A gallery no longer stores an image without a name.** Saving or reordering while an upload was running or had failed left a broken thumbnail behind.
 - **Backup settings take effect.** Snapshots per Object and Maximum Age under Settings → Backups were ignored: every site kept ten snapshots for 30 days whatever was set. A site that lowered either will see older snapshots pruned on the next save of each object
-- **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import
-- **The schema editor shows the JSON icon for a property stored as JSON.** A property whose data type is `json` but whose field comes from an extension showed a question mark as its type icon
 
 ## [3.6.11] - 2026-11-20
 

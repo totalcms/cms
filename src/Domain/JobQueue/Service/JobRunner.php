@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
-use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;

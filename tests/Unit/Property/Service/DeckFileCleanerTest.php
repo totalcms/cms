@@ -7,6 +7,7 @@ namespace Tests\Unit\Property\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\DeckFileCleaner;
@@ -35,7 +36,7 @@ final class DeckFileCleanerTest extends TestCase
 			$this->schemaFetcher,
 			$this->repository,
 			$loggerFactory,
-			$this->createMock(\TotalCMS\Domain\Backup\Service\FileBackupStore::class),
+			$this->createMock(FileBackupStore::class),
 		);
 	}
 

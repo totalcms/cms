@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Admin\Utils;
 
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Action\Admin\BackupRestoreAction;
 use TotalCMS\Domain\Backup\Service\BackupAccess;
 use TotalCMS\Domain\Backup\Service\FileBackupStore;
 use TotalCMS\Domain\Backup\Service\ObjectHistory;
@@ -22,7 +23,7 @@ use TotalCMS\Support\Config;
  *   restore would do, with the button that does it.
  *
  * Everything is a plain GET page: an entry opens by a link, and only the
- * restore itself is a POST ({@see \TotalCMS\Action\Admin\BackupRestoreAction}).
+ * restore itself is a POST ({@see BackupRestoreAction}).
  */
 final readonly class BackupsPageData implements UtilsPageData
 {
@@ -85,7 +86,7 @@ final readonly class BackupsPageData implements UtilsPageData
 			$kept   = $this->files->versions($collection, $row['id']);
 			$rows[] = $row + $this->history->describe($collection, $row['id'], $row['file'], $row['at']) + [
 				'files'      => count($kept),
-				'size'       => $this->bytes((int)array_sum(array_column($kept, 'size'))),
+				'size'       => $this->bytes(array_sum(array_column($kept, 'size'))),
 				'canRestore' => $this->access->restore($collection, $row['id'], false),
 			];
 		}

@@ -57,15 +57,15 @@ test('says what the files in a folder of a property are', function (string $prop
 	'a file in a deck item'                => ['team', 'alice/cv', 'file'],
 	'a video poster in a deck item'        => ['team', 'alice/reel/poster', 'image'],
 	// Nothing keeps files here, so nothing is kept from here.
-	'a folder under an image field'        => ['cover', 'stray', null],
-	'the top of a card'                    => ['lead', '', null],
-	'a text child of a card'               => ['lead', 'name', null],
-	'a child the card does not have'       => ['lead', 'nope', null],
-	'a deck item with no child named'      => ['team', 'alice', null],
-	'the top of a deck'                    => ['team', '', null],
+	'a folder under an image field'         => ['cover', 'stray', null],
+	'the top of a card'                     => ['lead', '', null],
+	'a text child of a card'                => ['lead', 'name', null],
+	'a child the card does not have'        => ['lead', 'nope', null],
+	'a deck item with no child named'       => ['team', 'alice', null],
+	'the top of a deck'                     => ['team', '', null],
 	'a video folder that is not the poster' => ['promo', 'other', null],
-	'a text field'                         => ['title', '', null],
-	'a property the schema does not have'  => ['ghost', '', null],
+	'a text field'                          => ['title', '', null],
+	'a property the schema does not have'   => ['ghost', '', null],
 ]);
 
 test('a collection that does not exist has no kinds, and no error', function (): void {
