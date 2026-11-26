@@ -69,7 +69,9 @@ When Total CMS looks up a schema, it checks in this order:
 2. **Extension schemas** (in extension `schemas/` directories)
 3. **Custom schemas** (in `tcms-data/.schemas/`)
 
-This means an extension schema cannot override a built-in schema, and a custom schema can override an extension schema if needed.
+The first match wins, so an extension schema cannot override a built-in schema, and a custom schema cannot override an extension schema: the extension's file is used and the custom one is ignored. Saving a custom schema under an extension schema's id is refused while the extension is enabled.
+
+A custom copy with the same id is only of use to an install that does not have the extension, such as a second install sharing the data folder. It is safer to give every such install the same extensions: see [Shared Data](docs/operations/shared-data#what-stays-per-install).
 
 ## Installable Schemas
 

@@ -2,7 +2,7 @@
 title: "Shared Data"
 description: "Run several Total CMS installs against one tcms-data folder: what they share, what stays per-install, caching, and per-site settings overlays."
 audience: advanced
-updated: 2026-09-20
+updated: 2026-11-25
 related:
   - operations/filesystem
   - operations/deployment
@@ -43,6 +43,14 @@ Everything below follows from that one line.
 - **Compiled Twig templates**, in each install's own `cache/` directory.
 - **Anything in that install's `config/tcms.php`** — including `siteId`,
   `siteOverrides` and the sync remote.
+- **Project and Composer extensions** — the `extensions/` folder at the
+  project root and `vendor/`. Their enabled state and settings are in the
+  shared folder, but the code is not. A collection on an extension's schema
+  fails with "Schema type does not exist" on an install without that
+  extension. Give every install the same extensions, at the same version
+  (they share one state record, so a version difference reads as an
+  update), or put the extension in `tcms-data/extensions/`, which every
+  install loads.
 
 ## Caching
 

@@ -6,8 +6,8 @@ namespace TotalCMS\Domain\Bundle\Service;
 
 use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Bundle\Repository\BundleRepository;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\PathResolver;
 
 class BundleChecker
@@ -22,7 +22,6 @@ class BundleChecker
 
 	public function __construct(
 		private readonly BundleRepository $bundleRepository,
-		private readonly SchemaLister $schemaLister,
 	) {
 	}
 
@@ -68,14 +67,19 @@ class BundleChecker
 		return $this->compareLocalBundle();
 	}
 
+	/**
+	 * Every schema Total CMS ships must be in the manifest. Walks the constant,
+	 * not a schema lister: a list built through the cache once took in an
+	 * extension's schema id (a custom copy of it, read as a core schema), and
+	 * an extension's schema is never in the manifest, so every write failed.
+	 */
 	private function compareLocalBundle(): bool
 	{
-		$schemas = $this->schemaLister->listReservedSchemas();
-		foreach ($schemas as $schema) {
-			$schemaPath = SchemaRepository::defaultSchemaDir() . "{$schema->id}.json";
-			$bundlePath = "resources/schemas/{$schema->id}.json";
+		foreach (SchemaData::RESERVED_SCHEMAS as $id) {
+			$schemaPath = SchemaRepository::defaultSchemaDir() . "{$id}.json";
+			$bundlePath = "resources/schemas/{$id}.json";
 
-			if (!isset($this->bundle->bundle[$bundlePath])) {
+			if (!isset($this->bundle->bundle[$bundlePath]) || !is_file($schemaPath)) {
 				throw new \DomainException(self::REINSTALL . "$bundlePath missing from Bundle.");
 			}
 			if (hash_file('sha256', $schemaPath) !== $this->bundle->bundle[$bundlePath]) {
