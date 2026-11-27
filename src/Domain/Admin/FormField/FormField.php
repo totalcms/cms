@@ -595,6 +595,7 @@ class FormField
 	 * - "schemas": fetch unique category values from all schemas
 	 * - "pageCollections": collections whose schema is builder-page or inherits from it
 	 * - "schemaCollections:<id>": collections whose schema is <id> or inherits from it
+	 * - "commerceCollections:<role>": collections that can hold one kind of commerce record
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
 	 * - "schemaProperties": the property keys of the collection's schema.
@@ -667,7 +668,8 @@ class FormField
 
 	/**
 	 * The string form of propertyOptions: a named source, or
-	 * `schemaCollections:{schema}`. Null for an unknown name.
+	 * `schemaCollections:{schema}` or `commerceCollections:{role}`. Null for
+	 * an unknown name.
 	 *
 	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>|null
 	 */
@@ -675,6 +677,10 @@ class FormField
 	{
 		if (str_starts_with($source, 'schemaCollections:')) {
 			return $this->form->collectionsUsingSchema(substr($source, strlen('schemaCollections:')));
+		}
+
+		if (str_starts_with($source, 'commerceCollections:')) {
+			return $this->form->commerceCollectionOptions(substr($source, strlen('commerceCollections:')));
 		}
 
 		return match ($source) {

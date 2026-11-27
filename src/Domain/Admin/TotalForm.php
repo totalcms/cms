@@ -991,6 +991,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * The collections one kind of commerce record can be kept in.
+	 * Used for propertyOptions: "commerceCollections:<role>" — Settings → Commerce.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function commerceCollectionOptions(string $role): array
+	{
+		return $this->optionSources()->commerceCollectionOptions($role);
+	}
+
+	/**
 	 * The access groups a product may grant its buyer.
 	 * Used for propertyOptions: "grantableGroups" — the product form's
 	 * access-group select offers these and nothing else.

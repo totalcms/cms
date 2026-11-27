@@ -12,7 +12,6 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Data\InstallReport;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -28,17 +27,18 @@ use TotalCMS\Support\PathResolver;
 final readonly class CommerceInstaller
 {
 	/**
-	 * Each kind of commerce record: its schema, and what the admin calls it.
+	 * What the admin calls each kind of commerce record. The schema each is
+	 * created on is CollectionRoles::SCHEMAS.
 	 *
-	 * @var array<string,array{schema: string, name: string, singular: string}>
+	 * @var array<string,array{name: string, singular: string}>
 	 */
 	private const COLLECTIONS = [
-		'products'      => ['schema' => 'commerce-product', 'name' => 'Products', 'singular' => 'Product'],
-		'orders'        => ['schema' => 'commerce-order', 'name' => 'Orders', 'singular' => 'Order'],
-		'transactions'  => ['schema' => 'commerce-transaction', 'name' => 'Transactions', 'singular' => 'Transaction'],
-		'carts'         => ['schema' => 'commerce-cart', 'name' => 'Carts', 'singular' => 'Cart'],
-		'subscriptions' => ['schema' => 'commerce-subscription', 'name' => 'Subscriptions', 'singular' => 'Subscription'],
-		'discounts'     => ['schema' => 'commerce-discount', 'name' => 'Discount codes', 'singular' => 'Discount code'],
+		'products'      => ['name' => 'Products', 'singular' => 'Product'],
+		'orders'        => ['name' => 'Orders', 'singular' => 'Order'],
+		'transactions'  => ['name' => 'Transactions', 'singular' => 'Transaction'],
+		'carts'         => ['name' => 'Carts', 'singular' => 'Cart'],
+		'subscriptions' => ['name' => 'Subscriptions', 'singular' => 'Subscription'],
+		'discounts'     => ['name' => 'Discount codes', 'singular' => 'Discount code'],
 	];
 
 	/** The emails Commerce ships, each a file in resources/commerce/mailers. */
@@ -52,9 +52,6 @@ final readonly class CommerceInstaller
 	 */
 	private const FILE_ACCESS_GROUP = 'admin';
 
-	/** What a products collection's schema must be, or inherit, at any depth. */
-	private const PRODUCT_BASE = 'commerce-product-base';
-
 	public function __construct(
 		private CommerceSettings $settings,
 		private CollectionFetcher $collections,
@@ -62,7 +59,7 @@ final readonly class CommerceInstaller
 		private ObjectSaver $objects,
 		private MailerFetcher $mailers,
 		private ActorContext $actors,
-		private SchemaFetcher $schemas,
+		private CollectionRoles $roles,
 	) {
 	}
 
@@ -106,7 +103,7 @@ final readonly class CommerceInstaller
 		$existing = $this->collections->fetchCollection($id);
 
 		if ($existing instanceof CollectionData) {
-			if (!$this->servesRole($role, $existing->schema)) {
+			if (!$this->roles->serves($role, $existing->schema)) {
 				throw new \RuntimeException("Collection \"{$id}\" exists with schema \"{$existing->schema}\"; set commerce.collections.{$role} to another id.");
 			}
 
@@ -116,7 +113,7 @@ final readonly class CommerceInstaller
 
 		$this->collectionSaver->saveCollection([
 			'id'               => $id,
-			'schema'           => $wanted['schema'],
+			'schema'           => CollectionRoles::SCHEMAS[$role],
 			'name'             => $wanted['name'],
 			'labelPlural'      => $wanted['name'],
 			'labelSingular'    => $wanted['singular'],
@@ -131,19 +128,6 @@ final readonly class CommerceInstaller
 		]);
 
 		return 'created';
-	}
-
-	/**
-	 * Whether a collection's schema can hold a role's records: the role's own
-	 * schema, or, for products only, any schema built on the product base part.
-	 */
-	private function servesRole(string $role, string $schema): bool
-	{
-		if ($schema === self::COLLECTIONS[$role]['schema']) {
-			return true;
-		}
-
-		return $role === 'products' && $this->schemas->isOrInherits($schema, self::PRODUCT_BASE);
 	}
 
 	/** @throws \RuntimeException when the shipped template cannot be read or the mailer collection cannot be made */

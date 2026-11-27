@@ -83,7 +83,14 @@ final readonly class SettingsForms
 				$currentValue = $defaults[$section][$fieldName];
 			}
 			if (isset($sectionData[$fieldName])) {
-				$currentValue = $sectionData[$fieldName];
+				// A card is one object with a key for each sub-field. A saved
+				// card that lacks a key (settings.json edited by hand) takes
+				// that key from the effective configuration, so a value set in
+				// tcms.php is shown and not replaced by the sub-field's default
+				// on the next save.
+				$currentValue = $fieldType === 'card' && is_array($currentValue) && is_array($sectionData[$fieldName])
+					? array_replace($currentValue, $sectionData[$fieldName])
+					: $sectionData[$fieldName];
 			}
 
 			// Special handling for JSON fields - convert arrays to JSON strings for display

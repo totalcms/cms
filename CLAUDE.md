@@ -172,7 +172,7 @@ local run for code CI then failed, so the local gate now always recomputes.
 
 ## Key Features
 
-- **Collection System**: 55 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, automations, mcp-*, etc.) plus user-defined custom schemas, all stored as JSON files
+- **Collection System**: 56 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, automations, mcp-*, etc.) plus user-defined custom schemas, all stored as JSON files
 - **Collection Reports**: Reporting API and admin utility for collection data
 - **Data Views**: Saved, filtered, dependency-resolved views across collections, rebuilt on a schedule. Pro+ edition feature with its own access middleware; exposed to MCP via `list_views` / `get_view` / `query_view` / `describe_view`
 - **Search**: Pluggable `SearchProvider` abstraction (built-in `text` by default, Algolia optional), with index jobs and event listeners; `tcms search:reindex` rebuilds

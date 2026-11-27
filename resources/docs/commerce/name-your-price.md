@@ -100,22 +100,10 @@ Add it with `tcms schema:import donation.json`. It has no fields of its own, and
 
 ### 2. Make the collection and point the store at it
 
-Make a collection with the schema `donation` and the ID `donations`. Then name it as the store's products collection, as in [Make a product schema of your own](docs/commerce/products#make-a-product-schema-of-your-own), step 4:
+Make a collection with the schema `donation` and the ID `donations`. Then open **Settings → Commerce**, find **Collections**, and choose it under **Products**, as in [Make a product schema of your own](docs/commerce/products#make-a-product-schema-of-your-own), step 4.
 
-```php
-<?php
-
-return [
-	'commerce' => [
-		'collections' => ['products' => 'donations'],
-	],
-];
-```
-
-Make the collection before you run `tcms commerce:install`, or before you set the key on a store that is already installed. The install takes `donations` as the products collection, because its schema is built on `commerce-product-base`. When the key names a collection that does not exist yet, the install makes it on the full `commerce-product` schema instead.
-
-- **Commerce not installed yet:** make the collection, set the key, then run `tcms commerce:install`. It does not make a `products` collection.
-- **Commerce already installed:** set the key. Nothing needs to run again: the store reads the key every time it looks for a product. The `products` collection the install made stays. Delete it if you do not need it.
+- **Commerce not installed yet:** make the collection, choose it, then run `tcms commerce:install`. The install takes `donations` as the products collection, because its schema is built on `commerce-product-base`. It does not make a `products` collection.
+- **Commerce already installed:** choose the collection and save. Nothing needs to run again: the store reads the setting every time it looks for a product. The `products` collection the install made stays. Delete it if you do not need it.
 
 A donation has no download, so it needs no File Access Group.
 

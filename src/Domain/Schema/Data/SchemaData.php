@@ -40,6 +40,7 @@ class SchemaData
 		'color',
 		'commerce-address',
 		'commerce-cart',
+		'commerce-collections',
 		'commerce-discount',
 		'commerce-line-item',
 		'commerce-order',
@@ -99,11 +100,11 @@ class SchemaData
 	];
 
 	/**
-	 * The rows of Settings → Commerce: schemas a deck there is made of.
+	 * The parts of Settings → Commerce: schemas a deck or a card there is made of.
 	 *
 	 * @var list<string>
 	 */
-	public const COMMERCE_SETTINGS_SCHEMAS = ['commerce-tax-rate', 'commerce-shipping-zone'];
+	public const COMMERCE_SETTINGS_SCHEMAS = ['commerce-tax-rate', 'commerce-shipping-zone', 'commerce-collections'];
 
 	/**
 	 * The parts commerce-product inherits, in the order it inherits them. A

@@ -2,7 +2,7 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Commerce Settings",
 	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
-	"formgrid": "enabled enabled\n---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty\ncustomPriceMax .",
+	"formgrid": "enabled enabled\n---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty\ncustomPriceMax .\n---Collections---\ncollections collections",
 	"type": "object",
 	"properties": {
 		"enabled": {
@@ -374,6 +374,12 @@
 			"settings": {
 				"accessGroupOptions": true
 			}
+		},
+		"collections": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"field": "card",
+			"help": "The collection each kind of store record is kept in. Most stores never change these.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-collections.json"
 		}
 	}
 }

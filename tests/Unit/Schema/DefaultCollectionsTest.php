@@ -30,6 +30,7 @@ final class DefaultCollectionsTest extends TestCase
 		'automation-trigger'     => 'embedded in automations via schemaref',
 		'commerce-address'       => 'embedded in commerce-order and commerce-subscription via schemaref',
 		'commerce-cart'          => 'provisioned by CommerceInstaller',
+		'commerce-collections'   => 'the collection pickers of Settings → Commerce, embedded via schemaref',
 		'commerce-discount'      => 'provisioned by CommerceInstaller',
 		'commerce-line-item'     => 'embedded in commerce-order and commerce-subscription via schemaref',
 		'commerce-order'         => 'provisioned by CommerceInstaller',

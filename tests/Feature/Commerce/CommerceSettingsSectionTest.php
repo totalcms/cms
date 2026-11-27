@@ -2,11 +2,17 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Admin\Form\FormOptionSources;
+use TotalCMS\Domain\Admin\Form\FormServices;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Data\CommerceGateStatus;
+use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\LicenseCommerceGate;
 use TotalCMS\Domain\License\Service\Entitlements;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Support\Config;
 
@@ -298,4 +304,105 @@ test('every locale names the section', function (): void {
 
 		expect($strings)->toHaveKeys(['settings.commerce', 'settings.commerce_desc'], basename($file));
 	}
+});
+
+/*
+ * Which collection each kind of store record is kept in. The six choices are
+ * one card, saved as `commerce.collections`: the same key tcms.php sets.
+ */
+describe('the collections a store keeps its records in', function (): void {
+	beforeEach(function (): void {
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+		$this->select = function (string $role): string {
+			$html = (string)get('/admin/settings/commerce')->assertOk()->getBody();
+			preg_match('/<select[^>]*name="' . $role . '"[^>]*>(.*?)<\/select>/s', $html, $found);
+
+			return $found[1] ?? '';
+		};
+		// As tcms.php would: in the configuration, and in no settings file.
+		$this->use = function (string $role, string $collection): void {
+			$config           = $this->c->get(Config::class);
+			$config->commerce = ['collections' => [$role => $collection] + $config->commerce['collections']] + $config->commerce;
+			$merged           = new ReflectionProperty(Config::class, 'rawSettings');
+			$merged->setValue($config, ['commerce' => $config->commerce] + $merged->getValue($config));
+		};
+	});
+
+	test('there is a choice for each kind of record, in a section of its own', function (): void {
+		$html   = (string)get('/admin/settings/commerce')->assertOk()->getBody();
+		$schema = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/resources/schemas/settings/commerce.json'), true);
+
+		expect($html)->toContain('data-type="card" style="--grid-area: collections;')
+			->and($schema['formgrid'])->toContain("---Collections---\ncollections collections");
+
+		foreach (['products', 'orders', 'transactions', 'carts', 'subscriptions', 'discounts'] as $role) {
+			expect(($this->select)($role))->not->toBe('', $role);
+		}
+	});
+
+	// Before the install the collections are not there. The id the store will
+	// use is still the choice, so saving the form changes nothing.
+	test('before the install each choice is the collection the store will use', function (string $role): void {
+		expect(($this->select)($role))->toContain('<option value="' . $role . '" selected>' . $role . ' (not created yet)</option>');
+	})->with(['products', 'orders', 'transactions', 'carts', 'subscriptions', 'discounts']);
+
+	test('after the install each choice is its own collection, and no other kind is offered', function (): void {
+		$this->c->get(CommerceInstaller::class)->install();
+
+		expect(($this->select)('orders'))->toContain('<option value="orders" selected>Orders</option>')
+			->not->toContain('value="products"', 'value="carts"', 'not created yet')
+			->and(($this->select)('products'))->toContain('<option value="products" selected>Products</option>')
+			->not->toContain('value="orders"', 'value="auth"');
+	});
+
+	// A store's own product schema is built on the product parts. Its collection is a products collection.
+	test('a collection on a product schema of the store\'s own can be chosen for products, and only for products', function (): void {
+		$this->c->get(CommerceInstaller::class)->install();
+		$this->c->get(SchemaSaver::class)->saveSchema(['id' => 'book', 'type' => 'object', 'inheritFrom' => ['commerce-product-base'], 'properties' => []]);
+		$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'books', 'name' => 'Books', 'schema' => 'book']);
+
+		expect(($this->select)('products'))->toContain('<option value="books">Books</option>', '<option value="products" selected>Products</option>')
+			->and(($this->select)('orders'))->not->toContain('value="books"');
+	});
+
+	// tcms.php can name a collection the install has still to make. The form
+	// must show it, or the first save would put the default back in its place.
+	test('a collection named in tcms.php that is not there yet stays the choice', function (): void {
+		$this->c->get(CommerceInstaller::class)->install();
+		($this->use)('orders', 'shop-orders');
+
+		expect(($this->select)('orders'))->toContain('<option value="shop-orders" selected>shop-orders (not created yet)</option>', '<option value="orders">Orders</option>');
+	});
+
+	test('a chosen collection that is on another schema is shown for what it is', function (): void {
+		$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'ledger', 'name' => 'Ledger', 'schema' => 'blog']);
+		($this->use)('orders', 'ledger');
+
+		expect(($this->select)('orders'))->toContain('<option value="ledger" selected>Ledger (on another schema)</option>');
+	});
+
+	// settings.json edited by hand can hold some of the six and not the rest.
+	test('a choice missing from the saved settings is still the one the store uses', function (): void {
+		$this->c->get(SettingsSaver::class)->saveSettings(['commerce' => ['collections' => ['products' => 'books']]]);
+		($this->use)('orders', 'shop-orders');
+
+		expect(($this->select)('orders'))->toContain('<option value="shop-orders" selected>shop-orders (not created yet)</option>');
+	});
+
+	test('a save writes the choices where the store reads them', function (): void {
+		$this->c->get(SettingsSaver::class)->saveSection('commerce', ['collections' => [
+			'products' => 'books', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts',
+		]]);
+
+		$saved = (array)json_decode((string)file_get_contents(cmsDataDir() . '.system/settings.json'), true);
+
+		expect($saved['commerce']['collections']['products'] ?? null)->toBe('books')
+			->and(Config::init()->commerce['collections'])->toBe([
+				'products' => 'books', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts',
+			]);
+	});
+
+	test('a choice for something that is not a kind of store record offers nothing', function (): void {
+		expect((new FormOptionSources($this->c->get(FormServices::class)))->commerceCollectionOptions('customers'))->toBe([]);
+	});
 });

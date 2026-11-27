@@ -80,6 +80,7 @@ These are under **Settings → Commerce**.
 | **First Order Number** | The number your first order gets. Default `1001`. A number is never used twice. |
 | **Order Number Prefix** | Shown before an order number, as in `#1001`. |
 | **Receipt Email** | The mailer template sent when an order is paid. Empty uses `commerce-receipt`. |
+| **Collections** | The collection each kind of store record is kept in: products, orders, transactions, carts, subscriptions and discount codes. Each list offers the collections on that record's schema. Most stores change only **Products**, to use a collection on [a product schema of their own](docs/commerce/products#make-a-product-schema-of-your-own). |
 | **Order Page** | A Site Builder page that shows an order after payment. Empty uses the built-in page. |
 | **Payment Page** | A Site Builder page that holds the payment form when checkout is on this site. Empty uses the built-in page. |
 | **Shipping**, **Flat Rate**, **Free Shipping Over**, **Shipping Zones** | What an order is charged for shipping. See [Shipping](docs/commerce/shipping). |

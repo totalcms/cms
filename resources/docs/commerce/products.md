@@ -105,7 +105,18 @@ The store does this for the `products` collection it installs, and not for a col
 
 ### 4. Point the store at the collection
 
-The store reads its products from the collection set in `commerce.collections.products`. It is `products` unless you say otherwise. Add the key to the `tcms.php` in your document root. It is deep-merged, so you set only this one key:
+Open **Settings → Commerce** and find **Collections**, the last section on the page. Under **Products**, choose **Books** and save. The list offers every collection whose schema is built on `commerce-product-base`, so `books` is on it as soon as you have made it.
+
+When to run `tcms commerce:install`:
+
+- **Commerce not installed yet:** make the collection (step 2), choose it, then run `tcms commerce:install`. The install takes `books` as the products collection, because its schema is built on `commerce-product-base`, and does not make a `products` collection. It leaves the collection's settings as they are, its File Access Groups too.
+- **Commerce already installed:** choose the collection and save. Nothing needs to run again: the store reads the setting every time it looks for a product. The `products` collection the install made stays. Delete it if you do not need it.
+
+The other five choices in that section are where the store keeps its orders, transactions, carts, subscriptions and discount codes. Each offers the collections on that record's own schema. Most stores never change them. Change one before the first order: records already written stay in the collection they were written to.
+
+#### In the config file
+
+The setting is `commerce.collections.products`. You can set it in the `tcms.php` in your document root instead. It is deep-merged, so you set only this one key:
 
 ```php
 <?php
@@ -117,12 +128,7 @@ return [
 ];
 ```
 
-This is a setting in the site's config file. It is not a field on the **Settings → Commerce** page, so nothing saved there replaces it. See [Configuration](docs/operations/configuration).
-
-When to run `tcms commerce:install`:
-
-- **Commerce not installed yet:** make the collection (step 2), set this key, then run `tcms commerce:install`. The install takes `books` as the products collection, because its schema is built on `commerce-product-base`, and does not make a `products` collection. It leaves the collection's settings as they are, its File Access Groups too.
-- **Commerce already installed:** set the key. Nothing needs to run again: the store reads the key every time it looks for a product. The `products` collection the install made stays. Delete it if you do not need it.
+The settings page shows what the config file says. Once the page has been saved, the saved choice is the one the store uses, whatever `tcms.php` says. The config file can also name a collection that does not exist yet: `tcms commerce:install` then makes it, and until then the settings page lists it as *not created yet*. See [Configuration](docs/operations/configuration).
 
 Make the collection first. When the key names a collection that does not exist, the install makes one on the full `commerce-product` schema.
 

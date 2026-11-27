@@ -11,6 +11,7 @@ use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\Commerce\Payment\PaymentProvider;
+use TotalCMS\Domain\Commerce\Service\CollectionRoles;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
@@ -282,6 +283,46 @@ final readonly class FormOptionSources
 	public function grantableGroupOptions(): array
 	{
 		return (new CommerceSettings($this->services->config))->grantableGroups();
+	}
+
+	/**
+	 * The collections one kind of commerce record can be kept in: products,
+	 * orders, transactions, carts, subscriptions or discounts.
+	 *
+	 * The collection the store uses now is always on the list, so saving the
+	 * form never changes it by accident. Before `tcms commerce:install` has
+	 * run, or when `tcms.php` names a collection still to be made, that is an
+	 * id with no collection behind it, and the label says so.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function commerceCollectionOptions(string $role): array
+	{
+		if (!CollectionRoles::isRole($role)) {
+			return [];
+		}
+
+		$roles   = new CollectionRoles($this->services->schemaFetcher);
+		$current = (new CommerceSettings($this->services->config))->collection($role);
+		$options = [];
+		$missing = $current . ' (not created yet)';
+
+		foreach ($this->services->collectionLister->listAllCollections() as $collection) {
+			$label = $collection->name !== '' ? $collection->name : $collection->id;
+
+			if ($roles->serves($role, $collection->schema)) {
+				$options[] = ['value' => $collection->id, 'label' => $label];
+				$missing   = $collection->id === $current ? null : $missing;
+			} elseif ($collection->id === $current) {
+				$missing = $label . ' (on another schema)';
+			}
+		}
+
+		if ($missing !== null) {
+			$options[] = ['value' => $current, 'label' => $missing];
+		}
+
+		return $options;
 	}
 
 	/**

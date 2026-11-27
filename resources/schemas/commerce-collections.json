@@ -1,0 +1,96 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://www.totalcms.co/schemas/commerce-collections.json",
+	"id": "commerce-collections",
+	"title": "Commerce Collections",
+	"description": "Which collection each kind of store record is kept in. Used as a card in Settings → Commerce.",
+	"formgrid": "products discounts\norders transactions\nsubscriptions carts",
+	"category": "Internal",
+	"type": "object",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "Reserved — required by the schema system but unused for cards.",
+			"factory": "slug",
+			"settings": {
+				"readonly": true,
+				"hide": true
+			}
+		},
+		"products": {
+			"type": "string",
+			"field": "select",
+			"label": "Products",
+			"help": "The collection your products are in. Choose your own collection here when it is on a schema of your own, built on the product parts. Give a collection you made yourself a File Access Group, or its paid downloads are open to anyone.",
+			"default": "products",
+			"settings": {
+				"propertyOptions": "commerceCollections:products",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		},
+		"discounts": {
+			"type": "string",
+			"field": "select",
+			"label": "Discount Codes",
+			"help": "The collection discount codes are kept in.",
+			"default": "discounts",
+			"settings": {
+				"propertyOptions": "commerceCollections:discounts",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		},
+		"orders": {
+			"type": "string",
+			"field": "select",
+			"label": "Orders",
+			"help": "The collection orders are kept in. Choose it before the first order: orders already placed stay in the collection they were written to.",
+			"default": "orders",
+			"settings": {
+				"propertyOptions": "commerceCollections:orders",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		},
+		"transactions": {
+			"type": "string",
+			"field": "select",
+			"label": "Transactions",
+			"help": "The collection payments and refunds are recorded in.",
+			"default": "transactions",
+			"settings": {
+				"propertyOptions": "commerceCollections:transactions",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		},
+		"subscriptions": {
+			"type": "string",
+			"field": "select",
+			"label": "Subscriptions",
+			"help": "The collection subscriptions are kept in.",
+			"default": "subscriptions",
+			"settings": {
+				"propertyOptions": "commerceCollections:subscriptions",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		},
+		"carts": {
+			"type": "string",
+			"field": "select",
+			"label": "Carts",
+			"help": "The collection carts are kept in while buyers shop.",
+			"default": "carts",
+			"settings": {
+				"propertyOptions": "commerceCollections:carts",
+				"clearValue": false,
+				"sortOptions": false
+			}
+		}
+	},
+	"required": []
+}
