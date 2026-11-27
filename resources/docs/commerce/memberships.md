@@ -45,7 +45,7 @@ This list is a safety limit. A product can only ever give a group that is on it.
 
 Open the product, go to **Subscription and Membership**, and choose the group under **Grants Access Group**. Only the groups from step 3 are offered.
 
-For a membership people pay for every month, also set **Billing** to `Recurring`. See [Subscriptions](docs/commerce/subscriptions).
+For a membership people pay for every month, also set **Billing** to **Subscription**. See [Subscriptions](docs/commerce/subscriptions).
 
 ### 5. Protect the pages
 
@@ -60,6 +60,12 @@ To show or hide part of a page:
     <a href="/join">Become a member</a>
 {% endif %}
 ```
+
+### A one-time variant of a membership product
+
+The group is set on the product, not on a variant. So a one-time variant of a product that grants a group grants that group too, and for good: a one-time purchase keeps the buyer in the group unless the order is fully refunded.
+
+To give access to subscribers only, put the one-time option on a product that grants no group.
 
 ## What the buyer does
 

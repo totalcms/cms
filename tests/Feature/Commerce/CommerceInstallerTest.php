@@ -16,6 +16,7 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\TotalCMS;
@@ -114,6 +115,49 @@ test('a collection of that name on another schema is refused and left alone', fu
 		->and($orders->name)->toBe('Work Orders')
 		// The rest of the install still happens: one clash does not strand the others.
 		->and($report->created)->toContain('products', 'transactions', 'carts', 'subscriptions', 'discounts');
+});
+
+test('a products collection on a store\'s own product schema is accepted and left as it is', function (): void {
+	$this->c->get(SchemaSaver::class)->saveSchema([
+		'id'          => 'book',
+		'type'        => 'object',
+		'inheritFrom' => ['commerce-product-base', 'commerce-product-digital'],
+		'properties'  => ['author' => ['type' => 'string', 'field' => 'text', 'label' => 'Author', 'help' => 'Who wrote it.']],
+	]);
+	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'books', 'name' => 'Books', 'schema' => 'book', 'groups' => ['staff']]);
+	$config           = $this->c->get(Config::class);
+	$config->commerce = ['collections' => ['products' => 'books'] + $config->commerce['collections']] + $config->commerce;
+
+	$report = commerceInstall();
+	$books  = $this->c->get(CollectionFetcher::class)->fetchCollection('books');
+
+	expect($report->errors)->toBe([])
+		->and($report->existing)->toContain('books')
+		->and($report->created)->not->toContain('books', 'products')
+		->and($books->schema)->toBe('book')
+		->and($books->name)->toBe('Books')
+		// An existing collection's File Access Groups are the owner's.
+		->and($books->groups)->toBe(['staff']);
+});
+
+test('a products collection on an unrelated schema is still refused', function (): void {
+	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'books', 'name' => 'Books', 'schema' => 'blog']);
+	$config           = $this->c->get(Config::class);
+	$config->commerce = ['collections' => ['products' => 'books'] + $config->commerce['collections']] + $config->commerce;
+
+	expect(commerceInstall()->errors)->toBe(['Collection "books" exists with schema "blog"; set commerce.collections.products to another id.']);
+});
+
+test('only products accepts a schema that inherits: other roles want their own schema exactly', function (): void {
+	$this->c->get(SchemaSaver::class)->saveSchema([
+		'id'          => 'my-orders',
+		'type'        => 'object',
+		'inheritFrom' => ['commerce-order'],
+		'properties'  => [],
+	]);
+	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'orders', 'name' => 'Orders', 'schema' => 'my-orders']);
+
+	expect(commerceInstall()->errors)->toBe(['Collection "orders" exists with schema "my-orders"; set commerce.collections.orders to another id.']);
 });
 
 test('collection ids come from the settings', function (): void {

@@ -34,7 +34,7 @@ A product's own `price` field is different: it is written as you typed it (`19.9
 | `currency()` | The store's currency code. |
 | `products(options)` | Active products. Takes the options of `cms.collection.query()`: `filter`, `sort`, `search`, `limit`, `page`. Returns `{objects, total, page, pages, hasMore}`. |
 | `product(id)` | One product, with all its fields, or `null`. Visitors get active products only. |
-| `price(productId, variantId)` | What it costs this buyer: `{amount, listAmount, currency, formatted, listFormatted, source}`, or `null`. |
+| `price(productId, variantId)` | What it costs this buyer: `{amount, listAmount, currency, formatted, listFormatted, source, billing, interval, intervalCount}`, or `null`. For a [name-your-price](docs/commerce/name-your-price) product, `amount` is only where the amount field starts, and `minAmount` and `minFormatted` are the least the buyer may enter (`0` and `''` when there is no minimum). |
 | `inStock(productId, variantId)` | Whether it can be bought now. |
 | `providers()` | The ways to pay: a list of `{id, label}`. |
 | `order(orderId, token)` | One order, for someone holding its signed link, or `null`. |
@@ -60,7 +60,7 @@ A product's own `price` field is different: it is written as you typed it (`19.9
 |---|---|
 | `count()` | How many items are in the cart, counting quantities. |
 | `isEmpty()` | `true` for an empty cart. |
-| `lines()` | The lines: `lineKey`, `productId`, `variantId`, `title`, `variantTitle`, `image`, `qty`, `unitPrice`, `lineTotal`, `discountTotal`. |
+| `lines()` | The lines: `lineKey`, `productId`, `variantId`, `title`, `variantTitle`, `image`, `qty`, `unitPrice`, `lineTotal`, `discountTotal`, and `priceSource`: `custom` for an amount the buyer named. Such a line is always one, so show its quantity as text, not as a field. |
 | `subtotal()` | The lines added up. |
 | `discount()` | The code on the cart, `{code, type, amount, formatted}`, or `null`. |
 | `total()` | The subtotal less the discount. |
@@ -73,8 +73,8 @@ Each prints HTML. See [Cart and Checkout](docs/commerce/cart-and-checkout) for h
 
 | Function | Prints |
 |---|---|
-| `addButton(productId, options)` | An "Add to cart" button. Options: `variant`, `qty`, `label`, `class`. |
-| `variantPicker(productId, options)` | A choice of variants, a quantity and a button. Options: `qty`, `label`, `class`. |
+| `addButton(productId, options)` | An "Add to cart" button. Options: `variant`, `qty`, `label`, `class`. For a [name-your-price](docs/commerce/name-your-price) product it also prints an amount field and the suggested amounts. |
+| `variantPicker(productId, options)` | A choice of variants, a quantity and a button. Options: `qty`, `label`, `class`. For a name-your-price product, an amount field takes the place of the quantity. Style it with `commerce-add-amount-field`, `commerce-add-amounts` and `commerce-add-amount`. |
 | `toggle(options)` | The button that opens the slide-out cart, with the count. Options: `label`, `class`. |
 | `drawer(options)` | The slide-out cart. Options: `side`, `title`, `checkoutUrl`, `openOnAdd`, `class`. |
 | `widget()` | The mini cart. |

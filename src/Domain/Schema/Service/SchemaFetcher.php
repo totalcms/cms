@@ -13,9 +13,6 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class SchemaFetcher
 {
-	/** How many levels of parents inheritance follows. */
-	private const MAX_INHERIT_DEPTH = 5;
-
 	private LoggerInterface $logger;
 
 	public function __construct(
@@ -158,13 +155,13 @@ readonly class SchemaFetcher
 
 	/**
 	 * Resolve schema inheritance by merging properties, required, and index arrays.
-	 * Parents are followed at any depth (up to MAX_INHERIT_DEPTH), depth first,
+	 * Parents are followed at any depth (up to SchemaData::MAX_INHERIT_DEPTH), depth first,
 	 * and the nearest definition of a property wins.
 	 */
 	private function resolveInheritance(SchemaData $schema): SchemaData
 	{
 		// Check cache first
-		$cacheKey = "schema_flattened:{$schema->id}";
+		$cacheKey = SchemaData::flattenedCacheKey($schema->id);
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -205,7 +202,7 @@ readonly class SchemaFetcher
 
 		if ($skipped !== []) {
 			$this->logger->warning(
-				"Schema '{$schema->id}' inherits deeper than " . self::MAX_INHERIT_DEPTH . ' levels; skipped: ' . implode(', ', $skipped),
+				"Schema '{$schema->id}' inherits deeper than " . SchemaData::MAX_INHERIT_DEPTH . ' levels; skipped: ' . implode(', ', $skipped),
 			);
 		}
 
@@ -228,9 +225,9 @@ readonly class SchemaFetcher
 		$flattened->properties = $mergedProperties;
 		$flattened->required   = array_values($mergedRequired); // Re-index
 		$flattened->index      = array_values($mergedIndex);    // Re-index
-		$flattened->formgrid   = $this->joinedLayout($schema, array_keys($mergedProperties));
+		$flattened->formgrid   = $this->joinedLayout($schema);
 
-		// Cache the flattened schema for 30 minutes
+		// Cache the flattened schema (CacheManager::TTL_FLATTENED_SCHEMA, 4 hours)
 		$cacheData = [
 			'id'          => $flattened->id,
 			'formgrid'    => $flattened->formgrid,
@@ -248,49 +245,37 @@ readonly class SchemaFetcher
 
 	/**
 	 * The form layout of a flattened schema. A schema's own layout is used as
-	 * written. Without one, the layouts of its parents are joined in order and
-	 * every property the join does not place gets a row of its own at the end.
-	 * No layout anywhere stays empty.
-	 *
-	 * @param list<int|string> $propertyNames Property names of the flattened schema, in order
+	 * written. Without one, the layouts of its parents are brought to one width
+	 * and joined in order. A field no layout places is added by the form, after
+	 * the layout, as a full-width row. No layout anywhere stays empty.
 	 */
-	private function joinedLayout(SchemaData $schema, array $propertyNames): string
+	private function joinedLayout(SchemaData $schema): string
 	{
 		if (trim($schema->formgrid) !== '') {
 			return $schema->formgrid;
 		}
 
-		$seen   = [$schema->id => true];
-		$joined = $this->parentLayouts($schema, 1, $seen);
+		$seen = [$schema->id => true];
 
-		if ($joined === '') {
-			return '';
-		}
-
-		$placed = $this->placedProperties($joined);
-		foreach ($propertyNames as $name) {
-			if (!isset($placed[(string) $name])) {
-				$joined .= "\n" . $name;
-			}
-		}
-
-		return $joined;
+		return implode("\n", $this->scaledLayouts($this->parentLayouts($schema, 1, $seen)));
 	}
 
 	/**
-	 * The layouts of a schema's direct parents joined with a newline. A parent
-	 * with no layout of its own contributes its own parents' layouts, by the
-	 * same rule. Follows the depth cap and skips schemas already seen, as the
-	 * ancestor walk does.
+	 * The layouts of a schema's direct parents, in order. A parent with no
+	 * layout of its own contributes its own parents' layouts, by the same rule.
+	 * Follows the depth cap and skips schemas already seen, as the ancestor
+	 * walk does.
 	 *
 	 * @param array<string,true> $seen Ids already visited, shared across the walk
+	 *
+	 * @return list<string>
 	 */
-	private function parentLayouts(SchemaData $schema, int $depth, array &$seen): string
+	private function parentLayouts(SchemaData $schema, int $depth, array &$seen): array
 	{
 		$layouts = [];
 
 		foreach ($schema->inheritFrom as $parentId) {
-			if (isset($seen[$parentId]) || $depth > self::MAX_INHERIT_DEPTH) {
+			if (isset($seen[$parentId]) || $depth > SchemaData::MAX_INHERIT_DEPTH) {
 				continue;
 			}
 
@@ -301,55 +286,107 @@ readonly class SchemaFetcher
 			}
 
 			$seen[$parentId] = true;
-			$layout          = trim($parent->formgrid) !== ''
-				? $parent->formgrid
-				: $this->parentLayouts($parent, $depth + 1, $seen);
-
-			if ($layout !== '') {
-				$layouts[] = $layout;
-			}
-		}
-
-		return implode("\n", $layouts);
-	}
-
-	/**
-	 * The property names a layout places: every whole cell of a row that is not
-	 * a marker: a section heading or divider (`---`), a fieldset (`[[`, `]]`)
-	 * or an accordion (`>>`, `<<`). The text after a marker is a title, not cells.
-	 *
-	 * @return array<string,true>
-	 */
-	private function placedProperties(string $layout): array
-	{
-		$placed = [];
-
-		foreach (preg_split('/\R/', $layout) ?: [] as $row) {
-			$row = trim($row);
-			if ($this->isMarkerRow($row)) {
+			if (trim($parent->formgrid) !== '') {
+				$layouts[] = $parent->formgrid;
 				continue;
 			}
-
-			foreach (preg_split('/\s+/', $row, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $cell) {
-				$placed[$cell] = true;
-			}
+			array_push($layouts, ...$this->parentLayouts($parent, $depth + 1, $seen));
 		}
 
-		return $placed;
+		return $layouts;
 	}
 
 	/**
-	 * Whether a layout row is a marker rather than a row of cells.
+	 * Parent layouts brought to one width, so every row of the joined layout
+	 * has the same number of cells (grid-template-areas needs that, or the
+	 * admin drops the layout). The width is the least common multiple of the
+	 * layouts' widths, and every cell of an ordinary row is repeated to reach
+	 * it: `a b` at width 2 becomes `a a a b b b` at width 6. Marker rows are
+	 * left alone. The layouts are joined unscaled when they already agree, when
+	 * one layout's own rows differ in width, or when the common width would be
+	 * more than 12 columns.
+	 *
+	 * @param list<string> $layouts
+	 *
+	 * @return list<string>
 	 */
-	private function isMarkerRow(string $row): bool
+	private function scaledLayouts(array $layouts): array
 	{
-		foreach (['---', '[[', ']]', '>>', '<<'] as $marker) {
-			if (str_starts_with($row, $marker)) {
-				return true;
+		$widths = array_map($this->layoutWidth(...), $layouts);
+		$sized  = array_values(array_unique(array_filter($widths)));
+		if (in_array(null, $widths, true) || count($sized) < 2) {
+			return $layouts;
+		}
+
+		$common = 1;
+		foreach ($sized as $width) {
+			$multiple = $common;
+			while ($multiple % $width !== 0) {
+				$multiple += $common;
+			}
+			$common = $multiple;
+		}
+		if ($common > 12) {
+			return $layouts;
+		}
+
+		foreach ($layouts as $i => $layout) {
+			$times = intdiv($common, max(1, (int) $widths[$i]));
+			$rows  = [];
+			foreach (preg_split('/\R/', $layout) ?: [] as $row) {
+				$cells  = $this->rowCells($row);
+				$rows[] = $cells === null
+					? $row
+					: implode(' ', array_merge(...array_map(fn (string $cell): array => array_fill(0, $times, $cell), $cells)));
+			}
+			$layouts[$i] = implode("\n", $rows);
+		}
+
+		return $layouts;
+	}
+
+	/**
+	 * The number of cells in each ordinary row of a layout: 0 when it has
+	 * none, null when its rows differ.
+	 */
+	private function layoutWidth(string $layout): ?int
+	{
+		$widths = [];
+		foreach (preg_split('/\R/', $layout) ?: [] as $row) {
+			$cells = $this->rowCells($row);
+			if ($cells !== null) {
+				$widths[count($cells)] = true;
 			}
 		}
 
-		return false;
+		return match (count($widths)) {
+			0       => 0,
+			1       => (int) array_key_first($widths),
+			default => null,
+		};
+	}
+
+	/**
+	 * The cells of an ordinary layout row, or null for a blank line or a
+	 * marker: a section heading or divider (`---`), a fieldset (`[[`, `]]`) or
+	 * an accordion (`>>`, `<<`). The text after a marker is a title, not cells.
+	 *
+	 * @return list<string>|null
+	 */
+	private function rowCells(string $row): ?array
+	{
+		$row = trim($row);
+		if ($row === '') {
+			return null;
+		}
+
+		foreach (['---', '[[', ']]', '>>', '<<'] as $marker) {
+			if (str_starts_with($row, $marker)) {
+				return null;
+			}
+		}
+
+		return preg_split('/\s+/', $row) ?: [];
 	}
 
 	/**
@@ -359,7 +396,7 @@ readonly class SchemaFetcher
 	 * read is skipped along with its ancestors.
 	 *
 	 * @param array<string,true> $seen    Ids already visited, shared across the walk
-	 * @param list<string>       $skipped Ids left out for being deeper than MAX_INHERIT_DEPTH
+	 * @param list<string>       $skipped Ids left out for being deeper than SchemaData::MAX_INHERIT_DEPTH
 	 *
 	 * @return list<SchemaData>
 	 */
@@ -372,7 +409,7 @@ readonly class SchemaFetcher
 				continue;
 			}
 
-			if ($depth > self::MAX_INHERIT_DEPTH) {
+			if ($depth > SchemaData::MAX_INHERIT_DEPTH) {
 				$skipped[] = $parentId;
 				continue;
 			}

@@ -325,6 +325,30 @@ it('checks the rows inside a fieldset against that fieldset only', function (): 
 	expect($errors[0])->toContain("formgrid row 'image'");
 });
 
+it('errors when the layout joined from the parents has uneven rows', function (): void {
+	$parent           = makeSchema('parent', ['id' => idProperty()], ['id'], ['id']);
+	$parent->formgrid = "id id\nsummary";
+	$child            = makeSchema('child', [], inheritFrom: ['parent']);
+	$flat             = makeSchema('child', ['id' => idProperty()], ['id'], ['id'], ['parent']);
+	$flat->formgrid   = $parent->formgrid;
+
+	$errors = makeLinter(['parent' => $parent, 'child' => $child], ['child' => $flat])->lint('child')['errors'];
+
+	expect($errors)->toHaveCount(1);
+	expect($errors[0])->toContain("joined from the parents has row 'summary'");
+});
+
+it('does not check the joined layout of a schema with a layout of its own', function (): void {
+	$parent           = makeSchema('parent', ['id' => idProperty()], ['id'], ['id']);
+	$parent->formgrid = "id id\nsummary";
+	$child            = makeSchema('child', [], inheritFrom: ['parent']);
+	$child->formgrid  = 'id';
+	$flat             = makeSchema('child', ['id' => idProperty()], ['id'], ['id'], ['parent']);
+	$flat->formgrid   = 'id';
+
+	expect(makeLinter(['parent' => $parent, 'child' => $child], ['child' => $flat])->lint('child')['errors'])->toBeEmpty();
+});
+
 it('passes a formgrid whose rows are all the same width', function (): void {
 	$schema           = makeSchema('even', ['id' => idProperty()], ['id'], ['id']);
 	$schema->formgrid = "id id\n---\nsummary .\n[[ Media\nimage\n]]";

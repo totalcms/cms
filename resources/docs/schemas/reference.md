@@ -133,7 +133,7 @@ A text-based grid layout for arranging form fields in the admin interface. Uses 
 }
 ```
 
-A schema that inherits from others and has no `formgrid` of its own gets its parents' layouts joined, in the order listed in `inheritFrom`, followed by one row for each property the joined layout does not place. A schema with its own `formgrid` uses it exactly as written.
+A schema that inherits from others and has no `formgrid` of its own gets its parents' layouts joined, in the order listed in `inheritFrom`. A field that no layout places is added by the form after it, full width. A schema with its own `formgrid` uses it exactly as written.
 
 See [Form Grid Layout](docs/schemas/formgrid) for complete documentation.
 
@@ -161,6 +161,7 @@ A list of schema IDs to inherit properties from. Schema inheritance allows you t
 - **Multiple parents are supported**: You can inherit from more than one schema. When multiple parents define the same property, the first parent listed wins.
 - **Parents of parents are followed**: A parent can itself inherit from other schemas, up to 5 levels deep. Parents are read depth first: each parent, then that parent's own parents, before the next parent. The nearest definition of a property wins. A schema that would be visited twice (a cycle) is skipped, and parents deeper than 5 levels are skipped with a warning in the log.
 - **Missing parents are skipped**: If a parent schema ID doesn't exist, it is silently skipped without causing errors.
+- **Objects are checked against inherited fields**: An object saved into a collection whose schema inherits is validated against the inherited properties and the inherited `required` names too, not only the schema's own. A parent that is missing or cannot be read is skipped.
 - **Deletion protection**: A schema cannot be deleted if other schemas inherit from it.
 
 **Example — Base content schema:**

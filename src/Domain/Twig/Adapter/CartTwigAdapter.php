@@ -89,7 +89,7 @@ final readonly class CartTwigAdapter
 	/**
 	 * The cart's lines. Every amount is a whole number of minor units of `currency`.
 	 *
-	 * @return list<array{lineKey: string, productId: string, variantId: string, title: string, variantTitle: string, image: string, qty: int, unitPrice: int, lineTotal: int, discountTotal: int, currency: string, url: string}>
+	 * @return list<array{lineKey: string, productId: string, variantId: string, title: string, variantTitle: string, image: string, qty: int, unitPrice: int, lineTotal: int, discountTotal: int, currency: string, url: string, billing: string, interval: string, intervalCount: int, trialDays: int, priceSource: string}>
 	 */
 	public function lines(): array
 	{
@@ -111,6 +111,8 @@ final readonly class CartTwigAdapter
 			'interval'      => $line->interval,
 			'intervalCount' => $line->intervalCount,
 			'trialDays'     => $line->trialDays,
+			// `custom` for an amount the buyer named: a line of one, with no quantity to change.
+			'priceSource'   => $line->priceSource,
 		], $this->view()->lines ?? []);
 	}
 

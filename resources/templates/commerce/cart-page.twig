@@ -33,14 +33,19 @@
 						</td>
 						<td class="commerce-cart-price">{{ line.unitPrice.amount|money(line.unitPrice.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</td>
 						<td class="commerce-cart-qty">
-							{# As in the drawer: a quantity saves itself when it changes. The button is for a browser with no JavaScript. #}
-							<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML" hx-trigger="change, submit">
-								{{ csrf|raw }}
-								<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
-								<label class="visually-hidden" for="qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
-								<input id="qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
-								<noscript><button type="submit">Update</button></noscript>
-							</form>
+							{% if line.priceSource == 'custom' %}
+								{# An amount the buyer named is a line of one: there is no quantity to change. #}
+								1
+							{% else %}
+								{# As in the drawer: a quantity saves itself when it changes. The button is for a browser with no JavaScript. #}
+								<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=page" hx-target="#cart-page" hx-swap="outerHTML" hx-trigger="change, submit">
+									{{ csrf|raw }}
+									<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+									<label class="visually-hidden" for="qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
+									<input id="qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
+									<noscript><button type="submit">Update</button></noscript>
+								</form>
+							{% endif %}
 						</td>
 						<td class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}</td>
 						<td class="commerce-cart-remove">

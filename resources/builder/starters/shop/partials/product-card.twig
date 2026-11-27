@@ -10,6 +10,9 @@
 {% if product %}
 {% set price = cms.commerce.price(product.id) %}
 {% set photo = product.images|default([])|first %}
+{# Options billed differently from the product (one time and monthly, say) leave no one way to say how it is billed. #}
+{% set billing = product.billing|default('') == 'recurring' ? 'recurring' : 'once' %}
+{% set mixedBilling = product.variants|default([])|filter(v => v.billing|default('') not in ['', billing])|length > 0 %}
 <article class="card product-card">
 	<a class="product-photo" href="/shop/{{ product.id|e }}">
 		{% if photo %}
@@ -20,13 +23,17 @@
 		{% endif %}
 	</a>
 	<div class="card-body">
-		<p class="meta">{{ product.category|e }}{% if product.type == 'digital' and product.billing != 'recurring' and product.variants is empty %} · Download{% endif %}</p>
+		<p class="meta">{{ product.category|e }}{% if product.type == 'digital' and billing != 'recurring' and not mixedBilling %} · Download{% endif %}</p>
 		<h3><a href="/shop/{{ product.id|e }}">{{ product.title|e }}</a></h3>
 		<p class="price">
-			{% if price %}
+			{% if price and product.customPrice %}
+				{# The buyer chooses the amount, so the starting amount is not a price. #}
+				<strong>Name your price</strong>
+				{% if price.billing == 'recurring' and not mixedBilling %}<small>every {{ (price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval)|e }}</small>{% endif %}
+			{% elseif price %}
 				{% if price.listAmount > price.amount %}<s>{{ price.listFormatted|e }}</s> {% endif %}
 				<strong>{{ price.formatted|e }}</strong>
-				{% if price.billing == 'recurring' %}<small>every {{ price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval }}</small>{% endif %}
+				{% if price.billing == 'recurring' and not mixedBilling %}<small>every {{ (price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval)|e }}</small>{% endif %}
 				{% if product.variants is not empty %}<small>and up</small>{% endif %}
 			{% endif %}
 		</p>

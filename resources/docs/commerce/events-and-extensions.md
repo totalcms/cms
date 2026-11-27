@@ -77,7 +77,7 @@ Every renewal is an order, so `order.paid` fires for each period too, with `kind
 |---|---|---|
 | `subscriptionId` | `string` | The subscription's ID |
 | `collection` | `string` | The collection subscriptions are kept in |
-| `status` | `string` | `trialing`, `active`, `past_due`, `paused` or `canceled` |
+| `status` | `string` | `active`, `past_due`, `paused` or `canceled`. `trialing` is reserved for free trials, which are not built yet, so it is not produced. |
 | `email` | `string` | The subscriber's email |
 | `customer` | `?array` | `{collection, id}` for a signed-in customer, `null` for a guest |
 | `currency` | `string` | Three-letter code |
@@ -159,6 +159,8 @@ The store's owner switches the provider on under **Settings → Commerce**. Its 
 The bundled Stripe extension (`resources/extensions/totalcms/stripe`) is a complete example.
 
 A provider that can bill a subscription also implements `TotalCMS\Domain\Commerce\Payment\SubscriptionProvider`: it cancels a subscription when asked, says where one stands, and gives the address of a page where the buyer changes their card. It turns its own webhooks about a subscription into `SubscriptionEvent`s. Until a provider does, a cart with a subscription in it does not offer that provider.
+
+A provider also says whether it can bill an amount the buyer named, in `ProviderCapabilities`. `recurringCustomAmounts` is `false` unless you set it. A subscription provider that bills from plans made ahead of time leaves it `false`, and a cart whose subscription is at a named amount is not offered that provider. Set it to `true` only when the provider bills each period from the amount the store sends it, as Stripe does. When no enabled provider can bill the line, the cart refuses it with `subscription_unavailable`. See [Name Your Price](docs/commerce/name-your-price#monthly-amounts).
 
 ### A price that depends on the buyer
 

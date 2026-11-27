@@ -49,3 +49,9 @@ test('suggested amounts outside the minimum and the store ceiling are left out',
 	expect(array_column($vars['suggestedPrices'], 'amount'))->toBe(['5', '25.5'])
 		->and(array_column($vars['suggestedPrices'], 'formatted'))->toBe(['$5.00', '$25.50']);
 });
+
+test('a suggested amount under the 50-cent floor a payment can carry is not offered', function (): void {
+	$vars = ($this->field)(['price' => 10, 'suggestedPrices' => [0.25, 0.5, 3]]);
+
+	expect(array_column($vars['suggestedPrices'], 'amount'))->toBe(['0.5', '3']);
+});

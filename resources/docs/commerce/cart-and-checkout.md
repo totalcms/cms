@@ -40,6 +40,21 @@ Your layout must print the site's assets, which most layouts already do:
 
 On a site with Commerce these include the cart's own small script and stylesheet. With them, adding to the cart updates the page in place.
 
+### A name-your-price product
+
+For a product that lets the buyer choose the price, `cms.cart.addButton()` and `cms.cart.variantPicker()` print an amount field in place of the quantity. It starts at the product's price, accepts the product's minimum up to the store's highest price, and shows each suggested price as a button that fills it in. There is nothing to call differently.
+
+You can style these classes:
+
+| Class | What it is |
+|---|---|
+| `commerce-add-amount-field` | The wrapper around the currency and the number field. |
+| `commerce-add-currency` | The currency code beside the field. |
+| `commerce-add-amounts` | The row of suggested-amount buttons. |
+| `commerce-add-amount` | One suggested-amount button. |
+
+See [Name Your Price](docs/commerce/name-your-price).
+
 ## The slide-out cart
 
 `cms.cart.drawer()` prints a cart that slides in from the side. Put it once on the page, usually in your layout, and put `cms.cart.toggle()` wherever the cart button belongs.
@@ -189,7 +204,7 @@ Every cart address also answers a script. Send `Accept: application/json` and yo
 | Address | What it does |
 |---|---|
 | `GET /commerce/cart` | The cart |
-| `POST /commerce/cart/add` | Add `productId`, with `variantId` and `qty` |
+| `POST /commerce/cart/add` | Add `productId`, with `variantId` and `qty`. For a [name-your-price](docs/commerce/name-your-price) product, send the buyer's `amount` too |
 | `POST /commerce/cart/update` | Set a line's `qty` |
 | `POST /commerce/cart/remove` | Remove a line |
 | `POST /commerce/cart/clear` | Empty the cart |
@@ -202,4 +217,16 @@ Every `POST` needs the site's CSRF token. A refusal is always the same shape:
 {"error": {"code": "out_of_stock", "message": "Only 2 left in stock."}}
 ```
 
-A script cannot set a price. Any `price`, `amount` or `total` it sends is ignored.
+A script cannot set the price of a fixed-price product. Any `price` or `total` it sends is ignored, and so is an `amount` sent for a product that does not let the buyer choose the price: the catalog price is charged.
+
+### Amounts for a name-your-price product
+
+A product that lets the buyer choose the price takes an `amount`: a plain decimal in the store's currency, such as `15` or `12.50`. These errors are particular to it:
+
+| Code | Status | When | Message |
+|---|---|---|---|
+| `amount_required` | 422 | The product lets the buyer choose the price and no `amount` was sent. | Enter the amount you want to pay. |
+| `amount_invalid` | 422 | The `amount` is not a plain decimal, or is outside the limits. | Enter an amount from {least} to {most}. Or "Enter 0, or an amount from {least} to {most}." when zero is allowed. |
+| `subscription_unavailable` | 503 | The line is a subscription and no enabled provider can bill it. For a monthly amount the buyer named, that needs a provider that bills from the amount it is sent. | Subscriptions cannot be bought here right now. |
+
+`{least}` and `{most}` are written for the store's currency. A named price is always quantity 1, and adding it again replaces the amount. The rules are on [Name Your Price](docs/commerce/name-your-price#the-rules-for-an-amount).

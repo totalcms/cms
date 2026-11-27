@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Event\Listener;
 
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 readonly class CacheInvalidationListener
 {
@@ -36,6 +37,6 @@ readonly class CacheInvalidationListener
 	{
 		$schemaId = (string)$payload['schema'];
 
-		$this->cacheManager->clearComputedData("schema_flattened:{$schemaId}");
+		$this->cacheManager->clearComputedData(SchemaData::flattenedCacheKey($schemaId));
 	}
 }

@@ -72,7 +72,7 @@ final class CacheInvalidationListenerTest extends TestCase
 		$this->cacheManager
 			->expects($this->once())
 			->method('clearComputedData')
-			->with('schema_flattened:blog');
+			->with('schema_flattened:v2:blog');
 
 		$this->dispatcher->dispatch('schema.saved', new SchemaEventPayload('blog'));
 	}

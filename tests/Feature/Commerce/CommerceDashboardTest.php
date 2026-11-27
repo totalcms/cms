@@ -180,6 +180,16 @@ describe('on the admin home page', function (): void {
 		expect($html)->toContain('Paid downloads are open to the public', 'Product files in the Downloads collection', 'href="collections/downloads/edit"', 'Open collection settings');
 	});
 
+	it('warns when paid downloads are open to anyone who signs in', function (array $groups): void {
+		commerceDownloadIs($this->c, 'file');
+		$this->c->get(CollectionSaver::class)->updateCollection('downloads', ['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-file', 'groups' => $groups]);
+		signInAs($this->app, 'boss', 'auth');
+		$html = (string)get('/admin')->getBody();
+
+		expect($html)->toContain('Paid downloads are open to anyone who signs in', 'The File Access Groups of the Downloads collection include default', 'href="collections/downloads/edit"')
+			->not->toContain('Paid downloads are open to the public');
+	})->with(['only default' => [['default']], 'admin and default' => [['admin', 'default']]]);
+
 	it('says nothing when downloads are protected', function (): void {
 		signInAs($this->app, 'boss', 'auth');
 

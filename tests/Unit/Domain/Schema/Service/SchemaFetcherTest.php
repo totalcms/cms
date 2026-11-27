@@ -301,7 +301,7 @@ describe('SchemaFetcher', function (): void {
 			->expects($this->once())
 			->method('storeComputedData')
 			->with(
-				$this->equalTo('schema_flattened:blog-pro'),
+				$this->equalTo('schema_flattened:v2:blog-pro'),
 				$this->callback(fn (array $data): bool => isset($data['properties']['author'])),
 				$this->equalTo(CacheManager::TTL_FLATTENED_SCHEMA),
 			)
@@ -316,7 +316,7 @@ describe('SchemaFetcher', function (): void {
 
 		$this->cacheManager
 			->method('getComputedData')
-			->with('schema_flattened:blog-pro')
+			->with('schema_flattened:v2:blog-pro')
 			->willReturn([
 				'id'          => 'blog-pro',
 				'properties'  => ['cached_prop' => ['field' => 'text']],
@@ -411,13 +411,14 @@ describe('SchemaFetcher', function (): void {
 			->toBe("id sku\ntitle title\n--- Digital Delivery\ndownload download");
 	});
 
-	test('a property nothing places gets a row of its own at the end', function (): void {
+	test('the joined layout of a child with its own properties ends where the last parent\'s layout ends', function (): void {
 		[$base, $digital] = layoutParents();
-		$child            = makeSchema('child', ['author' => ['field' => 'text']], inheritFrom: ['base', 'digital']);
+		$child            = makeSchema('child', ['author' => ['field' => 'text'], 'isbn' => ['field' => 'text']], inheritFrom: ['base', 'digital']);
 		wireSchemas($this, $child, $base, $digital);
 
+		// author and isbn are added by the form, full width, after the layout.
 		expect($this->fetcher->fetchSchema('child')->formgrid)
-			->toBe("id sku\ntitle title\n--- Digital Delivery\ndownload download\nauthor");
+			->toBe("id sku\ntitle title\n--- Digital Delivery\ndownload download");
 	});
 
 	test('a schema\'s own layout is used as written', function (): void {
@@ -442,15 +443,7 @@ describe('SchemaFetcher', function (): void {
 		$child  = makeSchema('child', inheritFrom: ['middle']);
 		wireSchemas($this, $child, $middle, $root);
 
-		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("title title\nsku");
-	});
-
-	test('a heading row does not place a property named like its words', function (): void {
-		$base  = makeSchema('base', ['id' => ['field' => 'text']], formgrid: "--- Notes\nid id");
-		$child = makeSchema('child', ['Notes' => ['field' => 'text']], inheritFrom: ['base']);
-		wireSchemas($this, $child, $base);
-
-		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("--- Notes\nid id\nNotes");
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe('title title');
 	});
 
 	test('the joined layout is what is cached, and a cache hit returns it', function (): void {
@@ -462,7 +455,7 @@ describe('SchemaFetcher', function (): void {
 			->expects($this->once())
 			->method('storeComputedData')
 			->with(
-				$this->equalTo('schema_flattened:child'),
+				$this->equalTo('schema_flattened:v2:child'),
 				$this->callback(fn (array $data): bool => $data['formgrid'] === "id sku\ntitle title\n--- Digital Delivery\ndownload download"),
 				$this->anything(),
 			)
@@ -482,19 +475,39 @@ describe('SchemaFetcher', function (): void {
 		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("id id\nsku");
 	});
 
-	test('a fieldset legend does not place a property named like its words', function (): void {
-		$base = makeSchema('base', ['street' => ['field' => 'text'], 'city' => ['field' => 'text']], formgrid: "[[ Shipping address\nstreet city\n]]");
-		$child = makeSchema('child', ['address' => ['field' => 'text']], inheritFrom: ['base']);
-		wireSchemas($this, $child, $base);
+	test('parents of different widths are scaled to a common width', function (): void {
+		$two   = makeSchema('two', ['a' => ['field' => 'text'], 'b' => ['field' => 'text']], formgrid: "--- Basics\na b\n[[ Shipping\nb a\n]]");
+		$three = makeSchema('three', ['c' => ['field' => 'text'], 'd' => ['field' => 'text']], formgrid: ">> More\nc d .\n<<");
+		$child = makeSchema('child', inheritFrom: ['two', 'three']);
+		wireSchemas($this, $child, $two, $three);
 
-		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("[[ Shipping address\nstreet city\n]]\naddress");
+		$layout = $this->fetcher->fetchSchema('child')->formgrid;
+
+		expect($layout)->toBe(
+			"--- Basics\na a a b b b\n[[ Shipping\nb b b a a a\n]]\n>> More\nc c d d . .\n<<"
+		);
+		foreach (explode("\n", $layout) as $row) {
+			if (!preg_match('/^(---|\[\[|\]\]|>>|<<)/', $row)) {
+				expect(preg_split('/\s+/', $row))->toHaveCount(6);
+			}
+		}
 	});
 
-	test('an accordion panel title does not place a property named like its words', function (): void {
-		$base = makeSchema('base', ['slug' => ['field' => 'text'], 'template' => ['field' => 'text']], formgrid: ">> Advanced price\nslug template\n<<");
-		$child = makeSchema('child', ['price' => ['field' => 'text']], inheritFrom: ['base']);
-		wireSchemas($this, $child, $base);
+	test('a parent whose own rows differ in width is joined unscaled', function (): void {
+		$uneven = makeSchema('uneven', ['a' => ['field' => 'text'], 'b' => ['field' => 'text']], formgrid: "a b\nb");
+		$three  = makeSchema('three', ['c' => ['field' => 'text']], formgrid: 'c c c');
+		$child  = makeSchema('child', inheritFrom: ['uneven', 'three']);
+		wireSchemas($this, $child, $uneven, $three);
 
-		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe(">> Advanced price\nslug template\n<<\nprice");
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("a b\nb\nc c c");
+	});
+
+	test('parents whose common width would pass 12 columns are joined unscaled', function (): void {
+		$five  = makeSchema('five', ['a' => ['field' => 'text']], formgrid: 'a a a a a');
+		$seven = makeSchema('seven', ['b' => ['field' => 'text']], formgrid: 'b b b b b b b');
+		$child = makeSchema('child', inheritFrom: ['five', 'seven']);
+		wireSchemas($this, $child, $five, $seven);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("a a a a a\nb b b b b b b");
 	});
 });

@@ -358,7 +358,7 @@ This creates a three-column layout:
 
 ## Inherited Layouts
 
-A schema that uses `inheritFrom` and has no `formgrid` of its own gets its parents' layouts, one after the other in the order `inheritFrom` lists them. A parent with no layout contributes its own parents' layout. Section headings in a parent carry over. Each property that no joined row places gets a row of its own at the end, in the order the properties appear. If no parent has a layout, the schema has none either. Write a `formgrid` in the schema itself to take full control: it is used exactly as written, with nothing added.
+A schema that uses `inheritFrom` and has no `formgrid` of its own gets its parents' layouts, one after the other in the order `inheritFrom` lists them. A parent with no layout contributes its own parents' layout. Section headings in a parent carry over. When the parents' layouts have different numbers of columns, each is widened to a common width (a 2-column and a 3-column layout both become 6 columns) so every row has the same number of cells. A field that no layout places is added by the form after the layout, full width. If no parent has a layout, the schema has none either. `tcms schema:lint` reports a joined layout whose rows still differ in width; give that schema a `formgrid` of its own. Write a `formgrid` in the schema itself to take full control: it is used exactly as written, with nothing added.
 
 ## Important Rules
 

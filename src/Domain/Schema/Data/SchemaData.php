@@ -13,6 +13,15 @@ class SchemaData
 	public const SCHEMA_PREFIX        = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_CUSTOM_PREFIX = 'https://www.totalcms.co/schemas/custom/';
 	public const SCHEMA_VERSION       = 'https://json-schema.org/draft/2020-12/schema';
+
+	/** How many levels of parents `inheritFrom` follows, everywhere it is walked. */
+	public const MAX_INHERIT_DEPTH = 5;
+
+	/**
+	 * Bumped when the flattened shape changes, so a cache written by an older
+	 * version is never read back after an update.
+	 */
+	private const FLATTENED_CACHE_VERSION = 'v2';
 	public const RESERVED_NAMES       = [
 		'collection',
 		'jumpstart',
@@ -198,6 +207,16 @@ class SchemaData
 	public static function isReferenceSchema(string $schemaId): bool
 	{
 		return in_array($schemaId, self::REFERENCE_SCHEMAS, true);
+	}
+
+	/**
+	 * The cache key of a schema's flattened (inheritance resolved) form. The
+	 * one place it is built, so the fetcher that writes it and everything that
+	 * clears it cannot drift apart.
+	 */
+	public static function flattenedCacheKey(string $schemaId): string
+	{
+		return 'schema_flattened:' . self::FLATTENED_CACHE_VERSION . ':' . $schemaId;
 	}
 
 	/**

@@ -13,6 +13,7 @@ use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Builder\Service\StarterService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
@@ -25,6 +26,7 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -158,6 +160,36 @@ describe('on a site with Commerce', function (): void {
 			->and(get('/shop/no-such-product')->getStatusCode())->toBeIn([200, 404]);
 	});
 
+	it('does not show the starting amount of a name-your-price product as its price', function (): void {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'tip-jar', 'title' => 'Tip Jar', 'status' => 'active', 'type' => 'digital', 'price' => 13, 'customPrice' => true, 'minPrice' => 5,
+		]));
+		$page  = (string)get('/shop/tip-jar')->getBody();
+		$cards = explode('<article class="card product-card">', (string)get('/shop')->getBody());
+		$card  = array_values(array_filter($cards, static fn (string $c): bool => str_contains($c, 'href="/shop/tip-jar"')))[0] ?? '';
+
+		expect($page)->toContain('Name your price', 'from $5.00')
+			->not->toContain('$13.00')
+			->and($card)->toContain('Name your price')
+			->not->toContain('$13.00');
+	});
+
+	it('states how a product with sizes is delivered, as they all bill the same way', function (): void {
+		expect((string)get('/shop/classic-tee')->getBody())->toContain('<dt>Delivery</dt><dd>Shipped to you</dd>');
+	});
+
+	it('says nothing of delivery or billing for a product whose options bill differently', function (): void {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'giving', 'title' => 'Giving', 'status' => 'active', 'type' => 'digital', 'price' => 10, 'billing' => 'once', 'variants' => [
+				'once'    => ['id' => 'once', 'title' => 'One time'],
+				'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring', 'interval' => 'month', 'intervalCount' => 1],
+			],
+		]));
+
+		expect((string)get('/shop/giving')->getBody())->toContain('Giving')
+			->not->toContain('<dt>Delivery</dt>', 'until you cancel');
+	});
+
 	it('has a sign-up form that posts to the customers collection', function (): void {
 		$html = html_entity_decode((string)get('/register')->getBody());
 
@@ -205,6 +237,27 @@ it('leaves settings the owner has already chosen as they are', function (): void
 
 	expect($config->commerce['customerCollection'])->toBe('clients')
 		->and($config->commerce['grantableGroups'])->toBe(['vip']);
+});
+
+it('scaffolds on a store whose products collection is on a product schema of its own', function (): void {
+	// The installer, run by the starter, accepts a products collection whose
+	// schema inherits the product base part, so the starter does not stop there.
+	$this->c->get(ActorContext::class)->runAs(Actor::system(), function (): void {
+		$this->c->get(SchemaSaver::class)->saveSchema([
+			'id'          => 'book',
+			'type'        => 'object',
+			'inheritFrom' => ['commerce-product-base', 'commerce-product-digital'],
+			'properties'  => ['author' => ['type' => 'string', 'field' => 'text', 'label' => 'Author', 'help' => 'Who wrote it.']],
+		]);
+		$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'books', 'name' => 'Books', 'schema' => 'book']);
+	});
+	$config           = $this->c->get(Config::class);
+	$config->commerce = ['collections' => ['products' => 'books'] + $config->commerce['collections']] + $config->commerce;
+
+	$result = ($this->scaffold)();
+
+	expect($result->success)->toBeTrue($result->message)
+		->and($this->c->get(CollectionFetcher::class)->fetchCollection('books')->schema)->toBe('book');
 });
 
 it('says why, and scaffolds nothing, on a site without Commerce', function (): void {

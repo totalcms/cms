@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -206,9 +207,11 @@ test('each part holds its own fields and a layout', function (string $part, arra
 		->and($raw->category)->toBe('Commerce')
 		->and($raw->description)->not->toBe('');
 
-	// The dates are filled in by the engine, so no layout places them.
+	// The dates are filled in by the engine, so no layout places them, and a
+	// field the form hides (`settings.hide`) draws nothing to place.
 	$placed = preg_split('/\s+/', $raw->formgrid) ?: [];
-	foreach (array_diff($fields, ['created', 'updated']) as $field) {
+	$hidden = array_keys(array_filter($raw->properties, fn (array $p): bool => ($p['settings']['hide'] ?? false) === true));
+	foreach (array_diff($fields, ['created', 'updated'], $hidden) as $field) {
 		expect($placed)->toContain($field);
 	}
 })->with([
@@ -233,8 +236,28 @@ test('a custom schema can take only some parts', function (): void {
 
 	expect($book->properties)->toHaveKeys(['author', 'price', 'download'])
 		->and($book->properties)->not->toHaveKeys(['stock', 'billing'])
-		->and($book->formgrid)->toBe($base->formgrid . "\n" . $digital->formgrid . "\nauthor")
+		->and($book->formgrid)->toBe($base->formgrid . "\n" . $digital->formgrid)
 		->and($book->formgrid)->toContain('---Digital Delivery---');
+});
+
+test('the documented book schema gets an even layout, and its form shows its own fields', function (): void {
+	$this->c->get(SchemaSaver::class)->saveSchema([
+		'id'          => 'book',
+		'type'        => 'object',
+		'inheritFrom' => ['commerce-product-base', 'commerce-product-digital'],
+		'properties'  => [
+			'author' => ['type' => 'string', 'field' => 'text', 'label' => 'Author', 'help' => 'Who wrote it.'],
+			'isbn'   => ['type' => 'string', 'field' => 'text', 'label' => 'ISBN', 'help' => 'The book number.'],
+		],
+	]);
+	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'books', 'name' => 'Books', 'schema' => 'book']);
+
+	$book = $this->c->get(SchemaFetcher::class)->fetchSchema('book');
+	$html = $this->c->get(TotalFormFactory::class)->builder('books')->autoBuild();
+
+	expect((new FormGridBuilder($book->formgrid))->unevenRows())->toBe([])
+		->and($this->c->get(SchemaLinter::class)->lint('book')['errors'])->toBe([])
+		->and($html)->toContain('name="author"', 'name="isbn"', '--grid-area: author;', '--grid-area: isbn;');
 });
 
 test('the flattened product is exactly its parts, without the two retired download fields', function (): void {

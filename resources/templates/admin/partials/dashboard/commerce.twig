@@ -8,6 +8,7 @@
 	Autoescape is off in this app, so everything a buyer typed is escaped.
 
 	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock, lowStockAt, productsCollection, openDownloads}
+	openDownloads  {id, name, anySignedIn}: anySignedIn when the groups include `default`
 #}
 <div class="dashboard-section commerce-dashboard" id="commerce-dashboard">
 	<div class="commerce-dashboard-header">
@@ -18,8 +19,13 @@
 	{% if store.openDownloads is not null %}
 		<div class="warning-box commerce-dashboard-warning">
 			<div>
-				<p><strong>Paid downloads are open to the public</strong></p>
-				<p>Product files in the {{ store.openDownloads.name|e }} collection have no File Access Groups, so anyone with the address can download them without buying. Add a group such as admin to close them. Buyers' own links keep working.</p>
+				{% if store.openDownloads.anySignedIn %}
+					<p><strong>Paid downloads are open to anyone who signs in</strong></p>
+					<p>The File Access Groups of the {{ store.openDownloads.name|e }} collection include default, which lets any signed-in user download product files without buying. Remove it, or use a group only staff are in. Buyers' own links keep working.</p>
+				{% else %}
+					<p><strong>Paid downloads are open to the public</strong></p>
+					<p>Product files in the {{ store.openDownloads.name|e }} collection have no File Access Groups, so anyone with the address can download them without buying. Add a group such as admin to close them. Buyers' own links keep working.</p>
+				{% endif %}
 				<p><a href="collections/{{ store.openDownloads.id|e }}/edit">Open collection settings</a></p>
 			</div>
 		</div>

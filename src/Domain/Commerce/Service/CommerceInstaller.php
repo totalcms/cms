@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Data\InstallReport;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -20,7 +21,9 @@ use TotalCMS\Support\PathResolver;
  * Safe to run any number of times: it creates what is missing and never
  * changes what is there. A collection of the right id on another schema is
  * the site's own, so it is reported and left alone; the operator points
- * `commerce.collections.{role}` at a free id instead.
+ * `commerce.collections.{role}` at a free id instead. The one exception is
+ * products: a store's own product schema, one that inherits
+ * `commerce-product-base` at any depth, is a products collection too.
  */
 final readonly class CommerceInstaller
 {
@@ -49,6 +52,9 @@ final readonly class CommerceInstaller
 	 */
 	private const FILE_ACCESS_GROUP = 'admin';
 
+	/** What a products collection's schema must be, or inherit, at any depth. */
+	private const PRODUCT_BASE = 'commerce-product-base';
+
 	public function __construct(
 		private CommerceSettings $settings,
 		private CollectionFetcher $collections,
@@ -56,6 +62,7 @@ final readonly class CommerceInstaller
 		private ObjectSaver $objects,
 		private MailerFetcher $mailers,
 		private ActorContext $actors,
+		private SchemaFetcher $schemas,
 	) {
 	}
 
@@ -99,10 +106,11 @@ final readonly class CommerceInstaller
 		$existing = $this->collections->fetchCollection($id);
 
 		if ($existing instanceof CollectionData) {
-			if ($existing->schema !== $wanted['schema']) {
+			if (!$this->servesRole($role, $existing->schema)) {
 				throw new \RuntimeException("Collection \"{$id}\" exists with schema \"{$existing->schema}\"; set commerce.collections.{$role} to another id.");
 			}
 
+			// An existing collection is left as it is, its File Access Groups too.
 			return 'existing';
 		}
 
@@ -123,6 +131,19 @@ final readonly class CommerceInstaller
 		]);
 
 		return 'created';
+	}
+
+	/**
+	 * Whether a collection's schema can hold a role's records: the role's own
+	 * schema, or, for products only, any schema built on the product base part.
+	 */
+	private function servesRole(string $role, string $schema): bool
+	{
+		if ($schema === self::COLLECTIONS[$role]['schema']) {
+			return true;
+		}
+
+		return $role === 'products' && $this->schemas->isOrInherits($schema, self::PRODUCT_BASE);
 	}
 
 	/** @throws \RuntimeException when the shipped template cannot be read or the mailer collection cannot be made */

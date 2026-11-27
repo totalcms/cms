@@ -9,6 +9,9 @@
 {% if product %}
 	{% set price = cms.commerce.price(product.id) %}
 	{% set photo = product.images|default([])|first %}
+	{# Options billed differently from the product (one time and monthly, say) leave no one way to say how it is billed or delivered. #}
+	{% set billing = product.billing|default('') == 'recurring' ? 'recurring' : 'once' %}
+	{% set mixedBilling = product.variants|default([])|filter(v => v.billing|default('') not in ['', billing])|length > 0 %}
 	<section class="container section product-detail">
 		<div class="product-photo large">
 			{% if photo %}
@@ -21,10 +24,15 @@
 			<p class="meta">{{ product.category|e }}</p>
 			<h1>{{ product.title|e }}</h1>
 			<p class="price large">
-				{% if price %}
+				{% if price and product.customPrice %}
+					{# The buyer chooses the amount, so the starting amount is not a price. #}
+					<strong>Name your price</strong>
+					{% if price.minFormatted %}<small>from {{ price.minFormatted|e }}</small>{% endif %}
+					{% if price.billing == 'recurring' and not mixedBilling %}<small>every {{ (price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval)|e }}, until you cancel</small>{% endif %}
+				{% elseif price %}
 					{% if price.listAmount > price.amount %}<s>{{ price.listFormatted|e }}</s> {% endif %}
 					<strong>{{ price.formatted|e }}</strong>
-					{% if price.billing == 'recurring' %}<small>every {{ price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval }}, until you cancel</small>{% endif %}
+					{% if price.billing == 'recurring' and not mixedBilling %}<small>every {{ (price.intervalCount > 1 ? price.intervalCount ~ ' ' ~ price.interval ~ 's' : price.interval)|e }}, until you cancel</small>{% endif %}
 					{% if product.variants is not empty %}<small>and up</small>{% endif %}
 				{% endif %}
 			</p>
@@ -51,8 +59,7 @@
 
 			<dl class="facts">
 				{% if product.sku %}<div><dt>SKU</dt><dd>{{ product.sku|e }}</dd></div>{% endif %}
-				{# A product with options can bill each option differently, so there is no one delivery to state. #}
-				{% if product.variants is empty %}<div><dt>Delivery</dt><dd>{% if product.billing == 'recurring' %}Starts as soon as you pay{% elseif product.type == 'digital' %}A download link, on your order page and in your receipt{% else %}Shipped to you{% endif %}</dd></div>{% endif %}
+				{% if not mixedBilling %}<div><dt>Delivery</dt><dd>{% if product.billing == 'recurring' %}Starts as soon as you pay{% elseif product.type == 'digital' %}A download link, on your order page and in your receipt{% else %}Shipped to you{% endif %}</dd></div>{% endif %}
 				{% if product.trackInventory and product.variants is empty %}<div><dt>In stock</dt><dd>{{ product.stock|e }}</dd></div>{% endif %}
 			</dl>
 			<p><a href="/shop">← Back to the shop</a></p>

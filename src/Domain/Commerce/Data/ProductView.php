@@ -104,7 +104,6 @@ final readonly class ProductView
 			billing: $recurring ? self::BILLING_RECURRING : self::BILLING_ONCE,
 			interval: $text('interval', $recurring ? 'month' : ''),
 			intervalCount: is_numeric($object['intervalCount'] ?? null) ? (int)$object['intervalCount'] : ($recurring ? 1 : 0),
-			trialDays: self::trial($object['trialDays'] ?? 0),
 			accessGroup: $text('accessGroup'),
 			customPrice: $flag('customPrice', false),
 			minPrice: self::minimum($object['minPrice'] ?? 0),
@@ -145,12 +144,6 @@ final readonly class ProductView
 	public function isActive(): bool
 	{
 		return $this->status === self::STATUS_ACTIVE;
-	}
-
-	/** Free trial days: a whole number from 0 to the most a provider allows. */
-	private static function trial(mixed $stored): int
-	{
-		return is_numeric($stored) ? max(0, min(Recurrence::MAX_TRIAL_DAYS, (int)$stored)) : 0;
 	}
 
 	private static function minimum(mixed $stored): float

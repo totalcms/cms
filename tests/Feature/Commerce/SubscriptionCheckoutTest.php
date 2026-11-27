@@ -6,17 +6,20 @@ use Odan\Session\PhpSession;
 use Tests\Fakes\FakeSubscriptionProvider;
 use Tests\Fakes\FixedPlanSubscriptionProvider;
 use TotalCMS\Domain\Commerce\Cart\CartService;
-use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Payment\PaymentEvent;
+use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
+use TotalCMS\Domain\Commerce\Payment\ProviderEventRouter;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionAccess;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionRepository;
+use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\SignedToken;
 use TotalCMS\Support\Config;
@@ -224,36 +227,32 @@ describe('a cart with a plan', function (): void {
 			->and(($this->allOrders)()[0]->subscriptionId())->toBe('');
 	});
 
-	it('gives a free trial to the line of a subscription product', function (): void {
+	it('ignores a stored trial: the first charge is taken at checkout and the subscription starts active', function (): void {
+		// Free trials are not built: the bundled Stripe provider never sends a
+		// trial period, so the store must not record or show one.
 		seedPlan('trial', 1000, ['trialDays' => 14]);
 		expect(postJson('/commerce/cart/add', ['productId' => 'trial'])->getStatusCode())->toBe(200)
-			->and($this->c->get(CartService::class)->view($this->c->get(PricingContextFactory::class)->current())->lines[0]->trialDays)->toBe(14);
+			->and($this->c->get(CartService::class)->view($this->c->get(PricingContextFactory::class)->current())->lines[0]->trialDays)->toBe(0);
 
 		($this->buy)();
+		[$order] = ($this->allOrders)();
+		$this->c->get(ProviderEventRouter::class)->route(new PaymentEvent(
+			'fake-sub',
+			'evt_trial',
+			PaymentEventType::Paid,
+			$order->id(),
+			Money::of($order->grandTotal(), 'USD'),
+			'ref_trial',
+			'pi_' . $order->number(),
+			[],
+			'sub_trial',
+			'cus_1',
+		));
 
-		expect($this->sub->checkouts[0]->lines[0]->recurrence)->toEqual(new Recurrence('month', 1, 14));
+		expect($this->sub->checkouts[0]->lines[0]->recurrence)->toEqual(new Recurrence('month', 1))
+			->and($this->sub->checkouts[0]->lines[0]->recurrence?->trialDays)->toBe(0)
+			->and($this->subs->find($order->subscriptionId())->status())->toBe('active');
 	});
-
-	it('gives the trial to a monthly variant of a once-billed product and none to the one-time variant', function (): void {
-		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'trialDays' => 14, 'variants' => [
-			'once'    => ['id' => 'once', 'title' => 'One time'],
-			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
-		]]);
-		$view = fn () => $this->c->get(CartService::class)->view($this->c->get(PricingContextFactory::class)->current())->lines;
-
-		postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'once', 'amount' => '10']);
-		expect(($view)()[0]->trialDays)->toBe(0)->and(($view)()[0]->billing)->toBe('once');
-
-		postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'monthly', 'amount' => '10']);
-		expect(($view)()[1]->trialDays)->toBe(14);
-
-		($this->buy)();
-		expect(array_map(static fn ($line) => $line->recurrence, $this->sub->checkouts[0]->lines))->toEqual([null, new Recurrence('month', 1, 14)]);
-	});
-
-	it('reads the trial as a whole number between 0 and 730', function (mixed $stored, int $expected): void {
-		expect(ProductView::fromObject(['id' => 't', 'title' => 'T', 'trialDays' => $stored])->trialDays)->toBe($expected);
-	})->with([[14, 14], ['7', 7], [-3, 0], [5000, 730], ['x', 0], [null, 0], [[1], 0]]);
 
 	describe('who needs an account', function (): void {
 		beforeEach(function (): void {

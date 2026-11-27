@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 use function TotalCMS\Slim\Pest\get;
@@ -101,6 +103,47 @@ describe('the drawer', function (): void {
 
 		// Its forms swap nothing: the change announces cart-updated and the body reloads itself.
 		expect($html)->toContain('hx-post="/commerce/cart/update?part=none"', 'hx-post="/commerce/cart/remove?part=none"', 'hx-swap="none"');
+	});
+});
+
+describe('a line at an amount the buyer named', function (): void {
+	beforeEach(function (): void {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'type' => 'digital',
+		]));
+		postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => '15']);
+		($this->add)('mug');
+		// The lines in the order they print, each cut at the next line.
+		$this->lineHtml = function (string $html, string $productId): string {
+			$key   = CartItem::lineKey($productId, '');
+			$start = strpos($html, 'data-line="' . $key . '"');
+			expect($start)->not->toBeFalse("no line for {$productId}");
+			$next = strpos($html, 'data-line="', $start + 1);
+
+			return substr($html, $start, $next === false ? null : $next - $start);
+		};
+	});
+
+	it('shows a quantity of 1 and no quantity field in the drawer', function (): void {
+		$html = (string)get('/commerce/cart?part=drawer', HTMX_REQUEST)->getBody();
+
+		expect(($this->lineHtml)($html, 'give'))->not->toContain('name="qty"', '/commerce/cart/update')
+			->toContain('Quantity of Give: </span>1')
+			->and(($this->lineHtml)($html, 'mug'))->toContain('name="qty"');
+	});
+
+	it('shows a quantity of 1 and no quantity field on the cart page', function (): void {
+		$html = (string)get('/commerce/cart?part=page', HTMX_REQUEST)->getBody();
+
+		expect(($this->lineHtml)($html, 'give'))->not->toContain('name="qty"', '/commerce/cart/update')
+			->and(($this->lineHtml)($html, 'mug'))->toContain('name="qty"');
+	});
+
+	it('says where its price came from in cms.cart.lines()', function (): void {
+		($this->open)();
+		$sources = renderTwig('{% for line in cms.cart.lines() %}{{ line.productId }}={{ line.priceSource }};{% endfor %}');
+
+		expect($sources)->toContain('give=custom;', 'mug=catalog;');
 	});
 });
 

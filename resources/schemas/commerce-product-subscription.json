@@ -6,7 +6,7 @@
 	"title": "Product Subscription",
 	"category": "Commerce",
 	"description": "Adds billing to a product: sell it as a subscription or a membership that grants an access group. Meant to be inherited by a product schema of your own, beside commerce-product-base.",
-	"formgrid": "---Subscription and Membership---\nbilling .\ninterval intervalCount\ntrialDays accessGroup",
+	"formgrid": "---Subscription and Membership---\nbilling .\ninterval intervalCount\naccessGroup accessGroup",
 	"index": [
 		"billing"
 	],
@@ -64,8 +64,11 @@
 			"type": "integer",
 			"field": "number",
 			"label": "Free Trial Days",
-			"help": "Subscriptions only. The first charge comes after the trial. 0 means no trial; 730 at most.",
-			"default": 0
+			"help": "Not used yet: changing it changes nothing. Free trials are not built, and the first charge is taken at checkout.",
+			"default": 0,
+			"settings": {
+				"hide": true
+			}
 		},
 		"accessGroup": {
 			"type": "string",

@@ -88,6 +88,7 @@ These are under **Settings → Commerce**.
 | **Tax**, **Tax Worked Out By**, **Tax Shipping**, **Tax Rates** | Whether the store charges tax, and who works it out: you, from your own table of rates, or Stripe Tax. See [Tax](docs/commerce/tax). |
 | **Most Lines in a Cart** | Default `100`. |
 | **Most of One Item** | The highest quantity of one item. Default `99`. |
+| **Highest Price a Buyer Can Enter** | The most a buyer may type for a product that lets them choose the price. Default `10000`, in the store's currency. See [Name Your Price](docs/commerce/name-your-price). |
 | **Checkout Attributes** | Extra values checkout may take from the buyer, by name, such as `giftNote`. Anything not named is dropped. |
 
 **Groups a Product May Grant** and **Failed Payment Email** are for [memberships](docs/commerce/memberships) and [subscriptions](docs/commerce/subscriptions).

@@ -354,7 +354,7 @@
 			"type": "number",
 			"field": "number",
 			"label": "Highest Price a Buyer Can Enter",
-			"help": "Used by products that let buyers choose the price. Catches a slip of the finger.",
+			"help": "In the store's currency. A buyer cannot enter more than this for a product that lets them choose the price. It catches a slip of the finger.",
 			"placeholder": "10000",
 			"default": 10000,
 			"min": 1

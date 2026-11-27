@@ -133,7 +133,7 @@ A new store's products collection is made with the group `admin` there, so a pro
 
 - **Keep at least one group there.** With none, the address above gives the file to anyone, and a product's ID is in your shop's URLs.
 - **A collection you made yourself has no group until you add one.** The store only sets the group on the collection it creates. If your products live in a collection you built on your own product schema, add a group there. The Store widget on the admin dashboard warns you while a products collection with a file download has none.
-- **Use a staff group.** A group your customers hold, such as one a membership grants, lets every customer in it fetch every product's file. The group `default` means any signed-in user at all.
+- **Use a staff group.** A group your customers hold, such as one a membership grants, lets every customer in it fetch every product's file. The group `default` means any signed-in user at all, and on a store where customers sign up themselves that is anyone. The Store widget warns you while the products collection's groups include `default`, as it does when they are empty.
 
 Staff in one of the groups can use the download button on the product's form.
 

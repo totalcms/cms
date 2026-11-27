@@ -3,6 +3,9 @@ title: "Products"
 description: "Add products to your store: prices, variants, photos, physical and digital products, and the fields your own code can use."
 since: "3.7.0"
 related:
+  - commerce/name-your-price
+  - commerce/digital-delivery
+  - commerce/subscriptions
   - commerce/discounts
   - commerce/cart-and-checkout
   - twig/commerce
@@ -28,6 +31,108 @@ Products live in the `products` collection. Add and edit them under **Collection
 | **Images** | Product photos. The first is the main one. |
 | **Description** | What the product page says. |
 | **Category** and **Tags** | For grouping and filtering your catalog. A discount code can be limited to a category. |
+| **Let Buyers Choose the Price** | Turns the product into a pay-what-you-want or donation product. See [Name Your Price](docs/commerce/name-your-price). |
+
+## Product parts
+
+A product schema is built from five **parts**. Each part is a small reserved schema that holds one group of fields. The bundled `commerce-product` schema, the one the store installs, takes all five. A store with simpler needs can build its own product schema from only the parts it uses.
+
+| Part | Fields it adds | Take it when |
+|---|---|---|
+| `commerce-product-base` | **ID**, **Title**, **Status**, **Type**, **SKU**, **Price**, **Compare-at Price**, **Taxable**, **Let Buyers Choose the Price**, **Minimum Price**, **Suggested Prices**, **Description**, **Images**, **Category**, **Tags**, **Fulfillment Data**, **Created**, **Updated** | Always. A product needs an ID, a title and a price. |
+| `commerce-product-subscription` | **Billing**, **Every**, **Interval Count**, **Grants Access Group** | You sell subscriptions or memberships, or let buyers choose a one-time or monthly option. |
+| `commerce-product-inventory` | **Track Inventory**, **Stock**, **Allow Backorder**, **Requires Shipping**, **Weight** | You sell something that ships, or you count stock. |
+| `commerce-product-variants` | **Variants** | A buyer chooses between sizes, colors or plans. |
+| `commerce-product-digital` | **Download** | You deliver a file after payment. |
+
+A part brings its own section of the product form, so a schema built from parts has a usable form without a layout of its own. Your own fields go at the end. See [Form layouts](docs/schemas/formgrid) for how the parts' layouts are joined, and [`inheritFrom`](docs/schemas/reference#inheritfrom) for how inheritance works.
+
+### A product without a part
+
+A product that does not have a part behaves as if that part were switched off.
+
+- **No inventory part.** Nothing ships, so checkout never asks for a shipping address. No stock is counted, so the product never runs out.
+- **No subscription part.** The product is bought once, and gives no access group.
+- **No variants part.** The product is bought on its own, with no choices.
+- **No digital part.** The product has no download.
+- **No base part.** You do not have a product. Always take `commerce-product-base`.
+
+## Make a product schema of your own
+
+This walk-through sells ebooks. Each book has an author and an ISBN, and the buyer downloads a file. Nothing ships and there is no stock to count, so the schema takes only two parts.
+
+### 1. Write the schema
+
+Save this as `book.json`. A property you define in your own schema is added to the ones the parts bring.
+
+```json
+{
+  "id": "book",
+  "type": "object",
+  "title": "Book",
+  "description": "An ebook sold as a download.",
+  "inheritFrom": ["commerce-product-base", "commerce-product-digital"],
+  "properties": {
+    "author": {
+      "type": "string",
+      "field": "text",
+      "label": "Author",
+      "help": "Who wrote the book. Shown on the book's page."
+    },
+    "isbn": {
+      "type": "string",
+      "field": "text",
+      "label": "ISBN",
+      "help": "The book's ISBN, if it has one."
+    }
+  }
+}
+```
+
+Add it with `tcms schema:import book.json`, or build it under **Schemas** in the admin. `tcms schema:lint book` checks it.
+
+The schema has no `formgrid`, so its form is the parts' layouts joined. The form adds **Author** and **ISBN** after them, each full width. To place them yourself, write a `formgrid`. A schema with its own layout gets exactly that layout.
+
+### 2. Make a collection on it
+
+Make a collection with the schema `book` and the ID `books`, under **Collections** or with `tcms collection:create books --schema=book --name=Books`.
+
+### 3. Give the collection a File Access Group
+
+Open the new collection, find **File Access Groups**, and choose `admin`.
+
+The store does this for the `products` collection it installs, and not for a collection you make. Without a group, the file can be fetched from its ordinary download address by anyone who knows a book's ID. A buyer does not need the group: their signed link works without one. The dashboard's **Store** widget warns you while a products collection with a download has none, or has the group `default`. See [Who else can get the file](docs/commerce/digital-delivery#who-else-can-get-the-file).
+
+### 4. Point the store at the collection
+
+The store reads its products from the collection set in `commerce.collections.products`. It is `products` unless you say otherwise. Add the key to the `tcms.php` in your document root. It is deep-merged, so you set only this one key:
+
+```php
+<?php
+
+return [
+	'commerce' => [
+		'collections' => ['products' => 'books'],
+	],
+];
+```
+
+This is a setting in the site's config file. It is not a field on the **Settings → Commerce** page, so nothing saved there replaces it. See [Configuration](docs/operations/configuration).
+
+When to run `tcms commerce:install`:
+
+- **Commerce not installed yet:** make the collection (step 2), set this key, then run `tcms commerce:install`. The install takes `books` as the products collection, because its schema is built on `commerce-product-base`, and does not make a `products` collection. It leaves the collection's settings as they are, its File Access Groups too.
+- **Commerce already installed:** set the key. Nothing needs to run again: the store reads the key every time it looks for a product. The `products` collection the install made stays. Delete it if you do not need it.
+
+Make the collection first. When the key names a collection that does not exist, the install makes one on the full `commerce-product` schema.
+
+### 5. Add a book
+
+Open **Collections → Books** and add one. Set the **Title**, the **Price**, the **Type** to **Digital**, upload the **Download**, and set **Status** to **Active**.
+
+A product in a collection of your own is bought the same way as any other: `cms.cart.addButton('my-book')`.
+
+A store has one products collection. Orders hold a copy of what was sold, so changing the collection later does not change old orders.
 
 ## Variants
 
@@ -36,6 +141,8 @@ Variants are the choices a buyer makes: a size, a color, a monthly or a yearly p
 Each variant has its own title, and may have its own price, SKU, stock and photo. A variant with no price uses the product's price.
 
 A product with variants is always bought as one of them. The cart refuses the product on its own.
+
+A variant can also be billed differently from its product: one time, or as a subscription. See [Subscriptions](docs/commerce/subscriptions#one-time-and-monthly-on-one-product).
 
 ## Stock
 

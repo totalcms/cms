@@ -198,6 +198,7 @@ $menu = [
 			['title' => 'Commerce Overview',      'path' => 'commerce/overview'],
 			['title' => 'Set Up Your Store',      'path' => 'commerce/setup'],
 			['title' => 'Products',               'path' => 'commerce/products'],
+			['title' => 'Name Your Price',        'path' => 'commerce/name-your-price'],
 			['title' => 'Discount Codes',         'path' => 'commerce/discounts'],
 			['title' => 'Tax',                    'path' => 'commerce/tax'],
 			['title' => 'Shipping',               'path' => 'commerce/shipping'],

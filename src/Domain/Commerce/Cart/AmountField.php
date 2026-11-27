@@ -39,9 +39,12 @@ final readonly class AmountField
 		$currency  = $this->settings->currency();
 		$ceiling   = $this->settings->customPriceMax();
 		$converter = new MoneyConverter();
+		$recurring = $product->isRecurring();
 		$suggested = [];
 		foreach ($product->suggestedPrices as $price) {
-			if ($price <= 0 || $price < $product->minPrice || $price > $ceiling) {
+			// Only an amount the cart would take: the server's own rule, so no
+			// button offers what is then refused. Nothing is never suggested.
+			if ($price <= 0 || !CustomAmount::allowed($price, $product, $recurring, $this->settings)) {
 				continue;
 			}
 			$suggested[] = [

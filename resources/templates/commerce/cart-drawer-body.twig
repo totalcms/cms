@@ -20,13 +20,18 @@
 					<span class="commerce-cart-total">{{ line.lineTotal.amount|money(line.lineTotal.currency) }}{% if line.billing == 'recurring' %} <small class="commerce-cart-interval">every {{ line.intervalCount > 1 ? line.intervalCount ~ ' ' ~ line.interval ~ 's' : line.interval }}</small>{% endif %}</span>
 				</div>
 				<div class="cart-drawer-controls">
-					<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=none" hx-swap="none" hx-trigger="change, submit">
-						{{ csrf|raw }}
-						<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
-						<label class="visually-hidden" for="drawer-qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
-						<input id="drawer-qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
-						<noscript><button type="submit">Update</button></noscript>
-					</form>
+					{% if line.priceSource == 'custom' %}
+						{# An amount the buyer named is a line of one: there is no quantity to change. #}
+						<span class="cart-drawer-qty"><span class="visually-hidden">Quantity of {{ line.title|e }}: </span>1</span>
+					{% else %}
+						<form method="post" action="{{ base|e }}/commerce/cart/update" hx-post="{{ base|e }}/commerce/cart/update?part=none" hx-swap="none" hx-trigger="change, submit">
+							{{ csrf|raw }}
+							<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">
+							<label class="visually-hidden" for="drawer-qty-{{ line.lineKey|e }}">Quantity of {{ line.title|e }}</label>
+							<input id="drawer-qty-{{ line.lineKey|e }}" type="number" name="qty" value="{{ line.qty|e }}" min="0" inputmode="numeric">
+							<noscript><button type="submit">Update</button></noscript>
+						</form>
+					{% endif %}
 					<form method="post" action="{{ base|e }}/commerce/cart/remove" hx-post="{{ base|e }}/commerce/cart/remove?part=none" hx-swap="none">
 						{{ csrf|raw }}
 						<input type="hidden" name="lineKey" value="{{ line.lineKey|e }}">

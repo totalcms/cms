@@ -7,16 +7,12 @@ use Opis\JsonSchema\Resolvers\SchemaResolver;
 use Opis\JsonSchema\Validator;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 
 /**
  * Service.
  */
 readonly class SchemaValidator
 {
-	/** How many levels of `inheritFrom` are followed, as when flattening a schema. */
-	private const MAX_INHERIT_DEPTH = 5;
-
 	public function __construct(private SchemaRepository $schemaRepository)
 	{
 	}
@@ -112,14 +108,15 @@ readonly class SchemaValidator
 		$seen[]   = $schema->id;
 
 		foreach ($schema->inheritFrom as $parentId) {
-			if (in_array($parentId, $seen, true) || $depth > self::MAX_INHERIT_DEPTH) {
+			if (in_array($parentId, $seen, true) || $depth > SchemaData::MAX_INHERIT_DEPTH) {
 				continue;
 			}
 
 			try {
 				$parent = $this->withInheritedProperties($this->schemaRepository->getSchema($parentId), $depth + 1, $seen);
-			} catch (\DomainException | CorruptedStorageFileException) {
-				// Missing or unreadable: skipped, as when the schema is flattened.
+			} catch (\Exception) {
+				// Missing, unreadable or broken: skipped, with the same catch as
+				// SchemaFetcher's walk, so a parent the form tolerates cannot fail a save.
 				continue;
 			}
 

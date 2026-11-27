@@ -403,7 +403,7 @@ class SchemaRepository extends StorageRepository
 		$this->cacheManager->clearComputedData($this->customCacheKey($id));
 
 		// Also clear flattened cache if this schema is flattened
-		$this->cacheManager->clearComputedData("schema_flattened:{$id}");
+		$this->cacheManager->clearComputedData(SchemaData::flattenedCacheKey($id));
 
 		// Clear caches for any schemas that inherit from this one
 		$this->invalidateInheritedSchemaCaches($id);
@@ -478,7 +478,7 @@ class SchemaRepository extends StorageRepository
 		$inheritingSchemas = $this->findInheritingSchemas($schemaId);
 
 		foreach ($inheritingSchemas as $inheritingSchemaId) {
-			$this->cacheManager->clearComputedData("schema_flattened:{$inheritingSchemaId}");
+			$this->cacheManager->clearComputedData(SchemaData::flattenedCacheKey($inheritingSchemaId));
 		}
 	}
 }

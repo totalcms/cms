@@ -21,6 +21,7 @@ use TotalCMS\Domain\Commerce\Service\CheckoutService;
 use TotalCMS\Domain\Commerce\Service\CommerceDashboardView;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
 use TotalCMS\Domain\Commerce\Service\CommerceSettings;
+use TotalCMS\Domain\Commerce\Service\MoneyConverter;
 use TotalCMS\Domain\Commerce\Service\MoneyFilter;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Commerce\Subscription\CustomerSubscriptions;
@@ -149,7 +150,7 @@ final readonly class CommerceTwigAdapter
 	 * What a product costs this buyer, or null when they cannot see it. With
 	 * no variant named it is the product's own price.
 	 *
-	 * @return array{amount: int, listAmount: int, currency: string, formatted: string, listFormatted: string, source: string, billing: string, interval: string, intervalCount: int, trialDays: int}|null
+	 * @return array{amount: int, listAmount: int, currency: string, formatted: string, listFormatted: string, source: string, billing: string, interval: string, intervalCount: int, trialDays: int, minAmount: int, minFormatted: string}|null
 	 */
 	public function price(string $productId, string $variantId = ''): ?array
 	{
@@ -172,6 +173,8 @@ final readonly class CommerceTwigAdapter
 			return null;
 		}
 
+		$minimum = $this->minimumOf($product, $priced->unitPrice->currency());
+
 		return [
 			'amount'        => $priced->unitPrice->amount(),
 			'listAmount'    => $priced->listPrice->amount(),
@@ -184,7 +187,24 @@ final readonly class CommerceTwigAdapter
 			'interval'      => $every->interval ?? '',
 			'intervalCount' => $every->intervalCount ?? 0,
 			'trialDays'     => $every->trialDays ?? 0,
+			// For a product whose buyer names the price: the least they may enter. 0 and '' otherwise.
+			'minAmount'     => $minimum,
+			'minFormatted'  => $minimum > 0 ? ($this->money)($minimum, $priced->unitPrice->currency()) : '',
 		];
+	}
+
+	/** A product's minimum for a named price, in minor units: 0 when it has none or the buyer cannot name one. */
+	private function minimumOf(ProductView $product, string $currency): int
+	{
+		if (!$product->customPrice || $product->minPrice <= 0) {
+			return 0;
+		}
+
+		try {
+			return (new MoneyConverter())->fromPrice($product->minPrice, $currency)->amount();
+		} catch (\InvalidArgumentException | \OverflowException) {
+			return 0;
+		}
 	}
 
 	/**

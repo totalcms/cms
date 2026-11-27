@@ -16,7 +16,7 @@ A subscription is a product the buyer pays for again every period, until they ca
 
 ## What you need
 
-- A payment provider that can bill subscriptions. The bundled [Stripe](docs/extensions/stripe#subscriptions) extension can. PayPal cannot yet, so a cart with a subscription in it is offered Stripe only.
+- A payment provider that can bill subscriptions. The bundled [Stripe](docs/extensions/stripe#subscriptions) extension can. PayPal has no subscription support at all, so a cart with a subscription in it is offered Stripe only. When no provider you have turned on can bill a subscription, the cart refuses it with `subscription_unavailable`.
 - Three more events on your Stripe webhook endpoint. See [Stripe: Subscriptions](docs/extensions/stripe#subscriptions).
 
 ## Make a product a subscription
@@ -25,15 +25,31 @@ Open the product and go to **Subscription and Membership**.
 
 | Field | What to set |
 |---|---|
-| **Billing** | `Recurring` |
+| **Billing** | **Subscription** |
 | **Every** | `Day`, `Week`, `Month` or `Year` |
 | **Interval Count** | How many of those make one period. `1` with `Month` is monthly. `3` with `Month` is every three months. |
 
 The product's **Price** is what one period costs.
 
-A subscription cannot ship. A product that is `Recurring` and has **Requires Shipping** ticked cannot be bought: a provider bills a period, it does not send a parcel each time.
+A subscription cannot ship. A product billed as a **Subscription** that has **Requires Shipping** ticked cannot be bought: a provider bills a period, it does not send a parcel each time.
 
 A variant can have its own period. For example, a plan with a `Monthly` variant and a `Yearly` variant, each with its own price.
+
+These fields come from the `commerce-product-subscription` part. A product schema without it is always bought once. See [Product parts](docs/commerce/products#product-parts).
+
+## One time and monthly on one product
+
+A variant has its own **Billing** field. Leave it empty and the variant is billed as its product is ("Same as the product"). Choose **One time** or **Subscription** and the variant is billed that way, whatever the product says.
+
+So one product can offer a one-time option and a monthly option. This is how a donation is both a single gift and a monthly one. See [Name Your Price](docs/commerce/name-your-price#walk-through-a-donation-product).
+
+- A subscription variant uses its own **Billed Every** and **Interval Count** when you set them, and the product's when you do not.
+- The price still comes from the variant, or from the product when the variant has none. On a [name-your-price](docs/commerce/name-your-price) product, the buyer types it.
+- A one-time variant of a product that grants an access group still grants that group, and for good. The group is set on the product, not the variant, and a one-time purchase is kept unless it is refunded. See [Memberships](docs/commerce/memberships#a-one-time-variant-of-a-membership-product).
+
+### Monthly amounts a buyer names
+
+When the buyer names the amount of a subscription, the payment provider must bill from the amount it is sent, not from a plan made ahead of time. Stripe does. If no provider you have turned on can, the cart refuses the line with `subscription_unavailable`. See [Name Your Price](docs/commerce/name-your-price#monthly-amounts).
 
 ## What the buyer sees
 
@@ -139,7 +155,7 @@ Turn **off** Stripe's own failed-payment emails, or your subscribers get two.
 
 ## What is not here yet
 
-- **Free trials.** The setting is not shown yet.
+- **Free trials.** The Free Trial Days field has no effect yet.
 - **Changing plan.** To move a subscriber to another plan, cancel the old subscription and have them buy the new one.
 - **Subscriptions with PayPal.**
 - **Subscriptions that ship**, such as a monthly box.

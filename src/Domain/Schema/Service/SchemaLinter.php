@@ -107,6 +107,7 @@ readonly class SchemaLinter
 		foreach ((new FormGridBuilder($raw->formgrid))->unevenRows() as $row) {
 			$errors[] = "formgrid row '{$row}' has a different number of names than the widest row. Every row needs the same count (pad with '.' or repeat a name), or the admin drops the form's layout.";
 		}
+		array_push($errors, ...$this->lintJoinedLayout($raw, $flattened));
 
 		if (trim($raw->description) === '') {
 			$warnings[] = 'Schema has no description.';
@@ -115,6 +116,26 @@ readonly class SchemaLinter
 		array_push($errors, ...$this->metaValidate($raw, $flattened));
 
 		return ['errors' => $errors, 'warnings' => $warnings];
+	}
+
+	/**
+	 * With no layout of its own, a schema's form uses the one joined from its
+	 * parents, which can still be uneven when they cannot be scaled to one width.
+	 *
+	 * @return list<string>
+	 */
+	private function lintJoinedLayout(SchemaData $raw, SchemaData $flattened): array
+	{
+		if (trim($raw->formgrid) !== '' || $raw->inheritFrom === []) {
+			return [];
+		}
+
+		$errors = [];
+		foreach ((new FormGridBuilder($flattened->formgrid))->unevenRows() as $row) {
+			$errors[] = "The formgrid joined from the parents has row '{$row}' with a different number of names than the widest row, so the admin drops the form's layout. Give this schema a formgrid of its own.";
+		}
+
+		return $errors;
 	}
 
 	/**

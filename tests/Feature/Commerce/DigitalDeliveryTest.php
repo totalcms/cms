@@ -650,6 +650,27 @@ describe('a paid download open to the public', function (): void {
 		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
 	});
 
+	test('a products collection whose groups include default is reported as open to anyone who signs in', function (array $groups): void {
+		($this->open)('file', $groups);
+		$open = $this->c->get(DownloadProtection::class)->openDownloads();
+
+		expect($open?->collection)->toBe('downloads')
+			->and($open?->anySignedIn)->toBeTrue()
+			->and($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBe('downloads');
+	})->with(['only default' => [['default']], 'admin and default' => [['admin', 'default']]]);
+
+	test('with no groups the report says the files are open to the public', function (): void {
+		($this->open)('file', []);
+
+		expect($this->c->get(DownloadProtection::class)->openDownloads()?->anySignedIn)->toBeFalse();
+	});
+
+	test('a group that is not default is not reported', function (): void {
+		($this->open)('file', ['admin']);
+
+		expect($this->c->get(DownloadProtection::class)->openDownloads())->toBeNull();
+	});
+
 	test('a download kept in S3 with no groups is reported too', function (): void {
 		($this->open)('s3file', []);
 
