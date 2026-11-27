@@ -7,12 +7,16 @@ use Opis\JsonSchema\Resolvers\SchemaResolver;
 use Opis\JsonSchema\Validator;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 
 /**
  * Service.
  */
 readonly class SchemaValidator
 {
+	/** How many levels of `inheritFrom` are followed, as when flattening a schema. */
+	private const MAX_INHERIT_DEPTH = 5;
+
 	public function __construct(private SchemaRepository $schemaRepository)
 	{
 	}
@@ -26,8 +30,8 @@ readonly class SchemaValidator
 	 */
 	public function validateSchema(array $object, string $schemaType = 'schema'): bool
 	{
-		$schema     = $this->schemaRepository->getSchema($schemaType);
-		$schemaJSON = $schema->toJson();
+		$schema     = $this->withInheritedProperties($this->schemaRepository->getSchema($schemaType));
+		$schemaJSON = $this->schemaAsObject($schema);
 
 		// Add custom validation for required string fields before JSON Schema validation
 		$this->validateRequiredProperties($object, $schema);
@@ -41,6 +45,12 @@ readonly class SchemaValidator
 			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX . 'properties/', SchemaRepository::defaultSchemaDir() . 'properties/');
 			// Register custom schemas with their own prefix
 			$resolver->registerPrefix(SchemaData::SCHEMA_CUSTOM_PREFIX, $this->schemaRepository->getCustomSchemaDir());
+		}
+
+		// A schema made only of parts has no properties of its own. An empty
+		// PHP array would be sent as a list, which is not an object.
+		if ($schemaType === 'schema' && ($object['properties'] ?? null) === []) {
+			$object['properties'] = new \stdClass();
 		}
 
 		$json = json_encode($object);
@@ -62,6 +72,62 @@ readonly class SchemaValidator
 		}
 
 		return $valid;
+	}
+
+	/**
+	 * The schema as JSON-decoded data, with empty `properties` as an object.
+	 * A schema none of whose parents could be read has no properties at all,
+	 * and an empty PHP array would be sent as a list, which is not an object.
+	 */
+	private function schemaAsObject(SchemaData $schema): object
+	{
+		$decoded = json_decode($schema->toJson());
+		if (!is_object($decoded)) {
+			throw new \DomainException("Schema '{$schema->id}' cannot be encoded.");
+		}
+		if (($decoded->properties ?? null) === []) {
+			$decoded->properties = new \stdClass();
+		}
+
+		return $decoded;
+	}
+
+	/**
+	 * The schema with the properties and required names of every ancestor
+	 * added, so an object is checked against all of its fields and not only the
+	 * ones the schema itself declares. A schema that holds nothing of its own,
+	 * such as one made only of parts, would otherwise validate anything. The
+	 * schema's own definition wins over an ancestor's, and the first parent over
+	 * the next, as when the schema is flattened for a form.
+	 *
+	 * @param list<string> $seen Ids already visited, so a loop ends
+	 */
+	private function withInheritedProperties(SchemaData $schema, int $depth = 1, array $seen = []): SchemaData
+	{
+		if ($schema->inheritFrom === []) {
+			return $schema;
+		}
+
+		$resolved = clone $schema;
+		$seen[]   = $schema->id;
+
+		foreach ($schema->inheritFrom as $parentId) {
+			if (in_array($parentId, $seen, true) || $depth > self::MAX_INHERIT_DEPTH) {
+				continue;
+			}
+
+			try {
+				$parent = $this->withInheritedProperties($this->schemaRepository->getSchema($parentId), $depth + 1, $seen);
+			} catch (\DomainException | CorruptedStorageFileException) {
+				// Missing or unreadable: skipped, as when the schema is flattened.
+				continue;
+			}
+
+			$resolved->properties = $resolved->properties + $parent->properties;
+			$resolved->required   = array_values(array_unique(array_merge($resolved->required, $parent->required)));
+		}
+
+		return $resolved;
 	}
 
 	/**

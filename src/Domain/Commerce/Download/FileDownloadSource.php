@@ -14,8 +14,6 @@ use TotalCMS\Domain\Property\Service\FileFetcher;
  */
 final readonly class FileDownloadSource implements DownloadSource
 {
-	public const PROPERTY = 'download';
-
 	public function __construct(private FileFetcher $files)
 	{
 	}
@@ -25,11 +23,16 @@ final readonly class FileDownloadSource implements DownloadSource
 		return 'file';
 	}
 
+	public function fieldType(): string
+	{
+		return 'file';
+	}
+
 	public function find(string $collection, array $product): ?Deliverable
 	{
 		$file = $this->file($collection, $product);
 
-		return $file instanceof FileData ? new Deliverable($file->download !== '' ? $file->download : $file->name, $file->size, self::PROPERTY) : null;
+		return $file instanceof FileData ? new Deliverable($file->download !== '' ? $file->download : $file->name, $file->size, DownloadSources::PROPERTY) : null;
 	}
 
 	public function deliver(string $collection, array $product): ?Delivery
@@ -42,7 +45,7 @@ final readonly class FileDownloadSource implements DownloadSource
 		return Delivery::stream(
 			$file->download !== '' ? $file->download : $file->name,
 			$file->mime,
-			$this->files->streamFile($collection, $this->productId($product), self::PROPERTY),
+			$this->files->streamFile($collection, $this->productId($product), DownloadSources::PROPERTY),
 		);
 	}
 
@@ -50,11 +53,11 @@ final readonly class FileDownloadSource implements DownloadSource
 	private function file(string $collection, array $product): ?FileData
 	{
 		$id = $this->productId($product);
-		if ($id === '' || !$this->files->fileExists($collection, $id, self::PROPERTY)) {
+		if ($id === '' || !$this->files->fileExists($collection, $id, DownloadSources::PROPERTY)) {
 			return null;
 		}
 
-		$file = $this->files->fetchFile($collection, $id, self::PROPERTY);
+		$file = $this->files->fetchFile($collection, $id, DownloadSources::PROPERTY);
 
 		return $file->name !== '' ? $file : null;
 	}

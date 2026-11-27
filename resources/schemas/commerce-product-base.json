@@ -1,0 +1,167 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-product-base.json",
+	"id": "commerce-product-base",
+	"type": "object",
+	"title": "Product",
+	"category": "Commerce",
+	"description": "The core of a sellable product: name, status, price, description, images and the way it is organized. Meant to be inherited: a product schema of your own takes this part, then any of the other commerce-product parts it needs.",
+	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Organize---\ncategory tags\nmeta meta\n---Dates---\ncreated updated",
+	"required": [
+		"id",
+		"title",
+		"price"
+	],
+	"index": [
+		"id",
+		"title",
+		"sku",
+		"price",
+		"status",
+		"type",
+		"category",
+		"tags",
+		"created",
+		"updated"
+	],
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"field": "id",
+			"label": "ID",
+			"help": "Used in the product's URL and in every cart and order line. Do not change it once the product has sold.",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type": "string",
+			"field": "text",
+			"label": "Title",
+			"help": "The product's name, as buyers see it."
+		},
+		"status": {
+			"type": "string",
+			"field": "select",
+			"label": "Status",
+			"help": "Only an active product can be added to a cart.",
+			"default": "draft",
+			"options": [
+				{
+					"value": "active",
+					"label": "Active"
+				},
+				{
+					"value": "draft",
+					"label": "Draft"
+				},
+				{
+					"value": "archived",
+					"label": "Archived"
+				}
+			]
+		},
+		"type": {
+			"type": "string",
+			"field": "select",
+			"label": "Type",
+			"help": "A digital product never ships, and can deliver files after payment.",
+			"default": "physical",
+			"options": [
+				{
+					"value": "physical",
+					"label": "Physical"
+				},
+				{
+					"value": "digital",
+					"label": "Digital"
+				}
+			]
+		},
+		"sku": {
+			"type": "string",
+			"field": "text",
+			"label": "SKU",
+			"help": "Your own stock code. Copied onto each order line."
+		},
+		"price": {
+			"type": "number",
+			"field": "price",
+			"label": "Price",
+			"help": "Unit price in the store currency. Used when the product has no variants, and as the default for a variant without its own price.",
+			"settings": {
+				"currency": "store"
+			}
+		},
+		"compareAtPrice": {
+			"type": "number",
+			"field": "price",
+			"label": "Compare-at Price",
+			"help": "Shown as the crossed-out price. Display only; never charged.",
+			"settings": {
+				"currency": "store"
+			}
+		},
+		"taxable": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Taxable",
+			"help": "Charge tax on this product when the store charges tax.",
+			"default": true
+		},
+		"description": {
+			"type": "string",
+			"field": "styledtext",
+			"label": "Description",
+			"help": "The product description shown on its page."
+		},
+		"images": {
+			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
+			"field": "gallery",
+			"label": "Images",
+			"help": "Product photos. The first is the main image."
+		},
+		"category": {
+			"type": "string",
+			"field": "text",
+			"label": "Category",
+			"help": "Groups products in your catalog, and can limit a discount code.",
+			"settings": {
+				"propertyOptions": true
+			}
+		},
+		"tags": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"field": "list",
+			"label": "Tags",
+			"help": "Free-form labels for filtering your catalog."
+		},
+		"meta": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"field": "json",
+			"label": "Fulfillment Data",
+			"help": "Free-form JSON copied onto each order line at purchase, for code that fulfills the order. Example: {\"edition\":\"pro\"} for a license product."
+		},
+		"created": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Created",
+			"help": "When the product was added.",
+			"settings": {
+				"onCreate": true,
+				"readonly": true
+			}
+		},
+		"updated": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"field": "datetime",
+			"label": "Updated",
+			"help": "When the product was last saved.",
+			"settings": {
+				"onUpdate": true,
+				"readonly": true
+			}
+		}
+	}
+}

@@ -6,6 +6,7 @@
 	"title": "Order Line",
 	"category": "Commerce",
 	"description": "One line of an order or a subscription: a snapshot taken at purchase. Later changes to the catalog never change it. Stored as a deck item; the deck key is the line id.",
+	"formgrid": "--- Product\nproductId variantId\nsku type\ntitle title\n--- Price\nqty priceSource\nunitPrice listPrice\nlineTotal discountTotal\ntaxTotal taxable\n--- Billing\nbilling interval\nintervalCount trialDays\naccessGroup .\n--- Delivery\nrequiresShipping refundedQty\nfulfillmentStatus .\nfulfillmentNote fulfillmentNote\ndownloads downloads\n--- Data\nmeta meta\nmetadata metadata",
 	"required": [
 		"id"
 	],

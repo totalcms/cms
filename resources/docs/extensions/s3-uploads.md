@@ -331,7 +331,31 @@ Open **Admin → Extensions → S3 Uploads** and check that **Event Listeners**,
 
 ## Selling a file from the bucket
 
-On a site with [Commerce](docs/commerce/overview), a digital product has a **Download from S3** field while this extension is on. Upload the file there and the store delivers it like any other download: the buyer gets the store's own signed, counted link, and behind it they are sent to a signed link to the bucket that saves the file under its name.
+On a site with [Commerce](docs/commerce/overview), a product has one `download` field, and the type of that field decides where the file is kept. To keep product downloads in your bucket, redefine `download` as an `s3file` field in your own product schema and use that schema for your products collection:
+
+```json
+{
+  "id": "my-product",
+  "type": "object",
+  "inheritFrom": [
+    "commerce-product-base",
+    "commerce-product-digital",
+    "commerce-product-inventory",
+    "commerce-product-subscription",
+    "commerce-product-variants"
+  ],
+  "properties": {
+    "download": {
+      "type": "json",
+      "field": "s3file",
+      "label": "Download",
+      "help": "The file the buyer gets, kept in your S3 bucket."
+    }
+  }
+}
+```
+
+Upload the file in the **Download** field of the product. The store delivers it like any other download: the buyer gets the store's own signed, counted link, and behind it they are sent to a signed link to the bucket that saves the file under its name.
 
 - Use a **private** bucket. In a public one the file can also be read at its public address.
 - The file's `/stream` and `/download` addresses follow the File Access Groups of the products collection, like every S3 file. Keep a staff group there.

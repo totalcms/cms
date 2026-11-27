@@ -7,6 +7,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLinter;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Support\Config;
 
 /*
@@ -162,12 +163,133 @@ test('with no group allowed, the product form offers none', function (): void {
 	expect(array_values(array_filter($options[1])))->toBe([]);
 });
 
-test('the product form asks for a download as a file or a link, and not from S3 on a site without S3 Uploads', function (): void {
+test('the product form asks for one download, a file, and has no separate link or S3 field', function (): void {
 	$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'products', 'name' => 'Products', 'schema' => 'commerce-product']);
 
 	$html = $this->c->get(TotalFormFactory::class)->builder('products')->autoBuild();
 
-	expect($html)->toContain('name="downloadUrl"', 'Download Link')
+	expect($html)->toContain('name="download"')
 		->and($html)->toContain('--grid-area: download;')
-		->and($html)->not->toContain('downloadS3', 'Download from S3');
+		->and($html)->not->toContain('name="downloadUrl"', 'name="downloadS3"', 'Download Link', 'Download from S3');
 });
+
+/*
+ * The product schema is five parts it inherits, so a customer's own product
+ * schema can take only the parts it needs. Field names never change: checkout,
+ * inventory and delivery read a product by them.
+ */
+
+const COMMERCE_PRODUCT_PARTS = [
+	'commerce-product-base', 'commerce-product-subscription', 'commerce-product-inventory', 'commerce-product-variants', 'commerce-product-digital',
+];
+
+const COMMERCE_PRODUCT_FIELDS = [
+	'commerce-product-base'         => ['id', 'title', 'status', 'type', 'sku', 'price', 'compareAtPrice', 'taxable', 'description', 'images', 'category', 'tags', 'meta', 'created', 'updated'],
+	'commerce-product-subscription' => ['billing', 'interval', 'intervalCount', 'trialDays', 'accessGroup'],
+	'commerce-product-inventory'    => ['trackInventory', 'stock', 'allowBackorder', 'requiresShipping', 'weight'],
+	'commerce-product-variants'     => ['variants'],
+	'commerce-product-digital'      => ['download'],
+];
+
+test('the product schema is its five parts', function (): void {
+	$fetcher = $this->c->get(SchemaFetcher::class);
+
+	expect($fetcher->fetchRawSchema('commerce-product')->inheritFrom)->toBe(COMMERCE_PRODUCT_PARTS)
+		->and(array_keys($fetcher->fetchSchema('commerce-product')->properties))->toEqualCanonicalizing(array_merge(...array_values(COMMERCE_PRODUCT_FIELDS)));
+});
+
+test('each part holds its own fields and a layout', function (string $part, array $fields): void {
+	$raw = $this->c->get(SchemaFetcher::class)->fetchRawSchema($part);
+
+	expect(array_keys($raw->properties))->toEqualCanonicalizing($fields)
+		->and($raw->formgrid)->not->toBe('')
+		->and($raw->category)->toBe('Commerce')
+		->and($raw->description)->not->toBe('');
+
+	// The dates are filled in by the engine, so no layout places them.
+	$placed = preg_split('/\s+/', $raw->formgrid) ?: [];
+	foreach (array_diff($fields, ['created', 'updated']) as $field) {
+		expect($placed)->toContain($field);
+	}
+})->with([
+	['commerce-product-base', COMMERCE_PRODUCT_FIELDS['commerce-product-base']],
+	['commerce-product-subscription', COMMERCE_PRODUCT_FIELDS['commerce-product-subscription']],
+	['commerce-product-inventory', COMMERCE_PRODUCT_FIELDS['commerce-product-inventory']],
+	['commerce-product-variants', COMMERCE_PRODUCT_FIELDS['commerce-product-variants']],
+	['commerce-product-digital', COMMERCE_PRODUCT_FIELDS['commerce-product-digital']],
+]);
+
+test('a custom schema can take only some parts', function (): void {
+	$this->c->get(SchemaSaver::class)->saveSchema([
+		'id'          => 'book',
+		'type'        => 'object',
+		'inheritFrom' => ['commerce-product-base', 'commerce-product-digital'],
+		'properties'  => ['author' => ['type' => 'string', 'field' => 'text', 'label' => 'Author', 'help' => 'Who wrote it.']],
+	]);
+
+	$book     = $this->c->get(SchemaFetcher::class)->fetchSchema('book');
+	$base     = $this->c->get(SchemaFetcher::class)->fetchRawSchema('commerce-product-base');
+	$digital  = $this->c->get(SchemaFetcher::class)->fetchRawSchema('commerce-product-digital');
+
+	expect($book->properties)->toHaveKeys(['author', 'price', 'download'])
+		->and($book->properties)->not->toHaveKeys(['stock', 'billing'])
+		->and($book->formgrid)->toBe($base->formgrid . "\n" . $digital->formgrid . "\nauthor")
+		->and($book->formgrid)->toContain('---Digital Delivery---');
+});
+
+test('the flattened product is exactly its parts, without the two retired download fields', function (): void {
+	$keys = array_keys($this->c->get(SchemaFetcher::class)->fetchSchema('commerce-product')->properties);
+
+	expect($keys)->toEqualCanonicalizing(array_merge(...array_values(COMMERCE_PRODUCT_FIELDS)))
+		->and($keys)->not->toContain('downloadS3')
+		->and($keys)->not->toContain('downloadUrl');
+});
+
+/**
+ * The cells of a formgrid, one list per row. Heading, divider, fieldset and
+ * accordion marker rows are not cells.
+ *
+ * @return list<list<string>>
+ */
+function commerceLayoutRows(string $formgrid): array
+{
+	$rows = [];
+	foreach (preg_split('/\r\n|\r|\n/', trim($formgrid)) ?: [] as $line) {
+		$line = trim($line);
+		if ($line === '' || str_starts_with($line, '---') || str_starts_with($line, '[[') || str_starts_with($line, ']]') || str_starts_with($line, '>>') || str_starts_with($line, '<<')) {
+			continue;
+		}
+		$rows[] = preg_split('/\s+/', $line) ?: [];
+	}
+
+	return $rows;
+}
+
+test('every commerce schema lays out every one of its fields once', function (string $id): void {
+	$schema = test()->c->get(SchemaFetcher::class)->fetchSchema($id);
+	expect(trim($schema->formgrid))->not->toBe('');
+
+	$rows       = commerceLayoutRows($schema->formgrid);
+	$properties = array_keys($schema->properties);
+	$rowsOf     = [];
+	foreach ($rows as $index => $cells) {
+		foreach ($cells as $cell) {
+			if ($cell !== '.') {
+				$rowsOf[$cell][$index] = true;
+			}
+		}
+	}
+
+	// every cell names a real property
+	expect(array_values(array_diff(array_keys($rowsOf), $properties)))->toBe([]);
+	// every property is laid out, except one the form hides (`settings.hide`):
+	// it draws nothing, so a cell for it would only leave a hole in the grid
+	$hidden = array_keys(array_filter($schema->properties, fn (array $p): bool => ($p['settings']['hide'] ?? false) === true));
+	expect(array_values(array_diff($properties, $hidden, array_keys($rowsOf))))->toBe([])
+		->and(array_values(array_intersect($hidden, array_keys($rowsOf))))->toBe([]);
+	// and only in one place: the rows that name it are consecutive
+	foreach ($rowsOf as $name => $indexes) {
+		$indexes = array_keys($indexes);
+		expect(max($indexes) - min($indexes) + 1)->toBe(count($indexes), "{$name} appears in separate places");
+	}
+})->with(fn () => array_values(array_filter(SchemaData::RESERVED_SCHEMAS, fn (string $id): bool => str_starts_with($id, 'commerce-'))));

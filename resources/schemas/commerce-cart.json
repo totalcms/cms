@@ -6,6 +6,7 @@
 	"title": "Cart",
 	"category": "Commerce",
 	"description": "A saved cart: a signed-in customer's cart, or a cart that reached checkout. It holds no prices.",
+	"formgrid": "id status\nemail orderId\ncustomerCollection customerId\ndiscountCode updated\nitems items\nattributes attributes",
 	"required": [
 		"id"
 	],

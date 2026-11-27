@@ -6,6 +6,7 @@
 	"title": "Subscription",
 	"category": "Commerce",
 	"description": "A recurring agreement billed by the payment provider. It holds the snapshot every renewal order is built from. Only the commerce engine writes it.",
+	"formgrid": "--- Customer\nid email\ncustomerCollection customerId\nbillingAddress billingAddress\n--- Plan\nlines lines\ninterval intervalCount\ndiscountCode taxMode\n--- Billing\nprovider currency\nproviderSubscriptionRef providerCustomerRef\noriginOrderId lastOrderId\nrecurringSubtotal recurringDiscount\nrecurringTax recurringTotal\ntaxLines taxLines\nlastFailedInvoiceRef accessToken\n--- Status\nstatus needsAttention\ncancelAtPeriodEnd renewalCount\nattributes metadata\nflags flags\n--- Dates\ntrialEndsAt currentPeriodEnd\ncanceledAt .\ncreated updated",
 	"required": [
 		"id"
 	],

@@ -6,6 +6,7 @@
 	"title": "Order",
 	"category": "Commerce",
 	"description": "An order built by the site. Every amount is a whole number of minor units of its currency. Only the commerce engine writes it.",
+	"formgrid": "id number\nkind status\npaymentStatus fulfillmentStatus\nneedsAttention currency\n--- Customer\nemail subscriptionId\ncustomerCollection customerId\nbillingAddress billingAddress\n--- Totals\nlines lines\nsubtotal discountTotal\nshippingTotal taxTotal\ngrandTotal refundedTotal\ntaxMode discountCode\ntaxLines taxLines\ndiscountLine discountLine\n--- Payment\nprovider providerSessionRef\nproviderPaymentRef providerClientSecret\naccessToken .\n--- Shipping\nshippingAddress shippingAddress\nshippingLine shippingLine\ntrackingNumber trackingUrl\n--- Fulfillment\nnotes notes\ntags tags\nattributes metadata\nflags .\n--- Dates\ncreated paidAt\nupdated .",
 	"required": [
 		"id"
 	],

@@ -35,6 +35,11 @@ class SchemaData
 		'commerce-line-item',
 		'commerce-order',
 		'commerce-product',
+		'commerce-product-base',
+		'commerce-product-digital',
+		'commerce-product-inventory',
+		'commerce-product-subscription',
+		'commerce-product-variants',
 		'commerce-shipping-zone',
 		'commerce-subscription',
 		'commerce-tax-rate',
@@ -90,6 +95,17 @@ class SchemaData
 	 * @var list<string>
 	 */
 	public const COMMERCE_SETTINGS_SCHEMAS = ['commerce-tax-rate', 'commerce-shipping-zone'];
+
+	/**
+	 * The parts commerce-product inherits, in the order it inherits them. A
+	 * product schema of a site's own can inherit only the parts it needs.
+	 * Not collections: nothing is stored on them.
+	 *
+	 * @var list<string>
+	 */
+	public const COMMERCE_PRODUCT_PARTS = [
+		'commerce-product-base', 'commerce-product-subscription', 'commerce-product-inventory', 'commerce-product-variants', 'commerce-product-digital',
+	];
 
 	/**
 	 * Written only by the commerce engine: nobody writes these through the
@@ -212,7 +228,9 @@ class SchemaData
 	 */
 	public static function isCommerceSchema(string $schema): bool
 	{
-		return in_array($schema, self::COMMERCE_SCHEMAS, true) || in_array($schema, self::COMMERCE_SETTINGS_SCHEMAS, true);
+		return in_array($schema, self::COMMERCE_SCHEMAS, true)
+			|| in_array($schema, self::COMMERCE_SETTINGS_SCHEMAS, true)
+			|| in_array($schema, self::COMMERCE_PRODUCT_PARTS, true);
 	}
 
 	/**

@@ -6,6 +6,7 @@
 	"title": "Transaction",
 	"category": "Commerce",
 	"description": "The payment ledger. One object for each provider event that moved money. Added to, never changed or deleted.",
+	"formgrid": "id orderId\nprovider providerRef\ntype status\namount currency\nproviderEventId actor\nsummary summary\ncreated .",
 	"required": [
 		"id"
 	],

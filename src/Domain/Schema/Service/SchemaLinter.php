@@ -46,7 +46,8 @@ readonly class SchemaLinter
 			return ['errors' => ["Schema cannot be loaded: {$e->getMessage()}"], 'warnings' => []];
 		}
 
-		if ($raw->properties === []) {
+		// A schema made only of parts defines none of its own.
+		if ($raw->properties === [] && $raw->inheritFrom === []) {
 			$errors[] = 'Schema defines no properties.';
 		}
 
@@ -111,7 +112,7 @@ readonly class SchemaLinter
 			$warnings[] = 'Schema has no description.';
 		}
 
-		array_push($errors, ...$this->metaValidate($raw));
+		array_push($errors, ...$this->metaValidate($raw, $flattened));
 
 		return ['errors' => $errors, 'warnings' => $warnings];
 	}
@@ -254,9 +255,14 @@ readonly class SchemaLinter
 	 *
 	 * @return list<string>
 	 */
-	private function metaValidate(SchemaData $raw): array
+	private function metaValidate(SchemaData $raw, SchemaData $flattened): array
 	{
-		$data               = $raw->toArray();
+		$data = $raw->toArray();
+		if ($raw->inheritFrom !== []) {
+			// What a schema made only of parts requires and indexes is what its parts do.
+			$data['required'] = $raw->required === [] ? $flattened->required : $raw->required;
+			$data['index']    = $raw->index === [] ? $flattened->index : $raw->index;
+		}
 		$data['properties'] = SchemaSaver::applyDefaultTypes((array)($data['properties'] ?? []));
 		$data['properties'] = SchemaSaver::propertyTypeToRef($data['properties']);
 		$data['properties'] = SchemaSaver::normalizeDefaultValues($data['properties']);

@@ -14,6 +14,10 @@ use TotalCMS\Domain\Commerce\Download\Delivery;
  * extension adds another with `ExtensionContext::addDownloadSource()`, as
  * S3 Uploads does for a file kept in a bucket.
  *
+ * A product has one Download field, and the type of that field picks the
+ * source: each source says which field type it delivers. A source an
+ * extension adds takes the place of the store's own for the same type.
+ *
  * A source never decides who may download. The store checks the buyer's
  * signed link, that the order is still paid and that downloads are left,
  * and counts the download, before it asks a source to hand anything over.
@@ -22,6 +26,9 @@ interface DownloadSource
 {
 	/** A short name for the source, such as `file`, `url` or `s3`. */
 	public function id(): string;
+
+	/** The form field type of the Download field this source delivers, such as `file`, `url` or `s3file`. */
+	public function fieldType(): string;
 
 	/**
 	 * What this product gives a buyer from here, or null when it has

@@ -1,0 +1,82 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-product-subscription.json",
+	"id": "commerce-product-subscription",
+	"type": "object",
+	"title": "Product Subscription",
+	"category": "Commerce",
+	"description": "Adds billing to a product: sell it as a subscription or a membership that grants an access group. Meant to be inherited by a product schema of your own, beside commerce-product-base.",
+	"formgrid": "---Subscription and Membership---\nbilling .\ninterval intervalCount\ntrialDays accessGroup",
+	"index": [
+		"billing"
+	],
+	"properties": {
+		"billing": {
+			"type": "string",
+			"field": "select",
+			"label": "Billing",
+			"help": "A subscription is billed by the payment provider every interval until it is cancelled. A subscription cannot be a product that ships.",
+			"default": "once",
+			"options": [
+				{
+					"value": "once",
+					"label": "One time"
+				},
+				{
+					"value": "recurring",
+					"label": "Subscription"
+				}
+			]
+		},
+		"interval": {
+			"type": "string",
+			"field": "select",
+			"label": "Every",
+			"help": "How often a subscription is billed.",
+			"default": "month",
+			"options": [
+				{
+					"value": "day",
+					"label": "Day"
+				},
+				{
+					"value": "week",
+					"label": "Week"
+				},
+				{
+					"value": "month",
+					"label": "Month"
+				},
+				{
+					"value": "year",
+					"label": "Year"
+				}
+			]
+		},
+		"intervalCount": {
+			"type": "integer",
+			"field": "number",
+			"label": "Interval Count",
+			"help": "3 with Month means every 3 months. At most 3 years, 36 months or 156 weeks.",
+			"default": 1
+		},
+		"trialDays": {
+			"type": "integer",
+			"field": "number",
+			"label": "Free Trial Days",
+			"help": "Subscriptions only. The first charge comes after the trial. 0 means no trial; 730 at most.",
+			"default": 0
+		},
+		"accessGroup": {
+			"type": "string",
+			"field": "select",
+			"label": "Grants Access Group",
+			"placeholder": "None",
+			"help": "The buyer joins this group, so the buyer must have an account. A subscription keeps them in it while it is active; a one-time purchase keeps them in it unless it is refunded. The groups offered are set in Settings → Commerce.",
+			"settings": {
+				"propertyOptions": "grantableGroups",
+				"mergeStoredValues": false
+			}
+		}
+	}
+}

@@ -4,6 +4,7 @@
 	"id": "commerce-tax-rate",
 	"title": "Commerce Tax Rate",
 	"description": "One row of the store's tax table",
+	"formgrid": "country region\nrate label",
 	"category": "Internal",
 	"type": "object",
 	"properties": {

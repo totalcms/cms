@@ -22,7 +22,7 @@ Products live in the `products` collection. Add and edit them under **Collection
 | **Price** | The price of one, in your store's currency. |
 | **Compare-at Price** | Shown as a crossed-out price. For display only. It is never charged. |
 | **Type** | **Physical** or **Digital**. A digital product never asks for a shipping address. |
-| **Download**, **Download from S3**, **Download Link** | Digital products only. What a buyer gets after paying: a file on your site, a file in your S3 bucket, or a link to a file kept elsewhere. See [Digital Delivery](docs/commerce/digital-delivery). |
+| **Download** | Digital products only. What a buyer gets after paying: by default a file on your site; your product schema can make it a link to a file kept elsewhere, or a file in your S3 bucket. See [Digital Delivery](docs/commerce/digital-delivery). |
 | **Requires Shipping** | Whether checkout asks where to send it. |
 | **SKU** | Your own stock code. Copied onto each order line. |
 | **Images** | Product photos. The first is the main one. |

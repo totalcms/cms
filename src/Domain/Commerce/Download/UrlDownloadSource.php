@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Commerce\Download;
 use TotalCMS\Domain\Commerce\Contract\DownloadSource;
 
 /**
- * A download kept somewhere else: the product's Download Link. The store
+ * A download kept somewhere else: the product's Download, when it is a link. The store
  * counts the download and sends the buyer on to the link.
  *
  * The store's limits end at its own link. The address the buyer is sent to
@@ -16,9 +16,12 @@ use TotalCMS\Domain\Commerce\Contract\DownloadSource;
  */
 final readonly class UrlDownloadSource implements DownloadSource
 {
-	public const PROPERTY = 'downloadUrl';
-
 	public function id(): string
+	{
+		return 'url';
+	}
+
+	public function fieldType(): string
 	{
 		return 'url';
 	}
@@ -27,7 +30,7 @@ final readonly class UrlDownloadSource implements DownloadSource
 	{
 		$url = $this->url($product);
 
-		return $url === '' ? null : new Deliverable($this->name($url), 0, self::PROPERTY);
+		return $url === '' ? null : new Deliverable($this->name($url), 0, DownloadSources::PROPERTY);
 	}
 
 	public function deliver(string $collection, array $product): ?Delivery
@@ -45,7 +48,7 @@ final readonly class UrlDownloadSource implements DownloadSource
 	 */
 	private function url(array $product): string
 	{
-		$url = is_string($product[self::PROPERTY] ?? null) ? trim($product[self::PROPERTY]) : '';
+		$url = is_string($product[DownloadSources::PROPERTY] ?? null) ? trim($product[DownloadSources::PROPERTY]) : '';
 		if ($url === '' || preg_match('/[\s\x00-\x1f]/', $url) === 1) {
 			return '';
 		}

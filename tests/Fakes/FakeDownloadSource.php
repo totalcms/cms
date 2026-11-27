@@ -16,9 +16,17 @@ final class FakeDownloadSource implements DownloadSource
 {
 	public bool $broken = false;
 
-	/** @param array<string,string> $links product id => where its file is */
-	public function __construct(public array $links = [])
+	/**
+	 * @param array<string,string> $links product id => where its file is
+	 * @param string               $type  the field type it delivers; `file` takes the place of the store's own
+	 */
+	public function __construct(public array $links = [], private readonly string $type = 'file')
 	{
+	}
+
+	public function fieldType(): string
+	{
+		return $this->type;
 	}
 
 	public function id(): string

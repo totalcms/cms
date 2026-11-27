@@ -199,7 +199,7 @@ A `CheckoutValidator` sees the order the store built, before any payment is aske
 $context->addDownloadSource(new VaultDownloads());
 ```
 
-A `DownloadSource` is a place a digital product's download can be kept: a bucket, a media host. The store asks each source in turn (the product's own file, then extension sources, then the product's Download Link) and the first with something for the product delivers it.
+A `DownloadSource` is a place a digital product's download can be kept: a bucket, a media host. A product has one `download` property, and the form field type of that property in the products collection's schema picks the source. Each source says which type it delivers with `fieldType()`. The store has two of its own, `file` and `url`; a source you add for the same type takes their place, and one for a type of its own (`vault` below) is used by a schema that sets `download` to that field type.
 
 ```php
 use TotalCMS\Domain\Commerce\Contract\DownloadSource;
@@ -213,12 +213,18 @@ final class VaultDownloads implements DownloadSource
         return 'vault';
     }
 
+    // The type of the product's download field that this source delivers.
+    public function fieldType(): string
+    {
+        return 'vault';
+    }
+
     // Asked whenever an order is shown: keep it cheap.
     public function find(string $collection, array $product): ?Deliverable
     {
         $file = $this->vault->lookup($product['id']);
 
-        return $file ? new Deliverable($file->name, $file->size, 'vaultFile') : null;
+        return $file ? new Deliverable($file->name, $file->size, 'download') : null;
     }
 
     // Asked once for each download, after the store has counted it.
@@ -231,7 +237,7 @@ final class VaultDownloads implements DownloadSource
 }
 ```
 
-Return `Delivery::redirect()` to send the buyer to an address, or `Delivery::stream()` to send the bytes yourself. A source never decides who may download: the store has already checked the buyer's link, that the order is still paid, and that downloads are left. A source that throws is passed over and logged.
+Return `Delivery::redirect()` to send the buyer to an address, or `Delivery::stream()` to send the bytes yourself. A source never decides who may download: the store has already checked the buyer's link, that the order is still paid, and that downloads are left. A source that throws is passed over and logged, and the product has no download for that order. A download field of a type no source handles is logged once each time it is asked.
 
 ### Write your own data on an order
 

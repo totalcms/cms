@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\delete;
@@ -140,6 +141,25 @@ describe('as a super admin', function (): void {
 
 	test('can set stock rules that keep the counter closed', function (): void {
 		expect(patchJson('/api/collections/products', ['properties' => ['stock' => ['field' => 'number', 'settings' => ['publicIncrement' => false]]]])->getStatusCode())->toBe(200);
+	});
+
+	test('stock cannot be a public counter on a custom schema that inherits the inventory part', function (): void {
+		$this->c->get(SchemaSaver::class)->saveSchema(['id' => 'gear', 'type' => 'object', 'inheritFrom' => ['commerce-product-base', 'commerce-product-inventory']]);
+		$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'gear', 'name' => 'Gear', 'schema' => 'gear']);
+
+		$response = patchJson('/api/collections/gear', ['properties' => ['stock' => ['field' => 'number', 'settings' => ['publicIncrement' => true]]]]);
+
+		expect($response->getStatusCode())->toBe(403)
+			->and(($this->code)($response))->toBe('commerce_stock_not_public');
+	});
+
+	test('stock is not guarded on a custom schema that has no stock to count', function (): void {
+		$this->c->get(SchemaSaver::class)->saveSchema(['id' => 'tracts', 'type' => 'object', 'inheritFrom' => ['commerce-product-base']]);
+		$this->c->get(CollectionSaver::class)->saveCollection(['id' => 'tracts', 'name' => 'Tracts', 'schema' => 'tracts']);
+
+		$response = patchJson('/api/collections/tracts', ['properties' => ['stock' => ['field' => 'number', 'settings' => ['publicIncrement' => true]]]]);
+
+		expect(($this->code)($response))->not->toBe('commerce_stock_not_public');
 	});
 
 	test('a collection on an order schema is guarded whatever it is called', function (): void {

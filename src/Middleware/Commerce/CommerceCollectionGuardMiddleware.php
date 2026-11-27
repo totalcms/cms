@@ -14,6 +14,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -50,8 +51,12 @@ final readonly class CommerceCollectionGuardMiddleware implements MiddlewareInte
 
 	private const STOCK = 'stock';
 
+	/** @var list<string> The parts of a product that carry a stock counter. */
+	private const STOCK_PARTS = ['commerce-product-inventory', 'commerce-product-variants'];
+
 	public function __construct(
 		private CollectionFetcher $collections,
+		private SchemaFetcher $schemas,
 		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
 	) {
@@ -119,7 +124,7 @@ final readonly class CommerceCollectionGuardMiddleware implements MiddlewareInte
 			return ['commerce_collection_private', 'This collection holds store records and cannot be opened to the public.'];
 		}
 
-		if ($schema === 'commerce-product' && $this->opensStock($body)) {
+		if ($this->schemas->inheritsAny($schema, self::STOCK_PARTS) && $this->opensStock($body)) {
 			return ['commerce_stock_not_public', 'Stock cannot be a public counter: anyone could count it up or down.'];
 		}
 

@@ -23,11 +23,11 @@ use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
 
 /*
- * A product's download kept in a bucket. With S3 Uploads on, the product
- * form has a Download from S3 field, and the extension is one of the places
- * the store looks for a product's download. The buyer is given the store's
- * own signed link, as for any download; behind it the download is counted
- * and the buyer is sent to a signed link to the bucket.
+ * A product's download kept in a bucket. A store that redefines the
+ * product's `download` as an s3file field keeps its downloads in a bucket,
+ * and the extension is the place the store looks for them. The buyer is
+ * given the store's own signed link, as for any download; behind it the
+ * download is counted and the buyer is sent to a signed link to the bucket.
  *
  * The real extension, the real store and the real routes. Only the bucket
  * is a fake. The video is a $30.00 download with a file in the bucket.
@@ -53,7 +53,9 @@ beforeEach(function (): void {
 	$this->c->set(S3Client::class, $this->c->make(S3Client::class));
 	$this->orders = $this->c->get(OrderRepository::class);
 
-	$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+	// The store keeps its download in S3 by redefining `download` as an s3file field in its product schema.
+	commerceDownloadIs($this->c, 's3file');
+	$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)->saveObject('downloads', [
 		'id' => 'video', 'title' => 'Video', 'status' => 'active', 'type' => 'digital', 'price' => 30, 'requiresShipping' => false,
 	]));
 
@@ -61,7 +63,7 @@ beforeEach(function (): void {
 	$this->upload = function (): void {
 		signInAs($this->app, 'admin-user-test-com');
 		$presign = postJson('/admin/ext/totalcms/s3-uploads/presign', [
-			'collection' => 'products', 'id' => 'video', 'property' => 'downloadS3', 'filename' => 'The Video.mp4', 'size' => 900000, 'mime' => 'video/mp4',
+			'collection' => 'downloads', 'id' => 'video', 'property' => 'download', 'filename' => 'The Video.mp4', 'size' => 900000, 'mime' => 'video/mp4',
 		]);
 		expect($presign->getStatusCode())->toBe(200);
 		$this->bucket->push(new HttpResponse(200, '', ['content-length' => '900000', 'content-type' => 'video/mp4', 'etag' => '"abc"']));
@@ -92,10 +94,10 @@ afterEach(function (): void {
 	}
 });
 
-test('the product form has a Download from S3 field when S3 Uploads is on', function (): void {
+test('the product form has an S3 Download field when the schema makes download an s3file', function (): void {
 	signInAs($this->app, 'admin-user-test-com');
 
-	expect($this->c->get(TotalFormFactory::class)->builder('products')->autoBuild())->toContain('Download from S3', '--grid-area: downloadS3;');
+	expect($this->c->get(TotalFormFactory::class)->builder('downloads')->autoBuild())->toContain('--grid-area: download;', 's3-field');
 });
 
 test('a product with nothing in the bucket has nothing to deliver', function (): void {
@@ -125,7 +127,7 @@ test('downloading counts it and sends the buyer to a signed link to the bucket t
 	$to    = $res->getHeaderLine('Location');
 
 	expect($res->getStatusCode())->toBe(302)
-		->and($to)->toContain('my-bucket', 'site/products/video/downloadS3/', 'X-Amz-Signature=', 'response-content-disposition=')
+		->and($to)->toContain('my-bucket', 'site/downloads/video/download/', 'X-Amz-Signature=', 'response-content-disposition=')
 		->and(rawurldecode($to))->toContain('The Video.mp4')
 		->and($res->getHeaderLine('Cache-Control'))->toContain('no-store')
 		->and(array_values($this->orders->find($order->id())->lines())[0]['downloads'])->toBe(['count' => 1]);
@@ -138,6 +140,6 @@ test('the extension\'s own addresses for the file refuse a visitor: the products
 	expect($res->getStatusCode())->toBeIn([302, 401, 403])
 		->and($res->getHeaderLine('Location'))->not->toContain('my-bucket');
 })->with([
-	'/api/ext/totalcms/s3-uploads/download/products/video/downloadS3',
-	'/api/ext/totalcms/s3-uploads/stream/products/video/downloadS3',
+	'/api/ext/totalcms/s3-uploads/download/downloads/video/download',
+	'/api/ext/totalcms/s3-uploads/stream/downloads/video/download',
 ]);

@@ -42,6 +42,23 @@ readonly class SchemaSaver
 	}
 
 	/**
+	 * A schema made only of parts has no properties of its own: give it an
+	 * empty set rather than refuse it for having no `properties` key.
+	 *
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function withPartsOnlyProperties(array $schemaData): array
+	{
+		if (!isset($schemaData['properties']) && is_array($schemaData['inheritFrom'] ?? null) && $schemaData['inheritFrom'] !== []) {
+			$schemaData['properties'] = [];
+		}
+
+		return $schemaData;
+	}
+
+	/**
 	 * Save a schema.
 	 *
 	 * @param array<string,mixed> $schemaData
@@ -60,6 +77,14 @@ readonly class SchemaSaver
 	 */
 	public function saveSchema(array $schemaData, bool $preserveDates = false): SchemaData
 	{
+		// Check for reserved schema names early, before processing
+		$reservedIds = $this->storage->reservedSchemasIds();
+		if (isset($schemaData['id']) && (in_array($schemaData['id'], $reservedIds) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
+			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
+		}
+
+		$schemaData = self::withPartsOnlyProperties($schemaData);
+
 		// Validate required input structure
 		if (!isset($schemaData['properties'])) {
 			throw new \InvalidArgumentException('Schema data must contain a "properties" key');
@@ -67,12 +92,6 @@ readonly class SchemaSaver
 
 		if (!is_array($schemaData['properties'])) {
 			throw new \InvalidArgumentException('Schema "properties" must be an array');
-		}
-
-		// Check for reserved schema names early, before processing
-		$reservedIds = $this->storage->reservedSchemasIds();
-		if (isset($schemaData['id']) && (in_array($schemaData['id'], $reservedIds) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
-			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
 		}
 
 		$schemaData['properties'] = self::applyDefaultTypes($schemaData['properties']);

@@ -86,7 +86,7 @@ final readonly class ProductView
 			type: $type,
 			price: is_int($price) || is_float($price) || is_string($price) ? (float)PriceData::normalize($price) : 0.0,
 			taxable: $flag('taxable', true),
-			requiresShipping: $type === self::TYPE_PHYSICAL && $flag('requiresShipping', true),
+			requiresShipping: $type === self::TYPE_PHYSICAL && $flag('requiresShipping', false),
 			trackInventory: $flag('trackInventory', false),
 			stock: is_numeric($object['stock'] ?? null) ? (int)$object['stock'] : 0,
 			allowBackorder: $flag('allowBackorder', false),

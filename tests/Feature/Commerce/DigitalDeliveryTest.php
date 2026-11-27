@@ -2,12 +2,17 @@
 
 declare(strict_types=1);
 
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Tests\Fakes\ClosedCommerceGate;
 use Tests\Fakes\FakeDownloadSource;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
 use TotalCMS\Domain\Commerce\Download\DownloadSources;
+use TotalCMS\Domain\Commerce\Download\FileDownloadSource;
 use TotalCMS\Domain\Commerce\Download\UrlDownloadSource;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderAdmin;
@@ -21,7 +26,10 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\FileRemover;
 use TotalCMS\Domain\Property\Service\FileSaver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Security\SignedToken;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -79,6 +87,25 @@ beforeEach(function (): void {
 	$this->fresh = fn (OrderData $order): OrderData => $this->orders->find($order->id());
 	$this->links = fn (OrderData $order): array => $this->c->get(DownloadLinks::class)->for(($this->fresh)($order));
 	$this->line  = fn (OrderData $order, string $productId): array => array_values(array_filter(($this->fresh)($order)->lines(), static fn (array $line): bool => $line['productId'] === $productId))[0];
+	// Keep the store's products in a collection on a schema that redefines download as the given field.
+	$this->downloadIs = fn (string $field, array $parts = ['base', 'digital', 'inventory', 'subscription', 'variants']) => commerceDownloadIs($this->c, $field, $parts);
+	// The sources, with a logger whose lines the test can read.
+	$this->logged = function () {
+		$handler = new TestHandler();
+		$logger  = new Logger('commerce', [$handler]);
+		$factory = new class($logger) extends LoggerFactory {
+			public function __construct(private readonly LoggerInterface $logger)
+			{
+			}
+
+			public function channelLogger(LogChannel $channel, ?Level $level = null): LoggerInterface
+			{
+				return $this->logger;
+			}
+		};
+
+		return [new DownloadSources($this->c->get(FileDownloadSource::class), new UrlDownloadSource(), $factory, $this->c->get(SchemaFetcher::class)), $handler];
+	};
 	// The path of a link, as the test client asks for it.
 	$this->path = fn (string $url): string => (string)parse_url($url, PHP_URL_PATH);
 });
@@ -321,19 +348,22 @@ describe('the site\'s ordinary file addresses', function (): void {
 });
 
 /*
- * A product's download need not be a file kept on the site. It can be a
- * link to a file kept anywhere, and an extension can add a source of its
- * own (S3 Uploads does). Whatever it is, the buyer is given the same signed
- * link, and each download is counted the same way; a download that is not
- * kept here ends with the buyer sent on to where it is.
+ * A product's download need not be a file kept on the site. The product has
+ * one Download field, and the type of that field says where the download is
+ * kept: a file field is kept here, a url field is a link to a file kept
+ * anywhere, and an extension can add a source for a field type of its own (S3
+ * Uploads does). Whatever it is, the buyer is given the same signed link, and
+ * each download is counted the same way; a download that is not kept here
+ * ends with the buyer sent on to where it is.
  *
- * The manual is a $12.00 download whose file is a link.
+ * The manual is a $12.00 download whose Download is a link.
  */
 describe('a download that is a link', function (): void {
 	beforeEach(function (): void {
 		$this->manualUrl = 'https://files.example.test/manuals/Manual%20v2.zip?edition=2';
-		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
-			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'downloadUrl' => $this->manualUrl,
+		($this->downloadIs)('url');
+		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('downloads', [
+			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'download' => $this->manualUrl,
 		]));
 	});
 
@@ -380,16 +410,7 @@ describe('a download that is a link', function (): void {
 
 		get(($this->path)(($this->links)($order)[0]['url']));
 
-		expect($heard)->toBe([['products', 'manual', 'downloadUrl', 'Manual v2.zip']]);
-	});
-
-	it('gives way to a file: a product with both delivers its file', function (): void {
-		($this->attach)('manual', 'manual.pdf', '%PDF the manual');
-		$order = ($this->order)(['manual' => 1]);
-		$links = ($this->links)($order);
-
-		expect($links[0]['fileName'])->toBe('manual.pdf')
-			->and((string)get(($this->path)($links[0]['url']))->getBody())->toBe('%PDF the manual');
+		expect($heard)->toBe([['downloads', 'manual', 'download', 'Manual v2.zip']]);
 	});
 
 	it('shows no size for it on the order page', function (): void {
@@ -402,14 +423,14 @@ describe('a download that is a link', function (): void {
 	});
 
 	it('names a link with no file in it by its host', function (): void {
-		expect((new UrlDownloadSource())->find('products', ['downloadUrl' => 'https://learn.example.test/'])?->name)->toBe('learn.example.test');
+		expect((new UrlDownloadSource())->find('products', ['download' => 'https://learn.example.test/'])?->name)->toBe('learn.example.test');
 	});
 
 	it('is no download unless it is a web address', function (mixed $value): void {
 		$source = new UrlDownloadSource();
 
-		expect($source->find('products', ['downloadUrl' => $value]))->toBeNull()
-			->and($source->deliver('products', ['downloadUrl' => $value]))->toBeNull();
+		expect($source->find('products', ['download' => $value]))->toBeNull()
+			->and($source->deliver('products', ['download' => $value]))->toBeNull();
 	})->with([
 		'a script'             => ['javascript:alert(1)'],
 		'another kind of link' => ['ftp://files.example.test/a.zip'],
@@ -418,6 +439,72 @@ describe('a download that is a link', function (): void {
 		'nothing'              => [''],
 		'not text'             => [['https://files.example.test/a.zip']],
 	]);
+});
+
+describe('which source delivers a download', function (): void {
+	it('is the one for the type of the Download field: a schema that makes it a link delivers by redirect', function (): void {
+		($this->downloadIs)('url');
+		$product = ['id' => 'manual', 'download' => 'https://files.example.test/manual.pdf'];
+
+		[$source, $found] = $this->c->get(DownloadSources::class)->for('downloads', $product);
+		$delivery         = $source->deliver('products', $product);
+
+		expect($source)->toBeInstanceOf(UrlDownloadSource::class)
+			->and($found->name)->toBe('manual.pdf')
+			->and($delivery?->url)->toBe('https://files.example.test/manual.pdf');
+	});
+
+	it('does not ask the file source when the schema says link', function (): void {
+		($this->downloadIs)('url');
+
+		// Even a product that has a file stored under the same name.
+		[$source] = $this->c->get(DownloadSources::class)->for('downloads', ['id' => 'guide', 'download' => 'https://files.example.test/guide.pdf']);
+
+		expect($source)->toBeInstanceOf(UrlDownloadSource::class);
+	});
+
+	it('is the file source on the store\'s own product schema, which asks for nothing more', function (): void {
+		[$source, $found] = $this->c->get(DownloadSources::class)->for('products', ['id' => 'guide']);
+
+		expect($source)->toBeInstanceOf(FileDownloadSource::class)
+			->and($found->name)->toBe('guide.pdf');
+	});
+
+	it('offers nothing, and logs once, for a field type no source handles; the order still completes', function (): void {
+		($this->downloadIs)('text');
+		[$sources, $log] = ($this->logged)();
+
+		expect($sources->for('downloads', ['id' => 'manual', 'download' => 'https://files.example.test/manual.pdf']))->toBeNull()
+			->and($log->getRecords())->toHaveCount(1)
+			->and($log->hasErrorThatContains('type text'))->toBeTrue();
+
+		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('downloads', [
+			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'download' => 'https://files.example.test/manual.pdf',
+		]));
+		$order = ($this->order)(['manual' => 1]);
+
+		expect(($this->line)($order, 'manual')['fulfillmentStatus'])->toBe('unfulfilled')
+			->and(($this->links)($order))->toBe([])
+			->and(($this->fresh)($order)->paymentStatus())->toBe('paid');
+	});
+
+	it('offers nothing, and logs once, when the products collection cannot be read; the order page does not break', function (): void {
+		$config           = $this->c->get(Config::class);
+		$config->commerce = ['collections' => ['products' => 'no-such-collection']] + $config->commerce;
+		[$sources, $log] = ($this->logged)();
+
+		expect($sources->for('no-such-collection', ['id' => 'guide']))->toBeNull()
+			->and($log->getRecords())->toHaveCount(1)
+			->and($log->hasErrorThatContains('no-such-collection'))->toBeTrue();
+	});
+
+	it('has no download, and says nothing, when the product schema has no digital part', function (): void {
+		($this->downloadIs)('file', ['base']);
+		[$sources, $log] = ($this->logged)();
+
+		expect($sources->for('downloads', ['id' => 'guide']))->toBeNull()
+			->and($log->getRecords())->toBe([]);
+	});
 });
 
 describe('a source an extension adds', function (): void {
@@ -435,27 +522,35 @@ describe('a source an extension adds', function (): void {
 			->and(get(($this->path)($links[0]['url']))->getHeaderLine('Location'))->toBe('https://cdn.example.test/kept/course.zip');
 	});
 
-	it('is asked after the product\'s own file', function (): void {
+	it('takes the place of the store\'s own source for the same field type', function (): void {
 		$this->fake->links['guide'] = 'https://cdn.example.test/kept/guide.zip';
-		$order                      = ($this->order)();
 
-		expect(($this->links)($order)[0]['fileName'])->toBe('guide.pdf');
+		expect(($this->links)(($this->order)())[0]['fileName'])->toBe('guide.zip');
 	});
 
-	it('is asked before the product\'s link', function (): void {
-		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
-			'id' => 'manual', 'title' => 'Manual', 'status' => 'active', 'type' => 'digital', 'price' => 12, 'requiresShipping' => false, 'downloadUrl' => 'https://files.example.test/manual.zip',
-		]));
+	it('is left alone by a schema whose Download is another type', function (): void {
+		($this->downloadIs)('url');
 		$this->fake->links['manual'] = 'https://cdn.example.test/kept/manual-kept.zip';
 
-		expect(($this->links)(($this->order)(['manual' => 1]))[0]['fileName'])->toBe('manual-kept.zip');
+		[$source] = $this->c->get(DownloadSources::class)->for('downloads', ['id' => 'manual', 'download' => 'https://files.example.test/manual.zip']);
+
+		expect($source)->toBeInstanceOf(UrlDownloadSource::class);
 	});
 
-	it('is passed over when it fails, and the others still deliver', function (): void {
+	it('is passed over when it fails, and logged, and nothing else delivers that type', function (): void {
 		$this->fake->broken = true;
 
-		expect(($this->links)(($this->order)())[0]['fileName'])->toBe('guide.pdf')
-			->and(($this->line)(($this->order)(['course' => 1]), 'course')['fulfillmentStatus'])->toBe('unfulfilled');
+		$order = ($this->order)();
+
+		expect(($this->links)($order))->toBe([])
+			->and(($this->line)($order, 'guide')['fulfillmentStatus'])->toBe('unfulfilled');
+
+		[$sources, $log] = ($this->logged)();
+		$sources->add($this->fake);
+
+		expect($sources->for('products', ['id' => 'guide']))->toBeNull()
+			->and($log->getRecords())->toHaveCount(1)
+			->and($log->hasErrorThatContains('A download source failed'))->toBeTrue();
 	});
 });
 

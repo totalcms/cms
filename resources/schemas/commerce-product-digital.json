@@ -1,0 +1,18 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-product-digital.json",
+	"id": "commerce-product-digital",
+	"type": "object",
+	"title": "Product Digital Delivery",
+	"category": "Commerce",
+	"description": "Adds a downloadable file to a product, given to the buyer after payment. Meant to be inherited by a product schema of your own, beside commerce-product-base.",
+	"formgrid": "---Digital Delivery---\ndownload download",
+	"properties": {
+		"download": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"field": "file",
+			"label": "Download",
+			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. Like any file, it is kept from the public by the File Access Groups of this collection: leave at least one group there. Sell several files as one zip."
+		}
+	}
+}

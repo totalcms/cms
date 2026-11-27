@@ -16,6 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 const HIDDEN_COMMERCE_SCHEMAS = [
 	'commerce-product', 'commerce-variant', 'commerce-order', 'commerce-line-item', 'commerce-address', 'commerce-transaction',
 	'commerce-cart', 'commerce-discount', 'commerce-subscription', 'commerce-tax-rate', 'commerce-shipping-zone',
+	'commerce-product-base', 'commerce-product-subscription', 'commerce-product-inventory', 'commerce-product-variants', 'commerce-product-digital',
 ];
 
 /** @param array<SchemaData> $schemas */

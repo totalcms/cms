@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Order\ShippingCalculator;
 use TotalCMS\Domain\Commerce\Order\TableShippingCalculator;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Support\Config;
@@ -51,6 +53,15 @@ beforeEach(function (): void {
 		return $this->orders->find((string)$rows[0]['id']);
 	};
 	$this->code = fn ($response): string => (string)(json_decode((string)$response->getBody(), true)['error']['code'] ?? '');
+});
+
+test('a product saved through the inventory part still ships by default', function (): void {
+	$this->c->get(ActorContext::class)->set(Actor::system());
+	$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'poster', 'title' => 'Poster', 'status' => 'active', 'price' => 20]);
+
+	$stored = $this->c->get(ObjectFetcher::class)->fetchObject('products', 'poster')->toArray();
+
+	expect(ProductView::fromObject($stored)->requiresShipping)->toBeTrue();
 });
 
 test('the store works shipping out from its own settings', function (): void {

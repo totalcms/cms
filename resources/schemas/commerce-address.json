@@ -6,6 +6,7 @@
 	"title": "Address",
 	"category": "Commerce",
 	"description": "A shipping or billing address on an order. Country and region decide tax and shipping; the rest is for display. Used as a card.",
+	"formgrid": "name company\nline1 line2\ncity region\npostalCode country\nphone phone",
 	"required": [],
 	"index": [
 		"id"

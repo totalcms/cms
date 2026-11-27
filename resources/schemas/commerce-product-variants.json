@@ -1,0 +1,27 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-product-variants.json",
+	"id": "commerce-product-variants",
+	"type": "object",
+	"title": "Product Variants",
+	"category": "Commerce",
+	"description": "Adds variants to a product: the options a buyer chooses between, such as sizes or a monthly and a yearly plan. Meant to be inherited by a product schema of your own, beside commerce-product-base.",
+	"formgrid": "---Variants---\nvariants variants",
+	"properties": {
+		"variants": {
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"field": "deck",
+			"label": "Variants",
+			"help": "The options a buyer chooses between, such as sizes or a monthly and a yearly plan. A product with variants is always bought as one of them.",
+			"schemaref": "https://www.totalcms.co/schemas/commerce-variant.json",
+			"patternProperties": {
+				"^[a-zA-Z0-9][\\w-]*$": {
+					"$ref": "https://www.totalcms.co/schemas/commerce-variant.json"
+				}
+			},
+			"settings": {
+				"deckItemLabel": "${title}"
+			}
+		}
+	}
+}

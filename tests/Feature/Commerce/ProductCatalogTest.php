@@ -184,3 +184,12 @@ describe('the pricing context of a request', function (): void {
 		expect($this->c->get(PricingContextFactory::class)->current()->customerId)->toBeNull();
 	});
 });
+
+test('a product with only the base fields ships nothing and tracks nothing', function (): void {
+	$view = ProductView::fromObject(['id' => 'ebook', 'title' => 'Ebook', 'status' => 'active', 'price' => 9]);
+
+	expect($view->requiresShipping)->toBeFalse()
+		->and($view->trackInventory)->toBeFalse()
+		->and($view->isRecurring())->toBeFalse()
+		->and($view->hasVariants)->toBeFalse();
+});

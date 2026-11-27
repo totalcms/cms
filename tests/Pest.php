@@ -143,6 +143,8 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Slim\Test\TestResponse;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
 use TotalCMS\Support\HttpClientInterface;
@@ -1700,6 +1702,34 @@ function &commerceScenes(): array
 function commerceSceneDir(string $name): string
 {
 	return rtrim(tcmsTestTmpDir(), '/') . '/commerce-scene-' . $name;
+}
+
+/**
+ * Keep the store's products in a collection called `downloads`, on a schema
+ * that inherits the parts of the Commerce product (all five, or only those
+ * named) and redefines `download` as the given field type: `url`, `s3file`,
+ * any other type, or `file` for the parts' own. A child's property replaces
+ * its parent's. The collection has the File Access Group the store's own
+ * products collection has, and the store is pointed at it.
+ *
+ * @param list<string> $parts
+ */
+function commerceDownloadIs(Container $c, string $field, array $parts = ['base', 'digital', 'inventory', 'subscription', 'variants']): void
+{
+	$download = match ($field) {
+		'url'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/url.json', 'field' => 'url'],
+		's3file' => ['type' => 'json', 'field' => 's3file'],
+		default  => ['type' => 'string', 'field' => $field],
+	};
+	$c->get(SchemaSaver::class)->saveSchema([
+		'id'          => 'download-is-' . $field,
+		'type'        => 'object',
+		'inheritFrom' => array_map(static fn (string $part): string => 'commerce-product-' . $part, $parts),
+		'properties'  => $field === 'file' ? [] : ['download' => $download + ['label' => 'Download', 'help' => 'What the buyer gets.']],
+	]);
+	$c->get(CollectionSaver::class)->saveCollection(['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-' . $field, 'groups' => ['admin']]);
+	$config           = $c->get(Config::class);
+	$config->commerce = ['collections' => ['products' => 'downloads']] + $config->commerce;
 }
 
 /**

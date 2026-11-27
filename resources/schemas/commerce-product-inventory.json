@@ -1,0 +1,50 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/commerce-product-inventory.json",
+	"id": "commerce-product-inventory",
+	"type": "object",
+	"title": "Product Inventory and Shipping",
+	"category": "Commerce",
+	"description": "Adds stock counting and shipping to a product. Meant to be inherited by a product schema of your own, beside commerce-product-base.",
+	"formgrid": "---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .",
+	"index": [
+		"stock",
+		"trackInventory"
+	],
+	"properties": {
+		"trackInventory": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Track Inventory",
+			"help": "Count stock down as orders are paid. On a subscription it counts seats, taken once when the subscription starts.",
+			"default": false
+		},
+		"stock": {
+			"type": "integer",
+			"field": "number",
+			"label": "Stock",
+			"help": "How many are left. Used when the product has no variants.",
+			"default": 0
+		},
+		"allowBackorder": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Allow Backorder",
+			"help": "Keep selling when stock reaches zero.",
+			"default": false
+		},
+		"requiresShipping": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Requires Shipping",
+			"help": "Ask for a shipping address and charge shipping. Ignored for a digital product.",
+			"default": true
+		},
+		"weight": {
+			"type": "number",
+			"field": "number",
+			"label": "Weight",
+			"help": "In your own weight unit. Not used by the built-in shipping rates; kept for extensions."
+		}
+	}
+}

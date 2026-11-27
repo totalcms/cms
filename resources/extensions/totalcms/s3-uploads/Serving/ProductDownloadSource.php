@@ -8,10 +8,11 @@ use TotalCMS\Bundled\S3Uploads\Storage\Pointer;
 use TotalCMS\Domain\Commerce\Contract\DownloadSource;
 use TotalCMS\Domain\Commerce\Download\Deliverable;
 use TotalCMS\Domain\Commerce\Download\Delivery;
+use TotalCMS\Domain\Commerce\Download\DownloadSources;
 
 /**
  * A store product's download, kept in the bucket: the product's Download
- * from S3 field.
+ * field, when the store's product schema makes it an `s3file` field.
  *
  * The store checks the buyer's own link and counts the download on their
  * order; this only says what is in the bucket and signs a link to it. The
@@ -22,8 +23,6 @@ use TotalCMS\Domain\Commerce\Download\Delivery;
  */
 final readonly class ProductDownloadSource implements DownloadSource
 {
-	public const PROPERTY = 'downloadS3';
-
 	/**
 	 * Each is resolved on first use: services cannot be built while
 	 * extensions register.
@@ -44,11 +43,16 @@ final readonly class ProductDownloadSource implements DownloadSource
 		return 's3';
 	}
 
+	public function fieldType(): string
+	{
+		return 's3file';
+	}
+
 	public function find(string $collection, array $product): ?Deliverable
 	{
 		$pointer = $this->pointer($collection, $product);
 
-		return $pointer instanceof Pointer ? new Deliverable($pointer->name, $pointer->size, self::PROPERTY) : null;
+		return $pointer instanceof Pointer ? new Deliverable($pointer->name, $pointer->size, DownloadSources::PROPERTY) : null;
 	}
 
 	public function deliver(string $collection, array $product): ?Delivery
@@ -59,7 +63,7 @@ final readonly class ProductDownloadSource implements DownloadSource
 		}
 
 		// The field's own count of downloads, beside the buyer's on their order.
-		($this->counter)()->increment($collection, self::productId($product), self::PROPERTY);
+		($this->counter)()->increment($collection, self::productId($product), DownloadSources::PROPERTY);
 
 		return Delivery::redirect($pointer->name, ($this->urls)()->downloadUrl($pointer));
 	}
@@ -74,11 +78,11 @@ final readonly class ProductDownloadSource implements DownloadSource
 	private function pointer(string $collection, array $product): ?Pointer
 	{
 		$id = self::productId($product);
-		if ($id === '' || ($product[self::PROPERTY] ?? null) === null || $product[self::PROPERTY] === []) {
+		if ($id === '' || ($product[DownloadSources::PROPERTY] ?? null) === null || $product[DownloadSources::PROPERTY] === []) {
 			return null;
 		}
 
-		return ($this->locator)()->find($collection, $id, self::PROPERTY)['pointer'] ?? null;
+		return ($this->locator)()->find($collection, $id, DownloadSources::PROPERTY)['pointer'] ?? null;
 	}
 
 	/** @param array<string,mixed> $product */
