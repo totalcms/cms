@@ -110,6 +110,8 @@ Each group has a `name`, a `buttons` array, and an optional `align` property (`"
 | Block | `blockAttributes` |
 | Editor Controls | `clearFormatting`, `codeView`, `fullscreen` |
 
+The `table` button inserts a table. While the cursor is in a table, the same button holds that table's controls: add or delete rows and columns, and turn the header row or column on and off. A toolbar without `table` still shows the button while the cursor is in a table, so a table pasted in or added in the code view can be edited too.
+
 **Default toolbar:**
 ```json
 [

@@ -1,2 +1,0 @@
-import{a}from"./chunk-UODOIGP2.js";import"./chunk-RE7EHM2A.js";import"./chunk-RTDHKMJF.js";import"./chunk-4EVD2TWN.js";import"./chunk-PK7HA5OZ.js";import"./chunk-L3HZUAUO.js";import"./chunk-NR5DGYS2.js";import"./chunk-COSB2ZMG.js";import"./chunk-WKJYEEBM.js";import"./chunk-IBLZF5CH.js";import"./chunk-NC52C2BS.js";import"./chunk-N5O52Q2M.js";export{a as default};
-//# sourceMappingURL=localizedstyledtext-ADZG2MCZ.js.map

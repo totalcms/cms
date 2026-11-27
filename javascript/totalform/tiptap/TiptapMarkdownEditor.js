@@ -21,7 +21,6 @@ import { Markdown } from '@tiptap/markdown';
 import TiptapEditor from './TiptapEditor.js';
 import TiptapCodeView from './TiptapCodeView.js';
 import ImageUpload from './extensions/ImageUpload.js';
-import TablePopover from './extensions/TablePopover.js';
 import { patchMarkdownSerializer } from './markdown/serializer.js';
 import { findLossySyntax } from './markdown/lossy.js';
 import { renderMarkdownPreview } from '../markdown/preview.js';
@@ -111,7 +110,6 @@ export default class TiptapMarkdownEditor extends TiptapEditor {
 			TableRow,
 			TableCell,
 			TableHeader,
-			TablePopover,
 			// No toolbar button: these exist so "- [ ]" items survive a save.
 			TaskList,
 			TaskItem.configure({

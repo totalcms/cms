@@ -34,7 +34,6 @@ import { tiptapInsertTarget } from './extensions/insertTargets.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
 import { createAnchorDialog } from './extensions/AnchorDialog.js';
 import { createBlockAttributesDialog } from './extensions/BlockAttributesDialog.js';
-import TablePopover from './extensions/TablePopover.js';
 import RawHTML from './extensions/RawHTML.js';
 import InlineClass from './extensions/InlineClass.js';
 import InlineStyle from './extensions/InlineStyle.js';
@@ -213,7 +212,6 @@ export default class TiptapEditor {
 			TableRow,
 			TableCell,
 			TableHeader,
-			TablePopover,
 			TextStyle,
 			Color,
 			Highlight.configure({

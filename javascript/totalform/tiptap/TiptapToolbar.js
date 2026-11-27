@@ -223,6 +223,17 @@ export default class TiptapToolbar {
 
 			this.element.appendChild(groupEl);
 		}
+
+		// A table can reach a field whose toolbar has no Table button: pasted
+		// in, typed in the code view, or imported. Its controls still need a
+		// home, so the Table menu is added anyway and shows only while the
+		// cursor is in a table (.ste-table-contextual in styledtext.scss).
+		if (!this.buttons.has('table') && this.editor.commands.addRowAfter) {
+			const groupEl = document.createElement('div');
+			groupEl.className = 'ste-toolbar-group ste-table-contextual';
+			groupEl.appendChild(this.buildTableGridPicker());
+			this.element.insertBefore(groupEl, this.element.querySelector('.ste-toolbar-group--right'));
+		}
 	}
 
 	createButton(name, def) {
@@ -437,10 +448,19 @@ export default class TiptapToolbar {
 		const menu = document.createElement('div');
 		menu.className = 'ste-toolbar-dropdown-menu ste-table-grid-menu';
 
+		// Outside a table the menu inserts one; inside a table it holds the
+		// row, column and header controls instead (updateTableDropdown). They
+		// used to float over the table and covered the cells being typed in:
+		// the editor is only as tall as its content, so there was seldom room
+		// for them anywhere else.
+		const insert = document.createElement('div');
+		insert.className = 'ste-table-insert';
+		menu.appendChild(insert);
+
 		const label = document.createElement('div');
 		label.className = 'ste-table-grid-label';
 		label.textContent = 'Insert Table';
-		menu.appendChild(label);
+		insert.appendChild(label);
 
 		const grid = document.createElement('div');
 		grid.className = 'ste-table-grid';
@@ -489,8 +509,9 @@ export default class TiptapToolbar {
 			this.closeDropdowns();
 		});
 
-		menu.appendChild(grid);
-		menu.appendChild(sizeLabel);
+		insert.appendChild(grid);
+		insert.appendChild(sizeLabel);
+		menu.appendChild(this.buildTableTools());
 
 		toggle.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -507,6 +528,47 @@ export default class TiptapToolbar {
 
 		this.buttons.set('table', { element: wrapper, type: 'dropdown' });
 		return wrapper;
+	}
+
+	// The controls for the table the cursor is in. The menu stays open after
+	// one, so several rows can be added in a row; a click back in the content
+	// closes it.
+	buildTableTools() {
+		const tools = document.createElement('div');
+		tools.className = 'ste-table-tools';
+		tools.innerHTML = `
+			<div class="ste-table-tools__row">
+				<span class="ste-table-tools__label">Row</span>
+				<button type="button" class="ste-table-tools__btn" data-action="addRowBefore" title="Add row above" style="--btn-icon: var(--icon-ste-add-top)"></button>
+				<button type="button" class="ste-table-tools__btn" data-action="addRowAfter" title="Add row below" style="--btn-icon: var(--icon-ste-add-bottom)"></button>
+				<button type="button" class="ste-table-tools__btn ste-table-tools__btn--danger" data-action="deleteRow" title="Delete row" style="--btn-icon: var(--icon-ste-trash)"></button>
+			</div>
+			<div class="ste-table-tools__row">
+				<span class="ste-table-tools__label">Col</span>
+				<button type="button" class="ste-table-tools__btn" data-action="addColumnBefore" title="Add column left" style="--btn-icon: var(--icon-ste-add-left)"></button>
+				<button type="button" class="ste-table-tools__btn" data-action="addColumnAfter" title="Add column right" style="--btn-icon: var(--icon-ste-add-right)"></button>
+				<button type="button" class="ste-table-tools__btn ste-table-tools__btn--danger" data-action="deleteColumn" title="Delete column" style="--btn-icon: var(--icon-ste-trash)"></button>
+			</div>
+			<div class="ste-table-tools__sep"></div>
+			<div class="ste-table-tools__row">
+				<span class="ste-table-tools__label">Header</span>
+				<button type="button" class="ste-table-tools__btn" data-action="toggleHeaderRow" title="Toggle header row" style="--btn-icon: var(--icon-ste-header-row)"></button>
+				<button type="button" class="ste-table-tools__btn" data-action="toggleHeaderColumn" title="Toggle header column" style="--btn-icon: var(--icon-ste-header-col)"></button>
+			</div>
+		`;
+
+		tools.addEventListener('click', (e) => {
+			const btn = e.target.closest('[data-action]');
+			if (!btn) return;
+			e.preventDefault();
+			// Each data-action is the name of a Tiptap table command.
+			this.editor.chain().focus()[btn.dataset.action]().run();
+			// The toolbar refreshes on selection changes, and a header toggle
+			// changes the table without moving the selection.
+			this.updateTableDropdown(tools.closest('.ste-toolbar-dropdown'));
+		});
+
+		return tools;
 	}
 
 	buildColorPicker(name, label, command) {
@@ -838,6 +900,7 @@ export default class TiptapToolbar {
 				if (name === 'bulletList' || name === 'orderedList') this.updateListDropdown(name, entry.element);
 				if (name === 'textColor' || name === 'textBgColor') this.updateColorPicker(name, entry);
 				if (name === 'inlineStyles' || name === 'inlineClasses') this.updateInlineDropdown(name, entry);
+				if (name === 'table') this.updateTableDropdown(entry.element);
 				continue;
 			}
 
@@ -872,6 +935,39 @@ export default class TiptapToolbar {
 			}
 
 			btn.classList.toggle('is-active', isActive);
+		}
+	}
+
+	// Inside a table the Table menu holds that table's controls, and the
+	// button is lit so it reads as the place to find them.
+	updateTableDropdown(wrapper) {
+		const inTable = this.editor.isActive('table');
+		wrapper.classList.toggle('in-table', inTable);
+		wrapper.querySelector('.ste-toolbar-dropdown-toggle')?.classList.toggle('is-active', inTable);
+		if (!inTable) return;
+
+		const rowBtn = wrapper.querySelector('[data-action="toggleHeaderRow"]');
+		const colBtn = wrapper.querySelector('[data-action="toggleHeaderColumn"]');
+		const { $from } = this.editor.state.selection;
+
+		for (let d = $from.depth; d >= 0; d--) {
+			const table = $from.node(d);
+			if (table.type.name !== 'table') continue;
+			// Guard every child() access: while ProseMirror reconciles a DOM
+			// change, this can run against a transient state where a table or
+			// row momentarily has no children, and child(0) would throw.
+			if (table.childCount === 0) break;
+
+			// Header row: the first row's first cell is a header.
+			const firstRow = table.child(0);
+			if (rowBtn && firstRow.childCount > 0) {
+				rowBtn.classList.toggle('is-active', firstRow.child(0).type.name === 'tableHeader');
+			}
+			// Header column: the second row's first cell is a header.
+			if (colBtn && table.childCount > 1 && table.child(1).childCount > 0) {
+				colBtn.classList.toggle('is-active', table.child(1).child(0).type.name === 'tableHeader');
+			}
+			break;
 		}
 	}
 

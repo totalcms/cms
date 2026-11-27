@@ -24,6 +24,15 @@
 	border-radius: var(--totalform-radius);
 	background-color: oklch(var(--totalform-white));
 	overflow: hidden;
+
+	// A changed or invalid field recolors --totalform-border-color (_layout.scss)
+	// so its outline shows the state. That outline is this container's border.
+	// Everything inside it draws its own lines with the same variable: table
+	// cells, rules, the menus and dialogs. Those keep the plain color, or a
+	// changed field paints every table cell in the accent.
+	> * {
+		--totalform-border-color : var(--totalform-lightgray);
+	}
 }
 
 // Toolbar
@@ -1357,22 +1366,26 @@ dialog.ste-dialog {
 
 
 //------------------------------
-// Table Popover (context controls)
+// Table controls (in the toolbar's Table menu)
 //------------------------------
-.ste-table-popover {
-	position         : absolute;
-	z-index          : 100;
-	background-color : oklch(var(--totalform-white));
-	border           : 1px solid oklch(var(--totalform-border-color));
-	border-radius    : 8px;
-	box-shadow       : 0 4px 16px oklch(0 0 0 / 0.15);
-	padding          : 8px;
-	white-space      : nowrap;
+// The menu shows the Insert Table grid outside a table and these controls
+// inside one (TiptapToolbar::updateTableDropdown).
+.ste-table-tools {
+	display : none;
+}
+.ste-toolbar-dropdown.in-table {
+	.ste-table-insert { display : none; }
+	.ste-table-tools  { display : block; }
+}
+// A toolbar with no Table button gets this menu only while the cursor is in
+// a table (TiptapToolbar::build).
+.ste-table-contextual:not(:has(.in-table)) {
+	display : none;
 }
 
-.ste-table-popover__row {
+.ste-table-tools__row {
 	display               : grid;
-	grid-template-columns : 36px 26px 26px 26px;
+	grid-template-columns : 44px 26px 26px 26px;
 	align-items           : center;
 	gap                   : 4px;
 
@@ -1385,13 +1398,13 @@ dialog.ste-dialog {
 	}
 }
 
-.ste-table-popover__label {
+.ste-table-tools__label {
 	font-size   : 11px;
 	font-weight : 600;
 	color       : oklch(var(--totalform-darkgray));
 }
 
-.ste-table-popover__icon-btn {
+.ste-table-tools__btn {
 	display         : inline-flex;
 	align-items     : center;
 	justify-content : center;
@@ -1422,6 +1435,11 @@ dialog.ste-dialog {
 		border-color     : oklch(var(--totalform-border-color));
 	}
 
+	&.is-active {
+		color            : oklch(var(--totalform-accent));
+		background-color : oklch(var(--totalform-accent) / 0.1);
+	}
+
 	&--danger {
 		color : oklch(var(--totalform-darkgray));
 
@@ -1433,7 +1451,7 @@ dialog.ste-dialog {
 	}
 }
 
-.ste-table-popover__sep-h {
+.ste-table-tools__sep {
 	height           : 1px;
 	background-color : oklch(var(--totalform-border-color));
 	margin           : 6px 0;
