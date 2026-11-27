@@ -82,6 +82,21 @@ describe('for a script', function (): void {
 			->and(json_encode($this->app->getContainer()->get(PhpSession::class)->get(SessionKeys::COMMERCE_CART)))->not->toContain('price');
 	});
 
+	test('a buyer names the price of a product that allows it', function (): void {
+		$this->app->getContainer()->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]);
+
+		expect(postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => '25'])->getStatusCode())->toBe(200)
+			->and(postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => 25.5])->getStatusCode())->toBe(200);
+
+		$response = postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => '1']);
+		expect($response->getStatusCode())->toBe(422)
+			->and(cartJson($response)['error']['code'])->toBe('amount_invalid');
+
+		$response = postJson('/commerce/cart/add', ['productId' => 'give']);
+		expect($response->getStatusCode())->toBe(422)
+			->and(cartJson($response)['error']['code'])->toBe('amount_required');
+	});
+
 	test('quantity is 1 when none is sent, and must be a number when one is', function (): void {
 		expect(cartJson(postJson('/commerce/cart/add', ['productId' => 'mug']))['count'])->toBe(1);
 

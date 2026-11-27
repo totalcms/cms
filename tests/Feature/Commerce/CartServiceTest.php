@@ -42,6 +42,8 @@ beforeEach(function (): void {
 	$save(['id' => 'poster', 'title' => 'Poster', 'status' => 'active', 'price' => 8]);
 	$save(['id' => 'print', 'title' => 'Signed Print', 'status' => 'active', 'price' => 40, 'trackInventory' => true, 'stock' => 3]);
 	$save(['id' => 'vinyl', 'title' => 'Vinyl', 'status' => 'active', 'price' => 25, 'trackInventory' => true, 'stock' => 1, 'allowBackorder' => true]);
+	$save(['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]);
+	$save(['id' => 'tip', 'title' => 'Tip', 'status' => 'active', 'price' => 3, 'customPrice' => true]);
 	$save(['id' => 'tee', 'title' => 'Tee', 'status' => 'active', 'price' => 20, 'trackInventory' => true, 'stock' => 99, 'variants' => [
 		'large' => ['id' => 'large', 'title' => 'Large', 'price' => 22, 'stock' => 2],
 		'small' => ['id' => 'small', 'title' => 'Small', 'stock' => 50],
@@ -372,4 +374,163 @@ describe('checkout attributes', function (): void {
 
 it('is built by the container, on the real session', function (): void {
 	expect($this->c->get(CartService::class))->toBeInstanceOf(CartService::class);
+});
+
+describe('a price the buyer names', function (): void {
+	test('a buyer names the price of a product that allows it', function (): void {
+		$this->cart->add('give', '', 1, '25');
+		expect(array_values($this->store->items())[0]->amount)->toBe(25.0);
+	});
+
+	test('an amount sent for a fixed-price product is ignored', function (): void {
+		$this->cart->add('mug', '', 1, '0.01');
+		expect(array_values($this->store->items())[0]->amount)->toBeNull();
+	});
+
+	test('a bad amount sent for a fixed-price product is ignored, not refused', function (): void {
+		$this->cart->add('mug', '', 1, 'abc');
+		expect(array_values($this->store->items())[0]->amount)->toBeNull();
+	});
+
+	test('a product that needs an amount refuses to go in without one', function (): void {
+		expect(($this->refused)(fn () => $this->cart->add('give', '', 1))->errorCode)->toBe('amount_required');
+	});
+
+	test('an amount that is not a plain number in range is refused', function (string $amount): void {
+		expect(($this->refused)(fn () => $this->cart->add('give', '', 1, $amount))->errorCode)->toBe('amount_invalid');
+		expect($this->store->items())->toBe([]);
+	})->with(['4.99', '-5', 'abc', '1e3', '10,50', '10001']);
+
+	test('an empty amount counts as none', function (string $amount): void {
+		expect(($this->refused)(fn () => $this->cart->add('give', '', 1, $amount))->errorCode)->toBe('amount_required');
+	})->with(['', ' ']);
+
+	test('an amount is rounded to the minor unit', function (): void {
+		$this->cart->add('give', '', 1, '10.999');
+		expect(array_values($this->store->items())[0]->amount)->toBe(11.0);
+	});
+
+	test('nothing is allowed only when the minimum is nothing', function (): void {
+		$this->cart->add('tip', '', 1, '0');
+		expect(array_values($this->store->items())[0]->amount)->toBe(0.0);
+		expect(($this->refused)(fn () => $this->cart->add('tip', '', 1, '0.20'))->errorCode)->toBe('amount_invalid');
+	});
+
+	test('a named-price line is always one, and adding again replaces the amount', function (): void {
+		$this->cart->add('give', '', 3, '25');
+		$this->cart->add('give', '', 1, '40');
+		$item = array_values($this->store->items())[0];
+		expect($item->qty)->toBe(1)->and($item->amount)->toBe(40.0)->and($this->store->items())->toHaveCount(1);
+	});
+
+	test('updating a named-price line keeps it at one, and zero removes it', function (): void {
+		$this->cart->add('give', '', 1, '25');
+		$key = array_key_first($this->store->items());
+
+		$this->cart->update($key, 5);
+		$item = $this->store->items()[$key];
+		expect($item->qty)->toBe(1)->and($item->amount)->toBe(25.0);
+
+		$this->cart->update($key, 0);
+		expect($this->store->items())->toBe([]);
+	});
+
+	test('the stock check still runs for a named price', function (): void {
+		($this->change)('give', ['trackInventory' => true, 'stock' => 0]);
+		expect(($this->refused)(fn () => $this->cart->add('give', '', 1, '25'))->errorCode)->toBe('out_of_stock');
+	});
+
+	test('the amount is kept in the session', function (): void {
+		$this->cart->add('give', '', 1, '25.5');
+		$raw = $this->session->get(SessionKeys::COMMERCE_CART);
+
+		expect($raw['items'][CartItem::lineKey('give', '')])->toBe(['productId' => 'give', 'variantId' => '', 'qty' => 1, 'amount' => 25.5]);
+	});
+
+	test('an amount that is not a usable number is dropped when read back', function (mixed $junk): void {
+		$item = CartItem::fromArray(['productId' => 'give', 'variantId' => '', 'qty' => 1, 'amount' => $junk]);
+		expect($item)->toBeInstanceOf(CartItem::class)->and($item->amount)->toBeNull();
+	})->with(['text' => ['25'], 'negative' => [-1], 'infinite' => [INF], 'nan' => [NAN], 'array' => [[1]], 'bool' => [true]]);
+
+	test('changing the quantity keeps the amount', function (): void {
+		expect((new CartItem('give', '', 1, 25.0))->withQty(1)->amount)->toBe(25.0);
+	});
+});
+
+describe('the price a buyer named is the line\'s price', function (): void {
+	test('the price a buyer named is the line\'s price', function (): void {
+		$this->cart->add('give', '', 1, '25');
+		$line = $this->cart->view($this->usd)->lines[0];
+		expect($line->unitPrice->amount())->toBe(2500)->and($line->priceSource)->toBe('custom');
+	});
+
+	test('a fixed-price product is charged its catalog price whatever is sent', function (): void {
+		$this->cart->add('mug', '', 1, '0.01');
+		expect($this->cart->view($this->usd)->lines[0]->unitPrice->amount())->toBe(1250);
+	});
+
+	test('a stored amount on a fixed-price product is never charged', function (): void {
+		// Put in the store directly, as nothing but a bug or a tampered session could.
+		$this->store->put([CartItem::lineKey('mug', '') => new CartItem('mug', '', 1, 0.01)]);
+		$view = $this->cart->view($this->usd);
+
+		expect($view->lines)->toBe([])->and($view->notices)->not->toBe([]);
+	});
+
+	test('a line whose amount is no longer allowed is taken out with a notice', function (): void {
+		$this->cart->add('give', '', 1, '6');
+		($this->change)('give', ['minPrice' => 20]);
+		$view = $this->cart->view($this->usd);
+		expect($view->lines)->toBe([])->and($view->notices)->not->toBe([]);
+	});
+
+	test('turning name-your-price off takes the line out too', function (): void {
+		$this->cart->add('give', '', 1, '6');
+		($this->change)('give', ['customPrice' => false]);
+		$view = $this->cart->view($this->usd);
+		expect($view->lines)->toBe([])->and($view->notices)->not->toBe([]);
+	});
+
+	test('a name-your-price line with no amount is taken out, not priced at the catalog price', function (): void {
+		$this->cart->add('mug', '', 1);
+		($this->change)('mug', ['customPrice' => true]);
+		$view = $this->cart->view($this->usd);
+		expect($view->lines)->toBe([])->and($view->notices)->toBe(['Mug is no longer available and was removed from your cart.']);
+	});
+
+	test('a line whose product stopped taking a named price is left alone by an update, and taken out when priced', function (): void {
+		$this->cart->add('give', '', 1, '25');
+		($this->change)('give', ['customPrice' => false]);
+		$this->cart->update(CartItem::lineKey('give', ''), 1);
+
+		// Not repriced at the catalog price: the amount is still on the line.
+		expect($this->store->items()[CartItem::lineKey('give', '')]->amount)->toBe(25.0);
+
+		$view = $this->cart->view($this->usd);
+		expect($view->lines)->toBe([])->and($view->notices)->not->toBe([]);
+	});
+
+	test('a named-price line of any quantity but one does not stand', function (int $qty): void {
+		$this->store->put([CartItem::lineKey('give', '') => new CartItem('give', '', $qty, 25.0)]);
+		$view = $this->cart->view($this->usd);
+
+		expect($view->lines)->toBe([])->and($view->notices)->not->toBe([]);
+	})->with([2, 5]);
+
+	test('a line that was taken out stays out and is only reported once', function (): void {
+		$this->cart->add('give', '', 1, '6');
+		($this->change)('give', ['minPrice' => 20]);
+		$this->cart->view($this->usd);
+		$again = $this->cart->view($this->usd);
+
+		expect($again->lines)->toBe([])->and($again->notices)->toBe([])->and($this->store->items())->toBe([]);
+	});
+
+	test('a named price is kept while it still stands', function (): void {
+		$this->cart->add('give', '', 1, '6');
+		$this->cart->add('mug', '', 1);
+		$view = $this->cart->view($this->usd);
+
+		expect($view->subtotal->amount())->toBe(600 + 1250)->and($view->lines[0]->lineTotal->amount())->toBe(600);
+	});
 });

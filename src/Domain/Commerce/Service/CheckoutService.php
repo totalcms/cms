@@ -145,7 +145,7 @@ final readonly class CheckoutService
 	{
 		$draft    = $this->builder->build($this->cart->items(), $input, $ctx, $this->cart->discountCode(), true);
 		$provider = null;
-		foreach ($this->providers->forCart($draft->hasRecurringLine()) as $candidate) {
+		foreach ($this->providers->forCart($draft->hasRecurringLine(), $draft->hasNamedPlan()) as $candidate) {
 			if ($candidate->id() === $input->provider) {
 				$provider = $candidate;
 			}
@@ -246,7 +246,7 @@ final readonly class CheckoutService
 	/** @throws CommerceException when the provider cannot take this order */
 	private function provider(string $id, OrderDraft $draft): PaymentProvider
 	{
-		foreach ($this->providers->forCart($draft->hasRecurringLine()) as $provider) {
+		foreach ($this->providers->forCart($draft->hasRecurringLine(), $draft->hasNamedPlan()) as $provider) {
 			if ($provider->id() === $id && $provider->supportsCurrency($draft->currency)) {
 				return $provider;
 			}

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\CommerceInstaller;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
@@ -192,4 +193,30 @@ test('a product with only the base fields ships nothing and tracks nothing', fun
 		->and($view->trackInventory)->toBeFalse()
 		->and($view->isRecurring())->toBeFalse()
 		->and($view->hasVariants)->toBeFalse();
+});
+
+test('a product reads its name-your-price fields', function (): void {
+	$view = ProductView::fromObject(['id' => 'give', 'title' => 'Give', 'price' => 10, 'customPrice' => true, 'minPrice' => '5', 'suggestedPrices' => ['5', 10, 'x', -1, 25]]);
+	expect($view->customPrice)->toBeTrue()
+		->and($view->minPrice)->toBe(5.0)
+		->and($view->suggestedPrices)->toBe([5.0, 10.0, 25.0]);
+});
+
+test('a product without them is a fixed-price product', function (): void {
+	$view = ProductView::fromObject(['id' => 'mug', 'title' => 'Mug', 'price' => 12.5]);
+	expect($view->customPrice)->toBeFalse()->and($view->minPrice)->toBe(0.0)->and($view->suggestedPrices)->toBe([]);
+});
+
+test('a minimum below zero or not a number is zero', function (mixed $stored): void {
+	expect(ProductView::fromObject(['id' => 'give', 'title' => 'Give', 'minPrice' => $stored])->minPrice)->toBe(0.0);
+})->with([[-3], ['-3'], ['free'], [null], [[]], ['']]);
+
+test('suggested prices keep the order, drop repeats and junk, and a list that is not one is empty', function (): void {
+	$view = ProductView::fromObject(['id' => 'give', 'title' => 'Give', 'suggestedPrices' => [25, '10', 10.0, 0, '0', 'abc', null, [5], 25]]);
+	expect($view->suggestedPrices)->toBe([25.0, 10.0])
+		->and(ProductView::fromObject(['id' => 'give', 'title' => 'Give', 'suggestedPrices' => 'ten'])->suggestedPrices)->toBe([]);
+});
+
+test('the most a buyer may name defaults to 10000', function (): void {
+	expect($this->c->get(CommerceSettings::class)->customPriceMax())->toBe(10000.0);
 });

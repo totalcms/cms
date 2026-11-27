@@ -184,7 +184,7 @@ const COMMERCE_PRODUCT_PARTS = [
 ];
 
 const COMMERCE_PRODUCT_FIELDS = [
-	'commerce-product-base'         => ['id', 'title', 'status', 'type', 'sku', 'price', 'compareAtPrice', 'taxable', 'description', 'images', 'category', 'tags', 'meta', 'created', 'updated'],
+	'commerce-product-base'         => ['id', 'title', 'status', 'type', 'sku', 'price', 'compareAtPrice', 'taxable', 'customPrice', 'minPrice', 'suggestedPrices', 'description', 'images', 'category', 'tags', 'meta', 'created', 'updated'],
 	'commerce-product-subscription' => ['billing', 'interval', 'intervalCount', 'trialDays', 'accessGroup'],
 	'commerce-product-inventory'    => ['trackInventory', 'stock', 'allowBackorder', 'requiresShipping', 'weight'],
 	'commerce-product-variants'     => ['variants'],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Cart;
 
 use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
+use TotalCMS\Domain\Commerce\Pricing\PricedUnit;
 use TotalCMS\Domain\Money\Money;
 
 /**
@@ -45,5 +46,11 @@ final readonly class CartView
 	public function hasSubscription(): bool
 	{
 		return array_filter($this->lines, static fn (CartLineView $line): bool => $line->billing === 'recurring') !== [];
+	}
+
+	/** Whether a plan in the cart is at an amount the buyer named. */
+	public function hasNamedPlan(): bool
+	{
+		return array_filter($this->lines, static fn (CartLineView $line): bool => $line->billing === 'recurring' && $line->priceSource === PricedUnit::CUSTOM) !== [];
 	}
 }

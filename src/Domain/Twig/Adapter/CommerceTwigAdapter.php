@@ -180,7 +180,7 @@ final readonly class CommerceTwigAdapter
 			'listFormatted' => ($this->money)($priced->listPrice->amount(), $priced->listPrice->currency()),
 			'source'        => $priced->source,
 			// How it is billed: `once`, or `recurring` every `intervalCount` `interval`s.
-			'billing'       => $product->billing,
+			'billing'       => $product->isRecurring($variant) ? ProductView::BILLING_RECURRING : ProductView::BILLING_ONCE,
 			'interval'      => $every->interval ?? '',
 			'intervalCount' => $every->intervalCount ?? 0,
 			'trialDays'     => $every->trialDays ?? 0,
@@ -406,11 +406,11 @@ final readonly class CommerceTwigAdapter
 			return [];
 		}
 
-		return array_map(
+		// A cart with a plan in it can be paid for only by a provider that bills subscriptions.
+		return array_values(array_map(
 			static fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label()],
-			// A cart with a plan in it can be paid for only by a provider that bills subscriptions.
-			$this->providers->forCart(($this->cart)()->hasSubscription()),
-		);
+			($this->cart)()->payableWith(),
+		));
 	}
 
 	/** An amount in minor units written for a person, in the store currency unless another is named. */

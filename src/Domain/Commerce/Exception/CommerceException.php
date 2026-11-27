@@ -15,6 +15,7 @@ namespace TotalCMS\Domain\Commerce\Exception;
  *                                                refusal: this list is every
  *                                                code the store answers with
  * @SuppressWarnings("PHPMD.TooManyMethods")       the same list, counted the other way
+ * @SuppressWarnings("PHPMD.ExcessivePublicCount") the same list again: it grows by design with every new refusal
  */
 final class CommerceException extends \RuntimeException
 {
@@ -98,6 +99,25 @@ final class CommerceException extends \RuntimeException
 	public static function qtyInvalid(int $most): self
 	{
 		return new self('qty_invalid', 422, "Choose a quantity from 1 to {$most}.");
+	}
+
+	public static function amountRequired(): self
+	{
+		return new self('amount_required', 422, 'Enter the amount you want to pay.');
+	}
+
+	/**
+	 * @param string $least       the lowest amount that is not zero, already written for the store's currency
+	 * @param string $most        the highest amount, written the same way
+	 * @param bool   $zeroAllowed the buyer may also enter 0
+	 */
+	public static function amountInvalid(string $least, string $most, bool $zeroAllowed): self
+	{
+		$message = $zeroAllowed
+			? "Enter 0, or an amount from {$least} to {$most}."
+			: "Enter an amount from {$least} to {$most}.";
+
+		return new self('amount_invalid', 422, $message);
 	}
 
 	public static function cartFull(int $most): self

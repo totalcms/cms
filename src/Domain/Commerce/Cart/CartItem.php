@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Cart;
 
 /**
- * One thing in a cart: which product, which variant, how many. Never a price.
+ * One thing in a cart: which product, which variant, how many. Never a
+ * price. The one number a buyer may add is the amount they chose to pay
+ * for a product that lets them name it; CartService checks it, and the
+ * price is still worked out from the catalog.
  */
 final readonly class CartItem
 {
 	/**
 	 * @param string $variantId '' for a product without variants
+	 * @param ?float $amount    what the buyer named, in major units; null for a product with a fixed price
 	 */
 	public function __construct(
 		public string $productId,
 		public string $variantId,
 		public int $qty,
+		public ?float $amount = null,
 	) {
 	}
 
@@ -35,13 +40,18 @@ final readonly class CartItem
 
 	public function withQty(int $qty): self
 	{
-		return new self($this->productId, $this->variantId, $qty);
+		return new self($this->productId, $this->variantId, $qty, $this->amount);
 	}
 
-	/** @return array{productId: string, variantId: string, qty: int} */
+	/** @return array{productId: string, variantId: string, qty: int, amount?: float} */
 	public function toArray(): array
 	{
-		return ['productId' => $this->productId, 'variantId' => $this->variantId, 'qty' => $this->qty];
+		$data = ['productId' => $this->productId, 'variantId' => $this->variantId, 'qty' => $this->qty];
+		if ($this->amount !== null) {
+			$data['amount'] = $this->amount;
+		}
+
+		return $data;
 	}
 
 	/** An item read back from a session, or null when it is not one. */
@@ -58,6 +68,10 @@ final readonly class CartItem
 			return null;
 		}
 
-		return new self($productId, $variantId, $qty);
+		// An amount that is not a usable number is dropped; the line stays.
+		$amount = $data['amount'] ?? null;
+		$amount = (is_int($amount) || is_float($amount)) && is_finite($amount) && $amount >= 0 ? (float)$amount : null;
+
+		return new self($productId, $variantId, $qty, $amount);
 	}
 }

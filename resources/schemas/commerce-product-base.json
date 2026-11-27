@@ -6,7 +6,7 @@
 	"title": "Product",
 	"category": "Commerce",
 	"description": "The core of a sellable product: name, status, price, description, images and the way it is organized. Meant to be inherited: a product schema of your own takes this part, then any of the other commerce-product parts it needs.",
-	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Organize---\ncategory tags\nmeta meta\n---Dates---\ncreated updated",
+	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\ncustomPrice minPrice\nsuggestedPrices suggestedPrices\n---Organize---\ncategory tags\nmeta meta\n---Dates---\ncreated updated",
 	"required": [
 		"id",
 		"title",
@@ -109,6 +109,29 @@
 			"label": "Taxable",
 			"help": "Charge tax on this product when the store charges tax.",
 			"default": true
+		},
+		"customPrice": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Let Buyers Choose the Price",
+			"help": "The buyer types the amount at checkout. Price is the amount the field starts with.",
+			"default": false
+		},
+		"minPrice": {
+			"type": "number",
+			"field": "price",
+			"label": "Minimum Price",
+			"help": "The least a buyer may pay. 0 lets them pay nothing for a one-time purchase.",
+			"default": 0,
+			"settings": {
+				"currency": "store"
+			}
+		},
+		"suggestedPrices": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"field": "list",
+			"label": "Suggested Prices",
+			"help": "Amounts offered as one-click choices, such as 5, 10 and 25. Leave empty for none."
 		},
 		"description": {
 			"type": "string",

@@ -30,7 +30,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 	expect(array_keys($defaults))->toBe([
 		'enabled', 'currency', 'collections', 'customerCollection', 'providers', 'orderNumberStart', 'orderNumberPrefix',
 		'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer',
-		'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage',
+		'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'customPriceMax', 'checkoutAttributes', 'returnPage',
 		'checkoutMode', 'payPage', 'grantableGroups', 'paymentFailedMailer',
 	])
 		->and($defaults['collections'])->toBe(['products' => 'products', 'orders' => 'orders', 'transactions' => 'transactions', 'carts' => 'carts', 'subscriptions' => 'subscriptions', 'discounts' => 'discounts']);
@@ -43,7 +43,7 @@ test('the shipped defaults name every setting, and the reader agrees with them',
 
 	// The store name is not here: left empty it is the site's own name, which
 	// CommerceSettingsTest pins.
-	foreach (['enabled', 'currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
+	foreach (['enabled', 'currency', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'lowStockAt', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'customPriceMax', 'checkoutMode', 'grantableGroups', 'enabledProviders'] as $accessor) {
 		expect($shipped->{$accessor}())->toBe($fallback->{$accessor}(), $accessor);
 	}
 });
@@ -87,7 +87,7 @@ test('the settings form renders with a field for each setting an operator choose
 	// has none: the field is there, with nothing in it to name.
 	expect($html)->toContain('data-type="checklist" style="--grid-area: providers;');
 
-	foreach (['currency', 'customerCollection', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
+	foreach (['currency', 'customerCollection', 'orderNumberStart', 'orderNumberPrefix', 'taxMode', 'taxBy', 'taxShipping', 'taxRates', 'shippingMode', 'shippingFlatRate', 'shippingFreeOver', 'shippingZones', 'receiptMailer', 'paymentFailedMailer', 'downloadTtlHours', 'downloadMaxCount', 'pendingOrderTtlHours', 'cartMaxLines', 'cartMaxQty', 'customPriceMax', 'checkoutAttributes', 'returnPage', 'payPage', 'checkoutMode', 'grantableGroups'] as $field) {
 		expect($html)->toContain('name="' . $field . '"', $field);
 	}
 });

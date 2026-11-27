@@ -712,6 +712,7 @@ $settings['commerce'] = [
 	'pendingOrderTtlHours' => 24,
 	'cartMaxLines'         => 100,
 	'cartMaxQty'           => 99,
+	'customPriceMax'       => 10000,            // the most a buyer may name for a product that lets them choose the price
 	'checkoutAttributes'   => [],               // extra values checkout may take from the buyer, by name, e.g. ['licenseKey']
 	'returnPage'           => '',               // Site Builder page id for the order page; '' = the built-in page
 	'checkoutMode'         => 'hosted',         // hosted | embedded; embedded falls back to hosted when the provider cannot do it

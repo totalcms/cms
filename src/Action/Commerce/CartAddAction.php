@@ -21,10 +21,17 @@ final readonly class CartAddAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		return $this->responder->change($request, $response, fn (array $body) => $this->cart->add(
-			$this->responder->text($body, 'productId'),
-			$this->responder->text($body, 'variantId'),
-			$this->responder->qty($body, 1),
-		));
+		return $this->responder->change($request, $response, function (array $body): void {
+			// A JSON client may send the amount as a number; a form sends text.
+			$sent   = $body['amount'] ?? null;
+			$amount = is_float($sent) ? (string)$sent : $this->responder->text($body, 'amount');
+
+			$this->cart->add(
+				$this->responder->text($body, 'productId'),
+				$this->responder->text($body, 'variantId'),
+				$this->responder->qty($body, 1),
+				$amount === '' ? null : $amount,
+			);
+		});
 	}
 }

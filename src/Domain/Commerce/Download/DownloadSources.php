@@ -97,8 +97,11 @@ final class DownloadSources
 		return null;
 	}
 
-	/** The field type of the collection's Download property, or '' when it has none. */
-	private function fieldType(string $collection): string
+	/**
+	 * The field type of the collection's Download property, or '' when it has
+	 * none. Throws when the collection's schema cannot be read.
+	 */
+	public function fieldType(string $collection): string
 	{
 		$property = $this->schemas->fetchSchemaForCollection($collection)->properties[self::PROPERTY] ?? null;
 		if (!is_array($property)) {

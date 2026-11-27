@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Order;
 
 use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Commerce\Cart\CustomAmount;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Discount\AppliedDiscount;
@@ -85,7 +86,11 @@ final readonly class OrderBuilder
 	{
 		$product = $this->catalog->purchasable($item->productId, $item->variantId);
 		$variant = $item->variantId === '' ? null : ($product->variants[$item->variantId] ?? null);
-		$priced  = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx);
+		// The same check the cart makes when it prices: an amount that stood when it went in may not now.
+		if (!CustomAmount::stands($item, $product, $product->isRecurring($variant), $this->settings)) {
+			throw CommerceException::productUnavailable();
+		}
+		$priced  = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx, $item->amount);
 		$every   = $product->recurrence($variant);
 
 		return new OrderLineDraft(

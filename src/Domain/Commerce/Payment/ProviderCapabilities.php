@@ -9,6 +9,9 @@ namespace TotalCMS\Domain\Commerce\Payment;
  * {@see SubscriptionProvider}, and `embedded` only for an
  * {@see EmbeddedCheckoutProvider}. `tax` is true for one that can work out
  * the tax on an order itself and add it when the buyer pays.
+ * `recurringCustomAmounts` is true for one that can bill a plan at an amount
+ * the buyer named at checkout, not one made ahead of time: a provider that
+ * does not say so is assumed not to.
  */
 final readonly class ProviderCapabilities
 {
@@ -20,6 +23,7 @@ final readonly class ProviderCapabilities
 		public bool $subscriptions = false,
 		public bool $billingPortal = false,
 		public bool $tax = false,
+		public bool $recurringCustomAmounts = false,
 	) {
 	}
 }

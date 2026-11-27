@@ -591,6 +591,7 @@ describe('being ready', function (): void {
 			->and($capabilities->hosted)->toBeTrue()
 			->and($capabilities->embedded)->toBeFalse()
 			->and($capabilities->subscriptions)->toBeFalse()
+			->and($capabilities->recurringCustomAmounts)->toBeFalse()
 			->and($capabilities->tax)->toBeFalse()
 			->and($provider)->not->toBeInstanceOf(SubscriptionProvider::class)
 			->and($provider)->not->toBeInstanceOf(EmbeddedCheckoutProvider::class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 
@@ -202,5 +203,36 @@ describe('in a template', function (): void {
 		bootCommerceStore(open: false);
 
 		expect(renderTwig('[{{ cms.cart.discountForm() }}][{{ cms.cart.discount() is null ? "none" : "some" }}][{{ cms.cart.total() }}]'))->toBe('[][none][0]');
+	});
+});
+
+describe('a price the buyer named', function (): void {
+	beforeEach(function (): void {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)
+			->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]));
+		expect(postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => '25'])->getStatusCode())->toBe(200);
+	});
+
+	it('is left alone by a percentage code', function (): void {
+		applyCode('fall15');
+		$lines = array_column(($this->cart)()['lines'], 'discountTotal', 'productId');
+
+		expect($lines['give'])->toBe(0)->and(($this->cart)()['discount']['amount'])->toBe(487);
+	});
+
+	it('is not reduced by a fixed code worth more than the fixed-price lines', function (): void {
+		seedDiscount('big', ['type' => 'fixed', 'value' => 100]);
+		applyCode('big');
+		$cart  = ($this->cart)();
+		$lines = array_column($cart['lines'], 'discountTotal', 'productId');
+
+		expect($lines['give'])->toBe(0)->and($cart['discount']['amount'])->toBe(3249)->and($cart['total'])->toBe(2500);
+	});
+
+	it('is not a reason for a code to apply', function (): void {
+		seedDiscount('give-only', ['type' => 'percent', 'value' => 50, 'products' => ['give']]);
+		$res = postJson('/commerce/cart/discount', ['code' => 'give-only']);
+
+		expect($res->getStatusCode())->toBe(422)->and(($this->json)($res)['error']['code'])->toBe('discount_no_items');
 	});
 });

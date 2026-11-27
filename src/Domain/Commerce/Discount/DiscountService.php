@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Commerce\Discount;
 
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\OrderLineDraft;
+use TotalCMS\Domain\Commerce\Pricing\PricedUnit;
 use TotalCMS\Domain\Commerce\Service\MoneyConverter;
 use TotalCMS\Domain\Commerce\Service\MoneyFormatter;
 use TotalCMS\Domain\Money\Money;
@@ -39,6 +40,10 @@ final readonly class DiscountService
 	{
 		$cart = [];
 		foreach ($lines as $lineId => $line) {
+			// A price the buyer named is not discounted.
+			if ($line->priceSource === PricedUnit::CUSTOM) {
+				continue;
+			}
 			$cart[] = DiscountLine::fromDraft($lineId, $line);
 		}
 

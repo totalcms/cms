@@ -287,3 +287,41 @@ describe('the cart repository', function (): void {
 			->and($stored['updated'])->not->toBe('');
 	});
 });
+
+describe('an amount the buyer named', function (): void {
+	beforeEach(function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]);
+	});
+
+	test('is stored for a signed-in customer', function (): void {
+		($this->signedIn)();
+		$this->cart->add('give', '', 1, '25.5');
+
+		$carts = array_values(($this->storedCarts)());
+		expect($carts[0]['items'])->toBe([['productId' => 'give', 'variantId' => '', 'qty' => 1, 'amount' => 25.5]]);
+	});
+
+	test('comes back when the customer signs in again', function (): void {
+		$this->repo->save(null, [
+			'customerCollection' => 'members', 'customerId' => 'ann', 'status' => 'active',
+			'items'              => [['productId' => 'give', 'variantId' => '', 'qty' => 1, 'amount' => 25.5]], 'attributes' => [],
+		]);
+
+		($this->login)('ann', 'members');
+
+		expect($this->store->items()[CartItem::lineKey('give', '')]->amount)->toBe(25.5);
+	});
+
+	test('is replaced, not added, when this visit names one for the same line', function (): void {
+		$this->repo->save(null, [
+			'customerCollection' => 'members', 'customerId' => 'ann', 'status' => 'active',
+			'items'              => [['productId' => 'give', 'variantId' => '', 'qty' => 1, 'amount' => 25.5]], 'attributes' => [],
+		]);
+		$this->cart->add('give', '', 1, '40');
+
+		($this->login)('ann', 'members');
+
+		$item = $this->store->items()[CartItem::lineKey('give', '')];
+		expect($item->qty)->toBe(1)->and($item->amount)->toBe(40.0);
+	});
+});

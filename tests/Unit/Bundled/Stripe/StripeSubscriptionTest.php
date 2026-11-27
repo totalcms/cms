@@ -121,7 +121,8 @@ it('says it can bill subscriptions and has a page for the buyer\'s card', functi
 
 	expect($provider)->toBeInstanceOf(SubscriptionProvider::class)
 		->and($provider->capabilities()->subscriptions)->toBeTrue()
-		->and($provider->capabilities()->billingPortal)->toBeTrue();
+		->and($provider->capabilities()->billingPortal)->toBeTrue()
+		->and($provider->capabilities()->recurringCustomAmounts)->toBeTrue();
 });
 
 describe('starting a subscription', function (): void {
@@ -150,6 +151,32 @@ describe('starting a subscription', function (): void {
 		subsProvider($http)->createCheckout(subsCheckout([subsClub(1, 0, 0, 'week', 2)], 1000, 1000));
 
 		expect(subsForm($http)['line_items'][0]['price_data']['recurring'])->toBe(['interval' => 'week', 'interval_count' => '2']);
+	});
+
+	it('bills an amount the buyer named, monthly or once, as an inline price made at checkout', function (): void {
+		$gift = static fn (int $amount, ?Recurrence $every): CheckoutLineSummary => new CheckoutLineSummary('Giving', 1, subsUsd($amount), subsUsd(0), subsUsd(0), $every);
+
+		$http = new RecordingHttpClient(subsSession());
+		subsProvider($http)->createCheckout(subsCheckout([$gift(1500, new Recurrence('month', 1))], 1500, 1500));
+		$monthly = subsForm($http)['line_items'][0]['price_data'];
+
+		$http = new RecordingHttpClient(subsSession());
+		subsProvider($http)->createCheckout(subsCheckout([$gift(500, null)], 500, 0, ['mode' => 'payment', 'recurringTotal' => null, 'recurringTax' => null, 'subscriptionId' => '']));
+		$once = subsForm($http)['line_items'][0]['price_data'];
+
+		$http = new RecordingHttpClient(subsSession());
+		subsProvider($http)->createCheckout(subsCheckout([subsTee(), $gift(1500, new Recurrence('month', 1))], 3499, 1500));
+		$mixed = subsForm($http)['line_items'];
+
+		expect($monthly['unit_amount'])->toBe('1500')
+			->and($monthly['recurring'])->toBe(['interval' => 'month', 'interval_count' => '1'])
+			->and($once['unit_amount'])->toBe('500')
+			->and($once)->not->toHaveKey('recurring')
+			->and($mixed)->toHaveCount(2)
+			->and($mixed[0]['price_data']['unit_amount'])->toBe('1999')
+			->and($mixed[0]['price_data'])->not->toHaveKey('recurring')
+			->and($mixed[1]['price_data']['unit_amount'])->toBe('1500')
+			->and($mixed[1]['price_data']['recurring'])->toBe(['interval' => 'month', 'interval_count' => '1']);
 	});
 
 	it('keeps a recurring line\'s quantity when nothing is taken off it', function (): void {

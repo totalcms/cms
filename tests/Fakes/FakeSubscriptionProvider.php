@@ -17,7 +17,7 @@ use TotalCMS\Domain\Commerce\Payment\SubscriptionProvider;
  * A fake provider that can do everything Stripe can: bill a subscription and
  * mount its checkout in the store's own page.
  */
-final class FakeSubscriptionProvider extends FakePaymentProvider implements SubscriptionProvider, EmbeddedCheckoutProvider
+class FakeSubscriptionProvider extends FakePaymentProvider implements SubscriptionProvider, EmbeddedCheckoutProvider
 {
 	/** @var list<array{ref: string, atPeriodEnd: bool}> */
 	public array $cancellations = [];
@@ -34,7 +34,7 @@ final class FakeSubscriptionProvider extends FakePaymentProvider implements Subs
 
 	public function capabilities(): ProviderCapabilities
 	{
-		return new ProviderCapabilities(embedded: $this->embedded, subscriptions: true, billingPortal: true, tax: $this->tax);
+		return new ProviderCapabilities(embedded: $this->embedded, subscriptions: true, billingPortal: true, tax: $this->tax, recurringCustomAmounts: true);
 	}
 
 	public function createCheckout(CheckoutRequest $request): CheckoutSession

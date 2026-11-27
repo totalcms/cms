@@ -8,6 +8,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -95,15 +96,11 @@ final readonly class ProductCatalog
 			throw CommerceException::productUnavailable();
 		}
 
-		// A provider bills a period. It does not send a parcel each time.
-		if ($product->isRecurring() && $product->requiresShipping) {
-			throw CommerceException::subscriptionShips();
-		}
-
 		if (!$product->hasVariants) {
 			if ($variantId !== '') {
 				throw CommerceException::variantInvalid();
 			}
+			$this->refuseShippedPlan($product, null);
 			$product->recurrence();
 
 			return $product;
@@ -114,10 +111,23 @@ final readonly class ProductCatalog
 		if (!isset($product->variants[$variantId]) || !$product->variants[$variantId]->active) {
 			throw CommerceException::variantInvalid();
 		}
+		$this->refuseShippedPlan($product, $product->variants[$variantId]);
 		// A plan whose billing period no provider can bill is not for sale.
 		$product->recurrence($product->variants[$variantId]);
 
 		return $product;
+	}
+
+	/**
+	 * A provider bills a period. It does not send a parcel each time.
+	 *
+	 * @throws CommerceException `subscription_ships`
+	 */
+	private function refuseShippedPlan(ProductView $product, ?VariantView $variant): void
+	{
+		if ($product->isRecurring($variant) && $product->requiresShipping) {
+			throw CommerceException::subscriptionShips();
+		}
 	}
 
 	/** The URL of the first image in the product's gallery, or ''. */

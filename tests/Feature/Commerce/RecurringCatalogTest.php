@@ -6,6 +6,8 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Cart\CartService;
+use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
 use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
@@ -178,5 +180,156 @@ describe('what a template is told', function (): void {
 		$this->cart->add('club', 'yearly', 1);
 
 		expect(renderTwig('{{ cms.cart.page() }}'))->toContain('every year');
+	});
+});
+
+/*
+ * One product can be given once or every month. The giving product is a
+ * name-your-price product billed once, with a variant that is billed as a
+ * subscription. A variant with no billing of its own follows the product.
+ */
+describe('a variant billed differently from its product', function (): void {
+	beforeEach(function (): void {
+		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'interval' => 'month', 'intervalCount' => 1, 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'One time'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		$this->giving = $this->catalog->product('giving');
+	});
+
+	it('can be billed differently from its product', function (): void {
+		expect($this->giving->isRecurring($this->giving->variants['once']))->toBeFalse()
+			->and($this->giving->isRecurring($this->giving->variants['monthly']))->toBeTrue()
+			->and($this->giving->isRecurring())->toBeFalse()
+			->and($this->giving->recurrence($this->giving->variants['monthly']))->toEqual(new Recurrence('month', 1, 0))
+			->and($this->giving->recurrence($this->giving->variants['once']))->toBeNull();
+	});
+
+	it('follows the product when it has no billing of its own', function (): void {
+		$club = $this->catalog->product('club');
+
+		expect($club->variants['monthly']->billing)->toBeNull()
+			->and($club->isRecurring($club->variants['monthly']))->toBeTrue()
+			->and($this->giving->variants['once']->billing)->toBeNull();
+	});
+
+	it('can be a once-billed line of a subscription product', function (): void {
+		seedPlan('mixed', 1000, ['variants' => [
+			'setup'  => ['id' => 'setup', 'title' => 'Setup', 'billing' => 'once'],
+			'yearly' => ['id' => 'yearly', 'title' => 'Yearly', 'interval' => 'year'],
+		]]);
+		$mixed = $this->catalog->product('mixed');
+
+		expect($mixed->isRecurring($mixed->variants['setup']))->toBeFalse()
+			->and($mixed->recurrence($mixed->variants['setup']))->toBeNull()
+			->and($mixed->recurrence($mixed->variants['yearly']))->toEqual(new Recurrence('year', 1));
+	});
+
+	it('ignores a billing it does not know', function (): void {
+		expect(VariantView::fromItem('x', ['title' => 'X', 'billing' => 'fortnightly'])->billing)->toBeNull();
+	});
+
+	it('uses the variant\'s own period over the product\'s', function (): void {
+		seedPlan('gift', 1000, ['billing' => 'once', 'interval' => 'month', 'variants' => [
+			'yearly' => ['id' => 'yearly', 'title' => 'Yearly', 'billing' => 'recurring', 'interval' => 'year'],
+		]]);
+		$gift = $this->catalog->product('gift');
+
+		expect($gift->recurrence($gift->variants['yearly']))->toEqual(new Recurrence('year', 1));
+	});
+
+	it('cannot bill a recurring variant when no period is named anywhere', function (): void {
+		$product = ProductView::fromObject(['id' => 'bare', 'title' => 'Bare', 'status' => 'active', 'price' => 5, 'billing' => 'once', 'variants' => [
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+
+		expect($product->interval)->toBe('')
+			->and(($this->refused)(fn () => $product->recurrence($product->variants['monthly'])))->toBe('product_unavailable:404');
+	});
+
+	it('keeps the interval a once-billed product stores', function (): void {
+		expect($this->giving->interval)->toBe('month')->and($this->giving->intervalCount)->toBe(1);
+	});
+
+	it('refuses a recurring variant of a product that ships', function (): void {
+		seedPlan('box', 1000, ['type' => 'physical', 'requiresShipping' => true, 'billing' => 'once', 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'Once'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		enableSubscriptions();
+
+		expect(($this->refused)(fn () => $this->catalog->purchasable('box', 'monthly')))->toBe('subscription_ships:422')
+			->and(($this->refused)(fn () => $this->catalog->purchasable('box', 'once')))->toBe('allowed');
+	});
+
+	it('names how each variant is billed to a template', function (): void {
+		$twig = $this->c->get(CommerceTwigAdapter::class);
+
+		expect($twig->price('giving', 'once'))->toMatchArray(['billing' => 'once', 'interval' => ''])
+			->and($twig->price('giving', 'monthly'))->toMatchArray(['billing' => 'recurring', 'interval' => 'month', 'intervalCount' => 1]);
+	});
+
+	describe('in the cart', function (): void {
+		beforeEach(fn () => enableSubscriptions());
+
+		it('makes a monthly gift a recurring line at the amount named', function (): void {
+			$this->cart->add('giving', 'monthly', 1, '15');
+			$line = ($this->view)()->lines[0];
+
+			expect($line->billing)->toBe('recurring')
+				->and($line->interval)->toBe('month')
+				->and($line->unitPrice->amount())->toBe(1500)
+				->and($line->priceSource)->toBe('custom')
+				->and(($this->view)()->hasSubscription())->toBeTrue();
+		});
+
+		it('makes the one-time gift a one-time line', function (): void {
+			$this->cart->add('giving', 'once', 1, '15');
+			$line = ($this->view)()->lines[0];
+
+			expect($line->billing)->toBe('once')
+				->and($line->interval)->toBe('')
+				->and($line->unitPrice->amount())->toBe(1500)
+				->and(($this->view)()->hasSubscription())->toBeFalse();
+		});
+
+		it('cannot make a monthly gift nothing, but can make a one-time one', function (): void {
+			expect(($this->refused)(fn () => $this->cart->add('giving', 'monthly', 1, '0')))->toBe('amount_invalid:422')
+				->and(($this->refused)(fn () => $this->cart->add('giving', 'once', 1, '0')))->toBe('allowed');
+		});
+
+		it('holds the one-time and the monthly gift as two lines', function (): void {
+			$this->cart->add('giving', 'once', 1, '10');
+			$this->cart->add('giving', 'monthly', 1, '15');
+			$lines = ($this->view)()->lines;
+
+			expect($lines)->toHaveCount(2)
+				->and(array_map(static fn ($line): string => $line->billing, $lines))->toBe(['once', 'recurring'])
+				->and(array_map(static fn ($line): int => $line->unitPrice->amount(), $lines))->toBe([1000, 1500]);
+		});
+
+		it('is not a subscription when only the one-time variant is in the cart', function (): void {
+			$this->cart->add('giving', 'once', 1, '10');
+
+			expect(($this->view)()->hasSubscription())->toBeFalse()
+				->and(renderTwig('{% for p in cms.commerce.providers() %}{{ p.id }},{% endfor %}'))->toBe('fake,fake-sub,');
+		});
+
+		it('offers only the ways to pay that bill a subscription once the monthly gift is in', function (): void {
+			$this->cart->add('giving', 'monthly', 1, '15');
+
+			expect(renderTwig('{% for p in cms.commerce.providers() %}{{ p.id }},{% endfor %}'))->toBe('fake-sub,');
+		});
+
+		it('keeps to one billing period like any other plan', function (): void {
+			$this->cart->add('club', 'yearly', 1);
+
+			expect(($this->refused)(fn () => $this->cart->add('giving', 'monthly', 1, '15')))->toBe('subscription_interval_mismatch:422');
+		});
+	});
+
+	it('cannot be added as a monthly gift when no way to pay can bill a subscription', function (): void {
+		expect(($this->refused)(fn () => $this->cart->add('giving', 'monthly', 1, '15')))->toBe('subscription_unavailable:503')
+			->and(($this->refused)(fn () => $this->cart->add('giving', 'once', 1, '15')))->toBe('allowed');
 	});
 });

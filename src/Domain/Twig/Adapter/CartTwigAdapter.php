@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\SessionInterface;
 use TotalCMS\Domain\Commerce\Cart\CartLineView;
+use TotalCMS\Domain\Commerce\Cart\AmountField;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
 use TotalCMS\Domain\Commerce\Cart\CartView;
@@ -43,6 +44,10 @@ use TotalCMS\Support\Config;
  *                                                  of the store a template
  *                                                  can show: cart, catalog,
  *                                                  providers, prices
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") it exposes the whole
+ *                                                  cart to a template: the
+ *                                                  cart, catalog, checkout,
+ *                                                  providers and amounts
  */
 final readonly class CartTwigAdapter
 {
@@ -66,6 +71,7 @@ final readonly class CartTwigAdapter
 		private MoneyFilter $money,
 		private TaxCalculator $tax,
 		private \Closure $checkout,
+		private AmountField $amount,
 	) {
 	}
 
@@ -112,6 +118,24 @@ final readonly class CartTwigAdapter
 	public function hasSubscription(): bool
 	{
 		return $this->view()?->hasSubscription() ?? false;
+	}
+
+	/**
+	 * The ways to pay that can take this cart, from one look at it.
+	 *
+	 * @return list<PaymentProvider>
+	 */
+	public function payableWith(): array
+	{
+		$view = $this->view();
+
+		return $this->providers->forCart($view?->hasSubscription() ?? false, $view?->hasNamedPlan() ?? false);
+	}
+
+	/** Whether a plan in the cart is at an amount the buyer named. */
+	public function hasNamedPlan(): bool
+	{
+		return $this->view()?->hasNamedPlan() ?? false;
 	}
 
 	/** The lines added up, in minor units, before discount, shipping and tax. */
@@ -291,7 +315,7 @@ final readonly class CartTwigAdapter
 
 		$providers = array_map(
 			fn (PaymentProvider $provider): array => ['id' => $provider->id(), 'label' => $provider->label(), 'worksOutTax' => $this->providers->worksOutTax($provider)],
-			$this->providers->forCart($view->hasSubscription()),
+			$this->providers->forCart($view->hasSubscription(), $view->hasNamedPlan()),
 		);
 		// The store works out the tax for an order paid with any provider
 		// that does not work it out itself, and for one that costs nothing.
@@ -395,7 +419,13 @@ final readonly class CartTwigAdapter
 	{
 		$qty = $options['qty'] ?? 1;
 
-		return ($this->twig)()->render('commerce/add-form.twig', $with + [
+		// A named price is one line of one: no quantity, whatever was asked.
+		if ($product->customPrice) {
+			$qty  = 1;
+			$with = ['showQty' => false] + $with;
+		}
+
+		return ($this->twig)()->render('commerce/add-form.twig', $this->amount->variables($product) + $with + [
 			'productId' => $product->id,
 			'qty'       => is_int($qty) && $qty > 0 ? $qty : 1,
 			'label'     => $this->option($options, 'label') ?: 'Add to cart',

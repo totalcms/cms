@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Commerce\Pricing;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Service\MoneyConverter;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Factory\LogChannel;
@@ -35,10 +36,25 @@ final readonly class PricingService
 	 * The catalog price is the variant's own when it has one, the product's
 	 * otherwise. Each registered resolver is then asked, lowest priority
 	 * first, and the first that names a price sets it.
+	 *
+	 * A price the buyer named is used only for a product that lets them, and
+	 * then no resolver is asked: it is their price. For any other product
+	 * $amount is ignored. The caller has already checked it still stands
+	 * (CustomAmount::stands()); this does not set the rules. It is in the
+	 * store's currency, as every price here is.
+	 *
+	 * @param float|null $amount the amount the buyer named, in major units
 	 */
-	public function unitPrice(ProductView $product, ?VariantView $variant, int $qty, PricingContext $ctx): PricedUnit
+	public function unitPrice(ProductView $product, ?VariantView $variant, int $qty, PricingContext $ctx, ?float $amount = null): PricedUnit
 	{
 		$list = $this->converter->fromPrice($variant->price ?? $product->price, $ctx->currency);
+
+		if ($product->customPrice && $amount !== null) {
+			// An amount that cannot be money is not a reason to fall back to the catalog price.
+			$named = $this->named($amount, $ctx) ?? throw CommerceException::productUnavailable();
+
+			return new PricedUnit($list, $named, PricedUnit::CUSTOM);
+		}
 
 		foreach ($this->resolvers->ordered() as $resolver) {
 			$price = $this->ask($resolver, $product, $variant, $qty, $ctx);
@@ -48,6 +64,16 @@ final readonly class PricingService
 		}
 
 		return new PricedUnit($list, $list, PricedUnit::CATALOG);
+	}
+
+	/** The amount a buyer named as money, or null when it cannot be one. */
+	private function named(float $amount, PricingContext $ctx): ?Money
+	{
+		try {
+			return $this->converter->fromPrice($amount, $ctx->currency);
+		} catch (\InvalidArgumentException | \OverflowException) {
+			return null;
+		}
 	}
 
 	/**

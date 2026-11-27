@@ -15,6 +15,7 @@ use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Money\Money;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Support\Config;
@@ -209,4 +210,39 @@ it('waives shipping with a free-shipping code', function (): void {
 		->and($order->grandTotal())->toBe(1250)
 		->and($this->fake->checkouts[0]->shipping->amount())->toBe(0)
 		->and($this->fake->checkouts[0]->total->amount())->toBe(1250);
+});
+
+describe('a price the buyer named', function (): void {
+	beforeEach(function (): void {
+		$this->c->get(ActorContext::class)->runAs(Actor::system(), fn () => $this->c->get(ObjectSaver::class)
+			->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]));
+		$this->named = fn (string $amount) => expect(postJson('/commerce/cart/add', ['productId' => 'give', 'amount' => $amount])->getStatusCode())->toBe(200);
+	});
+
+	it('is left alone by a discount code on the order', function (): void {
+		seedDiscount('tenth', ['type' => 'percent', 'value' => 10]);
+		($this->add)('mug');
+		($this->named)('25');
+		applyCode('tenth');
+		$res   = ($this->buy)();
+		$order = ($this->only)();
+
+		expect($res->getStatusCode())->toBe(200)
+			->and($order->discountTotal())->toBe(125)
+			->and($order->line('l1')['discountTotal'])->toBe(125)
+			->and($order->line('l2')['discountTotal'])->toBe(0)
+			->and($order->line('l2')['priceSource'])->toBe('custom')
+			->and($order->grandTotal())->toBe(1250 + 2500 - 125);
+	});
+
+	it('does not take a fixed code\'s remainder out of it', function (): void {
+		seedDiscount('big', ['type' => 'fixed', 'value' => 100]);
+		($this->add)('mug');
+		($this->named)('25');
+		applyCode('big');
+		($this->buy)();
+		$order = ($this->only)();
+
+		expect($order->discountTotal())->toBe(1250)->and($order->line('l2')['discountTotal'])->toBe(0)->and($order->grandTotal())->toBe(2500);
+	});
 });

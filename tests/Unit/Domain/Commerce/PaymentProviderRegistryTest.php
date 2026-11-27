@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Psr\Container\ContainerInterface;
 use Tests\Fakes\FakePaymentProvider;
 use Tests\Fakes\FakeSubscriptionProvider;
+use Tests\Fakes\FixedPlanSubscriptionProvider;
 use Tests\Fakes\OpenCommerceGate;
 use Tests\Fakes\RecordingLogger;
 use TotalCMS\Domain\Commerce\Data\CommerceGateStatus;
@@ -125,6 +126,18 @@ describe('what a buyer is offered', function (): void {
 			->and($registry->subscriptionProvider('fake-sub'))->toBeInstanceOf(FakeSubscriptionProvider::class)
 			->and($registry->subscriptionProvider('fake'))->toBeNull()
 			->and($registry->subscriptionProvider('nothing'))->toBeNull();
+	});
+
+	it('offers a plan at an amount the buyer named only the providers that say they can bill one', function (): void {
+		$registry = providerRegistry(['fake', 'fake-sub', 'fixed-sub']);
+		$registry->register(new FakePaymentProvider());
+		$registry->register(new FakeSubscriptionProvider());
+		// A subscription provider that says nothing about named amounts is not assumed to bill them.
+		$registry->register(new FixedPlanSubscriptionProvider());
+
+		expect(providerIds($registry->forCart(true, true)))->toBe(['fake-sub'])
+			->and(providerIds($registry->forCart(true)))->toBe(['fake-sub', 'fixed-sub'])
+			->and(providerIds($registry->forCart(false, true)))->toBe(['fake', 'fake-sub', 'fixed-sub']);
 	});
 });
 

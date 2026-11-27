@@ -50,6 +50,7 @@ it('has a working default for everything', function (): void {
 		->and($s->pendingOrderTtlHours())->toBe(24)
 		->and($s->cartMaxLines())->toBe(100)
 		->and($s->cartMaxQty())->toBe(99)
+		->and($s->customPriceMax())->toBe(10000.0)
 		->and($s->checkoutAttributes())->toBe([])
 		->and($s->returnPage())->toBe('')
 		->and($s->payPage())->toBe('')
@@ -78,6 +79,7 @@ it('reads what the site set', function (): void {
 		'pendingOrderTtlHours' => 2,
 		'cartMaxLines'         => 20,
 		'cartMaxQty'           => 10,
+		'customPriceMax'       => '250.5',
 		'checkoutAttributes'   => ['licenseKey', 'giftNote'],
 		'returnPage'           => 'thanks',
 		'payPage'              => 'pay',
@@ -106,6 +108,7 @@ it('reads what the site set', function (): void {
 		->and($s->pendingOrderTtlHours())->toBe(2)
 		->and($s->cartMaxLines())->toBe(20)
 		->and($s->cartMaxQty())->toBe(10)
+		->and($s->customPriceMax())->toBe(250.5)
 		->and($s->checkoutAttributes())->toBe(['licenseKey', 'giftNote'])
 		->and($s->returnPage())->toBe('thanks')
 		->and($s->payPage())->toBe('pay')
@@ -211,3 +214,7 @@ it('is switched off until the site turns it on', function (mixed $saved, bool $o
 	// Only the toggle's own value turns it on: a hand-edited one does not.
 	'a hand-edited 1' => ['1', false],
 ]);
+
+it('falls back to 10000 for a highest custom price that is not a positive number', function (mixed $stored): void {
+	expect(($this->settings)(['customPriceMax' => $stored])->customPriceMax())->toBe(10000.0);
+})->with([[0], [-5], ['0'], ['lots'], [null], [[]], ['1e999'], [INF]]);

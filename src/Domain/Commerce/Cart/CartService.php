@@ -28,6 +28,10 @@ use TotalCMS\Factory\LoggerFactory;
  *                                                buyer or the checkout does
  *                                                to a cart; they share the
  *                                                rules for storing it
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects") the one place that
+ *                                                coordinates the catalog,
+ *                                                pricing, discounts, the
+ *                                                store and the customer
  */
 final readonly class CartService
 {
@@ -52,13 +56,20 @@ final readonly class CartService
 	/**
 	 * Put $qty more of a product in the cart, on its existing line if it has one.
 	 *
+	 * A product whose buyer names the price takes the amount they typed: the
+	 * line is always one, and adding again replaces the amount. For any other
+	 * product $amount is dropped before anything is stored, so a buyer cannot
+	 * set the price of a fixed-price product.
+	 *
 	 * @param string $variantId '' for a product without variants
+	 * @param ?string $amount   what the buyer typed, as text
 	 *
 	 * @throws CommerceException `product_unavailable`, `variant_required` or `variant_invalid` from the catalog;
 	 *                           `qty_invalid` below 1 or above the most allowed of one item;
+	 *                           `amount_required` or `amount_invalid` for a product that takes an amount;
 	 *                           `cart_full` for a new line in a full cart; `out_of_stock`
 	 */
-	public function add(string $productId, string $variantId, int $qty): void
+	public function add(string $productId, string $variantId, int $qty, ?string $amount = null): void
 	{
 		$this->sync();
 		$product = $this->catalog->purchasable($productId, $variantId);
@@ -74,10 +85,20 @@ final readonly class CartService
 
 		$this->checkPlan($product, $variantId, $items);
 
-		$wanted = ($items[$key]->qty ?? 0) + $qty;
+		$named = null;
+		if ($product->customPrice) {
+			$typed = trim($amount ?? '');
+			if ($typed === '') {
+				throw CommerceException::amountRequired();
+			}
+			$named = CustomAmount::parse($typed, $product, $product->isRecurring($product->variants[$variantId] ?? null), $this->settings);
+		}
+
+		// A named price is one line of one; adding again replaces it.
+		$wanted = $named !== null ? 1 : ($items[$key]->qty ?? 0) + $qty;
 		$this->check($product, $variantId, $wanted);
 
-		$items[$key] = new CartItem($productId, $variantId, $wanted);
+		$items[$key] = new CartItem($productId, $variantId, $wanted, $named);
 		$this->store->put($items);
 		$this->persist();
 	}
@@ -104,10 +125,21 @@ final readonly class CartService
 			throw CommerceException::qtyInvalid($this->settings->cartMaxQty());
 		}
 
-		$item = $items[$lineKey];
-		$this->check($this->catalog->purchasable($item->productId, $item->variantId), $item->variantId, $qty);
+		$item    = $items[$lineKey];
+		$product = $this->catalog->purchasable($item->productId, $item->variantId);
 
-		$items[$lineKey] = $item->withQty($qty);
+		// A line whose buyer named the price stays at one.
+		$qty = $product->customPrice ? 1 : $qty;
+		$this->check($product, $item->variantId, $qty);
+
+		// A line that carries an amount the product no longer takes is left as it is, not
+		// repriced at the catalog price: the next pricing removes it with the notice.
+		if (!$product->customPrice && $item->amount !== null) {
+			// The buyer sees the removal notice on the next view.
+			return;
+		}
+
+		$items[$lineKey] = $product->customPrice ? $item->withQty($qty) : new CartItem($item->productId, $item->variantId, $qty);
 		$this->store->put($items);
 		$this->persist();
 	}
@@ -345,7 +377,8 @@ final readonly class CartService
 	}
 
 	/**
-	 * A plan can go in the cart only when a way to pay can bill one, and
+	 * A plan can go in the cart only when a way to pay can bill one (at an
+	 * amount the buyer names, when the product takes one), and
 	 * only beside plans billed on the same period: a provider makes one
 	 * subscription of a checkout, and a subscription has one period.
 	 *
@@ -359,7 +392,10 @@ final readonly class CartService
 		if (!$every instanceof Recurrence) {
 			return;
 		}
-		if ($this->providers->forCart(true) === []) {
+		// A product that takes an amount is "named" here as it is on the cart's
+		// lines and the order's: adding one requires the amount, and pricing
+		// drops a line whose amount no longer stands, so the three agree.
+		if ($this->providers->forCart(true, $product->customPrice) === []) {
 			throw CommerceException::subscriptionUnavailable();
 		}
 
@@ -455,7 +491,8 @@ final readonly class CartService
 	{
 		$items = $stored;
 		foreach ($mine as $key => $item) {
-			$items[$key] = $item->withQty(($items[$key]->qty ?? 0) + $item->qty);
+			// A line with a named amount is one; this visit's amount wins.
+			$items[$key] = $item->amount !== null ? $item : $item->withQty(($items[$key]->qty ?? 0) + $item->qty);
 		}
 
 		$most  = $this->settings->cartMaxQty();

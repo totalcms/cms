@@ -2,7 +2,7 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "Commerce Settings",
 	"description": "Your store: its currency, how buyers pay, tax, shipping, and the emails it sends. Commerce is a paid add-on for the Pro edition.",
-	"formgrid": "enabled enabled\n---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty",
+	"formgrid": "enabled enabled\n---Store---\ncurrency customerCollection\n---Payments---\nproviders providers\ncheckoutMode .\nreturnPage payPage\n---Orders---\norderNumberStart orderNumberPrefix\npendingOrderTtlHours .\ncheckoutAttributes checkoutAttributes\n---Tax---\ntaxMode taxBy\ntaxShipping .\ntaxRates taxRates\n---Shipping---\nshippingMode .\nshippingFlatRate shippingFreeOver\nshippingZones shippingZones\n---Stock---\nlowStockAt .\n---Email---\nreceiptMailer paymentFailedMailer\n---Digital Products and Memberships---\ndownloadTtlHours downloadMaxCount\ngrantableGroups grantableGroups\n---Limits---\ncartMaxLines cartMaxQty\ncustomPriceMax .",
 	"type": "object",
 	"properties": {
 		"enabled": {
@@ -349,6 +349,15 @@
 			"default": 99,
 			"min": 1,
 			"max": 100000
+		},
+		"customPriceMax": {
+			"type": "number",
+			"field": "number",
+			"label": "Highest Price a Buyer Can Enter",
+			"help": "Used by products that let buyers choose the price. Catches a slip of the finger.",
+			"placeholder": "10000",
+			"default": 10000,
+			"min": 1
 		},
 		"checkoutAttributes": {
 			"type": "array",

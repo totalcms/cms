@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Commerce\Download\DownloadProtection;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderLabels;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
@@ -28,11 +30,13 @@ final readonly class CommerceDashboardView
 		private OrderLabels $labels,
 		private CommerceSettings $settings,
 		private MoneyFilter $money,
+		private DownloadProtection $protection,
+		private CollectionFetcher $collections,
 	) {
 	}
 
 	/**
-	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>, lowStockAt: int}|null
+	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>, lowStockAt: int, productsCollection: string, openDownloads: array{id: string, name: string}|null}|null
 	 *                                                                                                                                                                                                                          null when there is no store, or this user may not see it
 	 */
 	public function forCurrentUser(): ?array
@@ -42,6 +46,7 @@ final readonly class CommerceDashboardView
 		}
 
 		$revenue = $this->dashboard->revenue(self::DAYS);
+		$open    = $this->protection->unprotectedCollection();
 
 		return [
 			'days'       => self::DAYS,
@@ -59,6 +64,8 @@ final readonly class CommerceDashboardView
 			], $this->dashboard->recentOrders()),
 			'lowStock'   => $this->dashboard->lowStock(),
 			'lowStockAt' => $this->settings->lowStockAt(),
+			'productsCollection' => $this->settings->collection('products'),
+			'openDownloads'      => $open === null ? null : ['id' => $open, 'name' => $this->collections->fetchCollection($open)->name ?? $open],
 		];
 	}
 }

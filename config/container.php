@@ -74,6 +74,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Access\AccessGrantService;
 use TotalCMS\Domain\Commerce\Cart\CartLoginListener;
+use TotalCMS\Domain\Commerce\Cart\AmountField;
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Commerce\Cart\CartStore;
 use TotalCMS\Domain\Commerce\Discount\DiscountRepository;
@@ -729,6 +730,7 @@ return [
 		$container->get(TaxCalculator::class),
 		// Lazy: checkout is built only when a checkout form is shown.
 		fn (): CheckoutService => $container->get(CheckoutService::class),
+		$container->get(AmountField::class),
 	),
 
 	// Spelled out for the same reason, and so checkout is built only when a pay page asks.

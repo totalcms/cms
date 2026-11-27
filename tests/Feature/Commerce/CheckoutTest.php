@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Cart\CartItem;
+use TotalCMS\Domain\Commerce\Cart\CartStore;
 use TotalCMS\Domain\Commerce\Contract\CheckoutValidator;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderData;
@@ -473,5 +475,74 @@ describe('in a template', function (): void {
 		$out = renderTwig('{% set o = cms.commerce.order(id, token) %}{{ o.number }}|{{ o.grandTotal }}|{{ o.paymentStatus }}|{{ o.accessToken ?? "none" }}|{{ o.providerClientSecret ?? "none" }}|{{ cms.commerce.order(id, "forged") is null ? "null" : "found" }}', ['id' => $order->id(), 'token' => $token]);
 
 		expect($out)->toBe('1001|1250|pending|none|none|null');
+	});
+});
+
+describe('a price the buyer named', function (): void {
+	beforeEach(function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5]);
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'mug-fixed', 'title' => 'Mug', 'status' => 'active', 'price' => 12.5]);
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'tip', 'title' => 'Tip', 'status' => 'active', 'price' => 3, 'customPrice' => true]);
+		$this->named = fn (string $id, string $amount) => expect(postJson('/commerce/cart/add', ['productId' => $id, 'amount' => $amount])->getStatusCode())->toBe(200);
+		$this->change = function (string $id, array $fields): void {
+			$product = $this->c->get(ObjectFetcher::class)->fetchObject('products', $id)->toArray();
+			$this->c->get(ObjectUpdater::class)->updateObject('products', $id, $fields + $product);
+		};
+	});
+
+	it('records the price the buyer named', function (): void {
+		($this->named)('give', '25');
+		$res   = ($this->buy)([], ['Accept' => 'application/json']);
+		$order = ($this->only)();
+
+		expect($res->getStatusCode())->toBe(200)
+			->and($order->line('l1')['unitPrice'])->toBe(2500)
+			->and($order->line('l1')['priceSource'])->toBe('custom')
+			->and($order->grandTotal())->toBe(2500)
+			->and($this->fake->checkouts[0]->total->amount())->toBe(2500);
+	});
+
+	it('goes through the free path for a cart of nothing but a zero tip', function (): void {
+		($this->named)('tip', '0');
+		$res   = ($this->buy)([], ['Accept' => 'application/json']);
+		$order = ($this->only)();
+
+		expect($res->getStatusCode())->toBe(200)
+			->and($this->fake->checkouts)->toBe([])
+			->and($order->grandTotal())->toBe(0)
+			->and($order->paymentStatus())->toBe('paid')
+			->and($order->provider())->toBe('free');
+	});
+
+	it('does not charge an amount carried by a product with a fixed price', function (): void {
+		// Placed in the cart store directly, as nothing but a bug or a tampered session could.
+		(new CartStore($this->c->get(PhpSession::class)))->put([CartItem::lineKey('mug-fixed', '') => new CartItem('mug-fixed', '', 1, 0.5)]);
+		$res = ($this->buy)([], ['Accept' => 'application/json']);
+
+		expect($res->getStatusCode())->toBe(404)
+			->and(($this->code)($res))->toBe('product_unavailable')
+			->and($this->fake->checkouts)->toBe([])
+			->and(($this->all)())->toBe([]);
+	});
+
+	it('does not take a named price at a quantity other than one', function (): void {
+		(new CartStore($this->c->get(PhpSession::class)))->put([CartItem::lineKey('give', '') => new CartItem('give', '', 3, 25.0)]);
+		$res = ($this->buy)([], ['Accept' => 'application/json']);
+
+		expect($res->getStatusCode())->toBe(404)
+			->and(($this->code)($res))->toBe('product_unavailable')
+			->and($this->fake->checkouts)->toBe([])
+			->and(($this->all)())->toBe([]);
+	});
+
+	it('refuses an order whose amount is no longer allowed, as it refuses an unsellable product', function (): void {
+		($this->named)('give', '6');
+		($this->change)('give', ['minPrice' => 20]);
+		$res = ($this->buy)([], ['Accept' => 'application/json']);
+
+		expect($res->getStatusCode())->toBe(404)
+			->and(($this->code)($res))->toBe('product_unavailable')
+			->and($this->fake->checkouts)->toBe([])
+			->and(($this->all)())->toBe([]);
 	});
 });

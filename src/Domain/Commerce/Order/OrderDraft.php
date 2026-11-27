@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Pricing\PricedUnit;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionDraft;
 
 /**
@@ -43,6 +44,12 @@ final readonly class OrderDraft
 	public function hasRecurringLine(): bool
 	{
 		return array_filter($this->lines, static fn (OrderLineDraft $line): bool => $line->isRecurring()) !== [];
+	}
+
+	/** Whether a line billed again every period is at an amount the buyer named. */
+	public function hasNamedPlan(): bool
+	{
+		return array_filter($this->lines, static fn (OrderLineDraft $line): bool => $line->isRecurring() && $line->priceSource === PricedUnit::CUSTOM) !== [];
 	}
 
 	/**

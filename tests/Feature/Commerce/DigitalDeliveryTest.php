@@ -11,6 +11,7 @@ use Tests\Fakes\FakeDownloadSource;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Commerce\Download\DownloadLinks;
+use TotalCMS\Domain\Commerce\Download\DownloadProtection;
 use TotalCMS\Domain\Commerce\Download\DownloadSources;
 use TotalCMS\Domain\Commerce\Download\FileDownloadSource;
 use TotalCMS\Domain\Commerce\Download\UrlDownloadSource;
@@ -21,6 +22,7 @@ use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
 use TotalCMS\Domain\Commerce\Service\CommerceGate;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -621,4 +623,56 @@ test('staff see on the order how much of the buyer\'s allowance is used', functi
 	signInAs($this->app, 'keeper', 'auth');
 
 	expect((string)get("/admin/commerce/orders/{$order->id()}")->getBody())->toContain('Delivered as a download', 'Downloaded 1 of 5 times');
+});
+
+describe('a paid download open to the public', function (): void {
+	// The products collection `downloads`, on the given download field, with these File Access Groups.
+	beforeEach(function (): void {
+		$this->open = function (string $field, array $groups): void {
+			commerceDownloadIs($this->c, $field);
+			$this->c->get(CollectionSaver::class)->updateCollection('downloads', ['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-' . $field, 'groups' => $groups]);
+		};
+	});
+
+	test('the bundled products collection is protected', function (): void {
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
+	});
+
+	test('a products collection with a file download and no File Access Groups is reported', function (): void {
+		($this->open)('file', []);
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBe('downloads');
+	});
+
+	test('giving it a group clears the report', function (): void {
+		($this->open)('file', ['admin']);
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
+	});
+
+	test('a download kept in S3 with no groups is reported too', function (): void {
+		($this->open)('s3file', []);
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBe('downloads');
+	});
+
+	test('a download that is a link is never reported', function (): void {
+		($this->open)('url', []);
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
+	});
+
+	test('a product schema with no download is never reported', function (): void {
+		commerceDownloadIs($this->c, 'file', ['base']);
+		$this->c->get(CollectionSaver::class)->updateCollection('downloads', ['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-file', 'groups' => []]);
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
+	});
+
+	test('a products collection that does not exist is not reported and does not throw', function (): void {
+		$config           = $this->c->get(Config::class);
+		$config->commerce = ['collections' => ['products' => 'nowhere']] + $config->commerce;
+
+		expect($this->c->get(DownloadProtection::class)->unprotectedCollection())->toBeNull();
+	});
 });

@@ -6,7 +6,7 @@
 	"title": "Variant",
 	"category": "Commerce",
 	"description": "One purchasable option of a product. Stored as a deck item; the deck key is the variant id.",
-	"formgrid": "title id\nprice sku\nstock active\ninterval intervalCount\nimage image\noptions options",
+	"formgrid": "title id\nprice sku\nstock active\nbilling interval\nintervalCount .\nimage image\noptions options",
 	"required": [
 		"id",
 		"title"
@@ -76,6 +76,23 @@
 			"label": "Available",
 			"help": "Turn off to stop selling this variant without deleting it.",
 			"default": true
+		},
+		"billing": {
+			"type": "string",
+			"field": "select",
+			"label": "Billing",
+			"help": "Leave empty to bill as the product does. Choose One time or Subscription to bill this variant differently, such as a donation that can be a single gift or a monthly one.",
+			"options": [
+				{
+					"value": "once",
+					"label": "One time"
+				},
+				{
+					"value": "recurring",
+					"label": "Subscription"
+				}
+			],
+			"placeholder": "Same as the product"
 		},
 		"interval": {
 			"type": "string",

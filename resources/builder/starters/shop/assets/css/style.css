@@ -387,6 +387,31 @@ img {
 	background : var(--accent-2);
 }
 
+/* Name your price: the amount field with its currency, and one-click amounts. */
+.commerce-add-amount-field {
+	display     : inline-flex;
+	align-items : center;
+	gap         : 0.4rem;
+}
+
+.commerce-add-amounts {
+	display   : flex;
+	flex-wrap : wrap;
+	gap       : 0.4rem;
+	margin    : 0.5rem 0;
+}
+
+.commerce-add-form .commerce-add-amount {
+	background : transparent;
+	color      : var(--ink);
+	border     : 1px solid var(--line);
+	padding    : 0.35rem 0.8rem;
+}
+
+.commerce-add-form .commerce-add-amount:hover {
+	background : var(--line);
+}
+
 .commerce-checkout-form input,
 .commerce-checkout-form select,
 .commerce-add-form select,

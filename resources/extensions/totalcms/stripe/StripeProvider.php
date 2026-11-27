@@ -105,7 +105,7 @@ final readonly class StripeProvider implements EmbeddedCheckoutProvider, Subscri
 	 */
 	public function capabilities(): ProviderCapabilities
 	{
-		return new ProviderCapabilities(embedded: preg_match('/^pk_(test|live)_[A-Za-z0-9]+\z/', $this->publishableKey) === 1, subscriptions: true, billingPortal: true, tax: true);
+		return new ProviderCapabilities(embedded: preg_match('/^pk_(test|live)_[A-Za-z0-9]+\z/', $this->publishableKey) === 1, subscriptions: true, billingPortal: true, tax: true, recurringCustomAmounts: true);
 	}
 
 	/** Ready when the secret key and the webhook secret are filled in. */

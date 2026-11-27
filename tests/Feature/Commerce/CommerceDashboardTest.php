@@ -9,6 +9,7 @@ use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Commerce\Service\CommerceDashboard;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -168,5 +169,34 @@ describe('on the admin home page', function (): void {
 		signInAs($this->app, 'boss', 'auth');
 
 		expect((string)get('/admin')->getBody())->not->toContain('id="commerce-dashboard"');
+	});
+
+	it('warns when paid downloads are open to the public', function (): void {
+		commerceDownloadIs($this->c, 'file');
+		$this->c->get(CollectionSaver::class)->updateCollection('downloads', ['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-file', 'groups' => []]);
+		signInAs($this->app, 'boss', 'auth');
+		$html = (string)get('/admin')->getBody();
+
+		expect($html)->toContain('Paid downloads are open to the public', 'Product files in the Downloads collection', 'href="collections/downloads/edit"', 'Open collection settings');
+	});
+
+	it('says nothing when downloads are protected', function (): void {
+		signInAs($this->app, 'boss', 'auth');
+
+		expect((string)get('/admin')->getBody())->not->toContain('Paid downloads are open to the public');
+	});
+
+	it('links running-low products into the configured products collection', function (): void {
+		commerceDownloadIs($this->c, 'file');
+		$config           = $this->c->get(Config::class);
+		$config->commerce = ['lowStockAt' => 5] + $config->commerce;
+		$this->c->get(CollectionSaver::class)->updateCollection('downloads', ['id' => 'downloads', 'name' => 'Downloads', 'schema' => 'download-is-file', 'groups' => ['admin']]);
+		$this->c->get(ActorContext::class)->set(Actor::system());
+		$this->c->get(ObjectSaver::class)->saveObject('downloads', ['id' => 'scarce', 'title' => 'Scarce', 'status' => 'active', 'price' => 10, 'trackInventory' => true, 'stock' => 1]);
+		$this->c->get(ActorContext::class)->set(Actor::anonymous());
+		signInAs($this->app, 'boss', 'auth');
+		$html = (string)get('/admin')->getBody();
+
+		expect($html)->toContain('collections/downloads/scarce')->not->toContain('collections/products/scarce');
 	});
 });

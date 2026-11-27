@@ -8,6 +8,8 @@ use TotalCMS\Domain\Property\Data\PriceData;
 
 /**
  * One option of a product, as the store reads it.
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList") a value object: every field of a variant is one promoted property
  */
 final readonly class VariantView
 {
@@ -16,6 +18,7 @@ final readonly class VariantView
 	 * @param array<string,mixed> $options what the variant is, such as ['size' => 'L']
 	 * @param string|null         $interval      for a plan: how often this variant is billed, when not as the product is
 	 * @param int|null            $intervalCount for a plan: every how many of them, when not as the product is
+	 * @param string|null         $billing       ProductView::BILLING_ONCE or BILLING_RECURRING when this variant is billed differently from its product, null when it follows the product
 	 */
 	public function __construct(
 		public string $id,
@@ -28,6 +31,7 @@ final readonly class VariantView
 		public string $image,
 		public ?string $interval = null,
 		public ?int $intervalCount = null,
+		public ?string $billing = null,
 	) {
 	}
 
@@ -50,6 +54,7 @@ final readonly class VariantView
 			image: '',
 			interval: is_string($item['interval'] ?? null) && trim($item['interval']) !== '' ? trim($item['interval']) : null,
 			intervalCount: is_numeric($item['intervalCount'] ?? null) && (int)$item['intervalCount'] > 0 ? (int)$item['intervalCount'] : null,
+			billing: in_array($item['billing'] ?? null, [ProductView::BILLING_ONCE, ProductView::BILLING_RECURRING], true) ? $item['billing'] : null,
 		);
 	}
 

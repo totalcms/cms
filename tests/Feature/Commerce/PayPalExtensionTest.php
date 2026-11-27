@@ -19,6 +19,7 @@ use TotalCMS\Support\HttpResponse;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\post;
+use function TotalCMS\Slim\Pest\postJson;
 use function TotalCMS\Slim\Pest\withHeader;
 
 /*
@@ -136,6 +137,20 @@ it('does not offer it without its values, and never for a subscription', functio
 
 	bootStoreWithPayPal();
 	expect($this->app->getContainer()->get(PaymentProviderRegistry::class)->forCart(true))->toBe([]);
+});
+
+it('refuses a monthly gift, whatever amount the buyer names, and takes the one-time gift', function (): void {
+	bootStoreWithPayPal();
+	seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => [
+		'once'    => ['id' => 'once', 'title' => 'One time'],
+		'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+	]]);
+	$add = fn (string $variant) => postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => $variant, 'amount' => '15']);
+
+	$refused = $add('monthly');
+	expect($refused->getStatusCode())->toBe(503)
+		->and(json_decode((string)$refused->getBody(), true)['error']['code'] ?? '')->toBe('subscription_unavailable')
+		->and($add('once')->getStatusCode())->toBe(200);
 });
 
 it('is not there at all when an admin has switched its payments capability off', function (): void {

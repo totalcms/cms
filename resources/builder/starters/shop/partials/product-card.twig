@@ -20,7 +20,7 @@
 		{% endif %}
 	</a>
 	<div class="card-body">
-		<p class="meta">{{ product.category|e }}{% if product.type == 'digital' and product.billing != 'recurring' %} · Download{% endif %}</p>
+		<p class="meta">{{ product.category|e }}{% if product.type == 'digital' and product.billing != 'recurring' and product.variants is empty %} · Download{% endif %}</p>
 		<h3><a href="/shop/{{ product.id|e }}">{{ product.title|e }}</a></h3>
 		<p class="price">
 			{% if price %}

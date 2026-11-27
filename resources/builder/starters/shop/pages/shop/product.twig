@@ -51,7 +51,8 @@
 
 			<dl class="facts">
 				{% if product.sku %}<div><dt>SKU</dt><dd>{{ product.sku|e }}</dd></div>{% endif %}
-				<div><dt>Delivery</dt><dd>{% if product.billing == 'recurring' %}Starts as soon as you pay{% elseif product.type == 'digital' %}A download link, on your order page and in your receipt{% else %}Shipped to you{% endif %}</dd></div>
+				{# A product with options can bill each option differently, so there is no one delivery to state. #}
+				{% if product.variants is empty %}<div><dt>Delivery</dt><dd>{% if product.billing == 'recurring' %}Starts as soon as you pay{% elseif product.type == 'digital' %}A download link, on your order page and in your receipt{% else %}Shipped to you{% endif %}</dd></div>{% endif %}
 				{% if product.trackInventory and product.variants is empty %}<div><dt>In stock</dt><dd>{{ product.stock|e }}</dd></div>{% endif %}
 			</dl>
 			<p><a href="/shop">← Back to the shop</a></p>

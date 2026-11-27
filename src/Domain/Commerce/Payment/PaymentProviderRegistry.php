@@ -83,17 +83,23 @@ final class PaymentProviderRegistry
 
 	/**
 	 * The providers that can take this cart: a cart with a subscription in it
-	 * needs one that can bill a subscription.
+	 * needs one that can bill a subscription, and one with a subscription at
+	 * an amount the buyer named needs one that can bill that too.
 	 *
 	 * @return list<PaymentProvider>
 	 */
-	public function forCart(bool $hasRecurringLine): array
+	public function forCart(bool $hasRecurringLine, bool $hasNamedPlan = false): array
 	{
 		$enabled = $this->enabled();
+		if (!$hasRecurringLine) {
+			return $enabled;
+		}
 
-		return $hasRecurringLine
-			? array_values(array_filter($enabled, static fn (PaymentProvider $provider): bool => $provider instanceof SubscriptionProvider))
-			: $enabled;
+		return array_values(array_filter(
+			$enabled,
+			static fn (PaymentProvider $provider): bool => $provider instanceof SubscriptionProvider
+				&& (!$hasNamedPlan || $provider->capabilities()->recurringCustomAmounts),
+		));
 	}
 
 	/**

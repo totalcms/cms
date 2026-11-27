@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Data\VariantView;
+use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\OrderBuildingRegistry;
 use TotalCMS\Domain\Commerce\Order\OrderDraft;
 use TotalCMS\Domain\Commerce\Order\Totals;
@@ -126,6 +127,37 @@ describe('a booted site', function (): void {
 			->and($priced->unitPrice->amount())->toBe(123)
 			->and($priced->listPrice->amount())->toBe(5000)
 			->and($priced->source)->toBe('fixture-price');
+	});
+
+	test('does not ask it about a price the buyer named', function (): void {
+		bootWithPriceResolverExtension(true);
+		$pricing = $this->app->getContainer()->get(PricingService::class);
+		$ctx     = new PricingContext('USD', null, null, []);
+		$product = ProductView::fromObject(['id' => 'fixture-priced', 'title' => 'Priced', 'status' => 'active', 'price' => 50, 'customPrice' => true]);
+
+		$named = $pricing->unitPrice($product, null, 1, $ctx, 25.0);
+		$none  = $pricing->unitPrice($product, null, 1, $ctx);
+
+		expect($named->unitPrice->amount())->toBe(2500)
+			->and($named->listPrice->amount())->toBe(5000)
+			->and($named->source)->toBe('custom')
+			->and($none->unitPrice->amount())->toBe(123);
+	});
+
+	test('does not fall back to the catalog price for an amount that cannot be money', function (): void {
+		bootWithPriceResolverExtension(true);
+		$pricing = $this->app->getContainer()->get(PricingService::class);
+		$product = ProductView::fromObject(['id' => 'fixture-priced', 'title' => 'Priced', 'status' => 'active', 'price' => 50, 'customPrice' => true]);
+
+		expect(fn () => $pricing->unitPrice($product, null, 1, new PricingContext('USD', null, null, []), -5.0))->toThrow(CommerceException::class);
+	});
+
+	test('ignores an amount for a product that does not let the buyer choose', function (): void {
+		bootWithPriceResolverExtension(true);
+		$product = ProductView::fromObject(['id' => 'fixture-priced', 'title' => 'Priced', 'status' => 'active', 'price' => 50]);
+		$priced  = $this->app->getContainer()->get(PricingService::class)->unitPrice($product, null, 1, new PricingContext('USD', null, null, []), 0.01);
+
+		expect($priced->unitPrice->amount())->toBe(123)->and($priced->source)->toBe('fixture-price');
 	});
 
 	test('runs its order-building listener on every order built', function (): void {

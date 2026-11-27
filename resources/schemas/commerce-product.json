@@ -13,5 +13,5 @@
 		"commerce-product-variants",
 		"commerce-product-digital"
 	],
-	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\n---Subscription and Membership---\nbilling .\ninterval intervalCount\ntrialDays accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Delivery---\ndownload download\n---Organize---\ncategory tags\nmeta meta\n---Dates---\ncreated updated"
+	"formgrid": "status type\ntitle title\nid sku\ndescription description\nimages images\n---Pricing---\nprice compareAtPrice\ntaxable .\ncustomPrice minPrice\nsuggestedPrices suggestedPrices\n---Subscription and Membership---\nbilling .\ninterval intervalCount\ntrialDays accessGroup\n---Inventory and Shipping---\ntrackInventory allowBackorder\nstock weight\nrequiresShipping .\n---Variants---\nvariants variants\n---Digital Delivery---\ndownload download\n---Organize---\ncategory tags\nmeta meta\n---Dates---\ncreated updated"
 }

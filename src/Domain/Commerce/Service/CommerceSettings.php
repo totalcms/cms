@@ -28,6 +28,9 @@ final readonly class CommerceSettings
 {
 	public const DEFAULT_CURRENCY = 'USD';
 
+	/** The most a buyer may name, in major units, when the setting cannot be read. config/defaults.php ships the same number. */
+	public const DEFAULT_CUSTOM_PRICE_MAX = 10000.0;
+
 	/** What each kind of commerce record is stored in, unless the site says otherwise. */
 	private const COLLECTIONS = [
 		'products'      => 'products',
@@ -237,6 +240,14 @@ final readonly class CommerceSettings
 	public function cartMaxQty(): int
 	{
 		return $this->atLeastOne('cartMaxQty', 99);
+	}
+
+	/** The most a buyer may name for a product that lets them choose the price. */
+	public function customPriceMax(): float
+	{
+		$value = $this->setting('customPriceMax');
+
+		return is_numeric($value) && is_finite((float)$value) && (float)$value > 0 ? (float)$value : self::DEFAULT_CUSTOM_PRICE_MAX;
 	}
 
 	/**

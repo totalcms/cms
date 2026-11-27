@@ -35,6 +35,9 @@ final readonly class ProductView
 	 * @param int                       $intervalCount    for a plan: billed every this many intervals; 0 otherwise
 	 * @param int                       $trialDays        for a plan: free days before the first payment
 	 * @param string                    $accessGroup      the access group its buyer is given, or ''
+	 * @param bool                      $customPrice      the buyer names the price; `price` is where the field starts
+	 * @param float                     $minPrice         the least a buyer may name; never negative
+	 * @param list<float>               $suggestedPrices  one-click amounts, above zero, in stored order, without repeats
 	 *
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") One parameter for each thing a product is; built by fromObject().
 	 */
@@ -60,6 +63,9 @@ final readonly class ProductView
 		public int $intervalCount = 0,
 		public int $trialDays = 0,
 		public string $accessGroup = '',
+		public bool $customPrice = false,
+		public float $minPrice = 0.0,
+		public array $suggestedPrices = [],
 	) {
 	}
 
@@ -96,28 +102,36 @@ final readonly class ProductView
 			variants: $variants,
 			image: $image,
 			billing: $recurring ? self::BILLING_RECURRING : self::BILLING_ONCE,
-			interval: $recurring ? $text('interval', 'month') : '',
-			intervalCount: $recurring ? (is_numeric($object['intervalCount'] ?? null) ? (int)$object['intervalCount'] : 1) : 0,
+			interval: $text('interval', $recurring ? 'month' : ''),
+			intervalCount: is_numeric($object['intervalCount'] ?? null) ? (int)$object['intervalCount'] : ($recurring ? 1 : 0),
+			trialDays: self::trial($object['trialDays'] ?? 0),
 			accessGroup: $text('accessGroup'),
+			customPrice: $flag('customPrice', false),
+			minPrice: self::minimum($object['minPrice'] ?? 0),
+			suggestedPrices: self::suggested($object['suggestedPrices'] ?? []),
 		);
 	}
 
-	/** A plan: billed again every interval until it is cancelled. */
-	public function isRecurring(): bool
+	/**
+	 * A plan: billed again every interval until it is cancelled. A variant
+	 * that names its own billing decides for its line; one that does not
+	 * follows the product.
+	 */
+	public function isRecurring(?VariantView $variant = null): bool
 	{
-		return $this->billing === self::BILLING_RECURRING;
+		return ($variant->billing ?? $this->billing) === self::BILLING_RECURRING;
 	}
 
 	/**
 	 * How often the product, or this variant of it, is billed: the
 	 * variant's own interval and count where it has them, the product's
-	 * otherwise. Null for a product paid for once.
+	 * otherwise. Null for a line paid for once.
 	 *
 	 * @throws CommerceException `product_unavailable` for a period no provider can bill
 	 */
 	public function recurrence(?VariantView $variant = null): ?Recurrence
 	{
-		if (!$this->isRecurring()) {
+		if (!$this->isRecurring($variant)) {
 			return null;
 		}
 
@@ -131,6 +145,32 @@ final readonly class ProductView
 	public function isActive(): bool
 	{
 		return $this->status === self::STATUS_ACTIVE;
+	}
+
+	/** Free trial days: a whole number from 0 to the most a provider allows. */
+	private static function trial(mixed $stored): int
+	{
+		return is_numeric($stored) ? max(0, min(Recurrence::MAX_TRIAL_DAYS, (int)$stored)) : 0;
+	}
+
+	private static function minimum(mixed $stored): float
+	{
+		return is_int($stored) || is_float($stored) || is_string($stored) ? max(0.0, (float)PriceData::normalize($stored)) : 0.0;
+	}
+
+	/**
+	 * @return list<float>
+	 */
+	private static function suggested(mixed $stored): array
+	{
+		$prices = [];
+		foreach (is_array($stored) ? $stored : [] as $value) {
+			if ((is_int($value) || is_float($value) || is_string($value)) && is_numeric($value) && (float)$value > 0 && !in_array((float)$value, $prices, true)) {
+				$prices[] = (float)$value;
+			}
+		}
+
+		return $prices;
 	}
 
 	/**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Commerce\Cart\CartService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
@@ -80,6 +81,82 @@ describe('the forms', function (): void {
 
 		expect($html)->toContain('<select name="variantId"', '<option value="large">Large</option>', '<option value="small">Small</option>', 'name="qty"', 'name="productId" value="tee"')
 			->and($html)->not->toContain('Gone');
+	});
+
+	test('the add form asks for an amount when the buyer names the price', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5, 'suggestedPrices' => [5, 10, 25]]);
+
+		$html = ($this->twig)("{{ cms.cart.addButton('give', {qty: 4}) }}");
+
+		expect($html)->toContain('<input type="number" name="amount"', 'value="10"', 'min="5"', 'max="10000"', 'step="any"', 'inputmode="decimal"', 'required', 'Amount')
+			->and($html)->toContain('<div class="commerce-add-amounts">')
+			->and(substr_count($html, 'class="commerce-add-amount"'))->toBe(3)
+			->and($html)->toContain('data-amount="5"', 'data-amount="10"', 'data-amount="25"', '>$25.00</button>', 'this.form.elements.amount.value = this.dataset.amount')
+			->and($html)->toContain('<input type="hidden" name="qty" value="1">')
+			->and($html)->not->toContain('Quantity');
+	});
+
+	test('a quantity field is never shown for a product the buyer names the price of', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true]);
+
+		$html = ($this->twig)("{{ cms.cart.variantPicker('give', {qty: 6}) }}");
+
+		expect($html)->toContain('name="amount"', '<input type="hidden" name="qty" value="1">')
+			->and($html)->not->toContain('name="qty" value="6"')
+			->and($html)->not->toContain('Quantity')
+			->and($html)->not->toContain('commerce-add-amounts');
+	});
+
+	test('a fixed-price product has no amount field and no suggested amounts', function (): void {
+		$html = ($this->twig)("{{ cms.cart.addButton('mug') }}{{ cms.cart.variantPicker('tee') }}");
+
+		expect($html)->not->toContain('name="amount"')
+			->and($html)->not->toContain('commerce-add-amount');
+	});
+
+	test('suggested amounts outside what the product and the store allow are not offered', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'minPrice' => 5, 'suggestedPrices' => [2, 5, 25, 99999]]);
+
+		$html = ($this->twig)("{{ cms.cart.addButton('give') }}");
+
+		expect(substr_count($html, 'class="commerce-add-amount"'))->toBe(2)
+			->and($html)->toContain('data-amount="5"', 'data-amount="25"')
+			->and($html)->not->toContain('data-amount="2"')
+			->and($html)->not->toContain('data-amount="99999"');
+	});
+
+	test('the options and the amount field are offered together', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'giving', 'title' => 'Giving', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'One time'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring', 'interval' => 'month'],
+		]]);
+
+		$html = ($this->twig)("{{ cms.cart.variantPicker('giving') }}");
+
+		expect($html)->toContain('<select name="variantId"', '<option value="once">One time</option>', '<option value="monthly">Monthly</option>', 'name="amount"');
+	});
+
+	test('a variant title and the button label are escaped', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'evil', 'title' => 'Evil <script>alert("x")</script>', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'suggestedPrices' => [5], 'variants' => [
+			'v' => ['id' => 'v', 'title' => 'Opt <i>"quoted"</i>'],
+		]]);
+
+		$html = ($this->twig)("{{ cms.cart.variantPicker('evil', {label: 'Give <b>now</b>'}) }}");
+
+		expect($html)->not->toContain('<script>')
+			->and($html)->not->toContain('<b>')
+			->and($html)->not->toContain('<i>')
+			->and($html)->toContain('Opt &lt;i&gt;&quot;quoted&quot;&lt;/i&gt;')
+			->and($html)->toContain('Give &lt;b&gt;now&lt;/b&gt;');
+	});
+
+	test('two forms on a page share no ids', function (): void {
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'give', 'title' => 'Give', 'status' => 'active', 'price' => 10, 'customPrice' => true, 'suggestedPrices' => [5, 10]]);
+
+		$html = ($this->twig)("{{ cms.cart.addButton('give') }}{{ cms.cart.addButton('give') }}");
+
+		expect($html)->not->toContain(' id=')
+			->and(substr_count($html, '<form'))->toBe(2);
 	});
 
 	test('a form for something that cannot be bought is nothing at all', function (string $call): void {

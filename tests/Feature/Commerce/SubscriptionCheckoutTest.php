@@ -3,10 +3,16 @@
 declare(strict_types=1);
 
 use Odan\Session\PhpSession;
+use Tests\Fakes\FakeSubscriptionProvider;
+use Tests\Fakes\FixedPlanSubscriptionProvider;
+use TotalCMS\Domain\Commerce\Cart\CartService;
+use TotalCMS\Domain\Commerce\Data\ProductView;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
+use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Pricing\PricingContextFactory;
 use TotalCMS\Domain\Commerce\Service\StoreRecords;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionAccess;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionData;
@@ -79,6 +85,205 @@ describe('a cart with a plan', function (): void {
 			->and($request->subscriptionId)->toBe($sub->id())
 			->and($request->lines[0]->recurrence)->toBeNull()
 			->and($request->lines[1]->recurrence)->toEqual(new Recurrence('month', 1));
+	});
+
+	it('sends a monthly gift to the provider as a recurring line at that amount', function (): void {
+		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'One time'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		expect(postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'monthly', 'amount' => '15'])->getStatusCode())->toBe(200);
+
+		($this->buy)();
+		[$sub]   = ($this->allSubs)();
+		$request = $this->sub->checkouts[0];
+
+		expect($request->mode)->toBe('subscription')
+			->and($request->lines)->toHaveCount(1)
+			->and($request->lines[0]->recurrence)->toEqual(new Recurrence('month', 1))
+			->and($request->lines[0]->unitAmount->amount())->toBe(1500)
+			->and($request->recurringTotal?->amount())->toBe(1500)
+			->and($sub->recurringTotal())->toBe(1500)
+			->and($sub->interval())->toBe('month');
+	});
+
+	describe('a monthly gift at an amount the buyer named', function (): void {
+		beforeEach(function (): void {
+			seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => [
+				'once'    => ['id' => 'once', 'title' => 'One time'],
+				'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+			]]);
+			$this->give = fn (string $variant) => json_decode((string)postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => $variant, 'amount' => '15'])->getBody(), true);
+			$this->giveStatus = fn (string $variant): int => postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => $variant, 'amount' => '15'])->getStatusCode();
+			$this->ids  = fn (): array => array_map(fn ($provider): string => $provider->id(), $this->c->get(PaymentProviderRegistry::class)->forCart(true, true));
+			// Only providers that say they can bill a named amount stay on.
+			$this->only = function (array $ids): void {
+				$config           = $this->c->get(Config::class);
+				$config->commerce = ['providers' => $ids] + $config->commerce;
+			};
+		});
+
+		it('is refused when no provider that is on says it can bill one', function (): void {
+			$this->c->get(PaymentProviderRegistry::class)->register(new FixedPlanSubscriptionProvider());
+			($this->only)(['fake', 'fixed-sub']);
+
+			expect(($this->give)('monthly')['error']['code'] ?? '')->toBe('subscription_unavailable')
+				->and(($this->giveStatus)('monthly'))->toBe(503)
+				->and(($this->giveStatus)('once'))->toBe(200);
+		});
+
+		it('is accepted when one that is on says it can, and leaves out the ones that cannot', function (): void {
+			$this->c->get(PaymentProviderRegistry::class)->register(new FixedPlanSubscriptionProvider());
+			($this->only)(['fake', 'fixed-sub', 'fake-sub']);
+
+			expect(($this->giveStatus)('monthly'))->toBe(200)
+				->and(($this->ids)())->toBe(['fake-sub']);
+		});
+
+		describe('with the gift in the cart and three providers on', function (): void {
+			beforeEach(function (): void {
+				$this->fixed = new FixedPlanSubscriptionProvider();
+				$this->c->get(PaymentProviderRegistry::class)->register($this->fixed);
+				($this->only)(['fake', 'fixed-sub', 'fake-sub']);
+				expect(($this->giveStatus)('monthly'))->toBe(200);
+			});
+
+			it('offers only the one that can, in Twig and in the checkout form', function (): void {
+				expect(renderTwig('{% for p in cms.commerce.providers() %}{{ p.id }},{% endfor %}'))->toBe('fake-sub,')
+					->and(renderTwig('{{ cms.cart.checkoutForm() }}'))->toContain('fake-sub')->not->toContain('fixed-sub')->not->toContain('value="fake"');
+			});
+
+			it('refuses to start checkout with one that cannot, and makes nothing', function (): void {
+				expect(($this->code)(($this->buy)('fixed-sub')))->toBe('checkout_unavailable')
+					->and(($this->allOrders)())->toBe([])
+					->and($this->fixed->checkouts)->toBe([]);
+
+				expect(($this->buy)('fake-sub')->getStatusCode())->toBeIn([200, 302, 303])
+					->and($this->sub->checkouts)->toHaveCount(1);
+			});
+
+			it('leaves the one that cannot out of the quote', function (): void {
+				$config           = $this->c->get(Config::class);
+				$config->commerce = ['taxMode' => 'exclusive', 'taxBy' => 'provider', 'taxRates' => [['country' => 'US', 'region' => '', 'rate' => '10', 'label' => 'Sales tax']]] + $config->commerce;
+				$this->fixed->tax = true;
+				$this->sub->tax   = true;
+				$quote            = fn (string $provider): array => (array)json_decode((string)post('/commerce/checkout/quote', ['provider' => $provider, 'shippingAddress' => ['country' => 'US']], ['Accept' => 'application/json'])->getBody(), true);
+
+				expect($quote('fixed-sub')['taxAtPayment'] ?? null)->toBeFalse()
+					->and($quote('fake-sub')['taxAtPayment'] ?? null)->toBeTrue();
+			});
+		});
+
+		it('leaves a plan at a fixed price to every provider that bills plans', function (): void {
+			$this->c->get(PaymentProviderRegistry::class)->register(new FixedPlanSubscriptionProvider());
+			($this->only)(['fake', 'fixed-sub', 'fake-sub']);
+			($this->add)('club');
+
+			expect(array_map(fn ($provider): string => $provider->id(), $this->c->get(PaymentProviderRegistry::class)->forCart(true)))->toBe(['fixed-sub', 'fake-sub'])
+				->and(renderTwig('{% for p in cms.commerce.providers() %}{{ p.id }},{% endfor %}'))->toBe('fixed-sub,fake-sub,');
+		});
+	});
+
+	it('sends the one-time gift of the same product as a plain payment, to any provider', function (): void {
+		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'One time'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		expect(postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'once', 'amount' => '15'])->getStatusCode())->toBe(200);
+
+		($this->buy)('fake');
+
+		expect(($this->allSubs)())->toBe([])
+			->and(($this->allOrders)()[0]->grandTotal())->toBe(1500)
+			->and(($this->allOrders)()[0]->subscriptionId())->toBe('');
+	});
+
+	it('cannot pay for a monthly gift with a provider that does not bill subscriptions', function (): void {
+		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => [
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		expect(postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'monthly', 'amount' => '15'])->getStatusCode())->toBe(200);
+
+		expect(($this->code)(($this->buy)('fake')))->toBe('checkout_unavailable')
+			->and(($this->allOrders)())->toBe([]);
+	});
+
+	it('sends a once-billed variant of a subscription product as a one-time payment', function (): void {
+		seedPlan('bundle', 2000, ['variants' => [
+			'setup'   => ['id' => 'setup', 'title' => 'Setup', 'billing' => 'once'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly'],
+		]]);
+		expect(postJson('/commerce/cart/add', ['productId' => 'bundle', 'variantId' => 'setup'])->getStatusCode())->toBe(200);
+
+		($this->buy)();
+
+		expect(($this->allSubs)())->toBe([])
+			->and($this->sub->checkouts[0]->mode)->toBe('payment')
+			->and($this->sub->checkouts[0]->recurringTotal)->toBeNull()
+			->and($this->sub->checkouts[0]->lines[0]->recurrence)->toBeNull()
+			->and(($this->allOrders)()[0]->subscriptionId())->toBe('');
+	});
+
+	it('gives a free trial to the line of a subscription product', function (): void {
+		seedPlan('trial', 1000, ['trialDays' => 14]);
+		expect(postJson('/commerce/cart/add', ['productId' => 'trial'])->getStatusCode())->toBe(200)
+			->and($this->c->get(CartService::class)->view($this->c->get(PricingContextFactory::class)->current())->lines[0]->trialDays)->toBe(14);
+
+		($this->buy)();
+
+		expect($this->sub->checkouts[0]->lines[0]->recurrence)->toEqual(new Recurrence('month', 1, 14));
+	});
+
+	it('gives the trial to a monthly variant of a once-billed product and none to the one-time variant', function (): void {
+		seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'trialDays' => 14, 'variants' => [
+			'once'    => ['id' => 'once', 'title' => 'One time'],
+			'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+		]]);
+		$view = fn () => $this->c->get(CartService::class)->view($this->c->get(PricingContextFactory::class)->current())->lines;
+
+		postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'once', 'amount' => '10']);
+		expect(($view)()[0]->trialDays)->toBe(0)->and(($view)()[0]->billing)->toBe('once');
+
+		postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => 'monthly', 'amount' => '10']);
+		expect(($view)()[1]->trialDays)->toBe(14);
+
+		($this->buy)();
+		expect(array_map(static fn ($line) => $line->recurrence, $this->sub->checkouts[0]->lines))->toEqual([null, new Recurrence('month', 1, 14)]);
+	});
+
+	it('reads the trial as a whole number between 0 and 730', function (mixed $stored, int $expected): void {
+		expect(ProductView::fromObject(['id' => 't', 'title' => 'T', 'trialDays' => $stored])->trialDays)->toBe($expected);
+	})->with([[14, 14], ['7', 7], [-3, 0], [5000, 730], ['x', 0], [null, 0], [[1], 0]]);
+
+	describe('who needs an account', function (): void {
+		beforeEach(function (): void {
+			$config           = $this->c->get(Config::class);
+			$config->commerce = ['grantableGroups' => ['members']] + $config->commerce;
+			$variants         = [
+				'once'    => ['id' => 'once', 'title' => 'One time'],
+				'monthly' => ['id' => 'monthly', 'title' => 'Monthly', 'billing' => 'recurring'],
+			];
+			seedPlan('giving', 1000, ['customPrice' => true, 'billing' => 'once', 'variants' => $variants]);
+			seedPlan('lounge', 1000, ['billing' => 'once', 'accessGroup' => 'members', 'variants' => $variants]);
+			$this->needs = fn (): bool => $this->c->get(CartService::class)->needsAccount();
+		});
+
+		it('asks a guest for no account to give once or monthly', function (string $variant): void {
+			postJson('/commerce/cart/add', ['productId' => 'giving', 'variantId' => $variant, 'amount' => '15']);
+
+			expect(($this->needs)())->toBeFalse()
+				->and(($this->buy)()->getStatusCode())->toBe(200)
+				->and(($this->allOrders)())->toHaveCount(1);
+		})->with(['once', 'monthly']);
+
+		it('asks a guest for an account to join a group, once or monthly', function (string $variant): void {
+			postJson('/commerce/cart/add', ['productId' => 'lounge', 'variantId' => $variant]);
+			$response = ($this->buy)();
+
+			expect(($this->needs)())->toBeTrue()
+				->and(($this->code)($response))->toBe('account_required')
+				->and(($this->allOrders)())->toBe([]);
+		})->with(['once', 'monthly']);
 	});
 
 	it('makes no subscription for a cart of things paid for once', function (): void {

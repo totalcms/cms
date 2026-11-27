@@ -14,6 +14,15 @@
 	class      extra classes for the form
 	base       the path Total CMS is served under
 	csrf       the hidden token field
+
+	For a product whose buyer names the price (customPrice) there is no
+	quantity: the line is always one, and the amount field takes its place.
+	customPrice      true to show the amount field
+	amount           the amount the field starts at; '' for none
+	minPrice         the least the field accepts, as plain digits
+	maxPrice         the most the field accepts, as plain digits
+	currency         the store's currency code, shown beside the field
+	suggestedPrices  one-click amounts as [{amount, formatted}], already within the limits
 #}
 <form class="commerce-add-form{% if class %} {{ class|e }}{% endif %}" method="post" action="{{ base|e }}/commerce/cart/add" {% if target %}hx-post="{{ base|e }}/commerce/cart/add" hx-target="{{ target|e }}" hx-swap="outerHTML"{% else %}hx-post="{{ base|e }}/commerce/cart/add?part=none" hx-swap="none"{% endif %}>
 	{{ csrf|raw }}
@@ -30,7 +39,23 @@
 	{% elseif variantId %}
 		<input type="hidden" name="variantId" value="{{ variantId|e }}">
 	{% endif %}
-	{% if showQty %}
+	{% if customPrice %}
+		<label>
+			<span class="commerce-add-label">Amount</span>
+			<span class="commerce-add-amount-field">
+				<span class="commerce-add-currency">{{ currency|e }}</span>
+				<input type="number" name="amount" value="{{ amount|e('html_attr') }}" min="{{ minPrice|e('html_attr') }}" max="{{ maxPrice|e('html_attr') }}" step="any" inputmode="decimal" required>
+			</span>
+		</label>
+		{% if suggestedPrices is not empty %}
+			<div class="commerce-add-amounts">
+				{% for suggestion in suggestedPrices %}
+					<button type="button" class="commerce-add-amount" data-amount="{{ suggestion.amount|e('html_attr') }}" onclick="this.form.elements.amount.value = this.dataset.amount">{{ suggestion.formatted|e }}</button>
+				{% endfor %}
+			</div>
+		{% endif %}
+		<input type="hidden" name="qty" value="1">
+	{% elseif showQty %}
 		<label>
 			<span class="commerce-add-label">Quantity</span>
 			<input type="number" name="qty" value="{{ qty|e }}" min="1" inputmode="numeric">

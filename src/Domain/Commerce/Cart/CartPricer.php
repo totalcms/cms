@@ -9,8 +9,10 @@ use TotalCMS\Domain\Commerce\Data\VariantView;
 use TotalCMS\Domain\Commerce\Discount\DiscountLine;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\Recurrence;
+use TotalCMS\Domain\Commerce\Pricing\PricedUnit;
 use TotalCMS\Domain\Commerce\Pricing\PricingContext;
 use TotalCMS\Domain\Commerce\Pricing\PricingService;
+use TotalCMS\Domain\Commerce\Service\CommerceSettings;
 use TotalCMS\Domain\Commerce\Service\ProductCatalog;
 use TotalCMS\Domain\Money\Money;
 
@@ -19,13 +21,16 @@ use TotalCMS\Domain\Money\Money;
  * quantities, never a price, so this runs every time a cart is shown.
  *
  * A line whose product can no longer be bought is left out, with a notice
- * for the buyer. Nothing here writes: the caller decides what to keep.
+ * for the buyer. So is a line whose named amount no longer stands: one the
+ * product's rules now refuse, one with none on a product that needs it, or
+ * one on a product that no longer lets the buyer choose. Nothing here writes: the caller decides what to keep.
  */
 final readonly class CartPricer
 {
 	public function __construct(
 		private ProductCatalog $catalog,
 		private PricingService $pricing,
+		private CommerceSettings $settings,
 	) {
 	}
 
@@ -45,20 +50,23 @@ final readonly class CartPricer
 
 		foreach ($items as $key => $item) {
 			$product = $this->catalog->product($item->productId);
-			if (!$product instanceof ProductView || !$this->sellable($product, $item->variantId)) {
+			$variant = $product?->variants[$item->variantId] ?? null;
+			if (!$product instanceof ProductView || !$this->sellable($product, $item->variantId) || !CustomAmount::stands($item, $product, $product->isRecurring($variant), $this->settings)) {
 				$notices[] = $this->goneNotice($product);
 				unset($items[$key]);
 
 				continue;
 			}
 
-			$variant = $product->variants[$item->variantId] ?? null;
-			$unit    = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx);
+			$unit    = $this->pricing->unitPrice($product, $variant, $item->qty, $ctx, $item->amount);
 			$total   = $unit->unitPrice->multiply($item->qty);
 
 			$every           = $this->recurrence($product, $variant);
-			$lines[]         = new CartLineView($key, $product->id, $item->variantId, $product->title, $variant->title ?? '', $product->image, $item->qty, $unit->unitPrice, $total, $unit->source, 0, $product->billing, $every->interval ?? '', $every->intervalCount ?? 0, $every->trialDays ?? 0);
-			$discountLines[] = new DiscountLine($key, $product->id, $product->category, $total->amount(), false, false);
+			$lines[]         = new CartLineView($key, $product->id, $item->variantId, $product->title, $variant->title ?? '', $product->image, $item->qty, $unit->unitPrice, $total, $unit->source, 0, $product->isRecurring($variant) ? ProductView::BILLING_RECURRING : ProductView::BILLING_ONCE, $every->interval ?? '', $every->intervalCount ?? 0, $every->trialDays ?? 0);
+			// A price the buyer named is not discounted, so no code sees the line.
+			if ($unit->source !== PricedUnit::CUSTOM) {
+				$discountLines[] = new DiscountLine($key, $product->id, $product->category, $total->amount(), false, false);
+			}
 			$subtotal        = $subtotal->add($total);
 			$count += $item->qty;
 		}
