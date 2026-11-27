@@ -186,7 +186,8 @@ readonly class SchemaTwigAdapter
 
 			foreach ($schema->inheritFrom as $parentId) {
 				try {
-					$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+					// Flattened, so the parent's own parents show up as inherited too
+					$parentSchema = $this->schemaFetcher->fetchSchema($parentId);
 
 					foreach ($parentSchema->properties as $propName => $propDef) {
 						if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {

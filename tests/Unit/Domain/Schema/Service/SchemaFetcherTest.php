@@ -8,6 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
 
 /**
  * SchemaFetcher sits at the heart of the admin/render pipeline — every form,
@@ -26,10 +27,11 @@ describe('SchemaFetcher', function (): void {
 			$this->storage,
 			$this->collectionFetcher,
 			$this->cacheManager,
+			$this->createStub(LoggerFactory::class),
 		);
 	});
 
-	function makeSchema(string $id, array $properties = [], array $inheritFrom = [], array $required = [], array $index = []): SchemaData
+	function makeSchema(string $id, array $properties = [], array $inheritFrom = [], array $required = [], array $index = [], string $formgrid = ''): SchemaData
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $id;
@@ -37,6 +39,7 @@ describe('SchemaFetcher', function (): void {
 		$schema->required    = $required;
 		$schema->index       = $index;
 		$schema->inheritFrom = $inheritFrom;
+		$schema->formgrid    = $formgrid;
 
 		return $schema;
 	}
@@ -125,6 +128,96 @@ describe('SchemaFetcher', function (): void {
 
 		expect(fn () => $this->fetcher->fetchRawSchemaForCollection('missing'))
 			->toThrow(UnexpectedValueException::class);
+	});
+
+	// --- inheritance at any depth ---
+
+	/**
+	 * Serve the given schemas from the mocked repository, by id.
+	 *
+	 * @param array<SchemaData> $schemas
+	 */
+	function serveSchemas(object $test, array $schemas): void
+	{
+		$byId = [];
+		foreach ($schemas as $schema) {
+			$byId[$schema->id] = $schema;
+		}
+
+		$test->storage->method('getSchema')->willReturnCallback(function (string $id) use ($byId): SchemaData {
+			return $byId[$id] ?? throw new RuntimeException('schema not found: ' . $id);
+		});
+		$test->cacheManager->method('getComputedData')->willReturn(null);
+	}
+
+	test('inheritance follows a parent of a parent', function (): void {
+		// child -> middle -> base
+		serveSchemas($this, [
+			makeSchema('child', ['author' => ['field' => 'text']], ['middle'], ['author'], ['author']),
+			makeSchema('middle', ['title' => ['field' => 'text']], ['base'], ['title'], ['title']),
+			makeSchema('base', ['sku' => ['field' => 'text']], [], ['sku'], ['sku']),
+		]);
+
+		$result = $this->fetcher->fetchSchema('child');
+
+		expect(array_keys($result->properties))->toBe(['author', 'title', 'sku']);
+		expect($result->required)->toBe(['author', 'title', 'sku']);
+		expect($result->index)->toBe(['author', 'title', 'sku']);
+	});
+
+	test('the nearest definition of a property wins', function (): void {
+		// child -> [first, second]; first -> base1
+		serveSchemas($this, [
+			makeSchema('child', ['download' => ['field' => 'url']], ['first', 'second']),
+			makeSchema('first', [], ['base1']),
+			makeSchema('base1', [
+				'download' => ['field' => 'file'],
+				'price'    => ['field' => 'price', 'label' => 'A'],
+			]),
+			makeSchema('second', ['price' => ['field' => 'price', 'label' => 'B']]),
+		]);
+
+		$result = $this->fetcher->fetchSchema('child');
+
+		expect($result->properties['download']['field'])->toBe('url');
+		expect($result->properties['price']['label'])->toBe('A');
+	});
+
+	test('a cycle does not loop', function (): void {
+		serveSchemas($this, [
+			makeSchema('a', ['pa' => ['field' => 'text']], ['b']),
+			makeSchema('b', ['pb' => ['field' => 'text']], ['a']),
+		]);
+
+		$result = $this->fetcher->fetchSchema('a');
+
+		expect(array_keys($result->properties))->toBe(['pa', 'pb']);
+	});
+
+	test('parents deeper than five levels are skipped', function (): void {
+		$chain = [];
+		for ($i = 0; $i <= 7; $i++) {
+			$chain[] = makeSchema("s{$i}", ["p{$i}" => ['field' => 'text']], $i < 7 ? ['s' . ($i + 1)] : []);
+		}
+		serveSchemas($this, $chain);
+
+		$result = $this->fetcher->fetchSchema('s0');
+
+		expect(array_keys($result->properties))->toBe(['p0', 'p1', 'p2', 'p3', 'p4', 'p5']);
+	});
+
+	test('isOrInherits is true for a grandparent', function (): void {
+		serveSchemas($this, [
+			makeSchema('child', [], ['middle']),
+			makeSchema('middle', [], ['base']),
+			makeSchema('base'),
+		]);
+
+		expect($this->fetcher->isOrInherits('child', 'base'))->toBeTrue();
+		expect($this->fetcher->isOrInherits('child', 'other'))->toBeFalse();
+		expect($this->fetcher->inheritsAny('child', ['x', 'base']))->toBeTrue();
+		expect($this->fetcher->inheritsAny('child', ['x']))->toBeFalse();
+		expect($this->fetcher->inheritsAny('base', ['base']))->toBeTrue();
 	});
 
 	// --- inheritance resolution ---
@@ -287,5 +380,121 @@ describe('SchemaFetcher', function (): void {
 		expect($result->properties)->toHaveKey('fromB');
 		// parentA wins over parentB for `shared` (first-wins among inherited)
 		expect($result->properties['shared']['label'])->toBe('From A');
+	});
+
+	// --- form layouts join ---
+
+	function layoutParents(): array
+	{
+		return [
+			makeSchema('base', ['id' => ['field' => 'text'], 'sku' => ['field' => 'text'], 'title' => ['field' => 'text']], formgrid: "id sku\ntitle title"),
+			makeSchema('digital', ['download' => ['field' => 'file']], formgrid: "--- Digital Delivery\ndownload download"),
+		];
+	}
+
+	function wireSchemas(object $test, SchemaData ...$schemas): void
+	{
+		$map = [];
+		foreach ($schemas as $schema) {
+			$map[] = [$schema->id, $schema];
+		}
+		$test->storage->method('getSchema')->willReturnMap($map);
+		$test->cacheManager->method('getComputedData')->willReturn(null);
+	}
+
+	test('a schema with no layout gets its parents\' layouts in order', function (): void {
+		[$base, $digital] = layoutParents();
+		$child            = makeSchema('child', inheritFrom: ['base', 'digital']);
+		wireSchemas($this, $child, $base, $digital);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)
+			->toBe("id sku\ntitle title\n--- Digital Delivery\ndownload download");
+	});
+
+	test('a property nothing places gets a row of its own at the end', function (): void {
+		[$base, $digital] = layoutParents();
+		$child            = makeSchema('child', ['author' => ['field' => 'text']], inheritFrom: ['base', 'digital']);
+		wireSchemas($this, $child, $base, $digital);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)
+			->toBe("id sku\ntitle title\n--- Digital Delivery\ndownload download\nauthor");
+	});
+
+	test('a schema\'s own layout is used as written', function (): void {
+		[$base, $digital] = layoutParents();
+		$child            = makeSchema('child', ['author' => ['field' => 'text']], inheritFrom: ['base', 'digital'], formgrid: 'author author');
+		wireSchemas($this, $child, $base, $digital);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe('author author');
+	});
+
+	test('no layout anywhere stays empty', function (): void {
+		$base  = makeSchema('base', ['title' => ['field' => 'text']]);
+		$child = makeSchema('child', ['author' => ['field' => 'text']], inheritFrom: ['base']);
+		wireSchemas($this, $child, $base);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe('');
+	});
+
+	test('a parent with no layout contributes its own parents\' layout', function (): void {
+		$root   = makeSchema('root', ['title' => ['field' => 'text']], formgrid: 'title title');
+		$middle = makeSchema('middle', ['sku' => ['field' => 'text']], inheritFrom: ['root']);
+		$child  = makeSchema('child', inheritFrom: ['middle']);
+		wireSchemas($this, $child, $middle, $root);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("title title\nsku");
+	});
+
+	test('a heading row does not place a property named like its words', function (): void {
+		$base  = makeSchema('base', ['id' => ['field' => 'text']], formgrid: "--- Notes\nid id");
+		$child = makeSchema('child', ['Notes' => ['field' => 'text']], inheritFrom: ['base']);
+		wireSchemas($this, $child, $base);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("--- Notes\nid id\nNotes");
+	});
+
+	test('the joined layout is what is cached, and a cache hit returns it', function (): void {
+		[$base, $digital] = layoutParents();
+		$child            = makeSchema('child', inheritFrom: ['base', 'digital']);
+		$this->storage->method('getSchema')->willReturnMap([['child', $child], ['base', $base], ['digital', $digital]]);
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->cacheManager
+			->expects($this->once())
+			->method('storeComputedData')
+			->with(
+				$this->equalTo('schema_flattened:child'),
+				$this->callback(fn (array $data): bool => $data['formgrid'] === "id sku\ntitle title\n--- Digital Delivery\ndownload download"),
+				$this->anything(),
+			)
+			->willReturn(true);
+
+		$this->fetcher->fetchSchema('child');
+	});
+
+	test('a cache hit returns the cached joined layout', function (): void {
+		$child = makeSchema('child', inheritFrom: ['base']);
+		$this->storage->method('getSchema')->with('child')->willReturn($child);
+		$this->cacheManager->method('getComputedData')->willReturn([
+			'id'       => 'child',
+			'formgrid' => "id id\nsku",
+		]);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("id id\nsku");
+	});
+
+	test('a fieldset legend does not place a property named like its words', function (): void {
+		$base = makeSchema('base', ['street' => ['field' => 'text'], 'city' => ['field' => 'text']], formgrid: "[[ Shipping address\nstreet city\n]]");
+		$child = makeSchema('child', ['address' => ['field' => 'text']], inheritFrom: ['base']);
+		wireSchemas($this, $child, $base);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe("[[ Shipping address\nstreet city\n]]\naddress");
+	});
+
+	test('an accordion panel title does not place a property named like its words', function (): void {
+		$base = makeSchema('base', ['slug' => ['field' => 'text'], 'template' => ['field' => 'text']], formgrid: ">> Advanced price\nslug template\n<<");
+		$child = makeSchema('child', ['price' => ['field' => 'text']], inheritFrom: ['base']);
+		wireSchemas($this, $child, $base);
+
+		expect($this->fetcher->fetchSchema('child')->formgrid)->toBe(">> Advanced price\nslug template\n<<\nprice");
 	});
 });

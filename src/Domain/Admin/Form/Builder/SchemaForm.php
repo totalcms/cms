@@ -95,7 +95,8 @@ class SchemaForm extends TotalForm
 		// Process each parent schema in order to collect all inherited property details
 		foreach ($this->schemaObjectData->inheritFrom as $parentId) {
 			try {
-				$parentSchema = $this->services->schemaFetcher->fetchRawSchema($parentId);
+				// Flattened, so the parent's own parents show up as inherited too
+				$parentSchema = $this->services->schemaFetcher->fetchSchema($parentId);
 
 				foreach ($parentSchema->properties as $propName => $propDef) {
 					// Only add if not already in own properties and not already inherited (first wins)

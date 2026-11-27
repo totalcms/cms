@@ -356,6 +356,10 @@ This creates a three-column layout:
 +------------+------------+------------+
 ```
 
+## Inherited Layouts
+
+A schema that uses `inheritFrom` and has no `formgrid` of its own gets its parents' layouts, one after the other in the order `inheritFrom` lists them. A parent with no layout contributes its own parents' layout. Section headings in a parent carry over. Each property that no joined row places gets a row of its own at the end, in the order the properties appear. If no parent has a layout, the schema has none either. Write a `formgrid` in the schema itself to take full control: it is used exactly as written, with nothing added.
+
 ## Important Rules
 
 ### Every Property Must Be Included

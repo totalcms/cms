@@ -35,7 +35,7 @@ describe('CollectionForm registration fields', function (): void {
 
 		// Partial: the real isOrInherits() reads the stubbed raw schemas; every
 		// other read is stubbed as before.
-		$schemaFetcher = $this->createPartialMock(SchemaFetcher::class, array_values(array_diff(get_class_methods(SchemaFetcher::class), ['isOrInherits', '__construct'])));
+		$schemaFetcher = $this->createPartialMock(SchemaFetcher::class, array_values(array_diff(get_class_methods(SchemaFetcher::class), ['isOrInherits', 'inheritsAny', '__construct'])));
 		// The forms' own schemas (collection, the record's schema) come from the real fetcher;
 		// a schema the test names stands in for a custom one.
 		$schemaFetcher->method('fetchSchema')->willReturnCallback(static function (string $id) use ($real, $inherits): SchemaData {

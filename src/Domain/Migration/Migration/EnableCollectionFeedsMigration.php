@@ -82,6 +82,6 @@ readonly class EnableCollectionFeedsMigration implements MigrationInterface
 			return false;
 		}
 
-		return array_intersect(RssBuilder::FEED_SCHEMAS, $schema->inheritFrom) !== [];
+		return $this->schemaFetcher->inheritsAny($schema->id, RssBuilder::FEED_SCHEMAS);
 	}
 }

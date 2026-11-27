@@ -362,7 +362,7 @@ readonly class SchemaSaver
 
 		foreach ($inheritFrom as $parentId) {
 			try {
-				$parentSchema = $this->schemaFetcher->fetchRawSchema((string)$parentId);
+				$parentSchema = $this->schemaFetcher->fetchSchema((string)$parentId);
 				$inherited    = array_merge($inherited, array_keys($parentSchema->properties));
 			} catch (\Exception) {
 				continue;

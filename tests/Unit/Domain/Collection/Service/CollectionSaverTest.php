@@ -362,9 +362,7 @@ final class CollectionSaverTest extends TestCase
 	public function testSaveAcceptsAnOwnerCollectionWhoseSchemaInheritsAuth(): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->with('members')->willReturn($this->authCollection('members', 'member'));
-		$schema              = new SchemaData();
-		$schema->inheritFrom = ['auth'];
-		$this->schemaFetcher->method('fetchRawSchema')->with('member')->willReturn($schema);
+		$this->schemaFetcher->method('isOrInherits')->with('member', 'auth')->willReturn(true);
 		$this->repository->expects($this->once())->method('saveCollection');
 
 		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'members']);

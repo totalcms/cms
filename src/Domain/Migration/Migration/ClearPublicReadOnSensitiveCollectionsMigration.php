@@ -94,6 +94,6 @@ readonly class ClearPublicReadOnSensitiveCollectionsMigration implements Migrati
 			return false;
 		}
 
-		return in_array(self::AUTH_SCHEMA, $schema->inheritFrom, true);
+		return $this->schemaFetcher->isOrInherits($schema->id, self::AUTH_SCHEMA);
 	}
 }

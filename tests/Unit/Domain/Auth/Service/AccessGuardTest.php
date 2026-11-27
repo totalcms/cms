@@ -59,6 +59,9 @@ final class AccessGuardTest extends TestCase
 		if ($schemaFetcher === null) {
 			$schemaFetcher = $this->createMock(SchemaFetcher::class);
 			$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+			$schemaFetcher->method('isOrInherits')->willReturnCallback(
+				static fn (string $id, string $target): bool => $id === $target || in_array($target, $inheritFrom, true),
+			);
 		}
 
 		$this->isSuperAdmin = $isSuperAdmin;

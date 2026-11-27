@@ -582,13 +582,11 @@ final class AccessGuard
 	}
 
 	/**
-	 * Whether the schema is the `auth` schema or inherits from it. Inheritance
-	 * is resolved one level deep by SchemaFetcher (matching its own model), and
-	 * `inheritFrom` is retained on the flattened schema.
+	 * Whether the schema is the `auth` schema or inherits from it at any depth.
 	 */
 	private function isAuthSchema(SchemaData $schema): bool
 	{
-		return $schema->id === self::AUTH_SCHEMA || in_array(self::AUTH_SCHEMA, $schema->inheritFrom, true);
+		return $this->schemaFetcher->isOrInherits($schema->id, self::AUTH_SCHEMA);
 	}
 
 	/**

@@ -431,25 +431,34 @@ class SchemaRepository extends StorageRepository
 	}
 
 	/**
-	 * Find all schemas that inherit from the given schema ID.
+	 * Find every schema that inherits from the given schema ID, directly or
+	 * through other schemas.
 	 *
 	 * @return array<string> Array of schema IDs that inherit from the given schema
 	 */
 	public function findInheritingSchemas(string $schemaId): array
 	{
-		$inheritingSchemas = [];
-
-		// Check custom schemas
+		// Note: Reserved schemas cannot be deleted, so we only check custom schemas
 		$customSchemas = $this->listCustomSchemas();
-		foreach ($customSchemas as $schema) {
-			if (in_array($schemaId, $schema->inheritFrom, true)) {
-				$inheritingSchemas[] = $schema->id;
+
+		$found    = [];
+		$frontier = [$schemaId];
+
+		while ($frontier !== []) {
+			$next = [];
+			foreach ($customSchemas as $schema) {
+				if (isset($found[$schema->id]) || $schema->id === $schemaId) {
+					continue;
+				}
+				if (array_intersect($frontier, $schema->inheritFrom) !== []) {
+					$found[$schema->id] = true;
+					$next[]             = $schema->id;
+				}
 			}
+			$frontier = $next;
 		}
 
-		// Note: Reserved schemas cannot be deleted, so we don't need to check them
-
-		return $inheritingSchemas;
+		return array_keys($found);
 	}
 
 	/**

@@ -625,12 +625,7 @@ readonly class CollectionSaver
 			return;
 		}
 
-		try {
-			$inherits = in_array('auth', $this->schemaFetcher->fetchRawSchema($collection->schema)->inheritFrom, true);
-		} catch (\Throwable) {
-			$inherits = false;
-		}
-		if (!$inherits) {
+		if (!$this->schemaFetcher->isOrInherits($collection->schema, 'auth')) {
 			throw new \DomainException($message);
 		}
 	}
