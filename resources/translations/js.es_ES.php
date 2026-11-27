@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => '¿Está seguro de que desea eliminar esta imagen?',
+	'confirm.delete_images'        => '¿Está seguro de que desea eliminar estas {count} imágenes?',
 	'confirm.delete_file'          => '¿Está seguro de que desea eliminar este archivo?',
 	'confirm.delete_item'          => '¿Está seguro de que desea eliminar esto? Esta acción no se puede deshacer.',
 	'confirm.delete_files'         => '¿Está seguro de que desea eliminar {count} archivos? Esta acción no se puede deshacer.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'No se pudo actualizar el estado de destacado. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.cache_clear'            => 'No se pudo limpiar la caché. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.delete_image'           => 'No se pudo eliminar la imagen. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
+	'error.delete_images'          => 'No se pudieron eliminar las imágenes. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
+	'gallery.selected'             => '{count} seleccionadas',
 	'error.delete_file'            => 'No se pudo eliminar el archivo. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.rename_folder'          => 'No se pudo cambiar el nombre de la carpeta. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.delete_label'           => 'No se pudo eliminar {label}',

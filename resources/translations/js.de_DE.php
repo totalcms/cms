@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => 'Sind Sie sicher, dass Sie dieses Bild löschen möchten?',
+	'confirm.delete_images'        => 'Sind Sie sicher, dass Sie diese {count} Bilder löschen möchten?',
 	'confirm.delete_file'          => 'Sind Sie sicher, dass Sie diese Datei löschen möchten?',
 	'confirm.delete_item'          => 'Sind Sie sicher, dass Sie dies löschen möchten? Dies kann nicht rückgängig gemacht werden.',
 	'confirm.delete_files'         => 'Sind Sie sicher, dass Sie {count} Dateien löschen möchten? Dies kann nicht rückgängig gemacht werden.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'Der Hervorgehoben-Status konnte nicht aktualisiert werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.cache_clear'            => 'Der Cache konnte nicht geleert werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.delete_image'           => 'Das Bild konnte nicht gelöscht werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+	'error.delete_images'          => 'Die Bilder konnten nicht gelöscht werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+	'gallery.selected'             => '{count} ausgewählt',
 	'error.delete_file'            => 'Die Datei konnte nicht gelöscht werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.rename_folder'          => 'Der Ordner konnte nicht umbenannt werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.delete_label'           => '{label} konnte nicht gelöscht werden',

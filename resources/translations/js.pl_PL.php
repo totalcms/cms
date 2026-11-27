@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => 'Czy na pewno chcesz usunąć ten obraz?',
+	'confirm.delete_images'        => 'Czy na pewno chcesz usunąć zaznaczone obrazy ({count})?',
 	'confirm.delete_file'          => 'Czy na pewno chcesz usunąć ten plik?',
 	'confirm.delete_item'          => 'Czy na pewno chcesz to usunąć? Tej operacji nie można cofnąć.',
 	'confirm.delete_files'         => 'Czy na pewno chcesz usunąć pliki ({count})? Tej operacji nie można cofnąć.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'Nie udało się zaktualizować statusu wyróżnienia. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.cache_clear'            => 'Nie udało się wyczyścić cache. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.delete_image'           => 'Nie udało się usunąć obrazu. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
+	'error.delete_images'          => 'Nie udało się usunąć obrazów. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
+	'gallery.selected'             => 'Zaznaczono: {count}',
 	'error.delete_file'            => 'Nie udało się usunąć pliku. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.rename_folder'          => 'Nie udało się zmienić nazwy folderu. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.delete_label'           => 'Nie udało się usunąć: {label}',

@@ -92,6 +92,9 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save')->add(PublicUploadGuardMiddleware::class);
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->put('/{collection}/{id}/{property}/folder/rename', Property\File\FolderRenameAction::class)->setName('property-folder-rename');
+		// Several gallery images in one save. Literal, so it MUST stay ahead of
+		// the greedy nested-save POST `{path:.+}` at the end of this group.
+		$group->post('/{collection}/{id}/{property}/bulk/delete', Property\File\FileBulkDeleteAction::class)->setName('property-file-bulk-delete');
 
 		// Object Property Meta — `{path:.+}` covers both gallery item meta and
 		// card-nested property updates. The action dispatches on filesystem state.

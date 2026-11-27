@@ -867,6 +867,26 @@ curl -X DELETE https://yoursite.com/api/collections/blog/my-post/gallery/old-pho
 
 Response is the updated object after the delete.
 
+### Delete Several Gallery Images
+
+Remove several images from a gallery with one request. The object is saved once, so `object.updated` fires once, and automations, webhooks and search indexing run once rather than once per image. The gallery field's multi-delete uses this.
+
+```http
+POST /api/collections/{collection}/{id}/{property}/bulk/delete
+```
+
+**Request body:**
+```json
+{ "names": ["old-photo.jpg", "blurry.jpg"] }
+```
+
+**Response:**
+```json
+{ "deleted": ["old-photo.jpg"], "missing": ["blurry.jpg"] }
+```
+
+`missing` lists names the gallery does not hold, for example an image already deleted in another tab. They are not an error: the others are still deleted. A property that is not a gallery is refused with `400`; delete depot files one at a time. The access needed is the same as for deleting one file.
+
 ### Move a File
 
 Move a file from one depot subfolder to another. Used by the depot field's drag-and-drop UI; the request body's `destination` is the new subfolder path.

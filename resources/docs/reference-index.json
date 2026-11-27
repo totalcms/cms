@@ -4005,6 +4005,15 @@
             "url": "https://docs.totalcms.co/apis/rest-api/"
         },
         {
+            "method": "POST",
+            "path": "/api/collections/{collection}/{id}/{property}/bulk/delete",
+            "title": "Delete Several Gallery Images",
+            "description": "Remove several images from a gallery with one request. The object is saved once, so `object.updated` fires once, and automations, webhooks and search indexing run once rather than once per image. The gallery field's multi-delete uses this.",
+            "parameters": [],
+            "edition": "lite",
+            "url": "https://docs.totalcms.co/apis/rest-api/"
+        },
+        {
             "method": "PUT",
             "path": "/api/collections/{collection}/{id}/{property}/{name}/move",
             "title": "Move a File",

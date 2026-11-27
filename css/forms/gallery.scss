@@ -133,6 +133,164 @@
 			display : none;
 		}
 	}
+
+	// --- Multi-delete (gallery-select.js) ---
+
+	// The Select button sits at the right end of the label's row, beside the
+	// label rather than in it (GalleryField::createFormField), and shows only
+	// when there is a saved image to select.
+	> .gallery-select {
+		display          : none;
+		position         : absolute;
+		top              : 0.15rem; // centered on the label's line
+		right            : 0;
+		width            : 1.25rem;
+		height           : 1.25rem;
+		padding          : 0;
+		border           : 0;
+		background-color : currentColor;
+		mask             : var(--icon-select-area) center / contain no-repeat;
+		opacity          : 0.6;
+		cursor           : pointer;
+		transition       : opacity var(--help-animation-timing);
+
+		&:hover, &:focus-visible, &[aria-pressed="true"] {
+			background-color : oklch(var(--totalform-accent));
+			opacity          : 1;
+		}
+	}
+	// Out of sight until the pointer is over the gallery, as the thumbnails'
+	// own action bars are. Focus inside the field shows it too, so a keyboard
+	// can reach it, and so does selection mode, so the way out stays in view.
+	// A touch screen has no hover to reveal it: there it always shows.
+	@media (hover: hover) {
+		&:not(:hover):not(:focus-within) > .gallery-select:not([aria-pressed="true"]) {
+			opacity : 0;
+		}
+	}
+	// No label to sit beside: take a row of its own, so it covers no thumbnail.
+	&:not(:has(> label)) > .gallery-select {
+		position      : static;
+		margin-left   : auto;
+		margin-bottom : 0.25rem;
+	}
+	.totalform.edit-mode &:has(.image-preview[data-image-name]) > .gallery-select {
+		display : block;
+	}
+
+	// The bar above the thumbnails, shown only while selecting.
+	.gallery-select-bar {
+		display       : none;
+		align-items   : center;
+		gap           : 0.25rem;
+		margin-bottom : 0.5rem;
+		padding       : 0.25rem 0.5rem;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-nearwhite));
+		font-size     : 0.85em;
+
+		.gallery-select-count {
+			font-weight  : 600;
+			margin-right : auto;
+		}
+		.gallery-bar-icon {
+			position      : relative;
+			width         : 1.75rem;
+			height        : 1.75rem;
+			padding       : 0;
+			border        : 0;
+			background    : transparent;
+			cursor        : pointer;
+			border-radius : var(--totalform-radius);
+
+			&::before {
+				content          : "";
+				position         : absolute;
+				inset            : 0;
+				background-color : oklch(var(--totalform-text-color));
+				mask-image       : var(--bar-icon);
+				mask-repeat      : no-repeat;
+				mask-position    : center;
+				mask-size        : 1rem;
+			}
+			&:hover:not(:disabled), &.active {
+				background : oklch(var(--totalform-icon-bg));
+			}
+			&:disabled {
+				cursor  : default;
+				opacity : 0.4;
+			}
+		}
+		.gallery-select-all      { --bar-icon : var(--icon-checks) }
+		.gallery-delete-selected { --bar-icon : var(--icon-trash) }
+		.gallery-select-done     {
+			--bar-icon   : var(--icon-close);
+			margin-left  : 0.5rem;
+			padding-left : 0.5rem;
+			border-left  : 1px solid oklch(var(--totalform-border-color));
+			border-radius: 0;
+		}
+		.gallery-delete-selected::before {
+			background-color : oklch(var(--totalform-error));
+		}
+		&.busy {
+			cursor : progress;
+		}
+	}
+
+	&.gallery-selecting {
+		.gallery-select-bar {
+			display : flex;
+		}
+		// No editing, uploading or reordering while selecting: hiding the
+		// action bars also hides the .move handle, the only place a drag starts.
+		.actionbar,
+		.gallery-upload {
+			display : none !important;
+		}
+		.image-preview {
+			cursor : pointer;
+		}
+		.image-preview:not([data-image-name]) {
+			cursor  : default;
+			opacity : 0.5;
+		}
+		.dz-preview {
+			position : relative;
+		}
+		.image-preview.selected .dz-preview {
+			outline        : 3px solid oklch(var(--totalform-accent));
+			outline-offset : 2px;
+			border-radius  : var(--totalform-radius);
+
+			&::after {
+				content          : "";
+				position         : absolute;
+				top              : 0.4rem;
+				right            : 0.4rem;
+				width            : 1.5rem;
+				aspect-ratio     : 1;
+				border-radius    : 50%;
+				background-color : oklch(var(--totalform-accent));
+				box-shadow       : 0 0 0 2px oklch(var(--totalform-purewhite));
+			}
+			&::before {
+				content          : "";
+				position         : absolute;
+				top              : 0.4rem;
+				right            : 0.4rem;
+				width            : 1.5rem;
+				aspect-ratio     : 1;
+				z-index          : 1;
+				background-color : oklch(var(--totalform-purewhite));
+				mask-image       : var(--icon-check);
+				mask-size        : 0.9rem;
+				mask-repeat      : no-repeat;
+				mask-position    : center;
+			}
+		}
+	}
 	// change border color?
 	// .sortable-chosen {
 	// }

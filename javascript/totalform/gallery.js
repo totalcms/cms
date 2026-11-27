@@ -1,5 +1,6 @@
 import ImageField from "./image";
 import GalleryPreview from "./gallery-preview";
+import GallerySelection from "./gallery-select";
 import Dialog from "./dialog";
 import Details from "./details";
 import TotalSortable from "./total-sortable";
@@ -23,6 +24,7 @@ export default class GalleryField extends ImageField {
 		this.scrollable = new Scrollable(this.previewContainer);
 		this.sortable = null;
 		this.watchPreviews();
+		this.selection = new GallerySelection(this);
     }
 
 	// Built on first read rather than in the constructor: ImageField's

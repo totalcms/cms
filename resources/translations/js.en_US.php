@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => 'Are you sure that you want to delete this image?',
+	'confirm.delete_images'        => 'Are you sure that you want to delete these {count} images?',
 	'confirm.delete_file'          => 'Are you sure that you want to delete this file?',
 	'confirm.delete_item'          => 'Are you sure that you want to delete this? This cannot be undone.',
 	'confirm.delete_files'         => 'Are you sure that you want to delete {count} files? This cannot be undone.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'Failed to update featured status. A network or timeout error occurred. Please try again.',
 	'error.cache_clear'            => 'Failed to clear cache. A network or timeout error occurred. Please try again.',
 	'error.delete_image'           => 'Failed to delete image. A network or timeout error occurred. Please try again.',
+	'error.delete_images'          => 'Failed to delete images. A network or timeout error occurred. Please try again.',
+	'gallery.selected'             => '{count} selected',
 	'error.delete_file'            => 'Failed to delete file. A network or timeout error occurred. Please try again.',
 	'error.rename_folder'          => 'Failed to rename the folder. A network or timeout error occurred. Please try again.',
 	'error.delete_label'           => 'Failed to delete {label}',

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
@@ -112,5 +113,81 @@ class FileRemover
 		$this->storage->deleteFile($collection, $objectID, $property, $name);
 
 		return $updated;
+	}
+
+	/**
+	 * Remove several images from a gallery with one save.
+	 *
+	 * The gallery field's multi-delete calls this rather than deleteFile() once
+	 * per image: each deleteFile() is a whole object save, so N of them fired
+	 * N `object.updated` events (N automation runs, N webhook calls, N search
+	 * index writes), and N requests sent at once raced each other's
+	 * read-modify-write of the record and could put a deleted image back.
+	 *
+	 * Only names the record holds are removed, and the disk delete uses the
+	 * record's own name, so a name in the request can never reach a file the
+	 * gallery does not list. Names it does not hold (already deleted in
+	 * another tab, say) are reported, not an error.
+	 *
+	 * Record first, disk second, as in deleteFile(): a refused save changes
+	 * nothing. Once the record is saved the files are going for certain; a
+	 * file that cannot be removed does not stop the others, and the first
+	 * such failure is thrown after every file has been tried.
+	 *
+	 * @param list<string> $names
+	 *
+	 * @return array{deleted: list<string>, missing: list<string>}
+	 */
+	public function deleteFiles(string $collection, string $objectID, string $property, array $names): array
+	{
+		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
+		}
+
+		$gallery = $this->fetchProperty($collection, $objectID, $property);
+		if (!$gallery instanceof GalleryData) {
+			throw new \InvalidArgumentException("Property '{$property}' is not a gallery; delete its files one at a time");
+		}
+
+		$wanted  = array_fill_keys($names, true);
+		$kept    = [];
+		$deleted = [];
+		foreach ($gallery->transform() as $image) {
+			$name = is_string($image['name'] ?? null) ? $image['name'] : '';
+			if ($name !== '' && isset($wanted[$name]) && self::isPlainName($name)) {
+				$deleted[] = $name;
+				unset($wanted[$name]);
+				continue;
+			}
+			$kept[] = $image;
+		}
+		$missing = array_map(strval(...), array_keys($wanted));
+
+		if ($deleted === []) {
+			return ['deleted' => [], 'missing' => $missing];
+		}
+
+		$this->updateObject($collection, $objectID, $property, $kept);
+
+		$failure = null;
+		foreach ($deleted as $name) {
+			try {
+				$this->fileBackups?->setAside($collection, $objectID, $property, null, $name);
+				$this->storage->deleteFile($collection, $objectID, $property, $name);
+			} catch (\RuntimeException $e) {
+				$failure ??= $e;
+			}
+		}
+		if ($failure instanceof \RuntimeException) {
+			throw $failure;
+		}
+
+		return ['deleted' => $deleted, 'missing' => $missing];
+	}
+
+	/** A file name of the property's own folder: no path, and not `.` or `..`. */
+	private static function isPlainName(string $name): bool
+	{
+		return $name === basename($name) && !in_array($name, ['.', '..'], true) && !str_contains($name, '\\');
 	}
 }

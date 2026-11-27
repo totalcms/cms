@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => 'Weet u zeker dat u deze afbeelding wilt verwijderen?',
+	'confirm.delete_images'        => 'Weet u zeker dat u deze {count} afbeeldingen wilt verwijderen?',
 	'confirm.delete_file'          => 'Weet u zeker dat u dit bestand wilt verwijderen?',
 	'confirm.delete_item'          => 'Weet u zeker dat u dit wilt verwijderen? Dit kan niet ongedaan worden gemaakt.',
 	'confirm.delete_files'         => 'Weet u zeker dat u {count} bestanden wilt verwijderen? Dit kan niet ongedaan worden gemaakt.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'De uitgelichte status kon niet worden bijgewerkt. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.cache_clear'            => 'De cache kon niet worden gewist. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.delete_image'           => 'De afbeelding kon niet worden verwijderd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
+	'error.delete_images'          => 'De afbeeldingen konden niet worden verwijderd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
+	'gallery.selected'             => '{count} geselecteerd',
 	'error.delete_file'            => 'Het bestand kon niet worden verwijderd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.rename_folder'          => 'De map kon niet worden hernoemd. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.delete_label'           => '{label} kon niet worden verwijderd',

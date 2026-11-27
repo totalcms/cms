@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
 	// ── Confirmation Dialogs ────────────────────────────────────────────────
 	'confirm.delete_image'         => 'Sei sicuro di voler eliminare questa immagine?',
+	'confirm.delete_images'        => 'Sei sicuro di voler eliminare queste {count} immagini?',
 	'confirm.delete_file'          => 'Sei sicuro di voler eliminare questo file?',
 	'confirm.delete_item'          => 'Sei sicuro di voler eliminare questo elemento? Questa azione non può essere annullata.',
 	'confirm.delete_files'         => 'Sei sicuro di voler eliminare {count} file? Questa azione non può essere annullata.',
@@ -23,6 +24,8 @@ return [
 	'error.featured_update'        => 'Aggiornamento dello stato in evidenza non riuscito. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.cache_clear'            => 'Cancellazione della cache non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.delete_image'           => "Eliminazione dell'immagine non riuscita. Si è verificato un errore di rete o di timeout. Riprova.",
+	'error.delete_images'          => 'Eliminazione delle immagini non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
+	'gallery.selected'             => '{count} selezionate',
 	'error.delete_file'            => 'Eliminazione del file non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.rename_folder'          => 'Rinomina della cartella non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.delete_label'           => 'Eliminazione di {label} non riuscita',

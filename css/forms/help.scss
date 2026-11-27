@@ -162,6 +162,11 @@
 		width : auto;
 		right : calc(var(--locale-tabs-width, 0px) + 1rem);
 	}
+	// Likewise the gallery's Select button at the right end of its label row.
+	.gallery-field:has(> .gallery-select) > .help {
+		width : auto;
+		right : 2rem;
+	}
 }
 
 //------------------------------

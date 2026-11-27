@@ -61,6 +61,50 @@ class GalleryField extends ImageField
 			'class' => 'gallery-upload dz-clickable',
 		]);
 
-		return $input . $overlay . $previews . $template . $galleryJson . $uploadButton;
+		return $input . $overlay . $this->selectBar() . $previews . $template . $galleryJson . $uploadButton;
+	}
+
+	/**
+	 * The Select button goes on the label's row, at its right end. It is the
+	 * label's sibling rather than its child: with help on the label, the label
+	 * fades out while the help shows, and a button inside it would go too.
+	 */
+	public function createFormField(string $content): string
+	{
+		return HTMLUtils::element('div', $this->createFieldLabel() . $this->selectButton() . $content . $this->createHelpText(), $this->buildFieldAttributes());
+	}
+
+	/**
+	 * The multi-delete bar, shown only while the gallery is in selection mode
+	 * (gallery.js). Its Delete sends every selected name in one request.
+	 */
+	private function selectBar(): string
+	{
+		$button = fn (string $class, string $label): string => HTMLUtils::element('button', '', [
+			'type'       => 'button',
+			'class'      => "gallery-bar-icon {$class}",
+			'title'      => $label,
+			'aria-label' => $label,
+		]);
+
+		$count = HTMLUtils::element('span', '', ['class' => 'gallery-select-count', 'aria-live' => 'polite']);
+		$tools = $button('gallery-select-all', $this->t('image.select_all', 'Select All'))
+			. $button('gallery-delete-selected', $this->t('image.delete_selected', 'Delete Selected'))
+			. $button('gallery-select-done', $this->t('image.select_done', 'Done'));
+
+		return HTMLUtils::element('div', $count . $tools, ['class' => 'gallery-select-bar']);
+	}
+
+	private function selectButton(): string
+	{
+		$label = $this->t('image.select', 'Select Images');
+
+		return HTMLUtils::element('button', '', [
+			'type'         => 'button',
+			'class'        => 'gallery-select',
+			'title'        => $label,
+			'aria-label'   => $label,
+			'aria-pressed' => 'false',
+		]);
 	}
 }

@@ -8100,6 +8100,93 @@
                 ]
             }
         },
+        "/api/collections/{collection}/{id}/{property}/bulk/delete": {
+            "post": {
+                "operationId": "property-file-bulk-delete",
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Delete Several Gallery Images",
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "property",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "names"
+                                ],
+                                "properties": {
+                                    "names": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "File names of the images to delete"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/api/collections/{collection}/{id}/{property}/bulk/delete",
+                "x-tcms-action": "FileBulkDeleteAction",
+                "x-tcms-middleware": [
+                    "OAuthRestScopeMiddleware",
+                    "OAuthBearerMiddleware",
+                    "NoCacheMiddleware",
+                    "CollectionEditionMiddleware",
+                    "CommerceCollectionGuardMiddleware",
+                    "SystemCollectionGuardMiddleware",
+                    "CollectionAccessMiddleware",
+                    "DualAuthMiddleware",
+                    "ExternalCorsMiddleware"
+                ]
+            }
+        },
         "/api/collections/{collection}/{id}/{property}/cache": {
             "delete": {
                 "operationId": "property-clear-cache",
