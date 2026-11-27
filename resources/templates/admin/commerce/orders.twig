@@ -10,10 +10,10 @@
 <main class="dash-main-content commerce-admin" style="max-width:100%;">
 	<header class="commerce-admin-header">
 		<h1>{{ t('commerce.orders') }}</h1>
-		<a class="dash-button transparent" href="commerce/subscriptions">{{ t('commerce.subscriptions') }}</a>
-		{% if cms.auth.isAdmin() %}
-			<a class="dash-button transparent" href="settings/commerce">Store settings</a>
-		{% endif %}
+		{# Where else the store is looked at: small, so the title and the orders lead. #}
+		<nav class="commerce-admin-links" aria-label="Store">
+			<a class="dash-button transparent small" href="commerce/subscriptions">{{ t('commerce.subscriptions') }}</a>
+		</nav>
 	</header>
 
 	<section class="dash-content-section commerce-orders">
@@ -40,19 +40,22 @@
 					{% endfor %}
 				</select>
 			</label>
-			<label>From
-				<input type="date" name="from" value="{{ filters.from|default('')|e }}">
-			</label>
-			<label>To
-				<input type="date" name="to" value="{{ filters.to|default('')|e }}">
-			</label>
+			{# The two ends of a range stay side by side when the row wraps. #}
+			<div class="commerce-filter-range">
+				<label>From
+					<input type="date" name="from" value="{{ filters.from|default('')|e }}">
+				</label>
+				<label>To
+					<input type="date" name="to" value="{{ filters.to|default('')|e }}">
+				</label>
+			</div>
 			<label class="commerce-filter-check">
 				<input type="checkbox" name="needsAttention" value="1"{{ filters.needsAttention|default('') ? ' checked' }}>
 				Needs attention
 			</label>
 			<div class="commerce-filter-actions">
 				<button class="dash-button" type="submit">Filter</button>
-				<a class="dash-button transparent" href="commerce/orders">Clear</a>
+				<a class="commerce-filter-clear" href="commerce/orders">Clear</a>
 			</div>
 		</form>
 

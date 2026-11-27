@@ -10,7 +10,9 @@
 <main class="dash-main-content commerce-admin" style="max-width:100%;">
 	<header class="commerce-admin-header">
 		<h1>{{ t('commerce.subscriptions') }}</h1>
-		<a class="dash-button transparent" href="commerce/orders">{{ t('commerce.orders') }}</a>
+		<nav class="commerce-admin-links" aria-label="Store">
+			<a class="dash-button transparent small" href="commerce/orders">{{ t('commerce.orders') }}</a>
+		</nav>
 	</header>
 
 	<section class="dash-content-section commerce-orders commerce-subscriptions">
@@ -36,7 +38,7 @@
 			</label>
 			<div class="commerce-filter-actions">
 				<button class="dash-button" type="submit">Filter</button>
-				<a class="dash-button transparent" href="commerce/subscriptions">Clear</a>
+				<a class="commerce-filter-clear" href="commerce/subscriptions">Clear</a>
 			</div>
 		</form>
 

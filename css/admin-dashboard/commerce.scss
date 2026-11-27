@@ -19,45 +19,62 @@
 		color       : oklch(var(--totalform-darkgray));
 	}
 
-	// Search takes the room; the choices and dates sit beside it. Two
-	// columns on narrow screens, one on phones.
+	// The other places the store is looked at, at the end of the title's row.
+	.commerce-admin-links {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.5rem;
+	}
+
+	// The list and what narrows it are one thing: the filters sit close
+	// above the table, where the page's sections are spaced further apart.
+	.commerce-orders {
+		gap : 1.25rem;
+	}
+
+	// One row of filters, with no box of its own: each control has its
+	// border, and the table under it is what they belong to. Search takes
+	// the room; the rest sit beside it and wrap when the row runs out.
 	// `form` in the selector: the dashboard caps every form at 800px, which
 	// suits a form of fields and not a row of filters over a wide table.
 	form.commerce-filters {
-		max-width             : none;
-		display               : grid;
-		grid-template-columns : minmax(0, 2fr) repeat(4, minmax(0, 1fr));
-		gap                   : 1rem 0.75rem;
-		align-items           : end;
-		margin-block          : 0 1rem;
-		padding               : 1.25rem;
-		background            : oklch(var(--totalform-nearwhite));
-		border                : 1px solid oklch(var(--totalform-border-color));
-		border-radius         : var(--totalform-radius);
-
-		@media (max-width: 1100px) {
-			grid-template-columns : repeat(2, minmax(0, 1fr));
-
-			.commerce-filter-search {
-				grid-column : 1 / -1;
-			}
-		}
-
-		@media (max-width: 500px) {
-			grid-template-columns : minmax(0, 1fr);
-		}
+		max-width    : none;
+		display      : flex;
+		flex-wrap    : wrap;
+		gap          : 0.75rem;
+		align-items  : end;
+		margin-block : 0;
 
 		// The TotalForm stylesheet sizes every label to its text
-		// (`width: max-content`); stretch these across their grid cell so the
-		// control inside can fill it.
+		// (`width: max-content`); these share the row instead.
 		label {
-			width       : 100%;
-			max-width   : none;
+			flex        : 1 1 9rem;
+			width       : auto;
+			max-width   : 13rem;
+			min-width   : 0;
 			display     : grid;
 			gap         : 0.35rem;
-			font-size   : 0.8em;
+			font-size   : 0.75rem;
 			font-weight : 600;
 			color       : oklch(var(--totalform-darkgray));
+		}
+
+		label.commerce-filter-search {
+			flex      : 2 1 16rem;
+			max-width : 26rem;
+		}
+
+		.commerce-filter-range {
+			flex      : 2 1 18rem;
+			display   : flex;
+			gap       : 0.75rem;
+			max-width : 26.75rem;
+			min-width : 0;
+
+			label {
+				flex : 1 1 0;
+			}
 		}
 
 		select,
@@ -68,12 +85,16 @@
 			height        : 2.5rem;
 			padding       : 0 0.75rem;
 			font          : inherit;
-			font-size     : 0.95rem;
+			font-size     : 0.9rem;
 			font-weight   : normal;
 			color         : oklch(var(--totalform-text-color));
 			background    : oklch(var(--totalform-white));
 			border        : 1px solid oklch(var(--totalform-border-color));
 			border-radius : var(--totalform-radius);
+		}
+
+		input::placeholder {
+			color : oklch(var(--totalform-darkgray) / 0.8);
 		}
 
 		select:focus,
@@ -82,15 +103,19 @@
 			outline-offset : 1px;
 		}
 
+		// A tick box as tall as the controls beside it, so its words sit on
+		// their line.
 		label.commerce-filter-check {
-			display               : grid;
-			grid-template-columns : auto 1fr;
-			align-items           : center;
-			gap                   : 0.5rem;
-			font-size             : 0.9rem;
-			font-weight           : normal;
-			color                 : oklch(var(--totalform-text-color));
-			cursor                : pointer;
+			flex        : none;
+			display     : flex;
+			align-items : center;
+			gap         : 0.5rem;
+			height      : 2.5rem;
+			max-width   : none;
+			font-size   : 0.9rem;
+			font-weight : normal;
+			color       : oklch(var(--totalform-text-color));
+			cursor      : pointer;
 
 			input {
 				width        : 1.1rem;
@@ -101,15 +126,29 @@
 		}
 	}
 
+	// Filter, as tall as the controls; Clear, a link beside it. The pair
+	// keeps to the end of the row.
 	.commerce-filter-actions {
-		grid-column     : 2 / -1;
-		display         : flex;
-		flex-wrap       : wrap;
-		justify-content : end;
-		gap             : 0.5rem;
+		flex        : none;
+		display     : flex;
+		align-items : center;
+		gap         : 1rem;
+		height      : 2.5rem;
+		margin-left : auto;
 
-		@media (max-width: 1100px) {
-			grid-column : 1 / -1;
+		.dash-button {
+			height    : 2.5rem;
+			padding   : 0 1rem;
+			font-size : 0.9rem;
+		}
+	}
+
+	.commerce-filter-clear {
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.9rem;
+
+		&:hover {
+			color : oklch(var(--totalform-text-color));
 		}
 	}
 
@@ -123,6 +162,19 @@
 	.commerce-orders-table {
 		display : grid;
 		gap     : 0.75rem;
+
+		// The count is already above it: no second gap over an empty list.
+		.dash-empty-state {
+			margin-top : 0;
+		}
+
+		// Less room between columns where there is less room for the table.
+		@media (max-width: 1000px) {
+			table.admin-table th,
+			table.admin-table td {
+				padding-inline : 0.6rem;
+			}
+		}
 	}
 
 	.commerce-table-wrap {
@@ -154,6 +206,15 @@
 
 		tbody tr + tr td {
 			border-top : 1px solid oklch(var(--totalform-border-color));
+		}
+
+		// Column names are labels: smaller and quieter than what they name.
+		th {
+			padding-block : 0.7rem;
+			font-size     : 0.75rem;
+			font-weight   : 600;
+			color         : oklch(var(--totalform-darkgray));
+			border-bottom : 1px solid oklch(var(--totalform-border-color));
 		}
 	}
 
@@ -615,14 +676,10 @@
 				}
 			}
 
-			// Column names are labels: smaller and quieter than what they name.
+			// In a card the heading is close above: no room over the column names.
 			th {
 				padding-block : 0 0.6rem;
-				font-size     : 0.75rem;
-				font-weight   : 600;
-				color         : oklch(var(--totalform-darkgray));
 				background    : none;
-				border-bottom : 1px solid oklch(var(--totalform-border-color));
 			}
 		}
 	}
