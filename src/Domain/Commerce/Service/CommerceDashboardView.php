@@ -36,7 +36,7 @@ final readonly class CommerceDashboardView
 	}
 
 	/**
-	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>, lowStockAt: int, productsCollection: string, openDownloads: array{id: string, name: string, anySignedIn: bool}|null}|null
+	 * @return array{days: int, revenue: string, paidOrders: int, attention: int, prefix: string, recent: list<array<string,mixed>>, lowStock: list<array{productId: string, variantId: string, title: string, stock: int}>, lowStockAt: int, productsCollection: string, nothingToDeliver: list<array{productId: string, title: string}>, openDownloads: array{id: string, name: string, anySignedIn: bool}|null}|null
 	 *                                                                                                                                                                                                                          null when there is no store, or this user may not see it
 	 */
 	public function forCurrentUser(): ?array
@@ -65,6 +65,7 @@ final readonly class CommerceDashboardView
 			'lowStock'   => $this->dashboard->lowStock(),
 			'lowStockAt' => $this->settings->lowStockAt(),
 			'productsCollection' => $this->settings->collection('products'),
+			'nothingToDeliver'   => $this->dashboard->nothingToDeliver(),
 			'openDownloads'      => $open === null ? null : [
 				'id'          => $open->collection,
 				'name'        => $this->collections->fetchCollection($open->collection)->name ?? $open->collection,

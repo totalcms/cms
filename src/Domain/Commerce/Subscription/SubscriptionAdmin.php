@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Subscription;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Commerce\Data\AttentionDismissal;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\PaymentProviderRegistry;
 use TotalCMS\Domain\Commerce\Payment\ProviderException;
@@ -14,10 +16,10 @@ use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
- * The two things a person can do to a subscription: ask for it to end,
- * and ask the provider where it stands.
+ * What a person can do to a subscription: ask for it to end, ask the
+ * provider where it stands, and mark one that needed someone as handled.
  *
- * Neither writes the subscription's status. Canceling asks the provider,
+ * None of them writes the subscription's status. Canceling asks the provider,
  * and the subscription changes when the provider's own word comes back.
  * Checking takes the provider's word now, through the same steps as its
  * webhook: for a store whose webhook was missed.
@@ -33,6 +35,26 @@ final readonly class SubscriptionAdmin
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Commerce);
+	}
+
+	/**
+	 * Mark a subscription that needs someone as handled: it leaves the
+	 * count, and keeps why it was there and who dealt with it. Nothing is
+	 * asked of the provider and its status does not change. One that needs
+	 * nobody is left exactly as it is.
+	 *
+	 * @throws CommerceException `subscription_not_found`
+	 */
+	public function dismiss(string $subscriptionId, Actor $by): void
+	{
+		$subscription = $this->subscriptions->find($subscriptionId) ?? throw CommerceException::subscriptionNotFound();
+		if ($subscription->needsAttention() === '') {
+			return;
+		}
+
+		$this->subscriptions->withLock($subscriptionId, static fn (SubscriptionData $fresh): SubscriptionData => $fresh->needsAttention() === ''
+			? $fresh
+			: $fresh->withAttentionDismissed($fresh->needsAttention(), AttentionDismissal::actor($by)));
 	}
 
 	/**

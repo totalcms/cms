@@ -33,6 +33,25 @@ final readonly class ProductDownload
 		return $product === null ? null : ($this->sources->for($this->settings->collection('products'), $product)[1] ?? null);
 	}
 
+	/**
+	 * What the product gives a buyer, and whether that is known. Not known
+	 * for a product that is gone, or whose download could not be looked for
+	 * ({@see DownloadSources::look()}): "none" is then not an answer to act on.
+	 *
+	 * @return array{0: ?Deliverable, 1: bool}
+	 */
+	public function look(string $productId): array
+	{
+		$product = $this->product($productId);
+		if ($product === null) {
+			return [null, false];
+		}
+
+		[$found, $known] = $this->sources->look($this->settings->collection('products'), $product);
+
+		return [$found[1] ?? null, $known];
+	}
+
 	/** Hand the product's download over, or null when there is nothing to hand over. */
 	public function deliver(string $productId): ?Delivery
 	{

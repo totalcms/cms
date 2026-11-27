@@ -32,8 +32,8 @@
 						<td class="commerce-num">{{ row.amount|money(row.currency ?: order.currency) }}</td>
 						<td>{{ row.actor|e }}</td>
 						<td class="commerce-refs">
-							{% if row.providerRef %}<code>{{ row.providerRef|e }}</code>{% endif %}
-							{% if row.providerEventId %}<code>{{ row.providerEventId|e }}</code>{% endif %}
+							{% if row.providerRef %}<code title="{{ row.providerRef|e }}">{{ row.providerRef|e }}</code>{% endif %}
+							{% if row.providerEventId %}<code title="{{ row.providerEventId|e }}">{{ row.providerEventId|e }}</code>{% endif %}
 						</td>
 					</tr>
 				{% endfor %}

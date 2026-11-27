@@ -354,7 +354,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"field": "json",
 			"label": "Flags",
-			"help": "Marks for work already done, so it is never done twice: inventoryApplied, receiptQueued, downloadsIssued, paidDispatched.",
+			"help": "Marks for work already done, so it is never done twice: inventoryApplied, receiptQueued, downloadsIssued, paidDispatched. Also attentionDismissed: why the order had needed someone, who marked it as handled, and when.",
 			"serverOnly": true
 		},
 		"accessToken": {

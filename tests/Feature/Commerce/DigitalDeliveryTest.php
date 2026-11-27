@@ -18,6 +18,7 @@ use TotalCMS\Domain\Commerce\Download\UrlDownloadSource;
 use TotalCMS\Domain\Commerce\Order\OrderAccess;
 use TotalCMS\Domain\Commerce\Order\OrderAdmin;
 use TotalCMS\Domain\Commerce\Order\OrderData;
+use TotalCMS\Domain\Commerce\Order\OrderQuery;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventType;
@@ -122,10 +123,42 @@ describe('when an order is paid', function (): void {
 			->and($order->status())->toBe('completed');
 	});
 
-	it('leaves a digital line with no file for whoever delivers it', function (): void {
+	it('has nothing to send for a digital line with no file: the order is complete once it is paid', function (): void {
 		$order = ($this->order)(['course' => 1]);
 
-		expect(($this->line)($order, 'course')['fulfillmentStatus'])->toBe('unfulfilled')
+		expect(($this->line)($order, 'course')['fulfillmentStatus'])->toBe('not_required')
+			->and($order->fulfillmentStatus())->toBe('not_required')
+			->and($order->status())->toBe('completed')
+			// Nothing was delivered, so nobody is told it was.
+			->and($order->hasFlag('fulfilled'))->toBeFalse();
+	});
+
+	it('never counts it as an order that needs someone', function (): void {
+		$order = ($this->order)(['course' => 1]);
+		$this->orders->withLock($order->id(), static fn (OrderData $fresh): OrderData => $fresh->with(['paidAt' => date(DATE_ATOM, time() - 3600)]));
+		$query = $this->c->get(OrderQuery::class);
+
+		expect($query->attentionCount())->toBe(0)
+			->and($query->attentionReason(($this->fresh)($order)))->toBe('');
+	});
+
+	it('leaves a digital line with fulfillment data for whoever delivers it', function (): void {
+		($this->asStore)(fn () => $this->c->get(ObjectSaver::class)->saveObject('products', [
+			'id' => 'license', 'title' => 'License', 'status' => 'active', 'type' => 'digital', 'price' => 30, 'requiresShipping' => false, 'meta' => ['license' => true],
+		]));
+		$order = ($this->order)(['license' => 1]);
+
+		expect(($this->line)($order, 'license')['fulfillmentStatus'])->toBe('unfulfilled')
+			->and($order->fulfillmentStatus())->toBe('unfulfilled')
+			->and($order->status())->toBe('open');
+	});
+
+	it('still waits for what ships beside a line with nothing to send', function (): void {
+		$order = ($this->order)(['course' => 1, 'mug' => 1]);
+
+		expect(($this->line)($order, 'course')['fulfillmentStatus'])->toBe('not_required')
+			->and(($this->line)($order, 'mug')['fulfillmentStatus'])->toBe('unfulfilled')
+			->and($order->fulfillmentStatus())->toBe('unfulfilled')
 			->and($order->status())->toBe('open');
 	});
 

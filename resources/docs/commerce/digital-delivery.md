@@ -85,7 +85,7 @@ If a schema gives `download` a field type that nothing delivers, a product is so
 
 Whichever you choose, the buyer is given the same kind of link, and it is counted and limited the same way. See [Who else can get the file](#who-else-can-get-the-file) for how well each one is protected.
 
-A digital product may have no download at all. A license key, a service or a membership is sold this way. See [Products with no file](#products-with-no-file).
+A digital product may have no download at all. A donation, a license key, a service or a membership is sold this way. See [Products with no file](#products-with-no-file).
 
 ## What the buyer gets
 
@@ -149,14 +149,28 @@ The store's limits end at its own link. Once a download is counted, the buyer is
 
 ## Products with no file
 
-A digital item with no file is not delivered by the store. It stays **Unfulfilled** until something says it is done:
+A digital item with no file has nothing for the store to send. What happens to it when the order is paid depends on the product:
+
+| The product | The item on a paid order |
+|---|---|
+| Has no download, no access group and no **Fulfillment Data** | **Nothing to send**. The order is complete once it is paid. A donation or a tip is sold this way. |
+| Gives an **Access Group** | Delivered when the buyer is given the group. See [Memberships](docs/commerce/memberships). |
+| Has **Fulfillment Data** | Stays **Unfulfilled** until something says it is done. |
+
+Fulfillment Data is how a product says that something other than a download delivers it. An item that has it is marked delivered by:
 
 - an extension, such as one that issues a license key, by calling `OrderFulfillment::markLineFulfilled()`. See [Events and Extensions](docs/commerce/events-and-extensions).
-- you, with **Mark as sent** on the order's page.
+- you, with **Mark as delivered** on the order's page. For something you deliver by hand, put any value in Fulfillment Data, such as `{"byHand": true}`.
 
 Fifteen minutes after payment, an order with a digital item still unfulfilled is flagged **Not delivered**, so nothing sold is forgotten.
 
-If you add the file to the product later, choose **Run fulfillment again** on the order and the item is delivered.
+### A file you forgot to add
+
+A product with no download is sold and nothing is sent, and the store cannot tell a donation from a guide whose file was never uploaded. So the Store widget on the admin dashboard lists the digital products on sale that have no download, no access group and no Fulfillment Data. A product whose buyer [names the price](docs/commerce/name-your-price) is left off the list.
+
+If you add the file to the product later, choose **Run fulfillment again** on each order already paid and the item is delivered.
+
+A download the store could not look for is not treated as no download. If the schema gives `download` a field type that nothing delivers, or the place the file is kept fails, the item stays **Unfulfilled** and the order is flagged.
 
 ## In your own templates
 

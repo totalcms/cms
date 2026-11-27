@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Commerce\Order;
 
+use TotalCMS\Domain\Commerce\Data\AttentionDismissal;
 use TotalCMS\Domain\Commerce\Payment\OrderView;
 use TotalCMS\Domain\Money\Money;
 
@@ -114,6 +115,17 @@ final readonly class OrderData
 	public function hasFlag(string $flag): bool
 	{
 		return ($this->flags()[$flag] ?? false) === true;
+	}
+
+	/**
+	 * The last time staff marked this order as handled: why it had needed
+	 * someone, who said it was dealt with, and when. Empty when nobody has.
+	 *
+	 * @return array{reason: string, by: string, at: string}|array{}
+	 */
+	public function attentionDismissed(): array
+	{
+		return AttentionDismissal::from($this->flags());
 	}
 
 	// ─── Who ───────────────────────────────────────────────────────────────
@@ -423,6 +435,12 @@ final readonly class OrderData
 	public function withFlag(string $flag): self
 	{
 		return $this->with(['flags' => [$flag => true] + $this->flags()]);
+	}
+
+	/** The same order, no longer asking for someone, with why it had and who dealt with it kept. */
+	public function withAttentionDismissed(string $reason, string $by): self
+	{
+		return $this->with(['needsAttention' => '', 'flags' => AttentionDismissal::onto($this->flags(), $reason, $by)]);
 	}
 
 	/**

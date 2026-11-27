@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Commerce\Order\OrderAdmin;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
@@ -15,6 +16,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\post;
 
 /*
  * The store's orders in the admin: a list that can be filtered and
@@ -33,11 +35,12 @@ beforeEach(function (): void {
 	$this->orders = $this->c->get(OrderRepository::class);
 	$this->query  = $this->c->get(OrderQuery::class);
 
-	// A file a buyer downloads: delivered by a listener, not shipped by a person.
+	// Something a buyer is sent by a listener, not shipped by a person: it has
+	// no file, and its Fulfillment Data says something else delivers it.
 	if ($stock) {
 		seedCommerceStaff($this->app);
 		$this->c->get(ActorContext::class)->set(Actor::system());
-		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital']);
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital', 'meta' => ['license' => true]]);
 		$this->c->get(ActorContext::class)->set(Actor::anonymous());
 		keepCommerceScene('admin-orders');
 	}
@@ -211,6 +214,29 @@ describe('one order', function (): void {
 
 		expect($html)->toContain('name="lines[]" value="' . $mug . '" checked', 'Mark as sent')
 			->and($html)->toContain('name="lines[]" value="' . $ebook . '" aria-label');
+	});
+
+	it('asks for tracking only while something that ships is still to send', function (): void {
+		$parcel   = ($this->page)(($this->order)(['mug' => 1]));
+		$mixed    = ($this->page)($this->paid);
+		$download = ($this->page)(($this->order)(['ebook' => 1]));
+		// The mug has gone: only the e-book is left to deliver.
+		$this->c->get(OrderAdmin::class)->fulfill($this->paid->id(), [array_key_first($this->paid->lines())], 'RM123');
+		$rest = ($this->page)($this->paid);
+
+		expect($parcel)->toContain('name="trackingNumber"', 'name="trackingUrl"', 'Mark as sent')
+			->and($mixed)->toContain('name="trackingNumber"', 'name="trackingUrl"', 'Mark as sent')
+			->and($download)->toContain('name="lines[]"', 'Mark as delivered', 'aria-label="Mark E-book as delivered"')
+			->and($download)->not->toContain('name="trackingNumber"', 'name="trackingUrl"', 'Mark as sent')
+			->and($rest)->toContain('Mark as delivered', 'RM123')
+			->and($rest)->not->toContain('name="trackingNumber"', 'Mark as sent');
+	});
+
+	it('says an item with nothing to send was delivered, not sent', function (): void {
+		$order = ($this->order)(['ebook' => 1]);
+		$res   = post("/admin/commerce/orders/{$order->id()}/fulfill", ['lines' => array_keys($order->lines())], ['HX-Request' => 'true']);
+
+		expect((string)$res->getBody())->toContain('Marked as delivered. This order is fulfilled.')->not->toContain('Marked as sent');
 	});
 
 	it('offers nothing to send on an order nobody paid for', function (): void {

@@ -1525,6 +1525,64 @@
                 ]
             }
         },
+        "/admin/commerce/orders/{id}/dismiss": {
+            "post": {
+                "operationId": "admin-commerce-order-dismiss",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/orders/{id}/dismiss",
+                "x-tcms-action": "AdminOrderDismissAction",
+                "x-tcms-middleware": [
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
         "/admin/commerce/orders/{id}/fulfill": {
             "post": {
                 "operationId": "admin-commerce-order-fulfill",
@@ -1935,6 +1993,64 @@
                 "x-tcms-action": "AdminSubscriptionCancelAction",
                 "x-tcms-middleware": [
                     "AdminOnlyMiddleware",
+                    "UserLocaleMiddleware",
+                    "VersionCheckMiddleware",
+                    "CSRFProtectionMiddleware",
+                    "AuthMiddleware",
+                    "NoCacheMiddleware",
+                    "SecurityHeadersMiddleware",
+                    "CommerceEditionMiddleware",
+                    "CommerceAccessMiddleware"
+                ]
+            }
+        },
+        "/admin/commerce/subscriptions/{id}/dismiss": {
+            "post": {
+                "operationId": "admin-commerce-subscription-dismiss",
+                "tags": [
+                    "admin"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Any response; the checks look at the status class."
+                    }
+                },
+                "security": [
+                    {
+                        "SessionAuth": [],
+                        "CsrfToken": []
+                    }
+                ],
+                "x-tcms-route": "/admin/commerce/subscriptions/{id}/dismiss",
+                "x-tcms-action": "AdminSubscriptionDismissAction",
+                "x-tcms-middleware": [
                     "UserLocaleMiddleware",
                     "VersionCheckMiddleware",
                     "CSRFProtectionMiddleware",

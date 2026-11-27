@@ -16,6 +16,7 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
+use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\post;
 
 /*
@@ -29,7 +30,8 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	// The staff and the e-book are the same for every test here: the first
-	// test in a worker makes them, the rest start from a copy.
+	// test in a worker makes them, the rest start from a copy. The e-book has
+	// no file: its Fulfillment Data says a listener delivers it.
 	$stock        = bootCommerceScene('admin-order-actions');
 	$this->c      = $this->app->getContainer();
 	$this->orders = $this->c->get(OrderRepository::class);
@@ -37,7 +39,7 @@ beforeEach(function (): void {
 	if ($stock) {
 		seedCommerceStaff($this->app);
 		$this->c->get(ActorContext::class)->set(Actor::system());
-		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital']);
+		$this->c->get(ObjectSaver::class)->saveObject('products', ['id' => 'ebook', 'title' => 'E-book', 'status' => 'active', 'price' => 9, 'type' => 'digital', 'meta' => ['license' => true]]);
 		$this->c->get(ActorContext::class)->set(Actor::anonymous());
 		keepCommerceScene('admin-order-actions');
 	}
@@ -301,13 +303,93 @@ describe('running fulfillment again', function (): void {
 	});
 });
 
+describe('marking an order as handled', function (): void {
+	beforeEach(function (): void {
+		// The provider says $10.00 was paid for this order: it is held for review.
+		$this->held = function (): OrderData {
+			$order = ($this->order)(paid: false);
+			$this->c->get(PaymentEventProcessor::class)->process(commercePaidEvent($order->id(), 1000, 'evt_held'));
+
+			return $this->orders->find($order->id());
+		};
+		/** A paid e-book nobody delivered, an hour on. */
+		$this->undelivered = function (): OrderData {
+			$order = ($this->order)(['ebook' => 1]);
+
+			return $this->orders->withLock($order->id(), static fn (OrderData $fresh): OrderData => $fresh->with(['paidAt' => date(DATE_ATOM, time() - 3600)]));
+		};
+		$this->query = $this->c->get(OrderQuery::class);
+	});
+
+	it('takes a flagged order off the count, and keeps why it was flagged and who handled it', function (): void {
+		$order  = ($this->held)();
+		$before = $this->query->attentionCount();
+		$res    = ($this->act)($order, 'dismiss');
+		$after  = $this->orders->find($order->id());
+
+		expect($before)->toBe(1)
+			->and($res->getStatusCode())->toBe(200)
+			->and($this->query->attentionCount())->toBe(0)
+			->and($after->needsAttention())->toBe('')
+			->and($this->query->attentionReason($after))->toBe('')
+			->and($after->attentionDismissed())->toMatchArray(['reason' => 'amount_mismatch', 'by' => 'user:auth/keeper'])
+			->and(strtotime($after->attentionDismissed()['at']))->toBeGreaterThan(time() - 60)
+			// Nothing else about the order moves: the money is still held.
+			->and($after->paymentStatus())->toBe('review');
+	});
+
+	it('takes an order whose download nobody delivered off the count', function (): void {
+		$order  = ($this->undelivered)();
+		$before = $this->query->attentionCount();
+		($this->act)($order, 'dismiss');
+		$after = $this->orders->find($order->id());
+
+		expect($before)->toBe(1)
+			->and($this->query->attentionCount())->toBe(0)
+			->and($this->query->attentionReason($after))->toBe('')
+			->and($after->attentionDismissed()['reason'])->toBe('fulfillment_incomplete')
+			->and($this->query->search(['needsAttention' => true], 1)['total'])->toBe(0)
+			// The line is still not delivered, and still says so.
+			->and($after->fulfillmentStatus())->toBe('unfulfilled');
+	});
+
+	it('counts the order again when something new goes wrong with it', function (): void {
+		$order = ($this->undelivered)();
+		($this->act)($order, 'dismiss');
+		$this->orders->withLock($order->id(), static fn (OrderData $fresh): OrderData => $fresh->with(['needsAttention' => 'disputed']));
+
+		expect($this->query->attentionCount())->toBe(1)
+			->and($this->query->attentionReason($this->orders->find($order->id())))->toBe('disputed');
+	});
+
+	it('changes nothing for an order that needs nobody', function (): void {
+		$order = ($this->order)();
+		$res   = ($this->act)($order, 'dismiss');
+
+		expect($res->getStatusCode())->toBe(200)
+			->and($this->orders->find($order->id())->toArray())->toBe($order->toArray());
+	});
+
+	it('offers it on the page of an order that needs someone, and says who handled it afterwards', function (): void {
+		$order = ($this->held)();
+		$page  = (string)get("/admin/commerce/orders/{$order->id()}")->getBody();
+		$html  = (string)($this->act)($order, 'dismiss', [], ['HX-Request' => 'true'])->getBody();
+		$quiet = (string)get('/admin/commerce/orders/' . ($this->order)()->id())->getBody();
+
+		expect($page)->toContain('Payment mismatch', "orders/{$order->id()}/dismiss", 'Mark as handled')
+			->and($html)->toContain('id="commerce-order"', 'Marked as handled', 'Payment mismatch', 'keeper')
+			->and($html)->not->toContain("orders/{$order->id()}/dismiss")
+			->and($quiet)->not->toContain('/dismiss');
+	});
+});
+
 describe('who may do what', function (): void {
 	it('lets a member with the grant fulfill, note and resend, and nothing that undoes or repeats a sale', function (string $action, int $status): void {
 		$order = ($this->order)();
 		$res   = ($this->act)($order, $action, ['lines' => ($this->lineIds)($order), 'notes' => 'x']);
 
 		expect($res->getStatusCode())->toBe($status);
-	})->with([['fulfill', 200], ['note', 200], ['receipt', 200], ['cancel', 403], ['refulfill', 403]]);
+	})->with([['fulfill', 200], ['note', 200], ['receipt', 200], ['dismiss', 200], ['cancel', 403], ['refulfill', 403]]);
 
 	it('lets a member without the grant do none of it', function (string $action): void {
 		$order = ($this->order)();
@@ -315,11 +397,11 @@ describe('who may do what', function (): void {
 
 		expect(($this->act)($order, $action, ['lines' => ($this->lineIds)($order)])->getStatusCode())->toBe(403)
 			->and($this->orders->find($order->id())->toArray())->toBe($order->toArray());
-	})->with(['fulfill', 'note', 'receipt', 'cancel', 'refulfill', 'accept']);
+	})->with(['fulfill', 'note', 'receipt', 'cancel', 'refulfill', 'accept', 'dismiss']);
 
 	it('answers 404 for an order that does not exist', function (string $action): void {
 		signInAs($this->app, 'boss', 'auth');
 
 		expect(post('/admin/commerce/orders/' . str_repeat('0', 32) . "/{$action}", ['lines' => ['x']])->getStatusCode())->toBe(404);
-	})->with(['fulfill', 'note', 'receipt', 'cancel', 'refulfill', 'accept']);
+	})->with(['fulfill', 'note', 'receipt', 'cancel', 'refulfill', 'accept', 'dismiss']);
 });

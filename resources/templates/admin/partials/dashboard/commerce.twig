@@ -7,7 +7,8 @@
 
 	Autoescape is off in this app, so everything a buyer typed is escaped.
 
-	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock, lowStockAt, productsCollection, openDownloads}
+	store  {days, revenue, paidOrders, attention, prefix, recent, lowStock, lowStockAt, productsCollection, nothingToDeliver, openDownloads}
+	nothingToDeliver  list of {productId, title}: digital products on sale with nothing to give a buyer
 	openDownloads  {id, name, anySignedIn}: anySignedIn when the groups include `default`
 #}
 <div class="dashboard-section commerce-dashboard" id="commerce-dashboard">
@@ -27,6 +28,21 @@
 					<p>Product files in the {{ store.openDownloads.name|e }} collection have no File Access Groups, so anyone with the address can download them without buying. Add a group such as admin to close them. Buyers' own links keep working.</p>
 				{% endif %}
 				<p><a href="collections/{{ store.openDownloads.id|e }}/edit">Open collection settings</a></p>
+			</div>
+		</div>
+	{% endif %}
+
+	{% if store.nothingToDeliver %}
+		{% set count = store.nothingToDeliver|length %}
+		<div class="info-box commerce-dashboard-warning">
+			<div>
+				<p><strong>{{ count == 1 ? 'A digital product has nothing to deliver' : count ~ ' digital products have nothing to deliver' }}</strong></p>
+				<p>
+					{%- for product in store.nothingToDeliver -%}
+						<a href="collections/{{ store.productsCollection|e }}/{{ product.productId|e }}">{{ product.title|e }}</a>{{ not loop.last ? ', ' }}
+					{%- endfor -%}
+				</p>
+				<p>{{ count == 1 ? 'It has' : 'They have' }} no download, so a buyer pays and is sent nothing, and the order is complete once it is paid. Add the file if one was meant to be there.</p>
 			</div>
 		</div>
 	{% endif %}

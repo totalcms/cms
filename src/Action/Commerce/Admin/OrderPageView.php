@@ -49,11 +49,14 @@ final readonly class OrderPageView
 
 		$lines = [];
 		$toDo  = 0;
+		$ships = false;
 		foreach ($order->lines() as $line) {
 			$needsWork = $this->machine->lineNeedsWork($line);
 			$status    = is_string($line['fulfillmentStatus'] ?? null) ? $line['fulfillmentStatus'] : '';
 			$open      = $needsWork && $status !== OrderStateMachine::FULFILLED;
 			$toDo += $open ? 1 : 0;
+			// A parcel has tracking; a license or a file handed over does not.
+			$ships = $ships || ($open && filter_var($line['requiresShipping'] ?? false, FILTER_VALIDATE_BOOLEAN));
 			$lines[] = $line + [
 				'needsWork' => $needsWork,
 				'open'      => $open,
@@ -68,10 +71,13 @@ final readonly class OrderPageView
 		return [
 			'order'       => $order,
 			'lines'       => $lines,
+			'ships'       => $ships,
+			'sameAddress' => $this->sameAddress($order),
 			'ledger'      => $this->history($order),
 			'payment'     => $this->labels->payment($order->paymentStatus()),
 			'fulfillment' => $this->labels->fulfillment($order->fulfillmentStatus(), $holds),
 			'attention'   => ['label' => $this->labels->attention($reason), 'help' => $this->labels->attentionHelp($reason)],
+			'handled'     => $reason === '' ? $this->handled($order) : null,
 			'prefix'      => $this->settings->orderNumberPrefix(),
 			// The provider's own name; its id when the provider is no longer installed.
 			'providerLabel' => $this->providers->get($order->provider())?->label() ?? $order->provider(),
@@ -146,6 +152,32 @@ final readonly class OrderPageView
 			'refulfill' => $holds && $super,
 			'cancel'    => $super && in_array($order->paymentStatus(), ['pending', 'failed'], true),
 			'accept'    => $super && $order->paymentStatus() === 'review',
+			'dismiss'   => $this->query->attentionReason($order) !== '',
 		];
+	}
+
+	/**
+	 * What the order had needed someone for, and who marked it as handled.
+	 * Null for an order nobody has marked.
+	 *
+	 * @return array{label: string, by: string, at: string}|null
+	 */
+	private function handled(OrderData $order): ?array
+	{
+		$mark = $order->attentionDismissed();
+
+		return $mark === [] ? null : ['label' => $this->labels->attention($mark['reason']), 'by' => $mark['by'], 'at' => $mark['at']];
+	}
+
+	/** Whether the bill goes where the parcel does: every part the page prints is the same in both. */
+	private function sameAddress(OrderData $order): bool
+	{
+		$printed = static fn (array $address): array => array_map(
+			static fn (string $part): string => is_scalar($address[$part] ?? null) ? mb_strtolower(trim((string)$address[$part])) : '',
+			['name', 'company', 'line1', 'line2', 'city', 'region', 'postalCode', 'country', 'phone'],
+		);
+		$ship = $printed($order->shippingAddress());
+
+		return array_filter($ship) !== [] && $ship === $printed($order->billingAddress());
 	}
 }

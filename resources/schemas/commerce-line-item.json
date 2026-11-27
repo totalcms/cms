@@ -158,7 +158,7 @@
 			"type": "string",
 			"field": "text",
 			"label": "Fulfillment Status",
-			"help": "unfulfilled, fulfilled or not_required."
+			"help": "unfulfilled, fulfilled, or not_required for a digital line that has nothing to deliver."
 		},
 		"fulfillmentNote": {
 			"type": "string",

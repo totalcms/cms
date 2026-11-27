@@ -247,33 +247,51 @@
 		}
 	}
 
+	// Each card in the main column sizes what is in it by its own width.
+	.commerce-order-main > .dash-card {
+		container-type : inline-size;
+	}
+
+	// The Items card's foot: what is ticked in the table is sent from here.
+	// It runs to the card's edges, a shade apart from the card, so it reads
+	// as the card's action and not as a box inside a box.
 	.commerce-fulfill-fields {
 		display               : grid;
-		grid-template-columns : repeat(2, minmax(0, 1fr));
+		grid-template-columns : minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
 		gap                   : 0.75rem;
 		align-items           : end;
-		margin                : 1rem 0 0;
-		padding               : 1rem;
-		border                : 1px solid oklch(var(--totalform-border-color));
-		border-radius         : var(--totalform-radius);
+		margin                : 0.25rem -1.25rem -1.25rem;
+		padding               : 1rem 1.25rem 1.25rem;
+		background            : oklch(var(--totalform-nearwhite));
+		border-top            : 1px solid oklch(var(--totalform-border-color));
+		border-radius         : 0 0 var(--totalform-radius) var(--totalform-radius);
 
-		legend {
-			padding     : 0 0.4rem;
-			font-size   : 0.85rem;
-			font-weight : 600;
-			color       : oklch(var(--totalform-darkgray));
-		}
-
-		.commerce-fulfill-note {
-			grid-column : 1 / -1;
+		// Nothing ships: a note and the button.
+		&.is-delivery {
+			grid-template-columns : minmax(0, 1fr) auto;
 		}
 
 		.dash-button {
-			grid-column  : 1 / -1;
-			justify-self : end;
+			height      : 2.5rem;
+			padding     : 0 1rem;
+			font-size   : 0.9rem;
+			white-space : nowrap;
 		}
 
-		@media (max-width: 600px) {
+		@container (max-width: 44rem) {
+			grid-template-columns : repeat(2, minmax(0, 1fr));
+
+			.commerce-fulfill-note {
+				grid-column : 1 / -1;
+			}
+
+			.dash-button {
+				grid-column  : 1 / -1;
+				justify-self : end;
+			}
+		}
+
+		@container (max-width: 26rem) {
 			grid-template-columns : minmax(0, 1fr);
 		}
 	}
@@ -294,17 +312,25 @@
 		min-width     : 0;
 		padding       : 0.55rem 0.75rem;
 		font          : inherit;
-		font-size     : 0.95rem;
+		font-size     : 0.9rem;
 		font-weight   : normal;
 		color         : oklch(var(--totalform-text-color));
 		background    : oklch(var(--totalform-white));
 		border        : 1px solid oklch(var(--totalform-border-color));
 		border-radius : var(--totalform-radius);
 
+		&::placeholder {
+			color : oklch(var(--totalform-darkgray) / 0.8);
+		}
+
 		&:focus {
 			outline        : 2px solid oklch(var(--totalform-accent));
 			outline-offset : 1px;
 		}
+	}
+
+	.commerce-fulfill-fields input {
+		height : 2.5rem;
 	}
 
 	.commerce-note {
@@ -320,21 +346,14 @@
 		}
 	}
 
-	.commerce-order-actions > form,
-	.commerce-order-action {
-		display : grid;
-		gap     : 0.35rem;
-
-		.dash-button {
-			justify-self : start;
-		}
-
-		// A rule between one action and the next. The refund popover sits
-		// among them, out of the flow, so the rule is on what follows it too.
-		& ~ form {
-			padding-top : 1rem;
-			border-top  : 1px solid oklch(var(--totalform-border-color));
-		}
+	// What can be done to the order, at the end of the title's row. It
+	// drops under the title when the row runs out.
+	.commerce-order-actions {
+		display     : flex;
+		flex-wrap   : wrap;
+		align-items : center;
+		gap         : 0.5rem;
+		margin-left : auto;
 	}
 
 	// The refund form: a popover, centered like a dialog.
@@ -493,6 +512,28 @@
 			margin : 0;
 		}
 
+		// The reason, with Mark as handled at its end. It drops under the
+		// reason when the two do not fit on a line.
+		.commerce-attention-body {
+			display         : flex;
+			flex-wrap       : wrap;
+			align-items     : center;
+			justify-content : space-between;
+			gap             : 0.5rem 1.5rem;
+
+			p {
+				flex : 1 1 24rem;
+			}
+		}
+
+		.commerce-attention-actions {
+			display     : flex;
+			flex-wrap   : wrap;
+			align-items : center;
+			gap         : 0.5rem;
+			flex        : none;
+		}
+
 		strong {
 			color : oklch(var(--totalform-text-color));
 		}
@@ -518,20 +559,100 @@
 		min-width : 0;
 	}
 
+	// Beside the tables, in the same size as what the tables hold.
+	.commerce-order-side {
+		font-size : 0.95rem;
+	}
+
+	// The history ends with the card, not with a rule under its last line.
+	.commerce-ledger tbody tr:last-child {
+		border-bottom : 0;
+	}
+
+	// The Items card's form holds the table, the totals and the foot: it
+	// spaces them as the card spaces its own children.
+	.commerce-fulfill {
+		display        : flex;
+		flex-direction : column;
+		gap            : 1rem;
+	}
+
 	.dash-card {
 		min-width : 0;
+		padding   : 1.25rem;
 
 		p {
 			margin : 0;
+		}
+
+		// A table in a card is the card's own content: no second border,
+		// and its first and last columns line up with the card's heading.
+		.commerce-table-wrap {
+			border        : 0;
+			border-radius : 0;
+		}
+
+		table.admin-table {
+			font-size  : 0.95rem;
+			background : none;
+
+			tr,
+			th,
+			td {
+				background : none;
+			}
+
+			th,
+			td {
+				padding-inline : 0.75rem;
+
+				&:first-child {
+					padding-left : 0;
+				}
+
+				&:last-child {
+					padding-right : 0;
+				}
+			}
+
+			// Column names are labels: smaller and quieter than what they name.
+			th {
+				padding-block : 0 0.6rem;
+				font-size     : 0.75rem;
+				font-weight   : 600;
+				color         : oklch(var(--totalform-darkgray));
+				background    : none;
+				border-bottom : 1px solid oklch(var(--totalform-border-color));
+			}
+		}
+	}
+
+	// Who bought it and where it goes, in one card: each part under a small
+	// label, a rule between one part and the next.
+	.commerce-side-block {
+		display : grid;
+		gap     : 0.25rem;
+
+		+ .commerce-side-block {
+			padding-top : 1rem;
+			border-top  : 1px solid oklch(var(--totalform-border-color));
+		}
+
+		h3 {
+			margin      : 0 0 0.15rem;
+			font-size   : 0.8rem;
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
 		}
 	}
 
 	.commerce-totals {
 		display      : grid;
 		gap          : 0.35rem;
-		width        : min(100%, 22rem);
+		width        : min(100%, 20rem);
 		margin       : 0;
 		margin-left  : auto;
+		font-size    : 0.95rem;
 
 		> div {
 			display         : flex;
@@ -600,8 +721,22 @@
 		overflow-wrap : anywhere;
 	}
 
-	.commerce-refs code {
-		display : block;
+	// A provider's reference is long and rarely read. One line each, cut
+	// short; selecting it or resting on it gives the whole of it.
+	.commerce-refs,
+	.commerce-facts dd {
+		// As much of the card as it can spare: the table fits its card
+		// instead of scrolling for the sake of a reference.
+		max-width : clamp(8rem, 30cqi, 18rem) !important;
+
+		code {
+			display       : block;
+			overflow      : hidden;
+			text-overflow : ellipsis;
+			white-space   : nowrap;
+			color         : oklch(var(--totalform-darkgray));
+			font-size     : 0.8rem;
+		}
 	}
 
 	.commerce-notes {

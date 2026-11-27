@@ -138,7 +138,7 @@ final readonly class OrderQuery
 		$stale = [];
 		foreach (array_slice($candidates, 0, self::STALE_CHECKED) as $row) {
 			$order = is_string($row['id'] ?? null) ? $this->orders->find($row['id']) : null;
-			if ($order instanceof OrderData && $this->hasUndeliveredDownload($order)) {
+			if ($order instanceof OrderData && !$this->handled($order) && $this->hasUndeliveredDownload($order)) {
 				$stale[] = $order->id();
 			}
 		}
@@ -152,13 +152,20 @@ final readonly class OrderQuery
 
 		return $order->paymentStatus() === OrderStateMachine::PAID
 			&& $paidAt !== false && $paidAt <= time() - self::STALE_AFTER
+			&& !$this->handled($order)
 			&& $this->hasUndeliveredDownload($order);
+	}
+
+	/** Whether staff have said the undelivered download is dealt with. Marked on the order, since nothing else records it. */
+	private function handled(OrderData $order): bool
+	{
+		return ($order->attentionDismissed()['reason'] ?? '') === self::INCOMPLETE;
 	}
 
 	private function hasUndeliveredDownload(OrderData $order): bool
 	{
 		foreach ($order->lines() as $line) {
-			if (($line['type'] ?? '') === self::DIGITAL && ($line['fulfillmentStatus'] ?? '') !== OrderStateMachine::FULFILLED) {
+			if (($line['type'] ?? '') === self::DIGITAL && !in_array($line['fulfillmentStatus'] ?? '', [OrderStateMachine::FULFILLED, OrderStateMachine::NOT_REQUIRED], true)) {
 				return true;
 			}
 		}

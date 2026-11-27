@@ -117,7 +117,7 @@ Add a product to **Donations**:
 |---|---|
 | **Title** | `Support Our Work` |
 | **ID** | `give` |
-| **Type** | **Physical**, the default. The `donation` schema has no inventory part, so the product never ships: checkout never asks for an address, and a paid order needs no fulfillment and completes on its own. A **Digital** product with no file would leave every order **Unfulfilled**, waiting for you. |
+| **Type** | **Physical**, the default. The `donation` schema has no inventory part, so the product never ships: checkout never asks for an address, and a paid order needs no fulfillment and completes on its own. **Digital** works the same way here: a digital product with no download has nothing to send, so its orders complete once paid. |
 | **Status** | **Active** |
 | **Let Buyers Choose the Price** | On |
 | **Price** | `25`, the amount the field starts with |

@@ -103,7 +103,7 @@ test('the product form has an S3 Download field when the schema makes download a
 test('a product with nothing in the bucket has nothing to deliver', function (): void {
 	$order = ($this->order)();
 
-	expect(array_values($order->lines())[0]['fulfillmentStatus'])->toBe('unfulfilled')
+	expect(array_values($order->lines())[0]['fulfillmentStatus'])->toBe('not_required')
 		->and(($this->links)($order))->toBe([]);
 });
 

@@ -260,7 +260,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"field": "json",
 			"label": "Flags",
-			"help": "Marks for work already done: createdDispatched, canceledDispatched.",
+			"help": "Marks for work already done: createdDispatched, canceledDispatched. Also attentionDismissed: why the subscription had needed someone, who marked it as handled, and when.",
 			"serverOnly": true
 		},
 		"accessToken": {

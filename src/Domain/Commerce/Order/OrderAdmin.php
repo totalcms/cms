@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Order;
 
 use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Commerce\Data\AttentionDismissal;
 use TotalCMS\Domain\Commerce\Exception\CommerceException;
 use TotalCMS\Domain\Commerce\Payment\PaymentEventProcessor;
 use TotalCMS\Domain\Commerce\Subscription\SubscriptionEventProcessor;
@@ -34,6 +35,7 @@ final readonly class OrderAdmin
 		private PaymentEventProcessor $payments,
 		private DownloadIssuer $downloads,
 		private SubscriptionEventProcessor $access,
+		private OrderQuery $query,
 	) {
 	}
 
@@ -134,14 +136,35 @@ final readonly class OrderAdmin
 	 */
 	public function acceptPayment(string $orderId, Actor $by): OrderData
 	{
-		$actor      = $by->userId !== '' ? "user:{$by->authCollection}/{$by->userId}" : $by->kind->value;
-		$transition = $this->payments->accept($orderId, $actor);
+		$transition = $this->payments->accept($orderId, AttentionDismissal::actor($by));
 		// Asked twice, the second finds it done: that is not a refusal.
 		if (!$transition->applied && $transition->reason !== PaymentEventProcessor::ALREADY_APPLIED) {
 			throw CommerceException::orderNotInReview();
 		}
 
 		return $this->orders->find($orderId) ?? throw CommerceException::orderNotFound();
+	}
+
+	/**
+	 * Mark an order that needs someone as handled: it leaves the count, and
+	 * keeps why it was there and who dealt with it. Nothing else about the
+	 * order changes: no money moves and nothing is delivered. An order that
+	 * needs nobody is left exactly as it is.
+	 *
+	 * @throws CommerceException no such order
+	 */
+	public function dismiss(string $orderId, Actor $by): OrderData
+	{
+		$order = $this->orders->find($orderId) ?? throw CommerceException::orderNotFound();
+		if ($this->query->attentionReason($order) === '') {
+			return $order;
+		}
+
+		return $this->orders->withLock($orderId, function (OrderData $fresh) use ($by): OrderData {
+			$reason = $this->query->attentionReason($fresh);
+
+			return $reason === '' ? $fresh : $fresh->withAttentionDismissed($reason, AttentionDismissal::actor($by));
+		});
 	}
 
 	/**

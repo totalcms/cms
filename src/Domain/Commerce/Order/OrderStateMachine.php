@@ -34,7 +34,7 @@ final readonly class OrderStateMachine
 	public const UNFULFILLED   = 'unfulfilled';
 	public const PARTIAL       = 'partial';
 	public const FULFILLED     = 'fulfilled';
-	private const NOT_REQUIRED = 'not_required';
+	public const NOT_REQUIRED  = 'not_required';
 
 	public function apply(OrderData $order, PaymentEvent $event): Transition
 	{
@@ -111,14 +111,20 @@ final readonly class OrderStateMachine
 	}
 
 	/**
-	 * Whether someone has to do something to deliver the line: send a thing
+	 * Whether something has to be done to deliver the line: send a thing
 	 * that ships, or hand over something digital (a file link, a license).
+	 * A digital line found to have nothing to deliver when its order was
+	 * paid ({@see DownloadGrantIssuer}) is marked so, and needs nothing.
 	 *
 	 * @param array<string,mixed> $line
 	 */
 	public function lineNeedsWork(array $line): bool
 	{
-		return ($line['type'] ?? '') === 'digital' || filter_var($line['requiresShipping'] ?? false, FILTER_VALIDATE_BOOLEAN);
+		if (($line['type'] ?? '') === 'digital') {
+			return ($line['fulfillmentStatus'] ?? '') !== self::NOT_REQUIRED;
+		}
+
+		return filter_var($line['requiresShipping'] ?? false, FILTER_VALIDATE_BOOLEAN);
 	}
 
 	private function paid(OrderData $order, PaymentEvent $event): Transition

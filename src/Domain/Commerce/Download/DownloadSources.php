@@ -55,23 +55,38 @@ final class DownloadSources
 	 */
 	public function for(string $collection, array $product): ?array
 	{
+		return $this->look($collection, $product)[0];
+	}
+
+	/**
+	 * What {@see for()} finds, and whether that is known. Not known when the
+	 * schema could not be read, nothing handles the Download field's type,
+	 * or the source failed: the product may well have a download that could
+	 * not be reached, which is not the same as having none.
+	 *
+	 * @param array<string,mixed> $product the stored product
+	 *
+	 * @return array{0: array{0: DownloadSource, 1: Deliverable}|null, 1: bool} what was found, and whether the answer can be trusted
+	 */
+	public function look(string $collection, array $product): array
+	{
 		try {
 			$type = $this->fieldType($collection);
 		} catch (\Throwable $e) {
 			$this->logger->error(sprintf('The schema of the %s collection could not be read, so its products have no download', $collection), ['collection' => $collection, 'exception' => $e]);
 
-			return null;
+			return [null, false];
 		}
 
 		if ($type === '') {
-			return null;
+			return [null, true];
 		}
 
 		$source = $this->sourceFor($type);
 		if (!$source instanceof DownloadSource) {
 			$this->logger->error(sprintf('No download source handles the Download field type %s in the %s collection', $type, $collection), ['collection' => $collection, 'fieldType' => $type]);
 
-			return null;
+			return [null, false];
 		}
 
 		try {
@@ -79,10 +94,10 @@ final class DownloadSources
 		} catch (\Throwable $e) {
 			$this->logger->error('A download source failed and was passed over', ['source' => $source::class, 'exception' => $e]);
 
-			return null;
+			return [null, false];
 		}
 
-		return $found instanceof Deliverable && $found->name !== '' ? [$source, $found] : null;
+		return [$found instanceof Deliverable && $found->name !== '' ? [$source, $found] : null, true];
 	}
 
 	/** The source for a field type: one an extension added, else the store's own. */

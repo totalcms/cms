@@ -164,7 +164,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"field": "json",
 			"label": "Fulfillment Data",
-			"help": "Free-form JSON copied onto each order line at purchase, for code that fulfills the order. Example: {\"edition\":\"pro\"} for a license product."
+			"help": "Free-form JSON copied onto each order line at purchase, for code that fulfills the order. Example: {\"edition\":\"pro\"} for a license product. A digital product with anything here is delivered by that code or by you: its orders stay unfulfilled until the item is marked delivered."
 		},
 		"created": {
 			"$ref": "https://www.totalcms.co/schemas/properties/date.json",

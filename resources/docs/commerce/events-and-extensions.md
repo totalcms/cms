@@ -144,6 +144,8 @@ $context->addEventListener('order.paid', function (array $payload) use ($context
 
 `markLineFulfilled()` is what tells the store the line is done. If your listener fails, the line stays unfulfilled, and after 15 minutes the order is flagged **Not delivered** in the admin.
 
+The product must have Fulfillment Data for this to work. It is what tells the store that something other than a download delivers the item. A digital product with no download, no access group and no Fulfillment Data is marked `not_required` when its order is paid, and the order completes without waiting for anyone.
+
 ## Extension points
 
 ### A payment provider

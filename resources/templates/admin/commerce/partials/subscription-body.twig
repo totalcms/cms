@@ -10,10 +10,12 @@
 	monthly        what it is worth a month, minor units
 	groups         the access groups it gives its subscriber
 	attention      {label, help}: why it needs someone, or both ''
+	handled        {label, by, at} when staff marked it as handled and it needs nobody now, else null
 	payments       list of {order, payment: {label, tone}}, newest first
 	prefix         what goes in front of an order number
 	providerLabel  the payment provider's name
-	can            {cancel, sync}: what the subscription's state allows; the buttons are a super admin's
+	can            {cancel, sync}: what the subscription's state allows; the buttons are a super admin's.
+	               {dismiss}: it needs someone, and anyone the store is open to may mark it as handled
 	error, notice  why an action was refused, or what it did
 #}
 {% macro post(subscription, action) %}method="post" action="commerce/subscriptions/{{ subscription.id|e }}/{{ action }}" hx-post="commerce/subscriptions/{{ subscription.id|e }}/{{ action }}" hx-target="#commerce-subscription" hx-swap="outerHTML"{% endmacro %}
@@ -26,6 +28,28 @@
 			<div class="dash-badge-group">
 				<span class="dash-badge {{ status.tone }}">{{ status.label|e }}</span>
 			</div>
+			{# What a super admin can do to it, where it is named, as on an order's page. #}
+			{% if cms.auth.isAdmin() and (can.cancel or can.sync) %}
+				<div class="commerce-order-actions" role="group" aria-label="Subscription actions">
+					{% if can.sync %}
+						<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'sync') }}>
+							<button class="dash-button transparent small" type="submit" title="Asks {{ providerLabel|e }} where this subscription stands and puts this page, and the subscriber's access, right. For when something looks out of date.">Check with {{ providerLabel|e }}</button>
+						</form>
+					{% endif %}
+					{% if can.cancel and not subscription.cancelAtPeriodEnd %}
+						<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }}>
+							<input type="hidden" name="when" value="period_end">
+							<button class="dash-button transparent small" type="submit" title="The subscriber keeps what they have paid for, and is not charged again.">Cancel at end of period</button>
+						</form>
+					{% endif %}
+					{% if can.cancel %}
+						<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }} hx-confirm="Cancel this subscription now? The subscriber loses what it gives them at once. Nothing is refunded.">
+							<input type="hidden" name="when" value="now">
+							<button class="dash-button transparent small danger" type="submit" title="Ends it at once. Nothing is refunded: refund a payment on its order.">Cancel now</button>
+						</form>
+					{% endif %}
+				</div>
+			{% endif %}
 		</div>
 		<p class="commerce-order-meta">
 			{{ subscription.recurringTotal|money(subscription.currency) }} every {{ every|e }}
@@ -42,8 +66,20 @@
 
 		{% if attention.label %}
 			<div class="warning-box commerce-attention commerce-order-attention" role="status">
-				<p><strong>{{ attention.label|e }}.</strong> {{ attention.help|e }}</p>
+				{# One child beside the box's icon: the reason, with the button at its end. #}
+				<div class="commerce-attention-body">
+					<p><strong>{{ attention.label|e }}.</strong> {{ attention.help|e }}</p>
+					{% if can.dismiss %}
+						<div class="commerce-attention-actions">
+							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'dismiss') }}>
+								<button class="dash-button transparent small" type="submit" title="For when you have dealt with it. It leaves the count; nothing else about this subscription changes.">Mark as handled</button>
+							</form>
+						</div>
+					{% endif %}
+				</div>
 			</div>
+		{% elseif handled %}
+			<p class="commerce-quiet commerce-attention-handled">{{ handled.label|e }}. Marked as handled{% if handled.by %} by {{ handled.by|e }}{% endif %}{% if handled.at %} on <time datetime="{{ handled.at|e }}">{{ handled.at|date('M j, Y') }}</time>{% endif %}.</p>
 		{% endif %}
 
 		<div class="commerce-order-grid">
@@ -143,38 +179,12 @@
 							<div><dt>{{ subscription.cancelAtPeriodEnd ? 'Ends' : 'Next payment' }}</dt><dd>{{ subscription.currentPeriodEnd|date('M j, Y') }}</dd></div>
 						{% endif %}
 						<div><dt>Payments so far</dt><dd>{{ subscription.renewalCount + 1 }}</dd></div>
-						<div><dt>{{ providerLabel|e }}</dt><dd>{% if subscription.providerSubscriptionRef %}<code>{{ subscription.providerSubscriptionRef|e }}</code>{% else %}Not started{% endif %}</dd></div>
+						<div><dt>{{ providerLabel|e }}</dt><dd>{% if subscription.providerSubscriptionRef %}<code title="{{ subscription.providerSubscriptionRef|e }}">{{ subscription.providerSubscriptionRef|e }}</code>{% else %}Not started{% endif %}</dd></div>
 						{% if subscription.providerCustomerRef %}
-							<div><dt>Customer there</dt><dd><code>{{ subscription.providerCustomerRef|e }}</code></dd></div>
+							<div><dt>Customer there</dt><dd><code title="{{ subscription.providerCustomerRef|e }}">{{ subscription.providerCustomerRef|e }}</code></dd></div>
 						{% endif %}
 					</dl>
 				</section>
-
-				{% if cms.auth.isAdmin() and (can.cancel or can.sync) %}
-					<section class="dash-card commerce-order-actions">
-						<h2>Actions</h2>
-						{% if can.sync %}
-							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'sync') }}>
-								<button class="dash-button transparent" type="submit">Check with {{ providerLabel|e }}</button>
-								<p class="commerce-quiet">Asks {{ providerLabel|e }} where this subscription stands and puts this page, and the subscriber's access, right. For when something looks out of date.</p>
-							</form>
-						{% endif %}
-						{% if can.cancel and not subscription.cancelAtPeriodEnd %}
-							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }}>
-								<input type="hidden" name="when" value="period_end">
-								<button class="dash-button transparent" type="submit">Cancel at end of period</button>
-								<p class="commerce-quiet">The subscriber keeps what they have paid for, and is not charged again.</p>
-							</form>
-						{% endif %}
-						{% if can.cancel %}
-							<form class="no-save no-unsaved-warning" {{ _self.post(subscription, 'cancel') }} hx-confirm="Cancel this subscription now? The subscriber loses what it gives them at once. Nothing is refunded.">
-								<input type="hidden" name="when" value="now">
-								<button class="dash-button transparent danger" type="submit">Cancel now</button>
-								<p class="commerce-quiet">Ends it at once. Nothing is refunded: refund a payment on its order.</p>
-							</form>
-						{% endif %}
-					</section>
-				{% endif %}
 			</aside>
 		</div>
 	</section>

@@ -32,7 +32,11 @@ final readonly class AdminOrderFulfillAction
 		return $this->responder->run($request, $response, $args['id'] ?? '', function (string $id) use ($lines, $text): string {
 			$order = $this->admin->fulfill($id, $lines, $text('trackingNumber'), $text('trackingUrl'), $text('note'));
 
-			return $order->fulfillmentStatus() === 'fulfilled' ? 'Marked as sent. This order is fulfilled.' : 'Marked as sent.';
+			// Something that ships was sent; a license or a file was delivered.
+			$shipped = array_filter($lines, static fn (string $line): bool => filter_var($order->line($line)['requiresShipping'] ?? false, FILTER_VALIDATE_BOOLEAN)) !== [];
+			$done    = $shipped ? 'Marked as sent.' : 'Marked as delivered.';
+
+			return $order->fulfillmentStatus() === 'fulfilled' ? $done . ' This order is fulfilled.' : $done;
 		});
 	}
 }

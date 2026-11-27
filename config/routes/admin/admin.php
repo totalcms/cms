@@ -45,6 +45,7 @@ use TotalCMS\Action\Automation\AutomationRunNowAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderAcceptAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderCancelAction;
+use TotalCMS\Action\Commerce\Admin\AdminOrderDismissAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderFulfillAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderNoteAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrderReceiptAction;
@@ -53,6 +54,7 @@ use TotalCMS\Action\Commerce\Admin\AdminOrderRefundAction;
 use TotalCMS\Action\Commerce\Admin\AdminOrdersAction;
 use TotalCMS\Action\Commerce\Admin\AdminSubscriptionAction;
 use TotalCMS\Action\Commerce\Admin\AdminSubscriptionCancelAction;
+use TotalCMS\Action\Commerce\Admin\AdminSubscriptionDismissAction;
 use TotalCMS\Action\Commerce\Admin\AdminSubscriptionsAction;
 use TotalCMS\Action\Commerce\Admin\AdminSubscriptionSyncAction;
 use TotalCMS\Action\Extension\ExtensionAdminRouteAction;
@@ -183,6 +185,7 @@ return function (App $app): void {
 			$commerce->post('/orders/{id}/fulfill', AdminOrderFulfillAction::class)->setName('admin-commerce-order-fulfill');
 			$commerce->post('/orders/{id}/note', AdminOrderNoteAction::class)->setName('admin-commerce-order-note');
 			$commerce->post('/orders/{id}/receipt', AdminOrderReceiptAction::class)->setName('admin-commerce-order-receipt');
+			$commerce->post('/orders/{id}/dismiss', AdminOrderDismissAction::class)->setName('admin-commerce-order-dismiss');
 			// What undoes or repeats a sale is for a super admin.
 			$commerce->post('/orders/{id}/refund', AdminOrderRefundAction::class)->setName('admin-commerce-order-refund')->add(AdminOnlyMiddleware::class);
 			$commerce->post('/orders/{id}/cancel', AdminOrderCancelAction::class)->setName('admin-commerce-order-cancel')->add(AdminOnlyMiddleware::class);
@@ -191,6 +194,7 @@ return function (App $app): void {
 
 			$commerce->get('/subscriptions', AdminSubscriptionsAction::class)->setName('admin-commerce-subscriptions');
 			$commerce->get('/subscriptions/{id}', AdminSubscriptionAction::class)->setName('admin-commerce-subscription');
+			$commerce->post('/subscriptions/{id}/dismiss', AdminSubscriptionDismissAction::class)->setName('admin-commerce-subscription-dismiss');
 			// Ending one, or taking the provider's word for where it stands, is for a super admin.
 			$commerce->post('/subscriptions/{id}/cancel', AdminSubscriptionCancelAction::class)->setName('admin-commerce-subscription-cancel')->add(AdminOnlyMiddleware::class);
 			$commerce->post('/subscriptions/{id}/sync', AdminSubscriptionSyncAction::class)->setName('admin-commerce-subscription-sync')->add(AdminOnlyMiddleware::class);

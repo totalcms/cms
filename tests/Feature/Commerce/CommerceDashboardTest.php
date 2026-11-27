@@ -196,6 +196,30 @@ describe('on the admin home page', function (): void {
 		expect((string)get('/admin')->getBody())->not->toContain('Paid downloads are open to the public');
 	});
 
+	it('names the digital products that have nothing to give a buyer', function (): void {
+		($this->product)(['id' => 'course', 'title' => 'Course <b>', 'type' => 'digital']);
+		// What is not a mistake: it ships, the buyer names the price, it gives a
+		// group, something else delivers it, or it is not on sale.
+		($this->product)(['id' => 'poster', 'title' => 'Poster']);
+		($this->product)(['id' => 'tip', 'title' => 'Tip jar', 'type' => 'digital', 'customPrice' => true]);
+		($this->product)(['id' => 'club', 'title' => 'Club', 'type' => 'digital', 'accessGroup' => 'members']);
+		($this->product)(['id' => 'key', 'title' => 'License key', 'type' => 'digital', 'meta' => ['license' => true]]);
+		($this->product)(['id' => 'draft', 'title' => 'Unfinished', 'type' => 'digital', 'status' => 'draft']);
+		signInAs($this->app, 'boss', 'auth');
+		$html = (string)get('/admin')->getBody();
+
+		expect($this->store->nothingToDeliver())->toBe([['productId' => 'course', 'title' => 'Course <b>']])
+			->and($html)->toContain('has nothing to deliver', 'href="collections/products/course"', 'Course &lt;b&gt;')
+			->not->toContain('Tip jar', 'License key', 'Unfinished');
+	});
+
+	it('says nothing about them when every digital product has its download', function (): void {
+		signInAs($this->app, 'boss', 'auth');
+
+		expect($this->store->nothingToDeliver())->toBe([])
+			->and((string)get('/admin')->getBody())->not->toContain('nothing to deliver');
+	});
+
 	it('links running-low products into the configured products collection', function (): void {
 		commerceDownloadIs($this->c, 'file');
 		$config           = $this->c->get(Config::class);

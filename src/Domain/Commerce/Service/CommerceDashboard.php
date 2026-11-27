@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Commerce\Service;
 
 use TotalCMS\Domain\Commerce\Data\ProductView;
+use TotalCMS\Domain\Commerce\Download\Deliverable;
+use TotalCMS\Domain\Commerce\Download\ProductDownload;
 use TotalCMS\Domain\Commerce\Order\OrderData;
 use TotalCMS\Domain\Commerce\Order\OrderQuery;
 use TotalCMS\Domain\Commerce\Order\OrderRepository;
@@ -29,6 +31,7 @@ final readonly class CommerceDashboard
 		private ProductCatalog $catalog,
 		private IndexReader $index,
 		private CommerceSettings $settings,
+		private ProductDownload $downloads,
 	) {
 	}
 
@@ -118,6 +121,43 @@ final readonly class CommerceDashboard
 		usort($low, static fn (array $a, array $b): int => [$a['stock'], $a['title']] <=> [$b['stock'], $b['title']]);
 
 		return $low;
+	}
+
+	/**
+	 * The digital products on sale that give a buyer nothing: no download,
+	 * no access group, and no Fulfillment Data for something else to deliver
+	 * by. Usually a file that was never added. A product whose buyer names
+	 * the price is left out: a donation or a tip is meant to deliver nothing.
+	 * A download that could not be looked for is not listed either.
+	 *
+	 * @return list<array{productId: string, title: string}>
+	 */
+	public function nothingToDeliver(): array
+	{
+		$found   = [];
+		$checked = 0;
+		foreach ($this->index->fetchIndex($this->settings->collection('products'))->objects as $row) {
+			if (!is_string($row['id'] ?? null) || ($row['type'] ?? '') !== ProductView::TYPE_DIGITAL || ($row['status'] ?? '') !== ProductView::STATUS_ACTIVE) {
+				continue;
+			}
+			if (++$checked > self::PRODUCTS_CHECKED) {
+				break;
+			}
+
+			$product = $this->catalog->product($row['id']);
+			if (!$product instanceof ProductView || $product->type !== ProductView::TYPE_DIGITAL || $product->customPrice || $product->accessGroup !== '' || $product->meta !== []) {
+				continue;
+			}
+
+			[$download, $known] = $this->downloads->look($product->id);
+			if ($known && !$download instanceof Deliverable) {
+				$found[] = ['productId' => $product->id, 'title' => $product->title];
+			}
+		}
+
+		usort($found, static fn (array $a, array $b): int => strcmp($a['title'], $b['title']));
+
+		return $found;
 	}
 
 	/** How many orders need someone. */

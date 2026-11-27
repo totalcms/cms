@@ -10,7 +10,7 @@ related:
 
 # Orders
 
-**Orders** is in the admin sidebar on a site with Commerce, for anyone [allowed to see orders](docs/commerce/setup#6-let-your-team-see-orders). A red number on its icon counts the orders that need someone.
+**Orders** is in the admin sidebar on a site with Commerce, for anyone [allowed to see orders](docs/commerce/setup#6-let-your-team-see-orders). A red number on its icon counts the orders and subscriptions that need someone. It is not a count of new orders: it goes down as each one is dealt with. See [Orders that need attention](#orders-that-need-attention).
 
 ## Find an order
 
@@ -42,7 +42,7 @@ The address bar keeps your filters, so a filtered list can be bookmarked.
 | **Unfulfilled** | Nothing has been sent. |
 | **Part fulfilled** | Some items have been sent. |
 | **Fulfilled** | Everything has been sent. |
-| **Nothing to send** | The order has nothing that needs delivering. |
+| **Nothing to send** | The order has nothing that needs delivering: nothing in it ships, and its digital items have no download. |
 
 ## Orders that need attention
 
@@ -56,7 +56,27 @@ An order is flagged when something went wrong that only a person can settle. Its
 | **Oversold** | More was sold than was in stock. |
 | **Refund failed** | The payment provider refused a refund you asked for. No money moved. |
 | **Disputed** | Answer the dispute at the payment provider. |
-| **Not delivered** | The order was paid more than 15 minutes ago, and a digital item in it has still not been delivered. An item with a file is delivered by itself; this is an item with none. See [Products with no file](docs/commerce/digital-delivery#products-with-no-file). |
+| **Not delivered** | The order was paid more than 15 minutes ago, and a digital item in it has still not been delivered. An item with a file is delivered by itself. This is an item that something else delivers, or one whose download could not be reached. See [Products with no file](docs/commerce/digital-delivery#products-with-no-file). |
+
+### What takes an order off the count
+
+Most flags clear by themselves when the problem is settled:
+
+| Flag | What clears it |
+|---|---|
+| **Payment mismatch**, **Paid after expiry**, **Wrong provider** | **Accept this payment**, or a full refund. |
+| **Disputed** | The payment provider's verdict on the dispute. |
+| **Not delivered** | The item is delivered: **Run fulfillment again**, or **Mark as delivered**. A refund also takes the order off the count. |
+| **Access not granted** | **Run fulfillment again**, once the buyer's account exists. |
+| **Oversold**, **Refund failed** | Nothing clears these by itself. Deal with the order, then mark it as handled. |
+
+### Mark as handled
+
+Every flagged order has **Mark as handled**. Use it once you have dealt with the order: you sent or refunded the oversold item, the refund went through on a second try, or you settled it at the payment provider.
+
+It takes the order off the count and nothing more. No money moves, nothing is delivered, and the order's payment and fulfillment statuses stay as they are. The order's page keeps a line saying what it had been flagged for, who marked it and when.
+
+An order that is flagged again later, for any reason, is counted again.
 
 ### Orders that stay pending
 
@@ -111,6 +131,8 @@ An order's page shows the items as they were sold, the totals, the buyer and the
 
 Tick the items you are sending, add a tracking number and link if you have them, and choose **Mark as sent**. You can send an order in several parcels.
 
+Tracking is only asked for while something that ships is still to send. When all that is left is a digital item that you or an extension delivers, the button reads **Mark as delivered** and there is nothing to fill in but an optional note.
+
 When the last item is marked, the order becomes **Fulfilled**.
 
 Only a paid order can be marked as sent.
@@ -146,7 +168,7 @@ If your site delivers something automatically when an order is paid, such as a l
 | | A team member with **Commerce Orders** | A super admin |
 |---|---|---|
 | See orders | Yes | Yes |
-| Mark items as sent, keep notes, resend a receipt | Yes | Yes |
+| Mark items as sent, keep notes, resend a receipt, mark as handled | Yes | Yes |
 | Refund | No | Yes |
 | Cancel an unpaid order | No | Yes |
 | Accept a payment in review | No | Yes |
@@ -154,7 +176,7 @@ If your site delivers something automatically when an order is paid, such as a l
 
 ## On the dashboard
 
-The admin home page shows your store to anyone who can see orders: what it took in the last 30 days less refunds, how many orders need attention, the newest orders, and the products with 5 or fewer left.
+The admin home page shows your store to anyone who can see orders: what it took in the last 30 days less refunds, how many orders need attention, the newest orders, and the products with 5 or fewer left. It also lists digital products that have [nothing to deliver](docs/commerce/digital-delivery#a-file-you-forgot-to-add).
 
 ## Orders cannot be edited by hand
 

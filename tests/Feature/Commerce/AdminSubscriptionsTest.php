@@ -301,6 +301,34 @@ describe('what staff can do to one', function (): void {
 			->and(($this->kept)($this->pat)->status())->toBe('active');
 	});
 
+	it('lets staff mark one that needs someone as handled, and keeps why and who', function (): void {
+		$this->subs->withLock($this->pat->id(), static fn (SubscriptionData $s): SubscriptionData => $s->with(['needsAttention' => 'amount_mismatch']));
+		$nav    = $this->c->get(CommerceNav::class);
+		$before = $nav->attention();
+		signInAs($this->app, 'keeper', 'auth');
+		$page = (string)get("/admin/commerce/subscriptions/{$this->pat->id()}")->getBody();
+		$res  = post("/admin/commerce/subscriptions/{$this->pat->id()}/dismiss", [], ['HX-Request' => 'true']);
+		$html = (string)$res->getBody();
+		$kept = ($this->kept)($this->pat);
+
+		expect($page)->toContain("subscriptions/{$this->pat->id()}/dismiss", 'Mark as handled')
+			->and($res->getStatusCode())->toBe(200)
+			->and($nav->attention())->toBe($before - 1)
+			->and($kept->needsAttention())->toBe('')
+			->and($kept->attentionDismissed())->toMatchArray(['reason' => 'amount_mismatch', 'by' => 'user:auth/keeper'])
+			->and($kept->status())->toBe('active')
+			->and($html)->toContain('id="commerce-subscription"', 'Marked as handled', 'keeper')
+			->and($html)->not->toContain("subscriptions/{$this->pat->id()}/dismiss");
+	});
+
+	it('changes nothing for a subscription that needs nobody', function (): void {
+		signInAs($this->app, 'keeper', 'auth');
+		$res = post("/admin/commerce/subscriptions/{$this->pat->id()}/dismiss");
+
+		expect($res->getStatusCode())->toBe(200)
+			->and(($this->kept)($this->pat)->toArray())->toBe($this->pat->toArray());
+	});
+
 	it('redraws the page with what was done, for the page\'s own buttons', function (): void {
 		signInAs($this->app, 'boss', 'auth');
 		$res  = post("/admin/commerce/subscriptions/{$this->pat->id()}/cancel", ['when' => 'period_end'], ['HX-Request' => 'true']);

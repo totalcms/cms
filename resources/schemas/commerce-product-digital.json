@@ -12,7 +12,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
 			"field": "file",
 			"label": "Download",
-			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. Like any file, it is kept from the public by the File Access Groups of this collection: leave at least one group there. Sell several files as one zip."
+			"help": "Digital products only. The file a buyer gets. After paying they are given a link to it that runs out, on their order page and in their receipt. Like any file, it is kept from the public by the File Access Groups of this collection: leave at least one group there. Sell several files as one zip. Leave it empty for a product with nothing to download, such as a donation: its orders are complete once they are paid."
 		}
 	}
 }

@@ -105,13 +105,32 @@ final readonly class SubscriptionPageView
 				'label' => $this->attention($subscription),
 				'help'  => self::ATTENTION[$reason][1] ?? 'This subscription needs a look: ' . str_replace('_', ' ', $reason) . '.',
 			],
+			'handled'       => $reason === '' ? $this->handled($subscription) : null,
 			'payments'      => $this->payments($subscription),
 			'prefix'        => $this->settings->orderNumberPrefix(),
 			'providerLabel' => $provider?->label() ?? $subscription->provider(),
 			'can'           => [
-				'cancel' => $running,
-				'sync'   => $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) instanceof SubscriptionProvider,
+				'dismiss' => $reason !== '',
+				'cancel'  => $running,
+				'sync'    => $subscription->providerSubscriptionRef() !== '' && $this->providers->subscriptionProvider($subscription->provider()) instanceof SubscriptionProvider,
 			],
+		];
+	}
+
+	/**
+	 * What the subscription had needed someone for, and who marked it as
+	 * handled. Null for one nobody has marked.
+	 *
+	 * @return array{label: string, by: string, at: string}|null
+	 */
+	private function handled(SubscriptionData $subscription): ?array
+	{
+		$mark = $subscription->attentionDismissed();
+
+		return $mark === [] ? null : [
+			'label' => self::ATTENTION[$mark['reason']][0] ?? ucfirst(str_replace('_', ' ', $mark['reason'])),
+			'by'    => $mark['by'],
+			'at'    => $mark['at'],
 		];
 	}
 

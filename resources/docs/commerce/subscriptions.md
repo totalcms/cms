@@ -147,6 +147,8 @@ Open one to see its payments. A super admin has three buttons:
 | **Cancel at end of period** | The subscriber keeps what they paid for and is not charged again. |
 | **Cancel now** | Ends it at once. Nothing is refunded: refund a payment on its order. |
 
+A subscription that needs someone says why at the top of its page, and counts toward the red number on **Orders** in the sidebar. Once you have dealt with it, anyone who can see orders can choose **Mark as handled** there. That takes it off the count and changes nothing else: nothing is asked of Stripe and its status stays as it is.
+
 ## The failed-payment email
 
 `tcms commerce:install` adds a mailer template called `commerce-payment-failed`. It is sent once for each invoice that fails, however many times Stripe retries it. Edit it under **Mailer**. In the template the subscription is `data`.
