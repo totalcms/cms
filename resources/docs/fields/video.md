@@ -265,6 +265,14 @@ vendor thumbnail. `muted` and `loop` carry into the embed the click builds:
 {{ cms.render.video(post, {property: 'promo', muted: true}) }}
 ```
 
+A Livid video loads sooner. When the pointer rests on the poster, or the play
+button takes keyboard focus, the player is built behind the poster and waits
+there, paused. The click then starts it, so the video plays with sound on the
+first click in Safari, which keeps a player built after the click paused. A
+touch screen has no hover: the player is still built on the tap, and Safari
+on iPhone may need a second tap. A visitor whose browser asks to save data
+gets no preload.
+
 A file-field value (any `file` property whose stored `mime` starts with
 `video/`) renders too, through the same streaming route a plain video upload
 already uses — so a template can treat local and hosted video through one

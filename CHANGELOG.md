@@ -18,6 +18,7 @@ All notable changes to Total CMS will be documented in this file.
 
 - **An object with an empty `json` property saves.** Leaving an optional `json` field blank failed with "Schema Validation Failed" when the object was created through the API, the CLI or an import
 - **The schema editor shows the JSON icon for a property stored as JSON.** A property whose data type is `json` but whose field comes from an extension showed a question mark as its type icon
+- **A Livid video starts with sound on the first click in Safari.** `cms.render.video()` built the player after the click, and Safari kept it paused. The player now loads behind the poster when the pointer rests on it or the play button takes keyboard focus, and the click starts it. It also starts sooner in every browser. See [Video](https://docs.totalcms.co/fields/video)
 
 ## [3.6.12] - 2026-11-25
 
